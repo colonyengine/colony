@@ -1,10 +1,10 @@
 (:universe
  (:player-ship
-  ((transform :translation/current (0 0 0)))
+  ((transform))
   (:turret
    ((transform :translation/current (1 2 0))
     (gun-manager
-     :guns (list :laser :missile)))
+     :guns (:laser :missile)))
    (:laser
     ((transform)
      (gun :shots 10
