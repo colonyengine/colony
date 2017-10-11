@@ -1,16 +1,16 @@
 (in-package :gear)
 
 (defclass transform-state ()
-  ((current :accessor current
-            :initarg :current)
-   (incremental :accessor incremental
-                :initarg :incremental)
-   (previous :accessor previous
-             :initarg :previous)
-   (interpolated :accessor interpolated
-                 :initarg :interpolated)
-   (modifiedp :accessor modifiedp
-              :initarg :modifiedp)))
+  ((%current :accessor current
+             :initarg :current)
+   (%incremental :accessor incremental
+                 :initarg :incremental)
+   (%previous :accessor previous
+              :initarg :previous)
+   (%interpolated :accessor interpolated
+                  :initarg :interpolated)
+   (%modifiedp :accessor modifiedp
+               :initarg :modifiedp)))
 
 (defclass transform-state-scalar (transform-state) ())
 
@@ -19,9 +19,9 @@
 (defclass transform-state-quaternion (transform-state) ())
 
 (defmethod initialize-instance :after ((object transform-state-quaternion) &key)
-  (with-slots (current) object
-    (when (typep current 'vec)
-      (setf current (qrot (qid) current)))))
+  (with-slots (%current) object
+    (when (typep %current 'vec)
+      (setf %current (qrot (qid) %current)))))
 
 (defgeneric %generate-default-state-value (type)
   (:method ((type (eql 'transform-state-scalar)))
@@ -41,19 +41,19 @@
          (append initargs (%generate-default-state-initargs type))))
 
 (defmethod interpolate-state ((state transform-state-scalar) coefficient)
-  (with-slots (previous current interpolated modifiedp) state
-    (if modifiedp
-        (setf interpolated (lerp coefficient previous current))
-        (setf interpolated current))))
+  (with-slots (%previous %current %interpolated %modifiedp) state
+    (if %modifiedp
+        (setf %interpolated (lerp coefficient %previous %current))
+        (setf %interpolated %current))))
 
 (defmethod interpolate-state ((state transform-state-vector) coefficient)
-  (with-slots (previous current interpolated modifiedp) state
-    (if modifiedp
-        (vlerp! interpolated previous current coefficient)
-        (vcp! interpolated current))))
+  (with-slots (%previous %current %interpolated %modifiedp) state
+    (if %modifiedp
+        (vlerp! %interpolated %previous %current coefficient)
+        (vcp! %interpolated %current))))
 
 (defmethod interpolate-state ((state transform-state-quaternion) coefficient)
-  (with-slots (previous current interpolated modifiedp) state
-    (if modifiedp
-        (qslerp! interpolated previous current coefficient)
-        (qcp! interpolated current))))
+  (with-slots (%previous %current %interpolated %modifiedp) state
+    (if %modifiedp
+        (qslerp! %interpolated %previous %current coefficient)
+        (qcp! %interpolated %current))))
