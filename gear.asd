@@ -1,11 +1,12 @@
 (asdf:defsystem #:gear
   :description "An experimental game engine."
-  :author ("Michael Fiano <michael.fiano@gmail.com>")
+  :author ("Michael Fiano <michael.fiano@gmail.com>"
+           "Peter Keller <psilord@cs.wisc.edu>")
   :maintainer "Michael Fiano <michael.fiano@gmail.com>"
   :license "MIT"
-  :homepage "https://github.com/mfiano/gear"
-  :bug-tracker "https://github.com/mfiano/gear/issues"
-  :source-control (:git "git@github.com:mfiano/gear.git")
+  :homepage "https://github.com/hackertheory/gear"
+  :bug-tracker "https://github.com/hackertheory/gear/issues"
+  :source-control (:git "git@github.com:hackertheory/gear.git")
   :version "0.1.0"
   :encoding :utf-8
   :long-description #.(uiop:read-file-string
