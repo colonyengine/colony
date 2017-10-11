@@ -18,5 +18,9 @@
   ((:file "package")
    (:file "transform-state")
    (:file "transform")
-   (:file "gear")))
    (:file "components")
+   (:file "scene")
+   (:file "gear")
+   (:module "example"
+    :components
+    ((:file "components")))))

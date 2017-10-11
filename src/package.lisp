@@ -4,4 +4,10 @@
   (:use #:cl
         #:alexandria
         #:gamebox-math)
-  (:export))
+  (:export #:component
+           #:components
+           #:game-object))
+
+(defpackage #:gear/example
+  (:use #:cl
+        #:gear))
