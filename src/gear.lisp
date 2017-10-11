@@ -14,3 +14,8 @@
    (%children :accessor children
               :initarg :children
               :initform nil)))
+
+(defclass tags (component)
+  ((%tags :accessor tags
+          :initarg :tags
+          :initform nil)))
