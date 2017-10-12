@@ -26,6 +26,11 @@
               :initarg :children
               :initform nil)))
 
+(defgeneric add-child (parent child)
+  (:method ((parent transform) (child transform))
+    (push child (children parent))
+    (setf (parent child) parent)))
+
 (defun translate-node (node)
   (with-slots (%current %incremental %previous %modifiedp) (translation node)
     (let ((locally-modified-p (not (vzerop %incremental))))

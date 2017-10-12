@@ -5,12 +5,11 @@
                  :initarg :game-object)))
 
 (defgeneric add-component (gobj component)
-  (:documentation
-   "Add COMPONENT into the GAME-OBJECT."))
+  (:documentation "Add COMPONENT into the GAME-OBJECT."))
 
 (defgeneric get-component (comp-type gobj)
-  (:documentation
-   "FIND the component of type COMP-TYPE in the GOBJ game-object."))
+  (:documentation "FIND the component of type COMP-TYPE in the GOBJ
+  game-object."))
 
 ;; NOTE: Currently we don't check if we push two of the same type.
 (defmethod add-component ((gobj game-object) (component component))

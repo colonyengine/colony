@@ -9,6 +9,7 @@
            #:add-component
            #:get-component
            #:transform
+           #:make-transform
            #:tags
            #:game-object))
 
