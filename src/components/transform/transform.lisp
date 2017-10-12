@@ -92,3 +92,30 @@
 ;; TODO: change to reflect engine idea spec'd out by psilord
 (defun interpolate-transforms (alpha)
   (do-nodes (lambda (node) (resolve-model node alpha))))
+
+
+;; NOTE: Each component requires a make-TYPE function for it.
+;; This one probably needs more work. :)
+(defun make-transform (&key
+                         (game-object NIL)
+                         (translation/current (vec))
+                         (translation/incremental (vec))
+                         (rotation/current (vec))
+                         (rotation/incremental (vec))
+                         (scale/current (vec 1 1 1))
+                         (scale/incremental (vec)))
+
+  (make-instance 'transform
+                 :game-object game-object
+                 :translation (%make-transform-state
+                               'transform-state-vector
+                               :current translation/current
+                               :incremental translation/incremental)
+                 :rotation (%make-transform-state
+                            'transform-state-quaternion
+                            :current rotation/current
+                            :incremental rotation/incremental)
+                 :scale (%make-transform-state
+                         'transform-state-vector
+                         :current scale/current
+                         :incremental scale/incremental)))

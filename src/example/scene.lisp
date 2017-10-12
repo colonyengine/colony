@@ -28,6 +28,9 @@
 ;; In short, I propose we put this progn into a DEFUN called "make-scene-tree"
 ;; and see if it works when we call it. :)
 
+;; NOTE: In order for the macro to generate a call to create a component, it
+;; will synthesize the name make-TYPE and use that to make that component.
+
 (progn
 
 ;;; butlast forms
@@ -53,8 +56,7 @@
 
     (let ((initarg-game-object (gethash '<universe> objects)))
       (add-component (gethash '<universe> objects)
-                     (make-instance 'transform
-                                    :game-object initarg-game-object)))
+                     (make-transform :game-object initarg-game-object)))
 
     ;; Each game-object is processed one by one in tree order. Each then has a
     ;; pile of LET forms around each creation and insertion of the component.
@@ -65,8 +67,7 @@
 
     (let ((initarg-game-object (gethash '<player-ship> objects)))
       (add-component (gethash '<player-ship> objects)
-                     (make-instance 'transform
-                                    :game-object initarg-game-object)))
+                     (make-transform :game-object initarg-game-object)))
 
 ;;; Initialize <turret>
 
@@ -74,51 +75,45 @@
           (initarg-translation/current (vec 1 2 0)))
       (add-component
        (gethash '<turret> objects)
-       (make-instance 'transform
-                      :game-object initarg-game-object
-                      :translation/current initarg-translation/current)))
+       (make-transform :game-object initarg-game-object
+                       :translation/current initarg-translation/current)))
 
     (let ((initarg-game-object (gethash '<turrent> objects))
           (initarg-active-gun 0)
           (initarg-guns (vector (gethash '<laser> objects)
                                 (gethash '<missle> objects))))
       (add-component (gethash '<turret> objects)
-                     (make-instance 'gun-manager
-                                    :game-object initarg-game-object
-                                    :active-gun initarg-active-gun
-                                    :guns initarg-guns)))
+                     (make-gun-manager :game-object initarg-game-object
+                                       :active-gun initarg-active-gun
+                                       :guns initarg-guns)))
 
 ;;; Initialize <laser>
 
     (let ((initarg-game-object (gethash '<laser> objects)))
       (add-component (gethash '<laser> objects)
-                     (make-instance 'transform
-                                    :game-object initarg-game-object)))
+                     (make-transform :game-object initarg-game-object)))
 
     (let ((initarg-game-object (gethash '<laser> objects))
           (initarg-shots 10)
           (initarg-type :beam))
       (add-component (gethash '<laser> objects)
-                     (make-instance 'gun
-                                    :game-object initarg-game-object
-                                    :shots initarg-shots
-                                    :type initarg-type)))
+                     (make-gun :game-object initarg-game-object
+                               :shots initarg-shots
+                               :type initarg-type)))
 
 ;;; Initialize <missle>
 
     (let ((initarg-game-object (gethash '<missle> objects)))
       (add-component (gethash '<missle> objects)
-                     (make-instance 'transform
-                                    :game-object initarg-game-object)))
+                     (make-transform :game-object initarg-game-object)))
 
     (let ((initarg-game-object (gethash '<missle> objects))
           (initarg-shots (random-shots 5 5))
           (initarg-type :homing))
       (add-component (gethash '<missle> objects)
-                     (make-instance 'gun
-                                    :game-object initarg-game-object
-                                    :shots initarg-shots
-                                    :type initarg-type)))
+                     (make-gun :game-object initarg-game-object
+                               :shots initarg-shots
+                               :type initarg-type)))
 
 
 ;;; Now, we wire together the actual scene tree through the transform
