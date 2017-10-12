@@ -98,25 +98,44 @@
 (defun interpolate-transforms (alpha)
   (do-nodes (lambda (node) (resolve-model node alpha))))
 
-(defun make-transform (&key
-                         (game-object nil)
-                         (translation/current (vec))
-                         (translation/incremental (vec))
-                         (rotation/current (vec))
-                         (rotation/incremental (vec))
-                         (scale/current (vec 1 1 1))
-                         (scale/incremental (vec)))
-  (make-instance 'transform
-                 :game-object game-object
-                 :translation (%make-transform-state
-                               'transform-state-vector
-                               :current translation/current
-                               :incremental translation/incremental)
-                 :rotation (%make-transform-state
-                            'transform-state-quaternion
-                            :current rotation/current
-                            :incremental rotation/incremental)
-                 :scale (%make-transform-state
-                         'transform-state-vector
-                         :current scale/current
-                         :incremental scale/incremental)))
+
+(defun make-transform (&rest args)
+  (apply #'make-instance 'transform args))
+
+
+;; NOTE: We do this because reinitialize-instance for a transform needs to
+;; process its argument before actually reinitializing the instance of the
+;; transform with the new data.
+(defmethod reinitialize-instance ((inst transform) &rest args)
+  (apply #'reinitialize-transform-instance inst args))
+
+(defun reinitialize-transform-instance (instance
+                                        &key
+                                          (game-object nil p/0)
+                                          (translation/current (vec) p/1)
+                                          (translation/incremental (vec) p/2)
+                                          (rotation/current (vec) p/3)
+                                          (rotation/incremental (vec) p/4)
+                                          (scale/current (vec 1 1 1) p/5)
+                                          (scale/incremental (vec) p/6))
+
+  (when p/0
+    (setf (game-object instance) game-object))
+
+  (when p/1
+    (setf (current (translation instance)) translation/current))
+
+  (when p/2
+    (setf (incremental (translation instance)) translation/incremental))
+
+  (when p/3
+    (setf (current (rotation instance)) rotation/current))
+
+  (when p/4
+    (setf (incremental (rotation instance)) rotation/incremental))
+
+  (when p/5
+    (setf (current (scale instance)) scale/current))
+
+  (when p/6
+    (setf (incremental (scale instance)) scale/incremental)))
