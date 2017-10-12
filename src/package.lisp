@@ -6,6 +6,7 @@
         #:gamebox-math)
   (:export #:component
            #:components
+           #:transform
            #:game-object))
 
 (defpackage #:gear/example

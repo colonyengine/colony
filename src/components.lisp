@@ -1,6 +1,8 @@
 (in-package :gear)
 
-(defclass component () ())
+(defclass component ()
+  ((%game-object :accessor game-object
+                :initarg :game-object)))
 
 (defclass transform (component transformable)
   ((%parent :accessor parent
