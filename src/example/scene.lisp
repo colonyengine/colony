@@ -99,7 +99,7 @@
       (add-component (gethash '<laser> objects)
                      (make-gun :game-object initarg-game-object
                                :shots initarg-shots
-                               :shot-type initarg-type)))
+                               :shot-type initarg-shot-type)))
 
 ;;; Initialize <missle>
 
@@ -113,7 +113,7 @@
       (add-component (gethash '<missle> objects)
                      (make-gun :game-object initarg-game-object
                                :shots initarg-shots
-                               :shot-type initarg-type)))
+                               :shot-type initarg-shot-type)))
 
 
 ;;; Now, we wire together the actual scene tree through the transform
