@@ -12,10 +12,8 @@
   (:documentation
    "FIND the component of type COMP-TYPE in the GOBJ game-object."))
 
-
-
 ;; NOTE: Currently we don't check if we push two of the same type.
-(defmethod add-component ((gobj game-object) (comp component))
+(defmethod add-component ((gobj game-object) (component component))
   (push component (components gobj)))
 
 (defmethod get-component ((comp-type symbol) (gobj game-object))
