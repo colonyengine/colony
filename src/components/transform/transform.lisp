@@ -18,6 +18,14 @@
            :initarg :model
            :initform (mid))))
 
+(defclass transform (component transformable)
+  ((%parent :accessor parent
+            :initarg :parent
+            :initform nil)
+   (%children :accessor children
+              :initarg :children
+              :initform nil)))
+
 (defun translate-node (node)
   (with-slots (%current %incremental %previous %modifiedp) (translation node)
     (let ((locally-modified-p (not (vzerop %incremental))))

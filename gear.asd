@@ -10,18 +10,23 @@
   :version "0.1.0"
   :encoding :utf-8
   :long-description #.(uiop:read-file-string
-                        (uiop/pathname:subpathname *load-pathname* "README.md"))
+                       (uiop/pathname:subpathname *load-pathname* "README.md"))
   :depends-on (#:alexandria
                #:gamebox-math)
   :pathname "src"
   :serial t
   :components
   ((:file "package")
-   (:file "transform-state")
-   (:file "transform")
    (:file "components")
    (:file "scene")
    (:file "gear")
+   (:module "components/transform"
+    :components
+    ((:file "state")
+     (:file "transform")))
+   (:module "components/tags"
+    :components
+    ((:file "tags")))
    (:module "example"
     :components
     ((:file "components")))))
