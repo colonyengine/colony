@@ -17,9 +17,9 @@
   :serial t
   :components
   ((:file "package")
+   (:file "game-object")
    (:file "components")
    (:file "scene")
-   (:file "gear")
    (:module "components/transform"
     :components
     ((:file "state")
