@@ -1,6 +1,8 @@
 (in-package :gear)
 
 (defclass game-object ()
-  ((%components :accessor components
+  ((%id :accessor id
+        :initarg :id)
+   (%components :accessor components
                 :initarg :components
                 :initform nil)))

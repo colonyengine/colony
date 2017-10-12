@@ -49,7 +49,7 @@
 
 ;;; Create all game-objects so future references all are valid.
       (dolist (name tmp-object-names)
-        (setf (gethash name tmp-objects) (make-instance 'game-object)))
+        (setf (gethash name tmp-objects) (make-instance 'game-object :id name)))
 
 ;;; Create all default components for all game-object to all future reference
 ;;; to them in the user values in the DSL are valid.
