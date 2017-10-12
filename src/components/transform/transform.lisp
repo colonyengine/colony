@@ -98,18 +98,16 @@
 (defun interpolate-transforms (alpha)
   (do-nodes (lambda (node) (resolve-model node alpha))))
 
-;; Need to reformat arguments to be appropriate, so provide a specific
-;; entry here for this type.
-(defmethod make-component ((comp-type (eql 'transform)) &rest args)
-  (let ((inst (make-instance 'transform)))
-    (apply #'reinitialize-instance inst args)
-    inst))
+(defmethod make-component ((type (eql 'transform)) &rest args)
+  (let ((instance (make-instance 'transform)))
+    (apply #'reinitialize-instance instance args)
+    instance))
 
 ;; NOTE: We do this because reinitialize-instance for a transform needs to
 ;; process its argument before actually reinitializing the instance of the
 ;; transform with the new data.
-(defmethod reinitialize-instance ((inst transform) &rest args)
-  (apply #'reinitialize-transform-instance inst args))
+(defmethod reinitialize-instance ((instance transform) &rest args)
+  (apply #'reinitialize-transform-instance instance args))
 
 (defun reinitialize-transform-instance (instance
                                         &key
@@ -123,21 +121,15 @@
 
   (when p/0
     (setf (game-object instance) game-object))
-
   (when p/1
     (setf (current (translation instance)) translation/current))
-
   (when p/2
     (setf (incremental (translation instance)) translation/incremental))
-
   (when p/3
     (setf (current (rotation instance)) rotation/current))
-
   (when p/4
     (setf (incremental (rotation instance)) rotation/incremental))
-
   (when p/5
     (setf (current (scale instance)) scale/current))
-
   (when p/6
     (setf (incremental (scale instance)) scale/incremental)))

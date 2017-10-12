@@ -8,6 +8,7 @@
            #:components
            #:make-component
            #:add-component
+           #:add-multiple-components
            #:get-component
            #:add-child
            #:transform
