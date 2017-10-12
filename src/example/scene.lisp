@@ -2,7 +2,9 @@
   (+ base (random extra)))
 
 ((<player-ship>
-  ((transform))
+  ((transform)
+   (hit-points :hp 100))
+
   (<turret>
    ((transform :translation/current (vec 1 2 0))
     (gun-manager :active-gun 0
@@ -69,7 +71,8 @@
                                    (list (make-component 'transform)))
 ;;; Create default components for <player-ship>
         (insert-default-components <player-ship>
-                                   (list (make-component 'transform)))
+                                   (list (make-component 'transform)
+                                         (make-component 'hit-points)))
 ;;; Create default components for <turret>
         (insert-default-components <turret>
                                    (list (make-component 'transform)
@@ -97,6 +100,13 @@
           (reinitialize-instance
            (get-component 'transform <player-ship>)
            :game-object initarg-game-object))
+
+        (let ((initarg-game-object <player-ship>)
+              (initarg-hp 100))
+          (reinitialize-instance
+           (get-component 'hit-points <player-ship>)
+           :game-object initarg-game-object
+           :hp initarg-hp))
 
 ;;; Initialize <turret>
 
