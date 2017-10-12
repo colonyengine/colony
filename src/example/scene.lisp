@@ -45,17 +45,17 @@
   ;; NOTE: Other ones should be fixed up to be gensymed, but I haven't done that
   ;; yet.
 
-  (let ((objects (make-hash-table))
-        (object-names `(<universe> <player-ship> <turret> <laser> <missle>)))
-    ;; First, create the empty game objects so I can have real references to
+  (let ((tmp-objects (make-hash-table))
+        (tmp-object-names `(<universe> <player-ship> <turret> <laser> <missle>)))
+    ;; First, create the empty game tmp-objects so I can have real references to
     ;; them.
-    (loop :for name :in object-names
-          :do (setf (gethash name objects) (make-instance 'game-object)))
+    (loop :for name :in tmp-object-names
+          :do (setf (gethash name tmp-objects) (make-instance 'game-object)))
 
 ;;; Initialize <universe>
 
-    (let ((initarg-game-object (gethash '<universe> objects)))
-      (add-component (gethash '<universe> objects)
+    (let ((initarg-game-object (gethash '<universe> tmp-objects)))
+      (add-component (gethash '<universe> tmp-objects)
                      (make-transform :game-object initarg-game-object)))
 
     ;; Each game-object is processed one by one in tree order. Each then has a
@@ -65,52 +65,52 @@
 
 ;;; Initialize <player-ship>
 
-    (let ((initarg-game-object (gethash '<player-ship> objects)))
-      (add-component (gethash '<player-ship> objects)
+    (let ((initarg-game-object (gethash '<player-ship> tmp-objects)))
+      (add-component (gethash '<player-ship> tmp-objects)
                      (make-transform :game-object initarg-game-object)))
 
 ;;; Initialize <turret>
 
-    (let ((initarg-game-object (gethash '<turret> objects))
+    (let ((initarg-game-object (gethash '<turret> tmp-objects))
           (initarg-translation/current (vec 1 2 0)))
       (add-component
-       (gethash '<turret> objects)
+       (gethash '<turret> tmp-objects)
        (make-transform :game-object initarg-game-object
                        :translation/current initarg-translation/current)))
 
-    (let ((initarg-game-object (gethash '<turrent> objects))
+    (let ((initarg-game-object (gethash '<turrent> tmp-objects))
           (initarg-active-gun 0)
-          (initarg-guns (vector (gethash '<laser> objects)
-                                (gethash '<missle> objects))))
-      (add-component (gethash '<turret> objects)
+          (initarg-guns (vector (gethash '<laser> tmp-objects)
+                                (gethash '<missle> tmp-objects))))
+      (add-component (gethash '<turret> tmp-objects)
                      (make-gun-manager :game-object initarg-game-object
                                        :active-gun initarg-active-gun
                                        :guns initarg-guns)))
 
 ;;; Initialize <laser>
 
-    (let ((initarg-game-object (gethash '<laser> objects)))
-      (add-component (gethash '<laser> objects)
+    (let ((initarg-game-object (gethash '<laser> tmp-objects)))
+      (add-component (gethash '<laser> tmp-objects)
                      (make-transform :game-object initarg-game-object)))
 
-    (let ((initarg-game-object (gethash '<laser> objects))
+    (let ((initarg-game-object (gethash '<laser> tmp-objects))
           (initarg-shots 10)
           (initarg-shot-type :beam))
-      (add-component (gethash '<laser> objects)
+      (add-component (gethash '<laser> tmp-objects)
                      (make-gun :game-object initarg-game-object
                                :shots initarg-shots
                                :shot-type initarg-shot-type)))
 
 ;;; Initialize <missle>
 
-    (let ((initarg-game-object (gethash '<missle> objects)))
-      (add-component (gethash '<missle> objects)
+    (let ((initarg-game-object (gethash '<missle> tmp-objects)))
+      (add-component (gethash '<missle> tmp-objects)
                      (make-transform :game-object initarg-game-object)))
 
-    (let ((initarg-game-object (gethash '<missle> objects))
+    (let ((initarg-game-object (gethash '<missle> tmp-objects))
           (initarg-shots (random-shots 5 5))
           (initarg-shot-type :homing))
-      (add-component (gethash '<missle> objects)
+      (add-component (gethash '<missle> tmp-objects)
                      (make-gun :game-object initarg-game-object
                                :shots initarg-shots
                                :shot-type initarg-shot-type)))
@@ -121,19 +121,19 @@
 ;;; tree.
 
     (add-child
-     (get-component 'transform (gethash '<universe> objects))
-     (get-component 'transform (gethash '<player-ship> objects)))
+     (get-component 'transform (gethash '<universe> tmp-objects))
+     (get-component 'transform (gethash '<player-ship> tmp-objects)))
 
     (add-child
-     (get-component 'transform (gethash '<player-ship> objects))
-     (get-component 'transform (gethash '<turret> objects)))
+     (get-component 'transform (gethash '<player-ship> tmp-objects))
+     (get-component 'transform (gethash '<turret> tmp-objects)))
 
     (add-child
-     (get-component 'transform (gethash '<turret> objects))
-     (get-component 'transform (gethash '<laser> objects)))
+     (get-component 'transform (gethash '<turret> tmp-objects))
+     (get-component 'transform (gethash '<laser> tmp-objects)))
 
     (add-child
-     (get-component 'transform (gethash '<turret> objects))
-     (get-component 'transform (gethash '<missle> objects)))
+     (get-component 'transform (gethash '<turret> tmp-objects))
+     (get-component 'transform (gethash '<missle> tmp-objects)))
 
-    (values objects '<universe>)))
+    (values tmp-objects '<universe>)))
