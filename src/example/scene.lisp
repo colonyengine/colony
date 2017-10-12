@@ -69,7 +69,7 @@ l;; Normally EOF here.
     ;; First, create the empty game objects so I can have real
     ;; references to them.
     (loop :for name :in obj-names :do
-      (setf (gethash name objs) (make-instance 'gobj)))
+      (setf (gethash name objs) (make-instance 'game-object)))
 
     ;;;; ;;;;;;;;;;;;;;;;;;;
     ;;;; Initializating <universe>
@@ -78,7 +78,7 @@ l;; Normally EOF here.
     (let ((initarg-gobj (gethash '<universe> objs)))
       (add-component (gethash '<universe> objs)
                      (make-instance 'transform
-                                    :gobj initarg-gobj)))
+                                    :game-object initarg-gobj)))
 
     ;; Each gobj os processed one by one in tree order.
     ;; Each gob then has a pile of LET forms around each creation and
@@ -93,7 +93,7 @@ l;; Normally EOF here.
     (let ((initarg-gobj (gethash '<player-ship> objs)))
       (add-component (gethash '<player-ship> objs)
                      (make-instance 'transform
-                                    :gobj initarg-gobj)))
+                                    :game-object initarg-gobj)))
 
     ;;;; ;;;;;;;;;;;;;;;;;;;
     ;;;; Initializaing <turret>
@@ -104,17 +104,17 @@ l;; Normally EOF here.
       (add-component
        (gethash '<turret> objs)
        (make-instance 'transform
-                      :gobj initarg-gobj
+                      :game-object initarg-gobj
                       :translation/current initarg-translation/current)))
 
     ;; add component gun-manager
     (let ((initarg-gobj (gethash '<turrent> objs))
           (initarg-active-gun 0)
           (initarg-guns (vector (gethash '<laser> objs)
-				(gethash '<missle> objs))))
+                                (gethash '<missle> objs))))
       (add-component (gethash '<turret> objs)
                      (make-instance 'gun-manager
-                                    :gobj initarg-gobj
+                                    :game-object initarg-gobj
                                     :active-gun initarg-active-gun
                                     :guns initarg-guns)))
 
@@ -125,14 +125,14 @@ l;; Normally EOF here.
     (let ((initarg-gobj (gethash '<laser> objs)))
       (add-component (gethash '<laser> objs)
                      (make-instance 'transform
-                                    :gobj initarg-obj)))
+                                    :game-object initarg-obj)))
     ;; add component gun
     (let ((initarg-gobj (gethash '<laser> objs))
           (initarg-shots 10)
           (initarg-type :beam))
       (add-component (gethash '<laser> objs)
                      (make-instance 'gun
-                                    :gobj initarg-gobj
+                                    :game-object initarg-gobj
                                     :shots initarg-shots
                                     :type initarg-type)))
     ;;;; ;;;;;;;;;;;;;;;;;;;
@@ -142,14 +142,14 @@ l;; Normally EOF here.
     (let ((initarg-gobj (gethash '<missle> objs)))
       (add-component (gethash '<missle> objs)
                      (make-instance 'transform
-                                    :gobj initarg-obj)))
+                                    :game-object initarg-obj)))
     ;; add component gun
     (let ((initarg-gobj (gethash '<missle> objs))
           (initarg-shots (random-shots 5 5))
           (initarg-type :homing))
       (add-component (gethash '<missle> objs)
                      (make-instance 'gun
-                                    :gobj initarg-gobj
+                                    :game-object initarg-gobj
                                     :shots initarg-gobj
                                     :type initarg-type)))
 
