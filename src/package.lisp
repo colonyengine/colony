@@ -7,6 +7,7 @@
   (:export #:component
            #:components
            #:transform
+           #:tags
            #:game-object))
 
 (defpackage #:gear/example
