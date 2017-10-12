@@ -5,9 +5,8 @@
   ((transform))
   (<turret>
    ((transform :translation/current (vec 1 2 0))
-    (gun-manager
-     :active-gun 0
-     :guns (vector <laser> <missile>)))
+    (gun-manager :active-gun 0
+                 :guns (vector <laser> <missile>)))
    (<laser>
     ((transform)
      (gun :shots 10
