@@ -169,12 +169,12 @@ l;; Normally EOF here.
      (get-component 'transform (gethash '<turret> objs)))
 
     (add-child
-     (get-component 'transform (gethash '<laser> objs))
-     (get-component 'transform (gethash '<turret> objs)))
+     (get-component 'transform (gethash '<turret> objs))
+     (get-component 'transform (gethash '<laser> objs)))
 
     (add-child
-     (get-component 'transform (gethash '<missle> objs))
-     (get-component 'transform (gethash '<turret> objs)))
+     (get-component 'transform (gethash '<turret> objs))
+     (get-component 'transform (gethash '<missle> objs)))
 
     ;; and now return the scene tree as a values with the root noted:
     (values objs '<universe>)))
