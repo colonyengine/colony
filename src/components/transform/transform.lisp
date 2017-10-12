@@ -98,18 +98,14 @@
 (defun interpolate-transforms (alpha)
   (do-nodes (lambda (node) (resolve-model node alpha))))
 
-
-;; NOTE: Each component requires a make-TYPE function for it.
-;; This one probably needs more work. :)
 (defun make-transform (&key
-                         (game-object NIL)
+                         (game-object nil)
                          (translation/current (vec))
                          (translation/incremental (vec))
                          (rotation/current (vec))
                          (rotation/incremental (vec))
                          (scale/current (vec 1 1 1))
                          (scale/incremental (vec)))
-
   (make-instance 'transform
                  :game-object game-object
                  :translation (%make-transform-state
