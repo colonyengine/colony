@@ -66,22 +66,22 @@
 
 ;;; Create default components for <universe>
         (insert-default-components <universe>
-                                   (list (make-transform)))
+                                   (list (make-component 'transform)))
 ;;; Create default components for <player-ship>
         (insert-default-components <player-ship>
-                                   (list (make-transform)))
+                                   (list (make-component 'transform)))
 ;;; Create default components for <turret>
         (insert-default-components <turret>
-                                   (list (make-transform)
-                                         (make-gun-manager)))
+                                   (list (make-component 'transform)
+                                         (make-component 'gun-manager)))
 ;;; Create default components for <laser>
         (insert-default-components <laser>
-                                   (list (make-transform)
-                                         (make-gun)))
+                                   (list (make-component 'transform)
+                                         (make-component 'gun)))
 ;;; Create default components for <missle>
         (insert-default-components <missle>
-                                   (list (make-transform)
-                                         (make-gun)))
+                                   (list (make-component 'transform)
+                                         (make-component 'gun)))
 
 ;;; Then reinitialize all components with user values.
 

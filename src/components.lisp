@@ -4,6 +4,13 @@
   ((%game-object :accessor game-object
                  :initarg :game-object)))
 
+(defgeneric make-component (comp-type &rest args)
+  (:documentation "This method should return an instance of the component
+COMP-TYPE as initialied with the ARGS.")
+  ;; And assume a default maker for all type name that are symbols.
+  (:method ((comp-type symbol) &rest args)
+    (apply #'make-instance comp-type args)))
+
 (defgeneric add-component (gobj component)
   (:documentation "Add COMPONENT into the GAME-OBJECT."))
 

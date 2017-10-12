@@ -5,9 +5,6 @@
         :initarg :hp
         :initform 0)))
 
-(defun make-hit-points (&rest args)
-  (apply #'make-instance 'hit-points args))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass gun-manager (component)
@@ -18,9 +15,6 @@
           :initarg :guns
           :initform (vector))))
 
-(defun make-gun-manager (&rest args)
-  (apply #'make-instance 'gun-manager args))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass gun (component)
@@ -30,6 +24,3 @@
    (%shot-type :accessor shot-type
                :initarg :shot-type
                :initform NIL)))
-
-(defun make-gun (&rest args)
-  (apply #'make-instance 'gun args))

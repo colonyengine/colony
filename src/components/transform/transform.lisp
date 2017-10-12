@@ -98,10 +98,12 @@
 (defun interpolate-transforms (alpha)
   (do-nodes (lambda (node) (resolve-model node alpha))))
 
-
-(defun make-transform (&rest args)
-  (apply #'make-instance 'transform args))
-
+;; Need to reformat arguments to be appropriate, so provide a specific
+;; entry here for this type.
+(defmethod make-component ((comp-type (eql 'transform)) &rest args)
+  (let ((inst (make-instance 'transform)))
+    (apply #'reinitialize-instance inst args)
+    inst))
 
 ;; NOTE: We do this because reinitialize-instance for a transform needs to
 ;; process its argument before actually reinitializing the instance of the

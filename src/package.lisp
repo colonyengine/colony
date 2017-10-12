@@ -6,11 +6,11 @@
         #:gamebox-math)
   (:export #:component
            #:components
+           #:make-component
            #:add-component
            #:get-component
-	   #:add-child
+           #:add-child
            #:transform
-           #:make-transform
            #:tags
            #:game-object))
 
