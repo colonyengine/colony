@@ -38,10 +38,12 @@
 
 ;;; last form (scene dsl) [possible] expansion
 
-  ;; NOTE: Whenever you see initarg-* it means a gensymed form. NOTE: Other ones
-  ;; should be fixed up to be gensymed, but I haven't done that yet.
+  ;; NOTE: Whenever you see initarg-* it means a gensymed form.
 
-  (let ((object-count 5) ; TODO: currently unused...needed?
+  ;; NOTE: Other ones should be fixed up to be gensymed, but I haven't done that
+  ;; yet.
+
+  (let ((object-count 5)                ; TODO: currently unused...needed?
         (objects (make-hash-table))
         (object-names `(<universe> <player-ship> <turret> <laser> <missle>)))
     ;; First, create the empty game objects so I can have real references to
