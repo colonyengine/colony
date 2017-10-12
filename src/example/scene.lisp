@@ -10,11 +10,11 @@
    (<laser>
     ((transform)
      (gun :shots 10
-          :type :beam)))
+          :shot-type :beam)))
    (<missile>
     ((transform)
      (gun :shots (random-shots 5 5)
-          :type :homing))))))
+          :shot-type :homing))))))
 
 ;; Normally EOF here.
 
@@ -95,11 +95,11 @@
 
     (let ((initarg-game-object (gethash '<laser> objects))
           (initarg-shots 10)
-          (initarg-type :beam))
+          (initarg-shot-type :beam))
       (add-component (gethash '<laser> objects)
                      (make-gun :game-object initarg-game-object
                                :shots initarg-shots
-                               :type initarg-type)))
+                               :shot-type initarg-type)))
 
 ;;; Initialize <missle>
 
@@ -109,11 +109,11 @@
 
     (let ((initarg-game-object (gethash '<missle> objects))
           (initarg-shots (random-shots 5 5))
-          (initarg-type :homing))
+          (initarg-shot-type :homing))
       (add-component (gethash '<missle> objects)
                      (make-gun :game-object initarg-game-object
                                :shots initarg-shots
-                               :type initarg-type)))
+                               :shot-type initarg-type)))
 
 
 ;;; Now, we wire together the actual scene tree through the transform
