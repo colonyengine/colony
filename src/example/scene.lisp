@@ -51,16 +51,15 @@
       (dolist (name tmp-object-names)
         (setf (gethash name tmp-objects) (make-instance 'game-object :id name)))
 
-      ;; This symbol-macrolet allows unedited use of the user's
+      ;; This generated let allows unedited use of the user's
       ;; evaluable forms from the DSL.  We actually use the names for
-      ;; the gobjs as supplied by the user as "symbols" in the future
-      ;; forms. I suppose we might be able to use a LET here, but my
-      ;; brain insists upon this for now, and I'm tired. :)
-      (symbol-macrolet ((<universe> (gethash '<universe> tmp-objects))
-                        (<player-ship> (gethash '<player-ship> tmp-objects))
-                        (<turret> (gethash '<turret> tmp-objects))
-                        (<laser> (gethash '<laser> tmp-objects))
-                        (<missle> (gethash '<missle> tmp-objects)))
+      ;; the gobjs as supplied by the user as variables in the which will
+      ;; all be set to the right value in the user's evaluable forms.
+      (let ((<universe> (gethash '<universe> tmp-objects))
+            (<player-ship> (gethash '<player-ship> tmp-objects))
+            (<turret> (gethash '<turret> tmp-objects))
+            (<laser> (gethash '<laser> tmp-objects))
+            (<missle> (gethash '<missle> tmp-objects)))
 
 ;;; Create all default components for all game-object to all future reference
 ;;; to them in the user values in the DSL are valid.
