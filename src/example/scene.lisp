@@ -20,20 +20,12 @@
 
 ;;; Possible expansion
 
-;; Here is a possible expansion of the above scene tree into real CL. Once we
-;; implment the component and gobj stuff, we should just see if this executes in
-;; its raw form, if it works like how we like it, then we write the macro to
-;; generate this.
-;;
-;; In short, I propose we put this progn into a DEFUN called "make-scene-tree"
-;; and see if it works when we call it. :)
-
 ;; NOTE: In order for the macro to generate a call to create a component, it
 ;; will synthesize the name make-TYPE and use that to make that component.
 
 (progn
 
-;;; butlast forms
+;;; all forms except last
 
   (defun random-shots (base extra)
     (+ base (random extra)))
@@ -47,21 +39,14 @@
 
   (let ((objects (make-hash-table))
         (object-names `(<universe> <player-ship> <turret> <laser> <missle>)))
-    ;; First, create the empty game objects so I can have real references to
-    ;; them.
-    (loop :for name :in object-names
-          :do (setf (gethash name objects) (make-instance 'game-object)))
+    (dolist (name object-names)
+      (setf (gethash name objects) (make-instance 'game-object)))
 
 ;;; Initialize <universe>
 
     (let ((initarg-game-object (gethash '<universe> objects)))
       (add-component (gethash '<universe> objects)
                      (make-transform :game-object initarg-game-object)))
-
-    ;; Each game-object is processed one by one in tree order. Each then has a
-    ;; pile of LET forms around each creation and insertion of the component.
-    ;; The LET form binds the values of the initarg plist and then assigns them
-    ;; to the initarg.
 
 ;;; Initialize <player-ship>
 
@@ -116,9 +101,7 @@
                                :shot-type initarg-shot-type)))
 
 
-;;; Now, we wire together the actual scene tree through the transform
-;;; components. The transform component has the interface to and keeps the scene
-;;; tree.
+;;; Create the scene tree
 
     (add-child
      (get-component 'transform (gethash '<universe> objects))
