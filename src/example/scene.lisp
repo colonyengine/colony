@@ -42,8 +42,7 @@
   ;; NOTE: Other ones should be fixed up to be gensymed, but I haven't done that
   ;; yet.
 
-  (let ((object-count 5)                ; TODO: currently unused...needed?
-        (objects (make-hash-table))
+  (let ((objects (make-hash-table))
         (object-names `(<universe> <player-ship> <turret> <laser> <missle>)))
     ;; First, create the empty game objects so I can have real references to
     ;; them.
