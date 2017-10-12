@@ -110,8 +110,8 @@ l;; Normally EOF here.
     ;; add component gun-manager
     (let ((initarg-gobj (gethash '<turrent> objs))
           (initarg-active-gun 0)
-          (initarg-guns (list (gethash '<laser> objs)
-                              (gethash '<missle> objs))))
+          (initarg-guns (vector (gethash '<laser> objs)
+				(gethash '<missle> objs))))
       (add-component (gethash '<turret> objs)
                      (make-instance 'gun-manager
                                     :gobj initarg-gobj
