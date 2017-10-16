@@ -112,24 +112,27 @@
 (defun reinitialize-transform-instance (instance
                                         &key
                                           (game-object nil p/0)
-                                          (translation/current (vec) p/1)
-                                          (translation/incremental (vec) p/2)
-                                          (rotation/current (vec) p/3)
-                                          (rotation/incremental (vec) p/4)
-                                          (scale/current (vec 1 1 1) p/5)
-                                          (scale/incremental (vec) p/6))
+                                          (state :initialize p/1)
+                                          (translation/current (vec) p/2)
+                                          (translation/incremental (vec) p/3)
+                                          (rotation/current (vec) p/4)
+                                          (rotation/incremental (vec) p/5)
+                                          (scale/current (vec 1 1 1) p/6)
+                                          (scale/incremental (vec) p/7))
 
   (when p/0
     (setf (game-object instance) game-object))
   (when p/1
-    (setf (current (translation instance)) translation/current))
+    (setf (state instance) state))
   (when p/2
-    (setf (incremental (translation instance)) translation/incremental))
+    (setf (current (translation instance)) translation/current))
   (when p/3
-    (setf (current (rotation instance)) rotation/current))
+    (setf (incremental (translation instance)) translation/incremental))
   (when p/4
-    (setf (incremental (rotation instance)) rotation/incremental))
+    (setf (current (rotation instance)) rotation/current))
   (when p/5
-    (setf (current (scale instance)) scale/current))
+    (setf (incremental (rotation instance)) rotation/incremental))
   (when p/6
+    (setf (current (scale instance)) scale/current))
+  (when p/7
     (setf (incremental (scale instance)) scale/incremental)))

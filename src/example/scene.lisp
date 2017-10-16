@@ -29,7 +29,9 @@
 
   (let ((objects (make-hash-table)))
     (dolist (name '(<universe> <player-ship> <turret> <laser> <missile>))
-      (setf (gethash name objects) (make-instance 'game-object :id name)))
+      (setf (gethash name objects) (make-instance 'game-object
+						  :id name
+						  :state :initialize)))
 
     (let ((<universe> (gethash '<universe> objects))
           (<player-ship> (gethash '<player-ship> objects))
@@ -39,27 +41,27 @@
 
       (add-multiple-components
        <universe>
-       (list (make-component 'transform)))
+       (list (make-component 'transform :state :initialize)))
 
       (add-multiple-components
        <player-ship>
-       (list (make-component 'transform)
-             (make-component 'hit-points)))
+       (list (make-component 'transform :state :initialize)
+             (make-component 'hit-points :state :initialize)))
 
       (add-multiple-components
        <turret>
-       (list (make-component 'transform)
-             (make-component 'gun-manager)))
+       (list (make-component 'transform :state :initialize)
+             (make-component 'gun-manager :state :initialize)))
 
       (add-multiple-components
        <laser>
-       (list (make-component 'transform)
-             (make-component 'gun)))
+       (list (make-component 'transform :state :initialize)
+             (make-component 'gun :state :initialize)))
 
       (add-multiple-components
        <missile>
-       (list (make-component 'transform)
-             (make-component 'gun)))
+       (list (make-component 'transform :state :initialize)
+             (make-component 'gun :state :initialize)))
 
       (reinitialize-instance
        (get-component 'transform <universe>)
