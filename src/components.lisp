@@ -6,9 +6,9 @@
    (%game-object :accessor game-object
                  :initarg :game-object)))
 
-(defgeneric make-component (component-type &rest args)
-  (:method ((component-type symbol) &rest args)
-    (apply #'make-instance component-type args)))
+(defgeneric make-component (component-type &rest initargs)
+  (:method ((component-type symbol) &rest initargs)
+    (apply #'make-instance component-type initargs)))
 
 (defgeneric add-component (game-object component)
   (:method ((game-object game-object) (component component))
@@ -22,8 +22,7 @@ the GAME-OBJECT.  If there are multiple components of this type, it is
 unknown which one will be returned first. Usually, there is only one
 component of any given COMPONENT-TYPE in a GAME-OBJECT.")
   (:method ((component-type symbol) (game-object game-object))
-    (car (gethash component-type
-                  (components-by-type game-object)))))
+    (first (gethash component-type (components-by-type game-object)))))
 
 (defgeneric get-components (component-type game-object)
   (:documentation "Return a list of the components with this COMPONENT-TYPE in

@@ -98,16 +98,16 @@
 (defun interpolate-transforms (alpha)
   (do-nodes (lambda (node) (resolve-model node alpha))))
 
-(defmethod make-component ((type (eql 'transform)) &rest args)
+(defmethod make-component ((type (eql 'transform)) &rest initargs)
   (let ((instance (make-instance 'transform)))
-    (apply #'reinitialize-instance instance args)
+    (apply #'reinitialize-instance instance initargs)
     instance))
 
 ;; NOTE: We do this because reinitialize-instance for a transform needs to
 ;; process its argument before actually reinitializing the instance of the
 ;; transform with the new data.
-(defmethod reinitialize-instance ((instance transform) &rest args)
-  (apply #'reinitialize-transform-instance instance args))
+(defmethod reinitialize-instance ((instance transform) &rest initargs)
+  (apply #'reinitialize-transform-instance instance initargs))
 
 (defun reinitialize-transform-instance (instance
                                         &key
