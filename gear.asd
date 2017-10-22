@@ -19,6 +19,7 @@
   ((:file "package")
    (:file "game-object")
    (:file "components")
+   (:file "core-state")
    (:file "scene")
    (:module "components/transform"
     :components
