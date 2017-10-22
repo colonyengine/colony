@@ -22,4 +22,4 @@
 
 (defmethod print-object ((object actor) stream)
   (print-unreadable-object (object stream :type t)
-    (format stream "~a[~(~s~)]" (id object) (state object))))
+    (format stream "~a" (id object))))
