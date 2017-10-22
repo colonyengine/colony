@@ -1,7 +1,10 @@
 (defun random-shots (base extra)
   (+ base (random extra)))
 
-((@player-ship
+((@camera
+  ((transform)))
+
+ (@player-ship
   ((transform)
    (hit-points :hp 100))
   (@turret
@@ -12,7 +15,7 @@
    (@laser
     ((transform)
      (gun :shot-count 10
-          :shot-type :beam)))a
+          :shot-type :beam)))
    (@missile
     ((transform)
      (gun :shot-count (random-shots 5 5)
@@ -35,13 +38,16 @@
     (lambda (core-state)
 
       (let ((actors (make-hash-table)))
-        (dolist (name '(@universe @player-ship @turret @laser @missile))
+        (dolist (name '(@universe @camera @player-ship @turret @laser
+                        @missile))
           (setf (gethash name actors) (make-instance 'actor
                                                      :id name
                                                      :state :initialize)))
 
         (let ((@universe (gethash '@universe actors))
               (@universe-initializing-components ())
+              (@camera (gethash '@camera actors))
+              (@camera-initializing-components ())
               (@player-ship (gethash '@player-ship actors))
               (@player-ship-initializing-components ())
               (@turret (gethash '@turret actors))
@@ -53,6 +59,10 @@
 
           (add-multiple-components
            @universe
+           (list (make-component 'transform :state :initialize)))
+
+          (add-multiple-components
+           @camera
            (list (make-component 'transform :state :initialize)))
 
           (add-multiple-components
@@ -80,6 +90,12 @@
                    (get-component 'transform @universe)
                    :actor @universe))
                 @universe-initializing-components)
+
+          (push (lambda ()
+                  (reinitialize-instance
+                   (get-component 'transform @camera)
+                   :actor @camera))
+                @camera-initializing-components)
 
           (push (lambda ()
                   (reinitialize-instance
@@ -143,6 +159,10 @@
            (get-component 'transform @player-ship))
 
           (add-child
+           (get-component 'transform @universe)
+           (get-component 'transform @camera))
+
+          (add-child
            (get-component 'transform @player-ship)
            (get-component 'transform @turret))
 
@@ -156,6 +176,9 @@
 
           (add-initializing-actor core-state @universe
                                   @universe-initializing-components)
+
+          (add-initializing-actor core-state @camera
+                                  @camera-initializing-components)
 
           (add-initializing-actor core-state @player-ship
                                   @player-ship-initializing-components)
