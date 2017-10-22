@@ -16,3 +16,17 @@
    (%scene-tree :accessor scene-tree
                 :initarg :scene-tree
                 :initform NIL)))
+
+(defun make-core-state (&rest initargs)
+  (apply #'make-instance 'core-state initargs))
+
+
+(defun add-initializing-actor (core-state actor initializer-thunk-list)
+
+  ;; Store initaizing actor
+  (setf (gethash actor (actor-initialize-db core-state)) actor)
+
+  ;; Store all associated components for actor.
+  (maphash (lambda (k v)
+             (setf (gethash k (component-initialize-view core-state)) v))
+           (components actor)))
