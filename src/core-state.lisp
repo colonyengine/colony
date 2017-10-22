@@ -4,9 +4,9 @@
   ((%actor-initialize-db :accessor actor-initialize-db
                          :initarg :actor-initialize-db
                          :initform (make-hash-table))
-   (%actor-initialize-thunks-view :accessor actor-initialize-thunks-view
-                                  :initarg :actor-initialize-thunks-view
-                                  :initform (make-hash-table))
+   (%actor-initialize-thunks-db :accessor actor-initialize-thunks-db
+                                :initarg :actor-initialize-thunks-db
+                                :initform (make-hash-table))
    (%actor-active-db :accessor actor-active-db
                      :initarg :actor-active-db
                      :initform (make-hash-table))
@@ -33,7 +33,7 @@
    actor
 
    ;; store the thunk that inits all components in this actor.
-   (gethash actor (actor-initialize-thunks-view core-state))
+   (gethash actor (actor-initialize-thunks-db core-state))
    initializer-thunk-list)
 
   ;; Store all associated components for actor in initing view.
