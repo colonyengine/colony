@@ -1,7 +1,9 @@
 (defun random-shots (base extra)
   (+ base (random extra)))
 
-((@player-ship
+((@camera
+  ((transform)))
+ (@player-ship
   ((transform)
    (hit-points :hp 100))
   (@turret
@@ -34,12 +36,13 @@
     (declare (ignorable core-state))
 
     (let ((actors (make-hash-table)))
-      (dolist (name '(@universe @player-ship @turret @laser @missile))
+      (dolist (name '(@universe @camera @player-ship @turret @laser @missile))
         (setf (gethash name actors) (make-instance 'actor
                                                    :id name
                                                    :state :initialize)))
 
       (let ((@universe (gethash '@universe actors))
+            (@camera (gethash '@camera actors))
             (@player-ship (gethash '@player-ship actors))
             (@turret (gethash '@turret actors))
             (@laser (gethash '@laser actors))
@@ -47,6 +50,10 @@
 
         (add-multiple-components
          @universe
+         (list (make-component 'transform :state :initialize)))
+
+        (add-multiple-components
+         @camera
          (list (make-component 'transform :state :initialize)))
 
         (add-multiple-components
@@ -72,6 +79,10 @@
         (reinitialize-instance
          (get-component 'transform @universe)
          :actor @universe)
+
+        (reinitialize-instance
+         (get-component 'transform @camera)
+         :actor @camera)
 
         (reinitialize-instance
          (get-component 'transform @player-ship)
@@ -117,6 +128,10 @@
         (add-child
          (get-component 'transform @universe)
          (get-component 'transform @player-ship))
+
+        (add-child
+         (get-component 'transform @universe)
+         (get-component 'transform @camera))
 
         (add-child
          (get-component 'transform @player-ship)

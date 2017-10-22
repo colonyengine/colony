@@ -19,8 +19,8 @@
                            (components-by-type actor))))
 
 (defun get-components (component-type actor)
-  "Return a list of the components with this COMPONENT-TYPE in
-the ACTOR. Do not modify the structure of the returned list."
+  "Return a list of the components with this COMPONENT-TYPE in the ACTOR. Do not
+modify the structure of the returned list."
   (gethash component-type (components-by-type actor)))
 
 (defun get-component (component-type actor)
