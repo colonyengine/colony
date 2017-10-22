@@ -18,14 +18,13 @@
                 :initform NIL)))
 
 (defun make-core-state (&rest initargs)
-  (make-instance 'core-state initargs))
+  (apply #'make-instance 'core-state initargs))
 
 
-(defun add-initializing-actor (core-state actor
-                               initializer-thunk-list)
+(defun add-initializing-actor (core-state actor initializer-thunk-list)
 
   ;; Store initaizing actor
-  (setf (gethash actor (game-object-initialize-db core-state)) actor)
+  (setf (gethash actor (actor-initialize-db core-state)) actor)
 
   ;; Store all associated components for actor.
   (maphash (lambda (k v)
