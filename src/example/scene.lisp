@@ -12,7 +12,7 @@
    (@laser
     ((transform)
      (gun :shot-count 10
-          :shot-type :beam)))
+          :shot-type :beam)))a
    (@missile
     ((transform)
      (gun :shot-count (random-shots 5 5)
