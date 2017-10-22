@@ -1,7 +1,13 @@
 (in-package :gear)
 
-(defclass transformable ()
-  ((%translation :accessor translation
+(defclass transform (component)
+  ((%parent :accessor parent
+            :initarg :parent
+            :initform nil)
+   (%children :accessor children
+              :initarg :children
+              :initform nil)
+   (%translation :accessor translation
                  :initarg :translation
                  :initform (%make-transform-state 'transform-state-vector))
    (%rotation :accessor rotation
@@ -17,14 +23,6 @@
    (%model :accessor model
            :initarg :model
            :initform (mid))))
-
-(defclass transform (component transformable)
-  ((%parent :accessor parent
-            :initarg :parent
-            :initform nil)
-   (%children :accessor children
-              :initarg :children
-              :initform nil)))
 
 (defgeneric add-child (parent child)
   (:method ((parent transform) (child transform))
@@ -65,7 +63,7 @@
 ;; TODO: change to reflect engine idea spec'd out by psilord
 (defgeneric transform-node (node)
   (:method (node))
-  (:method ((node transformable))
+  (:method ((node transform))
     (scale-node node)
     (rotate-node node)
     (translate-node node)))
@@ -111,7 +109,7 @@
 
 (defun reinitialize-transform-instance (instance
                                         &key
-                                          (game-object nil p/0)
+                                          (actor nil p/0)
                                           (state :initialize p/1)
                                           (translation/current (vec) p/2)
                                           (translation/incremental (vec) p/3)
@@ -121,7 +119,7 @@
                                           (scale/incremental (vec) p/7))
 
   (when p/0
-    (setf (game-object instance) game-object))
+    (setf (actor instance) actor))
   (when p/1
     (setf (state instance) state))
   (when p/2
