@@ -5,8 +5,12 @@
         #:alexandria
         #:gamebox-math)
   (:export
+   ;; utilities
+   #:path
+
    ;; actor
    #:actor
+
    ;; components
    #:component
    #:components
@@ -14,6 +18,9 @@
    #:add-component
    #:add-multiple-components
    #:get-component
+
+   ;; scene dsl
+   #:read-scene-file
 
    ;; transform component
    #:transform

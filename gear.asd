@@ -17,6 +17,7 @@
   :serial t
   :components
   ((:file "package")
+   (:file "utils")
    (:file "actor")
    (:file "components")
    (:file "core-state")
@@ -30,4 +31,5 @@
     ((:file "tags")))
    (:module "example"
     :components
-    ((:file "components")))))
+    ((:file "components")
+     (:file "test-scene")))))
