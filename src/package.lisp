@@ -13,7 +13,7 @@
            #:add-child
            #:transform
            #:tags
-           #:game-object))
+           #:actor))
 
 (defpackage #:gear/example
   (:use #:cl

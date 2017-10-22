@@ -111,7 +111,7 @@
 
 (defun reinitialize-transform-instance (instance
                                         &key
-                                          (game-object nil p/0)
+                                          (actor nil p/0)
                                           (state :initialize p/1)
                                           (translation/current (vec) p/2)
                                           (translation/incremental (vec) p/3)
@@ -121,7 +121,7 @@
                                           (scale/incremental (vec) p/7))
 
   (when p/0
-    (setf (game-object instance) game-object))
+    (setf (actor instance) actor))
   (when p/1
     (setf (state instance) state))
   (when p/2

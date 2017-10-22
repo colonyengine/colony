@@ -3,33 +3,33 @@
 (defclass component ()
   ((%state :accessor state
            :initarg :state)
-   (%game-object :accessor game-object
-                 :initarg :game-object)))
+   (%actor :accessor actor
+           :initarg :actor)))
 
 (defgeneric make-component (component-type &rest initargs)
   (:method ((component-type symbol) &rest initargs)
     (apply #'make-instance component-type initargs)))
 
-(defgeneric add-component (game-object component)
-  (:method ((game-object game-object) (component component))
-    (setf (gethash component (components game-object)) component)
+(defgeneric add-component (actor component)
+  (:method ((actor actor) (component component))
+    (setf (gethash component (components actor)) component)
     (push component (gethash (class-name (class-of component))
-                             (components-by-type game-object)))))
+                             (components-by-type actor)))))
 
-(defgeneric get-components (component-type game-object)
+(defgeneric get-components (component-type actor)
   (:documentation "Return a list of the components with this COMPONENT-TYPE in
-the GAME-OBJECT. Do not modify the structure of the returned list.")
-  (:method ((component-type symbol) (game-object game-object))
-    (gethash component-type (components-by-type game-object))))
+the ACTOR. Do not modify the structure of the returned list.")
+  (:method ((component-type symbol) (actor actor))
+    (gethash component-type (components-by-type actor))))
 
-(defgeneric get-component (component-type game-object)
-  (:documentation "Return the _first found_ component of COMPONENT-TYPE in
-the GAME-OBJECT.  If there are multiple components of this type, it is
-unknown which one will be returned first. Usually, there is only one
-component of any given COMPONENT-TYPE in a GAME-OBJECT.")
-  (:method ((component-type symbol) (game-object game-object))
-    (first (get-components component-type game-object))))
+(defgeneric get-component (component-type actor)
+  (:documentation "Return the _first found_ component of COMPONENT-TYPE in the
+ACTOR. If there are multiple components of this type, it is unknown which one
+will be returned first. Usually, there is only one component of any given
+COMPONENT-TYPE in an ACTOR.")
+  (:method ((component-type symbol) (actor actor))
+    (first (get-components component-type actor))))
 
-(defun add-multiple-components (game-object components)
+(defun add-multiple-components (actor components)
   (dolist (component components)
-    (add-component game-object component)))
+    (add-component actor component)))
