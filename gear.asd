@@ -21,6 +21,7 @@
    (:file "actor")
    (:file "components")
    (:file "core-state")
+   (:file "call-flow")
    (:file "scene")
    (:module "components/transform"
     :components
