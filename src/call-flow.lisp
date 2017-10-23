@@ -47,6 +47,9 @@
                 bind-syms
                 bind-vals))))
 
+(defun ensure-matched-symbol (sym name)
+  (assert (string= (symbol-name sym) (string-upcase name))))
+
 ;; parse a single flow-state dsl form and return a form which creates
 ;; the flow-state CLOS instance for it.
 (defun parse-flow-state (form)
@@ -59,7 +62,8 @@
         (transition (seventh form)))
     (multiple-value-bind (bind-syms bind-vals)
         (binding-partition bindings)
-      (assert (string= (symbol-name match) "FLOW-STATE"))
+
+      (ensure-matched-symbol match "flow-state")
 
       (let ((reset-function (gen-reset-function bind-syms bind-vals)))
         ;; Generate the instance maker for this flow-state.
@@ -85,7 +89,9 @@
          (processed-flow-state-forms
            (loop :for flow-state :in flow-states
                  :collect (parse-flow-state flow-state))))
-    (assert (string= (symbol-name match) "FLOW"))
+
+    (ensure-matched-symbol match "flow")
+
     `(',flow-name
       (let ((,flow-ht (make-hash-table)))
         ,@(loop :for (n f) :in processed-flow-state-forms
@@ -102,7 +108,9 @@
          (flows (cddr form))
          (processed-flow-forms (loop :for flow :in flows
                                      :collect (parse-flow flow))))
-    (assert (string= (symbol-name match) "CALL-FLOW"))
+
+    (ensure-matched-symbol match "call-flow")
+
     `(',call-flow-name
       (let ((,call-flow-ht (make-hash-table)))
         ,@(loop :for (n f) :in processed-flow-forms
