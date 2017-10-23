@@ -1,5 +1,26 @@
 (in-package :gear)
 
+
+;; THIS IS DEBUGGING.
+(defparameter dsl '((@camera
+                     ((transform)))
+                    (@player-ship
+                     ((transform)
+                      (hit-points :hp 100))
+                     (@turret
+                      ((transform :translation/current (vec 1 2 0))
+                       (gun-manager :active-gun 0
+                                    :guns (vector (get-component 'gun @laser)
+                                           (get-component 'gun @missile))))
+                      (@laser
+                       ((transform)
+                        (gun :shot-count 10
+                             :shot-type :beam)))
+                      (@missile
+                       ((transform)
+                        (gun :shot-count (random-shots 5 5)
+                             :shot-type :homing)))))))
+
 (defun read-spec-forms (file)
   ;; Loop over every top-level form of FILE, until we reach EOF, collecting each
   ;; into a list.
@@ -12,6 +33,7 @@
 (defun parse-scene-form (scene-spec)
   (destructuring-bind (actor components . children) (car scene-spec)
     (list actor components children)))
+
 
 (defun collect-actor-symbols (scene-spec)
   (remove-duplicates (append
@@ -43,13 +65,46 @@
             (symbolicate an "-INITIALIZE-COMPONENTS-" (gensym "LIST")))
           actor-names))
 
+;; generate the bindings needed for the big let.
+(defun gen-actor-symbol-let-bindings (actor-names actor-thunk-names ht-name)
+  (mapcan (lambda (actor-name actor-thunk-name)
+            `((,actor-name (gethash ',actor-name ,ht-name))
+              (,actor-thunk-name ())))
+          actor-names
+          actor-thunk-names))
+
 ;; Collect the data and produce the form.
 (defun parse-scene (dsl)
-  (let* ((actor-names (collect-actor-symbols form))
+  (let* ((actor-names (collect-actor-symbols dsl))
          (actor-name-thunk-vars (gen-actor-symbol-thunk-vars actor-names))
          (actor-component-info (collect-actor-component-info dsl))
-         )
-    nil))
+         (actors-ht-var (gensym))
+         (bindings
+           (gen-actor-symbol-let-bindings
+            actor-names actor-name-thunk-vars actors-ht-var))
+         (core-state-var (gensym))
+         (name-var (gensym)))
+
+    `(lambda (,core-state-var)
+       (let ((,actors-ht-var (make-hash-table)))
+         (dolist (,name-var ',actor-names)
+           (setf (gethash ,name-var ,actors-ht-var)
+                 (make-instance 'gear::actor :id ,name-var :state :initialize)))
+         (let ,bindings
+
+           ;; grovel the actor-component-info to produce the next
+           ;; set of add-multiple-components-form.
+
+           ;; then grovel actor-component-info to produce the
+           ;; reinitialize push forms.
+
+           ;; then the nexxt stuff may have to have another collect function
+           ;; written ofver the DSL to record the parent/child relationships.
+
+           ;; then grovel over the actor-component-info to produce the
+           ;; add-initializing-actor forms.
+
+           :todo)))))
 
 
 (defmacro read-scene-file (file)
