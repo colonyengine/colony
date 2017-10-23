@@ -6,6 +6,14 @@
    (%actor :accessor actor
            :initarg :actor)))
 
+(defmacro define-component (name super-classes &body slots)
+  `(defclass ,(intern (symbol-name name) :gear) (component ,@super-classes)
+     ,(loop :for (slot value) :in slots
+            :collect `(,(intern (format nil "%~a" slot) :gear)
+                       :accessor ,(intern (symbol-name slot) :gear)
+                       :initarg ,(make-keyword slot)
+                       :initform ,value))))
+
 (defun component-type (component)
   (class-name (class-of component)))
 

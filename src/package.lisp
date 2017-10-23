@@ -12,6 +12,7 @@
    #:actor
 
    ;; components
+   #:define-component
    #:component
    #:components
    #:make-component
@@ -34,8 +35,3 @@
    #:make-core-state
    #:add-scene-tree-root
    #:add-initializing-actor))
-
-(defpackage #:gear/example
-  (:use #:cl
-        #:gamebox-math
-        #:gear))

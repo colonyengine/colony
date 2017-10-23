@@ -144,4 +144,4 @@
     (list ht root core-state)))
 
 (defun test-scene-macro ()
-  (read-scene-file (path :gear "src/example/demo.scene")))
+  (read-scene-file (path :gear "example/demo.scene")))

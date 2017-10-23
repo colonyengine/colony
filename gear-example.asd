@@ -1,5 +1,5 @@
-(asdf:defsystem #:gear
-  :description "An experimental game engine."
+(asdf:defsystem #:gear-example
+  :description "Example scene for gear."
   :author ("Michael Fiano <michael.fiano@gmail.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
   :maintainer ("Michael Fiano <michael.fiano@gmail.com>"
@@ -13,20 +13,19 @@
   :long-description #.(uiop:read-file-string
                        (uiop/pathname:subpathname *load-pathname* "README.md"))
   :depends-on (#:alexandria
-               #:gamebox-math)
-  :pathname "src"
+               #:gamebox-math
+               #:gear)
+  :pathname "example"
   :serial t
   :components
   ((:file "package")
-   (:file "utils")
-   (:file "actor")
-   (:file "components")
-   (:file "core-state")
-   (:file "scene")
-   (:module "components/transform"
+   (:file "test-scene")
+   (:module "components/gun"
     :components
-    ((:file "state")
-     (:file "transform")))
-   (:module "components/tags"
+    ((:file "gun")))
+   (:module "components/gun-manager"
     :components
-    ((:file "tags")))))
+    ((:file "gun-manager")))
+   (:module "components/hit-points"
+    :components
+    ((:file "hit-points")))))

@@ -3,13 +3,23 @@
 (defun read-spec-forms (file)
   ;; Loop over every top-level form of FILE, until we reach EOF, collecting each
   ;; into a list.
-  (with-open-file (in file)
-    (loop :for form = (read in nil in)
-          :until (eq form in)
-          :collect form)))
+  (let ((*package* (find-package :gear)))
+    (with-open-file (in file)
+      (loop :for form = (read in nil in)
+            :until (eq form in)
+            :collect form))))
 
-(defun parse-scene-form (scene)
-  scene)
+(defun parse-scene-form (scene-spec)
+  (destructuring-bind (actor components . children) (car scene-spec)
+    (list actor components children)))
+
+(defun collect-actor-symbols (scene-spec)
+  (append
+   '(@universe)
+   (remove-if
+    (lambda (x) (or (not (symbolp x))
+               (not (eq (char (symbol-name x) 0) #\@))))
+    (flatten scene-spec))))
 
 (defmacro read-scene-file (file)
   `(let ((spec (read-spec-forms ,file)))
@@ -28,4 +38,11 @@
           ;; evaluated.
           ,@forms
           ;; Expand the scene form into our intended code.
-          ,(parse-scene-form scene)))))
+          ,(lambda (core-state)
+             (declare (ignore core-state))
+             (let ((actors (make-hash-table)))
+               (dolist (name (collect-actor-symbols scene))
+                 (setf (gethash name actors)
+                       (make-instance 'gear:actor :id name :state :initialize)))
+               ;; TODO: finish expansion
+               ))))))

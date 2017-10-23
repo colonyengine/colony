@@ -1,28 +1,14 @@
 (in-package :gear)
 
-(defclass transform (component)
-  ((%parent :accessor parent
-            :initarg :parent
-            :initform nil)
-   (%children :accessor children
-              :initarg :children
-              :initform nil)
-   (%translation :accessor translation
-                 :initarg :translation
-                 :initform (%make-transform-state 'transform-state-vector))
-   (%rotation :accessor rotation
-              :initarg :rotation
-              :initform (%make-transform-state 'transform-state-quaternion
-                                               :incremental (vec)))
-   (%scale :accessor scale
-           :initarg :scale
-           :initform (%make-transform-state 'transform-state-vector))
-   (%local :accessor local
-           :initarg :local
-           :initform (mid))
-   (%model :accessor model
-           :initarg :model
-           :initform (mid))))
+(define-component transform ()
+  (parent nil)
+  (children nil)
+  (translation (%make-transform-state 'transform-state-vector))
+  (rotation (%make-transform-state 'transform-state-quaternion
+                                   :incremental (vec)))
+  (scale (%make-transform-state 'transform-state-vector))
+  (local (mid))
+  (model (mid)))
 
 (defgeneric add-child (parent child)
   (:method ((parent transform) (child transform))
