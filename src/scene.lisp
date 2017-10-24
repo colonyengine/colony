@@ -113,13 +113,6 @@
                (add-scene-tree-root ,core-state @universe)
                (values ,core-state ,actor-table))))))))
 
-(defmacro read-scene-spec (file)
-  `(let ((spec (%read-spec-forms ,file)))
-     (destructuring-bind (scene . forms) (rotate spec 1)
-       `(progn
-          ,@forms
-          ,(parse-scene scene)))))
-
 (defmacro scene-definition (name &body body)
   `(setf (gethash ,name *scene-table*)
          ,(apply #'parse-scene body)))
