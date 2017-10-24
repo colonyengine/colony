@@ -34,4 +34,4 @@
    #:core-state
    #:make-core-state
    #:add-scene-tree-root
-   #:spawn-actor))
+   #:realize-actor))

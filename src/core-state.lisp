@@ -26,7 +26,7 @@
 (defun add-scene-tree-root (core-state actor)
   (setf (scene-tree core-state) actor))
 
-(defun spawn-actor (core-state actor initializer-thunk-list)
+(defun realize-actor (core-state actor initializer-thunk-list)
   (setf
    ;; Store initializing actor
    (gethash actor (actor-initialize-db core-state))

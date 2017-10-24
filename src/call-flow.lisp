@@ -148,7 +148,7 @@
                               ;; This function is run for every instance
                               (lambda (inst &rest args)
                                 ;; a core function, not exposed to users.
-                                (apply #'spawn-actor inst args))
+                                (apply #'realize-actor inst args))
 
                               ;; After all instances have been
                               ;; processed, this function is run once
@@ -271,7 +271,7 @@
                               NIL))
 
             (flow frame-flow
-                  ;; First spawn any actors (which may or may not be empty
+                  ;; First realize any actors (which may or may not be empty
                   ;; of components, but were created LAST frame and put into a
                   ;; staging area.
                   (flow-state ENTRY :reset ()

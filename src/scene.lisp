@@ -1,5 +1,7 @@
 (in-package :gear)
 
+(defvar *scene-table* (make-hash-table))
+
 (defun %read-spec-forms (file)
   (let ((*package* (find-package :gear)))
     (with-open-file (in file)
@@ -65,7 +67,7 @@
                                     ,@initargs))
                                  ,thunk))))
 
-(defun %generate-actor-children (scene-spec)
+(defun %generate-relationships (scene-spec)
   (labels ((traverse (tree &optional parent)
              (destructuring-bind (child components . sub-tree) tree
                (declare (ignore components))
@@ -76,31 +78,25 @@
                       (apply #'append
                              (mapcar (lambda (x) (traverse x child)) sub-tree)))
                      result)))))
-    (apply #'append (mapcar #'traverse scene-spec))))
+    (loop :with children = (apply #'append (mapcar #'traverse scene-spec))
+          :for (parent . child) :in children
+          :collect `(add-child
+                     (get-component 'transform ,parent)
+                     (get-component 'transform ,child)))))
 
-(defun %generate-transform-hierarchy (actor-children)
-  (loop :for (parent . child) :in actor-children
-        :collect `(add-child
-                   (get-component 'transform ,parent)
-                   (get-component 'transform ,child))))
-
-(defun %generate-actor-spawns (core-state actor-names thunk-names)
+(defun %generate-actor-realization (core-state actor-names thunk-names)
   (loop :for actor :in actor-names
         :for thunk :in thunk-names
-        :collect `(spawn-actor ,core-state ,actor ,thunk)))
+        :collect `(realize-actor ,core-state ,actor ,thunk)))
 
 (defun parse-scene (scene-spec)
   (with-gensyms (core-state actor-table actor-name)
-    (let* (;; augment the scene with @universe for now.
-           (scene-spec `((@universe ((transform)) ,@scene-spec)))
+    (let* ((scene-spec `((@universe ((transform)) ,@scene-spec)))
            (actor-names (%generate-actor-names scene-spec))
-           (actor-children (%generate-actor-children scene-spec))
            (actor-components (%generate-actor-components-table scene-spec))
            (thunk-list-symbols (%generate-thunk-list-symbols actor-names))
            (bindings (%generate-actor-bindings
-                      actor-names
-                      thunk-list-symbols
-                      actor-table)))
+                      actor-names thunk-list-symbols actor-table)))
       `(progn
          (lambda (,core-state)
            (let ((,actor-table (make-hash-table)))
@@ -109,10 +105,29 @@
                      (make-instance 'gear:actor :id ,actor-name)))
              (let ,bindings
                ,@(%generate-component-initializers actor-components)
-               ,@(%generate-component-thunks actor-names
-                                             thunk-list-symbols
-                                             actor-components)
-               ,@(%generate-transform-hierarchy actor-children)
-               ,@(%generate-actor-spawns core-state actor-names thunk-list-symbols)
+               ,@(%generate-component-thunks
+                  actor-names thunk-list-symbols actor-components)
+               ,@(%generate-relationships scene-spec)
+               ,@(%generate-actor-realization
+                  core-state actor-names thunk-list-symbols)
                (add-scene-tree-root ,core-state @universe)
-               (values ,core-state @universe ,actor-table))))))))
+               (values ,core-state ,actor-table))))))))
+
+(defmacro read-scene-spec (file)
+  `(let ((spec (%read-spec-forms ,file)))
+     (destructuring-bind (scene . forms) (rotate spec 1)
+       (funcall
+        (eval
+         `(progn
+            ,@forms
+            ,(parse-scene scene)))
+        (make-core-state)))))
+
+
+(defmacro scene-definition (name &body body)
+  `(progn
+     (setf (gethash ,name *scene-table*)
+           (eval (parse-scene ',@body)))))
+
+(defun get-scene (name)
+  (gethash name *scene-table*))
