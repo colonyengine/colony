@@ -20,9 +20,6 @@
    #:add-multiple-components
    #:get-component
 
-   ;; scene dsl
-   #:read-scene-file
-
    ;; transform component
    #:transform
    #:add-child
@@ -31,7 +28,5 @@
    #:tags
 
    ;; core-state
-   #:core-state
    #:make-core-state
-   #:add-scene-tree-root
    #:realize-actor))
