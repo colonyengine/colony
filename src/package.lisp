@@ -5,8 +5,9 @@
         #:alexandria
         #:gamebox-math)
   (:export
+
    ;; utilities
-   #:path
+   #:get-path
 
    ;; actor
    #:actor

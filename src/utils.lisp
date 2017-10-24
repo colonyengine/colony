@@ -1,6 +1,6 @@
 (in-package :gear)
 
-(defun path (system &optional path)
+(defun get-path (system &optional path)
   "Get the absolute path of a resource relative to the system designated by
 SYSTEM. This is needed to accurated refer to resources, such as a scene
 definition file, when the path to the system may be different than what it was
