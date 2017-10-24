@@ -121,9 +121,8 @@
           ,(parse-scene scene)))))
 
 (defmacro scene-definition (name &body body)
-  `(progn
-     (setf (gethash ,name *scene-table*)
-           ,(apply #'parse-scene body))))
+  `(setf (gethash ,name *scene-table*)
+         ,(apply #'parse-scene body)))
 
 (defun get-scene (name)
   (gethash name *scene-table*))
