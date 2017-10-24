@@ -1,79 +1,117 @@
 (in-package :gear)
 
-(defun read-spec-forms (file)
-  ;; Loop over every top-level form of FILE, until we reach EOF, collecting each
-  ;; into a list.
+(defun %read-spec-forms (file)
   (let ((*package* (find-package :gear)))
     (with-open-file (in file)
       (loop :for form = (read in nil in)
             :until (eq form in)
             :collect form))))
 
-(defun parse-scene-form (scene-spec)
-  (destructuring-bind (actor components . children) (car scene-spec)
-    (list actor components children)))
+(defun %generate-actor-names (scene-spec)
+  (remove-duplicates
+   (append
+    '(@universe)
+    (remove-if
+     (lambda (x) (or (not (symbolp x))
+                (not (eq (char (symbol-name x) 0) #\@))))
+     (flatten scene-spec)))))
 
-(defun collect-actor-symbols (scene-spec)
-  (remove-duplicates (append
-                      '(@universe)
-                      (remove-if
-                       (lambda (x) (or (not (symbolp x))
-                                       (not (eq (char (symbol-name x) 0) #\@))))
-                       (flatten scene-spec)))))
+(defun %generate-actor-components-table (scene-spec &optional table)
+  (loop :with table = (or table (make-hash-table))
+        :for (actor components . child) :in scene-spec
+        :do (dolist (component (reverse components))
+              (push component (gethash actor table)))
+            (%generate-actor-components-table child table)
+        :finally (return table)))
 
-;; This does double duty, it builds a list of components for each actor
-;; which includes the initform for that component. So, using first & cdr
-;; you can get all the info you need for each component for each actor.
-(defun collect-actor-component-info (form &optional (ht (make-hash-table)))
-  ;; First, collect all types/initforms for each actor at this level.
-  (loop :for actor :in form
-        :do
-           (let ((component-types (reverse (second actor))))
-             (loop :for comp-type :in component-types
-                   :do (push comp-type (gethash (first actor) ht)))))
-  ;; Then, for each child of each actor, go get more.
-  (loop :for actor :in form
-        :do (collect-actor-component-info (cddr actor) ht))
-  ht)
+(defun %generate-thunk-list-symbols (actor-names)
+  (mapcar
+   (lambda (x)
+     (symbolicate x "-COMPONENT-THUNKS" (gensym)))
+   actor-names))
 
-;; Produce the names for the variables holding component thunk lists
-;; for that actor.
-(defun gen-actor-symbol-thunk-vars (actor-names)
-  (mapcar (lambda (an)
-            (symbolicate an "-INITIALIZE-COMPONENTS-" (gensym "LIST")))
-          actor-names))
+(defun %generate-actor-bindings (actor-names thunk-list-names table)
+  (mapcan
+   (lambda (actor thunk)
+     `((,actor (gethash ',actor ,table))
+       (,thunk)))
+   actor-names
+   thunk-list-names))
 
-;; Collect the data and produce the form.
-(defun parse-scene (dsl)
-  (let* ((actor-names (collect-actor-symbols form))
-         (actor-name-thunk-vars (gen-actor-symbol-thunk-vars actor-names))
-         (actor-component-info (collect-actor-component-info dsl))
-         )
-    nil))
+(defun %generate-component-initializers (actor-components)
+  (flet ((generate-component-forms (components)
+           (let ((component-forms))
+             (dolist (c components)
+               (push `(make-component ',(first c)) component-forms))
+             component-forms)))
+    (let ((result))
+      (maphash
+       (lambda (actor components)
+         (push `(add-multiple-components
+                 ,actor
+                 (list ,@(generate-component-forms components)))
+               result))
+       actor-components)
+      result)))
 
+(defun %generate-component-thunks (actor-names thunk-names component-table)
+  (loop :for actor :in actor-names
+        :for thunk :in thunk-names
+        :for components = (gethash actor component-table)
+        :append (loop :for (component . initargs) :in components
+                      :collect `(push
+                                 (lambda ()
+                                   (reinitialize-instance
+                                    (get-component ',component ,actor)
+                                    :actor ,actor
+                                    ,@initargs))
+                                 ,thunk))))
 
-(defmacro read-scene-file (file)
-  `(let ((spec (read-spec-forms ,file)))
-     ;; Here, we first rotate the spec forms forward, in order to make the last
-     ;; form (the scene definition) be the first form instead. Logically, it
-     ;; makes sense for the DSL to define the other forms first, and the scene
-     ;; form last which references the other forms. However, for parsing, the
-     ;; opposite is true, because a lambda list cannot bind a list of all but
-     ;; the last form to a variable.
+(defun %generate-actor-children (scene-spec)
+  (labels ((traverse (tree &optional parent)
+             (destructuring-bind (child nil . sub-tree) tree
+               (let ((result (list (cons (or parent '@universe) child))))
+                 (if sub-tree
+                     (append
+                      result
+                      (apply #'append
+                             (mapcar (lambda (x) (traverse x child)) sub-tree)))
+                     result)))))
+    (apply #'append (mapcar #'traverse scene-spec))))
 
-     ;; Finally, we bind the first form as SCENE and all the rest of the forms
-     ;; as FORMS.
-     (destructuring-bind (scene . forms) (rotate spec 1)
-       `(progn
-          ;; Emit all regular forms verbatim - this is lisp code intended to be
-          ;; evaluated.
-          ,@forms
-          ;; Expand the scene form into our intended code.
-          ,(lambda (core-state)
-             (declare (ignore core-state))
-             (let ((actors (make-hash-table)))
-               (dolist (name (collect-actor-symbols scene))
-                 (setf (gethash name actors)
-                       (make-instance 'gear:actor :id name :state :initialize)))
-               ;; TODO: finish expansion
-               ))))))
+(defun %generate-transform-hierarchy (actor-children)
+  (loop :for (parent . child) :in actor-children
+        :collect `(add-child
+                   (get-component 'transform ,parent)
+                   (get-component 'transform ,child))))
+
+(defun %generate-actor-spawns (core-state actor-names thunk-names)
+  (loop :for actor :in actor-names
+        :for thunk :in thunk-names
+        :collect `(spawn-actor ,core-state ,actor ,thunk)))
+
+(defun parse-scene (scene-spec)
+  (with-gensyms (core-state actor-table actor-name)
+    (let* ((actor-names (%generate-actor-names scene-spec))
+           (actor-children (%generate-actor-children scene-spec))
+           (actor-components (%generate-actor-components-table scene-spec))
+           (thunk-list-symbols (%generate-thunk-list-symbols actor-names))
+           (bindings (%generate-actor-bindings
+                      actor-names
+                      thunk-list-symbols
+                      actor-table)))
+      `(progn
+         (lambda (,core-state)
+           (let ((,actor-table (make-hash-table)))
+             (dolist (,actor-name ',actor-names)
+               (setf (gethash ,actor-name ,actor-table)
+                     (make-instance 'gear:actor :id ,actor-name)))
+             (let ,bindings
+               ,@(%generate-component-initializers actor-components)
+               ,@(%generate-component-thunks actor-names
+                                             thunk-list-symbols
+                                             actor-components)
+               ,@(%generate-transform-hierarchy actor-children)
+               ,@(%generate-actor-spawns core-state actor-names thunk-list-symbols)
+               (add-scene-tree-root ,core-state @universe)
+               (values ,core-state @universe ,actor-table))))))))

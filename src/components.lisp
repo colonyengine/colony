@@ -2,7 +2,8 @@
 
 (defclass component ()
   ((%state :accessor state
-           :initarg :state)
+           :initarg :state
+           :initform :initialize)
    (%actor :accessor actor
            :initarg :actor)))
 
