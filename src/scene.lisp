@@ -9,12 +9,10 @@
 
 (defun %generate-actor-names (scene-spec)
   (remove-duplicates
-   (append
-    '(@universe)
-    (remove-if
-     (lambda (x) (or (not (symbolp x))
-                (not (eq (char (symbol-name x) 0) #\@))))
-     (flatten scene-spec)))))
+   (remove-if
+    (lambda (x) (or (not (symbolp x))
+                    (not (eq (char (symbol-name x) 0) #\@))))
+    (flatten scene-spec))))
 
 (defun %generate-actor-components-table (scene-spec &optional table)
   (loop :with table = (or table (make-hash-table))
@@ -67,10 +65,11 @@
                                     ,@initargs))
                                  ,thunk))))
 
-(defun %generate-actor-children (scene-spec)
+(defun %generate-actor-children (scene-spec &optional parent)
   (labels ((traverse (tree &optional parent)
-             (destructuring-bind (child nil . sub-tree) tree
-               (let ((result (list (cons (or parent '@universe) child))))
+             (destructuring-bind (child components . sub-tree) tree
+	       (declare (ignore components))
+               (let ((result (list (cons parent child))))
                  (if sub-tree
                      (append
                       result
@@ -92,8 +91,10 @@
 
 (defun parse-scene (scene-spec)
   (with-gensyms (core-state actor-table actor-name)
-    (let* ((actor-names (%generate-actor-names scene-spec))
-           (actor-children (%generate-actor-children scene-spec))
+    (let* (;; augment the scene with @universe for now.
+           (scene-spec `((@universe ((transform)) ,@scene-spec)))
+           (actor-names (%generate-actor-names scene-spec))
+           (actor-children (%generate-actor-children scene-spec '@universe))
            (actor-components (%generate-actor-components-table scene-spec))
            (thunk-list-symbols (%generate-thunk-list-symbols actor-names))
            (bindings (%generate-actor-bindings
