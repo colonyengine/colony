@@ -123,7 +123,7 @@
 (defmacro scene-definition (name &body body)
   `(progn
      (setf (gethash ,name *scene-table*)
-           (eval (parse-scene ',@body)))))
+           ,(apply #'parse-scene body))))
 
 (defun get-scene (name)
   (gethash name *scene-table*))
