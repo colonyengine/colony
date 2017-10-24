@@ -65,11 +65,11 @@
                                     ,@initargs))
                                  ,thunk))))
 
-(defun %generate-actor-children (scene-spec &optional parent)
+(defun %generate-actor-children (scene-spec)
   (labels ((traverse (tree &optional parent)
              (destructuring-bind (child components . sub-tree) tree
-	       (declare (ignore components))
-               (let ((result (list (cons parent child))))
+               (declare (ignore components))
+               (let ((result (list (cons (or parent '@universe) child))))
                  (if sub-tree
                      (append
                       result
@@ -94,7 +94,7 @@
     (let* (;; augment the scene with @universe for now.
            (scene-spec `((@universe ((transform)) ,@scene-spec)))
            (actor-names (%generate-actor-names scene-spec))
-           (actor-children (%generate-actor-children scene-spec '@universe))
+           (actor-children (%generate-actor-children scene-spec))
            (actor-components (%generate-actor-components-table scene-spec))
            (thunk-list-symbols (%generate-thunk-list-symbols actor-names))
            (bindings (%generate-actor-bindings
