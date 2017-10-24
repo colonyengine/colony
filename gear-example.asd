@@ -19,7 +19,6 @@
   :serial t
   :components
   ((:file "package")
-   (:file "test-scene")
    (:module "components/gun"
     :components
     ((:file "gun")))
