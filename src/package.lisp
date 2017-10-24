@@ -30,4 +30,4 @@
 
    ;; core-state
    #:make-core-state
-   #:realize-actor))
+   #:spawn-actor))

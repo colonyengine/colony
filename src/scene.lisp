@@ -87,7 +87,7 @@
 (defun %generate-actor-realization (core-state actor-names thunk-names)
   (loop :for actor :in actor-names
         :for thunk :in thunk-names
-        :collect `(realize-actor ,core-state ,actor ,thunk)))
+        :collect `(spawn-actor ,core-state ,actor ,thunk)))
 
 (defun parse-scene (scene-spec)
   (with-gensyms (core-state actor-table actor-name)
