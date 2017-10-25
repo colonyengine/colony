@@ -113,12 +113,11 @@
                (add-scene-tree-root ,core-state @universe)
                (values ,core-state ,actor-table))))))))
 
-(defun get-scene (name)
-  (gethash name *scene-table*))
+(defun get-scene (core-state scene-name)
+  (gethash scene-name (scene-table core-state)))
 
-(defmacro scene-definition (name &body body)
-  `(setf (gethash ,name *scene-table*)
-         ,(apply #'parse-scene body)))
+(defun load-scene (core-state scene-name)
+  (funcall (get-scene core-state scene-name) core-state))
 
 (defun prepare-scenes (core-state path)
   (let ((*scene-table* (make-hash-table)))
@@ -129,3 +128,7 @@
              *scene-table*))
       (merge-scene-table core-state (%prepare))
       core-state)))
+
+(defmacro scene-definition (name &body body)
+  `(setf (gethash ,name *scene-table*)
+         ,(apply #'parse-scene body)))
