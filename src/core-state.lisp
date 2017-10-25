@@ -16,6 +16,9 @@
    (%component-active-view :accessor component-active-view
                            :initarg :component-active-view
                            :initform (make-hash-table))
+   (%scene-table :accessor scene-table
+                 :initarg :scene-table
+                 :initform (make-hash-table :test #'eq))
    (%scene-tree :accessor scene-tree
                 :initarg :scene-tree
                 :initform NIL)))
@@ -25,6 +28,13 @@
 
 (defun add-scene-tree-root (core-state actor)
   (setf (scene-tree core-state) actor))
+
+(defun merge-scene-table (core-state scene-table)
+  (maphash (lambda (k v)
+             (setf (gethash k (scene-table core-state))
+                   v))
+           scene-table)
+  core-state)
 
 (defun spawn-actor (core-state actor initializer-thunk-list)
   (setf
