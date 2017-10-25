@@ -1,6 +1,6 @@
 (in-package :gear)
 
-(defvar *scene-table* (make-hash-table))
+(defvar *scene-table*)
 
 (defun %read-spec-forms (file)
   (let ((*package* (find-package :gear)))
@@ -113,14 +113,21 @@
                (add-scene-tree-root ,core-state @universe)
                (values ,core-state ,actor-table))))))))
 
+(defun get-scene (name)
+  (gethash name *scene-table*))
+
 (defmacro scene-definition (name &body body)
   `(setf (gethash ,name *scene-table*)
          ,(apply #'parse-scene body)))
 
-(defun get-scene (name)
-  (gethash name *scene-table*))
+(defun prepare-scenes (core-state path)
+  (let ((*scene-table* (make-hash-table)))
+    (declare (special *scene-table*))
+    (flet ((%prepare ()
+             (load-extensions (get-path :gear "extensions"))
+             (load-extensions path)
+             *scene-table*))
+      (add-prepared-scenes core-state (%prepare))
+      core-state)))
 
-(defun prepare-scenes (extension-path)
-  (load-extensions (get-path :gear "extensions"))
-  (load-extensions extension-path)
-  *scene-table*)
+(defun add-prepared-scenes (cs ht) cs)

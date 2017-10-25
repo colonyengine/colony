@@ -30,10 +30,10 @@
   (setf (scene-tree core-state) actor))
 
 (defun merge-scene-table (core-state scene-table)
-  (maphash (lambda (k v)
-             (setf (gethash k (scene-table core-state))
-                   v))
-           scene-table)
+  (maphash
+   (lambda (k v)
+     (setf (gethash k (scene-table core-state)) v))
+   scene-table)
   core-state)
 
 (defun spawn-actor (core-state actor initializer-thunk-list)
