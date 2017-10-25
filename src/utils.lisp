@@ -1,10 +1,6 @@
 (in-package :gear)
 
 (defun get-path (system &optional path)
-  "Get the absolute path of a resource relative to the system designated by
-SYSTEM. This is needed to refer to file resources on disk, in a method that
-works for both interactive development and dumped core images where system paths
-would otherwise refer to those on the host machine."
   (if uiop/image:*image-dumped-p*
       (truename
        (uiop/pathname:merge-pathnames*
@@ -12,7 +8,7 @@ would otherwise refer to those on the host machine."
         (uiop:pathname-directory-pathname (uiop:argv0))))
       (asdf/system:system-relative-pathname system path)))
 
-(defun map-files (path effect &key (filter (constantly t)) (recursive t))
+(defun map-files (path effect &key (filter (constantly t)) (recursivep t))
   (labels ((maybe-affect (file)
              (when (funcall filter file)
                (funcall effect file)))
@@ -20,7 +16,7 @@ would otherwise refer to those on the host machine."
              (map nil #'maybe-affect (uiop/filesystem:directory-files dir))))
     (uiop/filesystem:collect-sub*directories
      (uiop/pathname:ensure-directory-pathname path)
-     t recursive #'process-files)))
+     t recursivep #'process-files)))
 
 (defun load-extensions (path)
   (map-files
