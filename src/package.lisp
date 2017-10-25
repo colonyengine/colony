@@ -21,6 +21,11 @@
    #:add-multiple-components
    #:get-component
 
+   ;; scene
+   #:scene-definition
+   #:get-scene
+   #:prepare-scenes
+
    ;; transform component
    #:transform
    #:add-child
