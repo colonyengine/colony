@@ -119,3 +119,8 @@
 
 (defun get-scene (name)
   (gethash name *scene-table*))
+
+(defun prepare-scenes (extension-path)
+  (load-extensions (get-path :gear "extensions"))
+  (load-extensions extension-path)
+  *scene-table*)
