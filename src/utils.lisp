@@ -22,7 +22,7 @@ would otherwise refer to those on the host machine."
      (uiop/pathname:ensure-directory-pathname path)
      t recursive #'process-files)))
 
-(defun load-extensions ()
+(defun load-extensions (path)
   (map-files
    path
    (lambda (x) (load x :verbose t))
