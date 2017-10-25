@@ -127,7 +127,5 @@
              (load-extensions (get-path :gear "extensions"))
              (load-extensions path)
              *scene-table*))
-      (add-prepared-scenes core-state (%prepare))
+      (merge-scene-table core-state (%prepare))
       core-state)))
-
-(defun add-prepared-scenes (cs ht) cs)
