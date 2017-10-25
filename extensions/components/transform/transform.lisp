@@ -87,12 +87,6 @@
     (apply #'reinitialize-instance instance initargs)
     instance))
 
-;; NOTE: We do this because reinitialize-instance for a transform needs to
-;; process its argument before actually reinitializing the instance of the
-;; transform with the new data.
-(defmethod reinitialize-instance ((instance transform) &rest initargs)
-  (apply #'reinitialize-transform-instance instance initargs))
-
 (defun reinitialize-transform-instance (instance
                                         &key
                                           (actor nil p/0)
@@ -120,3 +114,9 @@
     (setf (current (scale instance)) scale/current))
   (when p/7
     (setf (incremental (scale instance)) scale/incremental)))
+
+;; NOTE: We do this because reinitialize-instance for a transform needs to
+;; process its argument before actually reinitializing the instance of the
+;; transform with the new data.
+(defmethod reinitialize-instance ((instance transform) &rest initargs)
+  (apply #'reinitialize-transform-instance instance initargs))

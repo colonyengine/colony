@@ -40,20 +40,22 @@
   (apply #'make-instance type
          (append initargs (%generate-default-state-initargs type))))
 
-(defmethod interpolate-state ((state transform-state-scalar) coefficient)
+(defgeneric interpolate-state (state factor))
+
+(defmethod interpolate-state ((state transform-state-scalar) factor)
   (with-slots (%previous %current %interpolated %modifiedp) state
     (if %modifiedp
-        (setf %interpolated (lerp coefficient %previous %current))
+        (setf %interpolated (lerp factor %previous %current))
         (setf %interpolated %current))))
 
-(defmethod interpolate-state ((state transform-state-vector) coefficient)
+(defmethod interpolate-state ((state transform-state-vector) factor)
   (with-slots (%previous %current %interpolated %modifiedp) state
     (if %modifiedp
-        (vlerp! %interpolated %previous %current coefficient)
+        (vlerp! %interpolated %previous %current factor)
         (vcp! %interpolated %current))))
 
-(defmethod interpolate-state ((state transform-state-quaternion) coefficient)
+(defmethod interpolate-state ((state transform-state-quaternion) factor)
   (with-slots (%previous %current %interpolated %modifiedp) state
     (if %modifiedp
-        (qslerp! %interpolated %previous %current coefficient)
+        (qslerp! %interpolated %previous %current factor)
         (qcp! %interpolated %current))))

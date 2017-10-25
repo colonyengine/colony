@@ -23,11 +23,4 @@
    (:file "components")
    (:file "core-state")
    (:file "call-flow")
-   (:file "scene")
-   (:module "components/transform"
-    :components
-    ((:file "state")
-     (:file "transform")))
-   (:module "components/tags"
-    :components
-    ((:file "tags")))))
+   (:file "scene")))
