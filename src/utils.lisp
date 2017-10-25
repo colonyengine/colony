@@ -18,9 +18,16 @@
      (uiop/pathname:ensure-directory-pathname path)
      t recursivep #'process-files)))
 
+(defun pathname-type-filter (&rest strings)
+  "Return a single argument function that checks if the PATHANME-TYPE
+of that argument is one of the STRINGS. Return T if true, NIL otherwise."
+  (lambda (path)
+    (some (lambda (str)
+            (string= (pathname-type path) str))
+          strings)))
+
 (defun load-extensions (path)
   (map-files
    path
    (lambda (x) (load x :verbose t))
-   :filter (lambda (x) (or (string= (pathname-type x) "lisp")
-                      (string= (pathname-type x) "scene")))))
+   :filter (pathname-type-filter "lisp" "scene")))
