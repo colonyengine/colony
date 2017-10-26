@@ -9,19 +9,41 @@
             :until (eq form in)
             :collect form))))
 
-(defun %generate-actor-names (scene-spec)
-  (remove-duplicates
-   (remove-if
-    (lambda (x) (or (not (symbolp x))
-                    (not (eq (char (symbol-name x) 0) #\@))))
-    (flatten scene-spec))))
+(defun %type-check-actor (actor actors-list)
+  (unless (char= (char (symbol-name actor) 0) #\@)
+    (error (format nil "Actor names must begin with '@': ~a" actor)))
+  (when (find actor actors-list)
+    (error (format nil "Actors cannot be duplicated: ~a" actor))))
 
-(defun %generate-actor-components-table (scene-spec &optional table)
+(defun %generate-actor-names (scene-spec)
+  (let ((result))
+    (labels ((%generate (tree)
+               (loop :for (actor nil . sub-tree) :in tree
+                     :do (%type-check-actor actor result)
+                         (push actor result)
+                         (%generate sub-tree))))
+      (%generate scene-spec))
+    (nreverse result)))
+
+(defun %type-check-actor-component (actor-names component)
+  (let ((component-actors
+          (remove-if
+           (lambda (x)
+             (or (not (symbolp x))
+                 (not (char= (char (symbol-name x) 0) #\@))))
+           (flatten component))))
+    (dolist (actor component-actors)
+      (unless (find actor actor-names)
+        (error (format nil "A component references the undefined actor: ~a"
+                       actor))))))
+
+(defun %generate-actor-components-table (scene-spec actor-names &optional table)
   (loop :with table = (or table (make-hash-table))
         :for (actor components . child) :in scene-spec
         :do (dolist (component (reverse components))
+              (%type-check-actor-component actor-names component)
               (push component (gethash actor table)))
-            (%generate-actor-components-table child table)
+            (%generate-actor-components-table child actor-names table)
         :finally (return table)))
 
 (defun %generate-thunk-list-symbols (actor-names)
@@ -93,7 +115,8 @@
   (with-gensyms (core-state actor-table actor-name)
     (let* ((scene-spec `((@universe ((transform)) ,@scene-spec)))
            (actor-names (%generate-actor-names scene-spec))
-           (actor-components (%generate-actor-components-table scene-spec))
+           (actor-components (%generate-actor-components-table
+                              scene-spec actor-names))
            (thunk-list-symbols (%generate-thunk-list-symbols actor-names))
            (bindings (%generate-actor-bindings
                       actor-names thunk-list-symbols actor-table)))
