@@ -18,6 +18,7 @@
   :serial t
   :components
   ((:file "package")
+   (:file "specials")
    (:file "utils")
    (:file "actor")
    (:file "components")

@@ -21,7 +21,10 @@
                  :initform (make-hash-table :test #'eq))
    (%scene-tree :accessor scene-tree
                 :initarg :scene-tree
-                :initform NIL)))
+                :initform NIL)
+   (%call-flow-table :accessor call-flow-table
+		     :initarg :call-flow-table
+		     :initform (make-hash-table :test #'eq))))
 
 (defun make-core-state (&rest initargs)
   (apply #'make-instance 'core-state initargs))
@@ -34,6 +37,13 @@
    (lambda (k v)
      (setf (gethash k (scene-table core-state)) v))
    scene-table)
+  core-state)
+
+(defun merge-call-flow-table (core-state call-flow-table)
+  (maphash
+   (lambda (k v)
+     (setf (gethash k (call-flow-table core-state)) v))
+   call-flow-table)
   core-state)
 
 (defun spawn-actor (core-state actor initializer-thunk-list)
