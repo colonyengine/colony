@@ -69,6 +69,13 @@
         ;; Generate the instance maker for this flow-state.
         `(',name
           (let ,bindings ;; these are canonicalized, available for user.
+
+	    ;; TODO: Should this bea closure, which I call immediately when
+	    ;; entering that flow to amke the current states (and then I use
+	    ;; them with the policy. If execute-flow is called recursively,
+	    ;; then should it make a new set of states for the driver in order
+	    ;; to truly support recursion? Need to think about it.
+
             (make-flow-state :name ',name
                              :policy ,policy
                              :exitingp ,(and (null selector)
