@@ -8,7 +8,7 @@
            :initarg :actor)))
 
 (defmacro define-component (name super-classes &body slots)
-  `(defclass ,(intern (symbol-name name) :gear) (component ,@super-classes)
+  `(defclass ,name (component ,@super-classes)
      ,(loop :for slot :in slots
             :collect
             (destructuring-bind (slot-name slot-value &key slot-type) slot
