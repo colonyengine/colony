@@ -120,21 +120,20 @@
            (thunk-list-symbols (%generate-thunk-list-symbols actor-names))
            (bindings (%generate-actor-bindings
                       actor-names thunk-list-symbols actor-table)))
-      `(progn
-         (lambda (,core-state)
-           (let ((,actor-table (make-hash-table)))
-             (dolist (,actor-name ',actor-names)
-               (setf (gethash ,actor-name ,actor-table)
-                     (make-instance 'gear:actor :id ,actor-name)))
-             (let ,bindings
-               ,@(%generate-component-initializers actor-components)
-               ,@(%generate-component-thunks
-                  actor-names thunk-list-symbols actor-components)
-               ,@(%generate-relationships scene-spec)
-               ,@(%generate-actor-spawn
-                  core-state actor-names thunk-list-symbols)
-               (add-scene-tree-root ,core-state @universe)
-               (values ,core-state ,actor-table))))))))
+      `(lambda (,core-state)
+         (let ((,actor-table (make-hash-table)))
+           (dolist (,actor-name ',actor-names)
+             (setf (gethash ,actor-name ,actor-table)
+                   (make-instance 'gear:actor :id ,actor-name)))
+           (let ,bindings
+             ,@(%generate-component-initializers actor-components)
+             ,@(%generate-component-thunks
+                actor-names thunk-list-symbols actor-components)
+             ,@(%generate-relationships scene-spec)
+             ,@(%generate-actor-spawn
+                core-state actor-names thunk-list-symbols)
+             (add-scene-tree-root ,core-state @universe)
+             (values ,core-state ,actor-table)))))))
 
 (defun get-scene (core-state scene-name)
   (gethash scene-name (scene-table core-state)))
@@ -151,15 +150,17 @@
       (merge-scene-table core-state (%prepare))
       core-state)))
 
-(defmacro scene-definition (name &body body)
-  `(setf (gethash ,name *scene-table*)
-         ,(apply #'parse-scene body)))
+(defmacro scene-definition (name (&key enabled) &body body)
+  (when enabled
+    `(setf (gethash ,name *scene-table*)
+           ,(apply #'parse-scene body))))
 
 ;;; debug stuff below
 
-(defmacro scene-definition-code (name &body body)
-  `(setf (gethash ,name *scene-table*)
-         (apply #'parse-scene ',body)))
+(defmacro scene-definition-code (name (&key enabled) &body body)
+  (when enabled
+    `(setf (gethash ,name *scene-table*)
+           (apply #'parse-scene ',body))))
 
 (defun test-scene-load ()
   (let ((cs (make-core-state)))
