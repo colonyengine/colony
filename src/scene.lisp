@@ -84,7 +84,7 @@
                      (get-component 'transform ,parent)
                      (get-component 'transform ,child)))))
 
-(defun %generate-actor-realization (core-state actor-names thunk-names)
+(defun %generate-actor-spawn (core-state actor-names thunk-names)
   (loop :for actor :in actor-names
         :for thunk :in thunk-names
         :collect `(spawn-actor ,core-state ,actor ,thunk)))
@@ -108,7 +108,7 @@
                ,@(%generate-component-thunks
                   actor-names thunk-list-symbols actor-components)
                ,@(%generate-relationships scene-spec)
-               ,@(%generate-actor-realization
+               ,@(%generate-actor-spawn
                   core-state actor-names thunk-list-symbols)
                (add-scene-tree-root ,core-state @universe)
                (values ,core-state ,actor-table))))))))
@@ -121,7 +121,6 @@
 
 (defun prepare-scenes (core-state path)
   (let ((*scene-table* (make-hash-table)))
-    (declare (special *scene-table*))
     (flet ((%prepare ()
              (load-extensions (get-path :gear "extensions"))
              (load-extensions path)
