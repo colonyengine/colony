@@ -132,3 +132,19 @@
 (defmacro scene-definition (name &body body)
   `(setf (gethash ,name *scene-table*)
          ,(apply #'parse-scene body)))
+
+;;; debug stuff below
+
+(defmacro scene-definition-code (name &body body)
+  `(setf (gethash ,name *scene-table*)
+         (apply #'parse-scene ',body)))
+
+(defun test-scene-load ()
+  (let ((cs (make-core-state)))
+    (prepare-scenes cs (get-path :gear-example "data"))
+    (load-scene cs :demo)))
+
+(defun test-scene-code ()
+  (let ((cs (make-core-state)))
+    (prepare-scenes cs (get-path :gear-example "data"))
+    (get-scene cs :demo-code)))
