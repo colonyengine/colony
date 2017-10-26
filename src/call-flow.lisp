@@ -139,7 +139,7 @@
 
             (flow actor-initialization-flow
                   (flow-state ENTRY :reset () ;; bindings in a let for
-					      ;; the two functions.
+                              ;; the two functions.
 
                               ;; Select what I want to work on.
                               (lambda (core-state)
@@ -248,7 +248,7 @@
                               (lambda (core-state inst)
                                 (unless (eq (status inst) :active)
                                   (destroy-component inst
-						     (context core-state))))
+                                                     (context core-state))))
 
                               (lambda (core-state)
                                 EXIT/FLOW-FIISHED))
@@ -280,10 +280,10 @@
 
                               (lambda (core-state inst)
                                 (execute-flow
-				 'ENTRY
-				 (flow 'component-initialization-flow
-				       core-state)
-				 (component-init-db core-state)))
+                                 'ENTRY
+                                 (flow 'component-initialization-flow
+                                       core-state)
+                                 (component-init-db core-state)))
 
                               (lambda (core-state)
                                 UPDATE-COMPONENTS))
@@ -305,7 +305,7 @@
                                           (execute-flow
                                            'ENTRY/PHYSICS-UPDATE
                                            (flow 'component-logic-flow
-						 core-state)
+                                                 core-state)
                                            ;; Fix to use type-flow
                                            (component-db core-state))
 
@@ -330,20 +330,20 @@
                                           (execute-flow
                                            'ENTRY/COLLISIONS
                                            (flow 'component-logic-flow
-						 core-state)
+                                                 core-state)
                                            ;; Fix to use type-flow
                                            (component-db core-state))
 
                                           ;; Check to see if we're
                                           ;; done doing physics.
                                           (unless (physics-loop-required-p
-						   core-state)
+                                                   core-state)
                                             (setf again NIL)))
 
                                 ;; Then, complete the logic for the components.
                                 (execute-flow 'ENTRY/AFTER-PHYSICS
                                               (flow 'component-logic-flow
-						    core-state)
+                                                    core-state)
                                               (component-db core-state)))
 
                               (lambda (core-state)
@@ -358,7 +358,7 @@
                               (lambda (core-state inst)
                                 (execute-flow 'ENTRY
                                               (flow 'actor-maintenance-flow
-						    core-state)
+                                                    core-state)
                                               (actor-db core-state)))
                               (lambda (core-state)
                                 COMPONENT-MAINTENANCE))
