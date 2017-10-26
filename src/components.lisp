@@ -42,8 +42,7 @@ modify the structure of the returned list."
 ACTOR. If there are multiple components of this type, it is unknown which one
 will be returned first. Usually, there is only one component of any given
 COMPONENT-TYPE in an ACTOR."
-  ;; TODO: account for when we actually do want to find a specific component of
-  ;; the same type, probably by using FIND if an optional argument is suppliedp.
+
   (first (get-components component-type actor)))
 
 (defun add-multiple-components (actor components)
