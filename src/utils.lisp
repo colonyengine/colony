@@ -23,4 +23,4 @@
    path
    (lambda (x) (load x :verbose t))
    :filter (lambda (x) (or (string= (pathname-type x) "lisp")
-                      (string= (pathname-type x) "scene")))))
+                           (string= (pathname-type x) "scene")))))
