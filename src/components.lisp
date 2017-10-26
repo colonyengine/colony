@@ -11,14 +11,14 @@
   `(defclass ,name (component ,@super-classes)
      ,(loop :for slot :in slots
             :collect
-            (destructuring-bind (slot-name slot-value &key slot-type) slot
+            (destructuring-bind (slot-name slot-value &key type) slot
               (append
-               `(,(intern (format nil "%~a" slot-name) :gear)
-                 :accessor ,(intern (symbol-name slot-name) :gear)
+               `(,slot-name
+                 :accessor ,slot-name
                  :initarg ,(make-keyword slot-name)
                  :initform ,slot-value)
-               (when slot-type
-                 `(:type ,slot-type)))))))
+               (when type
+                 `(:type ,type)))))))
 
 (defun component-type (component)
   (class-name (class-of component)))
