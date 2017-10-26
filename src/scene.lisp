@@ -121,6 +121,7 @@
 
 (defun prepare-scenes (core-state path)
   (let ((*scene-table* (make-hash-table)))
+    (declare (special *scene-table*))
     (flet ((%prepare ()
              (load-extensions (get-path :gear "extensions"))
              (load-extensions path)
