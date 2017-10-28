@@ -25,7 +25,7 @@
                    ;; instance function which may determine the state
                    ;; we go to.
                    (lambda (core-state)
-                     EXIT/FLOW-FINISHED))
+                     'EXIT/FLOW-FINISHED))
 
        (flow-state EXIT/FLOW-FINISHED :reset ()
                    NIL))
@@ -42,7 +42,7 @@
                      (physics-update inst (context core-state)))
 
                    (lambda (core-state)
-                     EXIT/PHYSICS))
+                     'EXIT/PHYSICS))
 
        (flow-state EXIT/PHYSICS :reset ()
                    NIL)
@@ -57,7 +57,7 @@
                      (perform-collide inst (context core-state)))
 
                    (lambda (core-state)
-                     EXIT/COLLISIONS))
+                     'EXIT/COLLISIONS))
 
        (flow-state EXIT/COLLISIONS :reset ()
                    NIL)
@@ -73,7 +73,7 @@
                      (update inst (context core-state)))
 
                    (lambda (core-state)
-                     RENDER))
+                     'RENDER))
 
        (flow-state RENDER :reset ()
                    (lambda (core-state)
@@ -83,7 +83,7 @@
                    (lambda (core-state inst)
                      (render inst (context core-state)))
                    (lambda (core-state)
-                     EXIT/FLOW-FINISHED))
+                     'EXIT/FLOW-FINISHED))
 
        (flow-state EXIT/FLOW-FINISHED :reset ()
                    NIL))
@@ -101,7 +101,7 @@
                        (destroy-actor inst (context core-state))))
 
                    (lambda (core-state)
-                     EXIT/FLOW-FINISHED))
+                     'EXIT/FLOW-FINISHED))
 
        (flow-state EXIT/FLOW-FIISHED :reset ()
                    NIL))
@@ -117,7 +117,7 @@
                        (destroy-component inst (context core-state))))
 
                    (lambda (core-state)
-                     EXIT/FLOW-FIISHED))
+                     'EXIT/FLOW-FIISHED))
 
        (flow-state EXIT/FLOW-FINISHED :reset ()
                    NIL))
@@ -137,7 +137,7 @@
                                    (actor-init-db core-state)))
 
                    (lambda (core-state)
-                     INIT-COMPONENTS))
+                     'INIT-COMPONENTS))
 
        ;; Then initialize any components that need initializaing.
        (flow-state INIT-COMPONENTS :reset ()
@@ -151,7 +151,7 @@
                                    (component-init-db core-state)))
 
                    (lambda (core-state)
-                     UPDATE-COMPONENTS))
+                     'UPDATE-COMPONENTS))
 
        ;; Then run the component logic for all the components
        (flow-state UPDATE-COMPONENTS :reset ()
@@ -206,7 +206,7 @@
                                    (component-db core-state)))
 
                    (lambda (core-state)
-                     ACTOR-MAINTENANCE))
+                     'ACTOR-MAINTENANCE))
 
        ;; if game objects are marked destroeyd, then kill all
        ;; components too.
@@ -219,7 +219,7 @@
                                    (flow 'actor-maintenance-flow core-state)
                                    (actor-db core-state)))
                    (lambda (core-state)
-                     COMPONENT-MAINTENANCE))
+                     'COMPONENT-MAINTENANCE))
 
        ;; Then, any game objects that died, or other components
        ;; previously marked as being destroyed get destroeyd.
@@ -233,7 +233,7 @@
                      core-state)
                                    (component-db core-state)))
                    (lambda (core-state)
-                     CONTINUE/EXIT))
+                     'CONTINUE/EXIT))
 
        (flow-state CONTINUE/EXIT :reset ()
                    (lambda (core-state)
@@ -243,8 +243,8 @@
 
                    (lambda (core-state)
                      (if (exitingp core-state)
-                         EXIT/GAME-OVER
-                         EXIT/DO-NEXT-FRAME)))
+                         'EXIT/GAME-OVER
+                         'EXIT/DO-NEXT-FRAME)))
 
        (flow-state EXIT/DO-NEXT-FRAME :reset ()
                    NIL)
