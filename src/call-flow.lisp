@@ -93,9 +93,7 @@ flow-state CLOS instance for it."
                 ;; in order of definition.
                 (make-flow-state :name ',name
                                  :policy ,policy
-                                 :exitingp ,(and (null selector)
-                                                 (null action)
-                                                 (null transition))
+                                 :exitingp ,(null transition)
                                  :selector ,selector
                                  :action ,action
                                  :transition ,transition
@@ -111,8 +109,8 @@ containing each flow-state indexed by name."
         (let ((,flow-table (make-hash-table))
               ,@(loop :for (nil name . nil) :in flow-states
                       :collect `(,name ',name)))
-	  ,@(loop :for (nil name . nil) :in flow-states
-		  :collect `(declare (ignorable ,name)))
+          ,@(loop :for (nil name . nil) :in flow-states
+                  :collect `(declare (ignorable ,name)))
           ,@(loop :for (name state) :in (mapcar #'parse-flow-state flow-states)
                   :collect `(setf (gethash ',name ,flow-table) ,state))
           ,flow-table)))))
@@ -163,7 +161,9 @@ name which resulted in the exiting of the flow."
                 (values last-state-name current-state-name)))
             ;; Step 4: Run Selector Function
             (format t "EF Calling Selector Function...~%")
-            (setf selections (funcall (selector flow-state) core-state))
+            (setf selections
+                  (when (selector flow-state)
+                    (funcall (selector flow-state) core-state)))
             ;; Step 5: Iterate the action across everything in the selections.
             ;; NOTE: This is not a map-tree or anything complex. It just assumes
             ;; selection is going to be one of:
@@ -177,10 +177,12 @@ name which resulted in the exiting of the flow."
                            (lambda (k v)
                              (declare (ignore k))
                              (format t "EF Calling action function....~%")
-                             (funcall (action flow-state) core-state v))
+                             (when (action flow-state)
+                               (funcall (action flow-state) core-state v)))
                            item))
                          ((atom item)
-                          (funcall (action flow-state) core-state item)))))
+                          (when (action flow-state)
+                            (funcall (action flow-state) core-state item))))))
               (if (consp selections)
                   (map nil #'act-on-item selections)
                   (act-on-item selections)))
