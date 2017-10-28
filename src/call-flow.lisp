@@ -111,6 +111,8 @@ containing each flow-state indexed by name."
         (let ((,flow-table (make-hash-table))
               ,@(loop :for (nil name . nil) :in flow-states
                       :collect `(,name ',name)))
+	  ,@(loop :for (nil name . nil) :in flow-states
+		  :collect `(declare (ignorable ,name)))
           ,@(loop :for (name state) :in (mapcar #'parse-flow-state flow-states)
                   :collect `(setf (gethash ',name ,flow-table) ,state))
           ,flow-table)))))
