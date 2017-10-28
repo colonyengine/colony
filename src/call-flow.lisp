@@ -26,7 +26,7 @@
 (defun canonicalize-binding (binding)
   (if (symbolp binding)
       (list binding nil)
-      binding))
+      (list (first binding) (second binding))))
 
 (defun binding-partition (bindings)
   (loop :for (b v) :in bindings
