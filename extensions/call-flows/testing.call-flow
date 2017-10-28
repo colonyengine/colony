@@ -1,7 +1,8 @@
 ;; -*- mode: common-lisp -*-
 
-(call-flow
- default
+(call-flow-definition
+ ;; name is a keyword, then options.
+ :default (:enabled)
 
  (flow a-test-flow
        (flow-state TEST-INSTANCE :reset ()
