@@ -99,27 +99,26 @@ flow-state CLOS instance for it."
                                  :transition ,transition
                                  :reset ,reset-function)))))))))
 
-(defun get-flow-state-names (flow-states)
+(defun get-flow-state-variables (flow-states)
   (loop :for (nil name . nil) :in flow-states
-        :collect `(,name ',name) :into bindings
+        :collect `(,name ',name) :into binds
         :collect `(declare (ignorable ,name)) :into ignores
-        :finally (return (values bindings ignores))))
+        :finally (return (values binds ignores))))
 
 (defun parse-flow (form)
   "Parse a single flow DSL node into a form that evaluates to a hash table
 containing each flow-state indexed by name."
   (destructuring-bind (match flow-name . flow-states) form
-    (multiple-value-bind (bindings ignores) (get-flow-state-names flow-states)
+    (multiple-value-bind (binds ignores) (get-flow-state-variables flow-states)
       (let ((flow-table (gensym)))
         (ensure-matched-symbol match "flow")
         `(,flow-name
           (let ((,flow-table (make-hash-table))
-                ,@bindings)
+                ,@binds)
             ,@ignores
             ,@(loop :for (name state) :in (mapcar #'parse-flow-state flow-states)
                     :collect `(setf (gethash ',name ,flow-table) ,state))
             ,flow-table))))))
-
 
 (defun parse-call-flows (form)
   "Parse an entire call-flow and return a list of the name of it and a form
