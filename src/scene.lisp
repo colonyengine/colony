@@ -111,7 +111,7 @@
         :for thunk :in thunk-names
         :collect `(spawn-actor ,core-state ,actor ,thunk)))
 
-(defun parse-scene (scene-spec)
+(defun parse-scene (scene-name scene-spec)
   (with-gensyms (core-state actor-table actor-name)
     (let* ((scene-spec `((@universe ((transform)) ,@scene-spec)))
            (actor-names (%generate-actor-names scene-spec))
@@ -124,7 +124,9 @@
          (let ((,actor-table (make-hash-table)))
            (dolist (,actor-name ',actor-names)
              (setf (gethash ,actor-name ,actor-table)
-                   (make-instance 'gear:actor :id ,actor-name)))
+                   (make-instance 'gear:actor
+                                  :id ,actor-name
+                                  :scene ,scene-name)))
            (let ,bindings
              ,@(%generate-component-initializers actor-components)
              ,@(%generate-component-thunks
@@ -155,14 +157,14 @@
 (defmacro scene-definition (name (&key enabled) &body body)
   (when enabled
     `(setf (gethash ,name *scene-table*)
-           ,(apply #'parse-scene body))))
+           ,(apply #'parse-scene name body))))
 
 ;;; debug stuff below
 
 (defmacro scene-definition-code (name (&key enabled) &body body)
   (when enabled
     `(setf (gethash ,name *scene-table*)
-           (apply #'parse-scene ',body))))
+           (apply #'parse-scene ,name ',body))))
 
 (defun test-scene-load ()
   (let ((cs (make-core-state)))

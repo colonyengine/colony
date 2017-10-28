@@ -11,7 +11,10 @@
                 :initform (make-hash-table))
    (%components-by-type :accessor components-by-type
                         :initarg :components-by-type
-                        :initform (make-hash-table))))
+                        :initform (make-hash-table))
+   (%scene :accessor scene
+           :initarg :scene
+           :initform nil)))
 
 (defmethod print-object ((object actor) stream)
   (print-unreadable-object (object stream :type t)
