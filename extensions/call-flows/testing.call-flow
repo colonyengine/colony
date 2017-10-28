@@ -1,8 +1,6 @@
 ;;;; -*- mode: common-lisp -*-
 
-(call-flow-definition
-    ;; name is a keyword, then options.
-    :default (:enabled t)
+(call-flow-definition :default (:enabled t)
 
   (flow a-test-flow
         (flow-state TEST-INSTANCE :reset ()
@@ -15,8 +13,7 @@
                     (action
                      (lambda (core-state inst)
                        (format t "Action function called.~%")
-                       (test-protocol-method-0 inst
-                                               (context core-state))))
+                       (test-protocol-method-0 inst (context core-state))))
 
                     (transition
                      (lambda (core-state)
@@ -37,8 +34,7 @@
                     (action
                      (lambda (core-state inst)
                        (format t "Action function called.~%")
-                       (test-protocol-method-1 inst
-                                               (context core-state))))
+                       (test-protocol-method-1 inst (context core-state))))
 
                     (transition
                      (lambda (core-state)
@@ -56,8 +52,7 @@
                     (action
                      (lambda (core-state inst)
                        (format t "Action function called.~%")
-                       (test-protocol-method-0 inst
-                                               (context core-state))))
+                       (test-protocol-method-0 inst (context core-state))))
 
                     (transition
                      (lambda (core-state)
@@ -71,18 +66,16 @@
                        (declare (ignorable core-state))
                        (format t "Selector function called.~%")
                        (loop :for j :below 3
-                             :collect
-                             (let ((ht (make-hash-table)))
-                               (loop :for i :in '(1 2 3)
-                                     :do (setf (gethash i ht)
-                                               (+ i (* j 10))))
-                               ht))))
+                             :for ht = (make-hash-table)
+                             :do (loop :for i :in '(1 2 3)
+                                       :do (setf (gethash i ht)
+                                                 (+ i (* j 10))))
+                             :collect ht)))
 
                     (action
                      (lambda (core-state inst)
                        (format t "Action function called.~%")
-                       (test-protocol-method-1 inst
-                                               (context core-state))))
+                       (test-protocol-method-1 inst (context core-state))))
 
                     (transition
                      (lambda (core-state)

@@ -133,7 +133,7 @@ which evaluates to a hash table of flows keyed by their name."
            ,(parse-call-flows body))))
 
 (defun execute-flow (core-state call-flow-name flow-name flow-state-name
-                     &optional come-from-state-name)
+                     &key come-from-state-name)
   "Find the CALL-FLOW-NAME call flow in the CORE-STATE, then lookup the flow
 FLOW-NAME, and then the state FLOW-STATE-NAME inside of that flow. Start
 execution of the flow from FLOW-STATE-NAME. Return a values of two states, the
@@ -155,7 +155,7 @@ name which resulted in the exiting of the flow."
                   current-state-name (name flow-state))
             ;; Step 2: Perform execution policy
             (case (policy flow-state)
-              (:reset ; Execute the resetting thunk
+              (:reset                   ; Execute the resetting thunk
                (funcall (reset flow-state))))
             ;; Step 3: Run Selector Function
             (format t "EF Calling Selector Function...~%")
@@ -186,7 +186,7 @@ name which resulted in the exiting of the flow."
                   (act-on-item selections)))
             ;; Step 5: Exit if reached exiting state.
             (when (exitingp flow-state)
-	      (format t "EF Exiting flow.....~%")
+              (format t "EF Exiting flow.....~%")
               (return-from execute-flow
                 (values last-state-name current-state-name)))
             ;; Step 6: Run the transition function to determine the next
@@ -228,4 +228,4 @@ name which resulted in the exiting of the flow."
 (defun test-execute-flow (core-state call-flow-name flow-name flow-state-name
                           &optional (flow-init-state (gensym "EF-INIT-")))
   (execute-flow core-state call-flow-name flow-name flow-state-name
-                flow-init-state))
+                :come-from-state-name flow-init-state))

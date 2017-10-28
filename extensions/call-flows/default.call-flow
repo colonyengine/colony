@@ -169,10 +169,10 @@
 
                     (action
                      (lambda (core-state inst)
-                       (execute-flow 'ENTRY
-                                     (flow 'actor-initialization-flow
-                                           core-state)
-                                     (actor-init-db core-state))))
+                       (execute-flow
+                        'ENTRY
+                        (flow 'actor-initialization-flow core-state)
+                        (actor-init-db core-state))))
 
                     (transition
                      (lambda (core-state)
@@ -186,10 +186,10 @@
 
                     (action
                      (lambda (core-state inst)
-                       (execute-flow 'ENTRY
-                                     (flow 'component-initialization-flow
-                                           core-state)
-                                     (component-init-db core-state))))
+                       (execute-flow
+                        'ENTRY
+                        (flow 'component-initialization-flow core-state)
+                        (component-init-db core-state))))
 
                     (transition
                      (lambda (core-state)
@@ -206,7 +206,7 @@
                        ;; First, we run the physics and collision
                        ;; updates, maybe in a loop depending what is
                        ;; required.
-                       (loop :with again = T
+                       (loop :with again = t
                              :while again
                              :do ;; First, run the User's physics
                                  ;; functions over all ordered
@@ -262,9 +262,10 @@
 
                     (action
                      (lambda (core-state inst)
-                       (execute-flow 'ENTRY
-                                     (flow 'actor-maintenance-flow core-state)
-                                     (actor-db core-state))))
+                       (execute-flow
+                        'ENTRY
+                        (flow 'actor-maintenance-flow core-state)
+                        (actor-db core-state))))
                     (transition
                      (lambda (core-state)
                        COMPONENT-MAINTENANCE)))
@@ -278,10 +279,11 @@
 
                     (action
                      (lambda (core-state inst)
-                       (execute-flow 'ENTRY
-                                     (flow 'component-maintenance-flow
-                                           core-state)
-                                     (component-db core-state))))
+                       (execute-flow
+                        'ENTRY
+                        (flow 'component-maintenance-flow core-state)
+                        (component-db core-state))))
+
                     (transition
                      (lambda (core-state)
                        CONTINUE/EXIT)))
