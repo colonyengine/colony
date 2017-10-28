@@ -36,11 +36,11 @@
 (defun add-scene-tree-root (core-state actor)
   (setf (scene-tree core-state) actor))
 
-(defun merge-scene-table (core-state scene-table)
+(defun merge-scene-table (core-state)
   (maphash
    (lambda (k v)
      (setf (gethash k (scene-table core-state)) v))
-   scene-table)
+   *scene-table*)
   core-state)
 
 (defun merge-call-flow-table (core-state call-flow-table)

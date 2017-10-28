@@ -146,11 +146,9 @@
 
 (defun prepare-scenes (core-state path)
   (let ((*scene-table* (make-hash-table)))
-    (flet ((%prepare ()
-             (load-extensions 'scene path)
-             *scene-table*))
-      (merge-scene-table core-state (%prepare))
-      core-state)))
+    (load-extensions 'scene path)
+    (merge-scene-table core-state)
+    core-state))
 
 (defmacro scene-definition (name (&key enabled) &body body)
   (when enabled
