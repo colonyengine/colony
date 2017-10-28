@@ -1,6 +1,6 @@
 ;;;; -*- mode: common-lisp -*-
 
-(call-flow-definition :default (:enabled t)
+(call-flow-definition :testing (:enabled t)
 
   (flow a-test-flow
         (flow-state TEST-INSTANCE :reset ()
