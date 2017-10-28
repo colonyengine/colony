@@ -48,28 +48,44 @@
 (defun ensure-matched-symbol (symbol name)
   (assert (string= (symbol-name symbol) (string-upcase name))))
 
+(defun parse-flow-state-functions (funcs)
+  "Parse the selection, action, and transition form from the FUNCS list.
+They can be in any order, but return them as a values in the specific order
+of selector, action, and transition."
+
+  ;; TODO: the selector, action, transition forms can come in any order.
+  ;; process them and get them in the right order and as lambda functions
+  ;; in the right order.
+
+  ;; TODO: This only returns these identity form to make the current code
+  ;; work. They will change to be the correct forms after processing in the
+  ;; above TODO.
+  (values (first funcs) (second funcs) (third funcs)))
+
 (defun parse-flow-state (form)
   "Parse a single flow-state DSL form and return a form which creates the
 flow-state CLOS instance for it."
-  (destructuring-bind (match name policy binds selector action transition) form
-    (let ((binds (mapcar #'canonicalize-binding binds)))
-      (multiple-value-bind (bind-syms bind-vals) (binding-partition binds)
-        (ensure-matched-symbol match "flow-state")
-        (let ((reset-function (gen-reset-function bind-syms bind-vals)))
-          ;; Generate the instance maker for this flow-state.
-          `(,name
-            (let ,binds ; these are canonicalized, available for user.
-              ;; TODO: Add a generated function to get the binding values out
-              ;; in order of definition.
-              (make-flow-state :name ',name
-                               :policy ,policy
-                               :exitingp ,(and (null selector)
-                                               (null action)
-                                               (null transition))
-                               :selector ,selector
-                               :action ,action
-                               :transition ,transition
-                               :reset ,reset-function))))))))
+  (destructuring-bind (match name policy binds . funcs) form
+    (multiple-value-bind (selector action transition)
+        (parse-flow-state-functions funcs)
+      (let ((binds (mapcar #'canonicalize-binding binds)))
+        (multiple-value-bind (bind-syms bind-vals) (binding-partition binds)
+          (ensure-matched-symbol match "flow-state")
+          (let ((reset-function (gen-reset-function bind-syms bind-vals)))
+            ;; Generate the instance maker for this flow-state.
+            `(,name
+              (let ,binds ; these are canonicalized, available for user.
+                ;; TODO: Add a generated function to get the binding values out
+                ;; in order of definition.
+                (make-flow-state :name ',name
+                                 :policy ,policy
+                                 :exitingp ,(and (null selector)
+                                                 (null action)
+                                                 (null transition))
+                                 :selector ,selector
+                                 :action ,action
+                                 :transition ,transition
+                                 :reset ,reset-function)))))))))
 
 (defun parse-flow (form)
   "Parse a single flow DSL node into a form that evaluates to a hash table
