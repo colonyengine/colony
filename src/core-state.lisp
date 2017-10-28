@@ -23,8 +23,12 @@
                 :initarg :scene-tree
                 :initform NIL)
    (%call-flow-table :accessor call-flow-table
-		     :initarg :call-flow-table
-		     :initform (make-hash-table :test #'eq))))
+                     :initarg :call-flow-table
+                     :initform (make-hash-table :test #'eq))
+   (%context :accessor context ;; to be defined later, hold delta time, etc.
+             :initarg :context
+             :initform nil)))
+
 
 (defun make-core-state (&rest initargs)
   (apply #'make-instance 'core-state initargs))

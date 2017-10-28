@@ -39,6 +39,8 @@
         :collect v :into vs
         :finally (return (values bs vs))))
 
+;; TODO: this should return a let over lambda to do a once only of the bind-vals
+;; evaluation. Needs fixing.
 (defun gen-reset-function (bind-syms bind-vals)
   `(lambda ()
      (setf
@@ -67,15 +69,11 @@
 
       (let ((reset-function (gen-reset-function bind-syms bind-vals)))
         ;; Generate the instance maker for this flow-state.
-        `(',name
+        `(,name
           (let ,bindings ;; these are canonicalized, available for user.
 
-	    ;; TODO: Should this bea closure, which I call immediately when
-	    ;; entering that flow to amke the current states (and then I use
-	    ;; them with the policy. If execute-flow is called recursively,
-	    ;; then should it make a new set of states for the driver in order
-	    ;; to truly support recursion? Need to think about it.
-
+            ;; TODO: Add a generated function to get the binding values out
+            ;; in order of definition.
             (make-flow-state :name ',name
                              :policy ,policy
                              :exitingp ,(and (null selector)
@@ -99,10 +97,10 @@
 
     (ensure-matched-symbol match "flow")
 
-    `(',flow-name
+    `(,flow-name
       (let ((,flow-ht (make-hash-table)))
         ,@(loop :for (n f) :in processed-flow-state-forms
-                :collect `(setf (gethash ,n ,flow-ht) ,f))
+                :collect `(setf (gethash ',n ,flow-ht) ,f))
         ,flow-ht))))
 
 ;; Parse an entire call-flow and return a list of the name of it and a
@@ -118,10 +116,10 @@
 
     (ensure-matched-symbol match "call-flow")
 
-    `(',call-flow-name
+    `(,call-flow-name
       (let ((,call-flow-ht (make-hash-table)))
         ,@(loop :for (n f) :in processed-flow-forms
-                :collect `(setf (gethash ,n ,call-flow-ht) ,f))
+                :collect `(setf (gethash ',n ,call-flow-ht) ,f))
         ,call-flow-ht))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -129,11 +127,90 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(defun test-call-flow ()
+(defun execute-flow (core-state call-flow-name flow-name flow-state-name
+                     &optional (come-from-state-name nil))
+  "Find the CALL-FLOW-NAME call flow in the CORE-STATE, then lookup the
+flow FLOW-NAME, and then the state FLOW-STATE-NAME inside of that flow.
+Start execution of the flow from FLOW-STATE-NAME. Return a values of two
+states, the one which executed before the currnet one which led to an
+exit of the call-flow. COME-FROM-STATE-NAME is an arbitrary symbol that
+indicates the previous flow-state name. This is often a symbolic name
+so execute-flow can determine how the flow exited. Return two values
+The previous state name and the current state name which resulted in
+the exiting of the flow."
 
+
+  (let* ((cfht (call-flow-table core-state))
+         (call-flow (gethash call-flow-name cfht))
+         (flow (gethash flow-name call-flow))
+         (flow-state (gethash flow-state-name flow))
+         (last-state-name nil)
+         (current-state-name come-from-state-name)
+         (selections ()))
+
+    (loop ;; forever, that's right.
+          (format t "Processing flow-state: ~A exiting=~A~%"
+                  (name flow-state) (exitingp flow-state))
+
+          ;; Step 1: Record state transition and update to current.
+          (setf last-state-name current-state-name
+                current-state-name (name flow-state))
+
+          ;; Step 2: Perform execution policy
+          (case (policy flow-state)
+            (:reset
+             ;; Execute the resetting thunk
+             (funcall (reset flow-state))))
+
+          ;; Step 3: Exit if reached exiting state.
+          (when (exitingp flow-state)
+            (return-from execute-flow (values last-state-name current-state-name)))
+
+          ;; Step 4: Run Selector Function
+          (format t "EF Calling Selector Function...~%")
+          (setf selections (funcall (selector flow-state) core-state))
+
+          ;; Step 5: Iterate the action across everything in the selections.
+          ;; NOTE: This is not a map-tree or anything complex. It just assumes
+          ;; selection is going to be one of:
+          ;; a single hash table instance
+          ;; a single instance of some class
+          ;; a list of things that are either hash tables or class instances.
+          (labels ((act-on-item (item)
+                     (cond
+                       ((hash-table-p item)
+                        (maphash (lambda (k v)
+                                   (declare (ignore k))
+                                   (format t "EF Calling action function....~%")
+                                   (funcall (action flow-state) core-state v))
+                                 item))
+
+                       ((atom item)
+                        (funcall (action flow-state) core-state item)))))
+            (cond
+              ((consp selections)
+               (loop :for item :in selections
+                     :do (act-on-item item)))
+              (t
+               (act-on-item selections))))
+
+          ;; Step 6: Run the transition function to determine the next
+          ;; flow-state.  Currently, a transition can only go into the
+          ;; SAME flow.
+          (format t "EF Calling transition function.....~%")
+          (setf flow-state
+                (gethash (funcall (transition flow-state) core-state) flow)))))
+
+
+(defun test-protocol-method-0 (inst cxt)
+  (format t "TEST-PROTOCOL-METHOD-0 called: inst=~A cxt=~A~%" inst cxt))
+
+(defun test-protocol-method-1 (inst cxt)
+  (format t "TEST-PROTOCOL-METHOD-1 called: inst=~A cxt=~A~%" inst cxt))
+
+(defun gen-call-flow ()
   (let ((form
           ;; This is directly from the ORG doc.
-
           `(call-flow
             default
             ;; Hrm. This is all single dispatch, is that good? Is
@@ -144,265 +221,96 @@
             ;; executor will recurse forever until something about a
             ;; state transition picks a different path.
 
-            (flow actor-initialization-flow
-                  (flow-state ENTRY :reset () ;; bindings in a let for
+            (flow a-test-flow
+                  (flow-state TEST-INSTANCE :reset ()
+                              (lambda (core-state)
+                                (declare (ignorable core-state))
+                                (format t "Selector function called.~%")
+                                42)
+
+                              (lambda (core-state inst)
+                                (format t "Action function called.~%")
+                                (test-protocol-method-0 inst
+                                                        (context core-state)))
+
+                              (lambda (core-state)
+                                (declare (ignore core-state))
+                                (format t "Transition function called.~%")
+                                'TEST-HT))
+
+                  (flow-state TEST-HT :reset ()
+                              (lambda (core-state)
+                                (declare (ignorable core-state))
+                                (format t "Selector function called.~%")
+                                (let ((ht (make-hash-table)))
+                                  (loop :for i :in '(1 2 3)
+                                        :do (setf (gethash i ht) (+ i 10)))
+                                  ht))
+
+                              (lambda (core-state inst)
+                                (format t "Action function called.~%")
+                                (test-protocol-method-1 inst
+                                                        (context core-state)))
+
+                              (lambda (core-state)
+                                (declare (ignore core-state))
+                                (format t "Transition function called.~%")
+                                'TEST-LIST-INSTANCES))
+
+                  (flow-state TEST-LIST-INSTANCES :reset ()
                               ;; the two functions.
 
                               ;; Select what I want to work on.
                               (lambda (core-state)
-                                (actors-initialize-db core-state))
+                                (declare (ignorable core-state))
+                                (format t "Selector function called.~%")
+                                (list 1 2 3))
 
                               ;; This function is run for every instance
                               (lambda (core-state inst)
                                 ;; a core function, not exposed to users.
-                                (realize-actor inst (context core-state)))
+                                (format t "Action function called.~%")
+                                (test-protocol-method-0 inst
+                                                        (context core-state)))
 
-                              ;; After all instances have been
-                              ;; processed, this function is run once
-                              ;; by the executor in order to choose
-                              ;; the next state. The let form contains
-                              ;; anything we need to store while
-                              ;; running the instance function which
-                              ;; may determine the state we go to.
                               (lambda (core-state)
-                                EXIT/FLOW-FINISHED))
+                                (declare (ignore core-state))
+                                (format t "Transition function called.~%")
+                                'TEST-LIST-HT))
+
+                  (flow-state TEST-LIST-HT :reset ()
+                              (lambda (core-state)
+                                (declare (ignorable core-state))
+                                (format t "Selector function called.~%")
+                                (loop :for j :below 3
+                                      :collect
+                                      (let ((ht (make-hash-table)))
+                                        (loop :for i :in '(1 2 3)
+                                              :do (setf (gethash i ht)
+                                                        (+ i (* j 10))))
+                                        ht)))
+
+                              (lambda (core-state inst)
+                                (format t "Action function called.~%")
+                                (test-protocol-method-1 inst
+                                                        (context core-state)))
+
+                              (lambda (core-state)
+                                (declare (ignore core-state))
+                                (format t "Transition function called.~%")
+                                'EXIT/FLOW-FINISHED))
 
                   (flow-state EXIT/FLOW-FINISHED :reset ()
-                              NIL))
+                              NIL)))))
 
-            (flow component-logic-flow
-                  (flow-state ENTRY/PHYSICS-UPDATE :reset ()
-                              (lambda (core-state)
-                                ;; Fix to use the type-flow structures.
-                                (components-db core-state))
+    (let ((parsed-form (parse-call-flow form))
+          (ht (make-hash-table :test #'eq)))
+      (setf (gethash (first parsed-form) ht)
+            (eval (second parsed-form)))
+      ht)))
 
-                              (lambda (core-state inst)
-                                ;; this is the USER method they want to run at
-                                ;; physics speed.
-                                (physics-update inst (context core-state)))
-
-                              (lambda (core-state)
-                                EXIT/PHYSICS))
-
-                  (flow-state EXIT/PHYSICS :reset ()
-                              NIL)
-
-                  (flow-state ENTRY/COLLISIONS :reset ()
-                              (lambda (core-state)
-                                ;; Fix to use the type-flow structures.
-                                (components-db core-state))
-
-                              (lambda (core-state inst)
-                                ;; I don't know how this is working yet.
-                                (perform-collide inst (context core-state)))
-
-                              (lambda (core-state)
-                                EXIT/COLLISIONS))
-
-                  (flow-state EXIT/COLLISIONS :reset ()
-                              NIL)
-
-                  ;; Once looped physics/collisions are dealt with, we
-                  ;; can do the rest of this flow properly.
-                  (flow-state ENTRY/AFTER-PHYSICS :reset ()
-                              (lambda (core-state)
-                                ;; Fix to use the type-flow structures.
-                                (components-db core-state))
-
-                              (lambda (core-state inst)
-                                (update inst (context core-state)))
-
-                              (lambda (core-state)
-                                RENDER))
-
-                  (flow-state RENDER :reset ()
-                              (lambda (core-state)
-                                ;; Fix to use the type-flow structures.
-                                (components-db core-state))
-
-                              (lambda (core-state inst)
-                                (render inst (context core-state)))
-                              (lambda (core-state)
-                                EXIT/FLOW-FINISHED))
-
-                  (flow-state EXIT/FLOW-FINISHED :reset ()
-                              NIL))
-
-            (flow actor-maintenance-flow
-                  (flow-state ENTRY :reset ()
-                              (lambda (core-state)
-                                (actors-db core-state))
-
-                              (lambda (core-state inst)
-                                (unless (eq (status inst) :alive)
-                                  ;; This should mark all components as
-                                  ;; dead and including the actor.
-                                  ;; NOT a user facing API.
-                                  (destroy-actor inst (context core-state))))
-
-                              (lambda (core-state)
-                                EXIT/FLOW-FINISHED))
-
-                  (flow-state EXIT/FLOW-FIISHED :reset ()
-                              NIL))
-
-            (flow component-maintenance-flow
-                  (flow-state ENTRY :reset ()
-                              (lambda (core-state)
-                                ;; Fix to use the type-flow structures.
-                                (components-db core-state))
-
-                              (lambda (core-state inst)
-                                (unless (eq (status inst) :active)
-                                  (destroy-component inst
-                                                     (context core-state))))
-
-                              (lambda (core-state)
-                                EXIT/FLOW-FIISHED))
-
-                  (flow-state EXIT/FLOW-FINISHED :reset ()
-                              NIL))
-
-            (flow frame-flow
-                  ;; First spawn any actors (which may or may not be
-                  ;; empty of components, but were created LAST frame
-                  ;; and put into a staging area.
-                  (flow-state ENTRY :reset ()
-                              (lambda (core-state)
-                                nil)
-
-                              (lambda (core-state inst)
-                                (execute-flow 'ENTRY
-                                              (flow 'actor-initialization-flow
-                                                    core-state)
-                                              (actor-init-db core-state)))
-
-                              (lambda (core-state)
-                                INIT-COMPONENTS))
-
-                  ;; Then initialize any components that need initializaing.
-                  (flow-state INIT-COMPONENTS :reset ()
-                              (lambda (core-state)
-                                nil)
-
-                              (lambda (core-state inst)
-                                (execute-flow
-                                 'ENTRY
-                                 (flow 'component-initialization-flow
-                                       core-state)
-                                 (component-init-db core-state)))
-
-                              (lambda (core-state)
-                                UPDATE-COMPONENTS))
-
-                  ;; Then run the component logic for all the components
-                  (flow-state UPDATE-COMPONENTS :reset ()
-                              (lambda (core-state)
-                                nil)
-
-                              (lambda (core-state inst)
-                                ;; First, we run the physics and collision
-                                ;; updates, maybe in a loop depending what is
-                                ;; required.
-                                (loop :with again = T
-                                      :while again
-                                      :do ;; First, run the User's physics
-                                          ;; functions over all ordered
-                                          ;; components.
-                                          (execute-flow
-                                           'ENTRY/PHYSICS-UPDATE
-                                           (flow 'component-logic-flow
-                                                 core-state)
-                                           ;; Fix to use type-flow
-                                           (component-db core-state))
-
-                                          ;; Then, update ALL transforms to
-                                          ;; current local/model
-
-                                          ;; TODO: maybe wrap in box:tick?
-
-                                          ;; TODO: pass the right stuff to get
-                                          ;; universe root.
-
-                                          (do-nodes #'transform-node)
-
-                                          ;; Then, run any collisions
-                                          ;; that may have happened
-                                          ;; over ordered components.
-
-                                          ;; TODO, exactly figure out
-                                          ;; how to call collisions
-                                          ;; with the right collidees
-                                          ;; and such.
-                                          (execute-flow
-                                           'ENTRY/COLLISIONS
-                                           (flow 'component-logic-flow
-                                                 core-state)
-                                           ;; Fix to use type-flow
-                                           (component-db core-state))
-
-                                          ;; Check to see if we're
-                                          ;; done doing physics.
-                                          (unless (physics-loop-required-p
-                                                   core-state)
-                                            (setf again NIL)))
-
-                                ;; Then, complete the logic for the components.
-                                (execute-flow 'ENTRY/AFTER-PHYSICS
-                                              (flow 'component-logic-flow
-                                                    core-state)
-                                              (component-db core-state)))
-
-                              (lambda (core-state)
-                                ACTOR-MAINTENANCE))
-
-                  ;; if game objects are marked destroeyd, then kill all
-                  ;; components too.
-                  (flow-state ACTOR-MAINTENANCE :reset ()
-                              (lambda (core-state)
-                                nil)
-
-                              (lambda (core-state inst)
-                                (execute-flow 'ENTRY
-                                              (flow 'actor-maintenance-flow
-                                                    core-state)
-                                              (actor-db core-state)))
-                              (lambda (core-state)
-                                COMPONENT-MAINTENANCE))
-
-                  ;; Then, any game objects that died, or other components
-                  ;; previously marked as being destroyed get destroeyd.
-                  (flow-state COMPONENT-MAINTENANCE :reset ()
-                              (lambda (core-state)
-                                nil)
-
-                              (lambda (core-state inst)
-                                (execute-flow 'ENTRY
-                                              (flow 'component-maintenance-flow
-                                                    core-state)
-                                              (component-db core-state)))
-                              (lambda (core-state)
-                                CONTINUE/EXIT))
-
-                  (flow-state CONTINUE/EXIT :reset ()
-                              (lambda (core-state)
-                                nil)
-
-                              NIL ;; no flows to run!
-
-                              (lambda (core-state)
-                                (if (exitingp core-state)
-                                    EXIT/GAME-OVER
-                                    EXIT/DO-NEXT-FRAME)))
-
-                  (flow-state EXIT/DO-NEXT-FRAME :reset ()
-                              NIL)
-
-                  (flow-state EXIT/GAME-OVER :reset ()
-                              NIL)))
-
-
-
-          ))
-
-    (parse-call-flow form)))
+(defun test-execute-flow ()
+  (let ((cs (make-core-state)))
+    (merge-call-flow-table cs (gen-call-flow))
+    (execute-flow cs 'default 'a-test-flow 'test-instance
+                  (gensym "INIT-"))))
