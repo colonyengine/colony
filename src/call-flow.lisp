@@ -1,5 +1,7 @@
 (in-package :gear)
 
+(defvar *call-flow-table*)
+
 (defclass flow-state ()
   ((%name :accessor name
           :initarg :name)
@@ -151,6 +153,27 @@ name which resulted in the exiting of the flow."
             (format t "EF Calling transition function.....~%")
             (setf flow-state
                   (gethash (funcall (transition flow-state) core-state) flow))))
+
+(defun get-call-flow (core-state call-flow-name)
+  (gethash call-flow-name (call-flow-table core-state)))
+
+(defmethod extension-file-types ((owner (eql 'call-flow)))
+  (list "call-flow"))
+
+(defun prepare-call-flows (core-state path)
+  (let ((*call-flow-table* (make-hash-table)))
+    (flet ((%prepare ()
+             (load-extensions 'call-flow path)
+             *call-flow-table*))
+      (merge-call-flow-table core-state (%prepare))
+      core-state)))
+
+(defmacro call-flow-definition (name (&key enabled) &body body)
+  (when enabled
+    `(setf (gethash ,name *call-flow-table*)
+           ,(apply #'parse-call-flow body))))
+
+;;; debug stuff below
 
 (defun test-protocol-method-0 (inst cxt)
   (format t "TEST-PROTOCOL-METHOD-0 called: inst=~A cxt=~A~%" inst cxt))

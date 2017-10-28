@@ -25,7 +25,7 @@
    (%call-flow-table :accessor call-flow-table
                      :initarg :call-flow-table
                      :initform (make-hash-table :test #'eq))
-   (%context :accessor context ;; to be defined later, hold delta time, etc.
+   (%context :accessor context ; to be defined later, hold delta time, etc.
              :initarg :context
              :initform nil)))
 
@@ -36,11 +36,11 @@
 (defun add-scene-tree-root (core-state actor)
   (setf (scene-tree core-state) actor))
 
-(defun merge-scene-table (core-state)
+(defun merge-scene-table (core-state scene-table)
   (maphash
    (lambda (k v)
      (setf (gethash k (scene-table core-state)) v))
-   *scene-table*)
+   scene-table)
   core-state)
 
 (defun merge-call-flow-table (core-state call-flow-table)
