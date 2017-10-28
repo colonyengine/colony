@@ -175,13 +175,13 @@ name which resulted in the exiting of the flow."
             (labels ((act-on-item (item)
                        (cond
                          ((hash-table-p item)
-                          (maphash
-                           (lambda (k v)
-                             (declare (ignore k))
-                             (format t "EF Calling action function....~%")
-                             (when (action flow-state)
-                               (funcall (action flow-state) core-state v)))
-                           item))
+                          (when (action flow-state)
+                            (maphash
+                             (lambda (k v)
+                               (declare (ignore k))
+                               (format t "EF Calling action function....~%")
+                               (funcall (action flow-state) core-state v))
+                             item)))
                          ((atom item)
                           (when (action flow-state)
                             (funcall (action flow-state) core-state item))))))

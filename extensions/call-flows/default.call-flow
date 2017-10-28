@@ -130,7 +130,7 @@
 
                     (transition
                      (lambda (core-state)
-                       'EXIT/FLOW-FINISHED)))
+                       EXIT/FLOW-FINISHED)))
 
         (flow-state EXIT/FLOW-FIISHED :reset ()
                     (selector NIL)
