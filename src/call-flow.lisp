@@ -157,29 +157,25 @@ name which resulted in the exiting of the flow."
             (case (policy flow-state)
               (:reset ; Execute the resetting thunk
                (funcall (reset flow-state))))
-            ;; Step 3: Exit if reached exiting state.
-            (when (exitingp flow-state)
-              (return-from execute-flow
-                (values last-state-name current-state-name)))
-            ;; Step 4: Run Selector Function
+            ;; Step 3: Run Selector Function
             (format t "EF Calling Selector Function...~%")
             (setf selections
                   (when (selector flow-state)
                     (funcall (selector flow-state) core-state)))
-            ;; Step 5: Iterate the action across everything in the selections.
+            ;; Step 4: Iterate the action across everything in the selections.
             ;; NOTE: This is not a map-tree or anything complex. It just assumes
             ;; selection is going to be one of:
             ;; a single hash table instance
             ;; a single instance of some class
             ;; a list of things that are either hash tables or class instances.
             (labels ((act-on-item (item)
+                       (format t "EF Calling action function....~%")
                        (cond
                          ((hash-table-p item)
                           (when (action flow-state)
                             (maphash
                              (lambda (k v)
                                (declare (ignore k))
-                               (format t "EF Calling action function....~%")
                                (funcall (action flow-state) core-state v))
                              item)))
                          ((atom item)
@@ -188,6 +184,11 @@ name which resulted in the exiting of the flow."
               (if (consp selections)
                   (map nil #'act-on-item selections)
                   (act-on-item selections)))
+            ;; Step 5: Exit if reached exiting state.
+            (when (exitingp flow-state)
+	      (format t "EF Exiting flow.....~%")
+              (return-from execute-flow
+                (values last-state-name current-state-name)))
             ;; Step 6: Run the transition function to determine the next
             ;; flow-state. Currently, a transition can only go into the SAME
             ;; flow.
