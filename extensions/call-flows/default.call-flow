@@ -1,4 +1,4 @@
-(call-flow 
+(call-flow
  default
  ;; Hrm. This is all single dispatch, is that good? Is there more
  ;; opportunity for CL's strengths in here?
@@ -28,7 +28,7 @@
                      'EXIT/FLOW-FINISHED))
 
        (flow-state EXIT/FLOW-FINISHED :reset ()
-                   NIL))
+                   NIL NIL NIL))
 
  (flow component-logic-flow
        (flow-state ENTRY/PHYSICS-UPDATE :reset ()
@@ -45,7 +45,7 @@
                      'EXIT/PHYSICS))
 
        (flow-state EXIT/PHYSICS :reset ()
-                   NIL)
+                   NIL NIL NIL)
 
        (flow-state ENTRY/COLLISIONS :reset ()
                    (lambda (core-state)
@@ -60,7 +60,7 @@
                      'EXIT/COLLISIONS))
 
        (flow-state EXIT/COLLISIONS :reset ()
-                   NIL)
+                   NIL NIL NIL)
 
        ;; Once looped physics/collisions are dealt with, we can do the
        ;; rest of this flow properly.
@@ -86,7 +86,7 @@
                      'EXIT/FLOW-FINISHED))
 
        (flow-state EXIT/FLOW-FINISHED :reset ()
-                   NIL))
+                   NIL NIL NIL))
 
  (flow actor-maintenance-flow
        (flow-state ENTRY :reset ()
@@ -104,7 +104,7 @@
                      'EXIT/FLOW-FINISHED))
 
        (flow-state EXIT/FLOW-FIISHED :reset ()
-                   NIL))
+                   NIL NIL NIL))
 
  (flow component-maintenance-flow
        (flow-state ENTRY :reset ()
@@ -120,7 +120,7 @@
                      'EXIT/FLOW-FIISHED))
 
        (flow-state EXIT/FLOW-FINISHED :reset ()
-                   NIL))
+                   NIL NIL NIL))
 
  (flow frame-flow
        ;; First spawn any actors (which may or may not be empty
@@ -229,8 +229,7 @@
 
                    (lambda (core-state inst)
                      (execute-flow 'ENTRY
-                                   (flow 'component-maintenance-flow
-                     core-state)
+                                   (flow 'component-maintenance-flow core-state)
                                    (component-db core-state)))
                    (lambda (core-state)
                      'CONTINUE/EXIT))
@@ -247,8 +246,7 @@
                          'EXIT/DO-NEXT-FRAME)))
 
        (flow-state EXIT/DO-NEXT-FRAME :reset ()
-                   NIL)
+                   NIL NIL NIL)
 
        (flow-state EXIT/GAME-OVER :reset ()
-                   NIL))))
-
+                   NIL NIL NIL))))
