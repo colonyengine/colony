@@ -30,7 +30,7 @@
                     ;; we go to.
                     (transition
                      (lambda (core-state)
-                       'EXIT/FLOW-FINISHED)))
+                       EXIT/FLOW-FINISHED)))
 
         (flow-state EXIT/FLOW-FINISHED :reset ()
                     (selector NIL)
@@ -52,7 +52,7 @@
 
                     (transition
                      (lambda (core-state)
-                       'EXIT/PHYSICS)))
+                       EXIT/PHYSICS)))
 
         (flow-state EXIT/PHYSICS :reset ()
                     (selector NIL)
@@ -72,7 +72,7 @@
 
                     (transition
                      (lambda (core-state)
-                       'EXIT/COLLISIONS)))
+                       EXIT/COLLISIONS)))
 
         (flow-state EXIT/COLLISIONS :reset ()
                     (selector NIL)
@@ -93,7 +93,7 @@
 
                     (transition
                      (lambda (core-state)
-                       'RENDER)))
+                       RENDER)))
 
         (flow-state RENDER :reset ()
                     (selector
@@ -107,7 +107,7 @@
 
                     (transition
                      (lambda (core-state)
-                       'EXIT/FLOW-FINISHED)))
+                       EXIT/FLOW-FINISHED)))
 
         (flow-state EXIT/FLOW-FINISHED :reset ()
                     (selector NIL)
@@ -151,7 +151,7 @@
 
                     (transition
                      (lambda (core-state)
-                       'EXIT/FLOW-FIISHED)))
+                       EXIT/FLOW-FIISHED)))
 
         (flow-state EXIT/FLOW-FINISHED :reset ()
                     (selector NIL)
@@ -176,7 +176,7 @@
 
                     (transition
                      (lambda (core-state)
-                       'INIT-COMPONENTS)))
+                       INIT-COMPONENTS)))
 
         ;; Then initialize any components that need initializaing.
         (flow-state INIT-COMPONENTS :reset ()
@@ -193,7 +193,7 @@
 
                     (transition
                      (lambda (core-state)
-                       'UPDATE-COMPONENTS)))
+                       UPDATE-COMPONENTS)))
 
         ;; Then run the component logic for all the components
         (flow-state UPDATE-COMPONENTS :reset ()
@@ -251,7 +251,7 @@
 
                     (transition
                      (lambda (core-state)
-                       'ACTOR-MAINTENANCE)))
+                       ACTOR-MAINTENANCE)))
 
         ;; if game objects are marked destroeyd, then kill all
         ;; components too.
@@ -267,7 +267,7 @@
                                      (actor-db core-state))))
                     (transition
                      (lambda (core-state)
-                       'COMPONENT-MAINTENANCE)))
+                       COMPONENT-MAINTENANCE)))
 
         ;; Then, any game objects that died, or other components
         ;; previously marked as being destroyed get destroeyd.
@@ -284,7 +284,7 @@
                                      (component-db core-state))))
                     (transition
                      (lambda (core-state)
-                       'CONTINUE/EXIT)))
+                       CONTINUE/EXIT)))
 
         (flow-state CONTINUE/EXIT :reset ()
                     (selector
@@ -296,8 +296,8 @@
                     (transition
                      (lambda (core-state)
                        (if (exitingp core-state)
-                           'EXIT/GAME-OVER
-                           'EXIT/DO-NEXT-FRAME))))
+                           EXIT/GAME-OVER
+                           EXIT/DO-NEXT-FRAME))))
 
         (flow-state EXIT/DO-NEXT-FRAME :reset ()
                     (selector NIL)

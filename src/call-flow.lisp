@@ -109,9 +109,12 @@ containing each flow-state indexed by name."
       (ensure-matched-symbol match "flow")
       `(,flow-name
         (let ((,flow-table (make-hash-table)))
-          ,@(loop :for (name state) :in (mapcar #'parse-flow-state flow-states)
-                  :collect `(setf (gethash ',name ,flow-table) ,state))
-          ,flow-table)))))
+          (let ,(loop :for f :in flow-states
+                      :for n = (second f)
+                      :collect `(,n ',n))
+            ,@(loop :for (name state) :in (mapcar #'parse-flow-state flow-states)
+                    :collect `(setf (gethash ',name ,flow-table) ,state))
+            ,flow-table))))))
 
 
 (defun parse-call-flows (form)

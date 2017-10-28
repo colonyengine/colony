@@ -22,7 +22,7 @@
                      (lambda (core-state)
                        (declare (ignore core-state))
                        (format t "Transition function called.~%")
-                       'TEST-HT)))
+                       TEST-HT)))
 
         (flow-state TEST-HT :reset ()
                     (selector
@@ -44,7 +44,7 @@
                      (lambda (core-state)
                        (declare (ignore core-state))
                        (format t "Transition function called.~%")
-                       'TEST-LIST-INSTANCES)))
+                       TEST-LIST-INSTANCES)))
 
         (flow-state TEST-LIST-INSTANCES :reset ()
                     (selector
@@ -63,7 +63,7 @@
                      (lambda (core-state)
                        (declare (ignore core-state))
                        (format t "Transition function called.~%")
-                       'TEST-LIST-HT)))
+                       TEST-LIST-HT)))
 
         (flow-state TEST-LIST-HT :reset ()
                     (selector
@@ -88,7 +88,7 @@
                      (lambda (core-state)
                        (declare (ignore core-state))
                        (format t "Transition function called.~%")
-                       'EXIT/FLOW-FINISHED)))
+                       EXIT/FLOW-FINISHED)))
 
         (flow-state EXIT/FLOW-FINISHED :reset ()
                     (selector NIL )
