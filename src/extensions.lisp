@@ -4,9 +4,9 @@
   (map-files
    path
    (lambda (x) (load x :verbose t))
-   :filter (pathname-type-filter owner)))
+   :filter (extension-type-filter owner)))
 
-(defun pathname-type-filter (owner)
+(defun extension-type-filter (owner)
   (lambda (path)
     (some (lambda (str)
             (string= (pathname-type path) str))
