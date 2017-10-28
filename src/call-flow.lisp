@@ -48,26 +48,40 @@
 (defun ensure-matched-symbol (symbol name)
   (assert (string= (symbol-name symbol) (string-upcase name))))
 
-(defun parse-flow-state-functions (funcs)
+(defun parse-flow-state-functions (name funcs)
   "Parse the selection, action, and transition form from the FUNCS list.
 They can be in any order, but return them as a values in the specific order
 of selector, action, and transition."
+  (let ((ht (make-hash-table :test #'eq)))
 
-  ;; TODO: the selector, action, transition forms can come in any order.
-  ;; process them and get them in the right order and as lambda functions
-  ;; in the right order.
+    (dolist (func-form funcs)
+      (when func-form
+        (setf (gethash (first func-form) ht)
+              (second func-form))))
 
-  ;; TODO: This only returns these identity form to make the current code
-  ;; work. They will change to be the correct forms after processing in the
-  ;; above TODO.
-  (values (first funcs) (second funcs) (third funcs)))
+    (multiple-value-bind (selector sel-present-p)
+        (gethash 'selector ht)
+      (multiple-value-bind (action act-present-p)
+          (gethash 'action ht)
+        (multiple-value-bind (transition trans-present-p)
+            (gethash 'transition ht)
+
+          (unless sel-present-p
+            (error "Missing selector function in flow-state: ~A" name))
+          (unless act-present-p
+            (error "Missing action functions in flow-state: ~A" name))
+          (unless trans-present-p
+            (error "Missing transition function in flow-state: ~A" name))
+
+          ;; now return them in the canonical order.
+          (values selector action transition))))))
 
 (defun parse-flow-state (form)
   "Parse a single flow-state DSL form and return a form which creates the
 flow-state CLOS instance for it."
   (destructuring-bind (match name policy binds . funcs) form
     (multiple-value-bind (selector action transition)
-        (parse-flow-state-functions funcs)
+        (parse-flow-state-functions name funcs)
       (let ((binds (mapcar #'canonicalize-binding binds)))
         (multiple-value-bind (bind-syms bind-vals) (binding-partition binds)
           (ensure-matched-symbol match "flow-state")
