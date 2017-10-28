@@ -38,7 +38,7 @@
                        actor))))))
 
 (defun %generate-actor-components-table (scene-spec actor-names &optional table)
-  (loop :with table = (or table (make-hash-table))
+  (loop :with table = (or table (make-hash-table :test #'eq))
         :for (actor components . child) :in scene-spec
         :do (dolist (component (reverse components))
               (%type-check-actor-component actor-names component)
@@ -121,7 +121,7 @@
            (bindings (%generate-actor-bindings
                       actor-names thunk-list-symbols actor-table)))
       `(lambda (,core-state)
-         (let ((,actor-table (make-hash-table)))
+         (let ((,actor-table (make-hash-table :test #'eq)))
            (dolist (,actor-name ',actor-names)
              (setf (gethash ,actor-name ,actor-table)
                    (make-instance 'gear:actor
@@ -147,7 +147,7 @@
   (list "lisp" "scene"))
 
 (defun prepare-scenes (core-state path)
-  (let ((*scene-table* (make-hash-table)))
+  (let ((*scene-table* (make-hash-table :test #'eq)))
     (flet ((%prepare ()
              (load-extensions 'scene path)
              *scene-table*))

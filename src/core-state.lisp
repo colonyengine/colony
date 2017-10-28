@@ -3,19 +3,19 @@
 (defclass core-state ()
   ((%actor-initialize-db :accessor actor-initialize-db
                          :initarg :actor-initialize-db
-                         :initform (make-hash-table))
+                         :initform (make-hash-table :test #'eq))
    (%actor-initialize-thunks-db :accessor actor-initialize-thunks-db
                                 :initarg :actor-initialize-thunks-db
-                                :initform (make-hash-table))
+                                :initform (make-hash-table :test #'eq))
    (%actor-active-db :accessor actor-active-db
                      :initarg :actor-active-db
-                     :initform (make-hash-table))
+                     :initform (make-hash-table :test #'eq))
    (%component-initialize-view :accessor component-initialize-view
                                :initarg :component-initialize-view
-                               :initform (make-hash-table))
+                               :initform (make-hash-table :test #'eq))
    (%component-active-view :accessor component-active-view
                            :initarg :component-active-view
-                           :initform (make-hash-table))
+                           :initform (make-hash-table :test #'eq))
    (%scene-table :accessor scene-table
                  :initarg :scene-table
                  :initform (make-hash-table :test #'eq))

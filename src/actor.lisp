@@ -8,10 +8,10 @@
            :initform :initialize)
    (%components :accessor components
                 :initarg :components
-                :initform (make-hash-table))
+                :initform (make-hash-table :test #'eq))
    (%components-by-type :accessor components-by-type
                         :initarg :components-by-type
-                        :initform (make-hash-table))
+                        :initform (make-hash-table :test #'eq))
    (%scene :accessor scene
            :initarg :scene
            :initform nil)))

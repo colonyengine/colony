@@ -5,18 +5,16 @@
 (defclass flow-state ()
   ((%name :accessor name
           :initarg :name)
-   (%policy :accessor policy ; :reset only for now.
+   (%policy :accessor policy
             :initarg :policy)
    (%exitingp :accessor exitingp
               :initarg :exitingp)
-   ;; User supplied functions which represent the flow state itself.
    (%selector :accessor selector
               :initarg :selector)
    (%action :accessor action
             :initarg :action)
    (%transition :accessor transition
                 :initarg :transition)
-   ;; Helper functions to deal with the internal state of this flow state.
    (%reset :accessor reset
            :initarg :reset)))
 
@@ -113,7 +111,7 @@ containing each flow-state indexed by name."
       (let ((flow-table (gensym)))
         (ensure-matched-symbol match "flow")
         `(,flow-name
-          (let ((,flow-table (make-hash-table))
+          (let ((,flow-table (make-hash-table :test #'eq))
                 ,@binds)
             ,@ignores
             ,@(loop :for (name state) :in (mapcar #'parse-flow-state flow-states)
@@ -124,7 +122,7 @@ containing each flow-state indexed by name."
   "Parse an entire call-flow and return a list of the name of it and a form
 which evaluates to a hash table of flows keyed by their name."
   (let ((call-flow-table (gensym)))
-    `(let ((,call-flow-table (make-hash-table)))
+    `(let ((,call-flow-table (make-hash-table :test #'eq)))
        ,@(loop :for (name flow) :in (mapcar #'parse-flow form)
                :collect `(setf (gethash ',name ,call-flow-table) ,flow))
        ,call-flow-table)))
@@ -210,7 +208,7 @@ name which resulted in the exiting of the flow."
   (list "call-flow"))
 
 (defun prepare-call-flows (core-state path)
-  (let ((*call-flow-table* (make-hash-table)))
+  (let ((*call-flow-table* (make-hash-table :test #'eq)))
     (flet ((%prepare ()
              (load-extensions 'call-flow path)
              *call-flow-table*))
