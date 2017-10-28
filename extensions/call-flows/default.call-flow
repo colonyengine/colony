@@ -1,252 +1,254 @@
-(call-flow
- default
- ;; Hrm. This is all single dispatch, is that good? Is there more
- ;; opportunity for CL's strengths in here?
+;; -*- mode: common-lisp -*-
 
- ;; NOTE: If the functions inside of the state machine internally recurse
- ;; by returning the correct states, the executor will recurse forever
- ;; until something about a state transition picks a different path.
+(call-flow-definition
+    :default (:enabled nil)
+  ;; Hrm. This is all single dispatch, is that good? Is there more
+  ;; opportunity for CL's strengths in here?
 
- (flow actor-initialization-flow
-       (flow-state ENTRY :reset () ;; bindings in a let for the two functions.
-                   ;; Select what I want to work on.
-                   (lambda (core-state)
-                     (actors-initialize-db core-state))
+  ;; NOTE: If the functions inside of the state machine internally recurse
+  ;; by returning the correct states, the executor will recurse forever
+  ;; until something about a state transition picks a different path.
 
-                   ;; This function is run for every instance
-                   (lambda (core-state inst)
-                     ;; a core function, not exposed to users.
-                     (realize-actor inst (context core-state)))
+  (flow actor-initialization-flow
+        (flow-state ENTRY :reset () ;; bindings in a let for the two functions.
+                    ;; Select what I want to work on.
+                    (lambda (core-state)
+                      (actors-initialize-db core-state))
 
-                   ;; After all instances have been processed, this
-                   ;; function is run once by the executor in order to
-                   ;; choose the next state. The let form contains
-                   ;; anything we need to store while running the
-                   ;; instance function which may determine the state
-                   ;; we go to.
-                   (lambda (core-state)
-                     'EXIT/FLOW-FINISHED))
+                    ;; This function is run for every instance
+                    (lambda (core-state inst)
+                      ;; a core function, not exposed to users.
+                      (realize-actor inst (context core-state)))
 
-       (flow-state EXIT/FLOW-FINISHED :reset ()
-                   NIL NIL NIL))
+                    ;; After all instances have been processed, this
+                    ;; function is run once by the executor in order to
+                    ;; choose the next state. The let form contains
+                    ;; anything we need to store while running the
+                    ;; instance function which may determine the state
+                    ;; we go to.
+                    (lambda (core-state)
+                      'EXIT/FLOW-FINISHED))
 
- (flow component-logic-flow
-       (flow-state ENTRY/PHYSICS-UPDATE :reset ()
-                   (lambda (core-state)
-                     ;; Fix to use the type-flow structures.
-                     (components-db core-state))
+        (flow-state EXIT/FLOW-FINISHED :reset ()
+                    NIL NIL NIL))
 
-                   (lambda (core-state inst)
-                     ;; this is the USER method they want to run at
-                     ;; physics speed.
-                     (physics-update inst (context core-state)))
+  (flow component-logic-flow
+        (flow-state ENTRY/PHYSICS-UPDATE :reset ()
+                    (lambda (core-state)
+                      ;; Fix to use the type-flow structures.
+                      (components-db core-state))
 
-                   (lambda (core-state)
-                     'EXIT/PHYSICS))
+                    (lambda (core-state inst)
+                      ;; this is the USER method they want to run at
+                      ;; physics speed.
+                      (physics-update inst (context core-state)))
 
-       (flow-state EXIT/PHYSICS :reset ()
-                   NIL NIL NIL)
+                    (lambda (core-state)
+                      'EXIT/PHYSICS))
 
-       (flow-state ENTRY/COLLISIONS :reset ()
-                   (lambda (core-state)
-                     ;; Fix to use the type-flow structures.
-                     (components-db core-state))
+        (flow-state EXIT/PHYSICS :reset ()
+                    NIL NIL NIL)
 
-                   (lambda (core-state inst)
-                     ;; I don't know how this is working yet.
-                     (perform-collide inst (context core-state)))
+        (flow-state ENTRY/COLLISIONS :reset ()
+                    (lambda (core-state)
+                      ;; Fix to use the type-flow structures.
+                      (components-db core-state))
 
-                   (lambda (core-state)
-                     'EXIT/COLLISIONS))
+                    (lambda (core-state inst)
+                      ;; I don't know how this is working yet.
+                      (perform-collide inst (context core-state)))
 
-       (flow-state EXIT/COLLISIONS :reset ()
-                   NIL NIL NIL)
+                    (lambda (core-state)
+                      'EXIT/COLLISIONS))
 
-       ;; Once looped physics/collisions are dealt with, we can do the
-       ;; rest of this flow properly.
-       (flow-state ENTRY/AFTER-PHYSICS :reset ()
-                   (lambda (core-state)
-                     ;; Fix to use the type-flow structures.
-                     (components-db core-state))
+        (flow-state EXIT/COLLISIONS :reset ()
+                    NIL NIL NIL)
 
-                   (lambda (core-state inst)
-                     (update inst (context core-state)))
+        ;; Once looped physics/collisions are dealt with, we can do the
+        ;; rest of this flow properly.
+        (flow-state ENTRY/AFTER-PHYSICS :reset ()
+                    (lambda (core-state)
+                      ;; Fix to use the type-flow structures.
+                      (components-db core-state))
 
-                   (lambda (core-state)
-                     'RENDER))
+                    (lambda (core-state inst)
+                      (update inst (context core-state)))
 
-       (flow-state RENDER :reset ()
-                   (lambda (core-state)
-                     ;; Fix to use the type-flow structures.
-                     (components-db core-state))
+                    (lambda (core-state)
+                      'RENDER))
 
-                   (lambda (core-state inst)
-                     (render inst (context core-state)))
-                   (lambda (core-state)
-                     'EXIT/FLOW-FINISHED))
+        (flow-state RENDER :reset ()
+                    (lambda (core-state)
+                      ;; Fix to use the type-flow structures.
+                      (components-db core-state))
 
-       (flow-state EXIT/FLOW-FINISHED :reset ()
-                   NIL NIL NIL))
+                    (lambda (core-state inst)
+                      (render inst (context core-state)))
+                    (lambda (core-state)
+                      'EXIT/FLOW-FINISHED))
 
- (flow actor-maintenance-flow
-       (flow-state ENTRY :reset ()
-                   (lambda (core-state)
-                     (actors-db core-state))
+        (flow-state EXIT/FLOW-FINISHED :reset ()
+                    NIL NIL NIL))
 
-                   (lambda (core-state inst)
-                     (unless (eq (status inst) :alive)
-                       ;; This should mark all components as
-                       ;; dead and including the actor.
-                       ;; NOT a user facing API.
-                       (destroy-actor inst (context core-state))))
+  (flow actor-maintenance-flow
+        (flow-state ENTRY :reset ()
+                    (lambda (core-state)
+                      (actors-db core-state))
 
-                   (lambda (core-state)
-                     'EXIT/FLOW-FINISHED))
+                    (lambda (core-state inst)
+                      (unless (eq (status inst) :alive)
+                        ;; This should mark all components as
+                        ;; dead and including the actor.
+                        ;; NOT a user facing API.
+                        (destroy-actor inst (context core-state))))
 
-       (flow-state EXIT/FLOW-FIISHED :reset ()
-                   NIL NIL NIL))
+                    (lambda (core-state)
+                      'EXIT/FLOW-FINISHED))
 
- (flow component-maintenance-flow
-       (flow-state ENTRY :reset ()
-                   (lambda (core-state)
-                     ;; Fix to use the type-flow structures.
-                     (components-db core-state))
+        (flow-state EXIT/FLOW-FIISHED :reset ()
+                    NIL NIL NIL))
 
-                   (lambda (core-state inst)
-                     (unless (eq (status inst) :active)
-                       (destroy-component inst (context core-state))))
+  (flow component-maintenance-flow
+        (flow-state ENTRY :reset ()
+                    (lambda (core-state)
+                      ;; Fix to use the type-flow structures.
+                      (components-db core-state))
 
-                   (lambda (core-state)
-                     'EXIT/FLOW-FIISHED))
+                    (lambda (core-state inst)
+                      (unless (eq (status inst) :active)
+                        (destroy-component inst (context core-state))))
 
-       (flow-state EXIT/FLOW-FINISHED :reset ()
-                   NIL NIL NIL))
+                    (lambda (core-state)
+                      'EXIT/FLOW-FIISHED))
 
- (flow frame-flow
-       ;; First spawn any actors (which may or may not be empty
-       ;; of components, but were created LAST frame and put into a
-       ;; staging area.
-       (flow-state ENTRY :reset ()
-                   (lambda (core-state)
-                     core-state)
+        (flow-state EXIT/FLOW-FINISHED :reset ()
+                    NIL NIL NIL))
 
-                   (lambda (core-state inst)
-                     (execute-flow 'ENTRY
-                                   (flow 'actor-initialization-flow
-                     core-state)
-                                   (actor-init-db core-state)))
+  (flow frame-flow
+        ;; First spawn any actors (which may or may not be empty
+        ;; of components, but were created LAST frame and put into a
+        ;; staging area.
+        (flow-state ENTRY :reset ()
+                    (lambda (core-state)
+                      core-state)
 
-                   (lambda (core-state)
-                     'INIT-COMPONENTS))
+                    (lambda (core-state inst)
+                      (execute-flow 'ENTRY
+                                    (flow 'actor-initialization-flow
+                                          core-state)
+                                    (actor-init-db core-state)))
 
-       ;; Then initialize any components that need initializaing.
-       (flow-state INIT-COMPONENTS :reset ()
-                   (lambda (core-state)
-                     core-state)
+                    (lambda (core-state)
+                      'INIT-COMPONENTS))
 
-                   (lambda (core-state inst)
-                     (execute-flow 'ENTRY
-                                   (flow 'component-initialization-flow
-                     core-state)
-                                   (component-init-db core-state)))
+        ;; Then initialize any components that need initializaing.
+        (flow-state INIT-COMPONENTS :reset ()
+                    (lambda (core-state)
+                      core-state)
 
-                   (lambda (core-state)
-                     'UPDATE-COMPONENTS))
+                    (lambda (core-state inst)
+                      (execute-flow 'ENTRY
+                                    (flow 'component-initialization-flow
+                                          core-state)
+                                    (component-init-db core-state)))
 
-       ;; Then run the component logic for all the components
-       (flow-state UPDATE-COMPONENTS :reset ()
-                   (lambda (core-state)
-                     core-state)
+                    (lambda (core-state)
+                      'UPDATE-COMPONENTS))
 
-                   (lambda (core-state inst)
-                     ;; First, we run the physics and collision
-                     ;; updates, maybe in a loop depending what is
-                     ;; required.
-                     (loop :with again = T
-                           :while again
-                           :do ;; First, run the User's physics
-                               ;; functions over all ordered
-                               ;; components.
-                               (execute-flow
-                                'ENTRY/PHYSICS-UPDATE
-                                (flow 'component-logic-flow core-state)
-                                ;; Fix to use type-flow
-                                (component-db core-state))
+        ;; Then run the component logic for all the components
+        (flow-state UPDATE-COMPONENTS :reset ()
+                    (lambda (core-state)
+                      core-state)
 
-                               ;; Then, update ALL transforms to
-                               ;; current local/model
+                    (lambda (core-state inst)
+                      ;; First, we run the physics and collision
+                      ;; updates, maybe in a loop depending what is
+                      ;; required.
+                      (loop :with again = T
+                            :while again
+                            :do ;; First, run the User's physics
+                                ;; functions over all ordered
+                                ;; components.
+                                (execute-flow
+                                 'ENTRY/PHYSICS-UPDATE
+                                 (flow 'component-logic-flow core-state)
+                                 ;; Fix to use type-flow
+                                 (component-db core-state))
 
-                               ;; TODO: maybe wrap in box:tick?
+                                ;; Then, update ALL transforms to
+                                ;; current local/model
 
-                               ;; TODO: pass the right stuff to get
-                               ;; universe root.
+                                ;; TODO: maybe wrap in box:tick?
 
-                               (do-nodes #'transform-node)
+                                ;; TODO: pass the right stuff to get
+                                ;; universe root.
 
-                               ;; Then, run any collisions that may
-                               ;; have happened over ordered
-                               ;; components.
+                                (do-nodes #'transform-node)
 
-                               ;; TODO, exactly figure out how to call
-                               ;; collisions with the right collidees
-                               ;; and such.
-                               (execute-flow
-                                'ENTRY/COLLISIONS
-                                (flow 'component-logic-flow core-state)
-                                ;; Fix to use type-flow
-                                (component-db core-state))
+                                ;; Then, run any collisions that may
+                                ;; have happened over ordered
+                                ;; components.
 
-                               ;; Check to see if we're done doing physics.
-                               (unless (physics-loop-required-p core-state)
-                                 (setf again NIL)))
+                                ;; TODO, exactly figure out how to call
+                                ;; collisions with the right collidees
+                                ;; and such.
+                                (execute-flow
+                                 'ENTRY/COLLISIONS
+                                 (flow 'component-logic-flow core-state)
+                                 ;; Fix to use type-flow
+                                 (component-db core-state))
 
-                     ;; Then, complete the logic for the components.
-                     (execute-flow 'ENTRY/AFTER-PHYSICS
-                                   (flow 'component-logic-flow core-state)
-                                   (component-db core-state)))
+                                ;; Check to see if we're done doing physics.
+                                (unless (physics-loop-required-p core-state)
+                                  (setf again NIL)))
 
-                   (lambda (core-state)
-                     'ACTOR-MAINTENANCE))
+                      ;; Then, complete the logic for the components.
+                      (execute-flow 'ENTRY/AFTER-PHYSICS
+                                    (flow 'component-logic-flow core-state)
+                                    (component-db core-state)))
 
-       ;; if game objects are marked destroeyd, then kill all
-       ;; components too.
-       (flow-state ACTOR-MAINTENANCE :reset ()
-                   (lambda (core-state)
-                     core-state)
+                    (lambda (core-state)
+                      'ACTOR-MAINTENANCE))
 
-                   (lambda (core-state inst)
-                     (execute-flow 'ENTRY
-                                   (flow 'actor-maintenance-flow core-state)
-                                   (actor-db core-state)))
-                   (lambda (core-state)
-                     'COMPONENT-MAINTENANCE))
+        ;; if game objects are marked destroeyd, then kill all
+        ;; components too.
+        (flow-state ACTOR-MAINTENANCE :reset ()
+                    (lambda (core-state)
+                      core-state)
 
-       ;; Then, any game objects that died, or other components
-       ;; previously marked as being destroyed get destroeyd.
-       (flow-state COMPONENT-MAINTENANCE :reset ()
-                   (lambda (core-state)
-                     core-state)
+                    (lambda (core-state inst)
+                      (execute-flow 'ENTRY
+                                    (flow 'actor-maintenance-flow core-state)
+                                    (actor-db core-state)))
+                    (lambda (core-state)
+                      'COMPONENT-MAINTENANCE))
 
-                   (lambda (core-state inst)
-                     (execute-flow 'ENTRY
-                                   (flow 'component-maintenance-flow core-state)
-                                   (component-db core-state)))
-                   (lambda (core-state)
-                     'CONTINUE/EXIT))
+        ;; Then, any game objects that died, or other components
+        ;; previously marked as being destroyed get destroeyd.
+        (flow-state COMPONENT-MAINTENANCE :reset ()
+                    (lambda (core-state)
+                      core-state)
 
-       (flow-state CONTINUE/EXIT :reset ()
-                   (lambda (core-state)
-                     core-state)
+                    (lambda (core-state inst)
+                      (execute-flow 'ENTRY
+                                    (flow 'component-maintenance-flow core-state)
+                                    (component-db core-state)))
+                    (lambda (core-state)
+                      'CONTINUE/EXIT))
 
-                   NIL ;; no flows to run!
+        (flow-state CONTINUE/EXIT :reset ()
+                    (lambda (core-state)
+                      core-state)
 
-                   (lambda (core-state)
-                     (if (exitingp core-state)
-                         'EXIT/GAME-OVER
-                         'EXIT/DO-NEXT-FRAME)))
+                    NIL ;; no flows to run!
 
-       (flow-state EXIT/DO-NEXT-FRAME :reset ()
-                   NIL NIL NIL)
+                    (lambda (core-state)
+                      (if (exitingp core-state)
+                          'EXIT/GAME-OVER
+                          'EXIT/DO-NEXT-FRAME)))
 
-       (flow-state EXIT/GAME-OVER :reset ()
-                   NIL NIL NIL))))
+        (flow-state EXIT/DO-NEXT-FRAME :reset ()
+                    NIL NIL NIL)
+
+        (flow-state EXIT/GAME-OVER :reset ()
+                    NIL NIL NIL)))

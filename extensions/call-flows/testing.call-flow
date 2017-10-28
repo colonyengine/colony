@@ -1,83 +1,83 @@
 ;;;; -*- mode: common-lisp -*-
 
 (call-flow-definition
- ;; name is a keyword, then options.
- :default (:enabled)
+    ;; name is a keyword, then options.
+    :default (:enabled t)
 
- (flow a-test-flow
-       (flow-state TEST-INSTANCE :reset ()
-                   (lambda (core-state)
-                     (declare (ignorable core-state))
-                     (format t "Selector function called.~%")
-                     42)
+  (flow a-test-flow
+        (flow-state TEST-INSTANCE :reset ()
+                    (lambda (core-state)
+                      (declare (ignorable core-state))
+                      (format t "Selector function called.~%")
+                      42)
 
-                   (lambda (core-state inst)
-                     (format t "Action function called.~%")
-                     (test-protocol-method-0 inst
-                                             (context core-state)))
+                    (lambda (core-state inst)
+                      (format t "Action function called.~%")
+                      (test-protocol-method-0 inst
+                                              (context core-state)))
 
-                   (lambda (core-state)
-                     (declare (ignore core-state))
-                     (format t "Transition function called.~%")
-                     'TEST-HT))
+                    (lambda (core-state)
+                      (declare (ignore core-state))
+                      (format t "Transition function called.~%")
+                      'TEST-HT))
 
-       (flow-state TEST-HT :reset ()
-                   (lambda (core-state)
-                     (declare (ignorable core-state))
-                     (format t "Selector function called.~%")
-                     (let ((ht (make-hash-table)))
-                       (loop :for i :in '(1 2 3)
-                             :do (setf (gethash i ht) (+ i 10)))
-                       ht))
+        (flow-state TEST-HT :reset ()
+                    (lambda (core-state)
+                      (declare (ignorable core-state))
+                      (format t "Selector function called.~%")
+                      (let ((ht (make-hash-table)))
+                        (loop :for i :in '(1 2 3)
+                              :do (setf (gethash i ht) (+ i 10)))
+                        ht))
 
-                   (lambda (core-state inst)
-                     (format t "Action function called.~%")
-                     (test-protocol-method-1 inst
-                                             (context core-state)))
+                    (lambda (core-state inst)
+                      (format t "Action function called.~%")
+                      (test-protocol-method-1 inst
+                                              (context core-state)))
 
-                   (lambda (core-state)
-                     (declare (ignore core-state))
-                     (format t "Transition function called.~%")
-                     'TEST-LIST-INSTANCES))
+                    (lambda (core-state)
+                      (declare (ignore core-state))
+                      (format t "Transition function called.~%")
+                      'TEST-LIST-INSTANCES))
 
-       (flow-state TEST-LIST-INSTANCES :reset ()
+        (flow-state TEST-LIST-INSTANCES :reset ()
 
-                   (lambda (core-state)
-                     (declare (ignorable core-state))
-                     (format t "Selector function called.~%")
-                     (list 1 2 3))
+                    (lambda (core-state)
+                      (declare (ignorable core-state))
+                      (format t "Selector function called.~%")
+                      (list 1 2 3))
 
-                   (lambda (core-state inst)
-                     (format t "Action function called.~%")
-                     (test-protocol-method-0 inst
-                                             (context core-state)))
+                    (lambda (core-state inst)
+                      (format t "Action function called.~%")
+                      (test-protocol-method-0 inst
+                                              (context core-state)))
 
-                   (lambda (core-state)
-                     (declare (ignore core-state))
-                     (format t "Transition function called.~%")
-                     'TEST-LIST-HT))
+                    (lambda (core-state)
+                      (declare (ignore core-state))
+                      (format t "Transition function called.~%")
+                      'TEST-LIST-HT))
 
-       (flow-state TEST-LIST-HT :reset ()
-                   (lambda (core-state)
-                     (declare (ignorable core-state))
-                     (format t "Selector function called.~%")
-                     (loop :for j :below 3
-                           :collect
-                           (let ((ht (make-hash-table)))
-                             (loop :for i :in '(1 2 3)
-                                   :do (setf (gethash i ht)
-                                             (+ i (* j 10))))
-                             ht)))
+        (flow-state TEST-LIST-HT :reset ()
+                    (lambda (core-state)
+                      (declare (ignorable core-state))
+                      (format t "Selector function called.~%")
+                      (loop :for j :below 3
+                            :collect
+                            (let ((ht (make-hash-table)))
+                              (loop :for i :in '(1 2 3)
+                                    :do (setf (gethash i ht)
+                                              (+ i (* j 10))))
+                              ht)))
 
-                   (lambda (core-state inst)
-                     (format t "Action function called.~%")
-                     (test-protocol-method-1 inst
-                                             (context core-state)))
+                    (lambda (core-state inst)
+                      (format t "Action function called.~%")
+                      (test-protocol-method-1 inst
+                                              (context core-state)))
 
-                   (lambda (core-state)
-                     (declare (ignore core-state))
-                     (format t "Transition function called.~%")
-                     'EXIT/FLOW-FINISHED))
+                    (lambda (core-state)
+                      (declare (ignore core-state))
+                      (format t "Transition function called.~%")
+                      'EXIT/FLOW-FINISHED))
 
-       (flow-state EXIT/FLOW-FINISHED :reset ()
-                   NIL NIL NIL)))
+        (flow-state EXIT/FLOW-FINISHED :reset ()
+                    NIL NIL NIL)))

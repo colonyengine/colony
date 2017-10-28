@@ -83,17 +83,20 @@ containing each flow-state indexed by name."
                   :collect `(setf (gethash ',name ,flow-table) ,state))
           ,flow-table)))))
 
-(defun parse-call-flow (form)
+
+(defun parse-call-flows (form)
   "Parse an entire call-flow and return a list of the name of it and a form
 which evaluates to a hash table of flows keyed by their name."
-  (destructuring-bind (match call-flow-name . flows) form
-    (let ((call-flow-table (gensym)))
-      (ensure-matched-symbol match "call-flow")
-      `(,call-flow-name
-        (let ((,call-flow-table (make-hash-table)))
-          ,@(loop :for (name flow) :in (mapcar #'parse-flow flows)
-                  :collect `(setf (gethash ',name ,call-flow-table) ,flow))
-          ,call-flow-table)))))
+  (let ((call-flow-table (gensym)))
+    `(let ((,call-flow-table (make-hash-table)))
+       ,@(loop :for (name flow) :in (mapcar #'parse-flow form)
+               :collect `(setf (gethash ',name ,call-flow-table) ,flow))
+       ,call-flow-table)))
+
+(defmacro call-flow-definition (name (&key enabled) &body body)
+  (when enabled
+    `(setf (gethash ,name *call-flow-table*)
+           ,(parse-call-flows body))))
 
 (defun execute-flow (core-state call-flow-name flow-name flow-state-name
                      &optional come-from-state-name)
@@ -105,9 +108,9 @@ COME-FROM-STATE-NAME is an arbitrary symbol that indicates the previous
 flow-state name. This is often a symbolic name so execute-flow can determine how
 the flow exited. Return two values The previous state name and the current state
 name which resulted in the exiting of the flow."
-  (loop :with call-flow = (gethash call-flow-name (call-flow-table core-state))
-        :with flow = (gethash flow-name call-flow)
-        :with flow-state = (gethash flow-state-name flow)
+  (loop :with call-flow = (get-call-flow call-flow-name core-state)
+        :with flow = (get-flow flow-name call-flow)
+        :with flow-state = (get-flow-state flow-state-name flow)
         :with current-state-name = come-from-state-name
         :with last-state-name
         :with selections
@@ -154,8 +157,14 @@ name which resulted in the exiting of the flow."
             (setf flow-state
                   (gethash (funcall (transition flow-state) core-state) flow))))
 
-(defun get-call-flow (core-state call-flow-name)
+(defun get-call-flow (call-flow-name core-state)
   (gethash call-flow-name (call-flow-table core-state)))
+
+(defun get-flow (flow-name call-flow)
+  (gethash flow-name call-flow))
+
+(defun get-flow-state (flow-state-name flow)
+  (gethash flow-state-name flow))
 
 (defmethod extension-file-types ((owner (eql 'call-flow)))
   (list "call-flow"))
@@ -168,107 +177,16 @@ name which resulted in the exiting of the flow."
       (merge-call-flow-table core-state (%prepare))
       core-state)))
 
-(defmacro call-flow-definition (name (&key enabled) &body body)
-  (when enabled
-    `(setf (gethash ,name *call-flow-table*)
-           ,(apply #'parse-call-flow body))))
-
 ;;; debug stuff below
 
+;; These are test functions used in testme.call-flow
 (defun test-protocol-method-0 (inst cxt)
   (format t "TEST-PROTOCOL-METHOD-0 called: inst=~A cxt=~A~%" inst cxt))
 
 (defun test-protocol-method-1 (inst cxt)
   (format t "TEST-PROTOCOL-METHOD-1 called: inst=~A cxt=~A~%" inst cxt))
 
-(defun gen-call-flow ()
-  (let ((form
-          ;; This is directly from the ORG doc.
-          `(call-flow
-            default
-            ;; Hrm. This is all single dispatch, is that good? Is
-            ;; there more opportunity for CL's strengths in here?
-
-            ;; NOTE: If the functions inside of the state machine
-            ;; internally recurse by returning the correct states, the
-            ;; executor will recurse forever until something about a
-            ;; state transition picks a different path.
-            (flow a-test-flow
-                  (flow-state TEST-INSTANCE :reset ()
-                              (lambda (core-state)
-                                (declare (ignorable core-state))
-                                (format t "Selector function called.~%")
-                                42)
-                              (lambda (core-state inst)
-                                (format t "Action function called.~%")
-                                (test-protocol-method-0 inst
-                                                        (context core-state)))
-                              (lambda (core-state)
-                                (declare (ignore core-state))
-                                (format t "Transition function called.~%")
-                                'TEST-HT))
-                  (flow-state TEST-HT :reset ()
-                              (lambda (core-state)
-                                (declare (ignorable core-state))
-                                (format t "Selector function called.~%")
-                                (let ((ht (make-hash-table)))
-                                  (loop :for i :in '(1 2 3)
-                                        :do (setf (gethash i ht) (+ i 10)))
-                                  ht))
-                              (lambda (core-state inst)
-                                (format t "Action function called.~%")
-                                (test-protocol-method-1 inst
-                                                        (context core-state)))
-                              (lambda (core-state)
-                                (declare (ignore core-state))
-                                (format t "Transition function called.~%")
-                                'TEST-LIST-INSTANCES))
-                  (flow-state TEST-LIST-INSTANCES :reset ()
-                              ;; the two functions.
-                              ;; Select what I want to work on.
-                              (lambda (core-state)
-                                (declare (ignorable core-state))
-                                (format t "Selector function called.~%")
-                                (list 1 2 3))
-                              ;; This function is run for every instance
-                              (lambda (core-state inst)
-                                ;; a core function, not exposed to users.
-                                (format t "Action function called.~%")
-                                (test-protocol-method-0 inst
-                                                        (context core-state)))
-                              (lambda (core-state)
-                                (declare (ignore core-state))
-                                (format t "Transition function called.~%")
-                                'TEST-LIST-HT))
-                  (flow-state TEST-LIST-HT :reset ()
-                              (lambda (core-state)
-                                (declare (ignorable core-state))
-                                (format t "Selector function called.~%")
-                                (loop :for j :below 3
-                                      :collect
-                                      (let ((ht (make-hash-table)))
-                                        (loop :for i :in '(1 2 3)
-                                              :do (setf (gethash i ht)
-                                                        (+ i (* j 10))))
-                                        ht)))
-                              (lambda (core-state inst)
-                                (format t "Action function called.~%")
-                                (test-protocol-method-1 inst
-                                                        (context core-state)))
-                              (lambda (core-state)
-                                (declare (ignore core-state))
-                                (format t "Transition function called.~%")
-                                'EXIT/FLOW-FINISHED))
-                  (flow-state EXIT/FLOW-FINISHED :reset ()
-                              NIL NIL NIL)))))
-    (let ((parsed-form (parse-call-flow form))
-          (ht (make-hash-table :test #'eq)))
-      (setf (gethash (first parsed-form) ht)
-            (eval (second parsed-form)))
-      ht)))
-
-(defun test-execute-flow ()
-  (let ((core-state (make-core-state)))
-    (merge-call-flow-table core-state (gen-call-flow))
-    (execute-flow core-state 'default 'a-test-flow 'test-instance
-                  (gensym "INIT-"))))
+(defun test-execute-flow (core-state call-flow-name flow-name flow-state-name
+                          &optional (flow-init-state (gensym "EF-INIT-")))
+  (execute-flow core-state call-flow-name flow-name flow-state-name
+                flow-init-state))
