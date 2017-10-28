@@ -1,3 +1,3 @@
 (in-package :gear)
 
-(define-component camera () ())
+(define-component camera ())

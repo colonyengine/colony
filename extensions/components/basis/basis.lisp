@@ -1,3 +1,3 @@
 (in-package :gear)
 
-(define-component basis () ())
+(define-component basis ())
