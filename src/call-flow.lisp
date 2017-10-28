@@ -101,21 +101,26 @@ flow-state CLOS instance for it."
                                  :transition ,transition
                                  :reset ,reset-function)))))))))
 
+(defun get-flow-state-names (flow-states)
+  (loop :for (nil name . nil) :in flow-states
+        :collect `(,name ',name) :into bindings
+        :collect `(declare (ignorable ,name)) :into ignores
+        :finally (return (values bindings ignores))))
+
 (defun parse-flow (form)
   "Parse a single flow DSL node into a form that evaluates to a hash table
 containing each flow-state indexed by name."
   (destructuring-bind (match flow-name . flow-states) form
-    (let ((flow-table (gensym)))
-      (ensure-matched-symbol match "flow")
-      `(,flow-name
-        (let ((,flow-table (make-hash-table))
-              ,@(loop :for (nil name . nil) :in flow-states
-                      :collect `(,name ',name)))
-	  ,@(loop :for (nil name . nil) :in flow-states
-		  :collect `(declare (ignorable ,name)))
-          ,@(loop :for (name state) :in (mapcar #'parse-flow-state flow-states)
-                  :collect `(setf (gethash ',name ,flow-table) ,state))
-          ,flow-table)))))
+    (multiple-value-bind (bindings ignores) (get-flow-state-names flow-states)
+      (let ((flow-table (gensym)))
+        (ensure-matched-symbol match "flow")
+        `(,flow-name
+          (let ((,flow-table (make-hash-table))
+                ,@bindings)
+            ,@ignores
+            ,@(loop :for (name state) :in (mapcar #'parse-flow-state flow-states)
+                    :collect `(setf (gethash ',name ,flow-table) ,state))
+            ,flow-table))))))
 
 
 (defun parse-call-flows (form)
