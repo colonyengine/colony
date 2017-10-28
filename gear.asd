@@ -19,6 +19,7 @@
   :components
   ((:file "package")
    (:file "utils")
+   (:file "extensions")
    (:file "actor")
    (:file "components")
    (:file "core-state")

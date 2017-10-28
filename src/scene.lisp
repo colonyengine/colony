@@ -141,11 +141,16 @@
 (defun load-scene (core-state scene-name)
   (funcall (get-scene core-state scene-name) core-state))
 
+(defmethod extension-file-types ((owner (eql 'scene)))
+  (list "lisp" "scene"))
+
+(defmethod load-extensions progn ((owner (eql 'scene)) path)
+  (map-extensions owner path))
+
 (defun prepare-scenes (core-state path)
   (let ((*scene-table* (make-hash-table)))
     (flet ((%prepare ()
-             (load-extensions (get-path :gear "extensions"))
-             (load-extensions path)
+             (load-extensions 'scene path)
              *scene-table*))
       (merge-scene-table core-state (%prepare))
       core-state)))
