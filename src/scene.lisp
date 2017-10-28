@@ -144,9 +144,6 @@
 (defmethod extension-file-types ((owner (eql 'scene)))
   (list "lisp" "scene"))
 
-(defmethod load-extensions progn ((owner (eql 'scene)) path)
-  (map-extensions owner path))
-
 (defun prepare-scenes (core-state path)
   (let ((*scene-table* (make-hash-table)))
     (flet ((%prepare ()
