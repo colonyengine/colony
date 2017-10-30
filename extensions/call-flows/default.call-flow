@@ -4,23 +4,30 @@
     :default (:enabled t)
 
   (flow actor-initialization-flow
-        (flow-state ENTRY :reset ()
+        (flow-state ENTRY/INIT-COMPONENTS :reset ()
+                    (selector
+                     (lambda (core-state)
+                       (component-initialize-view core-state)))
+
+                    (action
+                     (lambda (core-state inst)
+                       (realize-component inst (context core-state))))
+
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignorable core-state))
+                       INIT-ACTORS)))
+
+
+        (flow-state INIT-ACTORS :reset ()
                     (selector
                      (lambda (core-state)
                        (actor-initialize-db core-state)))
 
-                    ;; This function is run for every instance
                     (action
                      (lambda (core-state inst)
-                       ;; a core function, not exposed to users.
                        (realize-actor inst (context core-state))))
 
-                    ;; After all instances have been processed, this
-                    ;; function is run once by the executor in order to
-                    ;; choose the next state. The let form contains
-                    ;; anything we need to store while running the
-                    ;; instance function which may determine the state
-                    ;; we go to.
                     (transition
                      (lambda (core-state)
                        (declare (ignorable core-state))
@@ -41,7 +48,7 @@
                        (execute-flow core-state
                                      :default
                                      'actor-initialization-flow
-                                     'ENTRY)))
+                                     'INIT-COMPONENTS)))
 
                     (transition
                      (lambda (core-state)

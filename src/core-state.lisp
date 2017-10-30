@@ -50,7 +50,11 @@
    call-flow-table)
   core-state)
 
+;; TODO FIXME to separate out components properly.
 (defun spawn-actor (core-state actor initializer-thunk-list)
+  "Take the ACTOR and INITIALIZER-THUNK-LIST and place into the initializing
+db's and view's in the CORE-STATE. The actor is not yet in the scene
+and the main loop protocol will not be called on it or its components."
   (setf
    ;; Store initializing actor
    (gethash actor (actor-initialize-db core-state))
@@ -72,3 +76,15 @@
   ;; the initializers in the right type order. But not implemented yet.
 
   )
+
+(defun realize-component (core-state component)
+  "Run the initializer found in CORE-STATE for the COMPONENT, then
+move it from the component-initialize-view in CORE-STATE to
+component-active-view, then change its state to :active."
+
+  nil)
+
+(defun realize-actor (core-state actor)
+  "Simply convert the ACTOR from :initialize to :active and move it
+from CORE-STATE's actor-initialize-db to actor-active-db."
+  nil)
