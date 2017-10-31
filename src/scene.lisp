@@ -82,11 +82,12 @@
         :for components = (gethash actor component-table)
         :append (loop :for (component . initargs) :in components
                       :collect `(push
-                                 (lambda ()
-                                   (reinitialize-instance
-                                    (get-component ',component ,actor)
-                                    :actor ,actor
-                                    ,@initargs))
+                                 (list ',component
+                                       (lambda ()
+                                         (reinitialize-instance
+                                          (get-component ',component ,actor)
+                                          :actor ,actor
+                                          ,@initargs)))
                                  ,thunk))))
 
 (defun %generate-relationships (scene-spec)
