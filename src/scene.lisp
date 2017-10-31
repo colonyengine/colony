@@ -80,15 +80,19 @@
   (loop :for actor :in actor-names
         :for thunk :in thunk-names
         :for components = (gethash actor component-table)
-        :append (loop :for (component . initargs) :in components
-                      :collect `(push
-                                 (list ',component
-                                       (lambda ()
-                                         (reinitialize-instance
-                                          (get-component ',component ,actor)
-                                          :actor ,actor
-                                          ,@initargs)))
-                                 ,thunk))))
+        :append
+        (loop :for (component . initargs) :in components
+              :collect `(push
+                         (list ',component
+                               (lambda ()
+                                 (let ((c (get-component ',component ,actor)))
+				   ;; We need the reference to the component
+				   ;; after we initialize it from the scene
+				   ;; dsl.
+                                   (reinitialize-instance
+                                    c :actor ,actor ,@initargs)
+                                   c)))
+                         ,thunk))))
 
 (defun %generate-relationships (scene-spec)
   (labels ((traverse (tree &optional parent)
@@ -170,7 +174,15 @@
 (defun test-scene-load ()
   (let ((cs (make-core-state)))
     (prepare-scenes cs (get-path :gear-example "data"))
-    (load-scene cs :demo)))
+    (load-scene cs :demo)
+    cs))
+
+(defun test-one-frame ()
+  (let ((cs (test-scene-load)))
+    (prepare-call-flows cs (get-path :gear-example "data"))
+    (execute-flow cs :default 'perform-one-frame 'ENTRY
+                  :come-from-state-name (gensym "EXEC-FLOW-"))
+    cs))
 
 (defun test-scene-code ()
   (let ((cs (make-core-state)))

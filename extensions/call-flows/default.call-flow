@@ -3,52 +3,73 @@
 (call-flow-definition
     :default (:enabled t)
 
-  (flow actor-initialization-flow
-        (flow-state ENTRY/INIT-COMPONENTS :reset ()
+  (flow realize-phase
+        (flow-state ENTRY/REALIZE-COMPONENTS :reset ()
                     (selector
                      (lambda (core-state)
-                       (component-initialize-view core-state)))
+                       (component-initialize-thunks-db core-state)))
 
                     (action
-                     (lambda (core-state inst)
-                       (realize-component inst (context core-state))))
+                     (lambda (core-state thunk-list)
+                       ;; the component-initialize-thunks-db is keyed by
+                       ;; types and the values are lists of thunks.
+                       (dolist (thunk thunk-list)
+                         (realize-component core-state thunk))))
 
                     (transition
                      (lambda (core-state)
                        (declare (ignorable core-state))
-                       INIT-ACTORS)))
+                       REALIZE-ACTORS)))
 
-
-        (flow-state INIT-ACTORS :reset ()
+        (flow-state REALIZE-ACTORS :reset ()
                     (selector
                      (lambda (core-state)
                        (actor-initialize-db core-state)))
 
                     (action
                      (lambda (core-state inst)
-                       (realize-actor inst (context core-state))))
+                       (realize-actor core-state inst)))
 
                     (transition
                      (lambda (core-state)
                        (declare (ignorable core-state))
-                       EXIT/FLOW-FINISHED)))
+                       REALIZE-PHASE-COMMIT)))
 
-        (flow-state EXIT/FLOW-FINISHED :reset ()
+        (flow-state REALIZE-PHASE-COMMIT :reset ()
+                    (selector
+                     (lambda (core-state)
+                       core-state))
+
+                    (action
+                     (lambda (core-state inst)
+                       (declare (ignore inst))
+                       (realize-phase-commit core-state)))
+
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignorable core-state))
+                       EXIT/REALIZE-PHASE)))
+
+        (flow-state EXIT/REALIZE-PHASE :reset ()
                     (selector NIL)
                     (action NIL)
                     (transition NIL)))
 
-  (flow frame-flow
+  (flow perform-one-frame
         (flow-state ENTRY :reset ()
-                    (selector NIL)
+                    (selector
+                     (lambda (core-state)
+                       core-state))
 
                     (action
                      (lambda (core-state inst)
                        (declare (ignore inst))
                        (execute-flow core-state
                                      :default
-                                     'actor-initialization-flow
-                                     'INIT-COMPONENTS)))
+                                     'realize-phase
+                                     'ENTRY/REALIZE-COMPONENTS
+                                     :come-from-state-name
+                                     (gensym "EF-REALIZE-PHASE-"))))
 
                     (transition
                      (lambda (core-state)

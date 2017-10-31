@@ -54,7 +54,7 @@
 db's and view's in the CORE-STATE. The actor is not yet in the scene
 and the main loop protocol will not be called on it or its components."
   (setf
-   ;; Store initializing actor
+   ;; Store initializing actor.
    (gethash actor (actor-initialize-db core-state))
    actor)
 
@@ -64,14 +64,30 @@ and the main loop protocol will not be called on it or its components."
                                  (component-initialize-thunks-db core-state))))
   )
 
-(defun realize-component (core-state component)
-  "Run the initializer found in CORE-STATE for the COMPONENT, then
-move it from the component-initialize-view in CORE-STATE to
-component-active-view, then change its state to :active."
-
-  nil)
+(defun realize-component (core-state thunk)
+  "Execute a component's THUNK initializer and set the state of the component
+to :active. Then place it in component-active-view in CORE-STATE."
+  (declare (ignorable core-state))
+  (let ((component (funcall thunk)))
+    (setf (state component) :active)
+    (setf (gethash component (component-active-view core-state)) component)))
 
 (defun realize-actor (core-state actor)
-  "Simply convert the ACTOR from :initialize to :active and move it
-from CORE-STATE's actor-initialize-db to actor-active-db."
-  nil)
+  "Change the ACTOR's state to :active, then place into the actor-active-db
+in the CORE-STATE."
+  (setf (state actor) :active)
+  (setf (gethash actor (actor-active-db core-state)) actor))
+
+(defun realize-phase-commit (core-state)
+  "This function removes all elements from the
+component-initialize-thunks-db slot and the actor-initialize-db in the
+CORE-STATE. It is assumed they have been processed appropriately."
+  (maphash (lambda (k v)
+             (declare (ignore v))
+             (remhash k (actor-initialize-db core-state)))
+           (actor-initialize-db core-state))
+
+  (maphash (lambda (k v)
+             (declare (ignore v))
+             (remhash k (component-initialize-thunks-db core-state)))
+           (component-initialize-thunks-db core-state)))
