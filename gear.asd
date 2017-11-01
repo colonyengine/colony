@@ -25,4 +25,5 @@
    (:file "components")
    (:file "core-state")
    (:file "call-flow")
+   (:file "type-dag")
    (:file "scene")))
