@@ -73,18 +73,18 @@
         :for components = (gethash actor component-table)
         :append
         (loop :for (component . initargs) :in components
-        :for gsym = (gensym "COMPONENT-")
-              :collect `(let ((,gsym (get-component ',component ,actor)))
-                          (setf (initializer-thunk ,gsym)
+              :for symbol = (gensym "COMPONENT-")
+              :collect `(let ((,symbol (get-component ',component ,actor)))
+                          (setf (initializer-thunk ,symbol)
                                 (lambda ()
                                   (reinitialize-instance
-                                   ,gsym :actor ,actor ,@initargs)))))))
+                                   ,symbol :actor ,actor ,@initargs)))))))
 
 (defun %generate-relationships (scene-spec)
   (labels ((traverse (tree &optional parent)
              (destructuring-bind (child components . sub-tree) tree
                (declare (ignore components))
-               (let ((result (list (cons (or parent '@universe) child))))
+               (let ((result (list (cons parent child))))
                  (if sub-tree
                      (append
                       result
@@ -93,7 +93,7 @@
                      result)))))
     (loop :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
-          :unless (eq parent child)
+          :when parent
             :collect `(add-child
                        (get-component 'transform ,parent)
                        (get-component 'transform ,child)))))
@@ -165,7 +165,7 @@
 (defun test-one-frame ()
   (let ((cs (test-scene-load)))
     (prepare-call-flows cs (get-path :gear-example "data"))
-    (execute-flow cs :default 'perform-one-frame 'ENTRY/INITIALIZE-PHASE
+    (execute-flow cs :default 'perform-one-frame 'ENTRY
                   :come-from-state-name (gensym "EXEC-FLOW-"))
     cs))
 
