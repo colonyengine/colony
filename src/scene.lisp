@@ -73,7 +73,7 @@
         :for components = (gethash actor component-table)
         :append
         (loop :for (component . initargs) :in components
-	      :for gsym = (gensym "COMPONENT-")
+        :for gsym = (gensym "COMPONENT-")
               :collect `(let ((,gsym (get-component ',component ,actor)))
                           (setf (initializer-thunk ,gsym)
                                 (lambda ()
@@ -93,9 +93,10 @@
                      result)))))
     (loop :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
-          :collect `(add-child
-                     (get-component 'transform ,parent)
-                     (get-component 'transform ,child)))))
+          :unless (eq parent child)
+            :collect `(add-child
+                       (get-component 'transform ,parent)
+                       (get-component 'transform ,child)))))
 
 (defun %generate-actor-spawn (core-state actor-names)
   (loop :for actor :in actor-names
