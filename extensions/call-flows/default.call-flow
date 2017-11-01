@@ -7,15 +7,15 @@
         (flow-state ENTRY/REALIZE-COMPONENTS :reset ()
                     (selector
                      (lambda (core-state)
-		       ;; this will iterate over a hash, and the
-		       ;; action will work on the values, which are
-		       ;; hashes themselves.
+                       ;; this will iterate over a hash, and the
+                       ;; action will work on the values, which are
+                       ;; hashes themselves.
                        (component-initialize-by-type-view core-state)))
 
                     (action
                      (lambda (core-state component-ht)
-		       ;; realize all components in the component-ht.
-		       (realize-components core-state component-ht)))
+                       ;; realize all components in the component-ht.
+                       (realize-components core-state component-ht)))
 
                     (transition
                      (lambda (core-state)
@@ -36,6 +36,7 @@
                        (declare (ignorable core-state))
                        REALIZE-PHASE-COMMIT)))
 
+
         (flow-state REALIZE-PHASE-COMMIT :reset ()
                     (selector
                      (lambda (core-state)
@@ -45,6 +46,20 @@
                      (lambda (core-state inst)
                        (declare (ignore inst))
                        (realize-phase-commit core-state)))
+
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignorable core-state))
+                       PROTOCOL-INITIALIZE-COMPONENTS)))
+
+        (flow-state PROTOCOL-INITIALIZE-COMPONENTS :reset ()
+                    (selector
+                     (lambda (core-state)
+                       (component-active-view core-state)))
+
+                    (action
+                     (lambda (core-state component)
+                       (initialize-component component (context core-state))))
 
                     (transition
                      (lambda (core-state)

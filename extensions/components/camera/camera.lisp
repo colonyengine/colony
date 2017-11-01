@@ -11,6 +11,7 @@
   (transform nil))
 
 (defmethod initialize-component ((component camera) (context context))
+  (format t "Camera component: initializing~%")
   (setf (transform component) (get-component 'transform (actor component))))
 
 ;;; TODO: Think about what belongs in UPDATE-COMPONENT and RENDER-COMPONENT for
