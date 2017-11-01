@@ -7,14 +7,15 @@
         (flow-state ENTRY/REALIZE-COMPONENTS :reset ()
                     (selector
                      (lambda (core-state)
-                       (component-initialize-thunks-db core-state)))
+                       (component-initialize-by-type-db core-state)))
 
                     (action
                      (lambda (core-state thunk-list)
                        ;; the component-initialize-thunks-db is keyed by
                        ;; types and the values are lists of thunks.
-                       (dolist (thunk thunk-list)
-                         (realize-component core-state thunk))))
+
+                       ;; TODO broken.
+                       nil))
 
                     (transition
                      (lambda (core-state)

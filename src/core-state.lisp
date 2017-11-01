@@ -4,9 +4,9 @@
   ((%actor-initialize-db :accessor actor-initialize-db
                          :initarg :actor-initialize-db
                          :initform (make-hash-table :test #'eq))
-   (%component-initialize-thunks-db :accessor component-initialize-thunks-db
-                                    :initarg :component-initialize-thunks-db
-                                    :initform (make-hash-table :test #'eq))
+   (%component-initialize-by-type-db :accessor component-initialize-by-type-db
+                                     :initarg :component-initialize-by-type-db
+                                     :initform (make-hash-table :test #'eq))
 
    (%actor-active-db :accessor actor-active-db
                      :initarg :actor-active-db
@@ -59,10 +59,21 @@ and the main loop protocol will not be called on it or its components."
    actor)
 
   ;; store the component initializers by type name.
-  (loop :for (comp-type thunk) :in initializer-thunk-list
-        :do (push thunk (gethash comp-type
-                                 (component-initialize-thunks-db core-state))))
-  )
+  (with-accessors ((component-initialize-by-type-db
+                    component-initialize-by-type-db))
+      core-state
+
+    (loop :for (comp-type comp-ref thunk) :in initializer-thunk-list
+          :do (multiple-value-bind (thunk-ht presentp)
+                  (gethash comp-type component-initialize-by-type-db)
+                (unless presentp
+                  (let ((ht (make-hash-table :test #'eq)))
+                    (setf (gethash comp-type component-initialize-by-type-db)
+                          ht)
+                    (setf thunk-ht ht)))
+
+                (push (cons comp-ref thunk)
+                      (gethash comp-ref thunk-ht))))))
 
 (defun realize-component (core-state thunk)
   "Execute a component's THUNK initializer and set the state of the component
@@ -89,5 +100,5 @@ CORE-STATE. It is assumed they have been processed appropriately."
 
   (maphash (lambda (k v)
              (declare (ignore v))
-             (remhash k (component-initialize-thunks-db core-state)))
-           (component-initialize-thunks-db core-state)))
+             (remhash k (component-initialize-by-type-db core-state)))
+           (component-initialize-by-type-db core-state)))

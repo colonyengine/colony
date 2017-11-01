@@ -83,12 +83,14 @@
         :append
         (loop :for (component . initargs) :in components
               :collect `(push
-                         (list ',component
-                               (lambda ()
-                                 (let ((c (get-component ',component ,actor)))
-				   ;; We need the reference to the component
-				   ;; after we initialize it from the scene
-				   ;; dsl.
+                         (let ((c (get-component ',component ,actor)))
+                           (list ',component
+				 ;; we need this backreference when spawining.
+                                 c
+                                 (lambda ()
+                                   ;; We need the reference to the component
+                                   ;; after we initialize it from the scene
+                                   ;; dsl.
                                    (reinitialize-instance
                                     c :actor ,actor ,@initargs)
                                    c)))
