@@ -140,7 +140,7 @@
              (add-scene-tree-root ,core-state @universe)
              (values ,core-state ,actor-table)))))))
 
-(defun get-scene (core-state scene-name &optional expansion)
+(defun get-scene (core-state scene-name)
   (gethash scene-name (scene-table core-state)))
 
 (defun load-scene (core-state scene-name)
