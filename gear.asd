@@ -20,6 +20,7 @@
   ((:file "package")
    (:file "utils")
    (:file "extensions")
+   (:file "context")
    (:file "actor")
    (:file "components")
    (:file "core-state")
