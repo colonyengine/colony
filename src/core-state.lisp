@@ -24,9 +24,9 @@
    (%call-flow-table :accessor call-flow-table
                      :initarg :call-flow-table
                      :initform (make-hash-table :test #'eq))
-   (%context :accessor context ; to be defined later, hold delta time, etc.
+   (%context :accessor context
              :initarg :context
-             :initform nil)))
+             :initform (make-instance 'context))))
 
 
 (defun make-core-state (&rest initargs)
