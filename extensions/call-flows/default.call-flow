@@ -77,7 +77,26 @@
                     (transition NIL)))
 
   (flow active-phase
-        (flow-state ENTRY/PROTOCOL-UPDATE-COMPONENT :reset ()
+        (flow-state ENTRY/RUN-CRAPPY-PHYSICS :reset ()
+                    (selector
+                     (lambda (core-state)
+                       core-state))
+
+                    (action
+                     (lambda (core-state inst)
+                       (declare (ignore inst))
+		       (format t "Running crappy physics pipeline.~%")
+                       (do-nodes #'transform-node
+			 (get-component 'transform (scene-tree core-state)))
+                       (do-nodes #'resolve-model
+			 (get-component 'transform (scene-tree core-state)))))
+
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignorable core-state))
+                       PROTOCOL-UPDATE-COMPONENT)))
+
+        (flow-state PROTOCOL-UPDATE-COMPONENT :reset ()
                     (selector
                      (lambda (core-state)
                        (component-active-view core-state)))
@@ -144,7 +163,7 @@
                        (execute-flow core-state
                                      :default
                                      'active-phase
-                                     'ENTRY/PROTOCOL-UPDATE-COMPONENT
+                                     'ENTRY/RUN-CRAPPY-PHYSICS
                                      :come-from-state-name
                                      (gensym "EF-ACTIVE-PHASE-"))))
 

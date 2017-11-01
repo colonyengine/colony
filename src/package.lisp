@@ -29,6 +29,10 @@
    ;; transform component
    #:transform
    #:add-child
+   ;; Sketchy!!!
+   #:do-nodes
+   #:transform-node
+   #:resolve-model
 
    ;; camera component
    #:camera

@@ -55,7 +55,7 @@
     (translate-node node)))
 
 ;; TODO: change to reflect engine idea spec'd out by psilord
-(defun resolve-local (node alpha)
+(defun resolve-local (node &optional (alpha 0.5))
   (with-slots (%scale %rotation %translation %local) node
     (interpolate-state %scale alpha)
     (interpolate-state %rotation alpha)
@@ -67,7 +67,7 @@
       (v->mtr! %local (interpolated %translation)))))
 
 ;; TODO: change to reflect engine idea spec'd out by psilord
-(defun resolve-model (node alpha)
+(defun resolve-model (node &optional (alpha 0.5))
   (with-slots (%parent %local %model) node
     (when %parent
       (resolve-local node alpha)
@@ -75,8 +75,11 @@
       %model)))
 
 ;; TODO: change to reflect engine idea spec'd out by psilord
-(defun do-nodes (effect)
-  (declare (ignore effect)))
+;; HACK: parent is a transform component.
+(defun do-nodes (func parent)
+  (funcall func parent)
+  (dolist (child (children parent))
+    (do-nodes func child)))
 
 ;; TODO: change to reflect engine idea spec'd out by psilord
 (defun interpolate-transforms (alpha)
