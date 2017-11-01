@@ -30,6 +30,9 @@
    #:transform
    #:add-child
 
+   ;; camera component
+   #:camera
+
    ;; tags component
    #:tags
 

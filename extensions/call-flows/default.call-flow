@@ -34,8 +34,27 @@
                     (transition
                      (lambda (core-state)
                        (declare (ignorable core-state))
-                       REALIZE-PHASE-COMMIT)))
+                       PROTOCOL-INITIALIZE-COMPONENTS)))
 
+
+        (flow-state PROTOCOL-INITIALIZE-COMPONENTS :reset ()
+                    (selector
+                     (lambda (core-state)
+                       (component-initialize-by-type-view core-state)))
+
+                    (action
+                     (lambda (core-state component-ht)
+                       (maphash
+                        (lambda (k component)
+                          (declare (ignore k))
+                          (initialize-component component
+                                                (context core-state)))
+                        component-ht)))
+
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignorable core-state))
+                       REALIZE-PHASE-COMMIT)))
 
         (flow-state REALIZE-PHASE-COMMIT :reset ()
                     (selector
@@ -50,21 +69,8 @@
                     (transition
                      (lambda (core-state)
                        (declare (ignorable core-state))
-                       PROTOCOL-INITIALIZE-COMPONENTS)))
-
-        (flow-state PROTOCOL-INITIALIZE-COMPONENTS :reset ()
-                    (selector
-                     (lambda (core-state)
-                       (component-active-view core-state)))
-
-                    (action
-                     (lambda (core-state component)
-                       (initialize-component component (context core-state))))
-
-                    (transition
-                     (lambda (core-state)
-                       (declare (ignorable core-state))
                        EXIT/REALIZE-PHASE)))
+
 
         (flow-state EXIT/REALIZE-PHASE :reset ()
                     (selector NIL)
