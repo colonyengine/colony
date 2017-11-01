@@ -103,11 +103,7 @@ in the CORE-STATE."
 component-initialize-thunks-db slot and the actor-initialize-db in the
 CORE-STATE. It is assumed they have been processed appropriately."
   ;; remove all the actors from initialization phase.
-  (maphash
-   (lambda (k v)
-     (declare (ignore v))
-     (remhash k (actor-initialize-db core-state)))
-   (actor-initialize-db core-state))
+  (clrhash (actor-initialize-db core-state))
 
   ;; and remove the components from the typed hashes of the component
   ;; initialization view.
