@@ -71,8 +71,43 @@
                        (declare (ignorable core-state))
                        EXIT/REALIZE-PHASE)))
 
-
         (flow-state EXIT/REALIZE-PHASE :reset ()
+                    (selector NIL)
+                    (action NIL)
+                    (transition NIL)))
+
+  (flow active-phase
+        (flow-state ENTRY/PROTOCOL-UPDATE-COMPONENT :reset ()
+                    (selector
+                     (lambda (core-state)
+                       (component-active-view core-state)))
+
+                    (action
+                     (lambda (core-state inst)
+                       (declare (ignore inst))
+                       (update-component inst (context core-state))))
+
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignorable core-state))
+                       PROTOCOL-RENDER-COMPONENT)))
+
+        (flow-state PROTOCOL-RENDER-COMPONENT :reset ()
+                    (selector
+                     (lambda (core-state)
+                       (component-active-view core-state)))
+
+                    (action
+                     (lambda (core-state inst)
+                       (declare (ignore inst))
+                       (render-component inst (context core-state))))
+
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignorable core-state))
+                       EXIT/ACTIVE-PHASE)))
+
+        (flow-state EXIT/ACTIVE-PHASE :reset ()
                     (selector NIL)
                     (action NIL)
                     (transition NIL)))
@@ -92,6 +127,26 @@
                                      'ENTRY/REALIZE-COMPONENTS
                                      :come-from-state-name
                                      (gensym "EF-REALIZE-PHASE-"))))
+
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignorable core-state))
+                       ACTIVE-PHASE)))
+
+        (flow-state ACTIVE-PHASE :reset ()
+                    (selector
+                     (lambda (core-state)
+                       core-state))
+
+                    (action
+                     (lambda (core-state inst)
+                       (declare (ignore inst))
+                       (execute-flow core-state
+                                     :default
+                                     'active-phase
+                                     'ENTRY/PROTOCOL-UPDATE-COMPONENT
+                                     :come-from-state-name
+                                     (gensym "EF-ACTIVE-PHASE-"))))
 
                     (transition
                      (lambda (core-state)
