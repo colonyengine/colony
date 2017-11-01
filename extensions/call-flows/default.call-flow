@@ -103,7 +103,6 @@
 
                     (action
                      (lambda (core-state inst)
-                       (declare (ignore inst))
                        (update-component inst (context core-state))))
 
                     (transition
@@ -118,7 +117,6 @@
 
                     (action
                      (lambda (core-state inst)
-                       (declare (ignore inst))
                        (render-component inst (context core-state))))
 
                     (transition

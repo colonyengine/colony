@@ -82,8 +82,10 @@
     (do-nodes func child)))
 
 ;; TODO: change to reflect engine idea spec'd out by psilord
-(defun interpolate-transforms (alpha)
-  (do-nodes (lambda (node) (resolve-model node alpha))))
+;; TODO: THis needs inspection, what is it for, who would call it.
+;; NOTE: it doesn't match the hacked do-nodes API I have for this experiment.
+#++(defun interpolate-transforms (alpha)
+     (do-nodes (lambda (node) (resolve-model node alpha))))
 
 (defmethod make-component ((type (eql 'transform)) &rest initargs)
   (let ((instance (make-instance 'transform)))
