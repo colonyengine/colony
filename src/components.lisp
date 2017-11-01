@@ -1,5 +1,7 @@
 (in-package :gear)
 
+(defvar *core-components* nil)
+
 (defclass component ()
   ((%state :accessor state
            :initarg :state
@@ -8,20 +10,28 @@
            :initarg :actor)
    (%initializer-thunk :accessor initializer-thunk
                        :initarg :initializer-thunk
-                       :initform NIL)))
+                       :initform nil)))
 
 (defmacro define-component (name super-classes &body slots)
-  `(defclass ,name (component ,@super-classes)
-     ,(loop :for slot :in slots
-            :collect
-            (destructuring-bind (slot-name slot-value &key type) slot
-              (append
-               `(,(symbolicate '% slot-name)
-                 :accessor ,slot-name
-                 :initarg ,(make-keyword slot-name)
-                 :initform ,slot-value)
-               (when type
-                 `(:type ,type)))))))
+  `(progn
+     (when (member ',name *core-components*)
+       (error "Component name must not be a reserved core component name."))
+     (defclass ,name (component ,@super-classes)
+       ,(loop :for slot :in slots
+              :collect
+              (destructuring-bind (slot-name slot-value &key type) slot
+                (append
+                 `(,(symbolicate '% slot-name)
+                   :accessor ,slot-name
+                   :initarg ,(make-keyword slot-name)
+                   :initform ,slot-value)
+                 (when type
+                   `(:type ,type))))))))
+
+(defmacro %define-core-component (name super-classes &body slots)
+  `(progn
+     (define-component ,name ,super-classes ,@slots)
+     (push ',name *core-components*)))
 
 (defun component-type (component)
   (class-name (class-of component)))
@@ -53,13 +63,13 @@ COMPONENT-TYPE in an ACTOR."
     (add-component actor component)))
 
 (defgeneric initialize-component (component context)
-  (:method ((component component) (context context))))
+  (:method ((component component) context)))
 
 (defgeneric update-component (component context)
-  (:method ((component component) (context context))))
+  (:method ((component component) context)))
 
 (defgeneric render-component (component context)
-  (:method ((component component) (context context))))
+  (:method ((component component) context)))
 
 (defgeneric destroy-component (component context)
-  (:method ((component component) (context context))))
+  (:method ((component component) context)))

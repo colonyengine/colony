@@ -15,6 +15,18 @@
   :depends-on (#:alexandria
                #:gamebox-math
                #:gear)
+  :pathname "src"
   :serial t
   :components
-  ((:file "package")))
+  ((:file "package")
+
+   ;; components
+   (:module "components/gun"
+    :components
+    ((:file "gun")))
+   (:module "components/gun-manager"
+    :components
+    ((:file "gun-manager")))
+   (:module "components/hit-points"
+    :components
+    ((:file "hit-points")))))

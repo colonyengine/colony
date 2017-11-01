@@ -13,5 +13,5 @@
           (extension-file-types owner))))
 
 (defun load-extensions (owner path)
-  (map-extensions owner (get-path :gear "extensions"))
+  (map-extensions owner (get-path :gear "data"))
   (map-extensions owner path))

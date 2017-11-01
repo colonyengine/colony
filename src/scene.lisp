@@ -2,6 +2,12 @@
 
 (defvar *scene-table*)
 
+(defclass scene-definition ()
+  ((%scene :accessor scene
+           :initarg :scene)
+   (%data :accessor data
+          :initarg :data)))
+
 (defun %read-spec-forms (file)
   (let ((*package* (find-package :gear)))
     (with-open-file (in file)
@@ -52,11 +58,16 @@
      `((,actor (gethash ',actor ,table))))
    actor-names))
 
+(defun %generate-component-symbol (component-name)
+  (or (find-symbol (symbol-name component-name) :gear)
+      component-name))
+
 (defun %generate-component-initializers (actor-components)
   (flet ((generate-component-forms (components)
            (let ((component-forms))
              (dolist (c components)
-               (push `(make-component ',(first c)) component-forms))
+               (let ((component (%generate-component-symbol (first c))))
+                 (push `(make-component ',component) component-forms)))
              component-forms)))
     (let ((result))
       (maphash
@@ -72,7 +83,8 @@
   (loop :for actor :in actor-names
         :for components = (gethash actor component-table)
         :append
-        (loop :for (component . initargs) :in components
+        (loop :for (component-name . initargs) :in components
+              :for component = (%generate-component-symbol component-name)
               :for symbol = (gensym "COMPONENT-")
               :collect `(let ((,symbol (get-component ',component ,actor)))
                           (setf (initializer-thunk ,symbol)
@@ -94,9 +106,10 @@
     (loop :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
           :when parent
-            :collect `(add-child
-                       (get-component 'transform ,parent)
-                       (get-component 'transform ,child)))))
+            :collect
+          `(add-child
+            (get-component 'transform ,parent)
+            (get-component 'transform ,child)))))
 
 (defun %generate-actor-spawn (core-state actor-names)
   (loop :for actor :in actor-names
@@ -127,14 +140,14 @@
              (add-scene-tree-root ,core-state @universe)
              (values ,core-state ,actor-table)))))))
 
-(defun get-scene (core-state scene-name)
+(defun get-scene (core-state scene-name &optional expansion)
   (gethash scene-name (scene-table core-state)))
 
 (defun load-scene (core-state scene-name)
-  (funcall (get-scene core-state scene-name) core-state))
+  (funcall (scene (get-scene core-state scene-name)) core-state))
 
 (defmethod extension-file-types ((owner (eql 'scene)))
-  (list "lisp" "scene"))
+  (list "scene"))
 
 (defun prepare-scenes (core-state path)
   (let ((*scene-table* (make-hash-table :test #'eq)))
@@ -145,34 +158,8 @@
       core-state)))
 
 (defmacro scene-definition (name (&key enabled) &body body)
-  (when enabled
-    `(setf (gethash ,name *scene-table*)
-           ,(apply #'parse-scene name body))))
-
-;;; debug stuff below
-
-(defmacro scene-definition-code (name (&key enabled) &body body)
-  (when enabled
-    `(setf (gethash ,name *scene-table*)
-           (apply #'parse-scene ,name ',body))))
-
-(defun test-scene-load ()
-  (let ((cs (make-core-state)))
-    (prepare-scenes cs (get-path :gear-example "data"))
-    (load-scene cs :demo)
-    cs))
-
-(defun test-frames (&optional (num-frames 1))
-  (let ((cs (test-scene-load)))
-    (prepare-call-flows cs (get-path :gear-example "data"))
-    (loop
-      :repeat num-frames
-      :do (execute-flow cs :default 'perform-one-frame
-                        'ENTRY/INITIALIZE-PHASE
-                        :come-from-state-name (gensym "EXEC-FLOW-")))
-    cs))
-
-(defun test-scene-code ()
-  (let ((cs (make-core-state)))
-    (prepare-scenes cs (get-path :gear-example "data"))
-    (get-scene cs :demo-code)))
+  `(let ((scene (make-instance 'scene-definition
+                               :scene ,(apply #'parse-scene name body)
+                               :data (apply #'parse-scene ,name ',body))))
+     (when ,enabled
+       (setf (gethash ,name *scene-table*) scene))))

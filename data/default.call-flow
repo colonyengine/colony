@@ -85,11 +85,11 @@
                     (action
                      (lambda (core-state inst)
                        (declare (ignore inst))
-		       (format t "Running crappy physics pipeline.~%")
+                       (format t "Running crappy physics pipeline.~%")
                        (do-nodes #'transform-node
-			 (get-component 'transform (scene-tree core-state)))
+                         (get-component 'transform (scene-tree core-state)))
                        (do-nodes #'resolve-model
-			 (get-component 'transform (scene-tree core-state)))))
+                         (get-component 'transform (scene-tree core-state)))))
 
                     (transition
                      (lambda (core-state)

@@ -1,4 +1,4 @@
 (in-package :gear)
 
-(define-component tags ()
+(%define-core-component tags ()
   (tags nil))

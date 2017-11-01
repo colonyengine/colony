@@ -1,6 +1,6 @@
 (in-package :gear)
 
-(define-component transform ()
+(%define-core-component transform ()
   (parent nil)
   (children nil)
   (translation (%make-transform-state 'transform-state-vector))

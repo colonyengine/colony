@@ -215,17 +215,3 @@ name which resulted in the exiting of the flow."
              *call-flow-table*))
       (merge-call-flow-table core-state (%prepare))
       core-state)))
-
-;;; debug stuff below
-
-;; These are test functions used in testme.call-flow
-(defun test-protocol-method-0 (inst cxt)
-  (format t "TEST-PROTOCOL-METHOD-0 called: inst=~A cxt=~A~%" inst cxt))
-
-(defun test-protocol-method-1 (inst cxt)
-  (format t "TEST-PROTOCOL-METHOD-1 called: inst=~A cxt=~A~%" inst cxt))
-
-(defun test-execute-flow (core-state call-flow-name flow-name flow-state-name
-                          &optional (flow-init-state (gensym "EF-INIT-")))
-  (execute-flow core-state call-flow-name flow-name flow-state-name
-                :come-from-state-name flow-init-state))

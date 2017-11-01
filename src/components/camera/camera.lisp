@@ -1,6 +1,6 @@
 (in-package :gear)
 
-(define-component camera ()
+(%define-core-component camera ()
   (view (mid))
   (projection (mid))
   (mode :perspective)
@@ -10,7 +10,7 @@
   (target nil)
   (transform nil))
 
-(defmethod initialize-component ((component camera) (context context))
+(defmethod initialize-component ((component camera) context)
   (format t "Camera component: initializing~%")
   (setf (transform component) (get-component 'transform (actor component))))
 
@@ -18,10 +18,10 @@
 ;;; the camera. We need to call MAKE-VIEW and MAKE-PROJECTION somewhere, but
 ;;; currently these matrices are not computed at all.
 
-(defmethod update-component ((component camera) (context context))
+(defmethod update-component ((component camera) context)
   (format t "Camera component: updated~%"))
 
-(defmethod render-component ((component camera) (context context))
+(defmethod render-component ((component camera) context)
   (format t "Camera component: rendered~%"))
 
 (defun make-view (camera)

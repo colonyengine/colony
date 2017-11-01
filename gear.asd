@@ -26,4 +26,20 @@
    (:file "core-state")
    (:file "call-flow")
    (:file "type-dag")
-   (:file "scene")))
+   (:file "scene")
+   (:file "test")
+
+   ;; core components
+   (:module "components/basis"
+    :components
+    ((:file "basis")))
+   (:module "components/camera"
+    :components
+    ((:file "camera")))
+   (:module "components/tags"
+    :components
+    ((:file "tags")))
+   (:module "components/transform"
+    :components
+    ((:file "state")
+     (:file "transform")))))

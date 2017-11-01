@@ -4,42 +4,27 @@
   (:use #:cl
         #:alexandria
         #:gamebox-math)
-  (:export
+  (:export #:get-path
+           #:actor
+           #:scene-definition
+           #:get-scene
+           #:prepare-scenes
+           #:make-core-state
+           #:spawn-actor
+           #:define-component
+           #:component
+           #:components
+           #:make-component
+           #:add-component
+           #:add-multiple-components
+           #:get-component
 
-   ;; utilities
-   #:get-path
-
-   ;; actor
-   #:actor
-
-   ;; components
-   #:define-component
-   #:component
-   #:components
-   #:make-component
-   #:add-component
-   #:add-multiple-components
-   #:get-component
-
-   ;; scene
-   #:scene-definition
-   #:get-scene
-   #:prepare-scenes
-
-   ;; transform component
-   #:transform
-   #:add-child
-   ;; Sketchy!!!
-   #:do-nodes
-   #:transform-node
-   #:resolve-model
-
-   ;; camera component
-   #:camera
-
-   ;; tags component
-   #:tags
-
-   ;; core-state
-   #:make-core-state
-   #:spawn-actor))
+           ;; components
+           #:basis
+           #:camera
+           #:tags
+           #:transform
+           #:add-child
+           #:do-nodes ; sketchy!
+           #:transform-node
+           #:resolve-model))
