@@ -5,7 +5,10 @@
            :initarg :state
            :initform :initialize)
    (%actor :accessor actor
-           :initarg :actor)))
+           :initarg :actor)
+   (%initializer-thunk :accessor initializer-thunk
+                       :initarg :initializer-thunk
+                       :initform NIL)))
 
 (defmacro define-component (name super-classes &body slots)
   `(defclass ,name (component ,@super-classes)

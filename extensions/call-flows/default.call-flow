@@ -7,15 +7,15 @@
         (flow-state ENTRY/REALIZE-COMPONENTS :reset ()
                     (selector
                      (lambda (core-state)
-                       (component-initialize-by-type-db core-state)))
+		       ;; this will iterate over a hash, and the
+		       ;; action will work on the values, which are
+		       ;; hashes themselves.
+                       (component-initialize-by-type-view core-state)))
 
                     (action
-                     (lambda (core-state thunk-list)
-                       ;; the component-initialize-thunks-db is keyed by
-                       ;; types and the values are lists of thunks.
-
-                       ;; TODO broken.
-                       nil))
+                     (lambda (core-state component-ht)
+		       ;; realize all components in the component-ht.
+		       (realize-components core-state component-ht)))
 
                     (transition
                      (lambda (core-state)

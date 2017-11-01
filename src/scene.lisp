@@ -46,19 +46,11 @@
             (%generate-actor-components-table child actor-names table)
         :finally (return table)))
 
-(defun %generate-thunk-list-symbols (actor-names)
-  (mapcar
-   (lambda (x)
-     (symbolicate x "-COMPONENT-THUNKS" (gensym)))
-   actor-names))
-
-(defun %generate-actor-bindings (actor-names thunk-list-names table)
+(defun %generate-actor-bindings (actor-names table)
   (mapcan
-   (lambda (actor thunk)
-     `((,actor (gethash ',actor ,table))
-       (,thunk)))
-   actor-names
-   thunk-list-names))
+   (lambda (actor)
+     `((,actor (gethash ',actor ,table))))
+   actor-names))
 
 (defun %generate-component-initializers (actor-components)
   (flet ((generate-component-forms (components)
@@ -76,25 +68,17 @@
        actor-components)
       result)))
 
-(defun %generate-component-thunks (actor-names thunk-names component-table)
+(defun %generate-component-thunks (actor-names component-table)
   (loop :for actor :in actor-names
-        :for thunk :in thunk-names
         :for components = (gethash actor component-table)
         :append
         (loop :for (component . initargs) :in components
-              :collect `(push
-                         (let ((c (get-component ',component ,actor)))
-                           (list ',component
-				 ;; we need this backreference when spawining.
-                                 c
-                                 (lambda ()
-                                   ;; We need the reference to the component
-                                   ;; after we initialize it from the scene
-                                   ;; dsl.
-                                   (reinitialize-instance
-                                    c :actor ,actor ,@initargs)
-                                   c)))
-                         ,thunk))))
+	      :for gsym = (gensym "COMPONENT-")
+              :collect `(let ((,gsym (get-component ',component ,actor)))
+                          (setf (initializer-thunk ,gsym)
+                                (lambda ()
+                                  (reinitialize-instance
+                                   ,gsym :actor ,actor ,@initargs)))))))
 
 (defun %generate-relationships (scene-spec)
   (labels ((traverse (tree &optional parent)
@@ -113,10 +97,9 @@
                      (get-component 'transform ,parent)
                      (get-component 'transform ,child)))))
 
-(defun %generate-actor-spawn (core-state actor-names thunk-names)
+(defun %generate-actor-spawn (core-state actor-names)
   (loop :for actor :in actor-names
-        :for thunk :in thunk-names
-        :collect `(spawn-actor ,core-state ,actor ,thunk)))
+        :collect `(spawn-actor ,core-state ,actor)))
 
 (defun parse-scene (scene-name scene-spec)
   (with-gensyms (core-state actor-table actor-name)
@@ -124,9 +107,8 @@
            (actor-names (%generate-actor-names scene-spec))
            (actor-components (%generate-actor-components-table
                               scene-spec actor-names))
-           (thunk-list-symbols (%generate-thunk-list-symbols actor-names))
            (bindings (%generate-actor-bindings
-                      actor-names thunk-list-symbols actor-table)))
+                      actor-names actor-table)))
       `(lambda (,core-state)
          (let ((,actor-table (make-hash-table :test #'eq)))
            (dolist (,actor-name ',actor-names)
@@ -137,10 +119,10 @@
            (let ,bindings
              ,@(%generate-component-initializers actor-components)
              ,@(%generate-component-thunks
-                actor-names thunk-list-symbols actor-components)
+                actor-names actor-components)
              ,@(%generate-relationships scene-spec)
              ,@(%generate-actor-spawn
-                core-state actor-names thunk-list-symbols)
+                core-state actor-names)
              (add-scene-tree-root ,core-state @universe)
              (values ,core-state ,actor-table)))))))
 

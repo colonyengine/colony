@@ -4,9 +4,10 @@
   ((%actor-initialize-db :accessor actor-initialize-db
                          :initarg :actor-initialize-db
                          :initform (make-hash-table :test #'eq))
-   (%component-initialize-by-type-db :accessor component-initialize-by-type-db
-                                     :initarg :component-initialize-by-type-db
-                                     :initform (make-hash-table :test #'eq))
+   (%component-initialize-by-type-view
+    :accessor component-initialize-by-type-view
+    :initarg :component-initialize-by-type-view
+    :initform (make-hash-table :test #'eq))
 
    (%actor-active-db :accessor actor-active-db
                      :initarg :actor-active-db
@@ -49,56 +50,69 @@
    call-flow-table)
   core-state)
 
-(defun spawn-actor (core-state actor initializer-thunk-list)
+(defun spawn-actor (core-state actor)
   "Take the ACTOR and INITIALIZER-THUNK-LIST and place into the initializing
 db's and view's in the CORE-STATE. The actor is not yet in the scene
 and the main loop protocol will not be called on it or its components."
-  (setf
-   ;; Store initializing actor.
-   (gethash actor (actor-initialize-db core-state))
-   actor)
 
-  ;; store the component initializers by type name.
-  (with-accessors ((component-initialize-by-type-db
-                    component-initialize-by-type-db))
-      core-state
+  ;; store actor in conceptual storage location.
+  (setf (gethash actor (actor-initialize-db core-state)) actor)
 
-    (loop :for (comp-type comp-ref thunk) :in initializer-thunk-list
-          :do (multiple-value-bind (thunk-ht presentp)
-                  (gethash comp-type component-initialize-by-type-db)
-                (unless presentp
-                  (let ((ht (make-hash-table :test #'eq)))
-                    (setf (gethash comp-type component-initialize-by-type-db)
-                          ht)
-                    (setf thunk-ht ht)))
+  ;; put all components into the hash which represents the fact we need to
+  ;; complete their initialization by type.
+  (maphash
+   (lambda (k v)
+     (let ((component-type-name (component-type v)))
+       (multiple-value-bind (comp-type-ht presentp)
+           (gethash component-type-name
+                    (component-initialize-by-type-view core-state))
 
-                (push (cons comp-ref thunk)
-                      (gethash comp-ref thunk-ht))))))
+         (unless presentp
+           (let ((ht (make-hash-table :test #'eq)))
+             (setf (gethash component-type-name
+                            (component-initialize-by-type-view core-state))
+                   ht)
+             (setf comp-type-ht ht)))
 
-(defun realize-component (core-state thunk)
-  "Execute a component's THUNK initializer and set the state of the component
-to :active. Then place it in component-active-view in CORE-STATE."
-  (declare (ignorable core-state))
-  (let ((component (funcall thunk)))
-    (setf (state component) :active)
-    (setf (gethash component (component-active-view core-state)) component)))
+         (setf (gethash k comp-type-ht) v))))
+
+   (components actor)))
+
+(defun realize-components (core-state component-ht)
+  "For all component values in the COMPONENT-HT hash table, run their
+initialize-thunks, set them :active, and put them into the active component
+view."
+  (maphash
+   (lambda (k component)
+     (declare (ignorable k))
+     (when-let ((thunk (initializer-thunk component)))
+       (funcall thunk)
+       (setf (initializer-thunk component) nil))
+     (setf (state component) :active
+           (gethash component (component-active-view core-state)) component))
+   component-ht))
 
 (defun realize-actor (core-state actor)
   "Change the ACTOR's state to :active, then place into the actor-active-db
 in the CORE-STATE."
-  (setf (state actor) :active)
-  (setf (gethash actor (actor-active-db core-state)) actor))
+  (setf (state actor) :active
+        (gethash actor (actor-active-db core-state)) actor))
 
 (defun realize-phase-commit (core-state)
   "This function removes all elements from the
 component-initialize-thunks-db slot and the actor-initialize-db in the
 CORE-STATE. It is assumed they have been processed appropriately."
-  (maphash (lambda (k v)
-             (declare (ignore v))
-             (remhash k (actor-initialize-db core-state)))
-           (actor-initialize-db core-state))
+  ;; remove all the actors from initialization phase.
+  (maphash
+   (lambda (k v)
+     (declare (ignore v))
+     (remhash k (actor-initialize-db core-state)))
+   (actor-initialize-db core-state))
 
-  (maphash (lambda (k v)
-             (declare (ignore v))
-             (remhash k (component-initialize-by-type-db core-state)))
-           (component-initialize-by-type-db core-state)))
+  ;; and remove the components from the typed hashes of the component
+  ;; initialization view.
+  (maphash
+   (lambda (k v)
+     (declare (ignore k))
+     (clrhash v))
+   (component-initialize-by-type-view core-state)))
