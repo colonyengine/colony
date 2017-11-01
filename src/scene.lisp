@@ -162,11 +162,14 @@
     (load-scene cs :demo)
     cs))
 
-(defun test-one-frame ()
+(defun test-frames (&optional (num-frames 1))
   (let ((cs (test-scene-load)))
     (prepare-call-flows cs (get-path :gear-example "data"))
-    (execute-flow cs :default 'perform-one-frame 'ENTRY/INITIALIZE-PHASE
-                  :come-from-state-name (gensym "EXEC-FLOW-"))
+    (loop
+      :repeat num-frames
+      :do (execute-flow cs :default 'perform-one-frame
+                        'ENTRY/INITIALIZE-PHASE
+                        :come-from-state-name (gensym "EXEC-FLOW-")))
     cs))
 
 (defun test-scene-code ()
