@@ -16,7 +16,7 @@
             :collect
             (destructuring-bind (slot-name slot-value &key type) slot
               (append
-               `(,slot-name
+               `(,(symbolicate '% slot-name)
                  :accessor ,slot-name
                  :initarg ,(make-keyword slot-name)
                  :initform ,slot-value)
