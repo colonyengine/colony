@@ -32,16 +32,23 @@
         :collect v :into vs
         :finally (return (values bs vs))))
 
-;; TODO: this should return a let over lambda to do a once only of the bind-vals
-;; evaluation. Needs fixing.
 (defun gen-reset-function (symbols values)
-  `(lambda ()
-     (setf
-      ,@(mapcan
-         (lambda (symbol value)
-           `(,symbol ,value))
-         symbols
-         values))))
+  (let* ((tmp-symbols
+           (loop :for sym :in symbols
+                 :collect (gensym (concatenate 'string (symbol-name sym)
+                                               "-ONCE-ONLY-"))))
+         (once-only-bindings (mapcar (lambda (tsym value) `(,tsym ,value))
+                                     tmp-symbols
+                                     values)))
+    `(let ,once-only-bindings
+       (lambda ()
+         ,(when (plusp (length tmp-symbols))
+            `(setf
+              ,@(mapcan
+                 (lambda (symbol value)
+                   `(,symbol ,value))
+                 symbols
+                 tmp-symbols)))))))
 
 (defun ensure-matched-symbol (symbol name)
   (assert (string= (symbol-name symbol) (string-upcase name))))
