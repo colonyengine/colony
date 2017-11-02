@@ -207,43 +207,31 @@
                        ;; First, we run the physics and collision
                        ;; updates, maybe in a loop depending what is
                        ;; required.
-                       (loop :with again = t
-                             :while again
-                             :do ;; First, run the User's physics
-                                 ;; functions over all ordered
-                                 ;; components.
-                                 (execute-flow
-                                  'ENTRY/PHYSICS-UPDATE
-                                  (flow 'component-logic-flow core-state)
-                                  ;; Fix to use type-flow
-                                  (component-db core-state))
+                       (box.fm:tick
+                        (lambda ()
+                          (execute-flow
+                           'ENTRY/PHYSICS-UPDATE
+                           (flow 'component-logic-flow core-state)
+                           ;; Fix to use type-flow
+                           (component-db core-state))
 
-                                 ;; Then, update ALL transforms to
-                                 ;; current local/model
+                          ;; Then, update ALL transforms to
+                          ;; current local/model
 
-                                 ;; TODO: maybe wrap in box:tick?
+                          (do-nodes #'transform-node)
 
-                                 ;; TODO: pass the right stuff to get
-                                 ;; universe root.
+                          ;; Then, run any collisions that may
+                          ;; have happened over ordered
+                          ;; components.
 
-                                 (do-nodes #'transform-node)
-
-                                 ;; Then, run any collisions that may
-                                 ;; have happened over ordered
-                                 ;; components.
-
-                                 ;; TODO, exactly figure out how to call
-                                 ;; collisions with the right collidees
-                                 ;; and such.
-                                 (execute-flow
-                                  'ENTRY/COLLISIONS
-                                  (flow 'component-logic-flow core-state)
-                                  ;; Fix to use type-flow
-                                  (component-db core-state))
-
-                                 ;; Check to see if we're done doing physics.
-                                 (unless (physics-loop-required-p core-state)
-                                   (setf again NIL)))
+                          ;; TODO, exactly figure out how to call
+                          ;; collisions with the right collidees
+                          ;; and such.
+                          (execute-flow
+                           'ENTRY/COLLISIONS
+                           (flow 'component-logic-flow core-state)
+                           ;; Fix to use type-flow
+                           (component-db core-state))))
 
                        ;; Then, complete the logic for the components.
                        (execute-flow 'ENTRY/AFTER-PHYSICS
