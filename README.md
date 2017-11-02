@@ -22,7 +22,8 @@ TODO
 
 ## License
 
-Copyright © 2017 Michael Fiano <michael.fiano@gmail.com>.
+Copyright © 2017 Michael Fiano <michael.fiano@gmail.com>,
+                 Peter Keller <psilord@cs.wisc.edu>
 
 Licensed under the MIT License.
 
