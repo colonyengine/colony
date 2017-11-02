@@ -21,7 +21,7 @@
                  :initform (make-hash-table :test #'eq))
    (%scene-tree :accessor scene-tree
                 :initarg :scene-tree
-                :initform NIL)
+                :initform nil)
    (%call-flow-table :accessor call-flow-table
                      :initarg :call-flow-table
                      :initform (make-hash-table :test #'eq))

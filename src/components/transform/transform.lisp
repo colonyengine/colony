@@ -10,10 +10,9 @@
   (local (mid))
   (model (mid)))
 
-(defgeneric add-child (parent child)
-  (:method ((parent transform) (child transform))
-    (push child (children parent))
-    (setf (parent child) parent)))
+(defun add-child (parent child)
+  (push child (children parent))
+  (setf (parent child) parent))
 
 (defun translate-node (node)
   (with-slots (%current %incremental %previous %modifiedp) (translation node)
@@ -39,23 +38,19 @@
         (v+! %current %current %incremental))
       (setf %modifiedp locally-modified-p))))
 
-;; TODO: change to reflect engine idea spec'd out by psilord
 (defun node-modified-p (node)
   (when node
     (or (modifiedp (translation node))
         (modifiedp (rotation node))
         (modifiedp (scale node)))))
 
-;; TODO: change to reflect engine idea spec'd out by psilord
-(defgeneric transform-node (node)
-  (:method (node))
-  (:method ((node transform))
-    (scale-node node)
-    (rotate-node node)
-    (translate-node node)))
+(defun transform-node (node)
+  (scale-node node)
+  (rotate-node node)
+  (translate-node node))
 
-;; TODO: change to reflect engine idea spec'd out by psilord
-(defun resolve-local (node &optional (alpha 0.5))
+;; Checked by MF. Don't change.
+(defun resolve-local (node alpha)
   (with-slots (%scale %rotation %translation %local) node
     (interpolate-state %scale alpha)
     (interpolate-state %rotation alpha)
@@ -66,7 +61,11 @@
            (v->mscale +mid+ (interpolated %scale)))
       (v->mtr! %local (interpolated %translation)))))
 
-;; TODO: change to reflect engine idea spec'd out by psilord
+;; Checked by MF. Only change when render system and delta frame management
+;; system is in place.
+;; TODO: This is meant to be called from INTERPOLATE-TRANSFORMS.
+;; TODO: This is always called with an alpha value, which is the interpolation
+;; factor.
 (defun resolve-model (node &optional (alpha 0.5))
   (with-slots (%parent %local %model) node
     (when %parent
@@ -74,18 +73,25 @@
       (m*! %model (model %parent) %local)
       %model)))
 
-;; TODO: change to reflect engine idea spec'd out by psilord
-;; HACK: parent is a transform component.
+;; Checked by MF. Only change when render system and delta frame management
+;; system is in place.
+;; TODO: Parent should be optional, and default to the root of the tree
+;; (@universe). I think this will need to pass in a core-state instance to
+;; retrieve the root node.
 (defun do-nodes (func parent)
   (funcall func parent)
   (dolist (child (children parent))
     (do-nodes func child)))
 
-;; TODO: change to reflect engine idea spec'd out by psilord
-;; TODO: THis needs inspection, what is it for, who would call it.
-;; NOTE: it doesn't match the hacked do-nodes API I have for this experiment.
-#++(defun interpolate-transforms (alpha)
-     (do-nodes (lambda (node) (resolve-model node alpha))))
+;; Checked by MF. Only change when render system and delta frame management
+;; system is in place.
+;; TODO: This is called from the render loop, usually at 60Hz. The render loop
+;; is responsible for calculating the alpha value to call this with, which will
+;; interpolate the physics by that factor.
+;; TODO: When DO-NODES accepts an optional parent argument for the root node,
+;; remove the NIL below.
+(defun interpolate-transforms (alpha)
+  (do-nodes (lambda (node) (resolve-model node alpha)) nil))
 
 (defmethod make-component ((type (eql 'transform)) &rest initargs)
   (let ((instance (make-instance 'transform)))
@@ -120,8 +126,5 @@
   (when p/7
     (setf (incremental (scale instance)) scale/incremental)))
 
-;; NOTE: We do this because reinitialize-instance for a transform needs to
-;; process its argument before actually reinitializing the instance of the
-;; transform with the new data.
 (defmethod reinitialize-instance ((instance transform) &rest initargs)
   (apply #'reinitialize-transform-instance instance initargs))

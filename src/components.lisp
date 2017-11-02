@@ -63,13 +63,13 @@ COMPONENT-TYPE in an ACTOR."
     (add-component actor component)))
 
 (defgeneric initialize-component (component context)
-  (:method ((component component) context)))
+  (:method ((component component) (context context))))
 
 (defgeneric update-component (component context)
-  (:method ((component component) context)))
+  (:method ((component component) (context context))))
 
 (defgeneric render-component (component context)
-  (:method ((component component) context)))
+  (:method ((component component) (context context))))
 
 (defgeneric destroy-component (component context)
-  (:method ((component component) context)))
+  (:method ((component component) (context context))))

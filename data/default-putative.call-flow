@@ -294,7 +294,7 @@
                      (lambda (core-state)
                        core-state))
 
-                    (action NIL) ;; no flow to run.
+                    (action NIL) ; no flow to run.
 
                     (transition
                      (lambda (core-state)
