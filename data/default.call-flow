@@ -69,9 +69,9 @@
                     (transition
                      (lambda (core-state)
                        (declare (ignorable core-state))
-                       EXIT/REALIZE-PHASE)))
+                       EXIT/INITIALIZE-PHASE)))
 
-        (flow-state EXIT/REALIZE-PHASE :reset ()
+        (flow-state EXIT/INITIALIZE-PHASE :reset ()
                     (selector NIL)
                     (action NIL)
                     (transition NIL)))
