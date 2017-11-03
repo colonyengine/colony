@@ -85,7 +85,6 @@
                     (transition NIL)))
 
   (flow active-phase
-
         (flow-state ENTRY/ACTIVE-PHASE :reset ()
                     (selector NIL)
                     (action NIL)
