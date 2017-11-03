@@ -77,7 +77,7 @@
                     (transition NIL)))
 
   (flow active-phase
-        (flow-state ENTRY/RUN-CRAPPY-PHYSICS :reset ()
+        (flow-state ENTRY/PHYSICS-LOOP :reset ()
                     (selector
                      (lambda (core-state)
                        core-state))
@@ -85,16 +85,66 @@
                     (action
                      (lambda (core-state inst)
                        (declare (ignore inst))
-                       (format t "Running crappy physics pipeline.~%")
-                       (do-nodes #'transform-node
-                         (get-component 'transform (scene-tree core-state)))
-                       (do-nodes #'resolve-model
-                         (get-component 'transform (scene-tree core-state)))))
+                       ;; We enter ONCE here, but box.fm:tick may run more
+                       ;; than once as appropriate.
+                       (box.fm.tick-placeholder
+                        (window (context core-state))
+                        (hz (window (context core-state)))
+                        (lambda ()
+                          ;; Run the user's physics-update protocol
+                          (execute-flow core-state
+                                        :default
+                                        'active-phase
+                                        'PROTOCOL-PHYSICS-UPDATE
+                                        :come-from-state-name
+                                        :EF-PHYSICS-UPDATE)
+
+                          ;; Then update ALL transforms to current
+                          ;; local/model
+                          (do-nodes #'transform-node
+                            (get-component 'transform (scene-tree core-state)))
+
+                          ;; Then, determine if any physics collisions
+                          ;; happened and do whatever needs to be done.
+                          (execute-flow core-state
+                                        :default
+                                        'active-phase
+                                        'PHYSICS-COLLISIONS
+                                        :come-from-state-name
+                                        :EF-PHYSICS-COLLISIONS)))))
 
                     (transition
                      (lambda (core-state)
                        (declare (ignorable core-state))
                        PROTOCOL-UPDATE-COMPONENT)))
+
+        (flow-state PROTOCOL-PHYSICS-UPDATE :reset ()
+                    (selector
+                     (lambda (core-state)
+                       (component-active-view core-state)))
+
+                    (action
+                     (lambda (core-state inst)
+                       (physics-update-component inst (context core-state))))
+
+                    (transition NIL))
+
+        ;; TODO: PHYSICS-COLLISIONS is not yet implemented, there may be
+        ;; more work here than this single state. This will compute
+        ;; collisions and then inform the recipients of those
+        ;; collisions as desired in the boundary regions components
+        ;; (yet to be written).
+        (flow-state PHYSICS-COLLISIONS :reset ()
+                    (selector NIL)
+
+                    (action
+                     (lambda (core-state inst)
+                       (declare (ignore core-state inst))
+                       (format
+                        t "Would have ran flow-state PHYSICS-COLLISIONS.~%")))
+
+                    (transition NIL))
+
 
         (flow-state PROTOCOL-UPDATE-COMPONENT :reset ()
                     (selector
@@ -143,7 +193,7 @@
                                      'initialize-phase
                                      'ENTRY/REALIZE-COMPONENTS
                                      :come-from-state-name
-                                     (gensym "EF-REALIZE-PHASE-"))))
+                                     :EF-REALIZE-PHASE)))
 
                     (transition
                      (lambda (core-state)
@@ -161,9 +211,9 @@
                        (execute-flow core-state
                                      :default
                                      'active-phase
-                                     'ENTRY/RUN-CRAPPY-PHYSICS
+                                     'ENTRY/PHYSICS-LOOP
                                      :come-from-state-name
-                                     (gensym "EF-ACTIVE-PHASE-"))))
+                                     :EF-ACTIVE-PHASE)))
 
                     (transition
                      (lambda (core-state)

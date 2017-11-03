@@ -207,7 +207,7 @@
                        ;; First, we run the physics and collision
                        ;; updates, maybe in a loop depending what is
                        ;; required.
-                       (box.fm:tick
+                       (box.fm-tick
                         (window (context core-state))
                         (hz (window (context core-state)))
                         (lambda ()

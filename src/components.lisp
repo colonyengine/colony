@@ -65,6 +65,9 @@ COMPONENT-TYPE in an ACTOR."
 (defgeneric initialize-component (component context)
   (:method ((component component) (context context))))
 
+(defgeneric physics-update-component (component context)
+  (:method ((component component) (context context))))
+
 (defgeneric update-component (component context)
   (:method ((component component) (context context))))
 

@@ -2,6 +2,13 @@
 
 (defvar *call-flow-table*)
 
+;; TODO: This is a placeholder for when boc.fm:tick actually arrives
+;; in the source. WHen that happen, remove this, and go fix the call
+;; site of this macro be be the correct function name of box.fm:tick
+(defmacro box.fm.tick-placeholder (window hz func)
+  (declare (ignore window hz))
+  `(funcall ,func))
+
 (defclass flow-state ()
   ((%name :accessor name
           :initarg :name)

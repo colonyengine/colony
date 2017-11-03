@@ -18,7 +18,7 @@
       :repeat num-frames
       :do (execute-flow cs :default 'perform-one-frame
                         'ENTRY/INITIALIZE-PHASE
-                        :come-from-state-name (gensym "EXEC-FLOW-")))
+                        :come-from-state-name :EF))
     cs))
 
 (defun test-protocol-method-0 (inst cxt)
@@ -28,6 +28,6 @@
   (format t "TEST-PROTOCOL-METHOD-1 called: inst=~A cxt=~A~%" inst cxt))
 
 (defun test-execute-flow (core-state call-flow-name flow-name flow-state-name
-                          &optional (flow-init-state (gensym "EF-INIT-")))
+                          &optional (flow-init-state :EF))
   (execute-flow core-state call-flow-name flow-name flow-state-name
                 :come-from-state-name flow-init-state))
