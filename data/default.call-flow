@@ -145,7 +145,6 @@
 
                     (transition NIL))
 
-
         (flow-state PROTOCOL-UPDATE-COMPONENT :reset ()
                     (selector
                      (lambda (core-state)
