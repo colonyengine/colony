@@ -26,5 +26,4 @@
            #:transform
            #:add-child
            #:do-nodes ; sketchy!
-           #:transform-node
-           #:resolve-model))
+           ))

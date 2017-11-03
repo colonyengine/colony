@@ -13,7 +13,10 @@
   :long-description #.(uiop:read-file-string
                        (uiop/pathname:subpathname *load-pathname* "README.md"))
   :depends-on (#:alexandria
-               #:gamebox-math)
+               #:sdl2
+               #:sdl2kit
+               #:gamebox-math
+               #:gamebox-frame-manager)
   :pathname "src"
   :serial t
   :components
@@ -27,6 +30,8 @@
    (:file "call-flow")
    (:file "type-dag")
    (:file "scene")
+   (:file "render")
+   (:file "input")
    (:file "test")
 
    ;; core components

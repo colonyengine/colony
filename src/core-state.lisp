@@ -1,5 +1,7 @@
 (in-package :gear)
 
+(defvar *core-state*)
+
 (defclass core-state ()
   ((%actor-initialize-db :accessor actor-initialize-db
                          :initarg :actor-initialize-db
@@ -28,7 +30,6 @@
    (%context :accessor context
              :initarg :context
              :initform (make-instance 'context))))
-
 
 (defun make-core-state (&rest initargs)
   (apply #'make-instance 'core-state initargs))
