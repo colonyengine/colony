@@ -4,7 +4,15 @@
     :default (:enabled t)
 
   (flow initialize-phase
-        (flow-state ENTRY/REALIZE-COMPONENTS :reset ()
+        (flow-state ENTRY/INITIALIZE-PHASE :reset ()
+                    (selector nil)
+                    (action nil)
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignore core-state))
+                       REALIZE-COMPONENTS)))
+
+        (flow-state REALIZE-COMPONENTS :reset ()
                     (selector
                      (lambda (core-state)
                        ;; this will iterate over a hash, and the
@@ -77,7 +85,16 @@
                     (transition NIL)))
 
   (flow active-phase
-        (flow-state ENTRY/PHYSICS-LOOP :reset ()
+
+        (flow-state ENTRY/ACTIVE-PHASE :reset ()
+                    (selector NIL)
+                    (action NIL)
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignore core-state))
+                       PHYSICS-LOOP)))
+
+        (flow-state PHYSICS-LOOP :reset ()
                     (selector
                      (lambda (core-state)
                        core-state))
@@ -179,7 +196,7 @@
                     (transition NIL)))
 
   (flow perform-one-frame
-        (flow-state ENTRY/INITIALIZE-PHASE :reset ()
+        (flow-state ENTRY/PERFORM-ONE-FRAME :reset ()
                     (selector
                      (lambda (core-state)
                        core-state))
@@ -190,7 +207,7 @@
                        (execute-flow core-state
                                      :default
                                      'initialize-phase
-                                     'ENTRY/REALIZE-COMPONENTS
+                                     'ENTRY/INITIALIZE-PHASE
                                      :come-from-state-name
                                      :EF-REALIZE-PHASE)))
 
@@ -210,7 +227,7 @@
                        (execute-flow core-state
                                      :default
                                      'active-phase
-                                     'ENTRY/PHYSICS-LOOP
+                                     'ENTRY/ACTIVE-PHASE
                                      :come-from-state-name
                                      :EF-ACTIVE-PHASE)))
 

@@ -17,7 +17,7 @@
     (loop
       :repeat num-frames
       :do (execute-flow cs :default 'perform-one-frame
-                        'ENTRY/INITIALIZE-PHASE
+                        'ENTRY/PERFORM-ONE-FRAME
                         :come-from-state-name :EF))
     cs))
 
