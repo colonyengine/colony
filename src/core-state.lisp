@@ -14,6 +14,8 @@
                            :initform (make-hash-table :test #'eq))
    (%scene-table :reader scene-table
                  :initform (make-hash-table :test #'eq))
+   (%camera :accessor camera
+            :initform NIL)
    (%scene-tree :accessor scene-tree)
    (%call-flow-table :reader call-flow-table
                      :initform (make-hash-table :test #'eq))
@@ -107,3 +109,13 @@ CORE-STATE. It is assumed they have been processed appropriately."
      (declare (ignore k))
      (clrhash v))
    (component-initialize-by-type-view core-state)))
+
+(defun find-active-camera (core-state)
+  "Find the first active camera in CORE-STATE's scene tree and return the
+component."
+  (do-nodes
+      (lambda (transform)
+        (when-let ((camera-component (get-component 'camera (actor transform))))
+          (when (and camera-component (activep camera-component))
+            (return-from find-active-camera camera-component))))
+    (get-component 'transform (scene-tree core-state))))

@@ -186,13 +186,21 @@
         (flow-state MAKE-ACTIVE-CAMERA-VIEW :reset ()
                     (selector
                      (lambda (core-state)
-                       core-state))
+                       (unless (and (camera core-state)
+                                    (activep (camera core-state)))
+                         (setf (camera core-state)
+                               (find-active-camera core-state)))
+
+                       (camera core-state)))
 
                     (action
                      (lambda (core-state inst)
                        (declare (ignorable core-state inst))
-                       ;;(make-view (camera core-state))
-                       nil))
+                       (when (and (camera core-state)
+                                  (activep (camera core-state)))
+                         ;; TODO: when the camera component is up and
+                         ;; running, put this next line back in.
+                         #++(make-view (camera core-state)))))
 
                     (transition
                      (lambda (core-state)
