@@ -1,6 +1,7 @@
 (in-package :gear)
 
 (%define-core-component camera ()
+  (activep nil)
   (view (mid))
   (projection (mid))
   (mode :perspective)
