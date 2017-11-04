@@ -216,7 +216,7 @@ name which resulted in the exiting of the flow."
   (gethash flow-state-name flow))
 
 (defmethod extension-file-types ((owner (eql 'call-flow)))
-  (list "call-flow"))
+  (list "flow"))
 
 (defun prepare-call-flows (core-state path)
   (let ((*call-flow-table* (make-hash-table :test #'eq)))
