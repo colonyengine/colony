@@ -31,7 +31,7 @@
 
 (defmethod make-display :before ((core-state core-state))
   (let ((context (context core-state)))
-    (setf slog:*current-level* (cfg context :debug-level))
+    (setf slog:*current-level* (cfg context :log-level))
     (dolist (attr `((:context-major-version ,(cfg context :gl-version-major))
                     (:context-minor-version ,(cfg context :gl-version-minor))
                     (:multisamplebuffers
