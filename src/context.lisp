@@ -11,6 +11,6 @@
 
 (defmacro settings (&body body)
   `(let ()
-     (declare (special *temp-context*))
+     (declare (special %temp-context))
      (loop :for (key value) :on ',body :by #'cddr
-           :do (setf (gethash key *temp-context*) value))))
+           :do (setf (gethash key %temp-context) value))))

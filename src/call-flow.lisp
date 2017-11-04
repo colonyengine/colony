@@ -213,7 +213,7 @@ name which resulted in the exiting of the flow."
 
 (defmacro call-flow-definition (name (&key enabled) &body body)
   `(let ()
-     (declare (special *temp-call-flows*))
+     (declare (special %temp-call-flows))
      ,(when enabled
-        `(setf (gethash ,name *temp-call-flows*)
+        `(setf (gethash ,name %temp-call-flows)
                ,(parse-call-flows body)))))

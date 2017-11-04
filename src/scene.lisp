@@ -149,6 +149,6 @@
   `(let ((scene (make-instance 'scene-definition
                                :scene ,(apply #'parse-scene name body)
                                :data (apply #'parse-scene ,name ',body))))
-     (declare (special *temp-scene*))
+     (declare (special %temp-scene))
      ,(when enabled
-       `(setf (gethash ,name *temp-scene*) scene))))
+       `(setf (gethash ,name %temp-scene) scene))))
