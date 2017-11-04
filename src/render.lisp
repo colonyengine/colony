@@ -12,17 +12,18 @@
 
 (defgeneric make-display (core-state)
   (:method ((core-state core-state))
-    (let ((context (context core-state)))
-      (setf (display core-state)
+    (let ((context (context core-state))
+          (hz (calculate-refresh-rate)))
+      (setf (slot-value core-state '%display)
             (make-instance 'display
                            :core-state core-state
                            :title (cfg context :title)
                            :w (cfg context :width)
                            :h (cfg context :height)
-                           :hz (calculate-refresh-rate)
+                           :hz hz
                            :delta (cfg context :delta)
                            :period (cfg context :periodic-interval)
-                           :debug-interval (cfg context :debug-interval))))))
+                           :debug-interval (cfg context :debug-frames-interval)))
       (slog:emit :display.init
                  (cfg context :width)
                  (cfg context :height)
