@@ -126,7 +126,15 @@
                                           'active-phase
                                           'PHYSICS-COLLISIONS
                                           :come-from-state-name
-                                          :EF-PHYSICS-COLLISIONS))))))
+                                          :EF-PHYSICS-COLLISIONS)))
+
+                         ;; Then produce the interpolated model. Note that
+                         ;; physics collisions used ONLY the physics
+                         ;; computations to do their collisions instead of
+                         ;; the interpolated models.
+                         (interpolate-transforms
+                          (get-component 'transform (scene-tree core-state))
+                          (box.fm:alpha display)))))
 
                     (transition
                      (lambda (core-state)

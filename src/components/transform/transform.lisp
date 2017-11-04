@@ -90,8 +90,8 @@
 ;; interpolate the physics by that factor.
 ;; TODO: When DO-NODES accepts an optional parent argument for the root node,
 ;; remove the NIL below.
-(defun interpolate-transforms (alpha)
-  (do-nodes (lambda (node) (resolve-model node alpha)) nil))
+(defun interpolate-transforms (scene-root-transform alpha)
+  (do-nodes (lambda (node) (resolve-model node alpha)) scene-root-transform))
 
 (defmethod make-component ((type (eql 'transform)) &rest initargs)
   (let ((instance (make-instance 'transform)))
