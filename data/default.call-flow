@@ -181,6 +181,22 @@
                     (transition
                      (lambda (core-state)
                        (declare (ignorable core-state))
+                       RESOLVE-CAMERA)))
+
+        (flow-state RESOLVE-CAMERA :reset ()
+                    (selector
+                     (lambda (core-state)
+                       core-state))
+
+                    (action
+                     (lambda (core-state inst)
+                       ;; TODO: call (resolve-camera (camera core-state))
+                       (declare (ignorable core-state inst))
+                       nil))
+
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignorable core-state))
                        PROTOCOL-RENDER-COMPONENT)))
 
         (flow-state PROTOCOL-RENDER-COMPONENT :reset ()
@@ -191,6 +207,22 @@
                     (action
                      (lambda (core-state inst)
                        (render-component inst (context core-state))))
+
+                    (transition
+                     (lambda (core-state)
+                       (declare (ignorable core-state))
+                       SHADER-REFRESH)))
+
+        (flow-state SHADER-REFRESH :reset ()
+                    (selector
+                     (lambda (core-state)
+                       core-state))
+
+                    (action
+                     (lambda (core-state inst)
+                       ;; TODO: do shader refreshes.
+                       (declare (ignorable core-state inst))
+                       nil))
 
                     (transition
                      (lambda (core-state)
