@@ -4,33 +4,21 @@
 (defvar *context*)
 
 (defclass core-state ()
-  ((%actor-initialize-db :accessor actor-initialize-db
-                         :initarg :actor-initialize-db
+  ((%actor-initialize-db :reader actor-initialize-db
                          :initform (make-hash-table :test #'eq))
-   (%component-initialize-by-type-view
-    :accessor component-initialize-by-type-view
-    :initarg :component-initialize-by-type-view
-    :initform (make-hash-table :test #'eq))
-   (%actor-active-db :accessor actor-active-db
-                     :initarg :actor-active-db
+   (%component-initialize-by-type-view :reader component-initialize-by-type-view
+                                       :initform (make-hash-table :test #'eq))
+   (%actor-active-db :reader actor-active-db
                      :initform (make-hash-table :test #'eq))
-   (%component-active-view :accessor component-active-view
-                           :initarg :component-active-view
+   (%component-active-view :reader component-active-view
                            :initform (make-hash-table :test #'eq))
-   (%scene-table :accessor scene-table
-                 :initarg :scene-table
+   (%scene-table :reader scene-table
                  :initform (make-hash-table :test #'eq))
-   (%scene-tree :accessor scene-tree
-                :initarg :scene-tree
-                :initform nil)
-   (%call-flow-table :accessor call-flow-table
-                     :initarg :call-flow-table
+   (%scene-tree :accessor scene-tree)
+   (%call-flow-table :reader call-flow-table
                      :initform (make-hash-table :test #'eq))
-   (%display :accessor display
-             :initarg :display
-             :initform nil)
-   (%context :accessor context
-             :initarg :context
+   (%display :reader display)
+   (%context :reader context
              :initform (make-hash-table :test #'eq))))
 
 (defun make-core-state (&rest initargs)

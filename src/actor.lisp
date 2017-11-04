@@ -1,20 +1,16 @@
 (in-package :gear)
 
 (defclass actor ()
-  ((%id :accessor id
+  ((%id :reader id
         :initarg :id)
    (%state :accessor state
-           :initarg :state
            :initform :initialize)
-   (%components :accessor components
-                :initarg :components
+   (%components :reader components
                 :initform (make-hash-table :test #'eq))
-   (%components-by-type :accessor components-by-type
-                        :initarg :components-by-type
+   (%components-by-type :reader components-by-type
                         :initform (make-hash-table :test #'eq))
    (%scene :accessor scene
-           :initarg :scene
-           :initform nil)))
+           :initarg :scene)))
 
 (defmethod print-object ((object actor) stream)
   (print-unreadable-object (object stream :type t)

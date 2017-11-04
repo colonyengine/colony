@@ -1,9 +1,9 @@
 (in-package :gear)
 
 (defclass scene-definition ()
-  ((%scene :accessor scene
+  ((%scene :reader scene
            :initarg :scene)
-   (%data :accessor data
+   (%data :reader data
           :initarg :data)))
 
 (defun %read-spec-forms (file)
