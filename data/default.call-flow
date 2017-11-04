@@ -181,17 +181,17 @@
                     (transition
                      (lambda (core-state)
                        (declare (ignorable core-state))
-                       RESOLVE-CAMERA)))
+                       MAKE-ACTIVE-CAMERA-VIEW)))
 
-        (flow-state RESOLVE-CAMERA :reset ()
+        (flow-state MAKE-ACTIVE-CAMERA-VIEW :reset ()
                     (selector
                      (lambda (core-state)
                        core-state))
 
                     (action
                      (lambda (core-state inst)
-                       ;; TODO: call (resolve-camera (camera core-state))
                        (declare (ignorable core-state inst))
+                       ;;(make-view (camera core-state))
                        nil))
 
                     (transition
