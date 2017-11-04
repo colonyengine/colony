@@ -145,14 +145,6 @@
 (defmethod extension-file-types ((owner (eql 'scene)))
   (list "scene"))
 
-(defun prepare-scenes (core-state path)
-  (let ((*scene-table* (make-hash-table :test #'eq)))
-    (flet ((%prepare ()
-             (load-extensions 'scene path)
-             *scene-table*))
-      (merge-scene-table core-state (%prepare))
-      core-state)))
-
 (defmacro scene-definition (name (&key enabled) &body body)
   `(let ((scene (make-instance 'scene-definition
                                :scene ,(apply #'parse-scene name body)

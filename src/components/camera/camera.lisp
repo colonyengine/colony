@@ -34,13 +34,13 @@
 (defmethod make-projection ((mode (eql :perspective)) camera context)
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far))
       camera
-    (let ((w (width context))
-          (h (height context)))
+    (let ((w (cfg context :width))
+          (h (cfg context :height)))
       (mkpersp! proj (/ pi zoom) (/ w h) near far))))
 
 (defmethod make-projection ((mode (eql :orthographic)) camera context)
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far))
       camera
-    (let ((w (/ (width context) (zoom camera) 2))
-          (h (/ (height context) (zoom camera) 2)))
+    (let ((w (/ (cfg context :width) (zoom camera) 2))
+          (h (/ (cfg context :height) (zoom camera) 2)))
       (mkortho! proj (- w) w (- h) h near far))))
