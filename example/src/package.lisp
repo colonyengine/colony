@@ -1,6 +1,6 @@
 (in-package :cl-user)
 
-(defpackage #:gear/example
+(defpackage #:gear-example
   (:use #:cl
         #:gamebox-math
         #:gear))
