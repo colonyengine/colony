@@ -149,71 +149,62 @@ COME-FROM-STATE-NAME is an arbitrary symbol that indicates the previous
 flow-state name. This is often a symbolic name so execute-flow can determine how
 the flow exited. Return two values The previous state name and the current state
 name which resulted in the exiting of the flow."
-  (let ((debugp (cfg (context core-state) :debug-flows)))
-    (when debugp
-      (format t "EF Entering flow: (~A ~A ~A)~%"
-              call-flow-name flow-name flow-state-name))
-    (loop :with call-flow = (get-call-flow call-flow-name core-state)
-          :with flow = (get-flow flow-name call-flow)
-          :with flow-state = (get-flow-state flow-state-name flow)
-          :with current-state-name = come-from-state-name
-          :with last-state-name
-          :with selections
-          :do (when debugp
-                (format t "Processing flow-state: ~A exiting=~A~%"
-                        (name flow-state) (exitingp flow-state)))
-              ;; Step 1: Record state transition and update to current.
-              (setf last-state-name current-state-name
-                    current-state-name (name flow-state))
-              ;; Step 2: Perform execution policy
-              (case (policy flow-state)
-                (:reset                   ; Execute the resetting thunk
-                 (funcall (reset flow-state))))
-              ;; Step 3: Run Selector Function
-              (setf selections
-                    (when (selector flow-state)
-                      (when debugp
-                        (format t "EF Calling Selector Function...~%"))
-                      (funcall (selector flow-state) core-state)))
-              ;; Step 4: Iterate the action across everything in the selections.
-              ;; NOTE: This is not a map-tree or anything complex. It just assumes
-              ;; selection is going to be one of:
-              ;; a single hash table instance
-              ;; a single instance of some class
-              ;; a list of things that are either hash tables or class instances.
-              (labels ((act-on-item (item)
-                         (cond
-                           ((hash-table-p item)
-                            (when (action flow-state)
-                              (when debugp
-                                (format t "EF Calling Action function (hash)....~%"))
-                              (maphash
-                               (lambda (k v)
-                                 (declare (ignore k))
-                                 (funcall (action flow-state) core-state v))
-                               item)))
-                           ((atom item)
-                            (when (action flow-state)
-                              (when debugp
-                                (format t "EF Calling Action function (inst)....~%"))
-                              (funcall (action flow-state) core-state item))))))
-                (if (consp selections)
-                    (map nil #'act-on-item selections)
-                    (act-on-item selections)))
-              ;; Step 5: Exit if reached exiting state.
-              (when (exitingp flow-state)
-                (when debugp
-                  (format t "EF Exiting flow: (~A ~A ~A)~%"
-                          call-flow-name flow-name current-state-name))
-                (return-from execute-flow
-                  (values last-state-name current-state-name)))
-              ;; Step 6: Run the transition function to determine the next
-              ;; flow-state. Currently, a transition can only go into the SAME
-              ;; flow.
-              (when debugp
-                (format t "EF Calling Transition function.....~%"))
-              (setf flow-state
-                    (gethash (funcall (transition flow-state) core-state) flow)))))
+  (slog:emit :flow.enter call-flow-name flow-name flow-state-name)
+  (loop :with call-flow = (get-call-flow call-flow-name core-state)
+        :with flow = (get-flow flow-name call-flow)
+        :with flow-state = (get-flow-state flow-state-name flow)
+        :with current-state-name = come-from-state-name
+        :with last-state-name
+        :with selections
+        :do (slog:emit :flow.state.process
+                       (name flow-state)
+                       (exitingp flow-state))
+            ;; Step 1: Record state transition and update to current.
+            (setf last-state-name current-state-name
+                  current-state-name (name flow-state))
+            ;; Step 2: Perform execution policy
+            (case (policy flow-state)
+              (:reset                   ; Execute the resetting thunk
+               (funcall (reset flow-state))))
+            ;; Step 3: Run Selector Function
+            (setf selections
+                  (when (selector flow-state)
+                    (slog:emit :flow.call.selector)
+                    (funcall (selector flow-state) core-state)))
+            ;; Step 4: Iterate the action across everything in the selections.
+            ;; NOTE: This is not a map-tree or anything complex. It just assumes
+            ;; selection is going to be one of:
+            ;; a single hash table instance
+            ;; a single instance of some class
+            ;; a list of things that are either hash tables or class instances.
+            (labels ((act-on-item (item)
+                       (cond
+                         ((hash-table-p item)
+                          (when (action flow-state)
+                            (slog:emit :flow.call.action.hash)
+                            (maphash
+                             (lambda (k v)
+                               (declare (ignore k))
+                               (funcall (action flow-state) core-state v))
+                             item)))
+                         ((atom item)
+                          (when (action flow-state)
+                            (slog:emit :flow.call.action.instance)
+                            (funcall (action flow-state) core-state item))))))
+              (if (consp selections)
+                  (map nil #'act-on-item selections)
+                  (act-on-item selections)))
+            ;; Step 5: Exit if reached exiting state.
+            (when (exitingp flow-state)
+              (slog:emit :flow.exit call-flow-name flow-name current-state-name)
+              (return-from execute-flow
+                (values last-state-name current-state-name)))
+            ;; Step 6: Run the transition function to determine the next
+            ;; flow-state. Currently, a transition can only go into the SAME
+            ;; flow.
+            (slog:emit :flow.call.transition)
+            (setf flow-state
+                  (gethash (funcall (transition flow-state) core-state) flow))))
 
 (defun get-call-flow (call-flow-name core-state)
   (gethash call-flow-name (call-flow-table core-state)))

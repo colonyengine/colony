@@ -42,4 +42,5 @@
     (kit.sdl2:init)
     (sdl2:in-main-thread ()
       (make-display core-state))
-    (kit.sdl2:start)))
+    (kit.sdl2:start)
+    (slog:emit :engine.start (cfg (context core-state) :title))))

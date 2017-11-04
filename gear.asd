@@ -15,6 +15,7 @@
   :depends-on (#:alexandria
                #:sdl2
                #:sdl2kit
+               #:simple-logger
                #:gamebox-math
                #:gamebox-frame-manager)
   :pathname "src"
@@ -27,6 +28,7 @@
    (:file "components")
    (:file "core-state")
    (:file "settings")
+   (:file "logging")
    (:file "call-flow")
    (:file "type-dag")
    (:file "scene")
