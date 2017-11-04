@@ -101,33 +101,32 @@
                     (action
                      (lambda (core-state inst)
                        (declare (ignore inst))
-                       ;; We enter ONCE here, but box.fm:tick may run more
-                       ;; than once as appropriate.
-                       (box.fm.tick-placeholder
-                        (window (context core-state))
-                        (hz (window (context core-state)))
-                        (lambda ()
-                          ;; Run the user's physics-update protocol
-                          (execute-flow core-state
-                                        :default
-                                        'active-phase
-                                        'PROTOCOL-PHYSICS-UPDATE
-                                        :come-from-state-name
-                                        :EF-PHYSICS-UPDATE)
+                       (let ((display (display core-state)))
+                         (box.fm:tick
+                          display
+                          (hz display)
+                          (lambda ()
+                            ;; Run the user's physics-update protocol
+                            (execute-flow core-state
+                                          :default
+                                          'active-phase
+                                          'PROTOCOL-PHYSICS-UPDATE
+                                          :come-from-state-name
+                                          :EF-PHYSICS-UPDATE)
 
-                          ;; Then update ALL transforms to current
-                          ;; local/model
-                          (do-nodes #'transform-node
-                            (get-component 'transform (scene-tree core-state)))
+                            ;; Then update ALL transforms to current
+                            ;; local/model
+                            (do-nodes #'transform-node
+                              (get-component 'transform (scene-tree core-state)))
 
-                          ;; Then, determine if any physics collisions
-                          ;; happened and do whatever needs to be done.
-                          (execute-flow core-state
-                                        :default
-                                        'active-phase
-                                        'PHYSICS-COLLISIONS
-                                        :come-from-state-name
-                                        :EF-PHYSICS-COLLISIONS)))))
+                            ;; Then, determine if any physics collisions
+                            ;; happened and do whatever needs to be done.
+                            (execute-flow core-state
+                                          :default
+                                          'active-phase
+                                          'PHYSICS-COLLISIONS
+                                          :come-from-state-name
+                                          :EF-PHYSICS-COLLISIONS))))))
 
                     (transition
                      (lambda (core-state)
@@ -155,9 +154,10 @@
 
                     (action
                      (lambda (core-state inst)
-                       (declare (ignore core-state inst))
-                       (format
-                        t "Would have ran flow-state PHYSICS-COLLISIONS.~%")))
+                       (declare (ignore inst))
+                       (when (cfg (context core-state) :debug-flows)
+                         (format
+                          t "Would have ran flow-state PHYSICS-COLLISIONS.~%"))))
 
                     (transition NIL))
 

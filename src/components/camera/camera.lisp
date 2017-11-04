@@ -10,19 +10,16 @@
   (target nil)
   (transform nil))
 
-(defmethod initialize-component ((component camera) (context context))
-  (format t "Camera component: initializing~%")
+(defmethod initialize-component ((component camera) context)
   (setf (transform component) (get-component 'transform (actor component))))
 
 ;;; TODO: Think about what belongs in UPDATE-COMPONENT and RENDER-COMPONENT for
 ;;; the camera. We need to call MAKE-VIEW and MAKE-PROJECTION somewhere, but
 ;;; currently these matrices are not computed at all.
 
-(defmethod update-component ((component camera) (context context))
-  (format t "Camera component: updated~%"))
+(defmethod update-component ((component camera) context))
 
-(defmethod render-component ((component camera) (context context))
-  (format t "Camera component: rendered~%"))
+(defmethod render-component ((component camera) context))
 
 (defun make-view (camera)
   (with-accessors ((view view) (target target) (transform transform)) camera

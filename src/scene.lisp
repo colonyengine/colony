@@ -1,7 +1,5 @@
 (in-package :gear)
 
-(defvar *scene-table*)
-
 (defclass scene-definition ()
   ((%scene :accessor scene
            :initarg :scene)

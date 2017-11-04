@@ -1,6 +1,7 @@
 (in-package :gear)
 
-(defvar *core-state*)
+(defvar *scene-table*)
+(defvar *context*)
 
 (defclass core-state ()
   ((%actor-initialize-db :accessor actor-initialize-db
@@ -10,14 +11,12 @@
     :accessor component-initialize-by-type-view
     :initarg :component-initialize-by-type-view
     :initform (make-hash-table :test #'eq))
-
    (%actor-active-db :accessor actor-active-db
                      :initarg :actor-active-db
                      :initform (make-hash-table :test #'eq))
    (%component-active-view :accessor component-active-view
                            :initarg :component-active-view
                            :initform (make-hash-table :test #'eq))
-
    (%scene-table :accessor scene-table
                  :initarg :scene-table
                  :initform (make-hash-table :test #'eq))
@@ -27,15 +26,25 @@
    (%call-flow-table :accessor call-flow-table
                      :initarg :call-flow-table
                      :initform (make-hash-table :test #'eq))
+   (%display :accessor display
+             :initarg :display
+             :initform nil)
    (%context :accessor context
              :initarg :context
-             :initform (make-instance 'context))))
+             :initform (make-hash-table :test #'eq))))
 
 (defun make-core-state (&rest initargs)
   (apply #'make-instance 'core-state initargs))
 
 (defun add-scene-tree-root (core-state actor)
   (setf (scene-tree core-state) actor))
+
+(defun merge-context (core-state context)
+  (maphash
+   (lambda (k v)
+     (setf (gethash k (context core-state)) v))
+   context)
+  core-state)
 
 (defun merge-scene-table (core-state scene-table)
   (maphash
@@ -67,16 +76,13 @@ and the main loop protocol will not be called on it or its components."
        (multiple-value-bind (comp-type-ht presentp)
            (gethash component-type-name
                     (component-initialize-by-type-view core-state))
-
          (unless presentp
            (let ((ht (make-hash-table :test #'eq)))
              (setf (gethash component-type-name
                             (component-initialize-by-type-view core-state))
                    ht)
              (setf comp-type-ht ht)))
-
          (setf (gethash k comp-type-ht) v))))
-
    (components actor)))
 
 (defun realize-components (core-state component-ht)
@@ -85,7 +91,7 @@ initialize-thunks, set them :active, and put them into the active component
 view."
   (maphash
    (lambda (k component)
-     (declare (ignorable k))
+     (declare (ignore k))
      (when-let ((thunk (initializer-thunk component)))
        (funcall thunk)
        (setf (initializer-thunk component) nil))

@@ -18,6 +18,10 @@
            #:add-component
            #:add-multiple-components
            #:get-component
+           #:display
+           #:quit
+           #:key-down
+           #:key-up
 
            ;; components
            #:basis

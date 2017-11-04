@@ -19,6 +19,7 @@
   :serial t
   :components
   ((:file "package")
+   (:file "input")
 
    ;; components
    (:module "components/gun"

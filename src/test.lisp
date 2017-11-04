@@ -31,3 +31,15 @@
                           &optional (flow-init-state :EF))
   (execute-flow core-state call-flow-name flow-name flow-state-name
                 :come-from-state-name flow-init-state))
+
+(defun test-graphics-start ()
+  (let ((core-state (make-core-state))
+        (path (get-path :gear-example "data")))
+    (prepare-scenes core-state path)
+    (prepare-settings core-state path)
+    (prepare-call-flows core-state path)
+    (load-scene core-state :demo)
+    (kit.sdl2:init)
+    (sdl2:in-main-thread ()
+      (make-display core-state))
+    (kit.sdl2:start)))
