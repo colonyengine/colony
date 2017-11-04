@@ -1,7 +1,5 @@
 (in-package :gear)
 
-(defvar *call-flow-table*)
-
 (defclass flow-state ()
   ((%name :accessor name
           :initarg :name)
@@ -134,11 +132,6 @@ which evaluates to a hash table of flows keyed by their name."
                :collect `(setf (gethash ',name ,call-flow-table) ,flow))
        ,call-flow-table)))
 
-(defmacro call-flow-definition (name (&key enabled) &body body)
-  (when enabled
-    `(setf (gethash ,name *call-flow-table*)
-           ,(parse-call-flows body))))
-
 (defun execute-flow (core-state call-flow-name flow-name flow-state-name
                      &key come-from-state-name)
   "Find the CALL-FLOW-NAME call flow in the CORE-STATE, then lookup the flow
@@ -207,7 +200,7 @@ name which resulted in the exiting of the flow."
                   (gethash (funcall (transition flow-state) core-state) flow))))
 
 (defun get-call-flow (call-flow-name core-state)
-  (gethash call-flow-name (call-flow-table core-state)))
+  (gethash call-flow-name (call-flows-table core-state)))
 
 (defun get-flow (flow-name call-flow)
   (gethash flow-name call-flow))
@@ -215,13 +208,12 @@ name which resulted in the exiting of the flow."
 (defun get-flow-state (flow-state-name flow)
   (gethash flow-state-name flow))
 
-(defmethod extension-file-types ((owner (eql 'call-flow)))
+(defmethod extension-file-types ((owner (eql 'call-flows)))
   (list "flow"))
 
-(defun prepare-call-flows (core-state path)
-  (let ((*call-flow-table* (make-hash-table :test #'eq)))
-    (flet ((%prepare ()
-             (load-extensions 'call-flow path)
-             *call-flow-table*))
-      (merge-call-flow-table core-state (%prepare))
-      core-state)))
+(defmacro call-flow-definition (name (&key enabled) &body body)
+  `(let ()
+     (declare (special *temp-call-flows*))
+     ,(when enabled
+        `(setf (gethash ,name *temp-call-flows*)
+               ,(parse-call-flows body)))))

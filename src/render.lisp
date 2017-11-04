@@ -12,7 +12,7 @@
 
 (defgeneric make-display (core-state)
   (:method ((core-state core-state))
-    (let ((context (context core-state))
+    (let ((context (context-table core-state))
           (hz (calculate-refresh-rate)))
       (setf (slot-value core-state '%display)
             (make-instance 'display
@@ -30,7 +30,7 @@
                  hz))))
 
 (defmethod make-display :before ((core-state core-state))
-  (let ((context (context core-state)))
+  (let ((context (context-table core-state)))
     (setf slog:*current-level* (cfg context :log-level))
     (dolist (attr `((:context-major-version ,(cfg context :gl-version-major))
                     (:context-minor-version ,(cfg context :gl-version-minor))
@@ -40,7 +40,7 @@
       (apply #'sdl2:gl-set-attr attr))))
 
 (defmethod make-display :after ((core-state core-state))
-  (let ((context (context core-state)))
+  (let ((context (context-table core-state)))
     (setf (kit.sdl2:idle-render (display core-state)) t)
     (apply #'gl:enable (cfg context :gl-capabilities))
     (apply #'gl:blend-func (cfg context :gl-blend-mode))
@@ -58,14 +58,14 @@
   nil)
 
 (defmethod kit.sdl2:close-window :around ((display display))
-  (let* ((context (context (core-state display)))
+  (let* ((context (context-table (core-state display)))
          (width (cfg context :width))
          (height (cfg context :height)))
     (call-next-method)
     (slog:emit :display.stop width height (hz display))))
 
 (defmethod quit ((display display))
-  (let* ((context (context (core-state display)))
+  (let* ((context (context-table (core-state display)))
          (title (cfg context :title)))
     (kit.sdl2:close-window display)
     (kit.sdl2:quit)

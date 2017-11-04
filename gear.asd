@@ -23,17 +23,18 @@
   :components
   ((:file "package")
    (:file "utils")
+   (:file "logging")
    (:file "extensions")
+   (:file "context")
    (:file "actor")
    (:file "components")
-   (:file "core-state")
-   (:file "settings")
-   (:file "logging")
    (:file "call-flow")
+   (:file "core-state")
    (:file "type-dag")
    (:file "scene")
    (:file "render")
    (:file "input")
+   (:file "engine")
    (:file "test")
 
    ;; core components

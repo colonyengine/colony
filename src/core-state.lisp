@@ -1,8 +1,5 @@
 (in-package :gear)
 
-(defvar *scene-table*)
-(defvar *context*)
-
 (defclass core-state ()
   ((%actor-initialize-db :reader actor-initialize-db
                          :initform (make-hash-table :test #'eq))
@@ -15,40 +12,19 @@
    (%scene-table :reader scene-table
                  :initform (make-hash-table :test #'eq))
    (%camera :accessor camera
-            :initform NIL)
+            :initform nil)
    (%scene-tree :accessor scene-tree)
-   (%call-flow-table :reader call-flow-table
-                     :initform (make-hash-table :test #'eq))
+   (%call-flows-table :reader call-flows-table
+                      :initform (make-hash-table :test #'eq))
    (%display :reader display)
-   (%context :reader context
-             :initform (make-hash-table :test #'eq))))
+   (%context-table :reader context-table
+                   :initform (make-hash-table :test #'eq))))
 
 (defun make-core-state (&rest initargs)
   (apply #'make-instance 'core-state initargs))
 
 (defun add-scene-tree-root (core-state actor)
   (setf (scene-tree core-state) actor))
-
-(defun merge-context (core-state context)
-  (maphash
-   (lambda (k v)
-     (setf (gethash k (context core-state)) v))
-   context)
-  core-state)
-
-(defun merge-scene-table (core-state scene-table)
-  (maphash
-   (lambda (k v)
-     (setf (gethash k (scene-table core-state)) v))
-   scene-table)
-  core-state)
-
-(defun merge-call-flow-table (core-state call-flow-table)
-  (maphash
-   (lambda (k v)
-     (setf (gethash k (call-flow-table core-state)) v))
-   call-flow-table)
-  core-state)
 
 (defun spawn-actor (core-state actor)
   "Take the ACTOR and INITIALIZER-THUNK-LIST and place into the initializing
