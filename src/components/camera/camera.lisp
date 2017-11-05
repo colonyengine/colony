@@ -12,7 +12,9 @@
   (transform nil))
 
 (defmethod initialize-component ((component camera) context)
-  (setf (transform component) (get-component 'transform (actor component))))
+  (make-projection (mode component) component context)
+  (setf (transform component)
+        (get-component 'transform (actor component))))
 
 ;;; TODO: Think about what belongs in UPDATE-COMPONENT and RENDER-COMPONENT for
 ;;; the camera. We need to call MAKE-VIEW and MAKE-PROJECTION somewhere, but
