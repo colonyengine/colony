@@ -2,9 +2,9 @@
 
 (defmacro prepare-engine (core-state path)
   `(progn
-     ,@(loop :with items = '(context call-flow scene)
+     ,@(loop :with items = '(context call-flow scene shader)
              :for item :in items
-             :for var = (alexandria:symbolicate '%temp- item)
+             :for var = (symbolicate '%temp- item)
              :collect `(let ((,var (make-hash-table :test #'eq)))
                          (declare (special ,var))
                          (flet ((%prepare ()
@@ -18,13 +18,14 @@
                             (%prepare)))))))
 
 (defmethod start-engine ()
-  (let ((user-package-name (package-name *package*)))
+  (let ((user-package-name (package-name *package*))
+        (core-state (make-instance 'core-state)))
     (kit.sdl2:init)
     (sdl2:in-main-thread ()
       (let ((*package* (find-package :gear))
-            (core-state (make-instance 'core-state))
             (path (get-path user-package-name "data")))
         (prepare-engine core-state path)
         (load-default-scene core-state)
         (make-display core-state)))
-    (kit.sdl2:start)))
+    (kit.sdl2:start)
+    core-state))

@@ -30,5 +30,9 @@
            #:tags
            #:transform
            #:add-child
-           #:do-nodes ; sketchy!
-           ))
+           #:do-nodes))
+
+(defpackage #:gear-shaders
+  (:use #:3bgl-glsl/cl)
+  (:export #:vertex
+           #:fragment))

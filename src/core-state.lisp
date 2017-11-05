@@ -9,16 +9,18 @@
                      :initform (make-hash-table :test #'eq))
    (%component-active-view :reader component-active-view
                            :initform (make-hash-table :test #'eq))
+   (%display :reader display)
    (%camera :accessor camera
             :initform nil)
-   (%scene-table :reader scene-table
-                 :initform (make-hash-table :test #'eq))
    (%scene-tree :accessor scene-tree)
+   (%context-table :reader context-table
+                   :initform (make-hash-table :test #'eq))
    (%call-flow-table :reader call-flow-table
                      :initform (make-hash-table :test #'eq))
-   (%display :reader display)
-   (%context-table :reader context-table
-                   :initform (make-hash-table :test #'eq))))
+   (%scene-table :reader scene-table
+                 :initform (make-hash-table :test #'eq))
+   (%shader-table :reader shader-table
+                  :initform (make-hash-table :test #'eq))))
 
 (defun add-scene-tree-root (core-state actor)
   (setf (scene-tree core-state) actor))

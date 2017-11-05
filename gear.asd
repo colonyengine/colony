@@ -15,6 +15,7 @@
   :depends-on (#:alexandria
                #:sdl2
                #:sdl2kit
+               #:3bgl-shader
                #:simple-logger
                #:gamebox-math
                #:gamebox-frame-manager)
@@ -34,6 +35,7 @@
    (:file "scene")
    (:file "render")
    (:file "input")
+   (:file "shader")
    (:file "engine")
    (:file "test")
 
