@@ -64,7 +64,7 @@
     (call-next-method)
     (slog:emit :display.stop width height (hz display))))
 
-(defmethod quit ((display display))
+(defmethod quit-engine ((display display))
   (let* ((context (context-table (core-state display)))
          (title (cfg context :title)))
     (kit.sdl2:close-window display)

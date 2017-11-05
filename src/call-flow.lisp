@@ -200,7 +200,7 @@ name which resulted in the exiting of the flow."
                   (gethash (funcall (transition flow-state) core-state) flow))))
 
 (defun get-call-flow (call-flow-name core-state)
-  (gethash call-flow-name (call-flows-table core-state)))
+  (gethash call-flow-name (call-flow-table core-state)))
 
 (defun get-flow (flow-name call-flow)
   (gethash flow-name call-flow))
@@ -208,12 +208,12 @@ name which resulted in the exiting of the flow."
 (defun get-flow-state (flow-state-name flow)
   (gethash flow-state-name flow))
 
-(defmethod extension-file-types ((owner (eql 'call-flows)))
+(defmethod extension-file-types ((owner (eql 'call-flow)))
   (list "flow"))
 
 (defmacro call-flow-definition (name (&key enabled) &body body)
   `(let ()
-     (declare (special %temp-call-flows))
+     (declare (special %temp-call-flow))
      ,(when enabled
-        `(setf (gethash ,name %temp-call-flows)
+        `(setf (gethash ,name %temp-call-flow)
                ,(parse-call-flows body)))))

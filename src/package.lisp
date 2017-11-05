@@ -19,7 +19,8 @@
            #:add-multiple-components
            #:get-component
            #:display
-           #:quit
+           #:start-engine
+           #:quit-engine
            #:key-down
            #:key-up
 

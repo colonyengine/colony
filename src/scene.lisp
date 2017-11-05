@@ -139,8 +139,13 @@
 (defun get-scene (core-state scene-name)
   (gethash scene-name (scene-table core-state)))
 
-(defun load-scene (core-state scene-name)
-  (funcall (scene (get-scene core-state scene-name)) core-state))
+(defun load-scene (core-state name)
+  (funcall (scene (get-scene core-state name)) core-state))
+
+(defun load-default-scene (core-state)
+  (if-let ((default (cfg (context-table core-state) :default-scene)))
+    (load-scene core-state default)
+    (error "No default scene specified in settings.cfg.")))
 
 (defmethod extension-file-types ((owner (eql 'scene)))
   (list "scene"))
