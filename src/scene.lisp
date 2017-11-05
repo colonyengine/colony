@@ -56,16 +56,11 @@
      `((,actor (gethash ',actor ,table))))
    actor-names))
 
-(defun %generate-component-symbol (component-name)
-  (or (find-symbol (symbol-name component-name) :gear)
-      component-name))
-
 (defun %generate-component-initializers (actor-components)
   (flet ((generate-component-forms (components)
            (let ((component-forms))
              (dolist (c components)
-               (let ((component (%generate-component-symbol (first c))))
-                 (push `(make-component ',component) component-forms)))
+               (push `(make-component ',(first c)) component-forms))
              component-forms)))
     (let ((result))
       (maphash
@@ -81,8 +76,7 @@
   (loop :for actor :in actor-names
         :for components = (gethash actor component-table)
         :append
-        (loop :for (component-name . initargs) :in components
-              :for component = (%generate-component-symbol component-name)
+        (loop :for (component . initargs) :in components
               :for symbol = (gensym "COMPONENT-")
               :collect `(let ((,symbol (get-component ',component ,actor)))
                           (setf (initializer-thunk ,symbol)
