@@ -8,7 +8,6 @@
   (clip-near 0)
   (clip-far 1024)
   (zoom 1)
-  (target nil)
   (transform nil))
 
 (defmethod initialize-component ((component camera) context)
@@ -16,21 +15,16 @@
   (setf (transform component)
         (get-component 'transform (actor component))))
 
-;;; TODO: Think about what belongs in UPDATE-COMPONENT and RENDER-COMPONENT for
-;;; the camera. We need to call MAKE-VIEW and MAKE-PROJECTION somewhere, but
-;;; currently these matrices are not computed at all.
-
 (defmethod update-component ((component camera) context))
 
 (defmethod render-component ((component camera) context))
 
-(defun make-view (camera)
-  (with-accessors ((view view) (target target) (transform transform)) camera
-    (let* ((eye (v+ (mtr->v (local transform))
-                    (mtr->v (model (transform target)))))
-           (target-vec (v+ eye (vneg (mrot->v (model transform) :z))))
+(defmethod compute-camera-view ((component camera) context)
+  ;; Simply look down the neg z axis with y pointing up.
+  (with-accessors ((view view) (transform transform)) component
+    (let* ((eye (mtr->v (model transform)))
+           (target-vec (vneg (mrot->v (model transform) :z)))
            (up-vec (mrot->v (model transform) :y)))
-      (v->mtr! (model transform) eye)
       (mkview! view eye target-vec up-vec))))
 
 (defmethod make-projection ((mode (eql :perspective)) camera context)
