@@ -2,7 +2,7 @@
 
 (defmacro prepare-engine (core-state path)
   `(progn
-     ,@(loop :with items = '(context call-flow scene shader)
+     ,@(loop :with items = '(context call-flow scene)
              :for item :in items
              :for var = (symbolicate '%temp- item)
              :collect `(let ((,var (make-hash-table :test #'eq)))
