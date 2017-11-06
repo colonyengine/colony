@@ -1,5 +1,6 @@
 (in-package :gear-shaders)
 
+(input pos :vec3 :location 0)
 (input uv :vec3 :location 1)
 
 (output frag-color :vec4 :stage :fragment)
@@ -14,7 +15,7 @@
 
 (defun default-vertex ()
   (setf (@ v-out uv) uv
-        gl-position (* proj view model position)))
+        gl-position (* proj view model (vec4 pos 1))))
 
 (defun default-fragment ()
   (setf frag-color (vec4 1 1 1 1))
