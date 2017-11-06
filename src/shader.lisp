@@ -53,18 +53,94 @@
                            ,(apply #'%generate-uniform-list stages)
                            ,@(%generate-program-stages stages))))
 
-(defun parse-shader-dictionary (name version spec)
-  `(kit.gl.shader:defdict ,name (:uniform-style :camel-case)
-     ,@(loop :for (stages programs) :on spec :by #'cddr
-             :append (%generate-stages version stages)
-             :append (%generate-programs programs))))
-
 (defmethod extension-file-types ((owner (eql 'shader)))
   (list "shd"))
 
-(defmacro shader-dictionary (name (&key enabled version) &body body)
-  `(let ()
-     (declare (special %temp-shader))
-     ,(when enabled
-        `(setf (gethash ,name %temp-shader)
-               ,(parse-shader-dictionary name version body)))))
+(defmacro %with-shader-forms ((forms) &body body)
+  `(dolist (form ,forms)
+     (destructuring-bind (type options data) form
+       (declare (ignorable type options data))
+       ,@body)))
+
+(defmacro %shader-symbol-duplicate-check ((data key) &body body)
+  `(find-if
+    (lambda (x)
+      (when (> (count x ,data :key ,key) 1)
+        ,@body))
+    ,data
+    :key ,key))
+
+(defun %type-check-stages (forms)
+  (let ((fn-symbols))
+    (%with-shader-forms (forms)
+      (loop :for (nil . fns) :in data
+            :do (appendf fn-symbols fns))
+      (%shader-symbol-duplicate-check (data #'car)
+        (error "Stage ~s cannot be defined more than once in the same ~s form."
+               x type))
+      (%shader-symbol-duplicate-check (fn-symbols #'identity)
+        (error "Function ~s cannot be defined more than once in all ~s forms."
+               x type)))))
+
+(defun %type-check-programs (forms)
+  (let ((program-names))
+    (%with-shader-forms (forms)
+      (loop :for (name  nil) :in data
+            :do (push name program-names))
+      (%shader-symbol-duplicate-check (program-names #'identity)
+        (error "Program ~s must not be defined more than once in all ~s forms."
+               x type))
+      (flet ((%check (program stages)
+               (when (> (length stages)
+                        (length (remove-duplicates stages)))
+                 (error "Program ~s must not have multiple of the same stage."
+                        (car program)))))
+        (dolist (program data)
+          (loop :for (key value) :on (cadr program) :by #'cddr
+                :collect key :into stages
+                :finally (%check program stages)))))))
+
+(defun %collect-shader-stages (forms)
+  (flet ((%collect ()
+           (loop :for (nil nil . stages) :in forms
+                 :append (loop :for (stage fn) :in stages
+                               :append (list stage fn)))))
+    (loop :with table = (make-hash-table)
+          :for (stage . fns) :in (%collect)
+          :do (appendf (gethash stage table) fns)
+          :finally (return (nreverse (hash-table-alist table))))))
+
+(defun %collect-shader-programs (forms)
+  (let ((programs-list))
+    (%with-shader-forms (forms)
+      (appendf programs-list data))
+    programs-list))
+
+(defun %collect-shader-forms (path)
+  (let ((all-forms (collect-extension-forms 'shader path))
+        (stage-forms)
+        (program-forms))
+    (mapcar
+     (lambda (x)
+       (destructuring-bind (type options . rest) x
+         (declare (ignore rest))
+         (when (getf options :enabled)
+           (case type
+             (shader-stages (appendf stage-forms (list x)))
+             (shader-programs (appendf program-forms (list x)))))))
+     all-forms)
+    (%type-check-stages stage-forms)
+    (%type-check-programs program-forms)
+    (values (%collect-shader-stages stage-forms)
+            (%collect-shader-programs program-forms))))
+
+(defun make-shader-dictionary (extension-path)
+  (multiple-value-bind (stages programs) (%collect-shader-forms extension-path)
+    (kit.gl.shader:define-dictionary :shaders
+        (loop :for (type name uniforms . stages) :in (%generate-programs programs)
+              :collect (make-instance 'kit.gl.shader::program-source
+                                      :name name
+                                      :uniform-style :camel-case
+                                      :uniforms uniforms
+                                      :shaders stages))
+      :shaders (mapcar #'rest (%generate-stages 330 stages)))))

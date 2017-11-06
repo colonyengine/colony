@@ -15,3 +15,19 @@
 (defun load-extensions (owner path)
   (map-extensions owner (get-path :gear "data"))
   (map-extensions owner path))
+
+(defun collect-extension-forms (owner path)
+  (let ((*package* (find-package :gear))
+        (results))
+    (flet ((%collect (owner path)
+             (map-files
+              path
+              (lambda (x)
+                (with-open-file (in x)
+                  (loop :for form = (read in nil in)
+                        :until (eq form in)
+                        :do (push form results))))
+              :filter (extension-type-filter owner))))
+      (%collect owner (get-path :gear "data"))
+      (%collect owner path))
+    (nreverse results)))
