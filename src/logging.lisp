@@ -38,3 +38,6 @@
 
 (slog:define-message :trace :flow.exit
   "Exiting flow: (~a ~a ~a).")
+
+(slog:define-message :debug :shader.function.compiled
+  "Compiled shader function: ~a")

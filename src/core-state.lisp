@@ -13,14 +13,16 @@
    (%camera :accessor camera
             :initform nil)
    (%scene-tree :accessor scene-tree)
+   (%shaders :accessor shaders
+             :initform nil)
+   (%shaders-modified :accessor shaders-modified
+                      :initform nil)
    (%context-table :reader context-table
                    :initform (make-hash-table :test #'eq))
    (%call-flow-table :reader call-flow-table
                      :initform (make-hash-table :test #'eq))
    (%scene-table :reader scene-table
-                 :initform (make-hash-table :test #'eq))
-   (%shader-table :reader shader-table
-                  :initform (make-hash-table :test #'eq))))
+                 :initform (make-hash-table :test #'eq))))
 
 (defun add-scene-tree-root (core-state actor)
   (setf (scene-tree core-state) actor))
