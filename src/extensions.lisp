@@ -1,33 +1,34 @@
 (in-package :gear)
 
-(defun map-extensions (owner path)
+(defun map-extensions (extension-type path)
   (map-files
    path
    (lambda (x) (load x :verbose t))
-   :filter (extension-type-filter owner)))
+   :filter (extension-type-filter extension-type)))
 
-(defun extension-type-filter (owner)
+(defun extension-type-filter (extension-type)
   (lambda (path)
-    (some (lambda (str)
-            (string= (pathname-type path) str))
-          (extension-file-types owner))))
+    (string= (pathname-type path)
+             (extension-file-type extension-type))))
 
-(defun load-extensions (owner path)
-  (map-extensions owner (get-path :gear "data"))
-  (map-extensions owner path))
+(defun load-extensions (type path)
+  (map-extensions type (get-path :gear "data"))
+  (map-extensions type path))
 
-(defun collect-extension-forms (owner path)
+(defun collect-extension-forms (type path)
   (let ((*package* (find-package :gear))
         (results))
-    (flet ((%collect (owner path)
+    (flet ((%collect (type path)
              (map-files
               path
               (lambda (x)
                 (with-open-file (in x)
                   (loop :for form = (read in nil in)
                         :until (eq form in)
-                        :do (push form results))))
-              :filter (extension-type-filter owner))))
-      (%collect owner (get-path :gear "data"))
-      (%collect owner path))
+                        :for (nil options nil) = form
+                        :when (getf options :enabled)
+                          :do (push form results))))
+              :filter (extension-type-filter type))))
+      (%collect type (get-path :gear "data"))
+      (%collect type path))
     (nreverse results)))

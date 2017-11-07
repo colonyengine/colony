@@ -1,7 +1,7 @@
 (in-package :gear)
 
-(defmethod extension-file-types ((owner (eql 'context)))
-  (list "cfg"))
+(defmethod extension-file-type ((extension-type (eql 'context)))
+  "cfg")
 
 (defun cfg (context key)
   (gethash key context))

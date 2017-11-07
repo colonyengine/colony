@@ -141,8 +141,8 @@
     (load-scene core-state default)
     (error "No default scene specified in settings.cfg.")))
 
-(defmethod extension-file-types ((owner (eql 'scene)))
-  (list "scene"))
+(defmethod extension-file-type ((extension-type (eql 'scene)))
+  "scene")
 
 (defmacro scene-definition (name (&key enabled) &body body)
   `(let ((scene (make-instance 'scene-definition

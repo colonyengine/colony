@@ -208,8 +208,8 @@ name which resulted in the exiting of the flow."
 (defun get-flow-state (flow-state-name flow)
   (gethash flow-state-name flow))
 
-(defmethod extension-file-types ((owner (eql 'call-flow)))
-  (list "flow"))
+(defmethod extension-file-type ((extension-type (eql 'call-flow)))
+  "flow")
 
 (defmacro call-flow-definition (name (&key enabled) &body body)
   `(let ()
