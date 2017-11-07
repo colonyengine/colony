@@ -17,7 +17,8 @@
                                     v))
                             (%prepare)))))
      (setf (shaders ,core-state)
-           (make-shader-dictionary ,path))))
+           (make-instance 'shaders
+                          :data (make-shader-dictionary ,path)))))
 
 (defmethod start-engine ()
   (let* ((user-package-name (package-name *package*))

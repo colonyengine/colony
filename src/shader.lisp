@@ -1,5 +1,12 @@
 (in-package :gear)
 
+(defclass shaders ()
+  ((%data :reader data
+          :initarg :data)
+   (%compiled-shaders :accessor compiled-shaders)
+   (%modified-functions :accessor modified-functions
+                        :initform nil)))
+
 (defmacro shader-stages (&body body)
   body)
 
@@ -149,20 +156,20 @@
                               program))
       :shaders (%make-dictionary-stages stages))))
 
+(defun shaders-modified-hook-generator (core-state)
+  (lambda (x)
+    (setf (modified-functions (shaders core-state))
+          (union x (modified-functions (shaders core-state))))))
+
 (defun compile-shaders (core-state)
-  (setf (shaders core-state)
+  (setf (compiled-shaders (shaders core-state))
         (kit.gl.shader:compile-shader-dictionary :shaders))
   (pushnew (shaders-modified-hook-generator core-state)
            3bgl-shaders:*modified-function-hook*)
-  (dolist (func (shaders-modified core-state))
+  (dolist (func (modified-functions (shaders core-state)))
     (slog:emit :shader.function.compiled func)))
 
-(defun shaders-modified-hook-generator (core-state)
-  (lambda (x)
-    (setf (shaders-modified core-state)
-          (union x (shaders-modified core-state)))))
-
 (defun maybe-recompile-shaders (core-state)
-  (when (shaders-modified core-state)
+  (when (modified-functions (shaders core-state))
     (compile-shaders core-state)
-    (setf (shaders-modified core-state) nil)))
+    (setf (modified-functions (shaders core-state)) nil)))

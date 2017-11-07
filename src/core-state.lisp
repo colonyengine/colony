@@ -15,8 +15,6 @@
    (%scene-tree :accessor scene-tree)
    (%shaders :accessor shaders
              :initform nil)
-   (%shaders-modified :accessor shaders-modified
-                      :initform nil)
    (%context-table :reader context-table
                    :initform (make-hash-table :test #'eq))
    (%call-flow-table :reader call-flow-table
