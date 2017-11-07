@@ -37,9 +37,13 @@
    (:file "render")
    (:file "input")
    (:file "shader")
-   (:file "shader-code")
    (:file "engine")
    (:file "test")
+
+   ;; shader code
+   (:module "shaders"
+    :components
+    ((:file "shaders")))
 
    ;; core components
    (:module "components/basis"
