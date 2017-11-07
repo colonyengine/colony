@@ -14,7 +14,9 @@
                        (uiop/pathname:subpathname *load-pathname* "README.md"))
   :depends-on (#:alexandria
                #:gamebox-math
-               #:gear)
+               #:gear
+	       #:static-vectors
+	       #:cl-opengl)
   :pathname "src"
   :serial t
   :components
@@ -22,12 +24,11 @@
    (:file "input")
 
    ;; components
-   (:module "components/gun"
-    :components
-    ((:file "gun")))
-   (:module "components/gun-manager"
-    :components
-    ((:file "gun-manager")))
-   (:module "components/hit-points"
-    :components
-    ((:file "hit-points")))))
+   (:module "components/mesh-renderer" :components
+            ((:file "mesh-renderer")))
+   (:module "components/gun" :components
+            ((:file "gun")))
+   (:module "components/gun-manager" :components
+            ((:file "gun-manager")))
+   (:module "components/hit-points" :components
+            ((:file "hit-points")))))
