@@ -10,7 +10,8 @@
    (%interpolated :accessor interpolated
                   :initarg :interpolated)
    (%modifiedp :accessor modifiedp
-               :initarg :modifiedp)))
+               :initarg :modifiedp
+	       :initform t)))
 
 (defclass transform-state-scalar (transform-state) ())
 
@@ -36,7 +37,7 @@
 (defun %generate-default-state-initargs (type)
   (mapcan
    (lambda (key) (list key (%generate-default-state-value type)))
-   '(:current :incremental :previous :interpolated :modifiedp)))
+   '(:current :incremental :previous :interpolated)))
 
 (defun %make-transform-state (type &rest initargs)
   (apply #'make-instance type
