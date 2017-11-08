@@ -15,13 +15,18 @@
   :depends-on (#:alexandria
                #:gamebox-math
                #:gear
-	       #:static-vectors
-	       #:cl-opengl)
+               #:glkit
+               #:cl-opengl)
   :pathname "src"
   :serial t
   :components
   ((:file "package")
    (:file "input")
+
+   ;; shader code
+   (:module "shaders"
+    :components
+    ((:file "shaders")))
 
    ;; components
    (:module "components/mesh-renderer" :components

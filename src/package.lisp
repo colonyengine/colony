@@ -5,7 +5,6 @@
         #:alexandria
         #:gamebox-math)
   (:export #:get-path
-           #:actor
            #:scene-definition
            #:get-scene
            #:prepare-scenes
@@ -23,11 +22,23 @@
            #:do-nodes
            #:add-child
 
+	   ;; Actor API
+           #:actor
+	   #:id ;; for component too.
+
            ;; Core component types
            #:basis
-           #:camera
            #:tags
+
+           ;; camera component
+           #:camera
+           #:view
+           #:projection
+
+           ;; transform component
            #:transform
+           #:model
+           #:local
 
            ;; Component handling
            #:make-component

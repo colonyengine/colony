@@ -1,60 +1,68 @@
 (in-package :gear-example)
 
-(define-component mesh-renderer ()
-  (vao-id 0)
-  (vbo-id 0))
+(kit.gl.vao:defvao mesh ()
+  (:interleave ()
+               (pos :float 3)
+               (color :float 4)
+               (uv :float 3)))
 
+(define-component mesh-renderer ()
+  (vao nil)
+  (transform nil))
 
 (defmethod initialize-component ((component mesh-renderer) context)
-  (let ((vao (gl:gen-vertex-array))
-        (vbo (gl:gen-buffer))
-        ;; define a tetured square centered about origin.
-        (glverts (float-vector->static-vector
-                  ;; position color uv-coord
-                  #(-1.0 -1.0 0.0   1.0 1.0 1.0 1.0   0.0 0.0
-                    1.0 1.0 0.0     1.0 1.0 1.0 1.0   1.0 1.0
-                    -1.0 1.0 0.0    0.0 1.0
+  ;; We auto compute this since we always need it.
+  (setf (transform component)
+        (get-component 'transform (actor component)))
 
-                    -1.0 -1.0 0.0   1.0 1.0 1.0 1.0   0.0 0.0
-                    1.0 -1.0 0.0    1.0 1.0 1.0 1.0   1.0 0.0
-                    1.0 1.0 0.0     1.0 1.0 1.0 1.0   1.0 1.0
-                    )))
-        )
+  (let* (;; define a textured (soon) square centered about origin.
+         (num-verts 6)
+         (glverts
+           ;;(float-vector->static-vector
+           (make-array (* 10 num-verts)
+                       :element-type 'single-float
+                       :initial-contents
+                       ;; winding correct? This is CCW.
+                       (list -1.0 -1.0 0.0   1.0 1.0 1.0 1.0   0.0 0.0 0.0
+                             1.0 1.0 0.0     1.0 1.0 1.0 1.0   1.0 1.0 0.0
+                             -1.0 1.0 0.0    1.0 1.0 1.0 1.0   0.0 1.0 0.0
 
-    (setf (vao-id component) vao)
-    (setf (vbo-id component) vbo)
+                             -1.0 -1.0 0.0   1.0 1.0 1.0 1.0   0.0 0.0 0.0
+                             1.0 -1.0 0.0    1.0 1.0 1.0 1.0   1.0 0.0 0.0
+                             1.0 1.0 0.0     1.0 1.0 1.0 1.0   1.0 1.0 0.0
+                             )))
+         )
 
-    ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; Bind the VAO
-    ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    (gl:bind-vertex-array (vao-id component))
+    (setf (vao component)
+          (make-instance 'kit.gl.vao:vao
+                         :type 'mesh
+                         :primitive :triangles
+                         :vertex-count num-verts))
 
-    ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; bind interleaved position/uv datastore vbo into vao here
-    ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    (gl:bind-buffer :array-buffer (vbo-id component))
+    (kit.gl.vao:vao-buffer-vector (vao component) 0 glverts)
 
-    ;; position/uv data -> GPU
-    (%gl:buffer-data :array-buffer
-                     (* (length glverts) (gl-type->byte-size :float))
-                     (static-vectors:static-vector-pointer glverts)
-                     :static-draw)
-
-    ;; Free the memory, don't need it anymore.
-    (static-vectors:free-static-vector glverts)
-    (setf glverts nil)
-
-    ;; TODO bind layout to shader, but don't know how interface works yet.
-
-    ;; unbind-vao
-    (gl:bind-vertex-array 0)))
+    ;; TODO: Make texture and upload it
+    ))
 
 (defmethod render-component ((component mesh-renderer) context)
+  (let* ((shaders (gethash :shader-dict context))
+         (camera (gethash :camera context)))
 
-  (gl:bind-vertex-array (vao-id component))
+    (when (and shaders camera)
+      (let ((model (model (transform component)))
+            (view (view camera))
+            (projection (projection camera)))
 
-  ;; Just use draw-arrays for now.
-  (gl:draw-arrays :triangles 0 6))
+        ;; shader's layout should match the mesh vao spec.
+        (kit.gl.shader:use-program shaders 'gear::unlit-texture)
+        (kit.gl.shader:uniform-matrix-1-sv shaders :model model)
+        (kit.gl.shader:uniform-matrix-1-sv shaders :view view)
+        (kit.gl.shader:uniform-matrix-1-sv shaders :proj projection)
+
+        ;; Draw the mesh
+        (kit.gl.vao:vao-draw (vao component))))))
+
+
 
 
 ;; piles of helper functions. This is a horrible place for them.
@@ -75,64 +83,3 @@
             path (sdl2:surface-width sdl-surf) (sdl2:surface-height sdl-surf))
     (sdl2:free-surface sdl-surf)
     gltex))
-
-
-(defun gl-type->cl-type (gl-type)
-  (ecase gl-type
-    (:float 'single-float)
-    (:byte '(integer 0 255))
-    (:unsigned-byte '(integer -128 127))
-    (:short '(integer -32768 32767))
-    (:unsigned-short '(integer 0 65535))
-    (:signed-int '(integer −2147483648 2147483647))
-    (:unsigned-int '(integer 0 4294967295))
-    (:fixed '(integer 0 65535)) ;; 16.16 fixed point integer in 32-bits of space
-    (:half-float '(integer 0 65535)) ;; half float in 16 bits of space.
-    (:double 'double-float)))
-
-(defun gl-type->byte-size (gl-type)
-  (ecase gl-type
-    (:float 4)
-    (:byte 1)
-    (:unsigned-byte 1)
-    (:short 2)
-    (:unsigned-short 2)
-    (:signed-int 4)
-    (:unsigned-int 4)
-    (:fixed 2) ;; 16.16 fixed point integer in 32-bits of space
-    (:half-float 2) ;; half float in 16 bits of space.
-    (:double 8)))
-
-
-(defun vector->static-vector (vec gl-type)
-  (let* ((cl-type (gl-type->cl-type gl-type))
-         (sv (static-vectors:make-static-vector
-              (length vec) :element-type (gl-type->cl-type gl-type))))
-    (dotimes (i (length vec))
-      (setf (aref sv i) (coerce (aref vec i) cl-type)))
-    sv))
-
-
-(defun byte-vector->static-vector (vec)
-  (vector->static-vector vec :byte))
-
-(defun ubyte-vector->static-vector (vec)
-  (vector->static-vector vec :unsigned-byte))
-
-(defun short-vector->static-vector (vec)
-  (vector->static-vector vec :short))
-
-(defun ushort-vector->static-vector (vec)
-  (vector->static-vector vec :unsigned-short))
-
-(defun int-vector->static-vector (vec)
-  (vector->static-vector vec :int))
-
-(defun uint-vector->static-vector (vec)
-  (vector->static-vector vec :unsigned-int))
-
-(defun float-vector->static-vector (vec)
-  (vector->static-vector vec :float))
-
-(defun double-vector->static-vector (vec)
-  (vector->static-vector vec :double))

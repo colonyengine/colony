@@ -11,9 +11,8 @@
   (transform nil))
 
 (defmethod initialize-component ((component camera) context)
-  (make-projection (mode component) component context)
-  (setf (transform component)
-        (get-component 'transform (actor component))))
+  ;; transform is set in demo.scene
+  (make-projection (mode component) component context))
 
 (defmethod update-component ((component camera) context))
 
