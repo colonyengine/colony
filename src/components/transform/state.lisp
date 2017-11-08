@@ -11,7 +11,7 @@
                   :initarg :interpolated)
    (%modifiedp :accessor modifiedp
                :initarg :modifiedp
-	       :initform t)))
+	       :initform nil)))
 
 (defclass transform-state-scalar (transform-state) ())
 
