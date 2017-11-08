@@ -66,18 +66,18 @@
 (defmethod reinitialize-instance ((instance transform)
                                   &key
                                     actor
-                                    (translation/current (vec) tc-p)
-                                    (translation/incremental (vec) ti-p)
-                                    (rotation/current (vec) rc-p)
-                                    (rotation/incremental (vec) ri-p)
-                                    (scale/current (vec 1 1 1) sc-p)
-                                    (scale/incremental (vec) si-p))
+                                    (translation/current (vec))
+                                    (translation/incremental (vec))
+                                    (rotation/current (vec))
+                                    (rotation/incremental (vec))
+                                    (scale/current (vec 1 1 1))
+                                    (scale/incremental (vec)))
   (with-slots (%actor %state %translation %rotation %scale) instance
     (setf %actor actor
-          %state :initialize)
-    (when tc-p (setf (current %translation) translation/current))
-    (when ti-p (setf (incremental %translation) translation/incremental))
-    (when rc-p (setf (current %rotation) (qrot +qid+ rotation/current)))
-    (when ri-p (setf (incremental %rotation) rotation/incremental))
-    (when sc-p (setf (current %scale) scale/current))
-    (when si-p (setf (incremental %scale) scale/incremental))))
+          %state :initialize
+          (current %translation) translation/current
+          (incremental %translation) translation/incremental
+          (current %rotation) (qrot +qid+ rotation/current)
+          (incremental %rotation) rotation/incremental
+          (current %scale) scale/current
+          (incremental %scale) scale/incremental)))
