@@ -7,7 +7,7 @@
   (rotation (%make-transform-state 'transform-state-quaternion
                                    :incremental (vec)))
   (scale (%make-transform-state 'transform-state-vector
-				:current (vec 1 1 1)))
+                                :current (vec 1 1 1)))
   (local (mid))
   (model (mid)))
 
