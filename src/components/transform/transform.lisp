@@ -35,91 +35,49 @@
   (rotate-node node)
   (translate-node node))
 
-;; Checked by MF. Don't change.
 (defun resolve-local (node alpha)
   (with-slots (%scale %rotation %translation %local) node
     (interpolate-state %scale alpha)
     (interpolate-state %rotation alpha)
     (interpolate-state %translation alpha)
-    (when t
-      (m*! %local
-           (q->m! %local (interpolated %rotation))
-           (v->mscale +mid+ (interpolated %scale)))
-      (v->mtr! %local (interpolated %translation)))))
+    (m*! %local
+         (q->m! %local (interpolated %rotation))
+         (v->mscale +mid+ (interpolated %scale)))
+    (v->mtr! %local (interpolated %translation))))
 
-;; Checked by MF. Only change when render system and delta frame management
-;; system is in place.
-;; TODO: This is meant to be called from INTERPOLATE-TRANSFORMS.
-;; TODO: This is always called with an alpha value, which is the interpolation
-;; factor.
-(defun resolve-model (node &optional (alpha 0.5))
+(defun resolve-model (node alpha)
   (with-slots (%parent %local %model) node
     (when %parent
       (resolve-local node alpha)
       (m*! %model (model %parent) %local)
       %model)))
 
-;; Checked by MF. Only change when render system and delta frame management
-;; system is in place.
-;; TODO: Parent should be optional, and default to the root of the tree
-;; (@universe). I think this will need to pass in a core-state instance to
-;; retrieve the root node.
 (defun map-nodes (func parent)
   (funcall func parent)
   (dolist (child (children parent))
     (map-nodes func child)))
 
-;; Checked by MF. Only change when render system and delta frame management
-;; system is in place.
-;; TODO: This is called from the render loop, usually at 60Hz. The render loop
-;; is responsible for calculating the alpha value to call this with, which will
-;; interpolate the physics by that factor.
-;; TODO: When DO-NODES accepts an optional parent argument for the root node,
-;; remove the NIL below.
 (defun interpolate-transforms (root-node alpha)
   (map-nodes
    (lambda (node)
      (resolve-model node alpha))
    root-node))
 
-(defmethod make-component ((type (eql 'transform)) &rest initargs)
-  (let ((instance (make-instance 'transform)))
-    (apply #'reinitialize-instance instance initargs)
-    instance))
-
-(defun reinitialize-transform-instance (instance
-                                        &key
-                                          (actor nil p/0)
-                                          (state :initialize p/1)
-                                          ;; should be a vector of x y z
-                                          (translation/current (vec) p/2)
-                                          ;; should be a vector of dx dy dz
-                                          (translation/incremental (vec) p/3)
-                                          ;; should be a vec of euler angles.
-                                          (rotation/current (vec) p/4)
-                                          ;; should be a vec of euler angles.
-                                          (rotation/incremental (vec) p/5)
-                                          ;; This is a vector of x y z values.
-                                          (scale/current (vec 1 1 1) p/6)
-                                          ;; This is a vector of x y z values.
-                                          (scale/incremental (vec) p/7))
-
-  (when p/0
-    (setf (actor instance) actor))
-  (when p/1
-    (setf (state instance) state))
-  (when p/2
-    (setf (current (translation instance)) translation/current))
-  (when p/3
-    (setf (incremental (translation instance)) translation/incremental))
-  (when p/4
-    (setf (current (rotation instance)) (qrot +qid+ rotation/current)))
-  (when p/5
-    (setf (incremental (rotation instance)) rotation/incremental))
-  (when p/6
-    (setf (current (scale instance)) scale/current))
-  (when p/7
-    (setf (incremental (scale instance)) scale/incremental)))
-
-(defmethod reinitialize-instance ((instance transform) &rest initargs)
-  (apply #'reinitialize-transform-instance instance initargs))
+(defmethod reinitialize-instance ((instance transform)
+                                  &key
+                                    actor
+                                    (translation/current (vec) tc-p)
+                                    (translation/incremental (vec) ti-p)
+                                    (rotation/current (vec) rc-p)
+                                    (rotation/incremental (vec) ri-p)
+                                    (scale/current (vec 1 1 1) sc-p)
+                                    (scale/incremental (vec) si-p))
+  (with-slots (%actor %state %translation %rotation %scale) instance
+    (setf %actor actor
+          %state :initialize)
+    (when tc-p (setf (current %translation) translation/current))
+    (when ti-p (setf (incremental %translation) translation/incremental))
+    (when rc-p (setf (current %rotation) (qrot +qid+ rotation/current)))
+    (when ri-p (setf (incremental %rotation) rotation/incremental))
+    (when sc-p (setf (current %scale) scale/current))
+    (when si-p (setf (incremental %scale) scale/incremental))))
