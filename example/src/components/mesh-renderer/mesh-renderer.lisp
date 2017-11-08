@@ -16,7 +16,9 @@
   (setf (transform component)
         (get-component 'transform (actor component)))
 
-  (let* (;; define a textured (soon) square centered about origin.
+  (let* ( ;; define a textured (soon) square centered about origin.
+         ;; this geometry is of unit size: from edge to edge orthogonally is 1
+         ;; unit length, centered at origin.
          (num-verts 6)
          (glverts
            ;;(float-vector->static-vector
@@ -24,15 +26,14 @@
                        :element-type 'single-float
                        :initial-contents
                        ;; winding correct? This is CCW.
-                       (list -100.0 -100.0 0.0   1.0 1.0 1.0 1.0   0.0 0.0 0.0
-                             100.0 100.0 0.0     1.0 1.0 1.0 1.0   1.0 1.0 0.0
-                             -100.0 100.0 0.0    1.0 1.0 1.0 1.0   0.0 1.0 0.0
+                       (list 0.5 0.5 0.0     1.0 1.0 1.0 1.0   1.0 1.0 0.0
+                             -0.5 0.5 0.0    1.0 1.0 1.0 1.0   0.0 1.0 0.0
+                             -0.5 -0.5 0.0   1.0 1.0 1.0 1.0   0.0 0.0 0.0
 
-                             -100.0 -100.0 0.0   1.0 1.0 1.0 1.0   0.0 0.0 0.0
-                             100.0 -100.0 0.0    1.0 1.0 1.0 1.0   1.0 0.0 0.0
-                             100.0 100.0 0.0     1.0 1.0 1.0 1.0   1.0 1.0 0.0
-                             )))
-         )
+                             0.5 0.5 0.0     1.0 1.0 1.0 1.0   1.0 1.0 0.0
+                             -0.5 -0.5 0.0   1.0 1.0 1.0 1.0   0.0 0.0 0.0
+                             0.5 -0.5 0.0    1.0 1.0 1.0 1.0   1.0 0.0 0.0
+                             ))))
 
     (setf (vao component)
           (make-instance 'kit.gl.vao:vao
