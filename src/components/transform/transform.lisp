@@ -16,25 +16,19 @@
   (setf (parent child) parent))
 
 (defun translate-node (node)
-  (with-slots (%current %incremental %previous %modifiedp) (translation node)
+  (with-slots (%current %incremental %previous) (translation node)
     (vcp! %previous %current)
     (v+! %current %current %incremental)))
 
 (defun rotate-node (node)
-  (with-slots (%current %incremental %previous %modifiedp) (rotation node)
+  (with-slots (%current %incremental %previous) (rotation node)
     (qcp! %previous %current)
     (qrot! %current %current %incremental)))
 
 (defun scale-node (node)
-  (with-slots (%current %incremental %previous %modifiedp) (scale node)
+  (with-slots (%current %incremental %previous) (scale node)
     (vcp! %previous %current)
     (v+! %current %current %incremental)))
-
-#++(defun node-modified-p (node)
-  (when node
-    (or (modifiedp (translation node))
-        (modifiedp (rotation node))
-        (modifiedp (scale node)))))
 
 (defun transform-node (node)
   (scale-node node)

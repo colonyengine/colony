@@ -8,10 +8,7 @@
    (%previous :accessor previous
               :initarg :previous)
    (%interpolated :accessor interpolated
-                  :initarg :interpolated)
-   (%modifiedp :accessor modifiedp
-               :initarg :modifiedp
-         :initform t)))
+                  :initarg :interpolated)))
 
 (defclass transform-state-scalar (transform-state) ())
 
@@ -46,19 +43,13 @@
 (defgeneric interpolate-state (state factor))
 
 (defmethod interpolate-state ((state transform-state-scalar) factor)
-  (with-slots (%previous %current %interpolated %modifiedp) state
-    (if %modifiedp
-        (setf %interpolated (lerp factor %previous %current))
-        (setf %interpolated %current))))
+  (with-slots (%previous %current %interpolated) state
+    (setf %interpolated (lerp factor %previous %current))))
 
 (defmethod interpolate-state ((state transform-state-vector) factor)
-  (with-slots (%previous %current %interpolated %modifiedp) state
-    (if %modifiedp
-        (vlerp! %interpolated %previous %current factor)
-        (vcp! %interpolated %current))))
+  (with-slots (%previous %current %interpolated) state
+    (vlerp! %interpolated %previous %current factor)))
 
 (defmethod interpolate-state ((state transform-state-quaternion) factor)
-  (with-slots (%previous %current %interpolated %modifiedp) state
-    (if %modifiedp
-        (qslerp! %interpolated %previous %current factor)
-        (qcp! %interpolated %current))))
+  (with-slots (%previous %current %interpolated) state
+    (qslerp! %interpolated %previous %current factor)))
