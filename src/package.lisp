@@ -19,7 +19,7 @@
            #:quit-engine
            #:key-down
            #:key-up
-           #:do-nodes
+           #:map-nodes
            #:add-child
 
 	   ;; Actor API

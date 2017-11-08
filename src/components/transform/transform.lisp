@@ -64,10 +64,10 @@
 ;; TODO: Parent should be optional, and default to the root of the tree
 ;; (@universe). I think this will need to pass in a core-state instance to
 ;; retrieve the root node.
-(defun do-nodes (func parent)
+(defun map-nodes (func parent)
   (funcall func parent)
   (dolist (child (children parent))
-    (do-nodes func child)))
+    (map-nodes func child)))
 
 ;; Checked by MF. Only change when render system and delta frame management
 ;; system is in place.
@@ -76,8 +76,11 @@
 ;; interpolate the physics by that factor.
 ;; TODO: When DO-NODES accepts an optional parent argument for the root node,
 ;; remove the NIL below.
-(defun interpolate-transforms (scene-root-transform alpha)
-  (do-nodes (lambda (node) (resolve-model node alpha)) scene-root-transform))
+(defun interpolate-transforms (root-node alpha)
+  (map-nodes
+   (lambda (node)
+     (resolve-model node alpha))
+   root-node))
 
 (defmethod make-component ((type (eql 'transform)) &rest initargs)
   (let ((instance (make-instance 'transform)))

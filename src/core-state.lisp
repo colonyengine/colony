@@ -88,9 +88,9 @@ CORE-STATE. It is assumed they have been processed appropriately."
 (defun find-active-camera (core-state)
   "Find the first active camera in CORE-STATE's scene tree and return the
 component."
-  (do-nodes
-      (lambda (transform)
-        (when-let ((camera-component (get-component 'camera (actor transform))))
-          (when (and camera-component (activep camera-component))
-            (return-from find-active-camera camera-component))))
-    (get-component 'transform (scene-tree core-state))))
+  (map-nodes
+   (lambda (transform)
+     (when-let ((camera-component (get-component 'camera (actor transform))))
+       (when (and camera-component (activep camera-component))
+         (return-from find-active-camera camera-component))))
+   (get-component 'transform (scene-tree core-state))))
