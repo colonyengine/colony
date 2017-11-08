@@ -18,10 +18,12 @@
 
 (defclass transform-state-quaternion (transform-state) ())
 
-(defmethod initialize-instance :after ((object transform-state-quaternion) &key)
-  (with-slots (%current) object
-    (when (typep %current 'vec)
-      (setf %current (qrot (qid) %current)))))
+;; TODO this is still here for a little bit until we can figure out
+;; that we actually do not need it.
+#++(defmethod initialize-instance :after ((object transform-state-quaternion) &key)
+     (with-slots (%current) object
+       (when (typep %current 'vec)
+         (setf %current (qrot (qid) %current)))))
 
 (defgeneric %generate-default-state-value (type)
   (:method ((type (eql 'transform-state-scalar)))

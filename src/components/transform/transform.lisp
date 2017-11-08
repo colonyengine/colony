@@ -102,11 +102,17 @@
                                         &key
                                           (actor nil p/0)
                                           (state :initialize p/1)
+                                          ;; should be a vector of x y z
                                           (translation/current (vec) p/2)
+                                          ;; should be a vector of dx dy dz
                                           (translation/incremental (vec) p/3)
+                                          ;; should be a vec of euler angles.
                                           (rotation/current (vec) p/4)
+                                          ;; should be a vec of euler angles.
                                           (rotation/incremental (vec) p/5)
+                                          ;; This is a vector of x y z values.
                                           (scale/current (vec 1 1 1) p/6)
+                                          ;; This is a vector of x y z values.
                                           (scale/incremental (vec) p/7))
 
   (when p/0
@@ -118,7 +124,7 @@
   (when p/3
     (setf (incremental (translation instance)) translation/incremental))
   (when p/4
-    (setf (current (rotation instance)) rotation/current))
+    (setf (current (rotation instance)) (qrot +qid+ rotation/current)))
   (when p/5
     (setf (incremental (rotation instance)) rotation/incremental))
   (when p/6
