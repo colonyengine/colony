@@ -54,7 +54,7 @@
             (view (view camera))
             (projection (projection camera)))
 
-	(format t "Actor ~A model ~A~%" (id (actor component)) model)
+        (format t "Actor: ~a~%model:~% ~A~%~%" (id (actor component)) model)
 
         ;; shader's layout should match the mesh vao spec.
         (kit.gl.shader:use-program shaders 'gear::unlit-texture)
