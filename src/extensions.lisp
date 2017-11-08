@@ -20,10 +20,12 @@
            (make-instance 'shaders
                           :data (make-shader-dictionary ,path)))))
 
-(defun map-extensions (extension-type path)
+(defun map-extensions (extension-type path &optional owner)
   (map-files
    path
-   (lambda (x) (load x :verbose t))
+   (lambda (x)
+     (load x)
+     (slog:emit :extension.load owner x))
    :filter (extension-type-filter extension-type)))
 
 (defun extension-type-filter (extension-type)
@@ -32,8 +34,8 @@
              (extension-file-type extension-type))))
 
 (defun load-extensions (type path)
-  (map-extensions type (get-path :gear "data"))
-  (map-extensions type path))
+  (map-extensions type (get-path :gear "data") :builtin)
+  (map-extensions type path :user))
 
 (defun collect-extension-forms (type path)
   (let ((*package* (find-package :gear))

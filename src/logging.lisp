@@ -6,6 +6,9 @@
 (slog:define-message :info :engine.quit
   "Stopped ~a.")
 
+(slog:define-message :info :extension.load
+  "Loaded extension (~(~a~)): ~a.")
+
 (slog:define-message :debug :display.init
   "Display ~dx~d @ ~dHz created.")
 
