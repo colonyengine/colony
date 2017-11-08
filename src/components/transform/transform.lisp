@@ -17,29 +17,20 @@
 
 (defun translate-node (node)
   (with-slots (%current %incremental %previous %modifiedp) (translation node)
-    (let ((locally-modified-p (not (vzerop %incremental))))
-      (vcp! %previous %current)
-      (when locally-modified-p
-        (v+! %current %current %incremental))
-      (setf %modifiedp locally-modified-p))))
+    (vcp! %previous %current)
+    (v+! %current %current %incremental)))
 
 (defun rotate-node (node)
   (with-slots (%current %incremental %previous %modifiedp) (rotation node)
-    (let ((locally-modified-p (not (vzerop %incremental))))
-      (qcp! %previous %current)
-      (when locally-modified-p
-        (qrot! %current %current %incremental))
-      (setf %modifiedp locally-modified-p))))
+    (qcp! %previous %current)
+    (qrot! %current %current %incremental)))
 
 (defun scale-node (node)
   (with-slots (%current %incremental %previous %modifiedp) (scale node)
-    (let ((locally-modified-p (not (vzerop %incremental))))
-      (vcp! %previous %current)
-      (when locally-modified-p
-        (v+! %current %current %incremental))
-      (setf %modifiedp locally-modified-p))))
+    (vcp! %previous %current)
+    (v+! %current %current %incremental)))
 
-(defun node-modified-p (node)
+#++(defun node-modified-p (node)
   (when node
     (or (modifiedp (translation node))
         (modifiedp (rotation node))
@@ -56,7 +47,7 @@
     (interpolate-state %scale alpha)
     (interpolate-state %rotation alpha)
     (interpolate-state %translation alpha)
-    (when (node-modified-p node)
+    (when t
       (m*! %local
            (q->m! %local (interpolated %rotation))
            (v->mscale +mid+ (interpolated %scale)))
