@@ -11,6 +11,7 @@
   (transform nil))
 
 (defmethod initialize-component ((component mesh-renderer) context)
+  (format t "init mesh renderer~%")
   ;; We auto compute this since we always need it.
   (setf (transform component)
         (get-component 'transform (actor component)))
@@ -53,7 +54,7 @@
             (view (view camera))
             (projection (projection camera)))
 
-	;;(format t "Actor ~A model ~A~%" (id (actor component)) model)
+	(format t "Actor ~A model ~A~%" (id (actor component)) model)
 
         ;; shader's layout should match the mesh vao spec.
         (kit.gl.shader:use-program shaders 'gear::unlit-texture)
