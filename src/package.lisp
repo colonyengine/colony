@@ -14,23 +14,33 @@
            #:define-component
            #:component
            #:components
-           #:make-component
-           #:add-component
-           #:add-multiple-components
            #:get-component
            #:display
            #:start-engine
            #:quit-engine
            #:key-down
            #:key-up
+           #:do-nodes
+           #:add-child
 
-           ;; components
+           ;; Core component types
            #:basis
            #:camera
            #:tags
            #:transform
-           #:add-child
-           #:do-nodes))
+
+           ;; Component handling
+           #:make-component
+           #:add-component
+           #:add-multiple-components
+
+           ;; component protocol
+           #:initialize-component
+           #:physics-update-component
+           #:make-camera-view
+           #:update-component
+           #:render-component
+           #:destroy-component))
 
 (defpackage #:gear-shaders
   (:use #:3bgl-glsl/cl)
