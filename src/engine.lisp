@@ -1,38 +1,24 @@
 (in-package :gear)
 
-(defmacro prepare-engine (core-state path)
-  `(progn
-     ,@(loop :with items = '(context call-flow scene)
-             :for item :in items
-             :for var = (symbolicate '%temp- item)
-             :collect `(let ((,var (make-hash-table :test #'eq)))
-                         (declare (special ,var))
-                         (flet ((%prepare ()
-                                  (load-extensions ',item ,path)
-                                  ,var))
-                           (maphash
-                            (lambda (k v)
-                              (setf (gethash k (,(symbolicate item '-table)
-                                                ,core-state))
-                                    v))
-                            (%prepare)))))
-     (setf (shaders ,core-state)
-           (make-instance 'shaders
-                          :data (make-shader-dictionary ,path)))))
-
-(defmethod start-engine ()
-  (let* ((user-package-name (package-name *package*))
-         (path (get-path user-package-name "data"))
-         (core-state (make-instance 'core-state)))
-    (kit.sdl2:init)
-    (sdl2:in-main-thread ()
-      (let ((*package* (find-package :gear)))
-        (prepare-engine core-state path)
-        (load-default-scene core-state)
-        (make-display core-state)
-        (compile-shaders core-state)))
-    (kit.sdl2:start)
+(defun prepare-engine (package)
+  (let ((*package* (find-package :gear))
+        (core-state (make-instance 'core-state))
+        (path (get-path package "data")))
+    (prepare-extensions core-state path)
+    (load-default-scene core-state)
+    (make-display core-state)
+    (compile-shaders core-state)
     core-state))
+
+(defun start-engine ()
+  (let* ((user-package-name (make-keyword (package-name *package*))))
+    (when (eq user-package-name :gear)
+      (error "Cannot start the engine from the :GEAR package."))
+    (kit.sdl2:init)
+    (prog1
+        (sdl2:in-main-thread ()
+          (prepare-engine user-package-name))
+      (kit.sdl2:start))))
 
 #+sbcl
 (defmacro profile (seconds)
