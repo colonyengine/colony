@@ -33,3 +33,19 @@
         (compile-shaders core-state)))
     (kit.sdl2:start)
     core-state))
+
+#+sbcl
+(defmacro profile (seconds)
+  `(progn
+     (let ((display (display (start-engine))))
+       (sb-profile:unprofile)
+       (sb-profile:profile
+        "GEAR"
+        "GEAR-EXAMPLE"
+        "GAMEBOX-MATH"
+        "GAMEBOX-FRAME-MANAGER")
+       (sleep ,seconds)
+       (sb-profile:report)
+       (sb-profile:unprofile)
+       (sb-profile:reset)
+       (quit-engine display))))
