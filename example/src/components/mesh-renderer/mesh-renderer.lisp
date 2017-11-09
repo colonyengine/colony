@@ -10,7 +10,7 @@
   (vao nil)
   (transform nil))
 
-(defmethod initialize-component ((component mesh-renderer) context)
+(defmethod initialize-component ((component mesh-renderer) settings)
   ;; We auto compute this since we always need it.
   (setf (transform component)
         (get-component 'transform (actor component)))
@@ -45,9 +45,9 @@
     ;; TODO: Make texture and upload it
     ))
 
-(defmethod render-component ((component mesh-renderer) context)
-  (let* ((shaders (gethash :shader-dict context))
-         (camera (gethash :camera context)))
+(defmethod render-component ((component mesh-renderer) (context context))
+  (let* ((shaders (shaders context))
+         (camera (camera context)))
 
     (when (and shaders camera)
       (let ((model (model (transform component)))

@@ -12,18 +12,17 @@
   (look-at-transform nil)
   (transform nil))
 
-(defmethod initialize-component ((component camera) context)
-  (make-projection (mode component) component context)
+(defmethod initialize-component ((component camera) settings)
+  (make-projection (mode component) component settings)
   (setf (transform component) (get-component 'transform (actor component)))
   (when (look-at-actor component)
     (camera-look-at component (look-at-actor component))))
 
-(defmethod compute-camera-view ((component camera) context)
+(defmethod compute-camera-view ((component camera) (context context))
   (with-accessors ((view view) (look-at-actor look-at-actor)
                    (look-at-transform look-at-transform)
                    (transform transform))
       component
-
     (if look-at-actor
         ;; LookAt the look-at regardless of the camera's actor's
         ;; transform orientation. (But the camera's actor position
@@ -40,28 +39,25 @@
                (up-vec (mrot->v (model transform) :y)))
           (mkview! view eye look-at up-vec)))))
 
-(defmethod make-projection ((mode (eql :perspective)) camera context)
+(defmethod make-projection ((mode (eql :perspective)) camera (context context))
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far))
       camera
-    (let ((w (cfg context :width))
-          (h (cfg context :height)))
-      (mkpersp! proj (/ pi zoom) (/ w h) near far))))
+    (with-cfg (width height) context
+      (mkpersp! proj (/ pi zoom) (/ width height) near far))))
 
-(defmethod make-projection ((mode (eql :orthographic)) camera context)
+(defmethod make-projection ((mode (eql :orthographic)) camera (context context))
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far))
       camera
-    (let ((w (/ (cfg context :width) (zoom camera) 2))
-          (h (/ (cfg context :height) (zoom camera) 2)))
-      (mkortho! proj (- w) w (- h) h near far))))
+    (with-cfg (width height) context
+      (let ((w (/ width (zoom camera) 2))
+            (h (/ height (zoom camera) 2)))
+        (mkortho! proj (- w) w (- h) h near far)))))
 
-
-(defun camera-look-at (camera-component look-at-actor)
+(defun camera-look-at (camera actor)
   "Set LOOK-AT-ACTOR into the CAMERA-COMPONENT and make the camera
 track that actor. To unset, set LOOK-AT-ACTOR to NIL when calling
 function. That will restore the camera to its default configuration of
 matching the associated actor's transform for its orientation."
-  (setf (look-at-actor camera-component) look-at-actor
-
-        (look-at-transform camera-component)
-        (when look-at-actor
-          (get-component 'transform look-at-actor))))
+  (setf (look-at-actor camera) actor)
+  (when actor
+    (setf (look-at-transform camera) (get-component 'transform actor))))

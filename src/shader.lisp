@@ -147,6 +147,10 @@
 (defmethod extension-file-type ((extension-type (eql 'shader)))
   "shd")
 
+(defmethod prepare-extension ((extension-type (eql 'shader)) owner path)
+  (setf (shaders owner)
+        (make-instance 'shaders :data (make-shader-dictionary path))))
+
 (defun make-shader-dictionary (extension-path)
   (multiple-value-bind (stages programs) (%collect-shader-forms extension-path)
     (kit.gl.shader:define-dictionary :shaders

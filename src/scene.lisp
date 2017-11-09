@@ -131,18 +131,29 @@
              (values ,core-state ,actor-table)))))))
 
 (defun get-scene (core-state scene-name)
-  (gethash scene-name (scene-table core-state)))
+  (gethash scene-name (scenes core-state)))
 
 (defun load-scene (core-state name)
   (funcall (scene (get-scene core-state name)) core-state))
 
 (defun load-default-scene (core-state)
-  (if-let ((default (cfg (context-table core-state) :default-scene)))
+  (if-let ((default (cfg (context core-state) :default-scene)))
     (load-scene core-state default)
     (error "No default scene specified in settings.cfg.")))
 
 (defmethod extension-file-type ((extension-type (eql 'scene)))
   "scene")
+
+(defmethod prepare-extension ((extension-type (eql 'scene)) owner path)
+  (let ((%temp-scene (make-hash-table)))
+    (declare (special %temp-scene))
+    (flet ((%prepare ()
+             (load-extensions extension-type path)
+             %temp-scene))
+      (maphash
+       (lambda (key value)
+         (setf (gethash key (scenes owner)) value))
+       (%prepare)))))
 
 (defmacro scene-definition (name (&key enabled) &body body)
   `(let ((scene (make-instance 'scene-definition

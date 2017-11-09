@@ -15,12 +15,12 @@
    (%scene-tree :accessor scene-tree)
    (%shaders :accessor shaders
              :initform nil)
-   (%context-table :reader context-table
-                   :initform (make-hash-table :test #'eq))
-   (%call-flow-table :reader call-flow-table
-                     :initform (make-hash-table :test #'eq))
-   (%scene-table :reader scene-table
-                 :initform (make-hash-table :test #'eq))))
+   (%context :reader context
+             :initform (make-instance 'context))
+   (%call-flows :reader call-flows
+                :initform (make-hash-table))
+   (%scenes :reader scenes
+            :initform (make-hash-table))))
 
 (defun add-scene-tree-root (core-state actor)
   (setf (scene-tree core-state) actor))

@@ -1,25 +1,5 @@
 (in-package :gear)
 
-(defmacro prepare-extensions (core-state path)
-  `(progn
-     ,@(loop :with items = '(context call-flow scene)
-             :for item :in items
-             :for var = (symbolicate '%temp- item)
-             :collect `(let ((,var (make-hash-table :test #'eq)))
-                         (declare (special ,var))
-                         (flet ((%prepare ()
-                                  (load-extensions ',item ,path)
-                                  ,var))
-                           (maphash
-                            (lambda (k v)
-                              (setf (gethash k (,(symbolicate item '-table)
-                                                ,core-state))
-                                    v))
-                            (%prepare)))))
-     (setf (shaders ,core-state)
-           (make-instance 'shaders
-                          :data (make-shader-dictionary ,path)))))
-
 (defun map-extensions (extension-type path &optional owner)
   (map-files
    path
@@ -32,6 +12,12 @@
   (lambda (path)
     (string= (pathname-type path)
              (extension-file-type extension-type))))
+
+(defun prepare-extensions (core-state path)
+  (prepare-extension 'settings (context core-state) path)
+  (prepare-extension 'call-flow core-state path)
+  (prepare-extension 'scene core-state path)
+  (prepare-extension 'shader core-state path))
 
 (defun load-extensions (type path)
   (map-extensions type (get-path :gear "data") :builtin)

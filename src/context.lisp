@@ -1,16 +1,9 @@
 (in-package :gear)
 
-(defmethod extension-file-type ((extension-type (eql 'context)))
-  "cfg")
-
-(defun cfg (context key)
-  (gethash key context))
-
-(defun (setf cfg) (value context key)
-  (setf (gethash key context) value))
-
-(defmacro settings (&body body)
-  `(let ()
-     (declare (special %temp-context))
-     (loop :for (key value) :on ',body :by #'cddr
-           :do (setf (gethash key %temp-context) value))))
+(defclass context ()
+  ((%settings-table :reader settings-table
+                    :initform (make-hash-table))
+   (%shaders :accessor shaders
+             :initform nil)
+   (%camera :accessor camera
+            :initform nil)))

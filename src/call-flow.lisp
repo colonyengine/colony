@@ -126,11 +126,11 @@ containing each flow-state indexed by name."
 (defun parse-call-flows (form)
   "Parse an entire call-flow and return a list of the name of it and a form
 which evaluates to a hash table of flows keyed by their name."
-  (let ((call-flow-table (gensym)))
+  (let ((call-flows (gensym)))
     `(let ((,call-flows (make-hash-table)))
        ,@(loop :for (name flow) :in (mapcar #'parse-flow form)
-               :collect `(setf (gethash ',name ,call-flow-table) ,flow))
-       ,call-flow-table)))
+               :collect `(setf (gethash ',name ,call-flows) ,flow))
+       ,call-flows)))
 
 (defun execute-flow (core-state call-flow-name flow-name flow-state-name
                      &key come-from-state-name)
@@ -200,7 +200,7 @@ name which resulted in the exiting of the flow."
                   (gethash (funcall (transition flow-state) core-state) flow))))
 
 (defun get-call-flow (call-flow-name core-state)
-  (gethash call-flow-name (call-flow-table core-state)))
+  (gethash call-flow-name (call-flows core-state)))
 
 (defun get-flow (flow-name call-flow)
   (gethash flow-name call-flow))
@@ -210,6 +210,17 @@ name which resulted in the exiting of the flow."
 
 (defmethod extension-file-type ((extension-type (eql 'call-flow)))
   "flow")
+
+(defmethod prepare-extension ((extension-type (eql 'call-flow)) owner path)
+  (let ((%temp-call-flow (make-hash-table)))
+    (declare (special %temp-call-flow))
+    (flet ((%prepare ()
+             (load-extensions extension-type path)
+             %temp-call-flow))
+      (maphash
+       (lambda (key value)
+         (setf (gethash key (call-flows owner)) value))
+       (%prepare)))))
 
 (defmacro call-flow-definition (name (&key enabled) &body body)
   `(let ()

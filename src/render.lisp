@@ -12,40 +12,40 @@
 
 (defgeneric make-display (core-state)
   (:method ((core-state core-state))
-    (let ((context (context-table core-state))
-          (hz (calculate-refresh-rate)))
-      (setf (slot-value core-state '%display)
-            (make-instance 'display
-                           :core-state core-state
-                           :title (cfg context :title)
-                           :w (cfg context :width)
-                           :h (cfg context :height)
-                           :hz hz
-                           :delta (cfg context :delta)
-                           :period (cfg context :periodic-interval)
-                           :debug-interval (cfg context :debug-frames-interval)))
-      (slog:emit :display.init
-                 (cfg context :width)
-                 (cfg context :height)
-                 hz))))
+    (let ((hz (calculate-refresh-rate)))
+      (with-cfg (title width height delta periodic-interval
+                       debug-frames-interval)
+          (context core-state)
+        (setf (slot-value core-state '%display)
+              (make-instance 'display
+                             :core-state core-state
+                             :title title
+                             :w width
+                             :h height
+                             :hz hz
+                             :delta delta
+                             :period periodic-interval
+                             :debug-interval debug-frames-interval))
+        (slog:emit :display.init width height hz)))))
 
 (defmethod make-display :before ((core-state core-state))
-  (let ((context (context-table core-state)))
-    (setf slog:*current-level* (cfg context :log-level))
-    (dolist (attr `((:context-major-version ,(cfg context :gl-version-major))
-                    (:context-minor-version ,(cfg context :gl-version-minor))
-                    (:multisamplebuffers
-                     ,(if (zerop (cfg context :anti-alias-level)) 0 1))
-                    (:multisamplesamples ,(cfg context :anti-alias-level))))
+  (with-cfg (log-level gl-version-major gl-version-minor anti-alias-level)
+      (context core-state)
+    (setf slog:*current-level* log-level)
+    (dolist (attr `((:context-major-version ,gl-version-major)
+                    (:context-minor-version ,gl-version-minor)
+                    (:multisamplebuffers ,(if (zerop anti-alias-level) 0 1))
+                    (:multisamplesamples ,anti-alias-level)))
       (apply #'sdl2:gl-set-attr attr))))
 
 (defmethod make-display :after ((core-state core-state))
-  (let ((context (context-table core-state)))
+  (with-cfg (gl-capabilities gl-blend-mode gl-depth-mode vsync)
+      (context core-state)
     (setf (kit.sdl2:idle-render (display core-state)) t)
-    (apply #'gl:enable (cfg context :gl-capabilities))
-    (apply #'gl:blend-func (cfg context :gl-blend-mode))
-    (gl:depth-func (cfg context :gl-depth-mode))
-    (sdl2:gl-set-swap-interval (if (cfg context :vsync) 1 0))))
+    (apply #'gl:enable gl-capabilities)
+    (apply #'gl:blend-func gl-blend-mode)
+    (gl:depth-func gl-depth-mode)
+    (sdl2:gl-set-swap-interval (if vsync 1 0))))
 
 (defmethod kit.sdl2:render ((display display))
   (gl:clear-color (* 0.2 (abs (sin (* 0.001 (get-internal-real-time))))) 0 0 1)
@@ -57,15 +57,12 @@
                 :come-from-state-name :ef))
 
 (defmethod kit.sdl2:close-window :around ((display display))
-  (let* ((context (context-table (core-state display)))
-         (width (cfg context :width))
-         (height (cfg context :height)))
+  (with-cfg (width height) (context (core-state display))
     (call-next-method)
     (slog:emit :display.stop width height (hz display))))
 
 (defmethod quit-engine ((display display))
-  (let* ((context (context-table (core-state display)))
-         (title (cfg context :title)))
+  (with-cfg (title) (context (core-state display))
     (kit.sdl2:close-window display)
     (kit.sdl2:quit)
     (slog:emit :engine.quit title)))

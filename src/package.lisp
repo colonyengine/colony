@@ -8,6 +8,8 @@
            #:scene-definition
            #:get-scene
            #:prepare-scenes
+           #:context
+           #:shaders
            #:make-core-state
            #:spawn-actor
            #:define-component
