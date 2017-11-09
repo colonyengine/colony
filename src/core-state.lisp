@@ -89,8 +89,11 @@ CORE-STATE. It is assumed they have been processed appropriately."
   "Find the first active camera in CORE-STATE's scene tree and return the
 component."
   (map-nodes
-   (lambda (transform)
-     (when-let ((camera-component (get-component 'camera (actor transform))))
-       (when (and camera-component (activep camera-component))
-         (return-from find-active-camera camera-component))))
+   (lambda (x)
+     ;; TODO: Instead of checking each camera component type, we should have a
+     ;; means to identify any camera more flexibly.
+     (when-let ((camera (or (get-component 'camera (actor x))
+                            (get-component 'tracking-camera (actor x)))))
+       (when (activep camera)
+         (return-from find-active-camera camera))))
    (get-component 'transform (scene-tree core-state))))

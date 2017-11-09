@@ -24,11 +24,11 @@
            #:map-nodes
            #:add-child
 
-           ;; Actor API
+           ;; actor API
            #:actor
-           #:id ;; for component too.
+           #:id ; for component too.
 
-           ;; Core component types
+           ;; core component types
            #:basis
            #:tags
 
@@ -36,14 +36,15 @@
            #:camera
            #:view
            #:projection
-           #:camera-look-at
+           #:tracking-camera
+           #:look-at
 
            ;; transform component
            #:transform
            #:model
            #:local
 
-           ;; Component handling
+           ;; component handling
            #:make-component
            #:add-component
            #:add-multiple-components
@@ -57,6 +58,4 @@
            #:destroy-component))
 
 (defpackage #:gear-shaders
-  (:use #:3bgl-glsl/cl)
-  (:export #:vertex
-           #:fragment))
+  (:use #:3bgl-glsl/cl))

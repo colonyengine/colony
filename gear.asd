@@ -42,6 +42,7 @@
    (:file "shaders/shaders")
    (:file "components/basis/basis")
    (:file "components/camera/camera")
+   (:file "components/camera/tracking-camera")
    (:file "components/tags/tags")
    (:file "components/transform/state")
    (:file "components/transform/transform")))
