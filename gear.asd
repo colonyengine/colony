@@ -35,7 +35,7 @@
    (:file "core-state")
    (:file "type-dag")
    (:file "scene")
-   (:file "render")
+   (:file "display")
    (:file "input")
    (:file "shader")
    (:file "engine")
