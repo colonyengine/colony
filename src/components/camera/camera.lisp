@@ -5,7 +5,7 @@
   (view (mid))
   (projection (mid))
   (mode :perspective)
-  (clip-near -1024)
+  (clip-near 0)
   (clip-far 1024)
   (zoom 1)
   (look-at-actor nil)
@@ -13,19 +13,10 @@
   (transform nil))
 
 (defmethod initialize-component ((component camera) context)
-  ;; Store the actor's tranform this component for which we are a component.
-  (setf (transform component)
-        (get-component 'transform (actor component)))
-
-  ;; Setup ourselves if we want to LookAt a new look-at.
+  (make-projection (mode component) component context)
+  (setf (transform component) (get-component 'transform (actor component)))
   (when (look-at-actor component)
-    (camera-look-at component (look-at-actor component)))
-
-  (make-projection (mode component) component context))
-
-(defmethod update-component ((component camera) context))
-
-(defmethod render-component ((component camera) context))
+    (camera-look-at component (look-at-actor component))))
 
 (defmethod compute-camera-view ((component camera) context)
   (with-accessors ((view view) (look-at-actor look-at-actor)
