@@ -48,7 +48,7 @@
     (sdl2:gl-set-swap-interval (if (cfg context :vsync) 1 0))))
 
 (defmethod kit.sdl2:render ((display display))
-  (gl:clear-color (* 0.1 (abs (sin (* 0.001 (get-internal-real-time))))) 0 0 1)
+  (gl:clear-color (* 0.2 (abs (sin (* 0.001 (get-internal-real-time))))) 0 0 1)
   (gl:clear :color-buffer :depth-buffer)
   (execute-flow (core-state display)
                 :default
