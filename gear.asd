@@ -38,24 +38,9 @@
    (:file "input")
    (:file "shader")
    (:file "engine")
-   (:file "test")
-
-   ;; shader code
-   (:module "shaders"
-    :components
-    ((:file "shaders")))
-
-   ;; core components
-   (:module "components/basis"
-    :components
-    ((:file "basis")))
-   (:module "components/camera"
-    :components
-    ((:file "camera")))
-   (:module "components/tags"
-    :components
-    ((:file "tags")))
-   (:module "components/transform"
-    :components
-    ((:file "state")
-     (:file "transform")))))
+   (:file "shaders/shaders")
+   (:file "components/basis/basis")
+   (:file "components/camera/camera")
+   (:file "components/tags/tags")
+   (:file "components/transform/state")
+   (:file "components/transform/transform")))

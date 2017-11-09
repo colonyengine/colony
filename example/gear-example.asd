@@ -22,18 +22,8 @@
   :components
   ((:file "package")
    (:file "input")
-
-   ;; shader code
-   (:module "shaders"
-    :components
-    ((:file "shaders")))
-
-   ;; components
-   (:module "components/mesh-renderer" :components
-            ((:file "mesh-renderer")))
-   (:module "components/gun" :components
-            ((:file "gun")))
-   (:module "components/gun-manager" :components
-            ((:file "gun-manager")))
-   (:module "components/hit-points" :components
-            ((:file "hit-points")))))
+   (:file "shaders/shaders")
+   (:file "components/gun/gun")
+   (:file "components/gun-manager/gun-manager")
+   (:file "components/hit-points/hit-points")
+   (:file "components/mesh-renderer/mesh-renderer")))
