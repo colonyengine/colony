@@ -27,6 +27,7 @@
    (:file "utils")
    (:file "logging")
    (:file "extensions")
+   (:file "settings")
    (:file "context")
    (:file "actor")
    (:file "components")
