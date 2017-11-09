@@ -65,7 +65,10 @@
 
 
 (defun camera-look-at (camera-component look-at-actor)
-  "Setup the look-at-actor to be followed but the camera-component."
+  "Set LOOK-AT-ACTOR into the CAMERA-COMPONENT and make the camera
+track that actor. To unset, set LOOK-AT-ACTOR to NIL when calling
+function. That will restore the camera to its default configuration of
+matching the associated actor's transform for its orientation."
   (setf (look-at-actor camera-component) look-at-actor
 
         (look-at-transform camera-component)
