@@ -7,7 +7,7 @@
   (mode :perspective)
   (clip-near 0)
   (clip-far 1024)
-  (zoom 1)
+  (zoom 2)
   (transform nil))
 
 (defmethod initialize-component ((component camera) (context context))
