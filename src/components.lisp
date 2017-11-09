@@ -62,14 +62,6 @@ COMPONENT-TYPE in an ACTOR."
 (defgeneric update-component (component context)
   (:method ((component component) (context context))))
 
-(defgeneric compute-camera-view (component context)
-  ;; TODO: This is a special method used only for camera components of
-  ;; any kind.  Maybe it can be gotten rid of with some thought--but
-  ;; not sure yet. Making the inverted camera view is a distinct step
-  ;; which must happen after the interpolation of the model state vars
-  ;; and before update-component, which may use it (via raycasts, etc)
-  (:method ((component component) (context context))))
-
 (defgeneric render-component (component context)
   (:method ((component component) (context context))))
 

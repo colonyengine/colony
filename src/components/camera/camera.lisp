@@ -11,15 +11,12 @@
   (transform nil))
 
 (defmethod initialize-component ((component camera) (context context))
+  ;; compute a projection matrix according to the mode of this camera
   (make-projection (mode component) component context)
-  (setf (transform component) (get-component 'transform (actor component))))
-
-(defmethod compute-camera-view ((camera camera) (context context))
-  (with-accessors ((view view) (transform transform)) camera
-    (let* ((eye (mtr->v (model transform)))
-           (target (v+ eye (vneg (mrot->v (model transform) :z))))
-           (up (mrot->v (model transform) :y)))
-      (mkview! view eye target up))))
+  ;; store a reference to the transform component of this camera's actor locally
+  (setf (transform component) (get-component 'transform (actor component)))
+  ;; register the camera in the list of core-state cameras
+  (push component (cameras (core-state context))))
 
 (defmethod make-projection ((mode (eql :perspective)) camera (context context))
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far))
@@ -34,3 +31,16 @@
       (let ((w (/ width (zoom camera) 2))
             (h (/ height (zoom camera) 2)))
         (mkortho! proj (- w) w (- h) h near far)))))
+
+(defgeneric compute-camera-view (camera context)
+  (:method ((camera camera) (context context))
+    (with-accessors ((view view) (transform transform)) camera
+      (let* ((eye (mtr->v (model transform)))
+             (target (v+ eye (vneg (mrot->v (model transform) :z))))
+             (up (mrot->v (model transform) :y)))
+        (mkview! view eye target up)))))
+
+(defun find-active-camera (core-state)
+  (dolist (camera (cameras core-state))
+    (when (activep camera)
+      (return-from find-active-camera camera))))

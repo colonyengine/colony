@@ -2,7 +2,7 @@
 
 (defun prepare-engine (package)
   (let ((*package* (find-package :gear))
-        (core-state (make-instance 'core-state))
+        (core-state (make-core-state))
         (path (get-path package "data")))
     (prepare-extensions core-state path)
     (load-default-scene core-state)

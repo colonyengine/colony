@@ -10,17 +10,22 @@
    (%component-active-view :reader component-active-view
                            :initform (make-hash-table))
    (%display :reader display)
-   (%camera :accessor camera
-            :initform nil)
+   (%cameras :accessor cameras
+             :initform nil)
    (%scene-tree :accessor scene-tree)
    (%shaders :accessor shaders
              :initform nil)
-   (%context :reader context
-             :initform (make-instance 'context))
+   (%context :reader context)
    (%call-flows :reader call-flows
                 :initform (make-hash-table))
    (%scenes :reader scenes
             :initform (make-hash-table))))
+
+(defun make-core-state ()
+  (let ((core-state (make-instance 'core-state)))
+    (setf (slot-value core-state '%context)
+          (make-instance 'context :core-state core-state))
+    core-state))
 
 (defun add-scene-tree-root (core-state actor)
   (setf (scene-tree core-state) actor))
@@ -84,16 +89,3 @@ CORE-STATE. It is assumed they have been processed appropriately."
      (declare (ignore k))
      (clrhash v))
    (component-initialize-by-type-view core-state)))
-
-(defun find-active-camera (core-state)
-  "Find the first active camera in CORE-STATE's scene tree and return the
-component."
-  (map-nodes
-   (lambda (x)
-     ;; TODO: Instead of checking each camera component type, we should have a
-     ;; means to identify any camera more flexibly.
-     (when-let ((camera (or (get-component 'camera (actor x))
-                            (get-component 'tracking-camera (actor x)))))
-       (when (activep camera)
-         (return-from find-active-camera camera))))
-   (get-component 'transform (scene-tree core-state))))
