@@ -18,6 +18,13 @@
   ;; register the camera in the list of core-state cameras
   (push component (cameras (core-state context))))
 
+(defmethod destroy-component :around ((component camera) (context context))
+  ;; when we destroy a component that is a camera, also remove its reference in
+  ;; the list of core-state cameras, and the context
+  (call-next-method)
+  (deletef (cameras (core-state context)) component)
+  (setf (camera context) nil))
+
 (defmethod make-projection ((mode (eql :perspective)) camera (context context))
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far))
       camera
