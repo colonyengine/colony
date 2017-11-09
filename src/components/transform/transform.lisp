@@ -63,6 +63,11 @@
      (resolve-model node alpha))
    root-node))
 
+(defmethod make-component ((type (eql 'transform)) &rest args)
+  (let ((instance (make-instance 'transform)))
+    (apply #'reinitialize-instance instance args)
+    instance))
+
 (defmethod reinitialize-instance ((instance transform)
                                   &key
                                     actor
