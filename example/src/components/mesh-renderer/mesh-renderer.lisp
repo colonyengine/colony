@@ -55,7 +55,7 @@
             (projection (projection camera)))
 
         ;; shader's layout should match the mesh vao spec.
-        (kit.gl.shader:use-program shaders 'gear::unlit-texture)
+        (kit.gl.shader:use-program shaders :unlit-texture)
         (kit.gl.shader:uniform-matrix-1-sv shaders :model model)
         (kit.gl.shader:uniform-matrix-1-sv shaders :view view)
         (kit.gl.shader:uniform-matrix-1-sv shaders :proj projection)
