@@ -15,9 +15,7 @@
     (when (eq user-package-name :gear)
       (error "Cannot start the engine from the :GEAR package."))
     (kit.sdl2:init)
-    (prog1
-        (sdl2:in-main-thread ()
-          (prepare-engine user-package-name))
+    (prog1 (sdl2:in-main-thread () (prepare-engine user-package-name))
       (kit.sdl2:start))))
 
 #+sbcl
