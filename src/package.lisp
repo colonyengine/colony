@@ -22,9 +22,9 @@
            #:map-nodes
            #:add-child
 
-	   ;; Actor API
+           ;; Actor API
            #:actor
-	   #:id ;; for component too.
+           #:id ;; for component too.
 
            ;; Core component types
            #:basis
@@ -34,6 +34,7 @@
            #:camera
            #:view
            #:projection
+           #:camera-look-at
 
            ;; transform component
            #:transform
