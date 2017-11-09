@@ -1,7 +1,5 @@
 (in-package :gear)
 
-(defvar *core-components* nil)
-
 (defclass component ()
   ((%state :accessor state
            :initarg :state
@@ -13,25 +11,17 @@
                        :initform nil)))
 
 (defmacro define-component (name super-classes &body slots)
-  `(progn
-     (when (member ',name *core-components*)
-       (error "Component name must not be a reserved core component name."))
-     (defclass ,name (component ,@super-classes)
-       ,(loop :for slot :in slots
-              :collect
-              (destructuring-bind (slot-name slot-value &key type) slot
-                (append
-                 `(,(symbolicate '% slot-name)
-                   :accessor ,slot-name
-                   :initarg ,(make-keyword slot-name)
-                   :initform ,slot-value)
-                 (when type
-                   `(:type ,type))))))))
-
-(defmacro %define-core-component (name super-classes &body slots)
-  `(progn
-     (define-component ,name ,super-classes ,@slots)
-     (push ',name *core-components*)))
+  `(defclass ,name (component ,@super-classes)
+     ,(loop :for slot :in slots
+            :collect
+            (destructuring-bind (slot-name slot-value &key type) slot
+              (append
+               `(,(symbolicate '% slot-name)
+                 :accessor ,slot-name
+                 :initarg ,(make-keyword slot-name)
+                 :initform ,slot-value)
+               (when type
+                 `(:type ,type)))))))
 
 (defun component-type (component)
   (class-name (class-of component)))

@@ -1,6 +1,6 @@
 (in-package :gear)
 
-(%define-core-component camera ()
+(define-component camera ()
   (activep nil)
   (view (mid))
   (projection (mid))
