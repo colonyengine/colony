@@ -54,9 +54,7 @@
                 :default
                 'perform-one-frame
                 'entry/perform-one-frame
-                :come-from-state-name :ef)
-  ;; TODO: render pass
-  nil)
+                :come-from-state-name :ef))
 
 (defmethod kit.sdl2:close-window :around ((display display))
   (let* ((context (context-table (core-state display)))
