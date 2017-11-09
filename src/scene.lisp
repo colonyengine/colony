@@ -42,7 +42,7 @@
                        actor))))))
 
 (defun %generate-actor-components-table (scene-spec actor-names &optional table)
-  (loop :with table = (or table (make-hash-table :test #'eq))
+  (loop :with table = (or table (make-hash-table))
         :for (actor components . child) :in scene-spec
         :do (dolist (component (reverse components))
               (%type-check-actor-component actor-names component)
@@ -114,7 +114,7 @@
            (bindings (%generate-actor-bindings
                       actor-names actor-table)))
       `(lambda (,core-state)
-         (let ((,actor-table (make-hash-table :test #'eq)))
+         (let ((,actor-table (make-hash-table)))
            (dolist (,actor-name ',actor-names)
              (setf (gethash ,actor-name ,actor-table)
                    (make-instance 'gear:actor

@@ -2,13 +2,13 @@
 
 (defclass core-state ()
   ((%actor-initialize-db :reader actor-initialize-db
-                         :initform (make-hash-table :test #'eq))
+                         :initform (make-hash-table))
    (%component-initialize-by-type-view :reader component-initialize-by-type-view
-                                       :initform (make-hash-table :test #'eq))
+                                       :initform (make-hash-table))
    (%actor-active-db :reader actor-active-db
-                     :initform (make-hash-table :test #'eq))
+                     :initform (make-hash-table))
    (%component-active-view :reader component-active-view
-                           :initform (make-hash-table :test #'eq))
+                           :initform (make-hash-table))
    (%display :reader display)
    (%camera :accessor camera
             :initform nil)
@@ -42,7 +42,7 @@ and the main loop protocol will not be called on it or its components."
            (gethash component-type-name
                     (component-initialize-by-type-view core-state))
          (unless presentp
-           (let ((ht (make-hash-table :test #'eq)))
+           (let ((ht (make-hash-table)))
              (setf (gethash component-type-name
                             (component-initialize-by-type-view core-state))
                    ht)

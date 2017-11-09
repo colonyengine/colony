@@ -6,9 +6,9 @@
    (%state :accessor state
            :initform :initialize)
    (%components :reader components
-                :initform (make-hash-table :test #'eq))
+                :initform (make-hash-table))
    (%components-by-type :reader components-by-type
-                        :initform (make-hash-table :test #'eq))
+                        :initform (make-hash-table))
    (%scene :accessor scene
            :initarg :scene)))
 
