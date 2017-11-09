@@ -10,7 +10,7 @@
   (vao nil)
   (transform nil))
 
-(defmethod initialize-component ((component mesh-renderer) settings)
+(defmethod initialize-component ((component mesh-renderer) (context context))
   ;; We auto compute this since we always need it.
   (setf (transform component)
         (get-component 'transform (actor component)))

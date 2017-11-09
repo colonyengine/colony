@@ -12,8 +12,8 @@
   (look-at-transform nil)
   (transform nil))
 
-(defmethod initialize-component ((component camera) settings)
-  (make-projection (mode component) component settings)
+(defmethod initialize-component ((component camera) (context context))
+  (make-projection (mode component) component context)
   (setf (transform component) (get-component 'transform (actor component)))
   (when (look-at-actor component)
     (camera-look-at component (look-at-actor component))))
