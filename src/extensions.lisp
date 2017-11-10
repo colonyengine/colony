@@ -34,8 +34,7 @@
                   (loop :for form = (read in nil in)
                         :until (eq form in)
                         :for (nil options nil) = form
-                        :when (getf options :enabled)
-                          :do (push form results))))
+                        :do (push form results))))
               :filter (extension-type-filter type))))
       (%collect type (get-path :gear "data"))
       (%collect type path))

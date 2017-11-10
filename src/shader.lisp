@@ -129,10 +129,11 @@
 
 (defun %collect-shader-forms (path)
   (loop :for form :in (collect-extension-forms 'shader path)
-        :for (form-type . nil) = form
-        :when (eq form-type 'shader-stages)
+        :for (form-type options . nil) = form
+        :for enabled = (getf options :enabled)
+        :when (and enabled (eq form-type 'shader-stages))
           :collect form :into stages
-        :when (eq form-type 'shader-programs)
+        :when (and enabled (eq form-type 'shader-programs))
           :collect form :into programs
         :finally (%type-check-stages stages)
                  (%type-check-programs programs)
