@@ -45,10 +45,13 @@ form."
                              (gethash thingy lifts)
                            (if presentp
                                splice-var
-                               (let ((new-var (gensym
-                                               (string-upcase
-                                                (symbol-name
-                                                 (second thingy))))))
+                               (let ((new-var
+                                       (gensym
+                                        (concatenate 'string
+						     (string-upcase
+						      (symbol-name
+						       (second thingy)))
+						     "-"))))
                                  (setf (gethash thingy lifts) new-var)
                                  new-var))))
                         (t (error "lift-splices is broken."))))
