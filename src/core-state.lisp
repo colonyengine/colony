@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (defclass core-state ()
   ((%actor-initialize-db :reader actor-initialize-db

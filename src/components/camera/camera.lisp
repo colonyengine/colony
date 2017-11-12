@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (define-component camera ()
   (activep nil)

@@ -1,4 +1,4 @@
-(in-package :gear-example)
+(in-package :first-light-example)
 
 (kit.gl.vao:defvao mesh ()
   (:interleave ()

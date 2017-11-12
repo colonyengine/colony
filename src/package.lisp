@@ -1,6 +1,6 @@
 (in-package :cl-user)
 
-(defpackage #:gear
+(defpackage #:first-light
   (:use #:cl
         #:alexandria
         #:gamebox-math)
@@ -57,5 +57,5 @@
            #:render-component
            #:destroy-component))
 
-(defpackage #:gear-shaders
+(defpackage #:first-light-shaders
   (:use #:3bgl-glsl/cl))

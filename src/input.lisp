@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (defmethod kit.sdl2:keyboard-event ((display display) state ts repeatp keysym)
   (let ((key (sdl2:scancode keysym)))

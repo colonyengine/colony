@@ -1,4 +1,4 @@
-# gear-example
+# first-light-example
 
 TODO
 
@@ -13,7 +13,7 @@ To manually install using Quicklisp, clone this repository into your
 local-projects directory and issue the following in your REPL:
 
 ```lisp
-(ql:quickload :gear-example)
+(ql:quickload :first-light-example)
 ```
 
 ## Usage

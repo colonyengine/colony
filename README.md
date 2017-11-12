@@ -1,4 +1,4 @@
-# gear
+# First Light
 
 TODO
 
@@ -13,7 +13,7 @@ using Quicklisp, clone this repository into your local-projects directory and is
 your REPL:
 
 ```lisp
-(ql:quickload :gear)
+(ql:quickload :first-light)
 ```
 
 ## Usage
