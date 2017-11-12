@@ -20,6 +20,43 @@ return them as a list."
                                      (push v results))))
     results))
 
+(defun is-syntax-form-p (syntax-symbol form)
+  (if (and form (consp form) (eq (first form) syntax-symbol))
+      T
+      NIL))
+
+(defun lift-splices (form)
+  "If the dependency FORM has splices in it, lift them into a dictionary
+with gensymed names associated with the splice form. Return two values,
+the modified (if required) dependency form and an association list
+ (a hash-table) keyed by the gensymed name and keyed by the splice
+form."
+  (let ((lifts (make-hash-table :test #'equal)))
+    (labels ((substitute-splice (form)
+               (if (null form)
+                   nil
+                   (cons
+                    (let ((thingy (first form)))
+                      (cond
+                        ((symbolp thingy)
+                         thingy)
+                        ((is-syntax-form-p 'splice thingy)
+                         (multiple-value-bind (splice-var presentp)
+                             (gethash thingy lifts)
+                           (if presentp
+                               splice-var
+                               (let ((new-var (gensym
+                                               (string-upcase
+                                                (symbol-name
+                                                 (second thingy))))))
+                                 (setf (gethash thingy lifts) new-var)
+                                 new-var))))
+                        (t (error "lift-splices is broken."))))
+
+                    (substitute-splice (rest form))))))
+
+      (values (substitute-splice form) lifts))))
+
 (defun segment-subgraph/subdag-hyperedges (form)
   "Segment the dependency FORM and return the to/from hyper edges
 defined by the -> delimiter for each edge.
@@ -31,7 +68,7 @@ If the form is not null, but contains no hyper edges, return two values:
   form and :vertex.
 
 If the form is not null, and contains hyper edges, return two values:
-  list of hyper-edge pairs and :segments."
+  list of hyper-edge pairs and :hyperedges."
 
   (let* ((x (split-sequence:split-sequence '-> form))
          ;; cut into groups of two with rolling window
@@ -45,7 +82,7 @@ If the form is not null, and contains hyper edges, return two values:
        ;; no hyperedges
        (values form :vertex))
       (t ;; hyperedges found
-       (values connections :segments)))))
+       (values connections :hyperedges)))))
 
 
 ;; Then the code to perform the parsing.
