@@ -27,7 +27,7 @@ return them as a list."
 
 ;; TODO: Do I actually need to do this? Or do I just splice in the splice
 ;; brand new each time? I think brand new is what I want...
-(defun lift-splices (form)
+(defun lift-splices (dependency-form)
   "If the dependency FORM has splices in it, lift them into a table
 with gensymed names associated with EACH individual splice
 form. Return two values, the modified (if required) dependency form
@@ -49,12 +49,12 @@ is the splice form."
                           (setf (gethash new-var lifts) element)
                           new-var))
                        (t (error "lift-splices is broken."))))
-                   form)))
+                   dependency-form)))
 
     (values lifted-form lifts)))
 
 (defun segment-dependency-form (form)
-  "Lift splices and then Segment the dependency FORM.
+  "Lift splices and then segment the dependency FORM into hyperedges.
 
 If the form is null, return three values:
   NIL, :empty, lifts
