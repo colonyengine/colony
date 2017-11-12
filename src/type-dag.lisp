@@ -25,8 +25,6 @@ return them as a list."
       T
       NIL))
 
-;; TODO: Do I actually need to do this? Or do I just splice in the splice
-;; brand new each time? I think brand new is what I want...
 (defun lift-splices (dependency-form)
   "If the dependency FORM has splices in it, lift them into a table
 with gensymed names associated with EACH individual splice
