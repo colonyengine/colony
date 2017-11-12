@@ -29,8 +29,8 @@ return them as a list."
   "If the dependency FORM has splices in it, lift them into a dictionary
 with gensymed names associated with the splice form. Return two values,
 the modified (if required) dependency form and an association list
- (a hash-table) keyed by the gensymed name and keyed by the splice
-form."
+ (a hash-table) keyed by the splice form and value is the variable
+name as a symbol."
   (let ((lifts (make-hash-table :test #'equal)))
     (labels ((substitute-splice (form)
                (if (null form)
