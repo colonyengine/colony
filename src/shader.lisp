@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (defclass shaders ()
   ((%data :reader data
@@ -28,8 +28,9 @@
     :key ,key))
 
 (defun %type-check-shader-function (symbol)
-  (or (find-symbol (symbol-name symbol) :gear-shaders)
-      (error "Function ~a not defined in the :GEAR-SHADERS package." symbol)))
+  (or (find-symbol (symbol-name symbol) :first-light-shaders)
+      (error "Function ~a not defined in the :FIRST-LIGHT-SHADERS package."
+             symbol)))
 
 (defun %type-check-stages (forms)
   (let ((fn-symbols))

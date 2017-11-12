@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (define-component tracking-camera (camera)
   (look-at-actor nil)

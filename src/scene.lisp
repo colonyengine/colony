@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (defclass scene-definition ()
   ((%scene :reader scene
@@ -7,7 +7,7 @@
           :initarg :data)))
 
 (defun %read-spec-forms (file)
-  (let ((*package* (find-package :gear)))
+  (let ((*package* (find-package :first-light)))
     (with-open-file (in file)
       (loop :for form = (read in nil in)
             :until (eq form in)
@@ -117,7 +117,7 @@
          (let ((,actor-table (make-hash-table)))
            (dolist (,actor-name ',actor-names)
              (setf (gethash ,actor-name ,actor-table)
-                   (make-instance 'gear:actor
+                   (make-instance 'first-light:actor
                                   :id ,actor-name
                                   :scene ,scene-name)))
            (let ,bindings

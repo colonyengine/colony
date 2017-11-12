@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (slog:define-message :info :engine.start
   "Started ~a.")

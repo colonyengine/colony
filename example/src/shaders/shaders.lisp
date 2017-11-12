@@ -1,4 +1,4 @@
-(in-package :gear-shaders)
+(in-package :first-light-shaders)
 
 (input pos :vec3 :location 0)
 (input color :vec4 :location 1)
@@ -21,7 +21,7 @@
         gl-position (* proj view model (vec4 pos 1))))
 
 (defun unlit-texture-fragment ()
-  ;; TODO: Fix me to look up a texxture and get the right value from it.
+  ;; TODO: Fix me to look up a texture and get the right value from it.
   (setf frag-color (@ f-in color))
 
   (when (zerop (.a frag-color))

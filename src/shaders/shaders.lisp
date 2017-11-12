@@ -1,4 +1,4 @@
-(in-package :gear-shaders)
+(in-package :first-light-shaders)
 
 (input pos :vec3 :location 0)
 (input uv :vec3 :location 1)

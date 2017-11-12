@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (defclass flow-state ()
   ((%name :accessor name

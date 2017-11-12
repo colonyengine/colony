@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (defclass display (kit.sdl2:gl-window box.fm:frame-manager)
   ((core-state :reader core-state

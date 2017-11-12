@@ -1,7 +1,7 @@
-(in-package :gear)
+(in-package :first-light)
 
 (defun prepare-engine (package)
-  (let ((*package* (find-package :gear))
+  (let ((*package* (find-package :first-light))
         (core-state (make-core-state))
         (path (get-path package "data")))
     (prepare-extensions core-state path)
@@ -12,8 +12,8 @@
 
 (defun start-engine ()
   (let* ((user-package-name (make-keyword (package-name *package*))))
-    (when (eq user-package-name :gear)
-      (error "Cannot start the engine from the :GEAR package."))
+    (when (eq user-package-name :first-light)
+      (error "Cannot start the engine from the :FIRST-LIGHT package."))
     (kit.sdl2:init)
     (prog1 (sdl2:in-main-thread () (prepare-engine user-package-name))
       (kit.sdl2:start))))
@@ -24,8 +24,8 @@
      (let ((display (display (start-engine))))
        (sb-profile:unprofile)
        (sb-profile:profile
-        "GEAR"
-        "GEAR-EXAMPLE"
+        "FIRST-LIGHT"
+        "FIRST-LIGHT-EXAMPLE"
         "GAMEBOX-MATH"
         "GAMEBOX-FRAME-MANAGER")
        (sleep ,seconds)

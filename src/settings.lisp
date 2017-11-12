@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (defmethod extension-file-type ((extension-type (eql 'settings)))
   "cfg")

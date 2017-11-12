@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 ;; First, some graph utilities I need:
 

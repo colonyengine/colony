@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (defun get-path (system-name &optional path)
   (if uiop/image:*image-dumped-p*

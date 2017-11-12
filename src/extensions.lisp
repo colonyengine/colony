@@ -1,4 +1,4 @@
-(in-package :gear)
+(in-package :first-light)
 
 (defun map-extensions (extension-type path &optional owner)
   (map-files
@@ -20,11 +20,11 @@
   (prepare-extension 'shader core-state path))
 
 (defun load-extensions (type path)
-  (map-extensions type (get-path :gear "data") :builtin)
+  (map-extensions type (get-path :first-light "data") :builtin)
   (map-extensions type path :user))
 
 (defun collect-extension-forms (type path)
-  (let ((*package* (find-package :gear))
+  (let ((*package* (find-package :first-light))
         (results))
     (flet ((%collect (type path)
              (map-files
@@ -36,6 +36,6 @@
                         :for (nil options nil) = form
                         :do (push form results))))
               :filter (extension-type-filter type))))
-      (%collect type (get-path :gear "data"))
+      (%collect type (get-path :first-light "data"))
       (%collect type path))
     (nreverse results)))
