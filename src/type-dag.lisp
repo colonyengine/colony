@@ -25,40 +25,33 @@ return them as a list."
       T
       NIL))
 
+;; TODO: Do I actually need to do this? Or do I just splice in the splice
+;; brand new each time? I think brand new is what I want...
 (defun lift-splices (form)
-  "If the dependency FORM has splices in it, lift them into a dictionary
-with gensymed names associated with the splice form. Return two values,
-the modified (if required) dependency form and an association list
- (a hash-table) keyed by the splice form and value is the variable
-name as a symbol."
-  (let ((lifts (make-hash-table :test #'equal)))
-    (labels ((substitute-splice (form)
-               (if (null form)
-                   nil
-                   (cons
-                    (let ((thingy (first form)))
-                      (cond
-                        ((symbolp thingy)
-                         thingy)
-                        ((is-syntax-form-p 'splice thingy)
-                         (multiple-value-bind (splice-var presentp)
-                             (gethash thingy lifts)
-                           (if presentp
-                               splice-var
-                               (let ((new-var
-                                       (gensym
+  "If the dependency FORM has splices in it, lift them into a table
+with gensymed names associated with EACH individual splice
+form. Return two values, the modified (if required) dependency form
+and a hash-table keyed by the gensymed variable name and whose value
+is the splice form."
+  (let* ((lifts (make-hash-table :test #'equal))
+         (lifted-form
+           (mapcar (lambda (element)
+                     (cond
+                       ((symbolp element)
+                        element)
+                       ((is-syntax-form-p 'splice element)
+                        (let ((new-var (gensym
                                         (concatenate 'string
                                                      (string-upcase
                                                       (symbol-name
-                                                       (second thingy)))
+                                                       (second element)))
                                                      "-"))))
-                                 (setf (gethash thingy lifts) new-var)
-                                 new-var))))
-                        (t (error "lift-splices is broken."))))
+                          (setf (gethash new-var lifts) element)
+                          new-var))
+                       (t (error "lift-splices is broken."))))
+                   form)))
 
-                    (substitute-splice (rest form))))))
-
-      (values (substitute-splice form) lifts))))
+    (values lifted-form lifts)))
 
 (defun segment-dependency-form (form)
   "Lift splices and then Segment the dependency FORM.
