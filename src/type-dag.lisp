@@ -48,10 +48,10 @@ form."
                                (let ((new-var
                                        (gensym
                                         (concatenate 'string
-						     (string-upcase
-						      (symbol-name
-						       (second thingy)))
-						     "-"))))
+                                                     (string-upcase
+                                                      (symbol-name
+                                                       (second thingy)))
+                                                     "-"))))
                                  (setf (gethash thingy lifts) new-var)
                                  new-var))))
                         (t (error "lift-splices is broken."))))
@@ -60,32 +60,33 @@ form."
 
       (values (substitute-splice form) lifts))))
 
-(defun segment-subgraph/subdag-hyperedges (form)
-  "Segment the dependency FORM and return the to/from hyper edges
-defined by the -> delimiter for each edge.
+(defun segment-dependency-form (form)
+  "Lift splices and then Segment the dependency FORM.
 
-If the form is null, return two values:
-  NIL and :empty.
+If the form is null, return three values:
+  NIL, :empty, lifts
 
-If the form is not null, but contains no hyper edges, return two values:
-  form and :vertex.
+If the form is not null, but contains no hyper edges, return three values:
+  form and :vertex, lifts
 
-If the form is not null, and contains hyper edges, return two values:
-  list of hyper-edge pairs and :hyperedges."
+If the form is not null, and contains hyper edges, return three values:
+  list of hyper-edge pairs, :hyperedges, lifts"
 
-  (let* ((x (split-sequence:split-sequence '-> form))
-         ;; cut into groups of two with rolling window
-         (connections
-           (loop :for (k j . nil) :in (maplist #'identity x)
-                 :when j :collect `(,k ,j))))
-    (cond
-      ((null form)
-       (values form :empty))
-      ((= (length x) 1)
-       ;; no hyperedges
-       (values form :vertex))
-      (t ;; hyperedges found
-       (values connections :hyperedges)))))
+  (multiple-value-bind (lifted-form lifts) (lift-splices form)
+
+    (let* ((x (split-sequence:split-sequence '-> lifted-form))
+           ;; cut into groups of two with rolling window
+           (connections
+             (loop :for (k j . nil) :in (maplist #'identity x)
+                   :when j :collect `(,k ,j))))
+      (cond
+        ((null form)
+         (values form :empty lifts))
+        ((= (length x) 1)
+         ;; no hyperedges
+         (values form :vertex lifts))
+        (t ;; hyperedges found
+         (values connections :hyperedges lifts))))))
 
 
 ;; Then the code to perform the parsing.
