@@ -35,8 +35,6 @@ is the splice form."
          (lifted-form
            (mapcar (lambda (element)
                      (cond
-                       ((symbolp element)
-                        element)
                        ((is-syntax-form-p 'splice element)
                         (let ((new-var (gensym
                                         (concatenate 'string
@@ -46,7 +44,7 @@ is the splice form."
                                                      "-"))))
                           (setf (gethash new-var lifts) element)
                           new-var))
-                       (t (error "lift-splices is broken."))))
+                       (t element)))
                    dependency-form)))
 
     (values lifted-form lifts)))
