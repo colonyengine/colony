@@ -1,24 +1,56 @@
 (in-package :first-light)
 
-(defstruct subform
-  ;; Name of the subform
-  name
-  ;; Is it a 'subdag or a 'subgraph
-  kind
-  ;; a list of parsed and lifted depforms.
-  depforms)
+(defclass graphdef ()
+  ((%name :accessor name
+          :initarg :name)
+   (%enabled :accessor enabled
+             :initarg :enabled)
+   (%category :accessor category
+              :initarg :category)
+   (%depends-on :accessor depends-on
+                :initarg :depends-on)
+   (%roots :accessor roots
+           :initarg :roots)
+   (%subforms :accessor subforms
+              :initarg :subforms)))
 
-(defstruct depform
+(defun make-graphdef (name &rest init-args)
+  (apply #'make-instance 'graphdef :name name init-args))
+
+(defclass subform ()
+  ((%name :accessor name
+          :initarg :name)
+   (%kind :accessor kind
+          :initarg :kind)
+   (%depforms :accessor depforms
+              :initarg :depforms)))
+
+(defun make-subform (name &rest init-args)
+  (apply #'make-instance 'subform :name name init-args))
+
+(defclass depform ()
   ;; the original depform for debugging/error output
-  original-form
-  ;; the lifted form with the new symbols, if any
-  lifted-form
-  ;; Is it :empty, :vertex, or :hyperedges
-  kind
-  ;; The symbol -> form mapping
-  lifted-vars
-  ;; the form -> symbol mapping
-  lifted-forms)
+  ((%original-form :accessor original-form
+                   :initarg :original-form)
+   ;; the lifted form with the new symbols, if any
+   (%lifted-form :accessor lifted-form
+                 :initarg :lifted-form)
+   ;; Is it :empty, :vertex, or :hyperedges
+   (%kind :accessor kind
+          :initarg :kind)
+   ;; The symbol -> form mapping
+   (%lifted-vars :accessor lifted-vars
+                 :initarg :lifted-vars)
+   ;; the form -> symbol mapping
+   (%lifted-forms :accessor lifted-forms
+                  :initarg :lifted-forms)))
+
+(defun make-depform (&rest init-args)
+  (apply #'make-instance 'depform init-args))
+
+
+
+
 
 (defun graph-roots (g)
   "Find all vertex roots (vertexes with no parents) in the directed
@@ -37,6 +69,10 @@ return them as a list."
                                    (unless (cl-graph:has-children-p v)
                                      (push v results))))
     results))
+
+
+
+
 
 (defun is-syntax-form-p (syntax-symbol form)
   (if (and form (consp form) (eq (first form) syntax-symbol))
@@ -104,7 +140,7 @@ If the form is not null, and contains hyper edges, return three values:
 
   (destructuring-bind (kind name . dependency-forms) form
     (make-subform
-     :name name
+     name
      :kind kind
      :depforms
      (loop :for dep :in dependency-forms
@@ -117,3 +153,44 @@ If the form is not null, and contains hyper edges, return three values:
                            :kind kind
                            :lifted-vars lifted-vars
                            :lifted-forms lifted-forms))))))
+
+
+(defun get-graph-option (option-name option-form)
+  (second (member option-name option-form)))
+
+(defun parse-graph-definition (form)
+  (assert (is-syntax-form-p 'graph-definition form))
+
+  (destructuring-bind (name options . subforms) (rest form)
+    (make-graphdef
+     name
+     :enabled (get-graph-option :enabled options)
+     :category (get-graph-option :category options)
+     :depends-on (get-graph-option :depends-on options)
+     :roots (get-graph-option :roots options)
+     :subforms
+     (let ((subform-db (make-hash-table)))
+       (loop :for i :in subforms
+             :do (let ((sf (parse-subform i)))
+                   (setf (gethash (name sf) subform-db)
+                         sf)))
+       subform-db))))
+
+(defun doit ()
+  (parse-graph-definition
+   `(graph-definition
+     :gear-example
+     (:enabled t
+      :category component-dependency
+      :depends-on ((:core (unknown-types core-types)))
+      :roots (all-ordered-types))
+
+     ;; user chooses this name
+     (subdag ordered-types
+             ())
+
+     ;; user creates the master ordering of the types.
+     (subdag all-ordered-types
+             ((splice unknown-types)
+              -> (splice ordered-types)
+              -> (splice core-types))))))
