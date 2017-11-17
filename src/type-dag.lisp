@@ -92,8 +92,7 @@ return them as a list."
                       (if presentp
                           var
                           (let ((new-var
-                                  (gensym
-                                   (concatenate 'string
+                                  (make-gensym (symbolicate
                                                 (string-upcase
                                                  (symbol-name
                                                   (second element)))
