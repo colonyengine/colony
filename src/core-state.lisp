@@ -10,7 +10,7 @@
    (%component-active-view :reader component-active-view
                            :initform (make-hash-table))
    (%display :reader display)
-   (%scene-tree :accessor scene-tree)
+   (%scene-tree :reader scene-tree)
    (%cameras :accessor cameras
              :initform nil)
    (%shaders :accessor shaders
@@ -46,16 +46,15 @@ and the main loop protocol will not be called on it or its components."
   ;; complete their initialization by type.
   (maphash
    (lambda (k v)
-     (let ((component-type-name (component-type v)))
-       (multiple-value-bind (component-type-table presentp)
-           (gethash component-type-name
-                    (component-initialize-by-type-view core-state))
+     (symbol-macrolet
+         ((component-type-name
+            (gethash (component-type v)
+                     (component-initialize-by-type-view core-state))))
+       (multiple-value-bind (component-type-table presentp) component-type-name
          (unless presentp
            (let ((table (make-hash-table)))
-             (setf (gethash component-type-name
-                            (component-initialize-by-type-view core-state))
-                   table)
-             (setf component-type-table table)))
+             (setf component-type-name table
+                   component-type-table table)))
          (setf (gethash k component-type-table) v))))
    (components actor)))
 
