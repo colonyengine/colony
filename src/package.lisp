@@ -29,34 +29,36 @@
            #:id
            #:make-actor
 
-           ;; core component types
+           ;; component handling
+           #:make-component
+           #:add-component
+           #:add-multiple-components
+           #:initialize-component
+           #:physics-update-component
+           #:make-camera-view
+           #:update-component
+           #:render-component
+           #:destroy-component
+
+           ;;; core components below:
+
+           ;; basis
            #:basis
+
+           ;; tags
            #:tags
 
-           ;; camera component
+           ;; camera
            #:camera
            #:view
            #:projection
            #:tracking-camera
            #:look-at
 
-           ;; transform component
+           ;; transform
            #:transform
            #:model
-           #:local
-
-           ;; component handling
-           #:make-component
-           #:add-component
-           #:add-multiple-components
-
-           ;; component protocol
-           #:initialize-component
-           #:physics-update-component
-           #:make-camera-view
-           #:update-component
-           #:render-component
-           #:destroy-component))
+           #:local))
 
 (defpackage #:first-light-shaders
   (:use #:3bgl-glsl/cl))
