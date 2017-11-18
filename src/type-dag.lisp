@@ -175,6 +175,37 @@ If the form is not null, and contains hyper edges, return three values:
                          sf)))
        subform-db))))
 
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod extension-file-type ((extension-type (eql 'graph-definition)))
+  "gph")
+
+(defmethod prepare-extension ((extension-type (eql 'graph-definition))
+                              owner path)
+
+  ;; TODO: This is not done. Not only must I parse all the
+  ;; graph-definition forms, but then perform the validity and
+  ;; analysis of them, then convert them to cl-graph data structures, and
+  ;; finally perform whatever I need to do to get the final output that I
+  ;; need for each graph category.
+
+  ;; Collect all graph-definitions and sort into categories.
+  (loop :with defs = (collect-extension-forms extension-type path)
+        :for def :in defs
+        :do (let ((parsed-def (parse-graph-definition def)))
+              (when (enabled parsed-def)
+                (push parsed-def (gethash (category parsed-def)
+                                          (graphs owner))))))
+
+  ;; TODO: 1) analyze all graphs categories for correctness
+  ;; TODO: 2) convert each category to appropriate cl-graph version
+  ;; TODO: 3) produce whatever output I need from the cl-graph version.
+  )
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
 (defun doit ()
   (parse-graph-definition
    `(graph-definition

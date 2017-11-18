@@ -18,6 +18,8 @@
    (%context :reader context)
    (%call-flows :reader call-flows
                 :initform (make-hash-table))
+   (%graphs :reader graphs
+	    :initform (make-hash-table))
    (%scenes :reader scenes
             :initform (make-hash-table))))
 
