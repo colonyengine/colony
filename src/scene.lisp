@@ -84,7 +84,7 @@
                                   (reinitialize-instance
                                    ,symbol :actor ,actor ,@initargs)))))))
 
-(defun %generate-relationships (scene-spec)
+(defun %generate-relationships (core-state scene-spec)
   (labels ((traverse (tree &optional parent)
              (destructuring-bind (child components . sub-tree) tree
                (declare (ignore components))
@@ -95,11 +95,11 @@
                       (apply #'append
                              (mapcar (lambda (x) (traverse x child)) sub-tree)))
                      result)))))
-    (loop :with children = (apply #'append (mapcar #'traverse scene-spec))
+    (loop :with root = `(scene-tree ,core-state)
+          :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
-          :when parent
-            :collect `(add-child (get-component 'transform ,parent)
-                                 (get-component 'transform ,child)))))
+          :collect `(add-child (get-component 'transform ,(or parent root))
+                               (get-component 'transform ,child)))))
 
 (defun %generate-actor-spawn (core-state actor-names)
   (loop :for actor :in actor-names
@@ -107,8 +107,7 @@
 
 (defun parse-scene (scene-name scene-spec)
   (with-gensyms (core-state actor-table actor-name)
-    (let* ((scene-spec `((@universe ((transform)) ,@scene-spec)))
-           (actor-names (%generate-actor-names scene-spec))
+    (let* ((actor-names (%generate-actor-names scene-spec))
            (actor-components (%generate-actor-components-table
                               scene-spec actor-names))
            (bindings (%generate-actor-bindings
@@ -120,12 +119,9 @@
                    (make-actor :id ,actor-name :scene ,scene-name)))
            (let ,bindings
              ,@(%generate-component-initializers actor-components)
-             ,@(%generate-component-thunks
-                actor-names actor-components)
-             ,@(%generate-relationships scene-spec)
-             ,@(%generate-actor-spawn
-                core-state actor-names)
-             (add-scene-tree-root ,core-state @universe)
+             ,@(%generate-component-thunks actor-names actor-components)
+             ,@(%generate-relationships core-state scene-spec)
+             ,@(%generate-actor-spawn core-state actor-names)
              (values ,core-state ,actor-table)))))))
 
 (defun get-scene (core-state scene-name)

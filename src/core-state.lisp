@@ -10,10 +10,9 @@
    (%component-active-view :reader component-active-view
                            :initform (make-hash-table))
    (%display :reader display)
-   (%universe :reader universe)
+   (%scene-tree :accessor scene-tree)
    (%cameras :accessor cameras
              :initform nil)
-   (%scene-tree :accessor scene-tree)
    (%shaders :accessor shaders
              :initform nil)
    (%context :reader context)
@@ -32,22 +31,17 @@
 
 (defun make-core-state ()
   (let ((core-state (make-instance 'core-state)))
-    (with-slots (%context %universe) core-state
+    (with-slots (%context %scene-tree) core-state
       (setf %context (make-instance 'context :core-state core-state)
-            %universe (%make-scene-tree core-state)))
+            %scene-tree (%make-scene-tree core-state)))
     core-state))
-
-(defun add-scene-tree-root (core-state actor)
-  (setf (scene-tree core-state) actor))
 
 (defun spawn-actor (core-state actor)
   "Take the ACTOR and INITIALIZER-THUNK-LIST and place into the initializing
 db's and view's in the CORE-STATE. The actor is not yet in the scene
 and the main loop protocol will not be called on it or its components."
-
   ;; store actor in conceptual storage location.
   (setf (gethash actor (actor-initialize-db core-state)) actor)
-
   ;; put all components into the hash which represents the fact we need to
   ;; complete their initialization by type.
   (maphash
@@ -94,7 +88,6 @@ component-initialize-thunks-db slot and the actor-initialize-db in the
 CORE-STATE. It is assumed they have been processed appropriately."
   ;; remove all the actors from initialization phase.
   (clrhash (actor-initialize-db core-state))
-
   ;; and remove the components from the typed hashes of the component
   ;; initialization view.
   (maphash
