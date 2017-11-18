@@ -10,6 +10,7 @@
    (%component-active-view :reader component-active-view
                            :initform (make-hash-table))
    (%display :reader display)
+   (%universe :reader universe)
    (%cameras :accessor cameras
              :initform nil)
    (%scene-tree :accessor scene-tree)
@@ -21,10 +22,19 @@
    (%scenes :reader scenes
             :initform (make-hash-table))))
 
+(defun %make-scene-tree (core-state)
+  (let* ((actor (make-actor :id (make-gensym '@universe) :scene t))
+         (transform (make-component 'transform :actor actor)))
+    (add-component actor transform)
+    (realize-actor core-state actor)
+    (realize-component core-state transform)
+    actor))
+
 (defun make-core-state ()
   (let ((core-state (make-instance 'core-state)))
-    (setf (slot-value core-state '%context)
-          (make-instance 'context :core-state core-state))
+    (with-slots (%context %universe) core-state
+      (setf %context (make-instance 'context :core-state core-state)
+            %universe (%make-scene-tree core-state)))
     core-state))
 
 (defun add-scene-tree-root (core-state actor)
@@ -43,31 +53,34 @@ and the main loop protocol will not be called on it or its components."
   (maphash
    (lambda (k v)
      (let ((component-type-name (component-type v)))
-       (multiple-value-bind (comp-type-ht presentp)
+       (multiple-value-bind (component-type-table presentp)
            (gethash component-type-name
                     (component-initialize-by-type-view core-state))
          (unless presentp
-           (let ((ht (make-hash-table)))
+           (let ((table (make-hash-table)))
              (setf (gethash component-type-name
                             (component-initialize-by-type-view core-state))
-                   ht)
-             (setf comp-type-ht ht)))
-         (setf (gethash k comp-type-ht) v))))
+                   table)
+             (setf component-type-table table)))
+         (setf (gethash k component-type-table) v))))
    (components actor)))
 
-(defun realize-components (core-state component-ht)
+(defun realize-component (core-state component)
+  (when-let ((thunk (initializer-thunk component)))
+    (funcall thunk)
+    (setf (initializer-thunk component) nil))
+  (setf (state component) :active
+        (gethash component (component-active-view core-state)) component))
+
+(defun realize-components (core-state component-table)
   "For all component values in the COMPONENT-HT hash table, run their
 initialize-thunks, set them :active, and put them into the active component
 view."
   (maphash
    (lambda (k component)
      (declare (ignore k))
-     (when-let ((thunk (initializer-thunk component)))
-       (funcall thunk)
-       (setf (initializer-thunk component) nil))
-     (setf (state component) :active
-           (gethash component (component-active-view core-state)) component))
-   component-ht))
+     (realize-component core-state component))
+   component-table))
 
 (defun realize-actor (core-state actor)
   "Change the ACTOR's state to :active, then place into the actor-active-db
