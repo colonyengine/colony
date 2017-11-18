@@ -26,7 +26,8 @@
 
            ;; actor API
            #:actor
-           #:id ; for component too.
+           #:id
+           #:make-actor
 
            ;; core component types
            #:basis

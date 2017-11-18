@@ -117,9 +117,7 @@
          (let ((,actor-table (make-hash-table)))
            (dolist (,actor-name ',actor-names)
              (setf (gethash ,actor-name ,actor-table)
-                   (make-instance 'first-light:actor
-                                  :id ,actor-name
-                                  :scene ,scene-name)))
+                   (make-actor :id ,actor-name :scene ,scene-name)))
            (let ,bindings
              ,@(%generate-component-initializers actor-components)
              ,@(%generate-component-thunks
