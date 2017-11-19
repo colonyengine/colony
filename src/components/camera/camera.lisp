@@ -14,7 +14,8 @@
   ;; compute a projection matrix according to the mode of this camera
   (make-projection (mode component) component context)
   ;; store a reference to the transform component of this camera's actor locally
-  (setf (transform component) (get-component 'transform (actor component)))
+  (setf (transform component)
+        (actor-component-by-type (actor component) 'transform))
   ;; register the camera in the list of core-state cameras
   (push component (cameras (core-state context))))
 

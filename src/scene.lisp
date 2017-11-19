@@ -78,7 +78,8 @@
         :append
         (loop :for (component . initargs) :in components
               :for symbol = (gensym "COMPONENT-")
-              :collect `(let ((,symbol (get-component ',component ,actor)))
+              :collect `(let ((,symbol (actor-component-by-type ,actor
+                                                                ',component)))
                           (setf (initializer-thunk ,symbol)
                                 (lambda ()
                                   (reinitialize-instance
@@ -98,8 +99,9 @@
     (loop :with root = `(scene-tree ,core-state)
           :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
-          :collect `(add-child (get-component 'transform ,(or parent root))
-                               (get-component 'transform ,child)))))
+          :collect `(add-child
+                     (actor-component-by-type ,(or parent root) 'transform)
+                     (actor-component-by-type ,child 'transform)))))
 
 (defun %generate-actor-spawn (core-state actor-names)
   (loop :for actor :in actor-names

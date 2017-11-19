@@ -13,7 +13,7 @@
 (defmethod initialize-component ((component mesh-renderer) (context context))
   ;; We auto compute this since we always need it.
   (setf (transform component)
-        (get-component 'transform (actor component)))
+        (actor-component-by-type (actor component) 'transform))
 
   (let* ( ;; define a textured (soon) square centered about origin.
          ;; this geometry is of unit size: from edge to edge orthogonally is 1

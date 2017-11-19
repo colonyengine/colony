@@ -15,7 +15,6 @@
            #:define-component
            #:component
            #:components
-           #:get-component
            #:display
            #:start-engine
            #:quit-engine
@@ -24,12 +23,12 @@
            #:map-nodes
            #:add-child
 
-           ;; actor API
+           ;; actors
            #:actor
            #:id
            #:make-actor
 
-           ;; component handling
+           ;; components
            #:make-component
            #:add-component
            #:add-multiple-components
@@ -39,6 +38,8 @@
            #:update-component
            #:render-component
            #:destroy-component
+           #:actor-components-by-type
+           #:actor-component-by-type
 
            ;;; core components below:
 

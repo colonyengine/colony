@@ -37,17 +37,17 @@
   (push component (gethash (component-type component)
                            (components-by-type actor))))
 
-(defun get-components (component-type actor)
-  "Return a list of the components with this COMPONENT-TYPE in the ACTOR. Do not
-modify the structure of the returned list."
+(defun actor-components-by-type (actor component-type)
+  "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
   (gethash component-type (components-by-type actor)))
 
-(defun get-component (component-type actor)
-  "Return the _first found_ component of COMPONENT-TYPE in the
-ACTOR. If there are multiple components of this type, it is unknown which one
-will be returned first. Usually, there is only one component of any given
-COMPONENT-TYPE in an ACTOR."
-  (first (get-components component-type actor)))
+(defun actor-component-by-type (actor component-type)
+  "Get the first component of type COMPONENT-TYPE for the given ACTOR.
+Returns T as a secondary value if there exists more than one component of that
+type."
+  (let ((components (actor-components-by-type actor component-type)))
+    (values (first components)
+            (> (length components) 1))))
 
 (defun add-multiple-components (actor components)
   (dolist (component components)

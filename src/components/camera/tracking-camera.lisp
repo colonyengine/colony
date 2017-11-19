@@ -24,4 +24,5 @@ function. That will restore the camera to its default configuration of
 matching the associated actor's transform for its orientation."
   (setf (look-at-actor camera) actor)
   (when actor
-    (setf (look-at-transform camera) (get-component 'transform actor))))
+    (setf (look-at-transform camera)
+          (actor-component-by-type actor 'transform))))
