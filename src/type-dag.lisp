@@ -24,7 +24,7 @@
   ((%name :accessor name
           :initarg :name)
    (%original-form :reader original-form
-		   :initarg :original-form)
+                   :initarg :original-form)
    (%enabled :accessor enabled
              :initarg :enabled)
    (%category :accessor category
@@ -101,6 +101,10 @@ return them as a list."
       T
       NIL))
 
+(defun is/->/p (thing)
+  (when (symbolp thing)
+    (string= (symbol-name thing) (symbol-name '->))))
+
 (defun lift-splices (dependency-form)
   (let* ((lifted-vars (make-hash-table :test #'equal))
          (lifted-forms (make-hash-table :test #'equal))
@@ -108,20 +112,12 @@ return them as a list."
            (loop :for element :in dependency-form
                  :collect
                  (cond
-                   ((is-syntax-form-p 'splice element)
-                    (multiple-value-bind (var presentp)
-                        (gethash element lifted-forms)
-                      (if presentp
-                          var
-                          (let ((new-var
-                                  (make-gensym (symbolicate
-                                                (string-upcase
-                                                 (symbol-name
-                                                  (second element)))
-                                                "-"))))
-                            (setf (gethash new-var lifted-vars) element)
-                            (setf (gethash element lifted-forms) new-var)))))
-                   (t element)))))
+                   ((consp element)
+                    element)
+                   ((is/->/p element)
+                    element)
+                   (t
+                    `(component-type ,element))))))
 
     (values lifted-dependency-form lifted-vars lifted-forms)))
 
@@ -139,7 +135,15 @@ If the form is not null, and contains hyper edges, return three values:
 
   (multiple-value-bind (lifted-form lift-vars lift-forms) (lift-splices form)
 
-    (let* ((x (split-sequence:split-sequence '-> lifted-form))
+    (let* ((x (split-sequence:split-sequence
+               '-> lifted-form :test (lambda (sym1 sym2)
+                                       ;; HACK! -> is in two different packages.
+                                       ;; The :first-light and user package.
+                                       ;; So resolve to the symbol name itself.
+                                       (if (and (symbolp sym1) (symbolp sym2))
+                                           (string= (symbol-name sym1)
+                                                    (symbol-name sym2))
+                                           (eql sym1 sym2)))))
            ;; cut into groups of two with rolling window
            (connections
              (loop :for (k j . nil) :in (maplist #'identity x)
@@ -230,14 +234,78 @@ If the form is not null, and contains hyper edges, return three values:
             (when (enabled parsed-def)
               (push parsed-def (graphdefs analyzed-graph))))))
 
-  ;; TODO: 2) analyze each graph categories for correctness
+  ;; TODO: 2) perform the analysis for each graph category type. Note:
+  ;; a category may be a consp form in addition to a symbol.
+  ;; A) Ensure if subdag, all are subdag.
+  ;; B) Ensure if subgraph, all are subgraph.
 
 
   ;; TODO: 3) convert each category to appropriate cl-graph version
+  (loop :for angph :being :the :hash-values :in (analyzed-graphs owner)
+        :do (analyze-graph angph))
 
   )
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defun analyze-graph (angph)
+  (let ((clg (cl-graph:make-graph 'cl-graph:graph-container
+                                  ;; I store complex elements and
+                                  ;; edges.
+                                  :vertex-test #'equalp
+                                  :edge-test #'equalp)))
+
+    ;; We do an iterative algorithm where we continuously refine the
+    ;; graph we're making by expanding slices in additional passes until there
+    ;; are no splices left.
+    ;;(format t "Processing graph category: ~A~%" (category angph))
+
+    ;; First, add the initial depforms from the roots.
+    (loop
+      :for gdef :in (graphdefs angph)
+      :when (roots gdef) :do
+        (loop
+          :for root :in (roots gdef) :do
+            (loop
+              :for subform
+                :being :the :hash-values :in (subforms gdef) :do
+                  (loop
+                    :for depform :in (depforms subform)
+                    ;; check this when condition for validity.
+                    :when (lifted-form depform) :do
+                      (loop :for (from to) :in (lifted-form depform) :do
+                        (map-product
+                         (lambda (v1 v2)
+                           (cl-graph:add-edge-between-vertexes
+                            clg
+                            ;; Keep ref to gdef for namespace lookups.
+                            (list gdef v1)
+                            (list gdef v2)))
+                         from to))))))
+    ;; debug output
+    #++(dolist (edge (cl-graph:edges clg))
+         (let ((*print-right-margin* most-positive-fixnum))
+           (format t "Computed edge: from: ~A to: ~A~%"
+                   (cl-graph:element (cl-graph:source-vertex edge))
+                   (cl-graph:element (cl-graph:target-vertex edge)))))
+
+    ;; Then, iterate the graph, expanding the splicing vertexes
+    ;; (finding them from the right spot) until no more splices exist.
+    #++(let ((splices (cl-graph:find-vertexes-if
+                    clg (lambda (v)
+                          (is-syntax-form-p
+                           'splice (second (cl-graph:element v)))))))
+      ;; TODO: lookup the splices in the graph def associated with
+      ;; them and substitute their bodies. I have to do this in a loop
+      ;; until there are no more to process.
+      (format t "Found splice vertexes: ~A~%" splices))
+
+
+
+
+    ;; and we're done with this analyzed-graph.
+    (setf (graph angph) clg)))
 
 
 (defun doit ()

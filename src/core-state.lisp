@@ -19,7 +19,7 @@
    (%call-flows :reader call-flows
                 :initform (make-hash-table))
    (%analyzed-graphs :reader analyzed-graphs
-                     :initform (make-hash-table))
+                     :initform (make-hash-table :test #'equalp))
    (%scenes :reader scenes
             :initform (make-hash-table))))
 
