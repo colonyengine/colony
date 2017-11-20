@@ -1,8 +1,30 @@
 (in-package :first-light)
 
+(defclass analyzed-graph ()
+  (;; for what category is this CL-GRAPH graph for?
+   (%category :accessor category
+              :initarg :category)
+   ;; What are the entry roots into the CL-GRAPH?
+   (%roots :accessor roots
+           :initarg :roots
+           :initform nil)
+   ;; The completed CL-GRAPH representation of this category.
+   (%graph :accessor graph
+           :initarg :graph
+           :initform nil)
+   ;; The list of graphdefs that participated in this cl-graph rendition.
+   (%graphdefs :accessor graphdefs
+               :initarg :graphdefs
+               :initform nil)))
+
+(defun make-analyzed-graph (&rest init-args)
+  (apply #'make-instance 'analyzed-graph init-args))
+
 (defclass graphdef ()
   ((%name :accessor name
           :initarg :name)
+   (%original-form :reader original-form
+		   :initarg :original-form)
    (%enabled :accessor enabled
              :initarg :enabled)
    (%category :accessor category
@@ -163,6 +185,7 @@ If the form is not null, and contains hyper edges, return three values:
   (destructuring-bind (name options . subforms) (rest form)
     (make-graphdef
      name
+     :original-form form
      :enabled (get-graph-option :enabled options)
      :category (get-graph-option :category options)
      :depends-on (get-graph-option :depends-on options)
@@ -178,29 +201,40 @@ If the form is not null, and contains hyper edges, return three values:
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defmethod extension-file-type ((extension-type (eql 'graph-definition)))
+(defmethod extension-file-type ((extension-type (eql 'graphs)))
   "gph")
 
-(defmethod prepare-extension ((extension-type (eql 'graph-definition))
+(defmethod prepare-extension ((extension-type (eql 'graphs))
                               owner path)
 
-  ;; TODO: This is not done. Not only must I parse all the
-  ;; graph-definition forms, but then perform the validity and
-  ;; analysis of them, then convert them to cl-graph data structures, and
-  ;; finally perform whatever I need to do to get the final output that I
-  ;; need for each graph category.
+  ;; 1) Collect ALL graph-definitions into the appropriate
+  ;; analyzed-graph objects.  The graphs aren't fully analyzed yet,
+  ;; this is only the parsing phase.
+  (loop
+    :with defs = (collect-extension-forms extension-type path)
+    :for def :in defs
+    :do (let ((parsed-def (parse-graph-definition def)))
+          (multiple-value-bind (analyzed-graph present)
+              (gethash (category parsed-def) (analyzed-graphs owner))
 
-  ;; Collect all graph-definitions and sort into categories.
-  (loop :with defs = (collect-extension-forms extension-type path)
-        :for def :in defs
-        :do (let ((parsed-def (parse-graph-definition def)))
-              (when (enabled parsed-def)
-                (push parsed-def (gethash (category parsed-def)
-                                          (graphs owner))))))
+            (unless present
+              (let ((new-analyzed-graph (make-analyzed-graph
+                                         :category (category parsed-def))))
 
-  ;; TODO: 1) analyze all graphs categories for correctness
-  ;; TODO: 2) convert each category to appropriate cl-graph version
-  ;; TODO: 3) produce whatever output I need from the cl-graph version.
+                (setf (gethash (category parsed-def) (analyzed-graphs owner))
+                      new-analyzed-graph
+
+                      analyzed-graph
+                      new-analyzed-graph)))
+
+            (when (enabled parsed-def)
+              (push parsed-def (graphdefs analyzed-graph))))))
+
+  ;; TODO: 2) analyze each graph categories for correctness
+
+
+  ;; TODO: 3) convert each category to appropriate cl-graph version
+
   )
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

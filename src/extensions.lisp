@@ -18,7 +18,7 @@
   (prepare-extension 'call-flow core-state path)
   (prepare-extension 'scene core-state path)
   (prepare-extension 'shader core-state path)
-  (prepare-extension 'graph-definition core-state path))
+  (prepare-extension 'graphs core-state path))
 
 (defun load-extensions (type path)
   (map-extensions type (get-path :first-light "data") :builtin)
