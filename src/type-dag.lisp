@@ -268,21 +268,18 @@ If the form is not null, and contains hyper edges, return three values:
         (loop
           :for root :in (roots gdef) :do
             (loop
-              :for subform
-                :being :the :hash-values :in (subforms gdef) :do
-                  (loop
-                    :for depform :in (depforms subform)
-                    ;; check this when condition for validity.
-                    :when (lifted-form depform) :do
-                      (loop :for (from to) :in (lifted-form depform) :do
-                        (map-product
-                         (lambda (v1 v2)
-                           (cl-graph:add-edge-between-vertexes
-                            clg
-                            ;; Keep ref to gdef for namespace lookups.
-                            (list gdef v1)
-                            (list gdef v2)))
-                         from to))))))
+              :for depform :in (depforms (gethash root (subforms gdef)))
+              ;; check this when condition for validity.
+              :when (lifted-form depform) :do
+                (loop :for (from to) :in (lifted-form depform) :do
+                  (map-product
+                   (lambda (v1 v2)
+                     (cl-graph:add-edge-between-vertexes
+                      clg
+                      ;; Keep ref to gdef for namespace lookups.
+                      (list gdef v1)
+                      (list gdef v2)))
+                   from to)))))
     ;; debug output
     #++(dolist (edge (cl-graph:edges clg))
          (let ((*print-right-margin* most-positive-fixnum))
@@ -293,13 +290,13 @@ If the form is not null, and contains hyper edges, return three values:
     ;; Then, iterate the graph, expanding the splicing vertexes
     ;; (finding them from the right spot) until no more splices exist.
     #++(let ((splices (cl-graph:find-vertexes-if
-                    clg (lambda (v)
-                          (is-syntax-form-p
-                           'splice (second (cl-graph:element v)))))))
-      ;; TODO: lookup the splices in the graph def associated with
-      ;; them and substitute their bodies. I have to do this in a loop
-      ;; until there are no more to process.
-      (format t "Found splice vertexes: ~A~%" splices))
+                       clg (lambda (v)
+                             (is-syntax-form-p
+                              'splice (second (cl-graph:element v)))))))
+         ;; TODO: lookup the splices in the graph def associated with
+         ;; them and substitute their bodies. I have to do this in a loop
+         ;; until there are no more to process.
+         (format t "Found splice vertexes: ~A~%" splices))
 
 
 
