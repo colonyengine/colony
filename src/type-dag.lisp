@@ -361,54 +361,61 @@ subforms."
                 (cl-graph:element (cl-graph:source-vertex edge))
                 (cl-graph:element (cl-graph:target-vertex edge)))))
 
-    ;; Then, iterate the graph, expanding the splicing vertexes (of
-    ;; which there should only be ONE of each kind of splice vertex)
-    ;; until no more splices exist.
+    (loop
+      :for splices = (cl-graph:find-vertexes-if
+                      clg (lambda (v)
+                            (is-syntax-form-p
+                             'splice (first (cl-graph:element v)))))
+      :unless splices :return nil
+        :do
+           ;; Then, iterate the graph, expanding the splicing vertexes
+           ;; (finding them from the right spot) until no more splices exist.
+           (format t "Found splice vertexes: ~A~%" splices)
 
-    (format t "Run iterative algorithm to resolve full graph.~%")
-    (dolist (splice (cl-graph:find-vertexes-if
-                     clg (lambda (v)
-                           (is-syntax-form-p
-                            'splice (first (cl-graph:element v))))))
-      (format t "Processing splice: ~A~%" splice)
-      (let (;; source vertexes with a target of this splice vertex.
-            (parents (cl-graph:parent-vertexes splice))
-            ;; target vertexes with a source of this splice vertex.
-            (children (cl-graph:child-vertexes splice)))
+           ;; TODO: lookup the splices in the graph def associated with
+           ;; them and substitute their bodies. I have to do this in a loop
+           ;; until there are no more to process.
 
-        (format t "  parents: ~A~%  children: ~A~%"
-                parents children)
+           (dolist (splice splices)
+             (format t "processing splice: ~A~%" splice)
+             (let (;; source vertexes with a target of this splice vertex.
+                   (parents (cl-graph:parent-vertexes splice))
+                   ;; target vertexes with a source of this splice vertex.
+                   (children (cl-graph:child-vertexes splice)))
 
-        (destructuring-bind (splice-form gdef)
-            (cl-graph:element splice)
+               (format t "  parents: ~A~%  children: ~A~%"
+                       parents children)
 
-          ;; TODO: ensure gdefs are correct with splice
-          ;; expansions.  They aren't currently.
+               (destructuring-bind (splice-form gdef)
+                   (cl-graph:element splice)
 
-          ;; Now, absorb the splice from the right spot, get the
-          ;; roots and leaves, then fixup the edges.
-          (multiple-value-bind (clg splice-roots splice-leaves)
-              (absorb-depforms
-               clg gdef (depforms (lookup-splice splice-form gdef)))
+                 ;; TODO: ensure gdefs are correct with splice
+                 ;; expansions.  They aren't currently.
 
-            (format t "  splice-roots: ~A~%" splice-roots)
-            (format t "  splice-leaves: ~A~%" splice-leaves)
-            ;; delete the original parent edges.
-            (loop :for parent :in parents :do
-              (cl-graph:delete-edge-between-vertexes
-               clg parent splice))
-            ;; add the new edges from the parents to the new-roots.
-            (add-cross-product-edges
-             clg parents (annotate-splices splice-roots gdef))
-            ;; delete the original child edges.
-            (loop :for child :in children :do
-              (cl-graph:delete-edge-between-vertexes
-               clg splice child))
-            ;; add the new edges from the new-leaves to the children.
-            (add-cross-product-edges
-             clg (annotate-splices splice-leaves gdef) children)
-            ;; Then finally, delete the expanded splice vertex
-            (cl-graph:delete-vertex clg splice)))))
+                 ;; Now, absorb the splice from the right spot, get the
+                 ;; roots and leaves, then fixup the edges.
+                 (multiple-value-bind (clg splice-roots splice-leaves)
+                     (absorb-depforms
+                      clg gdef (depforms (lookup-splice splice-form gdef)))
+
+                   (format t "  splice-roots: ~A~%" splice-roots)
+                   (format t "  splice-leaves: ~A~%" splice-leaves)
+                   ;; delete the original parent edges.
+                   (loop :for parent :in parents :do
+                     (cl-graph:delete-edge-between-vertexes
+                      clg parent splice))
+                   ;; add the new edges from the parents to the new-roots.
+                   (add-cross-product-edges
+                    clg parents (annotate-splices splice-roots gdef))
+                   ;; delete the original child edges.
+                   (loop :for child :in children :do
+                     (cl-graph:delete-edge-between-vertexes
+                      clg splice child))
+                   ;; add the new edges from the new-leaves to the children.
+                   (add-cross-product-edges
+                    clg (annotate-splices splice-leaves gdef) children)
+                   ;; Then finally, delete the expanded splice vertex
+                   (cl-graph:delete-vertex clg splice))))))
 
 
 
