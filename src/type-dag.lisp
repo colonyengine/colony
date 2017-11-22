@@ -239,6 +239,9 @@ If the form is not null, and contains hyper edges, return three values:
   ;; A) Ensure if subdag, all are subdag.
   ;; B) Ensure if subgraph, all are subgraph.
 
+  ;; TODO: 2.5) create and fill in a real depends-on aggregate structure
+  ;; that contains actual references to the depended on graphdefs. This makes
+  ;; splice lookup extremely easy.
 
   ;; TODO: 3) convert each category to appropriate cl-graph version
   (loop :for angph :being :the :hash-values :in (analyzed-graphs owner)
