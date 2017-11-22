@@ -79,7 +79,7 @@
 graph G and return them as a list in no particular order."
   (let ((results ()))
     (cl-graph:iterate-vertexes g (lambda (v)
-                                   (when (cl-graph:rootp v)
+                                   (unless (cl-graph:parent-vertexes v)
                                      (push v results))))
     results))
 
@@ -88,7 +88,7 @@ graph G and return them as a list in no particular order."
 return them as a list."
   (let ((results ()))
     (cl-graph:iterate-vertexes g (lambda (v)
-                                   (unless (cl-graph:has-children-p v)
+                                   (unless (cl-graph:child-vertexes v)
                                      (push v results))))
     results))
 
@@ -248,13 +248,63 @@ If the form is not null, and contains hyper edges, return three values:
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun add-cross-product-edges (clg source-list target-list)
+  (map-product
+   (lambda (v1 v2)
+     (cl-graph:add-edge-between-vertexes clg v1 v2 :edge-type :directed))
+   source-list
+   target-list))
+
+(defun annotate (val-list &rest args)
+  "Take each member VAL of VAL-LIST and return a list of (VAL ,@ARGS)."
+  (mapcar (lambda (v)
+            `(,v ,@(copy-seq args)))
+          val-list))
+
+(defun absorb-depforms (clg gdef depforms)
+  "Traverse the depforms and add them into the clg as edges while
+keeping reference to the initial gdef assocated with the
+depforms. Return three values: the cl-graph, the roots as elements,
+the leaves as elements."
+  (let ((roots ())
+        (leaves ()))
+    (loop
+      :for depform :in depforms
+      :for lifted-form = (lifted-form depform)
+      ;; check this when condition for validity.
+      :when lifted-form :do
+        (pushnew (car (first lifted-form)) roots :test #'equalp)
+        (pushnew (cadar (last lifted-form)) leaves :test #'equalp)
+        (loop :for (from to) :in lifted-form :do
+          (add-cross-product-edges clg
+                                   (annotate from gdef)
+                                   (annotate to gdef))))
+
+    (values clg
+            (remove-duplicates (mapcan #'identity roots) :test #'equalp)
+            (remove-duplicates (mapcan #'identity leaves) :test #'equalp))))
+
+
+;; TODO: This should return two values. the subform and the gdef it is
+;; contained in.
+(defun lookup-splice (splice-form gdef)
+  "Find the subform named SPLICE-FORM in GDEF, or in any available imports."
+  (let ((splice-name (second splice-form)))
+    (gethash splice-name (subforms gdef))))
+
+
+
 
 (defun analyze-graph (angph)
+  ;; TODO: Huge bug/missing feature. This only knows how to analyze/construct
+  ;; directed graphs. Maybe that is actually ok and we don't need undirected
+  ;; graphs....in which case, dump the subgraph form in the dsl.
   (let ((clg (cl-graph:make-graph 'cl-graph:graph-container
                                   ;; I store complex elements and
                                   ;; edges.
                                   :vertex-test #'equalp
-                                  :edge-test #'equalp)))
+                                  :edge-test #'equalp
+                                  :default-edge-type :directed)))
 
     ;; We do an iterative algorithm where we continuously refine the
     ;; graph we're making by expanding slices in additional passes until there
@@ -262,44 +312,98 @@ If the form is not null, and contains hyper edges, return three values:
     ;;(format t "Processing graph category: ~A~%" (category angph))
 
     ;; First, add the initial depforms from the roots.
-    (loop
-      :for gdef :in (graphdefs angph)
-      :when (roots gdef) :do
-        (loop
-          :for root :in (roots gdef) :do
-            (loop
-              :for depform :in (depforms (gethash root (subforms gdef)))
-              ;; check this when condition for validity.
-              :when (lifted-form depform) :do
-                (loop :for (from to) :in (lifted-form depform) :do
-                  (map-product
-                   (lambda (v1 v2)
-                     (cl-graph:add-edge-between-vertexes
-                      clg
-                      ;; Keep ref to gdef for namespace lookups.
-                      (list gdef v1)
-                      (list gdef v2)))
-                   from to)))))
+    (loop :for gdef :in (graphdefs angph)
+          :when (roots gdef) :do
+            (loop :for root :in (roots gdef) :do
+              ;; For the initial seeding, we don't care about the
+              ;; roots/leaves of the initial root subforms.
+              (absorb-depforms clg gdef
+                               (depforms (gethash root (subforms gdef))))))
     ;; debug output
-    #++(dolist (edge (cl-graph:edges clg))
-         (let ((*print-right-margin* most-positive-fixnum))
-           (format t "Computed edge: from: ~A to: ~A~%"
-                   (cl-graph:element (cl-graph:source-vertex edge))
-                   (cl-graph:element (cl-graph:target-vertex edge)))))
+    (format t "Original graph....~%")
+    (dolist (edge (cl-graph:edges clg))
+      (let ((*print-right-margin* most-positive-fixnum))
+        (format t "Computed edge: from: ~A to: ~A~%"
+                (cl-graph:element (cl-graph:source-vertex edge))
+                (cl-graph:element (cl-graph:target-vertex edge)))))
 
-    ;; Then, iterate the graph, expanding the splicing vertexes
-    ;; (finding them from the right spot) until no more splices exist.
-    #++(let ((splices (cl-graph:find-vertexes-if
-                       clg (lambda (v)
-                             (is-syntax-form-p
-                              'splice (second (cl-graph:element v)))))))
-         ;; TODO: lookup the splices in the graph def associated with
-         ;; them and substitute their bodies. I have to do this in a loop
-         ;; until there are no more to process.
-         (format t "Found splice vertexes: ~A~%" splices))
+    (loop :with done = nil
+          :until done
+          :do
+             ;; Then, iterate the graph, expanding the splicing vertexes
+             ;; (finding them from the right spot) until no more splices exist.
+             (let ((splices (cl-graph:find-vertexes-if
+                             clg (lambda (v)
+                                   (is-syntax-form-p
+                                    'splice (first (cl-graph:element v)))))))
+
+               (format t "Found splice vertexes: ~A~%" splices)
+
+               ;; TODO: lookup the splices in the graph def associated with
+               ;; them and substitute their bodies. I have to do this in a loop
+               ;; until there are no more to process.
+
+               (dolist (splice splices)
+                 (format t "processing splice: ~A~%" splice)
+                 (let (;; source vertexes with a target of this splice vertex.
+                       (parents (cl-graph:parent-vertexes splice))
+                       ;; target vertexes with a source of this splice vertex.
+                       (children (cl-graph:child-vertexes splice)))
+
+                   (format t "  parents: ~A~%  children: ~A~%"
+                           parents children)
+
+                   (destructuring-bind (splice-form gdef)
+                       (cl-graph:element splice)
+
+                     ;; TODO: ensure gdefs are correct with splice
+                     ;; expansions.  They aren't currently.
+
+                     ;; Now, absorb the splice from the right spot, get the
+                     ;; roots and leaves, then fixup the edges.
+                     (multiple-value-bind (clg new-roots new-leaves)
+                         (absorb-depforms
+                          clg gdef (depforms (lookup-splice splice-form gdef)))
+
+                       (format t "  new-roots: ~A~%" new-roots)
+                       (format t "  new-leaves: ~A~%" new-leaves)
+                       ;; delete the original parent edges.
+                       (loop :for parent :in parents :do
+                         (cl-graph:delete-edge-between-vertexes
+                          clg parent splice))
+                       ;; add the new edges from the parents to the new-roots.
+                       (add-cross-product-edges
+                        clg parents (annotate new-roots gdef))
+                       ;; delete the original child edges.
+                       (loop :for child :in children :do
+                         (cl-graph:delete-edge-between-vertexes
+                          clg splice child))
+                       ;; add the new edges from the new-leaves to the children.
+                       (add-cross-product-edges
+                        clg (annotate new-leaves gdef) children)
+                       ;; Then finally, delete the expanded splice vertex
+                       (cl-graph:delete-vertex clg splice)))))
 
 
+               ;; keep expanding until no more splices to substitute.
+               (when (zerop (length splices))
+                 (setf done t))))
 
+    (format t "Single graph expansion....~%")
+    (dolist (edge (cl-graph:edges clg))
+      (let ((*print-right-margin* most-positive-fixnum))
+        (format t "Expanded edge: from: ~A to: ~A~%"
+                (cl-graph:element (cl-graph:source-vertex edge))
+                (cl-graph:element (cl-graph:target-vertex edge)))))
+
+    (format t "Graph roots for clg are: ~A~%" (graph-roots clg))
+    (format t "Graph leaves for clg are: ~A~%" (graph-leaves clg))
+
+    ;; This is reversed cause of the "depends-on" meaning of -> in a
+    ;; component-dependenct graph. For other uses of -> which mean
+    ;; "and then do" then we don't need the reverse. I'm contemplating
+    ;; => and -> for those meanings....
+    (format t "toposort: ~A~%" (reverse (cl-graph:topological-sort clg)))
 
     ;; and we're done with this analyzed-graph.
     (setf (graph angph) clg)))
