@@ -361,26 +361,26 @@ the leaves as elements."
 
                      ;; Now, absorb the splice from the right spot, get the
                      ;; roots and leaves, then fixup the edges.
-                     (multiple-value-bind (clg new-roots new-leaves)
+                     (multiple-value-bind (clg splice-roots splice-leaves)
                          (absorb-depforms
                           clg gdef (depforms (lookup-splice splice-form gdef)))
 
-                       (format t "  new-roots: ~A~%" new-roots)
-                       (format t "  new-leaves: ~A~%" new-leaves)
+                       (format t "  splice-roots: ~A~%" splice-roots)
+                       (format t "  splice-leaves: ~A~%" splice-leaves)
                        ;; delete the original parent edges.
                        (loop :for parent :in parents :do
                          (cl-graph:delete-edge-between-vertexes
                           clg parent splice))
                        ;; add the new edges from the parents to the new-roots.
                        (add-cross-product-edges
-                        clg parents (annotate new-roots gdef))
+                        clg parents (annotate splice-roots gdef))
                        ;; delete the original child edges.
                        (loop :for child :in children :do
                          (cl-graph:delete-edge-between-vertexes
                           clg splice child))
                        ;; add the new edges from the new-leaves to the children.
                        (add-cross-product-edges
-                        clg (annotate new-leaves gdef) children)
+                        clg (annotate splice-leaves gdef) children)
                        ;; Then finally, delete the expanded splice vertex
                        (cl-graph:delete-vertex clg splice)))))
 
