@@ -258,10 +258,12 @@ If the form is not null, and contains hyper edges, return three values:
    source-list
    target-list))
 
-(defun annotate (val-list &rest args)
+(defun annotate-splices (val-list &rest args)
   "Take each member VAL of VAL-LIST and return a list of (VAL ,@ARGS)."
   (mapcar (lambda (v)
-            `(,v ,@(copy-seq args)))
+            (if (is-syntax-form-p 'splice v)
+                `(,v ,@(copy-seq args))
+                v))
           val-list))
 
 (defun absorb-depforms (clg gdef depforms)
@@ -280,8 +282,8 @@ the leaves as elements."
         (pushnew (cadar (last lifted-form)) leaves :test #'equalp)
         (loop :for (from to) :in lifted-form :do
           (add-cross-product-edges clg
-                                   (annotate from gdef)
-                                   (annotate to gdef))))
+                                   (annotate-splices from gdef)
+                                   (annotate-splices to gdef))))
 
     (values clg
             (remove-duplicates (mapcan #'identity roots) :test #'equalp)
@@ -376,14 +378,14 @@ the leaves as elements."
                           clg parent splice))
                        ;; add the new edges from the parents to the new-roots.
                        (add-cross-product-edges
-                        clg parents (annotate splice-roots gdef))
+                        clg parents (annotate-splices splice-roots gdef))
                        ;; delete the original child edges.
                        (loop :for child :in children :do
                          (cl-graph:delete-edge-between-vertexes
                           clg splice child))
                        ;; add the new edges from the new-leaves to the children.
                        (add-cross-product-edges
-                        clg (annotate splice-leaves gdef) children)
+                        clg (annotate-splices splice-leaves gdef) children)
                        ;; Then finally, delete the expanded splice vertex
                        (cl-graph:delete-vertex clg splice)))))
 
