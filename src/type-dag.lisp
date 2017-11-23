@@ -335,6 +335,8 @@ subforms."
                   :graphdef gdef-reference
                   :original-form (list gdef-name subform-names))))
 
+	  (assert gdef-reference)
+
           ;; Now set up the subforms entry in the analyzed-depends-on object.
           (if (eq subform-names :all)
               ;; get all subform names in gdef
