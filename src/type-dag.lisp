@@ -335,7 +335,7 @@ subforms."
                   :graphdef gdef-reference
                   :original-form (list gdef-name subform-names))))
 
-	  (assert gdef-reference)
+          (assert gdef-reference)
 
           ;; Now set up the subforms entry in the analyzed-depends-on object.
           (if (eq subform-names :all)
@@ -369,7 +369,7 @@ subforms."
   ;; directed graphs. Maybe that is actually ok and we don't need undirected
   ;; graphs....in which case, dump the subgraph form in the dsl.
 
-  ;; First, resolve all depends-on lines into meaniingful structures
+  ;; First, resolve all depends-on lines into meaningful structures
   ;; with real references and such. This helps us look up splices.
   (analyze-graphdef-depends-on angph)
 
@@ -392,8 +392,13 @@ subforms."
             (loop :for root :in (roots gdef) :do
               ;; For the initial seeding, we don't care about the
               ;; roots/leaves of the initial root subforms.
-              (absorb-depforms clg gdef
-                               (depforms (gethash root (subforms gdef))))))
+              (absorb-depforms
+               clg
+               ;; This is the gdef...
+               gdef
+               ;; ... in which all splices must be looked up in,
+               ;; either directly or in a graphdef-depends-on object.
+               (depforms (gethash root (subforms gdef))))))
 
     ;; debug output
     (format t "Original graph....~%")
@@ -408,6 +413,7 @@ subforms."
     ;; splice names. This may ntroduce more splices the next iteration
     ;; will get. Stop when there are no more splices to substitute.
     (loop
+      ;; Don't convert to dolist, I need to recompute the find-vertexes-if
       :for splices = (cl-graph:find-vertexes-if
                       clg (lambda (v)
                             (is-syntax-form-p
@@ -445,14 +451,14 @@ subforms."
                    (format t "  splice-roots: ~A~%" splice-roots)
                    (format t "  splice-leaves: ~A~%" splice-leaves)
                    ;; delete the original parent edges.
-                   (loop :for parent :in parents :do
+                   (dolist (parent parents)
                      (cl-graph:delete-edge-between-vertexes
                       clg parent splice))
                    ;; add the new edges from the parents to the new-roots.
                    (add-cross-product-edges
                     clg parents (annotate-splices splice-roots gdef))
                    ;; delete the original child edges.
-                   (loop :for child :in children :do
+                   (dolist (child children)
                      (cl-graph:delete-edge-between-vertexes
                       clg splice child))
                    ;; add the new edges from the new-leaves to the children.
