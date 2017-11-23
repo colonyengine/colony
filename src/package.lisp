@@ -46,15 +46,18 @@
            ;; basis
            #:basis
 
-           ;; tags
-           #:tags
-
            ;; camera
            #:camera
            #:view
            #:projection
            #:tracking-camera
            #:look-at
+
+           ;; mesh-renderer
+           #:mesh-renderer
+
+           ;; tags
+           #:tags
 
            ;; transform
            #:transform

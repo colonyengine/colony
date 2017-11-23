@@ -25,5 +25,4 @@
    (:file "shaders/shaders")
    (:file "components/gun/gun")
    (:file "components/gun-manager/gun-manager")
-   (:file "components/hit-points/hit-points")
-   (:file "components/mesh-renderer/mesh-renderer")))
+   (:file "components/hit-points/hit-points")))

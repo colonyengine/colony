@@ -1,4 +1,4 @@
-(in-package :first-light-example)
+(in-package :first-light)
 
 (kit.gl.vao:defvao mesh ()
   (:interleave ()

@@ -45,6 +45,7 @@
    (:file "components/basis/basis")
    (:file "components/camera/camera")
    (:file "components/camera/tracking-camera")
+   (:file "components/mesh-renderer/mesh-renderer")
    (:file "components/tags/tags")
    (:file "components/transform/state")
    (:file "components/transform/transform")))
