@@ -12,10 +12,11 @@
    (%graph :accessor graph
            :initarg :graph
            :initform nil)
-   ;; The list of graphdefs that participated in this cl-graph rendition.
+   ;; The table of graphdefs that participated in this cl-graph rendition.
+   ;; Key is graph-definition name, value is graphdef instance.
    (%graphdefs :accessor graphdefs
                :initarg :graphdefs
-               :initform nil)))
+               :initform  (make-hash-table))))
 
 (defun make-analyzed-graph (&rest init-args)
   (apply #'make-instance 'analyzed-graph init-args))
@@ -29,6 +30,11 @@
              :initarg :enabled)
    (%category :accessor category
               :initarg :category)
+   ;; This starts out as a list grabbed from the graph-definition dsl,
+   ;; but we transform it later into a hash table with values of
+   ;; graphdef-depends-on instances to hold a richer semantic
+   ;; understanding of original depends-on forms in the
+   ;; graph-definition dsl.
    (%depends-on :accessor depends-on
                 :initarg :depends-on)
    (%roots :accessor roots
@@ -252,7 +258,8 @@ If the form is not null, and contains hyper edges, return three values:
                       new-analyzed-graph)))
 
             (when (enabled parsed-def)
-              (push parsed-def (graphdefs analyzed-graph))))))
+              (setf (gethash (name parsed-def) (graphdefs analyzed-graph))
+                    parsed-def)))))
 
   ;; TODO: 2) perform the analysis for each graph category type. Note:
   ;; a category may be a consp form in addition to a symbol.
@@ -313,8 +320,40 @@ the leaves as elements."
 into real graphdef references holding real references to the named
 subforms."
 
-  nil)
+  (loop :for gdef :being :the :hash-values :in (graphdefs angph) :do
+    (let ((whole-depends-on-form (depends-on gdef)))
 
+      ;; depends-on used to be list, but now we're converting it into a
+      ;; hash table with more semantic data in it.
+      (setf (depends-on gdef) (make-hash-table))
+
+      (loop :for (gdef-name subform-names) :in whole-depends-on-form :do
+        (let* ((gdef-reference (gethash gdef-name (graphdefs angph)))
+               (analyzed-depends-on
+                 (make-graphdef-depends-on
+                  gdef-name
+                  :graphdef gdef-reference
+                  :original-form (list gdef-name subform-names))))
+
+          ;; Now set up the subforms entry in the analyzed-depends-on object.
+          (if (eq subform-names :all)
+              ;; get all subform names in gdef
+              (maphash
+               (lambda (subform-name subform-instance)
+                 (setf (gethash subform-name (subforms analyzed-depends-on))
+                       subform-instance))
+               (subforms gdef-reference))
+              ;; find the listed subform-names (which if it is NIL, do
+              ;; nothing) in the gdef and assign them.
+              (loop :for subform-name :in subform-names :do
+                (setf (gethash subform-name (subforms analyzed-depends-on))
+                      (gethash subform-name (subforms gdef-reference)))))
+
+          ;; store the semantic analysis of the depends-on form,
+          ;; transmuted into its new graphdef-depends-on form, back
+          ;; into the initiating gdef.
+          (setf (gethash (name analyzed-depends-on) (depends-on gdef))
+                analyzed-depends-on))))))
 
 ;; TODO: This should return two values. the subform and the gdef it is
 ;; contained in.
@@ -346,13 +385,14 @@ subforms."
     ;;(format t "Processing graph category: ~A~%" (category angph))
 
     ;; First, add the initial depforms from the roots.
-    (loop :for gdef :in (graphdefs angph)
+    (loop :for gdef :being :the :hash-values :in (graphdefs angph)
           :when (roots gdef) :do
             (loop :for root :in (roots gdef) :do
               ;; For the initial seeding, we don't care about the
               ;; roots/leaves of the initial root subforms.
               (absorb-depforms clg gdef
                                (depforms (gethash root (subforms gdef))))))
+
     ;; debug output
     (format t "Original graph....~%")
     (dolist (edge (cl-graph:edges clg))
@@ -361,6 +401,10 @@ subforms."
                 (cl-graph:element (cl-graph:source-vertex edge))
                 (cl-graph:element (cl-graph:target-vertex edge)))))
 
+    ;; Then, iterate the graph. Each iteration will substitute the
+    ;; current splice forms for the actual graphs indicated by those
+    ;; splice names. This may ntroduce more splices the next iteration
+    ;; will get. Stop when there are no more splices to substitute.
     (loop
       :for splices = (cl-graph:find-vertexes-if
                       clg (lambda (v)
@@ -368,8 +412,6 @@ subforms."
                              'splice (first (cl-graph:element v)))))
       :unless splices :return nil
         :do
-           ;; Then, iterate the graph, expanding the splicing vertexes
-           ;; (finding them from the right spot) until no more splices exist.
            (format t "Found splice vertexes: ~A~%" splices)
 
            ;; TODO: lookup the splices in the graph def associated with
@@ -433,7 +475,7 @@ subforms."
     ;; component-dependenct graph. For other uses of -> which mean
     ;; "and then do" then we don't need the reverse. I'm contemplating
     ;; => and -> for those meanings....
-    (format t "toposort: ~A~%" (reverse (cl-graph:topological-sort clg)))
+    (format t "toposort: ~A~%" (cl-graph:topological-sort clg))
 
     ;; and we're done with this analyzed-graph.
     (setf (graph angph) clg)))
