@@ -357,12 +357,22 @@ subforms."
           (setf (gethash (name analyzed-depends-on) (depends-on gdef))
                 analyzed-depends-on))))))
 
-;; TODO: This should return two values. the subform and the gdef it is
-;; contained in.
+;; TODO: This should return two values. the splice subform and the
+;; gdef it is contained in.
 (defun lookup-splice (splice-form gdef)
   "Find the subform named SPLICE-FORM in GDEF, or in any available imports."
   (let ((splice-name (second splice-form)))
-    (gethash splice-name (subforms gdef))))
+    ;; 1) Check of the splice is natively in the current gdef.
+    (when-let ((splice (gethash splice-name (subforms gdef))))
+      (return-from lookup-splice (values splice gdef)))
+
+    ;; 2) If it isn't, then check which depends-on in the current gdef
+    ;; brings it in, choose the first from left to right that
+    ;; satisfies it.
+
+    ;; 3) ensure to return the sunform the splice mentiones plus the gdef from
+    ;; whence it came.
+    (values nil nil)))
 
 (defun analyze-graph (angph)
   ;; TODO: Huge bug/missing feature. This only knows how to analyze/construct
@@ -372,7 +382,6 @@ subforms."
   ;; First, resolve all depends-on lines into meaningful structures
   ;; with real references and such. This helps us look up splices.
   (analyze-graphdef-depends-on angph)
-
 
   (let ((clg (cl-graph:make-graph 'cl-graph:graph-container
                                   ;; I store complex elements and
@@ -394,10 +403,10 @@ subforms."
               ;; roots/leaves of the initial root subforms.
               (absorb-depforms
                clg
-               ;; This is the gdef...
+               ;; This is the gdef that these depforms came from...
                gdef
-               ;; ... in which all splices must be looked up in,
-               ;; either directly or in a graphdef-depends-on object.
+               ;; ...in which all splices must be looked up in,
+               ;; either directly or through a graphdef-depends-on object.
                (depforms (gethash root (subforms gdef))))))
 
     ;; debug output
@@ -414,6 +423,7 @@ subforms."
     ;; will get. Stop when there are no more splices to substitute.
     (loop
       ;; Don't convert to dolist, I need to recompute the find-vertexes-if
+      ;; in each iteration.
       :for splices = (cl-graph:find-vertexes-if
                       clg (lambda (v)
                             (is-syntax-form-p
