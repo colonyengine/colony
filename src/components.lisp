@@ -1,7 +1,9 @@
 (in-package :first-light)
 
 (defclass component ()
-  ((%state :accessor state
+  ((%type :reader component-type
+          :initarg :type)
+   (%state :accessor state
            :initarg :state
            :initform :initialize)
    (%actor :accessor actor
@@ -25,12 +27,8 @@
                (when type
                  `(:type ,type)))))))
 
-(defun component-type (component)
-  (class-name (class-of component)))
-
-(defgeneric make-component (component-type &rest initargs)
-  (:method ((component-type symbol) &rest initargs)
-    (apply #'make-instance component-type initargs)))
+(defmethod make-component (component-type &rest initargs)
+  (apply #'make-instance component-type :type component-type initargs))
 
 (defun add-component (actor component)
   (setf (gethash component (components actor)) component)

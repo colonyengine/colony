@@ -63,9 +63,9 @@
      (resolve-model node alpha))
    root-node))
 
-(defmethod make-component ((type (eql 'transform)) &rest args)
-  (let ((instance (make-instance 'transform)))
-    (apply #'reinitialize-instance instance args)
+(defmethod make-component ((component-type (eql 'transform)) &rest args)
+  (let ((instance (make-instance component-type :type component-type)))
+    (apply #'reinitialize-instance instance :type component-type args)
     instance))
 
 (defmethod reinitialize-instance ((instance transform)
