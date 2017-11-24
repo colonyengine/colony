@@ -4,65 +4,77 @@
   (:use #:cl
         #:alexandria
         #:gamebox-math)
-  (:export #:get-path
-           #:scene-definition
-           #:get-scene
-           #:prepare-scenes
-           #:context
-           #:shaders
-           #:make-core-state
-           #:spawn-actor
-           #:define-component
-           #:component
-           #:components
-           #:display
-           #:start-engine
-           #:quit-engine
-           #:key-down
-           #:key-up
-           #:map-nodes
-           #:add-child
 
-           ;; actors
-           #:actor
+  ;; common
+  (:export #:get-path
+           #:start-engine
+           #:quit-engine)
+
+  ;; settings
+  (:export #:cfg
+           #:with-cfg)
+
+  ;; core state
+  (:export #:make-core-state
+           #:display
+           #:context
+           #:shaders)
+
+  ;; input
+  (:export #:key-down
+           #:key-up)
+
+  ;; scene
+  (:export #:scene-definition
+           #:get-scene)
+
+  ;; actor
+  (:export #:actor
            #:id
            #:make-actor
+           #:spawn-actor)
 
-           ;; components
+  ;; component
+  (:export #:component
+           #:define-component
            #:make-component
            #:add-component
            #:add-multiple-components
            #:initialize-component
            #:physics-update-component
-           #:make-camera-view
            #:update-component
            #:render-component
            #:destroy-component
            #:actor-components-by-type
-           #:actor-component-by-type
+           #:actor-component-by-type)
 
-           ;;; core components below:
+  ;;; component types
 
-           ;; basis
-           #:basis
+  ;; basis
+  (:export #:basis)
 
-           ;; camera
-           #:camera
+  ;; camera
+  (:export #:camera
            #:view
            #:projection
-           #:tracking-camera
-           #:look-at
+           #:compute-camera-view)
 
-           ;; mesh-renderer
-           #:mesh-renderer
+  ;; tracking-camera
+  (:export #:tracking-camera
+           #:look-at)
 
-           ;; tags
-           #:tags
+  ;; mesh-renderer
+  (:export #:mesh-renderer)
 
-           ;; transform
-           #:transform
+  ;; tags
+  (:export #:tags)
+
+  ;; transform
+  (:export #:transform
            #:model
-           #:local))
+           #:local
+           #:add-child
+           #:map-nodes))
 
 (defpackage #:first-light-shaders
   (:use #:3bgl-glsl/cl))
