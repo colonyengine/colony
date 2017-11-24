@@ -30,7 +30,6 @@
    (:file "logging")
    (:file "extensions")
    (:file "settings")
-   (:file "context")
    (:file "actor")
    (:file "components")
    (:file "call-flow")

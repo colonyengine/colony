@@ -23,6 +23,18 @@
    (%scenes :reader scenes
             :initform (make-hash-table))))
 
+(defclass context ()
+  ((%core-state :reader core-state
+                :initarg :core-state)
+   (%settings :reader settings
+              :initform (make-hash-table))
+   (%shaders :accessor shaders
+             :initform nil)
+   (%camera :accessor camera
+            :initform nil)
+   (%shared-storage-table :reader shared-storage-table
+                          :initform (make-hash-table))))
+
 (defun %make-scene-tree (core-state)
   (let* ((actor (make-actor :id (make-gensym '@universe) :scene t))
          (transform (make-component 'transform :actor actor)))
@@ -44,10 +56,22 @@ component-initialize-thunks-db slot and the actor-initialize-db in the
 CORE-STATE. It is assumed they have been processed appropriately."
   ;; remove all the actors from initialization phase.
   (clrhash (actor-initialize-db core-state))
-  ;; and remove the components from the typed hashes of the component
-  ;; initialization view.
+  ;; remove the components from the typed hashes of the component initialization
+  ;; view.
   (maphash
    (lambda (k v)
      (declare (ignore k))
      (clrhash v))
    (component-initialize-by-type-view core-state)))
+
+(defgeneric shared-storage (context key)
+  (:method ((context context) key)
+    (gethash key (shared-storage-table context)))
+  (:method :around ((context context) (key component))
+    (call-next-method context (component-type key))))
+
+(defgeneric (setf shared-storage) (value context key)
+  (:method (value (context context) key)
+    (setf (gethash key (shared-storage-table context)) value))
+  (:method :around (value (context context) (key component))
+    (call-next-method value context (component-type key))))
