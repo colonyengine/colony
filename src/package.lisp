@@ -62,6 +62,9 @@
   (:export #:tracking-camera
            #:look-at)
 
+  ;; mesh
+  (:export #:mesh)
+
   ;; mesh-renderer
   (:export #:mesh-renderer)
 

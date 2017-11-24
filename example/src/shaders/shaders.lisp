@@ -1,8 +1,8 @@
 (in-package :first-light-shaders)
 
 (input pos :vec3 :location 0)
-(input color :vec4 :location 1)
-(input uv :vec3 :location 2)
+(input uv :vec3 :location 1)
+(input color :vec4 :location 2)
 
 (output frag-color :vec4 :stage :fragment)
 
