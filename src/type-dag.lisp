@@ -467,10 +467,6 @@ available depends-on in that GDEF."
         :do
            (format t "Found splice vertexes: ~A~%" splices)
 
-           ;; TODO: lookup the splices in the graph def associated with
-           ;; them and substitute their bodies. I have to do this in a loop
-           ;; until there are no more to process.
-
            (dolist (splice splices)
              (format t "processing splice: ~A~%" splice)
              (let (;; source vertexes with a target of this splice vertex.
