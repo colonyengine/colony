@@ -10,15 +10,14 @@
            #:start-engine
            #:quit-engine)
 
-  ;; settings
-  (:export #:cfg
-           #:with-cfg)
-
   ;; core state
   (:export #:make-core-state
            #:display
            #:context
-           #:shaders)
+           #:shaders
+           #:shared-storage
+           #:cfg
+           #:with-cfg)
 
   ;; input
   (:export #:key-down
@@ -48,7 +47,7 @@
            #:actor-components-by-type
            #:actor-component-by-type)
 
-  ;;; component types
+;;; component types
 
   ;; basis
   (:export #:basis)
