@@ -23,18 +23,6 @@
    (%scenes :reader scenes
             :initform (make-hash-table))))
 
-(defclass context ()
-  ((%core-state :reader core-state
-                :initarg :core-state)
-   (%settings :reader settings
-              :initform (make-hash-table))
-   (%shaders :accessor shaders
-             :initform nil)
-   (%camera :accessor camera
-            :initform nil)
-   (%shared-storage-table :reader shared-storage-table
-                          :initform (make-hash-table))))
-
 (defun %make-scene-tree (core-state)
   (let* ((actor (make-actor :id (make-gensym '@universe) :scene t))
          (transform (make-component 'transform :actor actor)))
