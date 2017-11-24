@@ -97,6 +97,15 @@
   (apply #'make-instance 'depform init-args))
 
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; TODO: stick in a util file somewhere.
+(defun eql/package-relaxed (obj1 obj2)
+  (if (and (symbolp obj1) (symbolp obj2))
+      (string= (symbol-name obj1)
+               (symbol-name obj2))
+      (eql obj1 obj2)))
+
 
 
 
@@ -122,16 +131,23 @@ return them as a list."
 
 
 
+;; A crappy kind of pattern matching.
 (defun is-syntax-form-p (syntax-symbol form)
-  (if (and form (consp form) (eq (first form) syntax-symbol))
-      T
-      NIL))
+  (cond
+    ((consp syntax-symbol)
+     (when (consp form)
+       (eql/package-relaxed (first syntax-symbol) (first form))))
+    ((symbolp syntax-symbol)
+     (when (symbolp form)
+       (eql/package-relaxed syntax-symbol form)))
+    ;; maybe other cases needed?
+    (t nil)))
 
-(defun is/->/p (thing)
-  (when (symbolp thing)
-    (string= (symbol-name thing) (symbol-name '->))))
 
-(defun lift-splices (dependency-form)
+;; TODO: rip out the lifted-vars and lifted-forms hash tables from the
+;; code flow. I believe we don't need them. Also, change lifted-form
+;; to canoncalized-form (in the defclass too for depform)
+(defun canonicalize-dependency-form (dependency-form)
   (let* ((lifted-vars (make-hash-table :test #'equal))
          (lifted-forms (make-hash-table :test #'equal))
          (lifted-dependency-form
@@ -140,12 +156,13 @@ return them as a list."
                  (cond
                    ((consp element)
                     element)
-                   ((is/->/p element)
+                   ((is-syntax-form-p '-> element)
                     element)
                    (t
                     `(component-type ,element))))))
 
     (values lifted-dependency-form lifted-vars lifted-forms)))
+
 
 (defun segment-dependency-form (form)
   "Lift splices and then segment the dependency FORM into hyperedges.
@@ -159,35 +176,29 @@ If the form is not null, but contains no hyper edges, return three values:
 If the form is not null, and contains hyper edges, return three values:
   list of hyper-edge pairs, :hyperedges, lift-vars, lift-forms"
 
-  (multiple-value-bind (lifted-form lift-vars lift-forms) (lift-splices form)
+  (multiple-value-bind (lifted-form lift-vars lift-forms)
+      (canonicalize-dependency-form form)
 
     (let* ((x (split-sequence:split-sequence
-               '-> lifted-form :test (lambda (sym1 sym2)
-                                       ;; HACK! -> is in two different packages.
-                                       ;; The :first-light and user package.
-                                       ;; So resolve to the symbol name itself.
-                                       (if (and (symbolp sym1) (symbolp sym2))
-                                           (string= (symbol-name sym1)
-                                                    (symbol-name sym2))
-                                           (eql sym1 sym2)))))
+               '-> lifted-form :test #'eql/package-relaxed))
            ;; cut into groups of two with rolling window
            (connections
              (loop :for (k j . nil) :in (maplist #'identity x)
                    :when j :collect `(,k ,j))))
       (cond
-        ((null form)
-         (values form :empty lift-vars lift-forms))
+        ((null lifted-form)
+         (values lifted-form :empty lift-vars lift-forms))
         ((= (length x) 1)
          ;; no hyperedges
-         (values form :vertex lift-vars lift-forms))
+         (values lifted-form :vertex lift-vars lift-forms))
         (t ;; hyperedges found
          (values connections :hyperedges lift-vars lift-forms))))))
 
 
 ;; Then the code to perform the parsing.
 (defun parse-subform (form)
-  (assert (or (is-syntax-form-p 'subdag form)
-              (is-syntax-form-p 'subgraph form)))
+  (assert (or (is-syntax-form-p '(subdag) form)
+              (is-syntax-form-p '(subgraph) form)))
 
   (destructuring-bind (kind name . dependency-forms) form
     (make-subform
@@ -210,7 +221,7 @@ If the form is not null, and contains hyper edges, return three values:
   (second (member option-name option-form)))
 
 (defun parse-graph-definition (form)
-  (assert (is-syntax-form-p 'graph-definition form))
+  (assert (is-syntax-form-p '(graph-definition) form))
 
   (destructuring-bind (name options . subforms) (rest form)
     (make-graphdef
@@ -284,12 +295,14 @@ If the form is not null, and contains hyper edges, return three values:
    source-list
    target-list))
 
+(defun annotate-splice (v &rest args)
+  (if (is-syntax-form-p '(splice) v)
+      `(,v ,@(copy-seq args))
+      v))
+
 (defun annotate-splices (val-list &rest args)
-  "Take each member VAL of VAL-LIST and return a list of (VAL ,@ARGS)."
   (mapcar (lambda (v)
-            (if (is-syntax-form-p 'splice v)
-                `(,v ,@(copy-seq args))
-                v))
+            (apply #'annotate-splice v args))
           val-list))
 
 (defun absorb-depforms (clg gdef depforms)
@@ -301,15 +314,30 @@ the leaves as elements."
         (leaves ()))
     (loop
       :for depform :in depforms
+      :for kind = (kind depform)
       :for lifted-form = (lifted-form depform)
       ;; check this when condition for validity.
       :when lifted-form :do
-        (pushnew (car (first lifted-form)) roots :test #'equalp)
-        (pushnew (cadar (last lifted-form)) leaves :test #'equalp)
-        (loop :for (from to) :in lifted-form :do
-          (add-cross-product-edges clg
-                                   (annotate-splices from gdef)
-                                   (annotate-splices to gdef))))
+        (ecase kind
+          ((:empty)
+           (format t "absorb-depforms: ignoring :empty form.~%")
+           nil)
+          ((:hyperedges)
+           (format t "absorb-depforms: absorbing :hyperedges.~%")
+           (pushnew (car (first lifted-form)) roots :test #'equalp)
+           (pushnew (cadar (last lifted-form)) leaves :test #'equalp)
+           (loop :for (from to) :in lifted-form :do
+             (add-cross-product-edges clg
+                                      (annotate-splices from gdef)
+                                      (annotate-splices to gdef))))
+          ((:vertex)
+           (format t "absorb-depforms: absorbing :vertex.~%")
+           ;; the :vertex for is not only the roots, but also the leaves.
+           (pushnew lifted-form roots :test #'equalp)
+           (pushnew lifted-form leaves :test #'equalp)
+           (loop :for vert :in lifted-form :do
+             (format t "Adding :vertex: ~A~%" vert)
+             (cl-graph:add-vertex clg (annotate-splice vert gdef))))))
 
     (values clg
             (remove-duplicates (mapcan #'identity roots) :test #'equalp)
@@ -357,21 +385,28 @@ subforms."
           (setf (gethash (name analyzed-depends-on) (depends-on gdef))
                 analyzed-depends-on))))))
 
-;; TODO: This should return two values. the splice subform and the
-;; gdef it is contained in.
 (defun lookup-splice (splice-form gdef)
-  "Find the subform named SPLICE-FORM in GDEF, or in any available imports."
+  "Find the subform describing SPLICE-FORM in GDEF, or in any
+available depends-on in that GDEF."
   (let ((splice-name (second splice-form)))
     ;; 1) Check of the splice is natively in the current gdef.
     (when-let ((splice (gethash splice-name (subforms gdef))))
-      (return-from lookup-splice (values splice gdef)))
+      (format t "Found splice ~A as subform ~A in current gdef ~A~%"
+              splice-name splice (name gdef))
+      (return-from lookup-splice
+        (values splice gdef)))
 
     ;; 2) If it isn't, then check which depends-on in the current gdef
-    ;; brings it in, choose the first from left to right that
-    ;; satisfies it.
+    (loop :for dep-inst :being :the :hash-values :in (depends-on gdef) :do
+      (multiple-value-bind (subform present)
+          (gethash splice-name (subforms dep-inst))
+        (when present
+          (format t "Found splice ~A as subform ~A in depended-on gdef ~A~%"
+                  splice-name subform (name dep-inst))
+          (return-from lookup-splice
+            (values subform (graphdef dep-inst))))))
 
-    ;; 3) ensure to return the sunform the splice mentiones plus the gdef from
-    ;; whence it came.
+    ;; #0 Otheriwse, you're out of luck. Prolly should put an error here.
     (values nil nil)))
 
 (defun analyze-graph (angph)
@@ -427,7 +462,7 @@ subforms."
       :for splices = (cl-graph:find-vertexes-if
                       clg (lambda (v)
                             (is-syntax-form-p
-                             'splice (first (cl-graph:element v)))))
+                             '(splice) (first (cl-graph:element v)))))
       :unless splices :return nil
         :do
            (format t "Found splice vertexes: ~A~%" splices)
@@ -449,33 +484,37 @@ subforms."
                (destructuring-bind (splice-form gdef)
                    (cl-graph:element splice)
 
-                 ;; TODO: ensure gdefs are correct with splice
-                 ;; expansions.  They aren't currently.
+                 (multiple-value-bind (lookedup-splice lookedup-gdef)
+                     (lookup-splice splice-form gdef)
 
-                 ;; Now, absorb the splice from the right spot, get the
-                 ;; roots and leaves, then fixup the edges.
-                 (multiple-value-bind (clg splice-roots splice-leaves)
-                     (absorb-depforms
-                      clg gdef (depforms (lookup-splice splice-form gdef)))
+                   ;; Now, absorb the splice into clg, get the roots
+                   ;; and leaves, then fixup the edges.
+                   (multiple-value-bind (clg splice-roots splice-leaves)
+                       (absorb-depforms
+                        clg lookedup-gdef (depforms lookedup-splice))
 
-                   (format t "  splice-roots: ~A~%" splice-roots)
-                   (format t "  splice-leaves: ~A~%" splice-leaves)
-                   ;; delete the original parent edges.
-                   (dolist (parent parents)
-                     (cl-graph:delete-edge-between-vertexes
-                      clg parent splice))
-                   ;; add the new edges from the parents to the new-roots.
-                   (add-cross-product-edges
-                    clg parents (annotate-splices splice-roots gdef))
-                   ;; delete the original child edges.
-                   (dolist (child children)
-                     (cl-graph:delete-edge-between-vertexes
-                      clg splice child))
-                   ;; add the new edges from the new-leaves to the children.
-                   (add-cross-product-edges
-                    clg (annotate-splices splice-leaves gdef) children)
-                   ;; Then finally, delete the expanded splice vertex
-                   (cl-graph:delete-vertex clg splice))))))
+                     (format t "  splice-roots: ~A~%" splice-roots)
+                     (format t "  splice-leaves: ~A~%" splice-leaves)
+                     ;; delete the original parent edges.
+                     (dolist (parent parents)
+                       (cl-graph:delete-edge-between-vertexes
+                        clg parent splice))
+                     ;; add the new edges from the parents to the new-roots.
+                     (add-cross-product-edges
+                      clg
+                      parents
+                      (annotate-splices splice-roots lookedup-gdef))
+                     ;; delete the original child edges.
+                     (dolist (child children)
+                       (cl-graph:delete-edge-between-vertexes
+                        clg splice child))
+                     ;; add the new edges from the new-leaves to the children.
+                     (add-cross-product-edges
+                      clg
+                      (annotate-splices splice-leaves lookedup-gdef)
+                      children)
+                     ;; Then finally, delete the expanding splice vertex
+                     (cl-graph:delete-vertex clg splice)))))))
 
 
 
@@ -497,23 +536,3 @@ subforms."
 
     ;; and we're done with this analyzed-graph.
     (setf (graph angph) clg)))
-
-
-(defun doit ()
-  (parse-graph-definition
-   `(graph-definition
-     :gear-example
-     (:enabled t
-      :category component-dependency
-      :depends-on ((:core (unknown-types core-types)))
-      :roots (all-ordered-types))
-
-     ;; user chooses this name
-     (subdag ordered-types
-             ())
-
-     ;; user creates the master ordering of the types.
-     (subdag all-ordered-types
-             ((splice unknown-types)
-              -> (splice ordered-types)
-              -> (splice core-types))))))
