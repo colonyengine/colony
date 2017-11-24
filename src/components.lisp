@@ -35,6 +35,23 @@
   (push component (gethash (component-type component)
                            (components-by-type actor))))
 
+(defun realize-component (core-state component)
+  (when-let ((thunk (initializer-thunk component)))
+    (funcall thunk)
+    (setf (initializer-thunk component) nil))
+  (setf (state component) :active
+        (gethash component (component-active-view core-state)) component))
+
+(defun realize-components (core-state component-table)
+  "For all component values in the COMPONENT-HT hash table, run their
+initialize-thunks, set them :active, and put them into the active component
+view."
+  (maphash
+   (lambda (k component)
+     (declare (ignore k))
+     (realize-component core-state component))
+   component-table))
+
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
   (gethash component-type (components-by-type actor)))
