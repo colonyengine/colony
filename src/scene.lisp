@@ -6,13 +6,6 @@
    (%data :reader data
           :initarg :data)))
 
-(defun %read-spec-forms (file)
-  (let ((*package* (find-package :first-light)))
-    (with-open-file (in file)
-      (loop :for form = (read in nil in)
-            :until (eq form in)
-            :collect form))))
-
 (defun %type-check-actor (actor actors-list)
   (unless (char= (char (symbol-name actor) 0) #\@)
     (error (format nil "Actor names must begin with '@': ~a" actor)))
