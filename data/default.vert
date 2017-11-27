@@ -66,7 +66,7 @@
 ;; Finally, we splice in the instance-test layout. This one is special in that
 ;; it both has 2 blocks instead of 1, and also introduces a new block. This
 ;; means first we splice in the tangent attribute into our existing mesh-data
-;; buffer, and we also create a new buffer for the test attributes. The finally
+;; buffer, and we also create a new buffer for the test attributes. The final
 ;; spec looks like 2 arrays of vertex data: ((pos0 uv0 normal0 color0 tangent0
 ;; ... posN uvN normalN colorN tangentN) (test-a0 test-b0 ... test-aN test-bN)).
 ;; This spec finally is instructed that the numbers contained in an instance of
@@ -103,9 +103,8 @@
 
 ;; Fill buffer
 ;; TODO define API
-
 ;; You are able to fill a buffer by name, not an integer index. That
-;; is, we can upload new data for the ':test-data' buffer in the about example
+;; is, we can upload new data for the ':test-data' buffer in the above example
 ;; mesh.
 
-;; TODO describe all the rest of the method
+;; TODO describe all the rest of the methods
