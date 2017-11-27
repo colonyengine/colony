@@ -12,13 +12,28 @@
 (defclass vertex-metadata ()
   ((%layouts :accessor layouts)))
 
-(defun %collect-layout-forms (path)
-  (let ((table (make-hash-table)))
-    (loop :for form :in (collect-extension-forms 'vertex path)
-          :for (form-type name . blocks) = form
-          :when (eq form-type 'define-vertex-layout)
-            :do (setf (gethash name table) blocks))
-    table))
+(defclass vertex-layout-block ()
+  ((%id :reader id
+        :initarg :id)
+   (%divisor :reader divisor
+             :initarg :divisor)
+   (%attrs :reader attrs
+           :initarg :attrs)))
+
+(defun %make-layout-block (id divisor attrs)
+  (make-instance 'vertex-layout-block :id id :divisor divisor :attrs attrs))
+
+(defun %collect-layouts (path)
+  (let ((layouts (make-hash-table)))
+    (dolist (form (collect-extension-forms 'vertex path))
+      (when (eq (car form) 'define-vertex-layout)
+        (destructuring-bind (form-type name blocks) form
+          (declare (ignore form-type))
+          (dolist (spec blocks)
+            (destructuring-bind (&key (id :mesh-data) (divisor 1) attrs) spec
+              (let ((layout-block (%make-layout-block id divisor attrs)))
+                (appendf (gethash name layouts) (list layout-block))))))))
+    layouts))
 
 (defun %create-vertex-spec (id attrs)
   (let ((kit.gl.vao::*vao-decl* (make-instance 'kit.gl.vao::vao-declaration)))
@@ -35,7 +50,7 @@
 (defmethod prepare-extension ((extension-type (eql 'vertex)) owner path)
   (let ((data (make-instance 'vertex-metadata)))
     (with-accessors ((layouts layouts)) data
-      (setf layouts (%collect-layout-forms path)
+      (setf layouts (%collect-layouts path)
             (vertex-metadata owner) data))))
 
 ;;; TODO

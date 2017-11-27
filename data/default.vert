@@ -10,8 +10,8 @@
 ;; defines a single block named ':mesh-data' with 2 attributes representing the
 ;; position and texture coordinates of a 2-dimensional mesh.
 (define-vertex-layout 2d
-  ((:divisor 0 ; optional, default: 0
-    :block-id :mesh-data ; optional, default: :mesh-data
+  ((:id :mesh-data ; optional, default: :mesh-data, should be a keyword symbol
+    :divisor 0 ; optional, default: 0
     :attrs ((pos :float 2)
             (uv :float 2)))))
 
@@ -36,8 +36,8 @@
 ;; attribute, and another block that will be used for instance data (divisor 1).
 (define-vertex-layout instance-test
   ((:attrs ((tangent :float 3)))
-   (:divisor 1
-    :block-id :test-data
+   (:id :test-data
+    :divisor 1
     :attrs ((test-a :float 2)
             (test-b :float 3)))))
 
