@@ -39,6 +39,7 @@
    (:file "scene")
    (:file "display")
    (:file "input")
+   (:file "vertex-data")
    (:file "shader")
    (:file "engine")
    (:file "shaders/shaders")

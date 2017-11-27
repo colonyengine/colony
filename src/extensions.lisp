@@ -18,6 +18,7 @@
   (prepare-extension 'call-flow core-state path)
   (prepare-extension 'scene core-state path)
   (prepare-extension 'shader core-state path)
+  (prepare-extension 'vertex core-state path)
   (prepare-extension 'graphs core-state path))
 
 (defun load-extensions (type path)

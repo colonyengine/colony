@@ -13,8 +13,8 @@
    (%scene-tree :reader scene-tree)
    (%cameras :accessor cameras
              :initform nil)
-   (%shaders :accessor shaders
-             :initform nil)
+   (%shaders :accessor shaders)
+   (%vertex-metadata :accessor vertex-metadata)
    (%context :reader context)
    (%call-flows :reader call-flows
                 :initform (make-hash-table))
