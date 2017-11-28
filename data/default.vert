@@ -73,8 +73,8 @@
 ;; this spec should be consumed by the shader in sets of 3, corresponding to
 ;; triangles to be drawn.
 (define-vertex-spec mesh-spec
-  (:layouts (3d normal color instance-test))
-  (:primitive :triangles)) ; optional, default :triangles
+  (:layouts (3d normal color instance-test)
+   :primitive :triangles)) ; optional, default :triangles
 
 ;;; Meshes
 
