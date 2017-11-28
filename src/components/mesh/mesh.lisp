@@ -25,23 +25,17 @@
 
 ;;; test
 
-(kit.gl.vao:defvao mesh ()
-  (:interleave ()
-               (pos :float 3)
-               (uv :float 3)
-               (color :float 4)))
-
-(defvar *test-vertex-data*
-  '(((0.5 0.5 0) (1 1 0) (1 0 0 1))
-    ((-0.5 0.5 0) (0 1 0) (0 1 0 1))
-    ((-0.5 -0.5 0) (0 0 0) (0 0 1 1))
-    ((0.5 0.5 0) (1 1 0) (1 0 0 1))
-    ((-0.5 -0.5 0) (0 0 0) (0 0 1 1))
-    ((0.5 -0.5 0) (1 0 0) (0 1 0 1))))
+(defparameter *test-vertex-data*
+  '(((0.5 0.5) (1 1) (1 0 0 1))
+    ((-0.5 0.5) (0 1) (0 1 0 1))
+    ((-0.5 -0.5) (0 0) (0 0 1 1))
+    ((0.5 0.5) (1 1) (1 0 0 1))
+    ((-0.5 -0.5) (0 0) (0 0 1 1))
+    ((0.5 -0.5) (1 0) (0 1 0 1))))
 
 (defun test-make-vao ()
   (let ((vao (make-instance 'kit.gl.vao:vao
-                            :type 'mesh
+                            :type '2d/color
                             :primitive :triangles
                             :vertex-count (length *test-vertex-data*))))
     (write-buffer-data vao 0 *test-vertex-data*)

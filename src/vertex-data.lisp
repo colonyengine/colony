@@ -13,7 +13,9 @@
   ((%groups :reader groups
             :initarg :groups)
    (%layouts :reader layouts
-             :initarg :layouts)))
+             :initarg :layouts)
+   (%objects :reader objects
+             :initarg :objects)))
 
 (defclass vertex-group ()
   ((%id :reader id
@@ -76,6 +78,19 @@
 (defun %vertex-layout-add-buffer-divisor (vertex-layout group)
   (setf (gethash (id group) (buffer-divisors vertex-layout)) (divisor group)))
 
+(defun %create-vao-spec (layout)
+  (let ((kit.gl.vao::*vao-decl* (make-instance 'kit.gl.vao::vao-declaration)))
+    (map nil
+         (lambda (x)
+           (kit.gl.vao::vao-add kit.gl.vao::*vao-decl*
+                                (kit.gl.vao::vao-parse x)))
+         (loop :for buffer-id :in (buffer-order layout)
+               :for attrs = (gethash buffer-id (group-attrs layout))
+               :for divisor = (gethash buffer-id (buffer-divisors layout))
+               :nconc `((:interleave (:divisor ,divisor) ,@attrs))))
+    (setf (gethash (id layout) kit.gl.vao::*vao-declarations*)
+          kit.gl.vao::*vao-decl*)))
+
 (defun %vertex-layout-generate (vertex-layout group-table)
   (with-slots (%vao-spec) vertex-layout
     (dolist (group-name (group-names vertex-layout))
@@ -97,24 +112,25 @@
               (setf (gethash id layouts) vertex-layout))))))
     layouts))
 
-(defun %create-vao-spec (layout)
-  (let ((kit.gl.vao::*vao-decl* (make-instance 'kit.gl.vao::vao-declaration)))
-    (map nil
-         (lambda (x)
-           (kit.gl.vao::vao-add kit.gl.vao::*vao-decl*
-                                (kit.gl.vao::vao-parse x)))
-         (loop :for buffer-id :in (buffer-order layout)
-               :for attrs = (gethash buffer-id (group-attrs layout))
-               :for divisor = (gethash buffer-id (buffer-divisors layout))
-               :nconc `((:interleave (:divisor ,divisor) ,@attrs))))
-    (setf (gethash (id layout) kit.gl.vao::*vao-declarations*)
-          kit.gl.vao::*vao-decl*)))
+(defun %collect-vertex-objects (path)
+  (let ((objects (make-hash-table)))
+    (dolist (form (collect-extension-forms 'vertex path))
+      (when (eq (car form) 'define-vertex-object)
+        (destructuring-bind (form-type id (layout) buffers) form
+          (declare (ignore form-type id layout))
+          (dolist (buffer buffers)
+            (destructuring-bind (buffer-id buffer-data) buffer
+              (declare (ignore buffer-id buffer-data)))))))
+    objects))
 
 (defmethod extension-file-type ((extension-type (eql 'vertex)))
   "vert")
 
 (defmethod prepare-extension ((extension-type (eql 'vertex)) owner path)
   (let* ((groups (%collect-vertex-groups path))
-         (layouts (%collect-vertex-layouts path groups)))
+         (layouts (%collect-vertex-layouts path groups))
+         (objects (%collect-vertex-objects path)))
     (setf (vertex-metadata owner)
-          (make-instance 'vertex-metadata :groups groups :layouts layouts))))
+          (make-instance 'vertex-metadata :groups groups
+                                          :layouts layouts
+                                          :objects objects))))

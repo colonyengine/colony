@@ -13,13 +13,15 @@
     (string= (pathname-type path)
              (extension-file-type extension-type))))
 
-(defun prepare-extensions (core-state path)
+(defun prepare-extensions/pre-context (core-state path)
   (prepare-extension 'settings (context core-state) path)
   (prepare-extension 'call-flow core-state path)
   (prepare-extension 'scene core-state path)
   (prepare-extension 'shader core-state path)
-  (prepare-extension 'vertex core-state path)
   (prepare-extension 'graphs core-state path))
+
+(defun prepare-extensions/post-context (core-state path)
+  (prepare-extension 'vertex core-state path))
 
 (defun load-extensions (type path)
   (map-extensions type (get-path :first-light "data") :builtin)

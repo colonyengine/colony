@@ -14,32 +14,27 @@
 (define-vertex-groups normal
   ((:attrs ((normal :float 3)))))
 
-(define-vertex-groups instance-test
-  ((:attrs ((tangent :float 3)))
-   (:id :test-data
-    :divisor 1
-    :attrs ((test-a :float 2)
-            (test-b :float 3)))))
-
 ;;; vertex layouts
 
-(define-vertex-layout mesh-layout
-  (:groups (3d normal color instance-test)))
+(define-vertex-layout 2d
+  (:groups (2d)))
 
-;;; meshes
+(define-vertex-layout 2d/color
+  (:groups (2d color)))
 
-(define-mesh example-mesh (mesh-layout)
+(define-vertex-layout 3d/normal
+  (:groups (3d normal)))
+
+(define-vertex-layout 3d/normal/color
+  (:groups (3d normal color)))
+
+;;; vertex-objects
+
+(define-vertex-object default-mesh (2d/color)
   ((:mesh-data
-    (((0.5 0.5 0) (1 1 0) (0 0 1) (1 0 0 1) (0 0 0))
-     ((-0.5 0.5 0) (0 1 0) (0 0 1) (0 1 0 1) (0 0 0))
-     ((-0.5 -0.5 0) (0 0 0) (0 0 1) (0 0 1 1) (0 0 0))
-     ((0.5 0.5 0) (1 1 0) (0 0 1) (1 0 0 1) (0 0 0))
-     ((-0.5 -0.5 0) (0 0 0) (0 0 1) (0 0 1 1) (0 0 0))
-     ((0.5 -0.5 0) (1 0 0) (0 0 1) (0 1 0 1) (0 0 0))))
-   (:test-data
-    (((0.1 0.2) (0.1 0.2 0.3))
-     ((0.2 0.4) (0.2 0.4 0.6))
-     ((0 0) (0 0 0))
-     ((0 1) (0 1 2))
-     ((1 2) (1 2 3))
-     ((0 1) (2 3 4))))))
+    (((0.5 0.5) (1 1) (1 0 0 1))
+     ((-0.5 0.5) (0 1) (0 1 0 1))
+     ((-0.5 -0.5) (0 0) (0 0 1 1))
+     ((0.5 0.5) (1 1) (1 0 0 1))
+     ((-0.5 -0.5) (0 0) (0 0 1 1))
+     ((0.5 -0.5) (1 0) (0 1 0 1))))))
