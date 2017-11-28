@@ -60,12 +60,6 @@
           (reversef (gethash name group-table)))))
     group-table))
 
-(defun %vertex-layout-add-buffer-id (vertex-layout buffer-id)
-  (with-slots (%buffer-order) vertex-layout
-    (unless (member buffer-id %buffer-order)
-      (push buffer-id %buffer-order)
-      (reversef %buffer-order))))
-
 (defun %vertex-layout-splice-group (vertex-layout group)
   (symbol-macrolet ((attrs (gethash (id group) (group-attrs vertex-layout))))
     (dolist (attr (attrs group))
@@ -92,12 +86,13 @@
           kit.gl.vao::*vao-decl*)))
 
 (defun %vertex-layout-generate (vertex-layout group-table)
-  (with-slots (%vao-spec) vertex-layout
+  (with-slots (%vao-spec %buffer-order) vertex-layout
     (dolist (group-name (group-names vertex-layout))
       (dolist (group (gethash group-name group-table))
-        (%vertex-layout-add-buffer-id vertex-layout (id group))
+        (pushnew (id group) %buffer-order)
         (%vertex-layout-add-buffer-divisor vertex-layout group)
         (%vertex-layout-splice-group vertex-layout group)))
+    (reversef %buffer-order)
     (setf %vao-spec (%create-vao-spec vertex-layout))))
 
 (defun %collect-vertex-layouts (path group-table)
