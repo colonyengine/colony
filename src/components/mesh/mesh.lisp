@@ -10,17 +10,8 @@
       (setf store (test-make-vao)))
     (setf (vao component) store)))
 
-(defun flatten-floats (sequence &key (type 'float))
-  (flet ((coerce/flatten (sequence)
-           (mapcar
-            (lambda (x) (coerce x type))
-            (remove-if (complement #'realp) (flatten sequence)))))
-    (let ((sequence (coerce/flatten sequence)))
-      (make-array (length sequence) :element-type type
-                                    :initial-contents sequence))))
-
 (defun write-buffer-data (vao vbo vertex-data)
-  (let ((data (flatten-floats vertex-data :type 'single-float)))
+  (let ((data (flatten-numbers vertex-data)))
     (kit.gl.vao:vao-buffer-vector vao vbo data)))
 
 ;;; test

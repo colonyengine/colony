@@ -17,3 +17,12 @@
     (uiop/filesystem:collect-sub*directories
      (uiop/pathname:ensure-directory-pathname path)
      t recursivep #'process-files)))
+
+(defun flatten-numbers (sequence &key (type 'single-float))
+  (flet ((coerce/flatten (sequence)
+           (mapcar
+            (lambda (x) (coerce x type))
+            (remove-if (complement #'realp) (flatten sequence)))))
+    (let ((sequence (coerce/flatten sequence)))
+      (make-array (length sequence) :element-type type
+                                    :initial-contents sequence))))
