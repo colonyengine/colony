@@ -149,6 +149,7 @@ name which resulted in the exiting of the flow."
         :with current-state-name = come-from-state-name
         :with last-state-name
         :with selections
+        :with policy = :identity-policy
         :do (slog:emit :flow.state.process
                        (name flow-state)
                        (exitingp flow-state))
@@ -159,17 +160,29 @@ name which resulted in the exiting of the flow."
             (case (policy flow-state)
               (:reset                   ; Execute the resetting thunk
                (funcall (reset flow-state))))
+
             ;; Step 3: Run Selector Function
-            (setf selections
-                  (when (selector flow-state)
-                    (slog:emit :flow.call.selector)
-                    (funcall (selector flow-state) core-state)))
+            (multiple-value-bind (the-policy the-selections)
+                (cond
+                  ((selector flow-state)
+                   (slog:emit :flow.call.selector)
+                   (funcall (selector flow-state) core-state))
+                  (t
+                   (values :identity-policy NIL)))
+
+              (setf selections the-selections
+                    policy the-policy))
+
             ;; Step 4: Iterate the action across everything in the selections.
             ;; NOTE: This is not a map-tree or anything complex. It just assumes
             ;; selection is going to be one of:
             ;; a single hash table instance
             ;; a single instance of some class
             ;; a list of things that are either hash tables or class instances.
+	    ;;
+	    ;; TODO Update the previous text when I implement the
+	    ;; :type-policy codes to order the types in accordance to
+	    ;; the component-dependency graph.
             (labels ((act-on-item (item)
                        (cond
                          ((hash-table-p item)
@@ -184,9 +197,18 @@ name which resulted in the exiting of the flow."
                           (when (action flow-state)
                             (slog:emit :flow.call.action.instance)
                             (funcall (action flow-state) core-state item))))))
-              (if (consp selections)
-                  (map nil #'act-on-item selections)
-                  (act-on-item selections)))
+
+              (ecase policy
+                ;; TODO: :type-policy is in this branch until I write
+                ;; the code path that it is supposed to take with that
+                ;; policy.
+                ((:identity-policy :type-policy)
+                 (if (consp selections)
+                     (map nil #'act-on-item selections)
+                     (act-on-item selections)))
+                ((:xxx)
+                 (error "EXECUTE-FLOW: Implement :type-policy"))))
+
             ;; Step 5: Exit if reached exiting state.
             (when (exitingp flow-state)
               (slog:emit :flow.exit call-flow-name flow-name current-state-name)
