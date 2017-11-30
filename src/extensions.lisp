@@ -13,24 +13,14 @@
     (string= (pathname-type path)
              (extension-file-type extension-type))))
 
-(defun prepare-extensions/pre-context (core-state path)
-  ;; These are loaded in a specific order.
-  ;; Constraints:
-  ;;
-  ;; 1) 'settings must be loaded before anything else so other extension
-  ;; loaders can use settings.
-  ;;
-  ;; 2) 'graphs must be loaded before 'scene since spawning actors and
-  ;; components need to know about which types are referenced in the
-  ;; COMPONENT-TYPE graph.
+(defun prepare-extensions (core-state path)
+  ;; https://github.com/HackerTheory/first-light/wiki/Developer-Rules#extension-order
   (prepare-extension 'settings (context core-state) path)
-  (prepare-extension 'graphs core-state path)
+  (prepare-extension 'vertex core-state path)
   (prepare-extension 'shader core-state path)
+  (prepare-extension 'graphs core-state path)
   (prepare-extension 'call-flow core-state path)
   (prepare-extension 'scene core-state path))
-
-(defun prepare-extensions/post-context (core-state path)
-  (prepare-extension 'vertex core-state path))
 
 (defun load-extensions (type path)
   (map-extensions type (get-path :first-light "data") :builtin)
