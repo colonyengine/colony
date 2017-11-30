@@ -12,6 +12,16 @@
    (%graph :accessor graph
            :initarg :graph
            :initform nil)
+   ;; A topological sort of the graph, NIL if unable to be created due
+   ;; to cycles (or there are no nodes in the graph).
+   (%toposort :accessor toposort
+              :initarg :toposort
+              :initform NIL)
+   ;; different graph categories can create some annotated data that is used in
+   ;; context specific ways.
+   (%annotation :accessor annotation
+                :initarg :annotation
+                :initform NIL)
    ;; The table of graphdefs that participated in this cl-graph rendition.
    ;; Key is graph-definition name, value is graphdef instance.
    (%graphdefs :accessor graphdefs
@@ -524,11 +534,40 @@ available depends-on in that GDEF."
     (format t "Graph roots for clg are: ~A~%" (graph-roots clg))
     (format t "Graph leaves for clg are: ~A~%" (graph-leaves clg))
 
-    ;; This is reversed cause of the "depends-on" meaning of -> in a
-    ;; component-dependenct graph. For other uses of -> which mean
-    ;; "and then do" then we don't need the reverse. I'm contemplating
-    ;; => and -> for those meanings....
-    (format t "toposort: ~A~%" (cl-graph:topological-sort clg))
+    ;; check for cycles.  TODO: We should have a flag for this in a
+    ;; graph definition that saturates all definitions of that
+    ;; category to T (maybe? Should there be another way to specify
+    ;; this?). Currently, we just hard code it here.
+    (let ((contains-cycles-p
+            (cl-graph:find-vertex-if clg (lambda (vert)
+                                           (cl-graph:in-cycle-p clg vert)))))
 
-    ;; and we're done with this analyzed-graph.
-    (setf (graph angph) clg)))
+      ;; compute/store toposort, can only do if no cycles.
+      (unless contains-cycles-p
+        (let ((tsort (cl-graph:topological-sort clg)))
+          (format t "toposort: ~A~%" tsort)
+          (setf (toposort angph) tsort)))
+
+      ;; Compute an annotation for the graph category. This is graph
+      ;; category specific. Probably should be a GF...
+      (cond
+        ((eql/package-relaxed 'component-dependency (category angph))
+         (let ((component-types (make-hash-table)))
+           ;; collect all component-types
+           (cl-graph:iterate-vertexes
+            clg (lambda (v)
+                  (let ((elem-v (cl-graph:element v)))
+                    (when (is-syntax-form-p '(component-type) elem-v)
+                      (setf (gethash (second elem-v) component-types) T)))))
+
+           (setf (annotation angph) component-types)))
+
+        (t
+         ;; TODO: need to figure out a good way to handle these cases
+         ;; as they grow.
+         nil))
+
+
+
+      ;; and we're done with this analyzed-graph.
+      (setf (graph angph) clg))))
