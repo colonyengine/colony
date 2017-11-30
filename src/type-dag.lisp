@@ -321,10 +321,10 @@ the leaves as elements."
       :when canonical-form :do
         (ecase kind
           ((:empty)
-           (format t "absorb-depforms: ignoring :empty form.~%")
+           #++(format t "absorb-depforms: ignoring :empty form.~%")
            nil)
           ((:hyperedges)
-           (format t "absorb-depforms: absorbing :hyperedges.~%")
+           #++(format t "absorb-depforms: absorbing :hyperedges.~%")
            (pushnew (car (first canonical-form)) roots :test #'equalp)
            (pushnew (cadar (last canonical-form)) leaves :test #'equalp)
            (loop :for (from to) :in canonical-form :do
@@ -332,12 +332,12 @@ the leaves as elements."
                                       (annotate-splices from gdef)
                                       (annotate-splices to gdef))))
           ((:vertex)
-           (format t "absorb-depforms: absorbing :vertex.~%")
+           #++(format t "absorb-depforms: absorbing :vertex.~%")
            ;; the :vertex for is not only the roots, but also the leaves.
            (pushnew canonical-form roots :test #'equalp)
            (pushnew canonical-form leaves :test #'equalp)
            (loop :for vert :in canonical-form :do
-             (format t "Adding :vertex: ~A~%" vert)
+             #++(format t "Adding :vertex: ~A~%" vert)
              (cl-graph:add-vertex clg (annotate-splice vert gdef))))))
 
     (values clg
@@ -392,7 +392,7 @@ available depends-on in that GDEF."
   (let ((splice-name (second splice-form)))
     ;; 1) Check of the splice is natively in the current gdef.
     (when-let ((splice (gethash splice-name (subforms gdef))))
-      (format t "Found splice ~A as subform ~A in current gdef ~A~%"
+      #++(format t "Found splice ~A as subform ~A in current gdef ~A~%"
               splice-name splice (name gdef))
       (return-from lookup-splice
         (values splice gdef)))
@@ -402,7 +402,7 @@ available depends-on in that GDEF."
       (multiple-value-bind (subform present)
           (gethash splice-name (subforms dep-inst))
         (when present
-          (format t "Found splice ~A as subform ~A in depended-on gdef ~A~%"
+          #++(format t "Found splice ~A as subform ~A in depended-on gdef ~A~%"
                   splice-name subform (name dep-inst))
           (return-from lookup-splice
             (values subform (graphdef dep-inst))))))
@@ -446,8 +446,8 @@ available depends-on in that GDEF."
                (depforms (gethash root (subforms gdef))))))
 
     ;; debug output
-    (format t "Original graph....~%")
-    (dolist (edge (cl-graph:edges clg))
+    #++(format t "Original graph....~%")
+    #++(dolist (edge (cl-graph:edges clg))
       (let ((*print-right-margin* most-positive-fixnum))
         (format t "Computed edge: from: ~A to: ~A~%"
                 (cl-graph:element (cl-graph:source-vertex edge))
@@ -466,16 +466,16 @@ available depends-on in that GDEF."
                              '(splice) (first (cl-graph:element v)))))
       :unless splices :return nil
         :do
-           (format t "Found splice vertexes: ~A~%" splices)
+           #++(format t "Found splice vertexes: ~A~%" splices)
 
            (dolist (splice splices)
-             (format t "processing splice: ~A~%" splice)
+             #++(format t "processing splice: ~A~%" splice)
              (let (;; source vertexes with a target of this splice vertex.
                    (parents (cl-graph:parent-vertexes splice))
                    ;; target vertexes with a source of this splice vertex.
                    (children (cl-graph:child-vertexes splice)))
 
-               (format t "  parents: ~A~%  children: ~A~%"
+               #++(format t "  parents: ~A~%  children: ~A~%"
                        parents children)
 
                (destructuring-bind (splice-form gdef)
@@ -490,8 +490,8 @@ available depends-on in that GDEF."
                        (absorb-depforms
                         clg lookedup-gdef (depforms lookedup-splice))
 
-                     (format t "  splice-roots: ~A~%" splice-roots)
-                     (format t "  splice-leaves: ~A~%" splice-leaves)
+                     #++(format t "  splice-roots: ~A~%" splice-roots)
+                     #++(format t "  splice-leaves: ~A~%" splice-leaves)
                      ;; delete the original parent edges.
                      (dolist (parent parents)
                        (cl-graph:delete-edge-between-vertexes
@@ -515,15 +515,15 @@ available depends-on in that GDEF."
 
 
 
-    (format t "Single graph expansion....~%")
-    (dolist (edge (cl-graph:edges clg))
+    #++(format t "Single graph expansion....~%")
+    #++(dolist (edge (cl-graph:edges clg))
       (let ((*print-right-margin* most-positive-fixnum))
         (format t "Expanded edge: from: ~A to: ~A~%"
                 (cl-graph:element (cl-graph:source-vertex edge))
                 (cl-graph:element (cl-graph:target-vertex edge)))))
 
-    (format t "Graph roots for clg are: ~A~%" (graph-roots clg))
-    (format t "Graph leaves for clg are: ~A~%" (graph-leaves clg))
+    #++(format t "Graph roots for clg are: ~A~%" (graph-roots clg))
+    #++(format t "Graph leaves for clg are: ~A~%" (graph-leaves clg))
 
     ;; check for cycles.  TODO: We should have a flag for this in a
     ;; graph definition that saturates all definitions of that
@@ -537,7 +537,7 @@ available depends-on in that GDEF."
       (unless contains-cycles-p
         (let ((tsort (mapcar #'cl-graph:element
                              (cl-graph:topological-sort clg))))
-          (format t "toposort: ~A~%" tsort)
+          #++(format t "toposort: ~A~%" tsort)
           (setf (toposort angph) tsort)))
 
       ;; Compute an annotation for the graph category. This is graph
