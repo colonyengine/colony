@@ -4,10 +4,10 @@
   (let ((*package* (find-package :first-light))
         (core-state (make-core-state))
         (path (get-path package "data")))
-    (prepare-extensions/pre-context core-state path)
+    (prepare-extensions core-state path)
     (load-default-scene core-state)
     (make-display core-state)
-    (prepare-extensions/post-context core-state path)
+    (prepare-extensions core-state path)
     (compile-shaders core-state)
     core-state))
 
