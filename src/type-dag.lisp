@@ -4,10 +4,6 @@
   (;; for what category is this CL-GRAPH graph for?
    (%category :accessor category
               :initarg :category)
-   ;; What are the entry roots into the CL-GRAPH?
-   (%roots :accessor roots
-           :initarg :roots
-           :initform nil)
    ;; The completed CL-GRAPH representation of this category.
    (%graph :accessor graph
            :initarg :graph
@@ -92,7 +88,7 @@
                    :initarg :original-form)
    ;; the lifted form with the new symbols, if any
    (%canonical-form :accessor canonical-form
-                 :initarg :canonical-form)
+                    :initarg :canonical-form)
    ;; Is it :empty, :vertex, or :hyperedges
    (%kind :accessor kind
           :initarg :kind)))
@@ -526,7 +522,8 @@ available depends-on in that GDEF."
 
       ;; compute/store toposort, can only do if no cycles.
       (unless contains-cycles-p
-        (let ((tsort (cl-graph:topological-sort clg)))
+        (let ((tsort (mapcar #'cl-graph:element
+                             (cl-graph:topological-sort clg))))
           (format t "toposort: ~A~%" tsort)
           (setf (toposort angph) tsort)))
 
