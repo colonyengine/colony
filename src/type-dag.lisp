@@ -564,7 +564,5 @@ available depends-on in that GDEF."
          ;; as they grow.
          nil))
 
-
-
       ;; and we're done with this analyzed-graph.
       (setf (graph angph) clg))))
