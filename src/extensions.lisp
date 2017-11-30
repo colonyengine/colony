@@ -18,7 +18,7 @@
   ;; Constraints:
   ;;
   ;; 1) 'settings must be loaded before anything else so other extension
-  ;; proessors can use settings.
+  ;; loaders can use settings.
   ;;
   ;; 2) 'graphs must be loaded before 'scene since spawning actors and
   ;; components need to know about which types are referenced in the
