@@ -11,13 +11,13 @@
   (transform nil))
 
 (defmethod initialize-component ((component camera) (context context))
-  ;; compute a projection matrix according to the mode of this camera
-  (make-projection (mode component) component context)
-  ;; store a reference to the transform component of this camera's actor locally
-  (setf (transform component)
-        (actor-component-by-type (actor component) 'transform))
-  ;; register the camera in the list of core-state cameras
-  (push component (cameras (core-state context))))
+  (with-accessors ((mode mode ) (actor actor) (transform transform)) component
+    ;; compute a projection matrix according to the mode of this camera
+    (make-projection mode component context)
+    ;; store a reference to the transform component of this camera's actor locally
+    (setf transform (actor-component-by-type actor 'transform))
+    ;; register the camera in the list of core-state cameras
+    (push component (cameras (core-state context)))))
 
 (defmethod destroy-component :around ((component camera) (context context))
   ;; when we destroy a component that is a camera, also remove its reference in

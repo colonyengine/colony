@@ -27,14 +27,3 @@
 
 (define-vertex-layout 3d/normal/color
   (:groups (3d normal color)))
-
-;;; vertex-objects
-
-(define-vertex-object default-mesh (2d/color)
-  ((:mesh-data
-    (((0.5 0.5) (1 1) (1 0 0 1))
-     ((-0.5 0.5) (0 1) (0 1 0 1))
-     ((-0.5 -0.5) (0 0) (0 0 1 1))
-     ((0.5 0.5) (1 1) (1 0 0 1))
-     ((-0.5 -0.5) (0 0) (0 0 1 1))
-     ((0.5 -0.5) (1 0) (0 1 0 1))))))

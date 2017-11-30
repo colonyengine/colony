@@ -9,6 +9,8 @@
                      :initform (make-hash-table))
    (%component-active-view :reader component-active-view
                            :initform (make-hash-table))
+   (%user-package :reader user-package
+                  :initarg :user-package)
    (%display :reader display)
    (%scene-tree :reader scene-tree)
    (%cameras :accessor cameras
@@ -31,8 +33,8 @@
     (realize-component core-state transform)
     actor))
 
-(defun make-core-state ()
-  (let ((core-state (make-instance 'core-state)))
+(defun make-core-state (&rest args)
+  (let ((core-state (apply #'make-instance 'core-state args)))
     (with-slots (%context %scene-tree) core-state
       (setf %context (make-instance 'context :core-state core-state)
             %scene-tree (%make-scene-tree core-state)))
@@ -63,3 +65,10 @@ CORE-STATE. It is assumed they have been processed appropriately."
     (setf (gethash key (shared-storage-table context)) value))
   (:method (value (context context) (key component))
     (setf (shared-storage context (component-type key)) value)))
+
+(defun find-resource (core-state path)
+  (let ((core-path (get-path :first-light path))
+        (user-path (get-path (user-package core-state) path)))
+    (or (uiop:file-exists-p user-path)
+        (uiop:file-exists-p core-path)
+        (error "Resource not found: ~a" path))))

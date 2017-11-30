@@ -6,9 +6,6 @@
 (defmacro define-vertex-layout (&body body)
   body)
 
-(defmacro define-mesh (&body body)
-  body)
-
 (defclass vertex-metadata ()
   ((%groups :reader groups
             :initarg :groups)
@@ -36,6 +33,8 @@
                   :initform nil)
    (%buffer-divisors :reader buffer-divisors
                      :initform (make-hash-table))
+   (%buffer-indices :reader buffer-indices
+                    :initform (make-hash-table))
    (%primitive :reader primitive
                :initarg :primitive)
    (%vao-spec :accessor vao-spec)))
@@ -77,6 +76,11 @@
 (defun %vertex-layout-add-buffer-divisor (vertex-layout group)
   (setf (gethash (id group) (buffer-divisors vertex-layout)) (divisor group)))
 
+(defun %vertex-layout-add-buffer-index (vertex-layout group)
+  (let ((buffer-id (id group)))
+    (setf (gethash buffer-id (buffer-indices vertex-layout))
+          (position buffer-id (buffer-order vertex-layout)))))
+
 (defun %create-vao-spec (layout)
   (let ((kit.gl.vao::*vao-decl* (make-instance 'kit.gl.vao::vao-declaration)))
     (map nil
@@ -96,9 +100,13 @@
       (dolist (group (gethash group-name group-table))
         (pushnew (id group) %buffer-order)
         (%vertex-layout-add-buffer-divisor vertex-layout group)
+        (%vertex-layout-add-buffer-index vertex-layout group)
         (%vertex-layout-splice-group vertex-layout group)))
     (reversef %buffer-order)
     (setf %vao-spec (%create-vao-spec vertex-layout))))
+
+(defun get-vertex-layout (core-state layout-id)
+  (gethash (make-keyword layout-id) (layouts (vertex-metadata core-state))))
 
 (defun %collect-vertex-layouts (path group-table)
   (let ((layouts (make-hash-table)))
@@ -112,34 +120,14 @@
                                                  :group-names groups
                                                  :primitive primitive)))
               (%vertex-layout-generate vertex-layout group-table)
-              (setf (gethash id layouts) vertex-layout))))))
+              (setf (gethash (make-keyword id) layouts) vertex-layout))))))
     layouts))
-
-(defun %vertex-object-add-layout (vertex-object layout-table layout-name)
-  (setf (slot-value vertex-object '%layout) (gethash layout-name layout-table)))
-
-(defun %collect-vertex-objects (path layout-table)
-  (let ((objects (make-hash-table)))
-    (dolist (form (collect-extension-forms 'vertex path))
-      (when (eq (car form) 'define-vertex-object)
-        (destructuring-bind (form-type id (layout) buffers) form
-          (declare (ignore form-type))
-          (let ((vertex-object (make-instance 'vertex-object :id id)))
-            (%vertex-object-add-layout vertex-object layout-table layout)
-            (setf (gethash id objects) vertex-object)
-            (dolist (buffer buffers)
-              (destructuring-bind (buffer-id buffer-data) buffer
-                (declare (ignore buffer-id buffer-data))))))))
-    objects))
 
 (defmethod extension-file-type ((extension-type (eql 'vertex)))
   "vert")
 
 (defmethod prepare-extension ((extension-type (eql 'vertex)) owner path)
   (let* ((groups (%collect-vertex-groups path))
-         (layouts (%collect-vertex-layouts path groups))
-         (objects (%collect-vertex-objects path layouts)))
+         (layouts (%collect-vertex-layouts path groups)))
     (setf (vertex-metadata owner)
-          (make-instance 'vertex-metadata :groups groups
-                                          :layouts layouts
-                                          :objects objects))))
+          (make-instance 'vertex-metadata :groups groups :layouts layouts))))

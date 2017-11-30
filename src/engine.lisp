@@ -2,12 +2,11 @@
 
 (defun prepare-engine (package)
   (let ((*package* (find-package :first-light))
-        (core-state (make-core-state))
+        (core-state (make-core-state :user-package package))
         (path (get-path package "data")))
     (prepare-extensions core-state path)
     (load-default-scene core-state)
     (make-display core-state)
-    (prepare-extensions core-state path)
     (compile-shaders core-state)
     core-state))
 
