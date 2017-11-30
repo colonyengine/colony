@@ -14,11 +14,20 @@
              (extension-file-type extension-type))))
 
 (defun prepare-extensions/pre-context (core-state path)
+  ;; These are loaded in a specific order.
+  ;; Constraints:
+  ;;
+  ;; 1) 'settings must be loaded before anything else so other extension
+  ;; proessors can use settings.
+  ;;
+  ;; 2) 'graphs must be loaded before 'scene since spawning actors and
+  ;; components need to know about which types are referenced in the
+  ;; COMPONENT-TYPE graph.
   (prepare-extension 'settings (context core-state) path)
-  (prepare-extension 'call-flow core-state path)
-  (prepare-extension 'scene core-state path)
+  (prepare-extension 'graphs core-state path)
   (prepare-extension 'shader core-state path)
-  (prepare-extension 'graphs core-state path))
+  (prepare-extension 'call-flow core-state path)
+  (prepare-extension 'scene core-state path))
 
 (defun prepare-extensions/post-context (core-state path)
   (prepare-extension 'vertex core-state path))
