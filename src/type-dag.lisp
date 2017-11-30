@@ -91,17 +91,11 @@
   ((%original-form :accessor original-form
                    :initarg :original-form)
    ;; the lifted form with the new symbols, if any
-   (%lifted-form :accessor lifted-form
-                 :initarg :lifted-form)
+   (%canonical-form :accessor canonical-form
+                 :initarg :canonical-form)
    ;; Is it :empty, :vertex, or :hyperedges
    (%kind :accessor kind
-          :initarg :kind)
-   ;; The symbol -> form mapping
-   (%lifted-vars :accessor lifted-vars
-                 :initarg :lifted-vars)
-   ;; the form -> symbol mapping
-   (%lifted-forms :accessor lifted-forms
-                  :initarg :lifted-forms)))
+          :initarg :kind)))
 
 (defun make-depform (&rest init-args)
   (apply #'make-instance 'depform init-args))
@@ -154,55 +148,46 @@ return them as a list."
     (t nil)))
 
 
-;; TODO: rip out the lifted-vars and lifted-forms hash tables from the
-;; code flow. I believe we don't need them. Also, change lifted-form
-;; to canoncalized-form (in the defclass too for depform)
 (defun canonicalize-dependency-form (dependency-form)
-  (let* ((lifted-vars (make-hash-table :test #'equal))
-         (lifted-forms (make-hash-table :test #'equal))
-         (lifted-dependency-form
-           (loop :for element :in dependency-form
-                 :collect
-                 (cond
-                   ((consp element)
-                    element)
-                   ((is-syntax-form-p '-> element)
-                    element)
-                   (t
-                    `(component-type ,element))))))
-
-    (values lifted-dependency-form lifted-vars lifted-forms)))
+  (loop :for element :in dependency-form
+        :collect
+        (cond
+          ((consp element)
+           element)
+          ((is-syntax-form-p '-> element)
+           element)
+          (t
+           `(component-type ,element)))))
 
 
 (defun segment-dependency-form (form)
   "Lift splices and then segment the dependency FORM into hyperedges.
 
 If the form is null, return four values:
-  NIL, :empty, lift-vars, lift-forms
+  NIL, :empty
 
 If the form is not null, but contains no hyper edges, return three values:
-  lifted-form and :vertex, lift-vars, lift-forms
+  canonical-form and :vertex
 
 If the form is not null, and contains hyper edges, return three values:
-  list of hyper-edge pairs, :hyperedges, lift-vars, lift-forms"
+  list of hyper-edge pairs, :hyperedges"
 
-  (multiple-value-bind (lifted-form lift-vars lift-forms)
-      (canonicalize-dependency-form form)
+  (let ((canonical-form (canonicalize-dependency-form form)))
 
     (let* ((x (split-sequence:split-sequence
-               '-> lifted-form :test #'eql/package-relaxed))
+               '-> canonical-form :test #'eql/package-relaxed))
            ;; cut into groups of two with rolling window
            (connections
              (loop :for (k j . nil) :in (maplist #'identity x)
                    :when j :collect `(,k ,j))))
       (cond
-        ((null lifted-form)
-         (values lifted-form :empty lift-vars lift-forms))
+        ((null canonical-form)
+         (values canonical-form :empty))
         ((= (length x) 1)
          ;; no hyperedges
-         (values lifted-form :vertex lift-vars lift-forms))
+         (values canonical-form :vertex))
         (t ;; hyperedges found
-         (values connections :hyperedges lift-vars lift-forms))))))
+         (values connections :hyperedges))))))
 
 
 ;; Then the code to perform the parsing.
@@ -217,14 +202,11 @@ If the form is not null, and contains hyper edges, return three values:
      :depforms
      (loop :for dep :in dependency-forms
            :collect
-           (multiple-value-bind (lifted-dependency-form kind lifted-vars
-                                 lifted-forms)
+           (multiple-value-bind (lifted-dependency-form kind)
                (segment-dependency-form dep)
              (make-depform :original-form dep
-                           :lifted-form lifted-dependency-form
-                           :kind kind
-                           :lifted-vars lifted-vars
-                           :lifted-forms lifted-forms))))))
+                           :canonical-form lifted-dependency-form
+                           :kind kind))))))
 
 
 (defun get-graph-option (option-name option-form)
@@ -325,27 +307,27 @@ the leaves as elements."
     (loop
       :for depform :in depforms
       :for kind = (kind depform)
-      :for lifted-form = (lifted-form depform)
+      :for canonical-form = (canonical-form depform)
       ;; check this when condition for validity.
-      :when lifted-form :do
+      :when canonical-form :do
         (ecase kind
           ((:empty)
            (format t "absorb-depforms: ignoring :empty form.~%")
            nil)
           ((:hyperedges)
            (format t "absorb-depforms: absorbing :hyperedges.~%")
-           (pushnew (car (first lifted-form)) roots :test #'equalp)
-           (pushnew (cadar (last lifted-form)) leaves :test #'equalp)
-           (loop :for (from to) :in lifted-form :do
+           (pushnew (car (first canonical-form)) roots :test #'equalp)
+           (pushnew (cadar (last canonical-form)) leaves :test #'equalp)
+           (loop :for (from to) :in canonical-form :do
              (add-cross-product-edges clg
                                       (annotate-splices from gdef)
                                       (annotate-splices to gdef))))
           ((:vertex)
            (format t "absorb-depforms: absorbing :vertex.~%")
            ;; the :vertex for is not only the roots, but also the leaves.
-           (pushnew lifted-form roots :test #'equalp)
-           (pushnew lifted-form leaves :test #'equalp)
-           (loop :for vert :in lifted-form :do
+           (pushnew canonical-form roots :test #'equalp)
+           (pushnew canonical-form leaves :test #'equalp)
+           (loop :for vert :in canonical-form :do
              (format t "Adding :vertex: ~A~%" vert)
              (cl-graph:add-vertex clg (annotate-splice vert gdef))))))
 
