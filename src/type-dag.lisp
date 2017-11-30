@@ -96,6 +96,19 @@
 (defun make-depform (&rest init-args)
   (apply #'make-instance 'depform init-args))
 
+;; ;;;; annotation classes for different graph categories
+
+
+;; For category COMPONNENT-DEPENDENCY
+(defclass graph-annotation/component-dependency ()
+  ((%unknown-type-id :accessor unknown-type-id
+                     :initarg :unknown-type-id)
+   (%referenced-types :accessor referenced-types
+                      :initarg :referenced-types
+                      :initform (make-hash-table))))
+
+(defun make-graph-annotation/component-dependency (&rest init-args)
+  (apply #'make-instance 'graph-annotation/component-dependency init-args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -531,15 +544,20 @@ available depends-on in that GDEF."
       ;; category specific. Probably should be a GF...
       (cond
         ((eql/package-relaxed 'component-dependency (category angph))
-         (let ((component-types (make-hash-table)))
-           ;; collect all component-types
+
+         (let ((annotation (make-graph-annotation/component-dependency
+                            :unknown-type-id (gensym "UNKNOWN-TYPE-ID-"))))
+
+           ;; collect all referenced component-types in the graph.
            (cl-graph:iterate-vertexes
             clg (lambda (v)
                   (let ((elem-v (cl-graph:element v)))
                     (when (is-syntax-form-p '(component-type) elem-v)
-                      (setf (gethash (second elem-v) component-types) T)))))
+                      (setf (gethash (second elem-v)
+                                     (referenced-types annotation))
+                            T)))))
 
-           (setf (annotation angph) component-types)))
+           (setf (annotation angph) annotation)))
 
         (t
          ;; TODO: need to figure out a good way to handle these cases
