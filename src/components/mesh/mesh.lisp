@@ -15,11 +15,16 @@
   (let ((data (flatten-numbers vertex-data)))
     (kit.gl.vao:vao-buffer-vector vao vbo data)))
 
+(defun fill-mesh-buffer (mesh buffer-id data)
+  (let ((index (gethash buffer-id (buffer-indices (layout mesh)))))
+    (write-buffer-data (vao mesh) index data)))
+
 (defun make-vao (context mesh)
   (let* ((buffers (load-mesh context mesh))
+         (layout (layout mesh))
          (vao (make-instance 'kit.gl.vao:vao
-                             :type (id (layout mesh))
-                             :primitive (primitive (layout mesh))
+                             :type (id layout)
+                             :primitive (primitive layout)
                              :vertex-count (length (cadar buffers)))))
     (loop :for (id data) :in buffers
           :for index = (gethash id (buffer-indices (layout mesh)))
