@@ -176,13 +176,15 @@ name which resulted in the exiting of the flow."
             ;; Step 4: Iterate the action across everything in the selections.
             ;; NOTE: This is not a map-tree or anything complex. It just assumes
             ;; selection is going to be one of:
+
+            ;; If the policy is :identity-policy, then the selection can be:
             ;; a single hash table instance
             ;; a single instance of some class
             ;; a list of things that are either hash tables or class instances.
-	    ;;
-	    ;; TODO Update the previous text when I implement the
-	    ;; :type-policy codes to order the types in accordance to
-	    ;; the component-dependency graph.
+            ;;
+            ;; If the policy is :type-policy, then the selection can be:
+            ;; a single type-table instance
+            ;; (more semantics for :type-policy could be added at a later date).
             (labels ((act-on-item (item)
                        (cond
                          ((hash-table-p item)
@@ -196,18 +198,51 @@ name which resulted in the exiting of the flow."
                          ((atom item)
                           (when (action flow-state)
                             (slog:emit :flow.call.action.instance)
-                            (funcall (action flow-state) core-state item))))))
+                            (funcall (action flow-state) core-state item)))))
+
+                     (act-on-type-table (type-key type-table)
+                       ;; Get the hash of components for the type-key
+                       (multiple-value-bind (component-table presentp)
+                           (type-table type-key type-table)
+                         (when presentp
+                           ;; Yes, there are components for this type....
+                           (act-on-item component-table)))))
 
               (ecase policy
                 ;; TODO: :type-policy is in this branch until I write
                 ;; the code path that it is supposed to take with that
                 ;; policy.
-                ((:identity-policy :type-policy)
+                ((:identity-policy)
                  (if (consp selections)
                      (map nil #'act-on-item selections)
                      (act-on-item selections)))
-                ((:xxx)
-                 (error "EXECUTE-FLOW: Implement :type-policy"))))
+
+                ((:type-policy)
+                 (let* ((component-dependency-graph
+                          (gethash 'component-dependency
+                                   (analyzed-graphs core-state)))
+                        (annotation (annotation component-dependency-graph))
+                        (dependency-type-order
+                          (toposort component-dependency-graph)))
+
+                   ;; Now, walk the list of dependency order and run the action
+                   ;; in the topologically sorted type order.
+                   (loop :for dependency-type :in dependency-type-order :do
+                     (cond
+                       ;; If it is a regular type, then act on all available
+                       ;; components for that type.
+                       ((is-syntax-form-p '(component-type) dependency-type)
+                        (act-on-type-table (second dependency-type)
+                                           selections))
+
+                       ;; If it is the unknown type, then run all components in
+                       ;; the unknown type set.
+                       ((is-syntax-form-p '(unknown-types) dependency-type)
+                        (act-on-type-table (unknown-type-id annotation)
+                                           selections))
+                       (t
+                        (error "EXECUTE-FLOW :type-policy is broken."))))))))
+
 
             ;; Step 5: Exit if reached exiting state.
             (when (exitingp flow-state)

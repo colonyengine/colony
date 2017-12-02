@@ -7,8 +7,8 @@
                                        :initform (make-hash-table))
    (%actor-active-db :reader actor-active-db
                      :initform (make-hash-table))
-   (%component-active-view :reader component-active-view
-                           :initform (make-hash-table))
+   (%component-active-by-type-view :reader component-active-by-type-view
+                                   :initform (make-hash-table))
    (%user-package :reader user-package
                   :initarg :user-package)
    (%display :reader display)
@@ -36,8 +36,10 @@
 (defun make-core-state (&rest args)
   (let ((core-state (apply #'make-instance 'core-state args)))
     (with-slots (%context %scene-tree) core-state
-      (setf %context (make-instance 'context :core-state core-state)
-            %scene-tree (%make-scene-tree core-state)))
+      ;; NOTE: We make the initial scene tree in the prepraration of the
+      ;; scenes code.
+      (setf %context (make-instance 'context :core-state core-state)))
+
     core-state))
 
 (defun realize-phase-commit (core-state)

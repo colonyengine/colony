@@ -139,6 +139,13 @@
     (flet ((%prepare ()
              (load-extensions extension-type path)
              %temp-scene))
+
+      ;; NOTE: Just before processing the *.scene files, we create the
+      ;; initial scene in owner. We must do this here since this call
+      ;; expects the 'graphs to have alreasdy been read.
+      (with-slots (%scene-tree) owner
+	(setf %scene-tree (%make-scene-tree owner)))
+
       (maphash
        (lambda (key value)
          (setf (gethash key (scenes owner)) value))

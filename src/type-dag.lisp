@@ -337,8 +337,8 @@ the leaves as elements."
            (pushnew canonical-form roots :test #'equalp)
            (pushnew canonical-form leaves :test #'equalp)
            (loop :for vert :in canonical-form :do
-             #++(format t "Adding :vertex: ~A~%" vert)
-             (cl-graph:add-vertex clg (annotate-splice vert gdef))))))
+                 #++(format t "Adding :vertex: ~A~%" vert)
+                    (cl-graph:add-vertex clg (annotate-splice vert gdef))))))
 
     (values clg
             (remove-duplicates (mapcan #'identity roots) :test #'equalp)
@@ -393,7 +393,7 @@ available depends-on in that GDEF."
     ;; 1) Check of the splice is natively in the current gdef.
     (when-let ((splice (gethash splice-name (subforms gdef))))
       #++(format t "Found splice ~A as subform ~A in current gdef ~A~%"
-              splice-name splice (name gdef))
+                 splice-name splice (name gdef))
       (return-from lookup-splice
         (values splice gdef)))
 
@@ -403,7 +403,7 @@ available depends-on in that GDEF."
           (gethash splice-name (subforms dep-inst))
         (when present
           #++(format t "Found splice ~A as subform ~A in depended-on gdef ~A~%"
-                  splice-name subform (name dep-inst))
+                     splice-name subform (name dep-inst))
           (return-from lookup-splice
             (values subform (graphdef dep-inst))))))
 
@@ -448,10 +448,10 @@ available depends-on in that GDEF."
     ;; debug output
     #++(format t "Original graph....~%")
     #++(dolist (edge (cl-graph:edges clg))
-      (let ((*print-right-margin* most-positive-fixnum))
-        (format t "Computed edge: from: ~A to: ~A~%"
-                (cl-graph:element (cl-graph:source-vertex edge))
-                (cl-graph:element (cl-graph:target-vertex edge)))))
+         (let ((*print-right-margin* most-positive-fixnum))
+           (format t "Computed edge: from: ~A to: ~A~%"
+                   (cl-graph:element (cl-graph:source-vertex edge))
+                   (cl-graph:element (cl-graph:target-vertex edge)))))
 
     ;; Then, iterate the graph. Each iteration will substitute the
     ;; current splice forms for the actual graphs indicated by those
@@ -466,61 +466,61 @@ available depends-on in that GDEF."
                              '(splice) (first (cl-graph:element v)))))
       :unless splices :return nil
         :do
-           #++(format t "Found splice vertexes: ~A~%" splices)
+      #++(format t "Found splice vertexes: ~A~%" splices)
 
-           (dolist (splice splices)
-             #++(format t "processing splice: ~A~%" splice)
-             (let (;; source vertexes with a target of this splice vertex.
-                   (parents (cl-graph:parent-vertexes splice))
-                   ;; target vertexes with a source of this splice vertex.
-                   (children (cl-graph:child-vertexes splice)))
+         (dolist (splice splices)
+           #++(format t "processing splice: ~A~%" splice)
+           (let (;; source vertexes with a target of this splice vertex.
+                 (parents (cl-graph:parent-vertexes splice))
+                 ;; target vertexes with a source of this splice vertex.
+                 (children (cl-graph:child-vertexes splice)))
 
-               #++(format t "  parents: ~A~%  children: ~A~%"
-                       parents children)
+             #++(format t "  parents: ~A~%  children: ~A~%"
+                        parents children)
 
-               (destructuring-bind (splice-form gdef)
-                   (cl-graph:element splice)
+             (destructuring-bind (splice-form gdef)
+                 (cl-graph:element splice)
 
-                 (multiple-value-bind (lookedup-splice lookedup-gdef)
-                     (lookup-splice splice-form gdef)
+               (multiple-value-bind (lookedup-splice lookedup-gdef)
+                   (lookup-splice splice-form gdef)
 
-                   ;; Now, absorb the splice into clg, get the roots
-                   ;; and leaves, then fixup the edges.
-                   (multiple-value-bind (clg splice-roots splice-leaves)
-                       (absorb-depforms
-                        clg lookedup-gdef (depforms lookedup-splice))
+                 ;; Now, absorb the splice into clg, get the roots
+                 ;; and leaves, then fixup the edges.
+                 (multiple-value-bind (clg splice-roots splice-leaves)
+                     (absorb-depforms
+                      clg lookedup-gdef (depforms lookedup-splice))
 
-                     #++(format t "  splice-roots: ~A~%" splice-roots)
-                     #++(format t "  splice-leaves: ~A~%" splice-leaves)
-                     ;; delete the original parent edges.
-                     (dolist (parent parents)
-                       (cl-graph:delete-edge-between-vertexes
-                        clg parent splice))
-                     ;; add the new edges from the parents to the new-roots.
-                     (add-cross-product-edges
-                      clg
-                      parents
-                      (annotate-splices splice-roots lookedup-gdef))
-                     ;; delete the original child edges.
-                     (dolist (child children)
-                       (cl-graph:delete-edge-between-vertexes
-                        clg splice child))
-                     ;; add the new edges from the new-leaves to the children.
-                     (add-cross-product-edges
-                      clg
-                      (annotate-splices splice-leaves lookedup-gdef)
-                      children)
-                     ;; Then finally, delete the expanding splice vertex
-                     (cl-graph:delete-vertex clg splice)))))))
+                   #++(format t "  splice-roots: ~A~%" splice-roots)
+                   #++(format t "  splice-leaves: ~A~%" splice-leaves)
+                   ;; delete the original parent edges.
+                   (dolist (parent parents)
+                     (cl-graph:delete-edge-between-vertexes
+                      clg parent splice))
+                   ;; add the new edges from the parents to the new-roots.
+                   (add-cross-product-edges
+                    clg
+                    parents
+                    (annotate-splices splice-roots lookedup-gdef))
+                   ;; delete the original child edges.
+                   (dolist (child children)
+                     (cl-graph:delete-edge-between-vertexes
+                      clg splice child))
+                   ;; add the new edges from the new-leaves to the children.
+                   (add-cross-product-edges
+                    clg
+                    (annotate-splices splice-leaves lookedup-gdef)
+                    children)
+                   ;; Then finally, delete the expanding splice vertex
+                   (cl-graph:delete-vertex clg splice)))))))
 
 
 
     #++(format t "Single graph expansion....~%")
     #++(dolist (edge (cl-graph:edges clg))
-      (let ((*print-right-margin* most-positive-fixnum))
-        (format t "Expanded edge: from: ~A to: ~A~%"
-                (cl-graph:element (cl-graph:source-vertex edge))
-                (cl-graph:element (cl-graph:target-vertex edge)))))
+         (let ((*print-right-margin* most-positive-fixnum))
+           (format t "Expanded edge: from: ~A to: ~A~%"
+                   (cl-graph:element (cl-graph:source-vertex edge))
+                   (cl-graph:element (cl-graph:target-vertex edge)))))
 
     #++(format t "Graph roots for clg are: ~A~%" (graph-roots clg))
     #++(format t "Graph leaves for clg are: ~A~%" (graph-leaves clg))
@@ -566,3 +566,21 @@ available depends-on in that GDEF."
 
       ;; and we're done with this analyzed-graph.
       (setf (graph angph) clg))))
+
+
+(defun canonicalize-component-type (component-type core-state)
+  "If the COMPONENT-TYPE is reference in the 'component-dependency graph,
+then return it, otherwise return the unknown-type-id symbol."
+  (let* ((putative-component-type component-type)
+         (component-dependency-graph (gethash 'component-dependency
+                                              (analyzed-graphs core-state)))
+         (annotation (annotation component-dependency-graph)))
+
+    (assert annotation)
+
+    (unless (gethash putative-component-type (referenced-types annotation))
+      ;; Nope, so we use the unknown type
+      (setf putative-component-type (unknown-type-id annotation)))
+
+    ;; The canonicalized component-type
+    putative-component-type))

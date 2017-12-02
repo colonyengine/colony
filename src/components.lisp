@@ -30,17 +30,18 @@
 (defmethod make-component (component-type &rest initargs)
   (apply #'make-instance component-type :type component-type initargs))
 
-(defun add-component (actor component)
-  (setf (gethash component (components actor)) component)
-  (push component (gethash (component-type component)
-                           (components-by-type actor))))
-
 (defun realize-component (core-state component)
   (when-let ((thunk (initializer-thunk component)))
     (funcall thunk)
     (setf (initializer-thunk component) nil))
-  (setf (state component) :active
-        (gethash component (component-active-view core-state)) component))
+
+  (setf (state component) :active)
+
+  (setf (type-table
+         (canonicalize-component-type (component-type component) core-state)
+         (component-active-by-type-view core-state))
+        component))
+
 
 (defun realize-components (core-state component-table)
   "For all component values in the COMPONENT-HT hash table, run their
@@ -52,22 +53,8 @@ view."
      (realize-component core-state component))
    component-table))
 
-(defun actor-components-by-type (actor component-type)
-  "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
-  (gethash component-type (components-by-type actor)))
 
-(defun actor-component-by-type (actor component-type)
-  "Get the first component of type COMPONENT-TYPE for the given ACTOR.
-Returns T as a secondary value if there exists more than one component of that
-type."
-  (let ((components (actor-components-by-type actor component-type)))
-    (values (first components)
-            (> (length components) 1))))
-
-(defun add-multiple-components (actor components)
-  (dolist (component components)
-    (add-component actor component)))
-
+;; The Component Protocol.
 (defgeneric initialize-component (component context)
   (:method ((component component) (context context))))
 
