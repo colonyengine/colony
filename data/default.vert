@@ -1,3 +1,5 @@
+;; -*- mode: common-lisp -*-
+
 ;;; vertex groups
 
 (define-vertex-groups 2d
