@@ -584,3 +584,9 @@ then return it, otherwise return the unknown-type-id symbol."
 
     ;; The canonicalized component-type
     putative-component-type))
+
+;; NOTE: This is unused! It is strictly here to get indention right in the
+;; *.gph files.
+(defmacro graph-definition (name (&key category enabled) &body body)
+  (declare (ignore name category enabled))
+  body)
