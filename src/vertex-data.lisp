@@ -10,9 +10,7 @@
   ((%groups :reader groups
             :initarg :groups)
    (%layouts :reader layouts
-             :initarg :layouts)
-   (%objects :reader objects
-             :initarg :objects)))
+             :initarg :layouts)))
 
 (defclass vertex-group ()
   ((%id :reader id
@@ -76,10 +74,10 @@
 (defun %vertex-layout-add-buffer-divisor (vertex-layout group)
   (setf (gethash (id group) (buffer-divisors vertex-layout)) (divisor group)))
 
-(defun %vertex-layout-add-buffer-index (vertex-layout group)
-  (let ((buffer-id (id group)))
-    (setf (gethash buffer-id (buffer-indices vertex-layout))
-          (position buffer-id (buffer-order vertex-layout)))))
+(defun %vertex-layout-add-buffer-indices (vertex-layout)
+  (loop :for buffer-id :in (buffer-order vertex-layout)
+        :for index :from 0
+        :do (setf (gethash buffer-id (buffer-indices vertex-layout)) index)))
 
 (defun %create-vao-spec (layout)
   (let ((kit.gl.vao::*vao-decl* (make-instance 'kit.gl.vao::vao-declaration)))
@@ -100,9 +98,9 @@
       (dolist (group (gethash group-name group-table))
         (pushnew (id group) %buffer-order)
         (%vertex-layout-add-buffer-divisor vertex-layout group)
-        (%vertex-layout-add-buffer-index vertex-layout group)
         (%vertex-layout-splice-group vertex-layout group)))
     (reversef %buffer-order)
+    (%vertex-layout-add-buffer-indices vertex-layout)
     (setf %vao-spec (%create-vao-spec vertex-layout))))
 
 (defun get-vertex-layout (core-state layout-id)
