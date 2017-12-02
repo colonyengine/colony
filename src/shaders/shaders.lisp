@@ -1,7 +1,7 @@
 (in-package :first-light-shaders)
 
-(input pos :vec3 :location 0)
-(input uv :vec3 :location 1)
+(input pos :vec2 :location 0)
+(input uv :vec2 :location 1)
 
 (output frag-color :vec4 :stage :fragment)
 
@@ -11,11 +11,11 @@
 
 (interface varyings (:out (:vertex v-out)
                      :in (:fragment f-in))
-  (uv :vec3))
+  (uv :vec2))
 
 (defun default-vertex ()
   (setf (@ v-out uv) uv
-        gl-position (* proj view model (vec4 pos 1))))
+        gl-position (* proj view model (vec4 pos 0 1))))
 
 (defun default-fragment ()
   (setf frag-color (vec4 1 1 1 1))
