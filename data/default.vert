@@ -28,7 +28,9 @@
 (define-vertex-layout 3d/normal/color
   (:groups (3d normal color)))
 
-;;; test
+;;; Test groups/layouts
+;;; These two definitions are to test how an object with more than 1 VBO behaves.
+;;; The test.mesh mesh file uses the 2d/color-test layout.
 
 (define-vertex-groups color-test
   ((:id :color-test
