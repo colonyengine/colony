@@ -27,3 +27,12 @@
 
 (define-vertex-layout 3d/normal/color
   (:groups (3d normal color)))
+
+;;; test
+
+(define-vertex-groups color-test
+  ((:id :color-test
+    :attrs ((color :float 4)))))
+
+(define-vertex-layout 2d/color-test
+  (:groups (2d color-test)))
