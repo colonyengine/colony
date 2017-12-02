@@ -13,7 +13,8 @@
   (gethash key (settings context)))
 
 (defun (setf cfg) (value context key)
-  (setf (gethash key (settings context)) value))
+  (check-type key symbol)
+  (setf (gethash (make-keyword key) (settings context)) value))
 
 (defmacro with-cfg (options context &body body)
   `(symbol-macrolet
