@@ -37,10 +37,10 @@
               (setf layout (layout cached)
                     vao (vao cached))
               (slog:emit :component.mesh.cache.used))
-            (let* ((buffers (load-mesh context component))
-                   (new-vao (make-vao layout buffers))
-                   (cached (make-cached-mesh location layout new-vao)))
-              (setf (cached-mesh store location) cached
-                    layout (layout cached)
-                    vao (vao cached))
-              (slog:emit :component.mesh.cache.created)))))))
+            (multiple-value-bind (layout buffers) (load-mesh context location)
+              (let* ((new-vao (make-vao layout buffers))
+                     (cached (make-cached-mesh location layout new-vao)))
+                (setf (cached-mesh store location) cached
+                      layout (layout cached)
+                      vao (vao cached))
+                (slog:emit :component.mesh.cache.created))))))))
