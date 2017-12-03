@@ -16,7 +16,7 @@
 
 (define-vertex-groups bones
   ((:id :bones
-    :attrs ((joints :unsigned-int 4)
+    :attrs ((joints :unsigned-short 4)
             (weights :float 4)))))
 
 ;;; vertex layouts
