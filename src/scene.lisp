@@ -1,11 +1,5 @@
 (in-package :first-light)
 
-(defclass scene-definition ()
-  ((%scene :reader scene
-           :initarg :scene)
-   (%data :reader data
-          :initarg :data)))
-
 (defun %type-check-actor (actor actors-list)
   (unless (char= (char (symbol-name actor) 0) #\@)
     (error (format nil "Actor names must begin with '@': ~a" actor)))
@@ -123,7 +117,7 @@
   (gethash scene-name (scenes core-state)))
 
 (defun load-scene (core-state name)
-  (funcall (scene (get-scene core-state name)) core-state))
+  (funcall (get-scene core-state name) core-state))
 
 (defun load-default-scene (core-state)
   (if-let ((default (cfg (context core-state) :default-scene)))
@@ -139,22 +133,15 @@
     (flet ((%prepare ()
              (load-extensions extension-type path)
              %temp-scene))
-
-      ;; NOTE: Just before processing the *.scene files, we create the
-      ;; initial scene in owner. We must do this here since this call
-      ;; expects the 'graphs to have alreasdy been read.
       (with-slots (%scene-tree) owner
-	(setf %scene-tree (%make-scene-tree owner)))
-
+        (setf %scene-tree (%make-scene-tree owner)))
       (maphash
        (lambda (key value)
          (setf (gethash key (scenes owner)) value))
        (%prepare)))))
 
-(defmacro scene-definition (name (&key enabled) &body body)
-  `(let ((scene (make-instance 'scene-definition
-                               :scene ,(apply #'parse-scene name body)
-                               :data (apply #'parse-scene ,name ',body))))
+(defmacro define-scene (name (&key enabled) &body body)
+  `(let ((scene ,(apply #'parse-scene `',name body)))
      (declare (special %temp-scene))
      ,(when enabled
-       `(setf (gethash ,name %temp-scene) scene))))
+       `(setf (gethash ',name %temp-scene) scene))))

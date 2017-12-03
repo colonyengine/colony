@@ -279,7 +279,7 @@ name which resulted in the exiting of the flow."
          (setf (gethash key (call-flows owner)) value))
        (%prepare)))))
 
-(defmacro call-flow-definition (name (&key enabled) &body body)
+(defmacro define-call-flow (name (&key enabled) &body body)
   `(let ()
      (declare (special %temp-call-flow))
      ,(when enabled

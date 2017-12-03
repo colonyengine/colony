@@ -42,17 +42,12 @@
          (component-active-by-type-view core-state))
         component))
 
-
 (defun realize-components (core-state component-table)
-  "For all component values in the COMPONENT-HT hash table, run their
-initialize-thunks, set them :active, and put them into the active component
-view."
   (maphash
    (lambda (k component)
      (declare (ignore k))
      (realize-component core-state component))
    component-table))
-
 
 ;; The Component Protocol.
 (defgeneric initialize-component (component context)

@@ -16,6 +16,7 @@
            #:context
            #:shaders
            #:shared-storage
+           #:define-settings
            #:cfg
            #:with-cfg)
 
@@ -24,7 +25,7 @@
            #:key-up)
 
   ;; scene
-  (:export #:scene-definition
+  (:export #:define-scene
            #:get-scene)
 
   ;; actor

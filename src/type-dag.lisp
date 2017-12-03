@@ -222,7 +222,7 @@ If the form is not null, and contains hyper edges, return three values:
   (second (member option-name option-form)))
 
 (defun parse-graph-definition (form)
-  (assert (is-syntax-form-p '(graph-definition) form))
+  (assert (is-syntax-form-p '(define-graph) form))
 
   (destructuring-bind (name options . subforms) (rest form)
     (make-graphdef
@@ -587,6 +587,6 @@ then return it, otherwise return the unknown-type-id symbol."
 
 ;; NOTE: This is unused! It is strictly here to get indention right in the
 ;; *.gph files.
-(defmacro graph-definition (name (&key category enabled) &body body)
+(defmacro define-graph (name (&key category enabled) &body body)
   (declare (ignore name category enabled))
   body)
