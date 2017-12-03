@@ -5,14 +5,14 @@
   (layout nil)
   (vao nil))
 
-(defun fill-buffer-data (layout vao buffer-id data)
+(defun write-buffer-data (layout vao buffer-id data)
   (let ((index (gethash buffer-id (buffer-indices layout)))
         (data (flatten-numbers data)))
     (kit.gl.vao:vao-buffer-vector vao index data)))
 
 (defun update-mesh-buffer (mesh buffer-id data)
   (with-accessors ((layout layout) (vao vao)) mesh
-    (fill-buffer-data layout vao buffer-id data)))
+    (write-buffer-data layout vao buffer-id data)))
 
 (defun make-vao (layout buffers)
   (let ((vao (make-instance 'kit.gl.vao:vao
@@ -21,7 +21,7 @@
                             :vertex-count (length (cadar buffers)))))
     (loop :for (id data) :in buffers
           :for index = (gethash id (buffer-indices layout))
-          :do (fill-buffer-data layout vao id data))
+          :do (write-buffer-data layout vao id data))
     vao))
 
 (defmethod initialize-component ((component mesh) (context context))
