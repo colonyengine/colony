@@ -1,7 +1,13 @@
 (in-package :first-light-shaders)
 
-(input pos :vec2 :location 0)
-(input uv :vec2 :location 1)
+(input pos :vec3 :location 0)
+(input normal :vec3 :location 1)
+(input tangent :vec4 :location 2)
+(input color :vec4 :location 3)
+(input uv1 :vec2 :location 4)
+(input uv2 :vec2 :location 5)
+(input joints :vec4 :location 6)
+(input weights :vec4 :location 7)
 
 (output frag-color :vec4 :stage :fragment)
 
@@ -11,13 +17,15 @@
 
 (interface varyings (:out (:vertex v-out)
                      :in (:fragment f-in))
-  (uv :vec2))
+  (color :vec4)
+  (uv1 :vec2))
 
 (defun default-vertex ()
-  (setf (@ v-out uv) uv
-        gl-position (* proj view model (vec4 pos 0 1))))
+  (setf (@ v-out uv1) uv1
+        (@ v-out color) color
+        gl-position (* proj view model (vec4 pos 1))))
 
 (defun default-fragment ()
-  (setf frag-color (vec4 1 1 1 1))
+  (setf frag-color (@ f-in color))
   (when (zerop (.a frag-color))
     (discard)))

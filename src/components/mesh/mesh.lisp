@@ -7,7 +7,6 @@
   (layout nil)
   (vao nil))
 
-
 (defun write-buffer-data (vao vbo vertex-data)
   (let ((data (flatten-numbers vertex-data)))
     (kit.gl.vao:vao-buffer-vector vao vbo data)))
@@ -18,7 +17,6 @@
 
 (defun make-vao (context location)
   (multiple-value-bind (buffers layout) (load-mesh context location)
-
     (let ((vao (make-instance 'kit.gl.vao:vao
                               :type (id layout)
                               :primitive (primitive layout)

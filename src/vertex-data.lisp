@@ -52,7 +52,7 @@
         (destructuring-bind (form-type name group-forms) form
           (declare (ignore form-type))
           (dolist (group-form group-forms)
-            (destructuring-bind (&key (id :mesh-data) (divisor 0) attrs)
+            (destructuring-bind (&key id (divisor 0) attrs)
                 group-form
               (let ((group (make-instance 'vertex-group
                                           :id id
