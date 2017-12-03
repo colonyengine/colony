@@ -22,7 +22,6 @@
   :components
   ((:file "package")
    (:file "input")
-   (:file "shaders/shaders")
    (:file "components/gun/gun")
    (:file "components/gun-manager/gun-manager")
    (:file "components/hit-points/hit-points")))
