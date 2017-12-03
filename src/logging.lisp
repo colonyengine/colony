@@ -44,3 +44,9 @@
 
 (slog:define-message :debug :shader.function.compiled
   "Compiled shader function: ~a")
+
+(slog:define-message :trace :component.mesh.cache.used
+  "Used a cached copy of mesh: ~a")
+
+(slog:define-message :trace :component.mesh.cache.created
+  "Creating a new cached mesh for: ~a")
