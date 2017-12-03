@@ -63,7 +63,11 @@
            #:look-at)
 
   ;; mesh
-  (:export #:mesh)
+  (:export #:mesh
+           #:write-buffer-data
+           #:update-mesh-buffer
+           #:make-vao
+           #:load-mesh)
 
   ;; mesh-renderer
   (:export #:mesh-renderer)
