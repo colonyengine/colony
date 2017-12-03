@@ -5,21 +5,23 @@
   (layout nil)
   (vao nil))
 
-(defun fill-mesh-buffer (mesh buffer-id data)
-  (let ((index (gethash buffer-id (buffer-indices (layout mesh))))
+(defun fill-buffer-data (layout vao buffer-id data)
+  (let ((index (gethash buffer-id (buffer-indices layout)))
         (data (flatten-numbers data)))
-    (kit.gl.vao:vao-buffer-vector (vao mesh) index data)))
+    (kit.gl.vao:vao-buffer-vector vao index data)))
 
-(defun make-vao (context mesh)
-  (let* ((buffers (load-mesh context mesh))
-         (vao (make-instance 'kit.gl.vao:vao
-                             :type (id (layout mesh))
-                             :primitive (primitive (layout mesh))
-                             :vertex-count (length (cadar buffers)))))
-    (setf (vao mesh) vao)
+(defun update-mesh-buffer (mesh buffer-id data)
+  (with-accessors ((layout layout) (vao vao)) mesh
+    (fill-buffer-data layout vao buffer-id data)))
+
+(defun make-vao (layout buffers)
+  (let ((vao (make-instance 'kit.gl.vao:vao
+                            :type (id layout)
+                            :primitive (primitive layout)
+                            :vertex-count (length (cadar buffers)))))
     (loop :for (id data) :in buffers
-          :for index = (gethash id (buffer-indices (layout mesh)))
-          :do (fill-mesh-buffer mesh id data))
+          :for index = (gethash id (buffer-indices layout))
+          :do (fill-buffer-data layout vao id data))
     vao))
 
 (defmethod initialize-component ((component mesh) (context context))
@@ -35,7 +37,9 @@
               (setf layout (layout cached)
                     vao (vao cached))
               (slog:emit :component.mesh.cache.used))
-            (progn
-              (setf (cached-mesh store location)
-                    (make-cached-mesh context component))
+            (let* ((buffers (load-mesh context component))
+                   (new-vao (make-vao layout buffers))
+                   (cached (make-cached-mesh location layout new-vao)))
+              (setf layout (layout cached)
+                    vao (vao cached))
               (slog:emit :component.mesh.cache.created)))))))

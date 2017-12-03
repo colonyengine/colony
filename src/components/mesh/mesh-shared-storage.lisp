@@ -13,10 +13,8 @@
    (%vao :reader vao
          :initarg :vao)))
 
-(defun make-cached-mesh (context mesh)
-  (with-accessors ((location location) (layout layout)) mesh
-    (let ((vao (make-vao context mesh)))
-      (make-instance 'cached-mesh :location location :layout layout :vao vao))))
+(defun make-cached-mesh (location layout vao)
+  (make-instance 'cached-mesh :location location :layout layout :vao vao))
 
 (defun cached-mesh (store location)
   (gethash location (cache store)))
