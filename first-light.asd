@@ -46,7 +46,7 @@
    (:file "components/basis/basis")
    (:file "components/camera/camera")
    (:file "components/tracking-camera/tracking-camera")
-   (:file "components/follow-camera/follow-camera")
+   (:file "components/following-camera/following-camera")
    (:file "components/mesh/mesh")
    (:file "components/mesh/mesh-format")
    (:file "components/mesh/mesh-shared-storage")

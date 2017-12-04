@@ -63,6 +63,10 @@
   (:export #:tracking-camera
            #:target-actor-with-tracking-camera)
 
+  ;; following-camera
+  (:export #:following-camera
+           #:target-actor-with-following-camera)
+
   ;; mesh
   (:export #:mesh
            #:write-buffer-data
