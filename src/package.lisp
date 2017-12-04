@@ -61,7 +61,7 @@
 
   ;; tracking-camera
   (:export #:tracking-camera
-           #:look-at)
+           #:target-actor-with-tracking-camera)
 
   ;; mesh
   (:export #:mesh

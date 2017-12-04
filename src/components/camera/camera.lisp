@@ -5,32 +5,36 @@
   (view (mid))
   (projection (mid))
   (mode :perspective)
-  (clip-near 0)
+  (clip-near .1)
   (clip-far 1024)
-  (zoom 2)
+  ;; fov>y< is X degrees, converted to radians. (easier to reason
+  ;; about in deg)
+  (fovy (* 90 (/ pi 180)))
+  (zoom 1)
   (transform nil))
 
 (defmethod initialize-component ((component camera) (context context))
   (with-accessors ((mode mode ) (actor actor) (transform transform)) component
     ;; compute a projection matrix according to the mode of this camera
     (make-projection mode component context)
-    ;; store a reference to the transform component of this camera's actor locally
+    ;; store a reference to the transform component of this camera's
+    ;; actor locally
     (setf transform (actor-component-by-type actor 'transform))
     ;; register the camera in the list of core-state cameras
     (push component (cameras (core-state context)))))
 
-(defmethod destroy-component :around ((component camera) (context context))
+(defmethod destroy-component ((component camera) (context context))
   ;; when we destroy a component that is a camera, also remove its reference in
   ;; the list of core-state cameras, and the context
-  (call-next-method)
   (deletef (cameras (core-state context)) component)
   (setf (camera context) nil))
 
 (defmethod make-projection ((mode (eql :perspective)) camera (context context))
-  (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far))
+  (with-accessors ((zoom zoom) (proj projection) (near clip-near)
+                   (far clip-far) (fovy fovy))
       camera
     (with-cfg (width height) context
-      (mkpersp! proj (/ pi zoom) (/ width height) near far))))
+      (mkpersp! proj (/ fovy zoom) (/ width height) near far))))
 
 (defmethod make-projection ((mode (eql :orthographic)) camera (context context))
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far))

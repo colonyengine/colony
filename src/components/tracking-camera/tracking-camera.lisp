@@ -1,28 +1,31 @@
 (in-package :first-light)
 
-(define-component tracking-camera (camera)
-  (look-at-actor nil)
-  (look-at-transform nil))
+(define-component tracking-camera ()
+  (slave-camera nil)
+  (target-actor nil)
+  (target-transform nil))
 
-(defmethod initialize-component :around ((component tracking-camera)
-                                         (context context))
-  (call-next-method)
-  (look-at component (look-at-actor component)))
-
-(defmethod compute-camera-view ((camera tracking-camera) (context context))
-  (with-accessors ((view view) (transform transform) (look-at look-at-transform))
-      camera
-    (let* ((eye (mtr->v (model transform)))
-           (target (mtr->v (model look-at)))
-           (up (vec 0 1 0)))
-      (mkview! view eye target up))))
-
-(defun look-at (camera actor)
-  "Set LOOK-AT-ACTOR into the CAMERA-COMPONENT and make the camera
-track that actor. To unset, set LOOK-AT-ACTOR to NIL when calling
-function. That will restore the camera to its default configuration of
-matching the associated actor's transform for its orientation."
-  (setf (look-at-actor camera) actor)
+;; exported so others can use this to change what the camera is tracking.
+(defun target-actor-with-tracking-camera (tracking-camera actor)
+  (setf (target-actor tracking-camera) actor)
   (when actor
-    (setf (look-at-transform camera)
+    (setf (target-transform tracking-camera)
           (actor-component-by-type actor 'transform))))
+
+(defmethod initialize-component ((component tracking-camera)
+                                 (context context))
+  (setf (slave-camera component) (actor-component-by-type
+                                  (actor component) 'camera))
+  ;; Set up the target-transform too!
+  (target-actor-with-tracking-camera component (target-actor component)))
+
+(defmethod update-component ((component tracking-camera) (context context))
+  (with-accessors ((view view) (transform transform))
+      (slave-camera component)
+
+    (let* ((eye (mtr->v (model transform)))
+           (target (mtr->v (model (target-transform component))))
+           (up (vec 0 1 0)))
+      ;; Reset the slave-camera's view to look at intended target instead of
+      ;; where it was previously looking.
+      (mkview! view eye target up))))
