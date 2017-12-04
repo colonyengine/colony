@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defclass context ()
   ((%core-state :reader core-state

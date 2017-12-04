@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 ;; For this component, the camera transform represents the vector away
 ;; from the target that the camera sits. The following-camera does NOT

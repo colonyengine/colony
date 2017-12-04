@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (slog:define-message :info :engine.start
   "Started ~a.")

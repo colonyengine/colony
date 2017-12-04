@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defmethod kit.sdl2:keyboard-event ((display display) state ts repeatp keysym)
   (let ((key (sdl2:scancode keysym)))

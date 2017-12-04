@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defun get-path (system-name &optional path)
   (if uiop/image:*image-dumped-p*

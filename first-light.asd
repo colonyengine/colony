@@ -21,7 +21,8 @@
                #:3bgl-shader
                #:simple-logger
                #:gamebox-math
-               #:gamebox-frame-manager)
+               #:gamebox-frame-manager
+               #:defpackage-plus)
   :pathname "src"
   :serial t
   :components

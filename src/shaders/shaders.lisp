@@ -1,4 +1,4 @@
-(in-package :first-light-shaders)
+(in-package :fl.shader)
 
 (input pos :vec3 :location 0)
 (input normal :vec3 :location 1)

@@ -1,6 +1,7 @@
 (in-package :cl-user)
 
-(defpackage #:first-light
+(defpackage #:fl.core
+  (:nicknames #:first-light)
   (:use #:cl
         #:alexandria
         #:gamebox-math)
@@ -87,5 +88,5 @@
            #:add-child
            #:map-nodes))
 
-(defpackage #:first-light-shaders
+(defpackage #:fl.shader
   (:use #:3bgl-glsl/cl))

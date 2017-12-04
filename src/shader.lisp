@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defclass shaders ()
   ((%data :reader data
@@ -28,8 +28,8 @@
     :key ,key))
 
 (defun %type-check-shader-function (symbol)
-  (or (find-symbol (symbol-name symbol) :first-light-shaders)
-      (error "Function ~a not defined in the :FIRST-LIGHT-SHADERS package."
+  (or (find-symbol (symbol-name symbol) :fl.shader)
+      (error "Function ~a not defined in the :FL.SHADER package."
              symbol)))
 
 (defun %type-check-stages (forms)

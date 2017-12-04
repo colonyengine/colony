@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defmethod extension-file-type ((extension-type (eql 'settings)))
   "cfg")

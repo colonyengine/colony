@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defun map-extensions (extension-type path &optional owner)
   (map-files
@@ -27,7 +27,7 @@
   (map-extensions type path :user))
 
 (defun collect-extension-forms (type path)
-  (let ((*package* (find-package :first-light))
+  (let ((*package* (find-package :fl.core))
         (results))
     (flet ((%collect (type path)
              (map-files

@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defmacro define-vertex-groups (&body body)
   body)

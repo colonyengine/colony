@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defclass analyzed-graph ()
   (;; for what category is this CL-GRAPH graph for?

@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defclass core-state ()
   ((%actor-initialize-db :reader actor-initialize-db

@@ -1,3 +1,3 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (define-component basis ())

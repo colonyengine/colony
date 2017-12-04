@@ -3,4 +3,4 @@
 (defpackage #:first-light-example
   (:use #:cl
         #:gamebox-math
-        #:first-light))
+        #:fl.core))

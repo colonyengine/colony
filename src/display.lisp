@@ -1,4 +1,4 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defclass display (kit.sdl2:gl-window box.fm:frame-manager)
   ((core-state :reader core-state

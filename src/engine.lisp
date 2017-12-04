@@ -1,7 +1,7 @@
-(in-package :first-light)
+(in-package :fl.core)
 
 (defun prepare-engine (package)
-  (let ((*package* (find-package :first-light))
+  (let ((*package* (find-package :fl.core))
         (core-state (make-core-state :user-package package))
         (path (get-path package "data")))
     (prepare-extensions core-state path)
@@ -12,8 +12,8 @@
 
 (defun start-engine ()
   (let* ((user-package-name (make-keyword (package-name *package*))))
-    (when (eq user-package-name :first-light)
-      (error "Cannot start the engine from the :FIRST-LIGHT package."))
+    (when (eq user-package-name :fl.core)
+      (error "Cannot start the engine from the :FL.CORE package."))
     (kit.sdl2:init)
     (prog1 (sdl2:in-main-thread () (prepare-engine user-package-name))
       (kit.sdl2:start))))
