@@ -2,8 +2,7 @@
 
 (defpackage+ #:fl.core
   (:nicknames #:first-light)
-  (:use-only #:cl
-             #:alexandria)
+  (:inherit #:cl #:alexandria #:gamebox-math)
   (:export #:start-engine
            #:quit-engine)
 
@@ -66,75 +65,9 @@
 ;;; component types
 
 (defpackage+ #:fl.comp.transform
-  (:use-only #:cl
-             #:alexandria
-             #:gamebox-math)
   (:inherit #:fl.core)
   (:export-only #:transform
                 #:model
                 #:local
                 #:add-child
                 #:map-nodes))
-
-(defpackage+ #:fl.comp.basis
-  (:use-only #:cl
-             #:alexandria)
-  (:inherit #:fl.core)
-  (:export-only #:basis))
-
-(defpackage+ #:fl.comp.camera
-  (:use-only #:cl
-             #:alexandria
-             #:gamebox-math)
-  (:inherit #:fl.core
-            #:fl.comp.transform)
-  (:export-only #:camera
-                #:view
-                #:projection
-                #:compute-camera-view))
-
-(defpackage+ #:fl.comp.tracking-camera
-  (:use-only #:cl
-             #:alexandria
-             #:gamebox-math)
-  (:inherit #:fl.core
-            #:fl.comp.transform
-            #:fl.comp.camera)
-  (:export-only #:tracking-camera
-                #:target-actor-with-tracking-camera))
-
-(defpackage+ #:fl.comp.following-camera
-  (:use-only #:cl
-             #:alexandria
-             #:gamebox-math)
-  (:inherit #:fl.core
-            #:fl.comp.transform
-            #:fl.comp.camera)
-  (:export-only #:following-camera
-                #:target-actor-with-following-camera))
-
-(defpackage+ #:fl.comp.mesh
-  (:use-only #:cl
-             #:alexandria)
-  (:inherit #:fl.core)
-  (:export-only #:mesh
-                #:write-buffer-data
-                #:update-mesh-buffer
-                #:make-vao
-                #:vao
-                #:load-mesh))
-
-(defpackage+ #:fl.comp.mesh-renderer
-  (:use-only #:cl
-             #:alexandria)
-  (:inherit #:fl.core
-            #:fl.comp.transform
-            #:fl.comp.camera
-            #:fl.comp.mesh)
-  (:export-only #:mesh-renderer))
-
-(defpackage+ #:fl.comp.tags
-  (:use-only #:cl
-             #:alexandria)
-  (:inherit #:fl.core)
-  (:export-only #:tags))
