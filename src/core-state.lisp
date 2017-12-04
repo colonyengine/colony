@@ -35,21 +35,15 @@
 
 (defun make-core-state (&rest args)
   (let ((core-state (apply #'make-instance 'core-state args)))
-    (with-slots (%context %scene-tree) core-state
-      ;; NOTE: We make the initial scene tree in the prepraration of the
-      ;; scenes code.
+    (with-slots (%context) core-state
       (setf %context (make-instance 'context :core-state core-state)))
-
     core-state))
 
 (defun realize-phase-commit (core-state)
-  "This function removes all elements from the
-component-initialize-thunks-db slot and the actor-initialize-db in the
-CORE-STATE. It is assumed they have been processed appropriately."
-  ;; remove all the actors from initialization phase.
+  "This function removes all elements from the component-initialize-thunks-db
+slot and the actor-initialize-db in the CORE-STATE. It is assumed they have been
+processed appropriately."
   (clrhash (actor-initialize-db core-state))
-  ;; remove the components from the typed hashes of the component initialization
-  ;; view.
   (maphash
    (lambda (k v)
      (declare (ignore k))

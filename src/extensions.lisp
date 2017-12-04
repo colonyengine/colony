@@ -1,5 +1,8 @@
 (in-package :fl.core)
 
+(defun get-extension-path (&optional (system-name :first-light))
+  (get-path system-name "data/extension"))
+
 (defun map-extensions (extension-type path &optional owner)
   (map-files
    path
@@ -23,7 +26,7 @@
   (prepare-extension 'scene core-state path))
 
 (defun load-extensions (type path)
-  (map-extensions type (get-path :first-light "data") :builtin)
+  (map-extensions type (get-extension-path) :builtin)
   (map-extensions type path :user))
 
 (defun collect-extension-forms (type path)
@@ -39,6 +42,6 @@
                         :for (nil options nil) = form
                         :do (push form results))))
               :filter (extension-type-filter type))))
-      (%collect type (get-path :first-light "data"))
+      (%collect type (get-extension-path))
       (%collect type path))
     (nreverse results)))

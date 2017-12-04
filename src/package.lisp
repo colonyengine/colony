@@ -3,8 +3,7 @@
 (defpackage+ #:fl.core
   (:nicknames #:first-light)
   (:use-only #:cl
-             #:alexandria
-             #:gamebox-math)
+             #:alexandria)
   (:export #:start-engine
            #:quit-engine)
 

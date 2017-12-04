@@ -2,9 +2,8 @@
 
 (defun prepare-engine (package)
   (let ((*package* (find-package :fl.core))
-        (core-state (make-core-state :user-package package))
-        (path (get-path package "data")))
-    (prepare-extensions core-state path)
+        (core-state (make-core-state :user-package package)))
+    (prepare-extensions core-state (get-extension-path package))
     (load-default-scene core-state)
     (make-display core-state)
     (compile-shaders core-state)
