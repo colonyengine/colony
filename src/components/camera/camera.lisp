@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :fl.comp.camera)
 
 (define-component camera ()
   (activep nil)
@@ -7,14 +7,12 @@
   (mode :perspective)
   (clip-near .1)
   (clip-far 1024)
-  ;; fov>y< is X degrees, converted to radians. (easier to reason
-  ;; about in deg)
   (fovy (* 90 (/ pi 180)))
   (zoom 1)
   (transform nil))
 
 (defmethod initialize-component ((component camera) (context context))
-  (with-accessors ((mode mode ) (actor actor) (transform transform)) component
+  (with-accessors ((mode mode) (actor actor) (transform transform)) component
     ;; compute a projection matrix according to the mode of this camera
     (make-projection mode component context)
     ;; store a reference to the transform component of this camera's

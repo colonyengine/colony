@@ -1,25 +1,36 @@
-(in-package :cl-user)
+(in-package :defpackage+-1)
 
-(defpackage #:fl.core
+(defpackage+ #:fl.core
   (:nicknames #:first-light)
-  (:use #:cl
-        #:alexandria
-        #:gamebox-math)
+  (:use-only #:cl
+             #:alexandria
+             #:gamebox-math)
+  (:export #:start-engine
+           #:quit-engine)
 
   ;; common
   (:export #:get-path
-           #:start-engine
-           #:quit-engine)
+           #:flatten-numbers)
 
   ;; core state
-  (:export #:make-core-state
+  (:export #:core-state
+           #:make-core-state
+           #:user-package
            #:display
+           #:cameras
            #:context
+           #:camera
            #:shaders
            #:shared-storage
            #:define-settings
+           #:find-resource
            #:cfg
            #:with-cfg)
+
+  ;; vertex-data
+  (:export #:primitive
+           #:buffer-indices
+           #:get-vertex-layout)
 
   ;; input
   (:export #:key-down
@@ -35,8 +46,9 @@
            #:make-actor
            #:spawn-actor)
 
-  ;; component
+  ;; components
   (:export #:component
+           #:state
            #:define-component
            #:make-component
            #:add-component
@@ -47,46 +59,83 @@
            #:render-component
            #:destroy-component
            #:actor-components-by-type
-           #:actor-component-by-type)
+           #:actor-component-by-type))
+
+(defpackage+ #:fl.shader
+  (:use-only #:3bgl-glsl/cl))
 
 ;;; component types
 
-  ;; basis
-  (:export #:basis)
+(defpackage+ #:fl.comp.transform
+  (:use-only #:cl
+             #:alexandria
+             #:gamebox-math)
+  (:inherit #:fl.core)
+  (:export-only #:transform
+                #:model
+                #:local
+                #:add-child
+                #:map-nodes))
 
-  ;; camera
-  (:export #:camera
-           #:view
-           #:projection
-           #:compute-camera-view)
+(defpackage+ #:fl.comp.basis
+  (:use-only #:cl
+             #:alexandria)
+  (:inherit #:fl.core)
+  (:export-only #:basis))
 
-  ;; tracking-camera
-  (:export #:tracking-camera
-           #:target-actor-with-tracking-camera)
+(defpackage+ #:fl.comp.camera
+  (:use-only #:cl
+             #:alexandria
+             #:gamebox-math)
+  (:inherit #:fl.core
+            #:fl.comp.transform)
+  (:export-only #:camera
+                #:view
+                #:projection
+                #:compute-camera-view))
 
-  ;; following-camera
-  (:export #:following-camera
-           #:target-actor-with-following-camera)
+(defpackage+ #:fl.comp.tracking-camera
+  (:use-only #:cl
+             #:alexandria
+             #:gamebox-math)
+  (:inherit #:fl.core
+            #:fl.comp.transform
+            #:fl.comp.camera)
+  (:export-only #:tracking-camera
+                #:target-actor-with-tracking-camera))
 
-  ;; mesh
-  (:export #:mesh
-           #:write-buffer-data
-           #:update-mesh-buffer
-           #:make-vao
-           #:load-mesh)
+(defpackage+ #:fl.comp.following-camera
+  (:use-only #:cl
+             #:alexandria
+             #:gamebox-math)
+  (:inherit #:fl.core
+            #:fl.comp.transform
+            #:fl.comp.camera)
+  (:export-only #:following-camera
+                #:target-actor-with-following-camera))
 
-  ;; mesh-renderer
-  (:export #:mesh-renderer)
+(defpackage+ #:fl.comp.mesh
+  (:use-only #:cl
+             #:alexandria)
+  (:inherit #:fl.core)
+  (:export-only #:mesh
+                #:write-buffer-data
+                #:update-mesh-buffer
+                #:make-vao
+                #:vao
+                #:load-mesh))
 
-  ;; tags
-  (:export #:tags)
+(defpackage+ #:fl.comp.mesh-renderer
+  (:use-only #:cl
+             #:alexandria)
+  (:inherit #:fl.core
+            #:fl.comp.transform
+            #:fl.comp.camera
+            #:fl.comp.mesh)
+  (:export-only #:mesh-renderer))
 
-  ;; transform
-  (:export #:transform
-           #:model
-           #:local
-           #:add-child
-           #:map-nodes))
-
-(defpackage #:fl.shader
-  (:use #:3bgl-glsl/cl))
+(defpackage+ #:fl.comp.tags
+  (:use-only #:cl
+             #:alexandria)
+  (:inherit #:fl.core)
+  (:export-only #:tags))

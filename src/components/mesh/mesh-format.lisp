@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :fl.comp.mesh)
 
 (defmacro define-mesh (&body body)
   body)

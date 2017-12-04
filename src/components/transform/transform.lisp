@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :fl.comp.transform)
 
 (define-component transform ()
   (parent nil)
@@ -77,9 +77,9 @@
                                     (rotation/incremental (vec))
                                     (scale/current (vec 1 1 1))
                                     (scale/incremental (vec)))
-  (with-slots (%actor %state %translation %rotation %scale) instance
-    (setf %actor actor
-          %state :initialize
+  (with-slots (%translation %rotation %scale) instance
+    (setf (actor instance) actor
+          (state instance) :initialize
           (current %translation) translation/current
           (incremental %translation) translation/incremental
           (current %rotation) (qrot +qid+ rotation/current)

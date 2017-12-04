@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :fl.comp.mesh)
 
 (defclass mesh-shared-storage ()
   ((%cache :accessor cache
