@@ -22,7 +22,6 @@
 
 (defun add-component (actor component)
   (setf (gethash component (components actor)) component)
-
   (push component (gethash (component-type component)
                            (components-by-type actor))))
 
@@ -38,7 +37,8 @@
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
 Returns T as a secondary value if there exists more than one component of that
 type."
-  (let ((components (actor-components-by-type actor component-type)))
+  (let* ((qualified-type (qualify-component component-type))
+         (components (actor-components-by-type actor qualified-type)))
     (values (first components)
             (> (length components) 1))))
 
@@ -48,12 +48,9 @@ db's and view's in the CORE-STATE. The actor is not yet in the scene
 and the main loop protocol will not be called on it or its components."
   ;; store actor in conceptual storage location.
   (setf (gethash actor (actor-initialize-db core-state)) actor)
-  ;; put all components into the hash which represents the fact we need to
-  ;; complete their initialization by type.
   (maphash
    (lambda (k v)
      (declare (ignore k))
-
      (setf (type-table
             (canonicalize-component-type (component-type v) core-state)
             (component-initialize-by-type-view core-state))
@@ -62,7 +59,7 @@ and the main loop protocol will not be called on it or its components."
    (components actor)))
 
 (defun realize-actor (core-state actor)
-  "Change the ACTOR's state to :active, then place into the actor-active-db
-in the CORE-STATE."
+  "Change the ACTOR's state to :active, then place into the actor-active-db in
+the CORE-STATE."
   (setf (state actor) :active
         (gethash actor (actor-active-db core-state)) actor))

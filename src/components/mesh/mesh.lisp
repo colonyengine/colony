@@ -1,6 +1,6 @@
 (in-package :fl.comp.mesh)
 
-(define-component mesh ()
+(define-component $mesh ()
   (location nil)
   (layout nil)
   (vao nil))
@@ -24,7 +24,7 @@
           :do (write-buffer-data layout vao id data))
     vao))
 
-(defmethod initialize-component ((component mesh) (context context))
+(defmethod initialize-component ((component $mesh) (context context))
   (symbol-macrolet ((store (shared-storage context component)))
     (with-accessors ((location location) (vao vao) (layout layout)) component
       (unless location

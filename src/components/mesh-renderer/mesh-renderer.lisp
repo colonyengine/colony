@@ -1,16 +1,16 @@
 (in-package :fl.comp.mesh-renderer)
 
-(define-component mesh-renderer ()
+(define-component $mesh-renderer ()
   (mesh nil)
   (transform nil)
   (shader :default))
 
-(defmethod initialize-component ((component mesh-renderer) (context context))
+(defmethod initialize-component ((component $mesh-renderer) (context context))
   (with-accessors ((actor actor) (mesh mesh) (transform transform)) component
-    (setf mesh (actor-component-by-type actor 'mesh)
-          transform (actor-component-by-type actor 'transform))))
+    (setf mesh (actor-component-by-type actor '$mesh)
+          transform (actor-component-by-type actor '$transform))))
 
-(defmethod render-component ((component mesh-renderer) (context context))
+(defmethod render-component ((component $mesh-renderer) (context context))
   (with-accessors ((transform transform) (mesh mesh)) component
     (when-let* ((shaders (shaders context))
                 (camera (camera context)))

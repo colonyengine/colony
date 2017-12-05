@@ -47,7 +47,7 @@
   (flet ((generate-component-forms (components)
            (let ((component-forms))
              (dolist (c components)
-               (push `(make-component ',(qualify-component (first c)))
+               (push `(make-component ',(first c))
                      component-forms))
              component-forms)))
     (let ((result))
@@ -68,7 +68,7 @@
               :for symbol = (gensym "COMPONENT-")
               :collect `(let ((,symbol (actor-component-by-type
                                         ,actor
-                                        ',(qualify-component component))))
+                                        ',component)))
                           (setf (initializer-thunk ,symbol)
                                 (lambda ()
                                   (reinitialize-instance
@@ -89,10 +89,8 @@
           :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
           :collect `(,(ensure-symbol 'add-child 'fl.comp.transform)
-                     (actor-component-by-type ,(or parent root)
-                                              ',(qualify-component 'transform))
-                     (actor-component-by-type ,child
-                                              ',(qualify-component 'transform))))))
+                     (actor-component-by-type ,(or parent root) '$transform)
+                     (actor-component-by-type ,child '$transform)))))
 
 (defun %generate-actor-spawn (core-state actor-names)
   (loop :for actor :in actor-names

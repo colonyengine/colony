@@ -1,6 +1,6 @@
 (in-package :fl.comp.transform)
 
-(define-component transform ()
+(define-component $transform ()
   (parent nil)
   (children nil)
   (translation (%make-transform-state 'transform-state-vector))
@@ -63,12 +63,12 @@
      (resolve-model node alpha))
    root-node))
 
-(defmethod make-component ((component-type (eql 'transform)) &rest args)
+(defmethod make-component ((component-type (eql '$transform)) &rest args)
   (let ((instance (make-instance component-type :type component-type)))
     (apply #'reinitialize-instance instance :type component-type args)
     instance))
 
-(defmethod reinitialize-instance ((instance transform)
+(defmethod reinitialize-instance ((instance $transform)
                                   &key
                                     actor
                                     (translation/current (vec))

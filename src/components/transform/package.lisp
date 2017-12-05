@@ -2,7 +2,7 @@
 
 (defpackage+ #:fl.comp.transform
   (:inherit #:fl.core)
-  (:export-only #:transform
+  (:export-only #:$transform
                 #:model
                 #:local
                 #:add-child

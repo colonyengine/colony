@@ -1,6 +1,6 @@
 (in-package :fl.comp.camera)
 
-(define-component camera ()
+(define-component $camera ()
   (activep nil)
   (view (mid))
   (projection (mid))
@@ -11,13 +11,13 @@
   (zoom 1)
   (transform nil))
 
-(defmethod initialize-component ((component camera) (context context))
+(defmethod initialize-component ((component $camera) (context context))
   (with-accessors ((mode mode) (actor actor) (transform transform)) component
     (make-projection mode component context)
-    (setf transform (actor-component-by-type actor 'transform))
+    (setf transform (actor-component-by-type actor '$transform))
     (push component (cameras (core-state context)))))
 
-(defmethod destroy-component ((component camera) (context context))
+(defmethod destroy-component ((component $camera) (context context))
   (deletef (cameras (core-state context)) component)
   (setf (camera context) nil))
 
@@ -37,7 +37,7 @@
         (mkortho! proj (- w) w (- h) h near far)))))
 
 (defgeneric compute-camera-view (camera context)
-  (:method ((camera camera) (context context))
+  (:method ((camera $camera) (context context))
     (with-accessors ((view view) (transform transform)) camera
       (let* ((eye (mtr->v (model transform)))
              (target (v+ eye (vneg (mrot->v (model transform) :z))))
