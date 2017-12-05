@@ -19,7 +19,7 @@
 
 (defmethod destroy-component ((component camera) (context context))
   (deletef (cameras (core-state context)) component)
-  (setf (camera context) nil))
+  (setf (active-camera context) nil))
 
 (defmethod make-projection ((mode (eql :perspective)) camera (context context))
   (with-accessors ((zoom zoom) (proj projection) (near clip-near)
