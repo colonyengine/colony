@@ -43,16 +43,11 @@
      `((,actor (gethash ',actor ,table))))
    actor-names))
 
-(defun %generate-component-name (symbol)
-  (if-let ((pkg (find-package (format nil "FL.COMP.~a" symbol))))
-    (intern (format nil "~a" symbol) pkg)
-    symbol))
-
 (defun %generate-component-initializers (actor-components)
   (flet ((generate-component-forms (components)
            (let ((component-forms))
              (dolist (c components)
-               (push `(make-component ',(%generate-component-name (first c)))
+               (push `(make-component ',(qualify-component (first c)))
                      component-forms))
              component-forms)))
     (let ((result))
@@ -73,7 +68,7 @@
               :for symbol = (gensym "COMPONENT-")
               :collect `(let ((,symbol (actor-component-by-type
                                         ,actor
-                                        ',(%generate-component-name component))))
+                                        ',(qualify-component component))))
                           (setf (initializer-thunk ,symbol)
                                 (lambda ()
                                   (reinitialize-instance
@@ -93,11 +88,11 @@
     (loop :with root = `(scene-tree ,core-state)
           :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
-          :collect `(fl.comp.transform:add-child
+          :collect `(,(ensure-symbol 'add-child 'fl.comp.transform)
                      (actor-component-by-type ,(or parent root)
-                                              'fl.comp.transform:transform)
+                                              ',(qualify-component 'transform))
                      (actor-component-by-type ,child
-                                              'fl.comp.transform:transform)))))
+                                              ',(qualify-component 'transform))))))
 
 (defun %generate-actor-spawn (core-state actor-names)
   (loop :for actor :in actor-names

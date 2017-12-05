@@ -49,6 +49,11 @@
      (realize-component core-state component))
    component-table))
 
+(defun qualify-component (component-type)
+  (if-let ((package (find-package (format nil "FL.COMP.~a" component-type))))
+    (ensure-symbol component-type package)
+    component-type))
+
 ;; The Component Protocol.
 (defgeneric initialize-component (component context)
   (:method ((component component) (context context))))

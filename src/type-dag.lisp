@@ -567,7 +567,6 @@ available depends-on in that GDEF."
       ;; and we're done with this analyzed-graph.
       (setf (graph angph) clg))))
 
-
 (defun canonicalize-component-type (component-type core-state)
   "If the COMPONENT-TYPE is reference in the 'component-dependency graph,
 then return it, otherwise return the unknown-type-id symbol."

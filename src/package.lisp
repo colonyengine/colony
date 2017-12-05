@@ -61,13 +61,3 @@
 
 (defpackage+ #:fl.shader
   (:use-only #:3bgl-glsl/cl))
-
-;;; component types
-
-(defpackage+ #:fl.comp.transform
-  (:inherit #:fl.core)
-  (:export-only #:transform
-                #:model
-                #:local
-                #:add-child
-                #:map-nodes))

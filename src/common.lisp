@@ -27,24 +27,19 @@
       (make-array (length sequence) :element-type type
                                     :initial-contents sequence))))
 
-
 ;; A "type-table" is a hash table indexed by a type (that is a symbol)
 ;; whose value is another hash table. The second hash is keyed with EQ
 ;; by an object whose value is the same object.
-
 (defun type-table (key type-table)
   (gethash key type-table))
-
 
 (defun (setf type-table) (entry type-name-key type-table)
   "SETF function for function TYPE-TABLE."
   (symbol-macrolet
       ((entry-ht (gethash type-name-key type-table)))
-
     (multiple-value-bind (looked-up-type-table presentp) entry-ht
       (unless presentp
         (let ((new-table (make-hash-table)))
           (setf entry-ht new-table
                 looked-up-type-table new-table)))
-
       (setf (gethash entry looked-up-type-table) entry))))
