@@ -7,7 +7,7 @@
               :initform (make-hash-table))
    (%shaders :accessor shaders
              :initform nil)
-   (%camera :accessor camera
-            :initform nil)
+   (%active-camera :accessor active-camera
+                   :initform nil)
    (%shared-storage-table :reader shared-storage-table
                           :initform (make-hash-table))))

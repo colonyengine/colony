@@ -5,10 +5,10 @@
 ;;; target, it only follows it from an offset. So it is not the same operation
 ;;; as parent the camera to the target.
 
-(define-component $following-camera ($target-camera)
+(define-component following-camera (target-camera)
   (offset (vec 0 0 0)))
 
-(defmethod update-component ((component $following-camera) (context context))
+(defmethod update-component ((component following-camera) (context context))
   (with-accessors ((view view) (transform transform)) (slave-camera component)
     (let* ((target-position (mtr->v (model (target-transform component))))
            (new-camera-position (v+! target-position

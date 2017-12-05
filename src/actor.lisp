@@ -44,9 +44,8 @@ type."
 
 (defun spawn-actor (core-state actor)
   "Take the ACTOR and INITIALIZER-THUNK-LIST and place into the initializing
-db's and view's in the CORE-STATE. The actor is not yet in the scene
-and the main loop protocol will not be called on it or its components."
-  ;; store actor in conceptual storage location.
+db's and view's in the CORE-STATE. The actor is not yet in the scene and the
+main loop protocol will not be called on it or its components."
   (setf (gethash actor (actor-initialize-db core-state)) actor)
   (maphash
    (lambda (k v)
@@ -55,7 +54,6 @@ and the main loop protocol will not be called on it or its components."
             (canonicalize-component-type (component-type v) core-state)
             (component-initialize-by-type-view core-state))
            v))
-
    (components actor)))
 
 (defun realize-actor (core-state actor)

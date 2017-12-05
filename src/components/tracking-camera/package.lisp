@@ -5,4 +5,4 @@
             #:fl.comp.transform
             #:fl.comp.camera
             #:fl.comp.target-camera)
-  (:export-only #:$tracking-camera))
+  (:export-only #:tracking-camera))

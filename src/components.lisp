@@ -16,8 +16,6 @@
 
 (defmacro define-component (name super-classes &body slots)
   `(progn
-     (unless (char= (aref (symbol-name ',name) 0) #\$)
-       (error "Component names must be prefixed with a '$' character."))
      (defclass ,name
          (,@(append (unless super-classes '(component))
                     super-classes))
@@ -32,11 +30,6 @@
                  (when type
                    `(:type ,type))))))
      (pushnew ',name *registered-components*)))
-
-(defun register-component (component-type)
-  (pushnew (cons (symbol-package component-type) (symbol-name component-type))
-           *registered-components*
-           :test #'equalp))
 
 (defmethod make-component (component-type &rest initargs)
   (let ((qualified-type (qualify-component component-type)))

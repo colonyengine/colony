@@ -89,8 +89,8 @@
           :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
           :collect `(,(ensure-symbol 'add-child 'fl.comp.transform)
-                     (actor-component-by-type ,(or parent root) '$transform)
-                     (actor-component-by-type ,child '$transform)))))
+                     (actor-component-by-type ,(or parent root) 'transform)
+                     (actor-component-by-type ,child 'transform)))))
 
 (defun %generate-actor-spawn (core-state actor-names)
   (loop :for actor :in actor-names

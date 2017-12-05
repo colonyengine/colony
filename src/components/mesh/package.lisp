@@ -2,7 +2,7 @@
 
 (defpackage+ #:fl.comp.mesh
   (:inherit #:fl.core)
-  (:export-only #:$mesh
+  (:export-only #:mesh
                 #:write-buffer-data
                 #:update-mesh-buffer
                 #:make-vao

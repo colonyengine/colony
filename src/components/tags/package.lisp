@@ -2,4 +2,4 @@
 
 (defpackage+ #:fl.comp.tags
   (:inherit #:fl.core)
-  (:export-only #:$tags))
+  (:export-only #:tags))

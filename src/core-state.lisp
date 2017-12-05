@@ -28,7 +28,7 @@
 (defun %make-scene-tree (core-state)
   (let* ((actor (make-actor :id (make-gensym '@universe) :scene t))
          (transform (make-component
-                     (qualify-component '$transform) :actor actor)))
+                     (qualify-component 'transform) :actor actor)))
     (add-component actor transform)
     (realize-actor core-state actor)
     (realize-component core-state transform)

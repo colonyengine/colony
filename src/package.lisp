@@ -17,7 +17,7 @@
            #:display
            #:cameras
            #:context
-           #:camera
+           #:active-camera
            #:shaders
            #:shared-storage
            #:define-settings
