@@ -70,7 +70,7 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
     ;; it is in, then look it up.
     (if (or
          ;; the component-type isn't even a class in whatever package the reader
-         ;; found it in..
+         ;; found it in.
          (null component-type/class)
          ;; The component-type is a class, but not a subclass of component
          (not (subtypep (class-name component-type/class)
