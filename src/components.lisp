@@ -89,7 +89,7 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
                 (multiple-value-bind (sym kind)
                     (find-symbol (symbol-name component-type) pkg-to-search)
                   (when (and (eq kind :external) (find-class sym nil))
-                    ;; do't forget to memoize it!
+                    ;; don't forget to memoize it!
                     (setf (gethash component-type
                                    (component-search-table core-state))
                           sym)
