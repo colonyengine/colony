@@ -18,8 +18,8 @@
    (%shaders :accessor shaders)
    (%vertex-metadata :accessor vertex-metadata)
    (%component-search-table :accessor component-search-table
-			    :initarg :component-search-table
-			    :initform (make-hash-table))
+                            :initarg :component-search-table
+                            :initform (make-hash-table))
    (%context :reader context)
    (%call-flows :reader call-flows
                 :initform (make-hash-table))
@@ -32,7 +32,7 @@
   (let* ((actor (make-actor (context core-state)
                             :id (make-gensym '@universe) :scene t))
          (transform (make-component (context core-state)
-				    'transform :actor actor)))
+                                    'transform :actor actor)))
     (add-component actor transform)
     (realize-actor core-state actor)
     (realize-component core-state transform)
