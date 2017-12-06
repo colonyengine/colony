@@ -96,10 +96,26 @@
 (defun make-depform (&rest init-args)
   (apply #'make-instance 'depform init-args))
 
-;; ;;;; annotation classes for different graph categories
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ;;;; annotation classes / protocol for different graph categories
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defgeneric generate-graph-annotation (category angph)
+  (:documentation "Generate any annotations this analyzed-graph may need.
+needs.")
+  (:method (category angph)
+    (declare (ignore category angph))
+    nil))
 
-;; For category COMPONNENT-DEPENDENCY
+(defgeneric make-graph-annotation (category &rest init-args)
+  (:documentation "Make an instance of an appropriate graph annotation depending
+on cateogry.")
+  ;; Default method is no annotation at all.
+  (:method (category &rest init-args)
+    (declare (ignore category init-args))
+    nil))
+
+;; For category COMPONENT-DEPENDENCY
 (defclass graph-annotation/component-dependency ()
   ((%unknown-type-id :accessor unknown-type-id
                      :initarg :unknown-type-id)
@@ -107,8 +123,20 @@
                       :initarg :referenced-types
                       :initform (make-hash-table))))
 
-(defun make-graph-annotation/component-dependency (&rest init-args)
+(defmethod make-graph-annotation ((category (eql 'component-dependency))
+                                  &rest init-args)
   (apply #'make-instance 'graph-annotation/component-dependency init-args))
+
+;; For category COMPONENT-PACKAGE-SEARCH-ORDER
+(defclass graph-annotation/component-package-search-order ()
+  ((%pattern-matched-packages :accessor pattern-matched-packages
+                              :initarg :pattern-matched-packages
+                              :initform (make-hash-table))))
+
+(defmethod make-graph-annotation
+    ((category (eql 'component-package-search-order)) &rest init-args)
+  (apply #'make-instance 'graph-annotation/component-package-search-order
+         init-args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -156,8 +184,10 @@ return them as a list."
     ;; maybe other cases needed?
     (t nil)))
 
+(defgeneric canonicalize-dependency-form (category dependency-form))
 
-(defun canonicalize-dependency-form (dependency-form)
+(defmethod canonicalize-dependency-form
+    ((category (eql 'component-dependency)) dependency-form)
   (loop :for element :in dependency-form
         :collect
         (cond
@@ -168,8 +198,19 @@ return them as a list."
           (t
            `(component-type ,element)))))
 
+(defmethod canonicalize-dependency-form
+    ((category (eql 'component-package-search-order)) dependency-form)
+  (loop :for element :in dependency-form
+        :collect
+        (cond
+          ((consp element)
+           element)
+          ((is-syntax-form-p '-> element)
+           element)
+          (t
+           `(potential-package ,element)))))
 
-(defun segment-dependency-form (form)
+(defun segment-dependency-form (category form)
   "Lift splices and then segment the dependency FORM into hyperedges.
 
 If the form is null, return four values:
@@ -181,7 +222,7 @@ If the form is not null, but contains no hyper edges, return three values:
 If the form is not null, and contains hyper edges, return three values:
   list of hyper-edge pairs, :hyperedges"
 
-  (let ((canonical-form (canonicalize-dependency-form form)))
+  (let ((canonical-form (canonicalize-dependency-form category form)))
 
     (let* ((x (split-sequence:split-sequence
                '-> canonical-form :test #'eql/package-relaxed))
@@ -200,7 +241,7 @@ If the form is not null, and contains hyper edges, return three values:
 
 
 ;; Then the code to perform the parsing.
-(defun parse-subform (form)
+(defun parse-subform (category form)
   (assert (or (is-syntax-form-p '(subdag) form)
               (is-syntax-form-p '(subgraph) form)))
 
@@ -212,7 +253,7 @@ If the form is not null, and contains hyper edges, return three values:
      (loop :for dep :in dependency-forms
            :collect
            (multiple-value-bind (lifted-dependency-form kind)
-               (segment-dependency-form dep)
+               (segment-dependency-form category dep)
              (make-depform :original-form dep
                            :canonical-form lifted-dependency-form
                            :kind kind))))))
@@ -225,20 +266,21 @@ If the form is not null, and contains hyper edges, return three values:
   (assert (is-syntax-form-p '(define-graph) form))
 
   (destructuring-bind (name options . subforms) (rest form)
-    (make-graphdef
-     name
-     :original-form form
-     :enabled (get-graph-option :enabled options)
-     :category (get-graph-option :category options)
-     :depends-on (get-graph-option :depends-on options)
-     :roots (get-graph-option :roots options)
-     :subforms
-     (let ((subform-db (make-hash-table)))
-       (loop :for i :in subforms
-             :do (let ((sf (parse-subform i)))
-                   (setf (gethash (name sf) subform-db)
-                         sf)))
-       subform-db))))
+    (let ((category (get-graph-option :category options)))
+      (make-graphdef
+       name
+       :original-form form
+       :enabled (get-graph-option :enabled options)
+       :category category
+       :depends-on (get-graph-option :depends-on options)
+       :roots (get-graph-option :roots options)
+       :subforms
+       (let ((subform-db (make-hash-table)))
+         (loop :for i :in subforms
+               :do (let ((sf (parse-subform category i)))
+                     (setf (gethash (name sf) subform-db)
+                           sf)))
+         subform-db)))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -463,6 +505,11 @@ available depends-on in that GDEF."
       :for splices = (cl-graph:find-vertexes-if
                       clg (lambda (v)
                             (is-syntax-form-p
+                             ;; TODO: This FIRST here implies a structure that
+                             ;; not all vertexes may actually have. It forces
+                             ;; canonicalize-dependency-form to always make the
+                             ;; element a list, like (component-type foo) or
+                             ;; (potential-package :bar)
                              '(splice) (first (cl-graph:element v)))))
       :unless splices :return nil
         :do
@@ -513,8 +560,6 @@ available depends-on in that GDEF."
                    ;; Then finally, delete the expanding splice vertex
                    (cl-graph:delete-vertex clg splice)))))))
 
-
-
     #++(format t "Single graph expansion....~%")
     #++(dolist (edge (cl-graph:edges clg))
          (let ((*print-right-margin* most-positive-fixnum))
@@ -525,47 +570,90 @@ available depends-on in that GDEF."
     #++(format t "Graph roots for clg are: ~A~%" (graph-roots clg))
     #++(format t "Graph leaves for clg are: ~A~%" (graph-leaves clg))
 
-    ;; check for cycles.  TODO: We should have a flag for this in a
-    ;; graph definition that saturates all definitions of that
-    ;; category to T (maybe? Should there be another way to specify
-    ;; this?). Currently, we just hard code it here.
-    (let ((contains-cycles-p
-            (cl-graph:find-vertex-if clg (lambda (vert)
-                                           (cl-graph:in-cycle-p clg vert)))))
+    ;; finally store it in the analyhzed-graph.
+    (setf (graph angph) clg)
 
-      ;; compute/store toposort, can only do if no cycles.
-      (unless contains-cycles-p
-        (let ((tsort (mapcar #'cl-graph:element
-                             (cl-graph:topological-sort clg))))
-          #++(format t "toposort: ~A~%" tsort)
-          (setf (toposort angph) tsort)))
+    ;; and then generate any annotations we might need.
+    (generate-graph-annotation (category angph) angph)))
 
-      ;; Compute an annotation for the graph category. This is graph
-      ;; category specific. Probably should be a GF...
-      (cond
-        ((eql/package-relaxed 'component-dependency (category angph))
 
-         (let ((annotation (make-graph-annotation/component-dependency
-                            :unknown-type-id (gensym "UNKNOWN-TYPE-ID-"))))
+(defmethod generate-graph-annotation
+    ((category (eql 'component-dependency)) angph)
 
-           ;; collect all referenced component-types in the graph.
-           (cl-graph:iterate-vertexes
-            clg (lambda (v)
-                  (let ((elem-v (cl-graph:element v)))
-                    (when (is-syntax-form-p '(component-type) elem-v)
-                      (setf (gethash (second elem-v)
-                                     (referenced-types annotation))
-                            T)))))
+  (let* ((clg (graph angph))
+         (contains-cycles-p
+           (cl-graph:find-vertex-if clg (lambda (vert)
+                                          (cl-graph:in-cycle-p clg vert)))))
 
-           (setf (annotation angph) annotation)))
+    ;; compute/store toposort, can only do if no cycles.
+    (unless contains-cycles-p
+      (let ((tsort (mapcar #'cl-graph:element
+                           (cl-graph:topological-sort clg))))
+        #++(format t "toposort: ~A~%" tsort)
+        (setf (toposort angph) tsort)))
 
-        (t
-         ;; TODO: need to figure out a good way to handle these cases
-         ;; as they grow.
-         nil))
+    (let ((annotation (make-graph-annotation
+                       (category angph)
+                       :unknown-type-id (gensym "UNKNOWN-TYPE-ID-"))))
 
-      ;; and we're done with this analyzed-graph.
-      (setf (graph angph) clg))))
+      ;; collect all referenced component-types in the graph.
+      (cl-graph:iterate-vertexes
+       clg (lambda (v)
+             (let ((elem-v (cl-graph:element v)))
+               (when (is-syntax-form-p '(component-type) elem-v)
+                 (setf (gethash (second elem-v)
+                                (referenced-types annotation))
+                       T)))))
+
+      (setf (annotation angph) annotation))))
+
+(defmethod generate-graph-annotation
+    ((category (eql 'component-package-search-order)) angph)
+
+  (let* ((clg (graph angph))
+         (contains-cycles-p
+           (cl-graph:find-vertex-if clg (lambda (vert)
+                                          (cl-graph:in-cycle-p clg vert)))))
+
+    ;; compute/store toposort, can only do if no cycles.
+    (unless contains-cycles-p
+      (let ((tsort (mapcar #'cl-graph:element
+                           (cl-graph:topological-sort clg))))
+        #++(format t "toposort: ~A~%" tsort)
+        (setf (toposort angph) tsort)))
+
+    (let ((annotation (make-graph-annotation (category angph))))
+
+      ;; Then, for each vertex in the clg, annotate the actual packages that
+      ;; match to it.
+
+      (let ((all-packages (sort (mapcar #'package-name (list-all-packages))
+                                #'string<)))
+
+        (cl-graph:iterate-vertexes
+         clg
+         (lambda (v)
+           (let* ((elem-v (cl-graph:element v))
+                  (putative-package-name (symbol-name (second elem-v)))
+                  ;; This regex is mildly wrong and will match a extraneous
+                  ;; stuff because it isn't escaped properly, stuff like
+                  ;; . + ? | whatever in the package name will mess things up.
+                  (putative-package-name-regex
+                    (concatenate 'string "^" putative-package-name "$")))
+             ;; Kind of a terrible Big-O...
+             (dolist (pkg-name all-packages)
+               (when-let ((matched-pkg-name (ppcre:scan-to-strings
+                                             putative-package-name-regex
+                                             pkg-name)))
+                 (let ((found-pkg (find-package matched-pkg-name)))
+                   (pushnew found-pkg
+			    ;; Use the original symbol from the graph.
+                            (gethash (second elem-v)
+                                     (pattern-matched-packages
+                                      annotation))))))))))
+
+      (setf (annotation angph) annotation))))
+
 
 (defun canonicalize-component-type (component-type core-state)
   "If the COMPONENT-TYPE is reference in the 'component-dependency graph,

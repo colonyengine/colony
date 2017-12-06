@@ -43,11 +43,11 @@
      `((,actor (gethash ',actor ,table))))
    actor-names))
 
-(defun %generate-component-initializers (actor-components)
+(defun %generate-component-initializers (core-state actor-components)
   (flet ((generate-component-forms (components)
            (let ((component-forms))
              (dolist (c components)
-               (push `(make-component ',(first c))
+               (push `(make-component (context ,core-state) ',(first c))
                      component-forms))
              component-forms)))
     (let ((result))
@@ -107,9 +107,10 @@
          (let ((,actor-table (make-hash-table)))
            (dolist (,actor-name ',actor-names)
              (setf (gethash ,actor-name ,actor-table)
-                   (make-actor :id ,actor-name :scene ,scene-name)))
+                   (make-actor (context ,core-state)
+                               :id ,actor-name :scene ,scene-name)))
            (let ,bindings
-             ,@(%generate-component-initializers actor-components)
+             ,@(%generate-component-initializers core-state actor-components)
              ,@(%generate-component-thunks actor-names actor-components)
              ,@(%generate-relationships core-state scene-spec)
              ,@(%generate-actor-spawn core-state actor-names)
@@ -146,4 +147,4 @@
   `(let ((scene ,(apply #'parse-scene `',name body)))
      (declare (special %temp-scene))
      ,(when enabled
-       `(setf (gethash ',name %temp-scene) scene))))
+        `(setf (gethash ',name %temp-scene) scene))))

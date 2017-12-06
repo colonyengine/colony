@@ -17,6 +17,9 @@
              :initform nil)
    (%shaders :accessor shaders)
    (%vertex-metadata :accessor vertex-metadata)
+   (%component-search-table :accessor component-search-table
+                            :initarg :component-search-table
+                            :initform (make-hash-table))
    (%context :reader context)
    (%call-flows :reader call-flows
                 :initform (make-hash-table))
@@ -26,9 +29,10 @@
             :initform (make-hash-table))))
 
 (defun %make-scene-tree (core-state)
-  (let* ((actor (make-actor :id (make-gensym '@universe) :scene t))
-         (transform (make-component
-                     (qualify-component 'transform) :actor actor)))
+  (let* ((actor (make-actor (context core-state)
+                            :id (make-gensym '@universe) :scene t))
+         (transform (make-component (context core-state)
+                                    'transform :actor actor)))
     (add-component actor transform)
     (realize-actor core-state actor)
     (realize-component core-state transform)
