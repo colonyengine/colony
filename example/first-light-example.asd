@@ -16,12 +16,15 @@
                #:gamebox-math
                #:first-light
                #:glkit
-               #:cl-opengl)
+               #:cl-opengl
+	       #:defpackage-plus)
   :pathname "src"
   :serial t
   :components
   ((:file "package")
+   (:file "components/stub-0/package")
    (:file "input")
+   (:file "components/stub-0/stub-0")
    (:file "components/gun/gun")
    (:file "components/gun-manager/gun-manager")
    (:file "components/hit-points/hit-points")))

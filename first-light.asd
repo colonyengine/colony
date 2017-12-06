@@ -29,6 +29,7 @@
   :serial t
   :components
   ((:file "package")
+   (:file "components/stub-0/package") ;; test package
    (:file "components/transform/package")
    (:file "components/camera/package")
    (:file "components/tracking-camera/package")
@@ -53,6 +54,7 @@
    (:file "shader")
    (:file "engine")
    (:file "shaders/shaders")
+   (:file "components/stub-0/stub-0")
    (:file "components/transform/state")
    (:file "components/transform/transform")
    (:file "components/camera/camera")
