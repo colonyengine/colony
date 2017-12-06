@@ -74,14 +74,11 @@
                      component-type pkg-to-search)
           (multiple-value-bind (sym kind)
               (find-symbol (symbol-name component-type) pkg-to-search)
-	    (declare (ignorable sym))
             (when (and (eq kind :external)
-                       (find-class (intern (symbol-name component-type)
-                                           pkg-to-search)))
+                       (find-class sym))
               #++(format t "XXX Found a component: pkg:[~A]:~A~%"
                          (package-name pkg-to-search) sym)
-              (return-from qualify-component
-                (intern (symbol-name component-type) pkg-to-search))))))))
+              (return-from qualify-component sym)))))))
 
 
   #++(format t "QUALIFY-COMPONENT: FALLBACK~%")
