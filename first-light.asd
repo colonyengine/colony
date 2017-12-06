@@ -22,6 +22,7 @@
                #:simple-logger
                #:gamebox-math
                #:gamebox-frame-manager
+               #:pngload
                #:defpackage-plus)
   :pathname "src"
   :serial t
@@ -34,7 +35,6 @@
    (:file "components/mesh/package")
    (:file "components/mesh-renderer/package")
    (:file "components/tags/package")
-
    (:file "common")
    (:file "logging")
    (:file "extensions")
@@ -60,6 +60,8 @@
    (:file "components/following-camera/following-camera")
    (:file "components/mesh/mesh")
    (:file "components/mesh/mesh-format")
-   (:file "components/mesh/mesh-shared-storage")
+   (:file "components/mesh/shared-storage")
    (:file "components/mesh-renderer/mesh-renderer")
+   (:file "components/mesh-renderer/shared-storage")
+   (:file "components/mesh-renderer/texture")
    (:file "components/tags/tags")))

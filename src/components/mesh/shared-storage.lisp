@@ -2,7 +2,6 @@
 
 (defclass mesh-shared-storage ()
   ((%cache :accessor cache
-           :initarg :cache
            :initform (make-hash-table :test #'equalp))))
 
 (defclass cached-mesh ()

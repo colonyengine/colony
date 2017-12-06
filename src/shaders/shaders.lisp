@@ -11,9 +11,14 @@
 
 (output frag-color :vec4 :stage :fragment)
 
+(defstruct texture-struct
+  (sampler1 :sampler-2d)
+  (sampler2 :sampler-2d))
+
 (uniform model :mat4)
 (uniform view :mat4)
 (uniform proj :mat4)
+(uniform tex texture-struct)
 
 (interface varyings (:out (:vertex v-out)
                      :in (:fragment f-in))
@@ -25,7 +30,12 @@
         (@ v-out color) color
         gl-position (* proj view model (vec4 pos 1))))
 
-(defun default-fragment ()
+(defun color-fragment ()
   (setf frag-color (@ f-in color))
+  (when (zerop (.a frag-color))
+    (discard)))
+
+(defun texture-fragment ()
+  (setf frag-color (texture (@ tex sampler1) (@ f-in uv1)))
   (when (zerop (.a frag-color))
     (discard)))
