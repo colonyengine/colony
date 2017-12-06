@@ -13,6 +13,7 @@
   :long-description #.(uiop:read-file-string
                        (uiop/pathname:subpathname *load-pathname* "README.md"))
   :depends-on (#:alexandria
+               #:cl-ppcre
                #:cl-graph
                #:split-sequence
                #:sdl2

@@ -31,8 +31,9 @@
                    `(:type ,type))))))
      (pushnew ',name *registered-components*)))
 
-(defmethod make-component (component-type &rest initargs)
-  (let ((qualified-type (qualify-component component-type)))
+(defmethod make-component (context component-type &rest initargs)
+  (let ((qualified-type (qualify-component (core-state context)
+					   component-type)))
     (apply #'make-instance qualified-type :type qualified-type initargs)))
 
 (defun realize-component (core-state component)
@@ -52,7 +53,14 @@
      (realize-component core-state component))
    component-table))
 
-(defun qualify-component (component-type)
+(defun qualify-component (core-state component-type)
+  (declare (ignorable core-state))
+
+  ;; iterate down the toposort and return a symbol interned in the correct
+  ;; package when I find it.
+
+  ;; TODO
+
   (or
    (find-if
     (lambda (x)

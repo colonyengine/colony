@@ -11,14 +11,16 @@
    (%components-by-type :reader components-by-type
                         :initform (make-hash-table))
    (%scene :accessor scene
-           :initarg :scene)))
+           :initarg :scene)
+   (%core-state :reader core-state
+                :initarg :core-state)))
 
 (defmethod print-object ((object actor) stream)
   (print-unreadable-object (object stream :type t)
     (format stream "~a" (id object))))
 
-(defun make-actor (&rest args)
-  (apply #'make-instance 'actor args))
+(defun make-actor (context &rest args)
+  (apply #'make-instance 'actor :core-state (core-state context) args))
 
 (defun add-component (actor component)
   (setf (gethash component (components actor)) component)
@@ -37,7 +39,7 @@
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
 Returns T as a secondary value if there exists more than one component of that
 type."
-  (let* ((qualified-type (qualify-component component-type))
+  (let* ((qualified-type (qualify-component (core-state actor) component-type))
          (components (actor-components-by-type actor qualified-type)))
     (values (first components)
             (> (length components) 1))))

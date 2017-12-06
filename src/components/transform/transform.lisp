@@ -63,7 +63,8 @@
      (resolve-model node alpha))
    root-node))
 
-(defmethod make-component ((component-type (eql 'transform)) &rest args)
+(defmethod make-component (context (component-type (eql 'transform)) &rest args)
+  ;; TODO: Do I have to qualify type here?
   (let ((instance (make-instance component-type :type component-type)))
     (apply #'reinitialize-instance instance :type component-type args)
     instance))
