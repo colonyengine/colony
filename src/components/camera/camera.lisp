@@ -50,9 +50,8 @@
       (return-from find-active-camera camera))))
 
 (defun zoom-camera (display direction)
-  (with-cfg (width height) context
-    (let* ((core-state (core-state display))
-           (camera (find-active-camera core-state)))
-      (with-accessors ((zoom zoom) (mode mode)) camera
-        (setf zoom (clamp (+ zoom (/ direction 2)) 1 10))
-        (make-projection mode camera (context core-state))))))
+  (let* ((core-state (core-state display))
+         (camera (find-active-camera core-state)))
+    (with-accessors ((zoom zoom) (mode mode)) camera
+      (setf zoom (clamp (+ zoom (/ direction 2)) 1 10))
+      (make-projection mode camera (context core-state)))))
