@@ -56,10 +56,15 @@
 (defun qualify-component (core-state component-type)
   (declare (ignorable core-state))
 
-  ;; iterate down the toposort and return a symbol interned in the correct
-  ;; package when I find it.
+  ;; Do a fast lookup in a memoization table first...
+  (multiple-value-bind (pkg-sym presentp)
+      (gethash component-type (component-search-table core-state))
+    (when presentp
+      (return-from qualify-component pkg-sym)))
 
-  ;; TODO. CHeck this over, make it better. definite memoizztion.
+  ;; Otherwise, iterate down the toposort and return a symbol interned in the
+  ;; correct package when I find it.
+
   (let* ((angph (gethash 'component-package-search-order
                          (analyzed-graphs core-state)))
          (annotation (annotation angph)))
@@ -78,8 +83,13 @@
                        (find-class sym))
               #++(format t "XXX Found a component: pkg:[~A]:~A~%"
                          (package-name pkg-to-search) sym)
+              (setf (gethash component-type
+                             (component-search-table core-state))
+                    sym)
               (return-from qualify-component sym)))))))
 
+
+  ;; Need to handle this better and maybe? get rid of *registered-components*
 
   #++(format t "QUALIFY-COMPONENT: FALLBACK~%")
   (or

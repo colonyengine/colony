@@ -17,6 +17,9 @@
              :initform nil)
    (%shaders :accessor shaders)
    (%vertex-metadata :accessor vertex-metadata)
+   (%component-search-table :accessor component-search-table
+			    :initarg :component-search-table
+			    :initform (make-hash-table))
    (%context :reader context)
    (%call-flows :reader call-flows
                 :initform (make-hash-table))
