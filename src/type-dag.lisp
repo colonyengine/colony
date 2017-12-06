@@ -647,7 +647,8 @@ available depends-on in that GDEF."
                                              pkg-name)))
                  (let ((found-pkg (find-package matched-pkg-name)))
                    (pushnew found-pkg
-                            (gethash putative-package-name
+			    ;; Use the original symbol from the graph.
+                            (gethash (second elem-v)
                                      (pattern-matched-packages
                                       annotation))))))))))
 

@@ -33,7 +33,7 @@
 
 (defmethod make-component (context component-type &rest initargs)
   (let ((qualified-type (qualify-component (core-state context)
-					   component-type)))
+                                           component-type)))
     (apply #'make-instance qualified-type :type qualified-type initargs)))
 
 (defun realize-component (core-state component)
@@ -59,8 +59,31 @@
   ;; iterate down the toposort and return a symbol interned in the correct
   ;; package when I find it.
 
-  ;; TODO
+  ;; TODO. CHeck this over, make it better. definite memoizztion.
+  (let* ((angph (gethash 'component-package-search-order
+                         (analyzed-graphs core-state)))
+         (annotation (annotation angph)))
 
+    (dolist (potential-package (toposort angph))
+      (let ((potential-package-name (second potential-package)))
+        #++(format t "checking for component ~A in potential-package-name ~A~%"
+                   component-type potential-package-name)
+        (dolist (pkg-to-search (gethash potential-package-name
+                                        (pattern-matched-packages annotation)))
+          #++(format t "checking for component ~A in pkg-to-search ~A~%"
+                     component-type pkg-to-search)
+          (multiple-value-bind (sym kind)
+              (find-symbol (symbol-name component-type) pkg-to-search)
+            (when (and (eq kind :external)
+                       (find-class (intern (symbol-name component-type)
+                                           pkg-to-search)))
+              #++(format t "XXX Found a component: pkg:[~A]:~A~%"
+                         (package-name pkg-to-search) sym)
+              (return-from qualify-component
+                (intern (symbol-name component-type) pkg-to-search))))))))
+
+
+  #++(format t "QUALIFY-COMPONENT: FALLBACK~%")
   (or
    (find-if
     (lambda (x)
