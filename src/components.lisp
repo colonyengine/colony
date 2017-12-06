@@ -74,6 +74,7 @@
                      component-type pkg-to-search)
           (multiple-value-bind (sym kind)
               (find-symbol (symbol-name component-type) pkg-to-search)
+	    (declare (ignorable sym))
             (when (and (eq kind :external)
                        (find-class (intern (symbol-name component-type)
                                            pkg-to-search)))
