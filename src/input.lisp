@@ -20,3 +20,21 @@
     (let ((key-name (sdl2:scancode-key-name key)))
       (slog:emit :input.key.up key-name)
       (call-next-method))))
+
+(defmethod kit.sdl2:mousewheel-event ((display display) ts x y)
+  (when (plusp y)
+    (mouse-scroll-up display))
+  (when (minusp y)
+    (mouse-scroll-down display)))
+
+(defgeneric mouse-scroll-up (display)
+  (:method ((display display)))
+  (:method :around ((display display))
+    (slog:emit :input.scroll.up)
+    (call-next-method)))
+
+(defgeneric mouse-scroll-down (display)
+  (:method ((display display)))
+  (:method :around ((display display))
+    (slog:emit :input.scroll.down)
+    (call-next-method)))

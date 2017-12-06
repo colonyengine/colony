@@ -32,7 +32,9 @@
 
   ;; input
   (:export #:key-down
-           #:key-up)
+           #:key-up
+           #:mouse-scroll-up
+           #:mouse-scroll-down)
 
   ;; scene
   (:export #:define-scene

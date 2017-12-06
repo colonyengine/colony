@@ -21,6 +21,12 @@
 (slog:define-message :debug :input.key.up
   "Key released: ~a.")
 
+(slog:define-message :debug :input.scroll.up
+  "Mouse wheel scrolled up.")
+
+(slog:define-message :debug :input.scroll.down
+  "Mouse wheel scrolled down.")
+
 (slog:define-message :trace :flow.enter
   "Entering flow: (~a ~a ~a).")
 

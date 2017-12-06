@@ -7,6 +7,7 @@
                 #:transform
                 #:view
                 #:projection
+                #:zoom-camera
                 #:compute-camera-view))
 
 (defpackage+ #:fl.comp.target-camera
