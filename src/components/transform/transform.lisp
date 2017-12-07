@@ -5,9 +5,9 @@
   (children nil)
   (translation (%make-transform-state 'transform-state-vector))
   (rotation (%make-transform-state 'transform-state-quaternion
-                                   :incremental (vec)))
+                                   :incremental (v3zero)))
   (scale (%make-transform-state 'transform-state-vector
-                                :current (vec 1 1 1)))
+                                :current (vec3 1 1 1)))
   (local (mid))
   (model (mid)))
 
@@ -17,8 +17,8 @@
 
 (defun translate-node (node)
   (with-slots (%current %incremental %previous) (translation node)
-    (vcp! %previous %current)
-    (v+! %current %current %incremental)))
+    (v3cp! %previous %current)
+    (v3+! %current %current %incremental)))
 
 (defun rotate-node (node)
   (with-slots (%current %incremental %previous) (rotation node)
@@ -27,8 +27,8 @@
 
 (defun scale-node (node)
   (with-slots (%current %incremental %previous) (scale node)
-    (vcp! %previous %current)
-    (v+! %current %current %incremental)))
+    (v3cp! %previous %current)
+    (v3+! %current %current %incremental)))
 
 (defun transform-node (node)
   (scale-node node)
@@ -42,8 +42,8 @@
     (interpolate-state %translation alpha)
     (m*! %local
          (q->m! %local (interpolated %rotation))
-         (v->mscale +mid+ (interpolated %scale)))
-    (v->mtr! %local (interpolated %translation))))
+         (v3->mscale +mid+ (interpolated %scale)))
+    (v3->mtr! %local (interpolated %translation))))
 
 (defun resolve-model (node alpha)
   (with-slots (%parent %local %model) node
@@ -72,12 +72,12 @@
 (defmethod reinitialize-instance ((instance transform)
                                   &key
                                     actor
-                                    (translation/current (vec))
-                                    (translation/incremental (vec))
-                                    (rotation/current (vec))
-                                    (rotation/incremental (vec))
-                                    (scale/current (vec 1 1 1))
-                                    (scale/incremental (vec)))
+                                    (translation/current (v3zero))
+                                    (translation/incremental (v3zero))
+                                    (rotation/current (v3zero))
+                                    (rotation/incremental (v3zero))
+                                    (scale/current (vec3 1 1 1))
+                                    (scale/incremental (v3zero)))
   (with-slots (%translation %rotation %scale) instance
     (setf (actor instance) actor
           (state instance) :initialize

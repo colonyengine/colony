@@ -39,9 +39,9 @@
 (defgeneric compute-camera-view (camera context)
   (:method ((camera camera) (context context))
     (with-accessors ((view view) (transform transform)) camera
-      (let* ((eye (mtr->v (model transform)))
-             (target (v+ eye (vneg (mrot->v (model transform) :z))))
-             (up (mrot->v (model transform) :y)))
+      (let* ((eye (mtr->v3 (model transform)))
+             (target (v3+ eye (v3neg (mrot->v3 (model transform) :z))))
+             (up (mrot->v3 (model transform) :y)))
         (mkview! view eye target up)))))
 
 (defun find-active-camera (core-state)

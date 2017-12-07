@@ -6,7 +6,7 @@
 ;;; as parent the camera to the target.
 
 (define-component following-camera (target-camera)
-  (offset (vec 0 0 0)))
+  (offset (v3zero)))
 
 (defmethod update-component ((component following-camera) (context context))
   (with-accessors ((view view) (transform transform)) (slave-camera component)

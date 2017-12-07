@@ -20,7 +20,7 @@
   (:method ((type (eql 'transform-state-scalar)))
     0)
   (:method ((type (eql 'transform-state-vector)))
-    (vec))
+    (v3zero))
   (:method ((type (eql 'transform-state-quaternion)))
     (qid)))
 
@@ -41,7 +41,7 @@
 
 (defmethod interpolate-state ((state transform-state-vector) factor)
   (with-slots (%previous %current %interpolated) state
-    (vlerp! %interpolated %previous %current factor)))
+    (v3lerp! %interpolated %previous %current factor)))
 
 (defmethod interpolate-state ((state transform-state-quaternion) factor)
   (with-slots (%previous %current %interpolated) state
