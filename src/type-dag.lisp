@@ -75,8 +75,8 @@ name, with graphdef instance as value.")))
    (%depforms :accessor depforms
               :initarg :depforms)))
 
-(defun make-subform (name &rest init-args)
-  (apply #'make-instance 'subform :name name init-args))
+(defun make-subform (name &rest args)
+  (apply #'make-instance 'subform :name name args))
 
 (defclass depform ()
   ;; the original depform for debugging/error output
@@ -89,20 +89,21 @@ name, with graphdef instance as value.")))
    (%kind :accessor kind
           :initarg :kind)))
 
-(defun make-depform (&rest init-args)
-  (apply #'make-instance 'depform init-args))
+(defun make-depform (&rest args)
+  (apply #'make-instance 'depform args))
 
 ;;; annotation classes / protocol for different graph categories
 
-(defgeneric generate-graph-annotation (category angph)
+(defgeneric generate-graph-annotation (category graph)
   (:documentation "Generate any annotations this analyzed-graph may need.")
-  (:method (category angph)))
+  (:method (category graph)))
 
-(defgeneric make-graph-annotation (category &rest init-args)
+(defgeneric make-graph-annotation (category &rest args)
   (:documentation "Make an instance of an appropriate graph annotation depending
 on cateogry.")
   ;; Default method is no annotation at all.
-  (:method (category &rest init-args)))
+  (:method (category &rest args)
+    (declare (ignore args))))
 
 ;; For category COMPONENT-DEPENDENCY
 (defclass graph-annotation/component-dependency ()
@@ -281,8 +282,8 @@ If the form is not null, and contains hyper edges, return values: list of
   ;; may be a consp form in addition to a symbol. A) Ensure if subdag, all are
   ;; subdag. B) Ensure if subgraph, all are subgraph.
   ;; TODO: convert each category to appropriate cl-graph version
-  (loop :for angph :being :the :hash-values :in (analyzed-graphs owner)
-        :do (analyze-graph angph)))
+  (loop :for graph :being :the :hash-values :in (analyzed-graphs owner)
+        :do (analyze-graph graph)))
 
 (defun add-cross-product-edges (clg source-list target-list)
   (map-product

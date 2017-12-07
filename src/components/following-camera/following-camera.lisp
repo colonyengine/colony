@@ -10,9 +10,9 @@
 
 (defmethod update-component ((component following-camera) (context context))
   (with-accessors ((view view) (transform transform)) (slave-camera component)
-    (let* ((target-position (mtr->v (model (target-transform component))))
-           (new-camera-position (v+! target-position
-                                     target-position
-                                     (offset component))))
-      (v->mtr! (model transform) new-camera-position)
+    (let* ((target-position (mtr->v3 (model (target-transform component))))
+           (new-camera-position (v3+! target-position
+                                      target-position
+                                      (offset component))))
+      (v3->mtr! (model transform) new-camera-position)
       (compute-camera-view (slave-camera component) context))))

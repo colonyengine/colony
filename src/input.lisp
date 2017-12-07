@@ -28,13 +28,13 @@
     (mouse-scroll-down display)))
 
 (defgeneric mouse-scroll-up (display)
-  (:method ((display display)))
+  (:method (display))
   (:method :around ((display display))
     (slog:emit :input.scroll.up)
     (call-next-method)))
 
 (defgeneric mouse-scroll-down (display)
-  (:method ((display display)))
+  (:method (display))
   (:method :around ((display display))
     (slog:emit :input.scroll.down)
     (call-next-method)))
