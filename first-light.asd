@@ -29,7 +29,7 @@
   :serial t
   :components
   ((:file "package")
-   (:file "components/stub-0/package") ;; test package
+   (:file "components/stub-0/package")
    (:file "components/transform/package")
    (:file "components/camera/package")
    (:file "components/tracking-camera/package")

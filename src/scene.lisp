@@ -47,7 +47,7 @@
   (flet ((generate-component-forms (components)
            (let ((component-forms))
              (dolist (c components)
-               (push `(make-component (context ,core-state) ',(first c))
+               (push `(make-component ',(first c) (context ,core-state))
                      component-forms))
              component-forms)))
     (let ((result))
@@ -108,7 +108,8 @@
            (dolist (,actor-name ',actor-names)
              (setf (gethash ,actor-name ,actor-table)
                    (make-actor (context ,core-state)
-                               :id ,actor-name :scene ,scene-name)))
+                               :id ,actor-name
+                               :scene ,scene-name)))
            (let ,bindings
              ,@(%generate-component-initializers core-state actor-components)
              ,@(%generate-component-thunks actor-names actor-components)
