@@ -130,10 +130,17 @@ on cateogry.")
 
 ;; TODO: stick in a util file somewhere.
 (defun eql/package-relaxed (obj1 obj2)
-  (if (and (symbolp obj1) (symbolp obj2))
-      (string= (symbol-name obj1)
-               (symbol-name obj2))
-      (eql obj1 obj2)))
+  (cond
+    ((eql obj1 obj2)
+     ;; It succeeded? Oh good. Return quickly.
+     T)
+    ((and (symbolp obj1) (symbolp obj2))
+     ;; Otherwise do a slower check.
+     (string= (symbol-name obj1)
+              (symbol-name obj2)))
+    (t
+     ;; Hrm, sorry. It didn't EQL match,
+     nil)))
 
 (defun graph-roots (graph)
   "Find all vertex roots (vertexes with no parents) in the directed graph GRAPH
@@ -538,8 +545,8 @@ depends-on in that GDEF."
          ;; Kind of a terrible Big-O...
          (dolist (pkg-name all-packages)
            (when-let* ((matched-pkg-name (ppcre:scan-to-strings
-                                         putative-package-name-regex pkg-name))
-                      (found-pkg (find-package matched-pkg-name)))
+                                          putative-package-name-regex pkg-name))
+                       (found-pkg (find-package matched-pkg-name)))
              (pushnew found-pkg
                       ;; Use the original symbol from the graph.
                       (gethash (second elem-v)
