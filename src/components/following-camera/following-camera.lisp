@@ -1,12 +1,16 @@
 (in-package :fl.comp.following-camera)
 
-;;; For this component, the camera transform represents the vector away from the
-;;; target that the camera sits. The following-camera does NOT rotate with the
-;;; target, it only follows it from an offset. So it is not the same operation
-;;; as parent the camera to the target.
-
-(define-component following-camera (target-camera)
+(define-component following-camera ()
+  (slave-camera nil)
+  (target-actor nil)
+  (target-transform nil)
   (offset (v3zero)))
+
+(defmethod initialize-component ((component following-camera) (context context))
+  (with-accessors ((slave slave-camera) (actor actor) (target target-actor))
+      component
+    (setf slave (actor-component-by-type actor 'camera))
+    (camera-target-actor component target)))
 
 (defmethod update-component ((component following-camera) (context context))
   (with-accessors ((view view) (transform transform)) (slave-camera component)
@@ -16,3 +20,9 @@
                                       (offset component))))
       (v3->mtr! (model transform) new-camera-position)
       (compute-camera-view (slave-camera component) context))))
+
+(defmethod camera-target-actor ((camera following-camera) (actor actor))
+  (setf (target-actor camera) actor)
+  (when actor
+    (setf (target-transform camera)
+          (actor-component-by-type actor 'transform))))

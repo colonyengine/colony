@@ -58,8 +58,6 @@
    (:file "components/transform/state")
    (:file "components/transform/transform")
    (:file "components/camera/camera")
-   (:file "components/camera/target-camera")
-   (:file "components/tracking-camera/tracking-camera")
    (:file "components/following-camera/following-camera")
    (:file "components/mesh/mesh")
    (:file "components/mesh/mesh-format")
