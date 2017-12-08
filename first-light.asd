@@ -12,57 +12,8 @@
   :encoding :utf-8
   :long-description #.(uiop:read-file-string
                        (uiop/pathname:subpathname *load-pathname* "README.md"))
-  :depends-on (#:alexandria
-               #:cl-ppcre
-               #:cl-graph
-               #:split-sequence
-               #:sdl2
-               #:sdl2kit
-               #:glkit
-               #:3bgl-shader
-               #:simple-logger
-               #:gamebox-math
-               #:gamebox-frame-manager
-               #:pngload
-               #:defpackage-plus)
-  :pathname "src"
-  :serial t
-  :components
-  ((:file "package")
-   (:file "components/stub-0/package")
-   (:file "components/transform/package")
-   (:file "components/camera/package")
-   (:file "components/tracking-camera/package")
-   (:file "components/following-camera/package")
-   (:file "components/mesh/package")
-   (:file "components/mesh-renderer/package")
-   (:file "components/tags/package")
-   (:file "common")
-   (:file "logging")
-   (:file "extensions")
-   (:file "context")
-   (:file "settings")
-   (:file "actor")
-   (:file "components")
-   (:file "call-flow")
-   (:file "core-state")
-   (:file "type-dag")
-   (:file "scene")
-   (:file "display")
-   (:file "input")
-   (:file "vertex-data")
-   (:file "shader")
-   (:file "engine")
-   (:file "shaders/shaders")
-   (:file "components/stub-0/stub-0")
-   (:file "components/transform/state")
-   (:file "components/transform/transform")
-   (:file "components/camera/camera")
-   (:file "components/following-camera/following-camera")
-   (:file "components/mesh/mesh")
-   (:file "components/mesh/mesh-format")
-   (:file "components/mesh/shared-storage")
-   (:file "components/mesh-renderer/mesh-renderer")
-   (:file "components/mesh-renderer/shared-storage")
-   (:file "components/mesh-renderer/texture")
-   (:file "components/tags/tags")))
+  :depends-on (#:first-light.engine
+               #:first-light.components
+               #:first-light.shaders
+               #:alexandria
+               #:defpackage-plus))

@@ -2,7 +2,9 @@
 
 (defpackage+ #:fl.core
   (:nicknames #:first-light)
-  (:inherit #:cl #:alexandria #:gamebox-math)
+  (:inherit #:cl
+            #:alexandria
+            #:gamebox-math)
   (:export #:start-engine
            #:quit-engine)
 
@@ -24,6 +26,9 @@
            #:find-resource
            #:cfg
            #:with-cfg)
+
+  ;; textures
+  (:export #:load-texture)
 
   ;; vertex-data
   (:export #:primitive
@@ -60,6 +65,3 @@
            #:destroy-component
            #:actor-components-by-type
            #:actor-component-by-type))
-
-(defpackage+ #:fl.shader
-  (:use-only #:3bgl-glsl/cl))

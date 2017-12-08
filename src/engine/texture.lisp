@@ -1,4 +1,4 @@
-(in-package :fl.comp.mesh-renderer)
+(in-package :fl.core)
 
 (defclass texture ()
   ((%width :reader width
