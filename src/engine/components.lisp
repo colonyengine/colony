@@ -7,7 +7,8 @@
            :initarg :state
            :initform :initialize)
    (%actor :accessor actor
-           :initarg :actor)
+           :initarg :actor
+           :initform nil)
    (%initializer-thunk :accessor initializer-thunk
                        :initarg :initializer-thunk
                        :initform nil)))
@@ -32,23 +33,6 @@
   (let ((qualified-type (qualify-component (core-state context)
                                            component-type)))
     (apply #'make-instance qualified-type :type qualified-type initargs)))
-
-(defun realize-component (core-state component)
-  (when-let ((thunk (initializer-thunk component)))
-    (funcall thunk)
-    (setf (initializer-thunk component) nil))
-  (setf (state component) :active
-        (type-table
-         (canonicalize-component-type (component-type component) core-state)
-         (component-active-by-type-view core-state))
-        component))
-
-(defun realize-components (core-state component-table)
-  (maphash
-   (lambda (k component)
-     (declare (ignore k))
-     (realize-component core-state component))
-   component-table))
 
 (defun qualify-component (core-state component-type)
   "Determine if the symbol COMPONENT-TYPE represents a real component. If so,
@@ -92,6 +76,46 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
         ;; Otherwise, use the symbol itself, because the user qualified it or it
         ;; already represents an applicable component in the home package.
         component-type)))
+
+(defun component/preinit->init (core-state component)
+  #++(format t "component/preinit->init: ~A~%" component)
+
+  (when-let ((thunk (initializer-thunk component)))
+    (funcall thunk)
+    (setf (initializer-thunk component) nil))
+
+  (let ((canonicalized-component-type (canonicalize-component-type
+                                       (component-type component)
+                                       core-state)))
+    ;; remove it from the pre-init table.
+    (remhash component
+             (type-table canonicalized-component-type
+                         (component-preinitialize-by-type-view core-state)))
+
+    ;; move it into the init table.
+    (setf (type-table
+           canonicalized-component-type
+           (component-initialize-by-type-view core-state))
+          component)))
+
+(defun component/init->active (core-state component)
+  #++(format t "component/init->active: ~A~%" component)
+
+  (let ((canonicalized-component-type (canonicalize-component-type
+                                       (component-type component)
+                                       core-state)))
+    ;; remove it from the init table.
+    (remhash component
+             (type-table canonicalized-component-type
+                         (component-initialize-by-type-view core-state)))
+
+    ;; move it into the active table.
+    (setf (state component) :active
+          (type-table
+           canonicalized-component-type
+           (component-active-by-type-view core-state))
+          component)))
+
 
 ;;; component protocol
 

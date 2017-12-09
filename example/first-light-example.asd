@@ -18,4 +18,5 @@
    (:file "components/stub-0/stub-0")
    (:file "components/gun/gun")
    (:file "components/gun-manager/gun-manager")
-   (:file "components/hit-points/hit-points")))
+   (:file "components/hit-points/hit-points")
+   (:file "components/spawn-destroy-test/spawn-destroy-test")))

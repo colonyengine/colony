@@ -1,14 +1,48 @@
 (in-package :fl.core)
 
 (defclass core-state ()
-  ((%actor-initialize-db :reader actor-initialize-db
+  (;; Anything that has been spawned into the world first starts here, in
+   ;; pre-initialization.
+   (%actor-preinitialize-db :accessor actor-preinitialize-db
+                            :initform (make-hash-table))
+   (%component-preinitialize-by-type-view
+    :accessor component-preinitialize-by-type-view
+    :initform (make-hash-table))
+
+   ;; Then, preinitialized objects are moved here and the initialize-component
+   ;; protocol is run on them. If that method on the components spawn more
+   ;; actors and/or make more components, then they go into pre-initialize.
+   ;; This prevents adding entries to a hash we're iterating. We also can
+   ;; directly control the execution of initialize-component for only new
+   ;; things that need it.
+   (%actor-initialize-db :accessor actor-initialize-db
                          :initform (make-hash-table))
-   (%component-initialize-by-type-view :reader component-initialize-by-type-view
-                                       :initform (make-hash-table))
-   (%actor-active-db :reader actor-active-db
+   (%component-initialize-by-type-view
+    :accessor component-initialize-by-type-view
+    :initform (make-hash-table))
+
+   ;; Then, things are moved into the active db where they sit most of the time.
+   (%actor-active-db :accessor actor-active-db
                      :initform (make-hash-table))
-   (%component-active-by-type-view :reader component-active-by-type-view
+   (%component-active-by-type-view :accessor component-active-by-type-view
                                    :initform (make-hash-table))
+
+   ;; When we mark an actor or component for destruction, we place it here.
+   (%actor-pre-destroy-view :accessor actor-pre-destroy-view
+                            :initform (make-hash-table))
+   (%component-pre-destroy-view :accessor component-pre-destroy-view
+                                :initform (make-hash-table))
+   ;; When we're actually going to destroy the marked actors/componets, we
+   ;; trace additional actors/components we need to destroy and everything ends
+   ;; up here. Then we actually destroy them (which might cause other things
+   ;; to be destroyed, so we repeat this cycle.
+   (%actor-destroy-db :accessor actor-destroy-db
+                      :initform (make-hash-table))
+   (%component-destroy-by-type-view :accessor component-destroy-by-type-view
+                                    :initform (make-hash-table))
+
+
+
    (%user-package :reader user-package
                   :initarg :user-package)
    (%display :reader display)
@@ -28,6 +62,20 @@
    (%scenes :reader scenes
             :initform (make-hash-table))))
 
+(defun pending-preinit-tasks-p (core-state)
+  (or
+   ;; Any new actors?
+   (> (hash-table-count
+       (actor-preinitialize-db core-state)) 0)
+   ;; Any new components of any type?
+   (block done
+     (maphash
+      (lambda (k component-ht)
+        (declare (ignore k))
+        (when (> (hash-table-count component-ht) 0)
+          (return-from done T)))
+      (component-preinitialize-by-type-view core-state)))))
+
 (defun %make-scene-tree (core-state)
   (let* ((actor (make-actor (context core-state)
                             :id (make-gensym '@universe)
@@ -36,8 +84,12 @@
                                     (context core-state)
                                     :actor actor)))
     (add-component actor transform)
-    (realize-actor core-state actor)
-    (realize-component core-state transform)
+    (spawn-actor actor (context core-state) :parent nil)
+    ;; Manually run the execute flow to get these actors and components into the
+    ;; active state.
+    (execute-flow core-state
+                  :default 'initialize-phase 'ENTRY/INITIALIZE-PHASE
+                  :come-from-state-name 'EF-MAKE-SCENE-TREE)
     actor))
 
 (defun make-core-state (&rest args)
@@ -45,17 +97,6 @@
     (with-slots (%context) core-state
       (setf %context (make-instance 'context :core-state core-state)))
     core-state))
-
-(defun realize-phase-commit (core-state)
-  "This function removes all elements from the component-initialize-thunks-db
-slot and the actor-initialize-db in the CORE-STATE. It is assumed they have been
-processed appropriately."
-  (clrhash (actor-initialize-db core-state))
-  (maphash
-   (lambda (k v)
-     (declare (ignore k))
-     (clrhash v))
-   (component-initialize-by-type-view core-state)))
 
 (defgeneric shared-storage (context key)
   (:method ((context context) key)
