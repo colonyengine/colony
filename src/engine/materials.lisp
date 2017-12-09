@@ -1,5 +1,16 @@
 (in-package :fl.core)
 
+(defclass material ()
+  ((id :reader id
+       :initarg :id)
+   (shader :reader shader
+           :initarg :shader
+           :initform ::default)
+   (factors :reader factors
+            :initarg :factors)
+   (maps :reader maps
+         :initarg :maps)))
+
 (defclass material-factors ()
   ((diffuse :reader diffuse
             :initarg :diffuse
@@ -27,14 +38,3 @@
    (emissive :reader emmissive
              :initarg :emissive
              :initform nil)))
-
-(defclass material ()
-  ((id :reader id
-       :initarg :id)
-   (shader :reader shader
-           :initarg :shader
-           :initform ::default)
-   (factors :reader factors
-            :initarg :factors)
-   (maps :reader maps
-         :initarg :maps)))

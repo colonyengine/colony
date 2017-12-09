@@ -19,22 +19,32 @@
      t recursivep #'process-files)))
 
 (defun flatten-numbers (sequence &key (type 'single-float))
-  (flet ((coerce/flatten (sequence)
-           (mapcar
-            (lambda (x) (coerce x type))
-            (remove-if (complement #'realp) (flatten sequence)))))
-    (let ((sequence (coerce/flatten sequence)))
-      (make-array (length sequence) :element-type type
-                                    :initial-contents sequence))))
+  (labels ((flatten* (object)
+             (let ((list))
+               (labels ((traverse (subtree)
+                          (when subtree
+                            (typecase subtree
+                              (cons
+                               (traverse (car subtree))
+                               (traverse (cdr subtree)))
+                              (vector
+                               (map nil #'traverse subtree))
+                              (t (push subtree list))))))
+                 (traverse object))
+               (nreverse list)))
+           (coerce* (sequence)
+             (mapcar
+              (lambda (x) (coerce x type))
+              (remove-if (complement #'realp) (flatten* sequence)))))
+    (let ((sequence (coerce* sequence)))
+      (make-array (length sequence)
+                  :element-type type
+                  :initial-contents sequence))))
 
-;; A "type-table" is a hash table indexed by a type (that is a symbol)
-;; whose value is another hash table. The second hash is keyed with EQ
-;; by an object whose value is the same object.
 (defun type-table (key type-table)
   (gethash key type-table))
 
 (defun (setf type-table) (entry type-name-key type-table)
-  "SETF function for function TYPE-TABLE."
   (symbol-macrolet
       ((entry-ht (gethash type-name-key type-table)))
     (multiple-value-bind (looked-up-type-table presentp) entry-ht
