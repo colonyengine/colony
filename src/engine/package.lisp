@@ -49,7 +49,8 @@
   (:export #:actor
            #:id
            #:make-actor
-           #:spawn-actor)
+           #:spawn-actor
+	   #:destroy-actor)
 
   ;; components
   (:export #:component

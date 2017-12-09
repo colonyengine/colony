@@ -94,7 +94,7 @@
 
 (defun %generate-actor-spawn (core-state actor-names)
   (loop :for actor :in actor-names
-        :collect `(spawn-actor ,core-state ,actor)))
+        :collect `(spawn-actor ,actor (context ,core-state))))
 
 (defun parse-scene (scene-name scene-spec)
   (with-gensyms (core-state actor-table actor-name)
