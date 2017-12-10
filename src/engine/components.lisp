@@ -9,6 +9,9 @@
    (%actor :accessor actor
            :initarg :actor
            :initform nil)
+   (%ttl :accessor ttl
+         :initarg :ttl
+         :initform 0)
    (%initializer-thunk :accessor initializer-thunk
                        :initarg :initializer-thunk
                        :initform nil)))
