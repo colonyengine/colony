@@ -40,7 +40,9 @@
         (gl:active-texture 0)
         (gl:bind-texture :texture-2d texture-id)
         (uniform-integer shaders :tex.sampler1 0))
-      (kit.gl.vao:vao-draw (vao mesh)))))
+      (gl:bind-vertex-array 1)
+      (%gl:draw-elements :triangles 36 :unsigned-short 3)
+      #++(kit.gl.vao:vao-draw (vao mesh)))))
 
 (defun uniform-matrix (shaders key value)
   (kit.gl.shader:uniform-matrix-1-sv shaders key value))
