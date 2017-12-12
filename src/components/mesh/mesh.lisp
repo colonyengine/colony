@@ -2,45 +2,28 @@
 
 (define-component mesh ()
   (location nil)
-  (layout nil)
-  (vao nil))
+  (id 0)
+  (primitives nil))
 
-(defun write-buffer-data (layout vao buffer-id data)
-  (let ((index (gethash buffer-id (buffer-indices layout)))
-        (data (flatten-numbers data)))
-    (kit.gl.vao:vao-buffer-vector vao index data)))
-
-(defun update-mesh-buffer (mesh buffer-id data)
-  (with-accessors ((layout layout) (vao vao)) mesh
-    (write-buffer-data layout vao buffer-id data)))
-
-(defun make-vao (layout buffers)
-  (let ((vao (make-instance 'kit.gl.vao:vao
-                            :type (id layout)
-                            :primitive (primitive layout)
-                            :vertex-count (length (cadar buffers)))))
-    (loop :for (id data) :in buffers
-          :for index = (gethash id (buffer-indices layout))
-          :do (write-buffer-data layout vao id data))
-    vao))
+(defun load-mesh (context location id)
+  (let ((core-state (core-state context)))
+    (cl-gltf2:load-mesh (find-resource core-state location) id)))
 
 (defmethod initialize-component ((component mesh) (context context))
   (symbol-macrolet ((store (shared-storage context component)))
-    (with-accessors ((location location) (vao vao) (layout layout)) component
+    (with-accessors ((location location) (id id) (primitives primitives))
+        component
       (unless location
         (error "A mesh component must have a location set."))
       (unless store
         (setf store (make-instance 'mesh-shared-storage)))
-      (multiple-value-bind (cached presentp) (cached-mesh store location)
+      (multiple-value-bind (cached presentp) (cached-mesh store location id)
         (if presentp
             (progn
-              (setf layout (layout cached)
-                    vao (vao cached))
+              (setf primitives (primitives cached))
               (slog:emit :component.mesh.cache.used))
-            (multiple-value-bind (layout buffers) (load-mesh context location)
-              (let* ((new-vao (make-vao layout buffers))
-                     (cached (make-cached-mesh location layout new-vao)))
-                (setf (cached-mesh store location) cached
-                      layout (layout cached)
-                      vao (vao cached))
-                (slog:emit :component.mesh.cache.created))))))))
+            (let* ((new-primitives (load-mesh context location id))
+                   (cached (make-cached-mesh location id new-primitives)))
+              (setf (cached-mesh store location id) cached
+                    primitives (primitives cached))
+              (slog:emit :component.mesh.cache.created)))))))

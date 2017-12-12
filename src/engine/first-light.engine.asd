@@ -34,7 +34,6 @@
    (:file "scene")
    (:file "display")
    (:file "input")
-   (:file "vertex-data")
    (:file "texture")
    (:file "materials")
    (:file "engine")))

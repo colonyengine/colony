@@ -9,8 +9,7 @@
            #:quit-engine)
 
   ;; common
-  (:export #:get-path
-           #:flatten-numbers)
+  (:export #:get-path)
 
   ;; core state
   (:export #:core-state
@@ -30,11 +29,6 @@
   ;; textures
   (:export #:load-texture)
 
-  ;; vertex-data
-  (:export #:primitive
-           #:buffer-indices
-           #:get-vertex-layout)
-
   ;; input
   (:export #:key-down
            #:key-up
@@ -50,7 +44,7 @@
            #:id
            #:make-actor
            #:spawn-actor
-	   #:destroy-actor)
+           #:destroy-actor)
 
   ;; components
   (:export #:component

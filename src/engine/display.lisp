@@ -45,8 +45,7 @@
     (apply #'gl:enable gl-capabilities)
     (apply #'gl:blend-func gl-blend-mode)
     (gl:depth-func gl-depth-mode)
-    (sdl2:gl-set-swap-interval (if vsync 1 0))
-    (cl-gltf2:load-gltf (get-path :first-light "data/mesh/cube.glb"))))
+    (sdl2:gl-set-swap-interval (if vsync 1 0))))
 
 (defmethod kit.sdl2:render ((display display))
   (gl:clear-color (* 0.2 (abs (sin (box.fm:total-time display)))) 0 0 1)

@@ -18,29 +18,6 @@
      (uiop/pathname:ensure-directory-pathname path)
      t recursivep #'process-files)))
 
-(defun flatten-numbers (sequence &key (type 'single-float))
-  (labels ((flatten* (object)
-             (let ((list))
-               (labels ((traverse (subtree)
-                          (when subtree
-                            (typecase subtree
-                              (cons
-                               (traverse (car subtree))
-                               (traverse (cdr subtree)))
-                              (vector
-                               (map nil #'traverse subtree))
-                              (t (push subtree list))))))
-                 (traverse object))
-               (nreverse list)))
-           (coerce* (sequence)
-             (mapcar
-              (lambda (x) (coerce x type))
-              (remove-if (complement #'realp) (flatten* sequence)))))
-    (let ((sequence (coerce* sequence)))
-      (make-array (length sequence)
-                  :element-type type
-                  :initial-contents sequence))))
-
 (defun type-table (key type-table)
   (gethash key type-table))
 

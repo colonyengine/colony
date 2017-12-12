@@ -39,10 +39,9 @@
       (when texture-id
         (gl:active-texture 0)
         (gl:bind-texture :texture-2d texture-id)
-        (uniform-integer shaders :tex.sampler1 0))
-      (gl:bind-vertex-array 1)
-      (%gl:draw-elements :triangles 36 :unsigned-short 3)
-      #++(kit.gl.vao:vao-draw (vao mesh)))))
+        (uniform-integer shaders :tex.sampler1 0)
+        (dolist (primitive (primitives mesh))
+          (funcall (cl-gltf2:draw-func primitive)))))))
 
 (defun uniform-matrix (shaders key value)
   (kit.gl.shader:uniform-matrix-1-sv shaders key value))

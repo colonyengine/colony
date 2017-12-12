@@ -19,7 +19,6 @@
 (defun prepare-extensions (core-state path)
   ;; https://github.com/HackerTheory/first-light/wiki/Developer-Rules#extension-order
   (prepare-extension 'settings (context core-state) path)
-  (prepare-extension 'vertex core-state path)
   (prepare-extension 'shader core-state path)
   (prepare-extension 'graphs core-state path)
   (prepare-extension 'call-flow core-state path)

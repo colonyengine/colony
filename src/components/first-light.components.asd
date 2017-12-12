@@ -29,7 +29,6 @@
    (:module "mesh"
     :components
     ((:file "mesh")
-     (:file "mesh-format")
      (:file "shared-storage")))
    (:module "mesh-renderer"
     :components
