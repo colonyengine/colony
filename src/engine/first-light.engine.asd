@@ -16,7 +16,8 @@
                #:glkit
                #:gamebox-math
                #:gamebox-frame-manager
-               #:pngload)
+               #:pngload
+               #:cl-gltf2)
   :serial t
   :components
   ((:file "package")
@@ -33,7 +34,6 @@
    (:file "scene")
    (:file "display")
    (:file "input")
-   (:file "vertex-data")
    (:file "texture")
    (:file "materials")
    (:file "engine")))

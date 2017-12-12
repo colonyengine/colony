@@ -7,16 +7,16 @@
 (defclass cached-mesh ()
   ((%location :reader location
               :initarg :location)
-   (%layout :reader layout
-            :initarg :layout)
-   (%vao :reader vao
-         :initarg :vao)))
+   (%id :reader id
+        :initarg :id)
+   (%primitives :reader primitives
+                :initarg :primitives)))
 
-(defun make-cached-mesh (location layout vao)
-  (make-instance 'cached-mesh :location location :layout layout :vao vao))
+(defun make-cached-mesh (location id primitives)
+  (make-instance 'cached-mesh :location location :id id :primitives primitives))
 
-(defun cached-mesh (store location)
-  (gethash location (cache store)))
+(defun cached-mesh (store location id)
+  (gethash (cons location id) (cache store)))
 
-(defun (setf cached-mesh) (value store location)
-  (setf (gethash location (cache store)) value))
+(defun (setf cached-mesh) (value store location id)
+  (setf (gethash (cons location id) (cache store)) value))
