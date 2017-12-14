@@ -13,6 +13,7 @@
   :long-description #.(uiop:read-file-string
                        (uiop/pathname:subpathname *load-pathname* "README.md"))
   :depends-on (#:first-light.engine
+               #:first-light.assets
                #:first-light.components
                #:first-light.shaders
                #:alexandria

@@ -16,8 +16,7 @@
                #:glkit
                #:gamebox-math
                #:gamebox-frame-manager
-               #:pngload
-               #:cl-gltf2)
+               #:pngload)
   :serial t
   :components
   ((:file "package")

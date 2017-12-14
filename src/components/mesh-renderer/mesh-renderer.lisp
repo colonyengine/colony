@@ -39,9 +39,9 @@
       (when texture-id
         (gl:active-texture 0)
         (gl:bind-texture :texture-2d texture-id)
-        (uniform-integer shaders :tex.sampler1 0)
-        (dolist (primitive (primitives mesh))
-          (funcall (cl-gltf2:draw-func primitive)))))))
+        (uniform-integer shaders :tex.sampler1 0))
+      (dolist (primitive (primitives mesh))
+        (funcall (fl.assets:draw-func primitive))))))
 
 (defun uniform-matrix (shaders key value)
   (kit.gl.shader:uniform-matrix-1-sv shaders key value))

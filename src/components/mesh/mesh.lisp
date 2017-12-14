@@ -7,7 +7,7 @@
 
 (defun load-mesh (context location id)
   (let ((core-state (core-state context)))
-    (cl-gltf2:load-mesh (find-resource core-state location) id)))
+    (fl.assets:load-mesh (find-resource core-state location) id)))
 
 (defmethod initialize-component ((component mesh) (context context))
   (symbol-macrolet ((store (shared-storage context component)))
