@@ -80,6 +80,8 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
         ;; already represents an applicable component in the home package.
         component-type)))
 
+
+
 (defun component/preinit->init (core-state component)
   #++(format t "component/preinit->init: ~A~%" component)
 
@@ -119,6 +121,16 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
            (component-active-by-type-view core-state))
           component)))
 
+(defun component/init-or-active->destroy (core-state component)
+  (let ((canonicalized-component-type (canonicalize-component-type
+                                       (component-type component)
+                                       core-state)))
+
+    ;; 1. add it to destroy state.
+    ;; 2. remove it from predestroy state.
+    ;; 2. remove it from init state, OR
+    ;; 3. remove it from active state
+    nil))
 
 ;;; component protocol
 

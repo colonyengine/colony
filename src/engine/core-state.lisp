@@ -28,15 +28,16 @@
                                    :initform (make-hash-table))
 
    ;; When we mark an actor or component for destruction, we place it here.
+   ;; These doesn't have to be any kind of a type view.
    (%actor-predestroy-view :accessor actor-predestroy-view
                            :initform (make-hash-table))
-   (%component-predestroy-by-type-view
-    :accessor component-predestroy-by-type-view
-    :initform (make-hash-table))
+   (%component-predestroy-view :accessor component-predestroy-view
+                               :initform (make-hash-table))
    ;; When we're actually going to destroy the marked actors/componets, we
    ;; trace additional actors/components we need to destroy and everything ends
    ;; up here. Then we actually destroy them (which might cause other things
-   ;; to be destroyed, so we repeat this cycle.
+   ;; to be destroyed, so we repeat this cycle. This must be a type view
+   ;; since we need to call the protocol appropriately.
    (%actor-destroy-db :accessor actor-destroy-db
                       :initform (make-hash-table))
    (%component-destroy-by-type-view :accessor component-destroy-by-type-view
@@ -84,15 +85,11 @@
    ;; Any components which ran out of time?
    (block done
      (maphash
-      (lambda (a-type component-ht)
-        (declare (ignore a-type))
-        (maphash
-         (lambda (k component)
-           (declare (ignore k))
-           (when (<= (ttl component) 0)
-             (return-from done T)))
-         component-ht))
-      (component-predestroy-by-type-view core-state)))
+      (lambda (k component)
+        (declare (ignore k))
+        (when (<= (ttl component) 0)
+          (return-from done T)))
+      (component-predestroy-view core-state)))
 
    ;; Any actors which ran out of time?
    (block done
