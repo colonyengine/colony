@@ -1,5 +1,10 @@
 (in-package :fl.core)
 
+(defgeneric destroy (thing context &key ttl)
+  (:documentation "Destroy may take either an ACTOR or a COMPONENT. The
+keyword argument :TTL supplied in real seconds, how long the thing has yet
+to live."))
+
 (defun get-path (system-name &optional path)
   (if uiop/image:*image-dumped-p*
       (truename

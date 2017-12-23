@@ -112,10 +112,31 @@ actor."
         (gethash actor (actor-active-db core-state)) actor))
 
 
-;; TODO: This is not finished.
-(defun destroy-actor (actor context &key (ttl 0.0))
-  (setf ttl (if (< ttl 0) 0 ttl))
+(defmethod destroy ((thing actor) (context context) &key (ttl 0))
   (let ((core-state (core-state context)))
-    ;; TODO: wander down the components and pre-destroy them too.
-    (setf (state actor) :destroy
-          (gethash actor (actor-pre-destroy-view core-state)) actor)))
+    (setf (ttl thing) (if (< ttl 0) 0 ttl))
+    (setf (gethash thing (actor-predestroy-view core-state)) thing)))
+
+(defun actor/init-or-active->destroy (core-state actor)
+  ;; 1. Add it to destroy state.
+  (setf (actor-destroy-db core-state) actor)
+
+  ;; 2. Set its state to destroying.
+  (setf (state actor) :destroy)
+
+  ;; 3. remove it from predestroy state (it may not be there, that's ok).
+  (remhash actor (actor-predestroy-view core-state))
+
+  ;; 4a. remove it from active state, OR
+  ;; 4b. remove it from init state.
+  ;; It will be in one of those two.
+  (unless (remhash actor (actor-active-db core-state))
+    (remhash actor (actor-preinitialize-db core-state)))
+
+  ;; 5. Now, for each of its components, automatically push them into destroy
+  ;; too.
+  (dolist (component (components actor))
+    ;; If the actor is being destroyed, then we upgrade all components to
+    ;; being destroyed to right now.
+    (setf (ttl component) 0)
+    (component/init-or-active->destroy core-state component)))

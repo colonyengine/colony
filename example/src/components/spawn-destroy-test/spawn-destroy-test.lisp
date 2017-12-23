@@ -35,7 +35,7 @@
   (when (destroy-self component)
     (format t "spawn-destroy-test[~A]: Spawned actor attempting to destroy itself!~%"
             component)
-    (destroy-actor (actor component) context)))
+    (destroy (actor component) context)))
 
 (defmethod destroy-component ((component spawn-destroy-test) (context context))
   (format t "spawn-destroy-test[~A]: destroyed!~%" component))

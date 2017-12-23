@@ -121,16 +121,38 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
            (component-active-by-type-view core-state))
           component)))
 
+
+(defmethod destroy ((thing component) (context context) &key (ttl 0))
+  (let ((core-state (core-state context)))
+    (setf (ttl thing) (if (< ttl 0) 0 ttl))
+    (setf (gethash thing (component-predestroy-view core-state)) thing)))
+
 (defun component/init-or-active->destroy (core-state component)
   (let ((canonicalized-component-type (canonicalize-component-type
                                        (component-type component)
                                        core-state)))
+    ;; 1. Add it to destroy state.
+    (setf (type-table canonicalized-component-type
+                      (component-destroy-by-type-view core-state))
+          component)
 
-    ;; 1. add it to destroy state.
-    ;; 2. remove it from predestroy state.
-    ;; 2. remove it from init state, OR
-    ;; 3. remove it from active state
-    nil))
+    ;; 2. Set its state to destroying.
+    (setf (state component) :destroy)
+
+    ;; 3. remove it from predestroy state (it may not be there, that's ok).
+    (remhash component (component-predestroy-view core-state))
+
+    ;; 4a. remove it from active state, OR
+    ;; 4b. remove it from init state.
+    ;; It will be in one of those two.
+    (unless (remhash component
+                     (type-table canonicalized-component-type
+                                 (component-active-by-type-view core-state)))
+      (remhash component
+               (type-table canonicalized-component-type
+                           (component-preinitialize-by-type-view
+                            core-state))))))
+
 
 ;;; component protocol
 

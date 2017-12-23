@@ -9,7 +9,8 @@
            #:quit-engine)
 
   ;; common
-  (:export #:get-path)
+  (:export #:get-path
+	   #:destroy)
 
   ;; core state
   (:export #:core-state
@@ -43,8 +44,7 @@
   (:export #:actor
            #:id
            #:make-actor
-           #:spawn-actor
-           #:destroy-actor)
+           #:spawn-actor)
 
   ;; components
   (:export #:component
