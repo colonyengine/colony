@@ -11,6 +11,7 @@
                 #:model
                 #:local
                 #:add-child
+		#:remove-child
                 #:map-nodes))
 
 (defpackage+ #:fl.comp.camera

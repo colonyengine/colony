@@ -100,6 +100,20 @@
           (return-from done T)))
       (actor-predestroy-view core-state)))))
 
+(defun pending-destroy-tasks-p (core-state)
+  (or
+   (> (hash-table-count
+       (actor-destroy-db core-state)) 0)
+
+   (block done
+     (maphash
+      (lambda (k component-ht)
+        (declare (ignore k))
+        (when (> (hash-table-count component-ht) 0)
+          (return-from done T)))
+      (component-destroy-by-type-view core-state)))))
+
+
 (defun %make-scene-tree (core-state)
   (let* ((actor (make-actor (context core-state)
                             :id (make-gensym '@universe)

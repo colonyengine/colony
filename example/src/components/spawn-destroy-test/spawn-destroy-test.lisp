@@ -2,6 +2,7 @@
 
 (define-component spawn-destroy-test ()
   (spawn 0)
+  (marked-destroying nil)
   (destroy-self nil))
 
 (defmethod initialize-component
@@ -21,9 +22,6 @@
                                 (make-component 'spawn-destroy-test context
                                                 :destroy-self t)))
 
-      ;; Add it to the universe? Hrm... how does that work?
-      ;; How do I get this right by default?
-
       ;; put it into the game world.
       (spawn-actor new-actor context)
 
@@ -32,10 +30,15 @@
 (defmethod update-component ((component spawn-destroy-test) (context context))
   (format t "spawn-destroy-test[~A]: updating.~%" component)
 
-  (when (destroy-self component)
-    (format t "spawn-destroy-test[~A]: Spawned actor attempting to destroy itself!~%"
+  (when (and (destroy-self component)
+             (null (marked-destroying component)))
+
+    (format t "spawn-destroy-test[~A]: Spawned actor attempting to destroy its component!~%"
             component)
-    (destroy (actor component) context)))
+
+    (destroy component context :ttl 2)
+
+    (setf (marked-destroying component) t)))
 
 (defmethod destroy-component ((component spawn-destroy-test) (context context))
   (format t "spawn-destroy-test[~A]: destroyed!~%" component))

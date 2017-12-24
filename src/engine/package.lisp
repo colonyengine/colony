@@ -52,6 +52,7 @@
            #:define-component
            #:make-component
            #:add-component
+	   #:remove-component
            #:add-multiple-components
            #:initialize-component
            #:physics-update-component

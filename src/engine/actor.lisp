@@ -12,6 +12,9 @@
                         :initform (make-hash-table))
    (%scene :accessor scene
            :initarg :scene)
+   (%ttl :accessor ttl
+         :initarg :ttl
+         :initform 0)
    (%core-state :reader core-state
                 :initarg :core-state)))
 
@@ -32,6 +35,19 @@
 (defun add-multiple-components (actor components)
   (dolist (component components)
     (add-component actor component)))
+
+(defun number-of-components (actor)
+  (hash-table-count (components actor)))
+
+(defun remove-component (actor component)
+  "If COMPONENT is contained in the ACTOR. Remove it. Otherwise, do nothing."
+  (when (remhash component (components actor))
+    (symbol-macrolet ((the-typed-components
+                        (gethash (component-type component)
+                                 (components-by-type actor))))
+      (setf the-typed-components
+            (remove-if (lambda (c) (eq c component))
+                       the-typed-components)))))
 
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
@@ -119,7 +135,7 @@ actor."
 
 (defun actor/init-or-active->destroy (core-state actor)
   ;; 1. Add it to destroy state.
-  (setf (actor-destroy-db core-state) actor)
+  (setf (gethash actor (actor-destroy-db core-state)) actor)
 
   ;; 2. Set its state to destroying.
   (setf (state actor) :destroy)
@@ -135,8 +151,48 @@ actor."
 
   ;; 5. Now, for each of its components, automatically push them into destroy
   ;; too.
-  (dolist (component (components actor))
-    ;; If the actor is being destroyed, then we upgrade all components to
-    ;; being destroyed to right now.
-    (setf (ttl component) 0)
-    (component/init-or-active->destroy core-state component)))
+  (maphash
+   (lambda (k component)
+     (declare (ignore k))
+     ;; If the actor is being destroyed, then we upgrade all components to
+     ;; being destroyed to right now.
+     (setf (ttl component) 0)
+     (component/init-or-active->destroy core-state component))
+   (components actor)))
+
+(defun actor/destroy-descendants (core-state actor)
+  (let* ((sym/transform (ensure-symbol 'transform 'fl.comp.transform))
+         (sym/map-nodes (ensure-symbol 'map-nodes 'fl.comp.transform)))
+
+    (flet ((destroy-actor (descendant-actor-transform)
+             (let ((destroying-actor (actor descendant-actor-transform)))
+               ;; any actor we're forcing to destroy must immediately be book
+               ;; kept as being destroyed right now.
+               (setf (ttl destroying-actor) 0)
+               (actor/init-or-active->destroy core-state destroying-actor))))
+
+      (funcall sym/map-nodes
+               #'destroy-actor
+               (actor-component-by-type actor sym/transform)))))
+
+;; TODO: this should probably never be run on the @universe actor. :)
+(defun actor/disconnect (core-state actor)
+  (declare (ignore core-state))
+  (let* ((sym/transform (ensure-symbol 'transform 'fl.comp.transform))
+         (sym/remove-child (ensure-symbol 'remove-child 'fl.comp.transform))
+         (sym/parent (ensure-symbol 'parent 'fl.comp.transform))
+         (actor-transform (actor-component-by-type actor sym/transform)))
+    (funcall sym/remove-child
+             (funcall sym/parent actor-transform) actor-transform)))
+
+(defun actor/destroy->released (core-state actor)
+  ;; At this point, the actor should be empty, we'll check it just in case.
+  (unless (zerop (number-of-components actor))
+    (error "actor/destroy->released: destroyed actor still has components!"))
+
+  ;; now we release the actor from anything core-state knows about.
+  (remhash actor (actor-destroy-db core-state)))
+
+(defun actor/countdown-to-destruction (core-state actor)
+  (when (> (ttl actor) 0)
+    (decf (ttl actor) (box.fm:frame-time (display core-state)))))

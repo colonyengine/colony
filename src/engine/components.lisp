@@ -153,8 +153,32 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
                            (component-preinitialize-by-type-view
                             core-state))))))
 
+(defun component/destroy->released (core-state component)
+  (let ((canonicalized-component-type (canonicalize-component-type
+                                       (component-type component)
+                                       core-state)))
 
-;;; component protocol
+    ;; 1. Remove it from destroy table.
+    ;; At this point, no core-state tables should have a reference to this
+    ;; component!
+    (remhash component
+             (type-table canonicalized-component-type
+                         (component-destroy-by-type-view core-state)))
+
+    ;; 2. Remove it from actor.
+    ;; At this point, core-state releases any knowledge of any references to
+    ;; this component. The USER CODE may still have references, and it is up
+    ;; to them to check if they still have a valid component reference
+    ;; (by ensuring the state is not :destroyed) and it is up to them to deal
+    ;; with it.
+    (remove-component (actor component) component)))
+
+(defun component/countdown-to-destruction (core-state component)
+  (when (> (ttl component) 0)
+    (decf (ttl component) (box.fm:frame-time (display core-state)))))
+
+
+;;; User API Component Protocol
 
 (defgeneric initialize-component (component context)
   (:method ((component component) (context context))))
