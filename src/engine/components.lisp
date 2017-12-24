@@ -80,15 +80,11 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
         ;; already represents an applicable component in the home package.
         component-type)))
 
-
-
 (defun component/preinit->init (core-state component)
   #++(format t "component/preinit->init: ~A~%" component)
-
   (when-let ((thunk (initializer-thunk component)))
     (funcall thunk)
     (setf (initializer-thunk component) nil))
-
   (let ((canonicalized-component-type (canonicalize-component-type
                                        (component-type component)
                                        core-state)))
@@ -96,7 +92,6 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
     (remhash component
              (type-table canonicalized-component-type
                          (component-preinitialize-by-type-view core-state)))
-
     ;; move it into the init table.
     (setf (type-table
            canonicalized-component-type
@@ -113,14 +108,12 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
     (remhash component
              (type-table canonicalized-component-type
                          (component-initialize-by-type-view core-state)))
-
     ;; move it into the active table.
     (setf (state component) :active
           (type-table
            canonicalized-component-type
            (component-active-by-type-view core-state))
           component)))
-
 
 (defmethod destroy ((thing component) (context context) &key (ttl 0))
   (let ((core-state (core-state context)))
@@ -135,13 +128,10 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
     (setf (type-table canonicalized-component-type
                       (component-destroy-by-type-view core-state))
           component)
-
     ;; 2. Set its state to destroying.
     (setf (state component) :destroy)
-
     ;; 3. remove it from predestroy state (it may not be there, that's ok).
     (remhash component (component-predestroy-view core-state))
-
     ;; 4a. remove it from active state, OR
     ;; 4b. remove it from init state.
     ;; It will be in one of those two.
@@ -157,14 +147,12 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
   (let ((canonicalized-component-type (canonicalize-component-type
                                        (component-type component)
                                        core-state)))
-
     ;; 1. Remove it from destroy table.
     ;; At this point, no core-state tables should have a reference to this
     ;; component!
     (remhash component
              (type-table canonicalized-component-type
                          (component-destroy-by-type-view core-state)))
-
     ;; 2. Remove it from actor.
     ;; At this point, core-state releases any knowledge of any references to
     ;; this component. The USER CODE may still have references, and it is up
@@ -176,7 +164,6 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
 (defun component/countdown-to-destruction (core-state component)
   (when (> (ttl component) 0)
     (decf (ttl component) (box.fm:frame-time (display core-state)))))
-
 
 ;;; User API Component Protocol
 
