@@ -17,7 +17,7 @@
            :initarg :reset)))
 
 (defun make-flow-state (&rest initargs)
-  (apply #'make-instance 'flow-state  initargs))
+  (apply #'make-instance 'flow-state initargs))
 
 (defun canonicalize-binding (binding)
   (if (symbolp binding)
@@ -56,26 +56,22 @@
 They can be in any order, but return them as a values in the specific order
 of selector, action, and transition."
   (let ((ht (make-hash-table)))
-
     (dolist (func-form funcs)
       (when func-form
         (setf (gethash (first func-form) ht)
               (second func-form))))
-
     (multiple-value-bind (selector sel-present-p)
         (gethash 'selector ht)
       (multiple-value-bind (action act-present-p)
           (gethash 'action ht)
         (multiple-value-bind (transition trans-present-p)
             (gethash 'transition ht)
-
           (unless sel-present-p
             (error "Missing selector function in flow-state: ~A" name))
           (unless act-present-p
             (error "Missing action functions in flow-state: ~A" name))
           (unless trans-present-p
             (error "Missing transition function in flow-state: ~A" name))
-
           ;; now return them in the canonical order.
           (values selector action transition))))))
 
@@ -168,7 +164,7 @@ name which resulted in the exiting of the flow."
                    (slog:emit :flow.call.selector)
                    (funcall (selector flow-state) core-state))
                   (t
-                   (values :identity-policy NIL)))
+                   (values :identity-policy nil)))
 
               (setf selections the-selections
                     policy the-policy))

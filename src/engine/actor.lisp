@@ -129,7 +129,7 @@ actor."
 
 (defun actor/init-or-active->destroy (core-state actor)
   ;; 1. Add it to destroy state.
-  (setf (gethash actor (actor-destroy-db core-state)) actor)
+  (setf (gethash actor (actor-destroy-db (tables core-state))) actor)
   ;; 2. Set its state to destroying.
   (setf (state actor) :destroy)
   ;; 3. remove it from predestroy state (it may not be there, that's ok).
