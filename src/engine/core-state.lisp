@@ -65,10 +65,12 @@
             :initform (make-hash-table))))
 
 (defun pending-preinit-tasks-p (core-state)
+  "Return T if there are ANY components or actors in the preinit data structures
+in CORE-STATE."
   (or
-   ;; Any new actors?
-   (> (hash-table-count
-       (actor-preinitialize-db core-state)) 0)
+   ;; Any actors?
+   (> (hash-table-count (actor-preinitialize-db core-state)) 0)
+
    ;; Any new components of any type?
    (block done
      (maphash
@@ -78,33 +80,24 @@
           (return-from done T)))
       (component-preinitialize-by-type-view core-state)))))
 
-;; return T if there are either components or actors that have
-;; reached their ttl in the predestroy tables.
 (defun pending-predestroy-tasks-p (core-state)
+  "Return T if there are ANY components or actors that are in the
+predestroy data structures in CORE-STATE."
   (or
-   ;; Any components which ran out of time?
-   (block done
-     (maphash
-      (lambda (k component)
-        (declare (ignore k))
-        (when (<= (ttl component) 0)
-          (return-from done T)))
-      (component-predestroy-view core-state)))
+   ;; Any components?
+   (> (hash-table-count (component-predestroy-view core-state)) 0)
 
-   ;; Any actors which ran out of time?
-   (block done
-     (maphash
-      (lambda (actor-key actor-value)
-        (declare (ignore actor-key))
-        (when (<= (ttl actor-value) 0)
-          (return-from done T)))
-      (actor-predestroy-view core-state)))))
+   ;; Any actors?
+   (> (hash-table-count (actor-predestroy-view core-state)) 0)))
 
 (defun pending-destroy-tasks-p (core-state)
+  "Return T of there are ANY components or actors that are in the destroy
+data structures in CORE-STATE."
   (or
-   (> (hash-table-count
-       (actor-destroy-db core-state)) 0)
+   ;; Any actors?
+   (> (hash-table-count (actor-destroy-db core-state)) 0)
 
+   ;; Any components?
    (block done
      (maphash
       (lambda (k component-ht)

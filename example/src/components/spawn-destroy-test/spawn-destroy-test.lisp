@@ -36,7 +36,7 @@
     (format t "spawn-destroy-test[~A]: Spawned actor attempting to destroy its component!~%"
             component)
 
-    (destroy component context :ttl 2)
+    (destroy (actor component) context :ttl 2)
 
     (setf (marked-destroying component) t)))
 
