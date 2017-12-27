@@ -12,7 +12,17 @@
    (%internal-format :reader internal-format
                      :initarg :internal-format)
    (%data :reader data
-          :initarg :data)))
+          :initarg :data)
+
+   ;; stuff for material dsl
+   (%name :reader name
+	  :initarg :name)
+   (%source :reader source
+	    :initarg :source)
+   (%sampler :accessor sampler
+	     :initarg :sampler)
+   (%location :reader location
+	      :initarg :location)))
 
 (defun get-pixel-format (color-type)
   (ecase color-type
@@ -35,6 +45,7 @@
                    :pixel-format pixel-format
                    :internal-format (get-internal-format pixel-format)
                    :pixel-type :unsigned-byte
+		   :location location
                    :data (pngload:data image))))
 
 (defun load-texture (context location &key
