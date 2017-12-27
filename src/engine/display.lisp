@@ -1,10 +1,10 @@
 (in-package :fl.core)
 
 (defclass display (kit.sdl2:gl-window box.fm:frame-manager)
-  ((core-state :reader core-state
-               :initarg :core-state)
-   (hz :reader hz
-       :initarg :hz)))
+  ((%core-state :reader core-state
+                :initarg :core-state)
+   (%hz :reader hz
+        :initarg :hz)))
 
 (defun calculate-refresh-rate ()
   (let ((hz (nth-value 3 (sdl2:get-current-display-mode 0))))
