@@ -12,133 +12,80 @@
 ;; :texture
 
 
-(defclass matvar ()
-  ((%name :reader name
-          :initarg :name)
-   (%slot-type :reader slot-type
-               :initarg :slot-type)
-   (%value :accessor value
-           :initarg :value)
-   (%default-thunk :reader default-thunk
-                   :initarg :default-thunk)))
-
-(defclass matvar-type ()
-  ((%name :reader name
-          :initarg :name)
-   (%matvars :reader matvars
-             :initarg :matvars
-             :initform (make-hash-table))))
-
-(defclass material-type ()
-  ((%name :reader name
-          :initarg :name)
-   (%matvar-types :reader matvar-types
-                  :initarg :matvar-types
-                  :initform (make-hash-table))))
-
-(defclass material-template ()
+(defclass material ()
   ((%id :reader id
         :initarg :id)
-   (%material-types :reader material-types
-                    :initarg :material-types
-                    :initform (make-hash-table))))
+   (%shader :reader shader
+            :initarg :shader)
+   (%uniforms :reader uniforms
+              :initarg :uniforms
+              ;; key is a uniform keyword, value is suitable for uniform.
+              :initform (make-hash-table))))
 
-;; Held in core-state
+;; Held in core-state, the material database.
 (defclass materials-table ()
-  ((%matvar-table :reader matvar-table
-                  :initarg :matvar-table
-                  :initform (make-hash-table))
-   (%matvar-type-table :reader matvar-type-table
-                       :initarg :matvar-type-table
-                       :initform (make-hash-table))
-   (%material-type-table :reader material-type-table
-                         :initarg :material-type-table
-                         :initform (make-hash-table))
-   (%material-table :reader material-table
+  ((%material-table :reader material-table
                     :initarg :material-table
                     :initform (make-hash-table))))
 
+(defun make-materials-table (&rest init-args)
+  (apply #'make-instance 'materials-table init-args))
 
 
 ;; standins until I write the code
-(defmacro with-material-accessors (accessors material &body body)
-  `(list ',accessors ',material ',body))
+(defmacro define-material-dictionary (name (&body options) &body body)
+  `(list ',name ',options ',body))
 
-(defmacro define-matvar-type (name &body slots)
-  `(list ',name ',slots))
-
-(defmacro define-material-type (name &body slots)
-  `(list ',name ',slots))
-
-(defmacro define-material (name (mat-type) &body init-forms)
-  `(list ',name ',mat-type ',init-forms))
-
-
-
+(defmacro define-material (name (&body options) &body init-forms)
+  `(list ',name ',options ',init-forms))
 
 
 ;; The materials DSL.
 
-(define-matvar-type :textfact-scalar
-  (factor :float 1)
-  (texture :texture))
+;; This form happens in the user codes.
+;; FirstLight/example/data/extensions/materials.matdict
+(define-material-dictionary :example-project
+    (:enabled t)
 
-(define-matvar-type :textfact-vec3
-  (factor :vec3 (vec3 1 1 1))
-  (texture :texture))
+  (define-material :default-unlit-color-material
+      (:shader :color)
+    ;; This shader uses no uniforms.
+    ;; The color is derived from the vertex attributes.
+    )
 
-(define-matvar-type :textfact-vec4
-  (factor :vec4 (vec4 1 1 1 1))
-  (texture :texture))
+  (define-material :default-unlit-texture-material
+      (:shader :texture)
+    (tex
+     (sampler1 "file")
+     (sampler2 "file")))
 
-(define-matvar-type :pbrmr
-  (base-color :textfact-vec4
-              ;; set defaults for pbmrmr's use of this type.
-              (factor (vec4 0 0 0 1)))
-  (metallic-factor :float .4)
-  (roughness-factor :float 0)
-  (metallic-roughness-texture :texture)
-  (alpha-mode :var :opaque)
-  (alpha-cutoff :float .5))
+  ;; And now, define a real named instance of a template.
+  (define-material :default-pbr-material
+      (:shader :pbr-lit-shader)
 
-;; This is the gltf2 material definition minus extras
-(define-material-type :gltf2-material-type
-  (display-name :string "Unknown Texture")
-  (shader :shader)
-  (pbr-metallic-roughness :pbrmr)
-  (normal :textfact-vec4)
-  (occlusion :textfact-vec4)
-  (emissive :textfact-vec3)
-  (alpha-mode :var)
-  (alpha-cutoff :float))
+    (pbr-metallic-roughness
+     (base-color
+      (factor (vec4 .1 .2 .3 1))
+      (texture "file"))
+     (metallic-factor .4)
+     (roughness-factor .7)
+     (metallic-roughness-texture
+      (factor (vec4 0 0 0 0))
+      (texture "file3")))
 
-;; And now, define a real named instance of a template.
-(define-material :default-material (:gltf2-material-type)
-  (display-name "Default Material")
-  (shader :pbr-lit-shader)
+    (normal
+     (factor (vec4 1 1 1 1))
+     (texture "file4"))
 
-  (pbr-metallic-roughness
-   (base-color
-    (factor (vec4 .1 .2 .3 1))
-    (texture (location "file")))
-   (metallic-factor
-    (factor .4))
-   (roughness-factor
-    (factor .7))
-   (metallic-roughness-texture
-    (texture (location "file2"))))
+    (occlusion
+     (factor (vec4 1 1 1 1))
+     (texture "file6"))
 
-  (normal
-   (factor (vec4 1 1 1 1))
-   (texture (location "file4")))
+    (emissive (vec3 0 0 0))
 
-  (occlusion
-   (factor (vec4 1 1 1 1))
-   (texture (location "file6")))
+    (alpha-mode 0)
+    (alpha-cutoff .3))
+  )
 
-  (emissive
-   (factor 0 0 0))
 
-  (alpha-mode :opaque)
-  (alpha-cutoff
-   (factor .3)))
+;; :pbr-metallic-roughness.base-color.factor -> (vec4 .1 .2 .3 1)
