@@ -1,9 +1,9 @@
 
 (asdf:defsystem #:first-light
   :description "An experimental game engine."
-  :author ("Michael Fiano <michael.fiano@gmail.com>"
+  :author ("Michael Fiano <mail@michaelfiano.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
-  :maintainer ("Michael Fiano <michael.fiano@gmail.com>"
+  :maintainer ("Michael Fiano <mail@michaelfiano.com>"
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :homepage "https://github.com/hackertheory/first-light"
