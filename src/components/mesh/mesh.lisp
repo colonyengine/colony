@@ -21,9 +21,9 @@
         (if presentp
             (progn
               (setf primitives (primitives cached))
-              (slog:emit :component.mesh.cache.used))
+              (simple-logger:emit :component.mesh.cache.used))
             (let* ((new-primitives (load-mesh context location id))
                    (cached (make-cached-mesh location id new-primitives)))
               (setf (cached-mesh store location id) cached
                     primitives (primitives cached))
-              (slog:emit :component.mesh.cache.created cached)))))))
+              (simple-logger:emit :component.mesh.cache.created cached)))))))

@@ -26,12 +26,12 @@
                              :delta delta
                              :period periodic-interval
                              :debug-interval debug-frames-interval))
-        (slog:emit :display.init width height hz)))))
+        (simple-logger:emit :display.init width height hz)))))
 
 (defmethod make-display :before ((core-state core-state))
   (with-cfg (log-level gl-version-major gl-version-minor anti-alias-level)
       (context core-state)
-    (setf slog:*current-level* log-level)
+    (setf simple-logger:*current-level* log-level)
     (dolist (attr `((:context-major-version ,gl-version-major)
                     (:context-minor-version ,gl-version-minor)
                     (:multisamplebuffers ,(if (zerop anti-alias-level) 0 1))
@@ -59,10 +59,10 @@
 (defmethod kit.sdl2:close-window :around ((display display))
   (with-cfg (width height) (context (core-state display))
     (call-next-method)
-    (slog:emit :display.stop width height (hz display))))
+    (simple-logger:emit :display.stop width height (hz display))))
 
 (defmethod quit-engine ((display display))
   (with-cfg (title) (context (core-state display))
     (kit.sdl2:close-window display)
     (kit.sdl2:quit)
-    (slog:emit :engine.quit title)))
+    (simple-logger:emit :engine.quit title)))

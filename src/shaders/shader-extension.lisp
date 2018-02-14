@@ -173,7 +173,7 @@
   (pushnew (shaders-modified-hook-generator core-state)
            3bgl-shaders:*modified-function-hook*)
   (dolist (func (modified-functions (shaders core-state)))
-    (slog:emit :shader.function.compiled func)))
+    (simple-logger:emit :shader.function.compiled func)))
 
 (defun maybe-recompile-shaders (core-state)
   (when (modified-functions (shaders core-state))

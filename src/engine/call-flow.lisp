@@ -138,7 +138,7 @@ COME-FROM-STATE-NAME is an arbitrary symbol that indicates the previous
 flow-state name. This is often a symbolic name so execute-flow can determine how
 the flow exited. Return two values The previous state name and the current state
 name which resulted in the exiting of the flow."
-  (slog:emit :flow.enter call-flow-name flow-name flow-state-name)
+  (simple-logger:emit :flow.enter call-flow-name flow-name flow-state-name)
   (loop :with call-flow = (get-call-flow call-flow-name core-state)
         :with flow = (get-flow flow-name call-flow)
         :with flow-state = (get-flow-state flow-state-name flow)
@@ -146,7 +146,7 @@ name which resulted in the exiting of the flow."
         :with last-state-name
         :with selections
         :with policy = :identity-policy
-        :do (slog:emit :flow.state.process
+        :do (simple-logger:emit :flow.state.process
                        (name flow-state)
                        (exitingp flow-state))
             ;; Step 1: Record state transition and update to current.
@@ -161,7 +161,7 @@ name which resulted in the exiting of the flow."
             (multiple-value-bind (the-policy the-selections)
                 (cond
                   ((selector flow-state)
-                   (slog:emit :flow.call.selector)
+                   (simple-logger:emit :flow.call.selector)
                    (funcall (selector flow-state) core-state))
                   (t
                    (values :identity-policy nil)))
@@ -185,7 +185,7 @@ name which resulted in the exiting of the flow."
                        (cond
                          ((hash-table-p item)
                           (when (action flow-state)
-                            (slog:emit :flow.call.action.hash)
+                            (simple-logger:emit :flow.call.action.hash)
                             (maphash
                              (lambda (k v)
                                (declare (ignore k))
@@ -193,7 +193,7 @@ name which resulted in the exiting of the flow."
                              item)))
                          ((atom item)
                           (when (action flow-state)
-                            (slog:emit :flow.call.action.instance)
+                            (simple-logger:emit :flow.call.action.instance)
                             (funcall (action flow-state) core-state item)))))
 
                      (act-on-type-table (type-key type-table)
@@ -242,13 +242,13 @@ name which resulted in the exiting of the flow."
 
             ;; Step 5: Exit if reached exiting state.
             (when (exitingp flow-state)
-              (slog:emit :flow.exit call-flow-name flow-name current-state-name)
+              (simple-logger:emit :flow.exit call-flow-name flow-name current-state-name)
               (return-from execute-flow
                 (values last-state-name current-state-name)))
             ;; Step 6: Run the transition function to determine the next
             ;; flow-state. Currently, a transition can only go into the SAME
             ;; flow.
-            (slog:emit :flow.call.transition)
+            (simple-logger:emit :flow.call.transition)
             (setf flow-state
                   (gethash (funcall (transition flow-state) core-state) flow))))
 

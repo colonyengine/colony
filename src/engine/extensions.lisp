@@ -8,7 +8,7 @@
    path
    (lambda (x)
      (load x)
-     (slog:emit :extension.load owner x))
+     (simple-logger:emit :extension.load owner x))
    :filter (extension-type-filter extension-type)))
 
 (defun extension-type-filter (extension-type)
