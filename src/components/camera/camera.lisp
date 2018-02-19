@@ -2,8 +2,8 @@
 
 (define-component camera ()
   (activep nil)
-  (view (mid))
-  (projection (mid))
+  (view (m4:id))
+  (projection (m4:id))
   (mode :perspective)
   (clip-near .1)
   (clip-far 1024)
@@ -18,15 +18,14 @@
     (push component (cameras (core-state context)))))
 
 (defmethod destroy-component ((component camera) (context context))
-  (deletef (cameras (core-state context)) component)
+  (alexandria:deletef (cameras (core-state context)) component)
   (setf (active-camera context) nil))
 
 (defmethod make-projection ((mode (eql :perspective)) camera (context context))
-  (with-accessors ((zoom zoom) (proj projection) (near clip-near)
-                   (far clip-far) (fovy fovy))
+  (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far) (fovy fovy))
       camera
     (with-cfg (width height) context
-      (mkpersp! proj (/ fovy zoom) (/ width height) near far))))
+      (m4:perspective-projection! proj (/ fovy zoom) (/ width height) near far))))
 
 (defmethod make-projection ((mode (eql :orthographic)) camera (context context))
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far))
@@ -34,15 +33,15 @@
     (with-cfg (width height) context
       (let ((w (/ width (zoom camera) 2))
             (h (/ height (zoom camera) 2)))
-        (mkortho! proj (- w) w (- h) h near far)))))
+        (m4:orthographic-projection! proj (- w) w (- h) h near far)))))
 
 (defgeneric compute-camera-view (camera context)
   (:method ((camera camera) (context context))
     (with-accessors ((view view) (transform transform)) camera
-      (let* ((eye (mtr->v3 (model transform)))
-             (target (v3+ eye (v3neg (mrot->v3 (model transform) :z))))
-             (up (mrot->v3 (model transform) :y)))
-        (mkview! view eye target up)))))
+      (let* ((eye (m4:translation-to-vec3 (model transform)))
+             (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3 (model transform) :z))))
+             (up (m4:rotation-axis-to-vec3 (model transform) :y)))
+        (m4:view! view eye target up)))))
 
 (defun find-active-camera (core-state)
   (dolist (camera (cameras core-state))

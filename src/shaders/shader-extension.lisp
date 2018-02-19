@@ -36,7 +36,7 @@
   (let ((fn-symbols))
     (%with-shader-forms (forms)
       (loop :for (nil . fns) :in data
-            :do (appendf fn-symbols fns))
+            :do (alexandria:appendf fn-symbols fns))
       (%shader-symbol-duplicate-check (data #'car)
         (error "Stage ~s cannot be defined more than once in the same ~s form."
                x type))
@@ -64,7 +64,7 @@
 
 (defun %generate-uniforms (&rest stages)
   (flet ((%generate-uniform-symbol (parts)
-           (make-keyword
+           (alexandria:make-keyword
             (with-output-to-string (s)
               (loop :for (part . rest) :on parts
                     :do (etypecase part
@@ -86,7 +86,7 @@
 (defun %make-dictionary-programs (data)
   (flet ((%generate-stages (stages)
            (loop :for (stage func) :on stages :by #'cddr
-                 :collect `(,(make-keyword (symbolicate stage '-shader))
+                 :collect `(,(alexandria:make-keyword (alexandria:symbolicate stage '-shader))
                             ,(%type-check-shader-function func)))))
     (loop :for (name stages) :in data
           :collect `(:name ,name
@@ -100,7 +100,7 @@
                       :for func-symbol = (%type-check-shader-function func)
                       :collect
                       `(,func-symbol
-                        ,(make-keyword (symbolicate type '-shader))
+                        ,(alexandria:make-keyword (alexandria:symbolicate type '-shader))
                         (:generate ,(getf options :version)
                                    ,type
                                    ,func-symbol)))))
@@ -111,7 +111,7 @@
           :for default-version = (getf options :default-version 330)
           :do (loop :for (type . funcs) :in stages
                     :do (loop :for func :in funcs
-                              :for options = (cdr (ensure-list func))
+                              :for options = (cdr (alexandria:ensure-list func))
                               :unless (getf options :version)
                                 :do (setf func (append
                                                 (list func)
@@ -120,12 +120,12 @@
     (loop :with table = (make-hash-table)
           :for (type func) :in result
           :do (push func (gethash type table))
-          :finally (return (nreverse (hash-table-alist table))))))
+          :finally (return (nreverse (alexandria:hash-table-alist table))))))
 
 (defun %process-program-forms (forms)
   (let ((programs-list))
     (%with-shader-forms (forms)
-      (appendf programs-list data))
+      (alexandria:appendf programs-list data))
     programs-list))
 
 (defun %collect-shader-forms (path)

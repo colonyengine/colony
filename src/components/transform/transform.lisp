@@ -5,11 +5,11 @@
   (children nil)
   (translation (%make-transform-state 'transform-state-vector))
   (rotation (%make-transform-state 'transform-state-quaternion
-                                   :incremental (v3zero)))
+                                   :incremental (v3:zero)))
   (scale (%make-transform-state 'transform-state-vector
-                                :current (vec3 1 1 1)))
-  (local (mid))
-  (model (mid)))
+                                :current (v3:make 1.0 1.0 1.0)))
+  (local (m4:id))
+  (model (m4:id)))
 
 (defun add-child (parent child)
   (push child (children parent))
@@ -23,18 +23,18 @@
 
 (defun translate-node (node)
   (with-slots (%current %incremental %previous) (translation node)
-    (v3cp! %previous %current)
-    (v3+! %current %current %incremental)))
+    (v3:copy! %previous %current)
+    (v3:+! %current %current %incremental)))
 
 (defun rotate-node (node)
   (with-slots (%current %incremental %previous) (rotation node)
-    (qcp! %previous %current)
-    (qrot! %current %current %incremental)))
+    (q:copy! %previous %current)
+    (q:rotate! %current %current %incremental)))
 
 (defun scale-node (node)
   (with-slots (%current %incremental %previous) (scale node)
-    (v3cp! %previous %current)
-    (v3+! %current %current %incremental)))
+    (v3:copy! %previous %current)
+    (v3:+! %current %current %incremental)))
 
 (defun transform-node (node)
   (scale-node node)
@@ -46,16 +46,16 @@
     (interpolate-state %scale alpha)
     (interpolate-state %rotation alpha)
     (interpolate-state %translation alpha)
-    (m*! %local
-         (q->m! %local (interpolated %rotation))
-         (v3->mscale +mid+ (interpolated %scale)))
-    (v3->mtr! %local (interpolated %translation))))
+    (m4:*! %local
+           (q:to-mat4! %local (interpolated %rotation))
+           (m4:scale-from-vec3 m4:+id+ (interpolated %scale)))
+    (m4:translation-from-vec3! %local (interpolated %translation))))
 
 (defun resolve-model (node alpha)
   (with-slots (%parent %local %model) node
     (when %parent
       (resolve-local node alpha)
-      (m*! %model (model %parent) %local)
+      (m4:*! %model (model %parent) %local)
       %model)))
 
 (defun map-nodes (func parent)
@@ -78,18 +78,18 @@
 (defmethod reinitialize-instance ((instance transform)
                                   &key
                                     actor
-                                    (translation/current (v3zero))
-                                    (translation/incremental (v3zero))
-                                    (rotation/current (v3zero))
-                                    (rotation/incremental (v3zero))
-                                    (scale/current (vec3 1 1 1))
-                                    (scale/incremental (v3zero)))
+                                    (translation/current (v3:zero))
+                                    (translation/incremental (v3:zero))
+                                    (rotation/current (v3:zero))
+                                    (rotation/incremental (v3:zero))
+                                    (scale/current (v3:make 1.0 1.0 1.0))
+                                    (scale/incremental (v3:zero)))
   (with-slots (%translation %rotation %scale) instance
     (setf (actor instance) actor
           (state instance) :initialize
           (current %translation) translation/current
           (incremental %translation) translation/incremental
-          (current %rotation) (qrot +qid+ rotation/current)
+          (current %rotation) (q:rotate q:+id+ rotation/current)
           (incremental %rotation) rotation/incremental
           (current %scale) scale/current
           (incremental %scale) scale/incremental)))

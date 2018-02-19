@@ -30,8 +30,8 @@
   (with-accessors ((transform transform) (mesh mesh) (shader shader)
                    (texture-id texture-id))
       component
-    (when-let* ((shaders (shaders context))
-                (camera (active-camera context)))
+    (alexandria:when-let* ((shaders (shaders context))
+                           (camera (active-camera context)))
       (kit.gl.shader:use-program shaders shader)
       (uniform-matrix shaders :model (model transform))
       (uniform-matrix shaders :view (view camera))

@@ -10,9 +10,6 @@
   :serial t
   :components
   ((:file "package")
-   (:module "stub-0"
-    :components
-    ((:file "stub-0")))
    (:module "transform"
     :components
     ((:file "transform")

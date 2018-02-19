@@ -74,7 +74,7 @@ data structures in CORE-STATE."
 
 (defun %make-scene-tree (core-state)
   (with-slots (%context) core-state
-    (let* ((actor (make-actor %context :id (make-gensym '@universe) :scene t))
+    (let* ((actor (make-actor %context :id (alexandria:make-gensym '@universe) :scene t))
            (transform (make-component 'transform %context :actor actor)))
       (add-component actor transform)
       (spawn-actor actor %context :parent nil)

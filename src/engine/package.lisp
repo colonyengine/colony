@@ -1,16 +1,14 @@
 (in-package :defpackage+-1)
 
 (defpackage+ #:fl.core
-  (:nicknames #:first-light)
-  (:inherit #:cl
-            #:alexandria
-            #:gamebox-math)
+    (:nicknames #:first-light)
+  (:use #:cl)
   (:export #:start-engine
            #:quit-engine)
 
   ;; common
   (:export #:get-path
-	   #:destroy)
+           #:destroy)
 
   ;; core state
   (:export #:core-state
@@ -52,7 +50,7 @@
            #:define-component
            #:make-component
            #:add-component
-	   #:remove-component
+           #:remove-component
            #:add-multiple-components
            #:initialize-component
            #:physics-update-component

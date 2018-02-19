@@ -30,7 +30,7 @@
     (5126 :float)))
 
 (defun get-component-count (data-type)
-  (ecase (make-keyword data-type)
+  (ecase (alexandria:make-keyword data-type)
     (:scalar 1)
     (:vec2 2)
     (:vec3 3)
@@ -119,7 +119,7 @@
                   (gl:draw-arrays %mode 0 %count))))))))
 
 (defun make-index-buffer (primitive data)
-  (when-let* ((indices (get-property "indices" data))
+  (alexandria:when-let* ((indices (get-property "indices" data))
               (accessor (elt (get-property "accessors") indices)))
     (with-slots (%vao %mode %count %type %index-buffer %draw-func) primitive
       (setf %count (get-property "count" accessor)

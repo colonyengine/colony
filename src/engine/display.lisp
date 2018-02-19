@@ -1,6 +1,6 @@
 (in-package :fl.core)
 
-(defclass display (kit.sdl2:gl-window box.fm:frame-manager)
+(defclass display (kit.sdl2:gl-window box.frame:frame-manager)
   ((%core-state :reader core-state
                 :initarg :core-state)
    (%hz :reader hz
@@ -48,7 +48,7 @@
     (sdl2:gl-set-swap-interval (if vsync 1 0))))
 
 (defmethod kit.sdl2:render ((display display))
-  (gl:clear-color (* 0.2 (abs (sin (box.fm:total-time display)))) 0 0 1)
+  (gl:clear-color (* 0.2 (abs (sin (box.frame:total-time display)))) 0 0 1)
   (gl:clear :color-buffer :depth-buffer)
   (execute-flow (core-state display)
                 :default

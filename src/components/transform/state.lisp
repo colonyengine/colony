@@ -20,9 +20,9 @@
   (:method ((type (eql 'transform-state-scalar)))
     0)
   (:method ((type (eql 'transform-state-vector)))
-    (v3zero))
+    (v3:zero))
   (:method ((type (eql 'transform-state-quaternion)))
-    (qid)))
+    (q:id)))
 
 (defun %generate-default-state-initargs (type)
   (mapcan
@@ -41,8 +41,8 @@
 
 (defmethod interpolate-state ((state transform-state-vector) factor)
   (with-slots (%previous %current %interpolated) state
-    (v3lerp! %interpolated %previous %current factor)))
+    (v3:lerp! %interpolated %previous %current factor)))
 
 (defmethod interpolate-state ((state transform-state-quaternion) factor)
   (with-slots (%previous %current %interpolated) state
-    (qslerp! %interpolated %previous %current factor)))
+    (q:slerp! %interpolated %previous %current factor)))

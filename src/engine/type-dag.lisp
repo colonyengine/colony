@@ -293,7 +293,7 @@ If the form is not null, and contains hyper edges, return values: list of
         :do (analyze-graph graph)))
 
 (defun add-cross-product-edges (clg source-list target-list)
-  (map-product
+  (alexandria:map-product
    (lambda (v1 v2)
      (cl-graph:add-edge-between-vertexes clg v1 v2 :edge-type :directed))
    source-list
@@ -388,7 +388,7 @@ graphdef references holding real references to the named subforms."
 depends-on in that GDEF."
   (let ((splice-name (second splice-form)))
     ;; Check of the splice is natively in the current gdef.
-    (when-let ((splice (gethash splice-name (subforms gdef))))
+    (alexandria:when-let ((splice (gethash splice-name (subforms gdef))))
       (return-from lookup-splice
         (values splice gdef)))
     ;; If it isn't, then check which depends-on in the current gdef
@@ -544,7 +544,7 @@ depends-on in that GDEF."
                 (concatenate 'string "^" putative-package-name "$")))
          ;; Kind of a terrible Big-O...
          (dolist (pkg-name all-packages)
-           (when-let* ((matched-pkg-name (ppcre:scan-to-strings
+           (alexandria:when-let* ((matched-pkg-name (ppcre:scan-to-strings
                                           putative-package-name-regex pkg-name))
                        (found-pkg (find-package matched-pkg-name)))
              (pushnew found-pkg

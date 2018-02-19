@@ -11,7 +11,7 @@ to live."))
        (uiop/pathname:merge-pathnames*
         path
         (uiop:pathname-directory-pathname (uiop:argv0))))
-      (asdf/system:system-relative-pathname (make-keyword system-name) path)))
+      (asdf/system:system-relative-pathname (alexandria:make-keyword system-name) path)))
 
 (defun map-files (path effect &key (filter (constantly t)) (recursivep t))
   (labels ((maybe-affect (file)

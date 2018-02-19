@@ -25,9 +25,9 @@
               :collect
               (destructuring-bind (slot-name slot-value &key type) slot
                 (append
-                 `(,(symbolicate '% slot-name)
+                 `(,(alexandria:symbolicate '% slot-name)
                    :accessor ,slot-name
-                   :initarg ,(make-keyword slot-name)
+                   :initarg ,(alexandria:make-keyword slot-name)
                    :initform ,slot-value)
                  (when type
                    `(:type ,type))))))))
@@ -81,7 +81,7 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
           component-type))))
 
 (defun component/preinit->init (core-state component)
-  (when-let ((thunk (initializer-thunk component)))
+  (alexandria:when-let ((thunk (initializer-thunk component)))
     (funcall thunk)
     (setf (initializer-thunk component) nil))
   (let ((canonicalized-component-type (canonicalize-component-type
@@ -162,7 +162,7 @@ defined in the graph category COMPONENT-PACKAGE-SEARCH-ORDER."
 
 (defun component/countdown-to-destruction (core-state component)
   (when (> (ttl component) 0)
-    (decf (ttl component) (box.fm:frame-time (display core-state)))))
+    (decf (ttl component) (box.frame:frame-time (display core-state)))))
 
 ;;; User API Component Protocol
 

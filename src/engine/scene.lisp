@@ -22,7 +22,7 @@
            (lambda (x)
              (or (not (symbolp x))
                  (not (char= (char (symbol-name x) 0) #\@))))
-           (flatten component))))
+           (alexandria:flatten component))))
     (dolist (actor component-actors)
       (unless (find actor actor-names)
         (error (format nil "A component references the undefined actor: ~a"
@@ -88,7 +88,7 @@
     (loop :with root = `(scene-tree ,core-state)
           :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
-          :collect `(,(ensure-symbol 'add-child 'fl.comp.transform)
+          :collect `(,(alexandria:ensure-symbol 'add-child 'fl.comp.transform)
                      (actor-component-by-type ,(or parent root) 'transform)
                      (actor-component-by-type ,child 'transform)))))
 
@@ -97,7 +97,7 @@
         :collect `(spawn-actor ,actor (context ,core-state))))
 
 (defun parse-scene (scene-name scene-spec)
-  (with-gensyms (core-state actor-table actor-name)
+  (alexandria:with-gensyms (core-state actor-table actor-name)
     (let* ((actor-names (%generate-actor-names scene-spec))
            (actor-components (%generate-actor-components-table
                               scene-spec actor-names))
@@ -124,7 +124,7 @@
   (funcall (get-scene core-state name) core-state))
 
 (defun load-default-scene (core-state)
-  (if-let ((default (cfg (context core-state) :default-scene)))
+  (alexandria:if-let ((default (cfg (context core-state) :default-scene)))
     (load-scene core-state default)
     (error "No default scene specified in settings.cfg.")))
 
