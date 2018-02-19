@@ -52,5 +52,5 @@
   (let* ((core-state (core-state display))
          (camera (find-active-camera core-state)))
     (with-accessors ((zoom zoom) (mode mode)) camera
-      (setf zoom (clamp (+ zoom (/ direction 2)) 1 10))
+      (setf zoom (alexandria:clamp (+ zoom (/ direction 2)) 1 10))
       (make-projection mode camera (context core-state)))))
