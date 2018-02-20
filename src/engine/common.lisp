@@ -1,9 +1,8 @@
 (in-package :fl.core)
 
 (defgeneric destroy (thing context &key ttl)
-  (:documentation "Destroy may take either an ACTOR or a COMPONENT. The
-keyword argument :TTL supplied in real seconds, how long the thing has yet
-to live."))
+  (:documentation "Destroy may take either an ACTOR or a COMPONENT. The keyword argument :TTL
+supplied in real seconds, how long the thing has yet to live."))
 
 (defun get-path (system-name &optional path)
   (if uiop/image:*image-dumped-p*
@@ -27,8 +26,7 @@ to live."))
   (gethash key type-table))
 
 (defun (setf type-table) (entry type-name-key type-table)
-  (symbol-macrolet
-      ((entry-ht (gethash type-name-key type-table)))
+  (symbol-macrolet ((entry-ht (gethash type-name-key type-table)))
     (multiple-value-bind (looked-up-type-table presentp) entry-ht
       (unless presentp
         (let ((new-table (make-hash-table)))

@@ -19,8 +19,8 @@
    (%graphdefs :accessor graphdefs
                :initarg :graphdefs
                :initform  (make-hash-table)
-               :documentation "graph definitions that participated, keyed by
-name, with graphdef instance as value.")))
+               :documentation "graph definitions that participated, keyed by name, with graphdef
+instance as value.")))
 
 (defun make-analyzed-graph (&rest init-args)
   (apply #'make-instance 'analyzed-graph init-args))
@@ -99,8 +99,7 @@ name, with graphdef instance as value.")))
   (:method (category graph)))
 
 (defgeneric make-graph-annotation (category &rest args)
-  (:documentation "Make an instance of an appropriate graph annotation depending
-on cateogry.")
+  (:documentation "Make an instance of an appropriate graph annotation depending on cateogry.")
   ;; Default method is no annotation at all.
   (:method (category &rest args)
     (declare (ignore args))))
@@ -113,8 +112,7 @@ on cateogry.")
                       :initarg :referenced-types
                       :initform (make-hash-table))))
 
-(defmethod make-graph-annotation ((category (eql 'component-dependency))
-                                  &rest init-args)
+(defmethod make-graph-annotation ((category (eql 'component-dependency)) &rest init-args)
   (apply #'make-instance 'graph-annotation/component-dependency init-args))
 
 ;; For category COMPONENT-PACKAGE-SEARCH-ORDER
@@ -123,28 +121,23 @@ on cateogry.")
                               :initarg :pattern-matched-packages
                               :initform (make-hash-table))))
 
-(defmethod make-graph-annotation
-    ((category (eql 'component-package-search-order)) &rest init-args)
+(defmethod make-graph-annotation ((category (eql 'component-package-search-order)) &rest init-args)
   (apply #'make-instance 'graph-annotation/component-package-search-order
          init-args))
 
 ;; TODO: stick in a util file somewhere.
 (defun eql/package-relaxed (obj1 obj2)
   (cond
-    ((eql obj1 obj2)
-     ;; It succeeded? Oh good. Return quickly.
-     T)
-    ((and (symbolp obj1) (symbolp obj2))
-     ;; Otherwise do a slower check.
+    ((eql obj1 obj2) t) ; It succeeded? Oh good. Return quickly.
+    ((and (symbolp obj1) (symbolp obj2)) ; Otherwise do a slower check.
      (string= (symbol-name obj1)
               (symbol-name obj2)))
-    (t
-     ;; Hrm, sorry. It didn't EQL match,
+    (t ; Hrm, sorry. It didn't EQL match,
      nil)))
 
 (defun graph-roots (graph)
-  "Find all vertex roots (vertexes with no parents) in the directed graph GRAPH
-and return them as a list in no particular order."
+  "Find all vertex roots (vertexes with no parents) in the directed graph GRAPH and return them as a
+list in no particular order."
   (let ((results))
     (cl-graph:iterate-vertexes
      graph
@@ -154,8 +147,7 @@ and return them as a list in no particular order."
     results))
 
 (defun graph-leaves (graph)
-  "Find all vertex leaves (vertexes with no children) in the graph GRAPH and
-return them as a list."
+  "Find all vertex leaves (vertexes with no children) in the graph GRAPH and return them as a list."
   (let ((results))
     (cl-graph:iterate-vertexes
      graph
@@ -178,8 +170,7 @@ return them as a list."
 
 (defgeneric canonicalize-dependency-form (category dependency-form))
 
-(defmethod canonicalize-dependency-form ((category (eql 'component-dependency))
-                                         dependency-form)
+(defmethod canonicalize-dependency-form ((category (eql 'component-dependency)) dependency-form)
   (loop :for element :in dependency-form
         :collect
         (cond
@@ -190,8 +181,8 @@ return them as a list."
           (t
            `(component-type ,element)))))
 
-(defmethod canonicalize-dependency-form
-    ((category (eql 'component-package-search-order)) dependency-form)
+(defmethod canonicalize-dependency-form ((category (eql 'component-package-search-order))
+                                         dependency-form)
   (loop :for element :in dependency-form
         :collect
         (cond
@@ -203,15 +194,12 @@ return them as a list."
            `(potential-package ,element)))))
 
 (defun segment-dependency-form (category form)
-  "Lift splices and then segment the dependency FORM into hyperedges.
-If the form is null, return values: NIL, :empty
-If the form is not null, but contains no hyper edges, return values:
-canonical-form and :vertex
-If the form is not null, and contains hyper edges, return values: list of
-  hyper-edge pairs, :hyperedges"
+  "Lift splices and then segment the dependency FORM into hyperedges. If the form is null, return
+values: NIL, :empty If the form is not null, but contains no hyper edges, return values:
+canonical-form and :vertex If the form is not null, and contains hyper edges, return values: list of
+hyper-edge pairs, :hyperedges"
   (let* ((canonical-form (canonicalize-dependency-form category form))
-         (x (split-sequence:split-sequence
-             '-> canonical-form :test #'eql/package-relaxed))
+         (x (split-sequence:split-sequence '-> canonical-form :test #'eql/package-relaxed))
          ;; cut into groups of two with rolling window
          (connections
            (loop :for (k j . nil) :in (maplist #'identity x)
@@ -250,30 +238,28 @@ If the form is not null, and contains hyper edges, return values: list of
   (assert (is-syntax-form-p '(define-graph) form))
   (destructuring-bind (name options . subforms) (rest form)
     (let ((category (get-graph-option :category options)))
-      (make-graphdef
-       name
-       :original-form form
-       :enabled (get-graph-option :enabled options)
-       :category category
-       :depends-on (get-graph-option :depends-on options)
-       :roots (get-graph-option :roots options)
-       :subforms
-       (let ((subform-db (make-hash-table)))
-         (loop :for i :in subforms
-               :for subform = (parse-subform category i)
-               :do (setf (gethash (name subform) subform-db) subform))
-         subform-db)))))
+      (make-graphdef name
+                     :original-form form
+                     :enabled (get-graph-option :enabled options)
+                     :category category
+                     :depends-on (get-graph-option :depends-on options)
+                     :roots (get-graph-option :roots options)
+                     :subforms
+                     (let ((subform-db (make-hash-table)))
+                       (loop :for i :in subforms
+                             :for subform = (parse-subform category i)
+                             :do (setf (gethash (name subform) subform-db) subform))
+                       subform-db)))))
 
 (defmethod extension-file-type ((extension-type (eql 'graphs)))
   "gph")
 
-(defmethod prepare-extension ((extension-type (eql 'graphs))
-                              owner path)
+(defmethod prepare-extension ((extension-type (eql 'graphs)) owner path)
   ;; Collect ALL graph-definitions into the appropriate analyzed-graph objects.
   ;; The graphs aren't fully analyzed yet. This is only the parsing phase.
   (loop :with defs = (collect-extension-forms extension-type path)
         :for def :in defs
-        for parsed-def = (parse-graph-definition def)
+        :for parsed-def = (parse-graph-definition def)
         :do (multiple-value-bind (analyzed-graph present)
                 (gethash (category parsed-def) (analyzed-graphs owner))
               (unless present
@@ -283,14 +269,13 @@ If the form is not null, and contains hyper edges, return values: list of
                         new-analyzed-graph
                         analyzed-graph new-analyzed-graph)))
               (when (enabled parsed-def)
-                (setf (gethash (name parsed-def) (graphdefs analyzed-graph))
-                      parsed-def))))
+                (setf (gethash (name parsed-def) (graphdefs analyzed-graph)) parsed-def))))
   ;; TODO: perform the analysis for each graph category type. Note: a category
   ;; may be a consp form in addition to a symbol. A) Ensure if subdag, all are
   ;; subdag. B) Ensure if subgraph, all are subgraph.
   ;; TODO: convert each category to appropriate cl-graph version
-  (loop :for graph :being :the :hash-values :in (analyzed-graphs owner)
-        :do (analyze-graph graph)))
+  (dolist (graph (alexandria:hash-table-values (analyzed-graphs owner)))
+    (analyze-graph graph)))
 
 (defun add-cross-product-edges (clg source-list target-list)
   (alexandria:map-product
@@ -311,9 +296,9 @@ If the form is not null, and contains hyper edges, return values: list of
    val-list))
 
 (defun absorb-depforms (clg gdef depforms)
-  "Traverse the depforms and add them into the clg as edges while keeping
-reference to the initial gdef associated with the depforms. Return three values:
-the cl-graph, the roots as elements, the leaves as elements."
+  "Traverse the depforms and add them into the clg as edges while keeping reference to the initial
+gdef associated with the depforms. Return three values: the cl-graph, the roots as elements, the
+leaves as elements."
   (let ((roots)
         (leaves))
     (loop :for depform :in depforms
@@ -335,18 +320,16 @@ the cl-graph, the roots as elements, the leaves as elements."
                    ;; the :vertex for is not only the roots, but also the leaves.
                    (pushnew canonical-form roots :test #'equalp)
                    (pushnew canonical-form leaves :test #'equalp)
-                   (loop :for vert :in canonical-form
-                         :do (cl-graph:add-vertex
-                              clg
-                              (annotate-splice vert gdef))))))
+                   (dolist (vert canonical-form)
+                     (cl-graph:add-vertex clg (annotate-splice vert gdef))))))
     (values clg
             (remove-duplicates (mapcan #'identity roots) :test #'equalp)
             (remove-duplicates (mapcan #'identity leaves) :test #'equalp))))
 
 (defun analyze-graphdef-depends-on (graph)
-  "Transmute the :depends-on form in each graphdef object in the GRAPH into real
-graphdef references holding real references to the named subforms."
-  (loop :for gdef :being :the :hash-values :in (graphdefs graph)
+  "Transmute the :depends-on form in each graphdef object in the GRAPH into real graphdef references
+holding real references to the named subforms."
+  (loop :for gdef :in (alexandria:hash-table-values(graphdefs graph))
         :for whole-depends-on-form = (depends-on gdef)
         :do
            ;; depends-on used to be list, but now we're converting it into a
@@ -357,8 +340,7 @@ graphdef references holding real references to the named subforms."
                  :for analyzed-depends-on = (make-graphdef-depends-on
                                              gdef-name
                                              :graphdef gdef-reference
-                                             :original-form (list gdef-name
-                                                                  subform-names))
+                                             :original-form (list gdef-name subform-names))
                  :do (assert gdef-reference)
                      ;; Now set up the subforms entry in the analyzed-depends-on
                      ;; object.
@@ -366,17 +348,14 @@ graphdef references holding real references to the named subforms."
                          ;; get all subform names in gdef
                          (maphash
                           (lambda (subform-name subform-instance)
-                            (setf (gethash subform-name
-                                           (subforms analyzed-depends-on))
+                            (setf (gethash subform-name (subforms analyzed-depends-on))
                                   subform-instance))
                           (subforms gdef-reference))
                          ;; find the listed subform-names (which if it is NIL,
                          ;; do nothing) in the gdef and assign them.
-                         (loop :for subform-name :in subform-names
-                               :do (setf (gethash subform-name
-                                                  (subforms analyzed-depends-on))
-                                         (gethash subform-name
-                                                  (subforms gdef-reference)))))
+                         (dolist (subform-name subform-names)
+                           (setf (gethash subform-name (subforms analyzed-depends-on))
+                                 (gethash subform-name (subforms gdef-reference)))))
                      ;; store the semantic analysis of the depends-on form,
                      ;; transmuted into its new graphdef-depends-on form, back
                      ;; into the initiating gdef.
@@ -384,20 +363,16 @@ graphdef references holding real references to the named subforms."
                            analyzed-depends-on))))
 
 (defun lookup-splice (splice-form gdef)
-  "Find the subform describing SPLICE-FORM in GDEF, or in any available
-depends-on in that GDEF."
+  "Find the subform describing SPLICE-FORM in GDEF, or in any available depends-on in that GDEF."
   (let ((splice-name (second splice-form)))
     ;; Check of the splice is natively in the current gdef.
     (alexandria:when-let ((splice (gethash splice-name (subforms gdef))))
-      (return-from lookup-splice
-        (values splice gdef)))
+      (return-from lookup-splice (values splice gdef)))
     ;; If it isn't, then check which depends-on in the current gdef
-    (loop :for dep-inst :being :the :hash-values :in (depends-on gdef)
-          :do (multiple-value-bind (subform present)
-                  (gethash splice-name (subforms dep-inst))
-                (when present
-                  (return-from lookup-splice
-                    (values subform (graphdef dep-inst))))))
+    (dolist (dep-inst (alexandria:hash-table-values (depends-on gdef)))
+      (multiple-value-bind (subform present) (gethash splice-name (subforms dep-inst))
+        (when present
+          (return-from lookup-splice (values subform (graphdef dep-inst))))))
     ;; Otheriwse, you're out of luck. Prolly should put an error here.
     (values nil nil)))
 
@@ -418,19 +393,19 @@ depends-on in that GDEF."
     ;; making by expanding slices in additional passes until there are no
     ;; splices left.
     ;; First, add the initial depforms from the roots.
-    (loop :for gdef :being :the :hash-values :in (graphdefs graph)
+    (loop :for gdef :in (alexandria:hash-table-values (graphdefs graph))
           :when (roots gdef)
-            :do (loop :for root :in (roots gdef)
-                      ;; For the initial seeding, we don't care about the
-                      ;; roots/leaves of the initial root subforms.
-                      :do (absorb-depforms
-                           clg
-                           ;; This is the gdef that these depforms came from...
-                           gdef
-                           ;; ...in which all splices must be looked up in,
-                           ;; either directly or through a graphdef-depends-on
-                           ;; object.
-                           (depforms (gethash root (subforms gdef))))))
+            :do (dolist ( root (roots gdef))
+                  ;; For the initial seeding, we don't care about the
+                  ;; roots/leaves of the initial root subforms.
+                  (absorb-depforms
+                   clg
+                   ;; This is the gdef that these depforms came from...
+                   gdef
+                   ;; ...in which all splices must be looked up in,
+                   ;; either directly or through a graphdef-depends-on
+                   ;; object.
+                   (depforms (gethash root (subforms gdef))))))
     ;; Then, iterate the graph. Each iteration will substitute the current
     ;; splice forms for the actual graphs indicated by those splice names. This
     ;; may introduce more splices the next iteration will get. Stop when there
@@ -453,15 +428,13 @@ depends-on in that GDEF."
           :do (dolist (splice splices)
                 (let ((parents (cl-graph:parent-vertexes splice))
                       (children (cl-graph:child-vertexes splice)))
-                  (destructuring-bind (splice-form gdef)
-                      (cl-graph:element splice)
+                  (destructuring-bind (splice-form gdef) (cl-graph:element splice)
                     (multiple-value-bind (lookedup-splice lookedup-gdef)
                         (lookup-splice splice-form gdef)
                       ;; Now, absorb the splice into clg, get the roots and
                       ;; leaves, then fixup the edges.
                       (multiple-value-bind (clg splice-roots splice-leaves)
-                          (absorb-depforms
-                           clg lookedup-gdef (depforms lookedup-splice))
+                          (absorb-depforms clg lookedup-gdef (depforms lookedup-splice))
                         ;; delete the original parent edges.
                         (dolist (parent parents)
                           (cl-graph:delete-edge-between-vertexes
@@ -491,8 +464,7 @@ depends-on in that GDEF."
     ;; and then generate any annotations we might need.
     (generate-graph-annotation (category graph) graph)))
 
-(defmethod generate-graph-annotation
-    ((category (eql 'component-dependency)) graph)
+(defmethod generate-graph-annotation ((category (eql 'component-dependency)) graph)
   (let* ((clg (graph graph))
          (contains-cycles-p
            (cl-graph:find-vertex-if
@@ -515,8 +487,7 @@ depends-on in that GDEF."
            (setf (gethash (second elem-v) (referenced-types annotation)) t)))))
     (setf (annotation graph) annotation)))
 
-(defmethod generate-graph-annotation
-    ((category (eql 'component-package-search-order)) graph)
+(defmethod generate-graph-annotation ((category (eql 'component-package-search-order)) graph)
   (let* ((clg (graph graph))
          (contains-cycles-p
            (cl-graph:find-vertex-if
@@ -524,8 +495,7 @@ depends-on in that GDEF."
             (lambda (vert)
               (cl-graph:in-cycle-p clg vert))))
          (annotation (make-graph-annotation (category graph)))
-         (all-packages (sort (mapcar #'package-name (list-all-packages))
-                             #'string<)))
+         (all-packages (sort (mapcar #'package-name (list-all-packages)) #'string<)))
     ;; compute/store toposort, can only do if no cycles.
     (unless contains-cycles-p
       (let ((tsort (mapcar #'cl-graph:element (cl-graph:topological-sort clg))))
@@ -540,25 +510,22 @@ depends-on in that GDEF."
               ;; This regex is mildly wrong and will match a extraneous stuff
               ;; because it isn't escaped properly, stuff like . + ? | whatever
               ;; in the package name will mess things up.
-              (putative-package-name-regex
-                (concatenate 'string "^" putative-package-name "$")))
+              (putative-package-name-regex (concatenate 'string "^" putative-package-name "$")))
          ;; Kind of a terrible Big-O...
          (dolist (pkg-name all-packages)
            (alexandria:when-let* ((matched-pkg-name (ppcre:scan-to-strings
-                                          putative-package-name-regex pkg-name))
-                       (found-pkg (find-package matched-pkg-name)))
+                                                     putative-package-name-regex pkg-name))
+                                  (found-pkg (find-package matched-pkg-name)))
              (pushnew found-pkg
                       ;; Use the original symbol from the graph.
-                      (gethash (second elem-v)
-                               (pattern-matched-packages annotation))))))))
+                      (gethash (second elem-v) (pattern-matched-packages annotation))))))))
     (setf (annotation graph) annotation)))
 
 (defun canonicalize-component-type (component-type core-state)
-  "If the COMPONENT-TYPE is reference in the component-dependency graph, then
-return it, otherwise return the unknown-type-id symbol."
+  "If the COMPONENT-TYPE is reference in the component-dependency graph, then return it, otherwise
+return the unknown-type-id symbol."
   (let* ((putative-component-type component-type)
-         (component-dependency-graph (gethash 'component-dependency
-                                              (analyzed-graphs core-state)))
+         (component-dependency-graph (gethash 'component-dependency (analyzed-graphs core-state)))
          (annotation (annotation component-dependency-graph)))
     (assert annotation)
     (unless (gethash putative-component-type (referenced-types annotation))

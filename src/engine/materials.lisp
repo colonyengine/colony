@@ -11,7 +11,6 @@
 ;; :shader
 ;; :texture
 
-
 (defclass material ()
   ((%id :reader id
         :initarg :id)

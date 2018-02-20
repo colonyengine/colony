@@ -1,4 +1,3 @@
-
 (asdf:defsystem #:first-light
   :description "An experimental game engine."
   :author ("Michael Fiano <mail@michaelfiano.com>"
@@ -11,8 +10,7 @@
   :source-control (:git "git@github.com:hackertheory/first-light.git")
   :version "0.1.0"
   :encoding :utf-8
-  :long-description #.(uiop:read-file-string
-                       (uiop/pathname:subpathname *load-pathname* "README.md"))
+  :long-description #.(uiop:read-file-string (uiop/pathname:subpathname *load-pathname* "README.md"))
   :depends-on (#:first-light.engine
                #:first-light.assets
                #:first-light.components

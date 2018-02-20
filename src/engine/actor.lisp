@@ -56,8 +56,7 @@
 
 (defun actor-component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
-Returns T as a secondary value if there exists more than one component of that
-type."
+Returns T as a secondary value if there exists more than one component of that type."
   (let* ((qualified-type (qualify-component (core-state actor) component-type))
          (components (actor-components-by-type actor qualified-type)))
     (values (first components)
@@ -68,11 +67,10 @@ type."
 ;; at read time for this code. Think about a better way, if any, to do this
 ;; operation.
 (defun spawn-actor (actor context &key (parent :universe))
-  "Take the ACTOR and place into the initializing db's and view's in the
-CORE-STATE. The actor is not yet in the scene and the main loop protocol will
-not be called on it or its components. If keyword argument :PARENT is supplied
-it is an actor reference which will be the parent of the spawning actor. It
-defaults to :universe, which means make this actor a child of the universe
+  "Take the ACTOR and place into the initializing db's and view's in the CORE-STATE. The actor is
+not yet in the scene and the main loop protocol will not be called on it or its components. If
+keyword argument :PARENT is supplied it is an actor reference which will be the parent of the
+spawning actor. It defaults to :universe, which means make this actor a child of the universe
 actor."
   (let* ((core-state (core-state context))
          (sym/transform (alexandria:ensure-symbol 'transform 'fl.comp.transform))
@@ -90,8 +88,7 @@ actor."
        ;; actor to reference as the parent.
        (unless (funcall sym/parent-func actor-transform)
          (funcall sym/add-child-func
-                  (actor-component-by-type (scene-tree core-state)
-                                           sym/transform)
+                  (actor-component-by-type (scene-tree core-state) sym/transform)
                   (actor-component-by-type actor sym/transform))))
       ((typep parent 'actor)
        (funcall sym/add-child-func
@@ -107,9 +104,8 @@ actor."
     (maphash
      (lambda (k v)
        (declare (ignore k))
-       (setf (type-table
-              (canonicalize-component-type (component-type v) core-state)
-              (component-preinit-by-type-view (tables core-state)))
+       (setf (type-table (canonicalize-component-type (component-type v) core-state)
+                         (component-preinit-by-type-view (tables core-state)))
              v))
      (components actor))))
 
@@ -124,28 +120,18 @@ actor."
 
 (defmethod destroy ((thing actor) (context context) &key (ttl 0))
   (let ((core-state (core-state context)))
-    (setf (ttl thing) (if (minusp ttl) 0 ttl))
-    (setf (gethash thing (actor-predestroy-view (tables core-state))) thing)))
+    (setf (ttl thing) (if (minusp ttl) 0 ttl)
+          (gethash thing (actor-predestroy-view (tables core-state))) thing)))
 
 (defun actor/init-or-active->destroy (core-state actor)
-  ;; 1. Add it to destroy state.
-  (setf (gethash actor (actor-destroy-db (tables core-state))) actor)
-  ;; 2. Set its state to destroying.
-  (setf (state actor) :destroy)
-  ;; 3. remove it from predestroy state (it may not be there, that's ok).
+  (setf (gethash actor (actor-destroy-db (tables core-state))) actor
+        (state actor) :destroy)
   (remhash actor (actor-predestroy-view (tables core-state)))
-  ;; 4a. remove it from active state, OR
-  ;; 4b. remove it from init state.
-  ;; It will be in one of those two.
   (unless (remhash actor (actor-active-db (tables core-state)))
     (remhash actor (actor-preinit-db (tables core-state))))
-  ;; 5. Now, for each of its components, automatically push them into destroy
-  ;; too.
   (maphash
    (lambda (k component)
      (declare (ignore k))
-     ;; If the actor is being destroyed, then we upgrade all components to being
-     ;; destroyed to right now.
      (setf (ttl component) 0)
      (component/init-or-active->destroy core-state component))
    (components actor)))
@@ -155,8 +141,6 @@ actor."
         (sym/map-nodes (alexandria:ensure-symbol 'map-nodes 'fl.comp.transform)))
     (flet ((destroy-actor (descendant-actor-transform)
              (let ((destroying-actor (actor descendant-actor-transform)))
-               ;; any actor we're forcing to destroy must immediately be book
-               ;; kept as being destroyed right now.
                (setf (ttl destroying-actor) 0)
                (actor/init-or-active->destroy core-state destroying-actor))))
       (funcall sym/map-nodes
@@ -170,14 +154,12 @@ actor."
          (sym/remove-child (alexandria:ensure-symbol 'remove-child 'fl.comp.transform))
          (sym/parent (alexandria:ensure-symbol 'parent 'fl.comp.transform))
          (actor-transform (actor-component-by-type actor sym/transform)))
-    (funcall sym/remove-child
-             (funcall sym/parent actor-transform) actor-transform)))
+    (funcall sym/remove-child (funcall sym/parent actor-transform) actor-transform)))
 
 (defun actor/destroy->released (core-state actor)
   ;; At this point, the actor should be empty, we'll check it just in case.
   (unless (zerop (number-of-components actor))
     (error "actor/destroy->released: destroyed actor still has components!"))
-  ;; now we release the actor from anything core-state knows about.
   (remhash actor (actor-destroy-db (tables core-state))))
 
 (defun actor/countdown-to-destruction (core-state actor)

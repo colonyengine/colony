@@ -25,8 +25,7 @@
            (alexandria:flatten component))))
     (dolist (actor component-actors)
       (unless (find actor actor-names)
-        (error (format nil "A component references the undefined actor: ~a"
-                       actor))))))
+        (error (format nil "A component references the undefined actor: ~a" actor))))))
 
 (defun %generate-actor-components-table (scene-spec actor-names &optional table)
   (loop :with table = (or table (make-hash-table))
@@ -47,15 +46,12 @@
   (flet ((generate-component-forms (components)
            (let ((component-forms))
              (dolist (c components)
-               (push `(make-component ',(first c) (context ,core-state))
-                     component-forms))
+               (push `(make-component ',(first c) (context ,core-state)) component-forms))
              component-forms)))
     (let ((result))
       (maphash
        (lambda (actor components)
-         (push `(add-multiple-components
-                 ,actor
-                 (list ,@(generate-component-forms components)))
+         (push `(add-multiple-components ,actor (list ,@(generate-component-forms components)))
                result))
        actor-components)
       result)))
@@ -66,13 +62,10 @@
         :append
         (loop :for (component . initargs) :in components
               :for symbol = (gensym "COMPONENT-")
-              :collect `(let ((,symbol (actor-component-by-type
-                                        ,actor
-                                        ',component)))
+              :collect `(let ((,symbol (actor-component-by-type ,actor ',component)))
                           (setf (initializer-thunk ,symbol)
                                 (lambda ()
-                                  (reinitialize-instance
-                                   ,symbol :actor ,actor ,@initargs)))))))
+                                  (reinitialize-instance ,symbol :actor ,actor ,@initargs)))))))
 
 (defun %generate-relationships (core-state scene-spec)
   (labels ((traverse (tree &optional parent)
@@ -82,8 +75,7 @@
                  (if sub-tree
                      (append
                       result
-                      (apply #'append
-                             (mapcar (lambda (x) (traverse x child)) sub-tree)))
+                      (apply #'append (mapcar (lambda (x) (traverse x child)) sub-tree)))
                      result)))))
     (loop :with root = `(scene-tree ,core-state)
           :with children = (apply #'append (mapcar #'traverse scene-spec))
@@ -99,17 +91,13 @@
 (defun parse-scene (scene-name scene-spec)
   (alexandria:with-gensyms (core-state actor-table actor-name)
     (let* ((actor-names (%generate-actor-names scene-spec))
-           (actor-components (%generate-actor-components-table
-                              scene-spec actor-names))
-           (bindings (%generate-actor-bindings
-                      actor-names actor-table)))
+           (actor-components (%generate-actor-components-table scene-spec actor-names))
+           (bindings (%generate-actor-bindings actor-names actor-table)))
       `(lambda (,core-state)
          (let ((,actor-table (make-hash-table)))
            (dolist (,actor-name ',actor-names)
              (setf (gethash ,actor-name ,actor-table)
-                   (make-actor (context ,core-state)
-                               :id ,actor-name
-                               :scene ,scene-name)))
+                   (make-actor (context ,core-state) :id ,actor-name :scene ,scene-name)))
            (let ,bindings
              ,@(%generate-component-initializers core-state actor-components)
              ,@(%generate-component-thunks actor-names actor-components)

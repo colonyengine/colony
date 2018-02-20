@@ -43,8 +43,7 @@
                       :initform (make-hash-table))))
 
 (defun pending-preinit-tasks-p (core-state)
-  "Return T if there are ANY components or actors in the preinit data structures
-in CORE-STATE."
+  "Return T if there are ANY components or actors in the preinit data structures in CORE-STATE."
   (or (plusp (hash-table-count (actor-preinit-db (tables core-state))))
       (block done
         (maphash
@@ -55,14 +54,14 @@ in CORE-STATE."
          (component-preinit-by-type-view (tables core-state))))))
 
 (defun pending-predestroy-tasks-p (core-state)
-  "Return T if there are ANY components or actors that are in the
-predestroy data structures in CORE-STATE."
+  "Return T if there are ANY components or actors that are in the predestroy data structures in
+CORE-STATE."
   (or (plusp (hash-table-count (component-predestroy-view (tables core-state))))
       (plusp (hash-table-count (actor-predestroy-view (tables core-state))))))
 
 (defun pending-destroy-tasks-p (core-state)
-  "Return T of there are ANY components or actors that are in the destroy
-data structures in CORE-STATE."
+  "Return T of there are ANY components or actors that are in the destroy data structures in
+CORE-STATE."
   (or (plusp (hash-table-count (actor-destroy-db (tables core-state))))
       (block done
         (maphash
@@ -84,8 +83,7 @@ data structures in CORE-STATE."
 
 (defun make-core-state (&rest args)
   (let ((core-state (apply #'make-instance 'core-state args)))
-    (setf (slot-value core-state '%context)
-          (make-instance 'context :core-state core-state))
+    (setf (slot-value core-state '%context) (make-instance 'context :core-state core-state))
     core-state))
 
 (defgeneric shared-storage (context key)

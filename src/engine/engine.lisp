@@ -10,7 +10,7 @@
     core-state))
 
 (defun start-engine ()
-  (let* ((user-package-name (alexandria:make-keyword (package-name *package*))))
+  (let ((user-package-name (alexandria:make-keyword (package-name *package*))))
     (when (eq user-package-name :fl.core)
       (error "Cannot start the engine from the :FL.CORE package."))
     (kit.sdl2:init)
@@ -25,7 +25,6 @@
        (sb-profile:profile
         "FIRST-LIGHT"
         "FIRST-LIGHT-EXAMPLE"
-        "GAMEBOX-MATH"
         "GAMEBOX-FRAME-MANAGER")
        (sleep ,seconds)
        (sb-profile:report)

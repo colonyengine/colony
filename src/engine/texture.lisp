@@ -13,7 +13,6 @@
                      :initarg :internal-format)
    (%data :reader data
           :initarg :data)
-
    ;; stuff for material dsl
    (%name :reader name
 	  :initarg :name)
@@ -45,7 +44,7 @@
                    :pixel-format pixel-format
                    :internal-format (get-internal-format pixel-format)
                    :pixel-type :unsigned-byte
-		   :location location
+                   :location location
                    :data (pngload:data image))))
 
 (defun load-texture (context location &key
@@ -56,8 +55,8 @@
       (read-texture context location)
     (let ((id (gl:gen-texture)))
       (gl:bind-texture :texture-2d id)
-      (gl:tex-image-2d :texture-2d 0 %internal-format %width %height 0
-                       %pixel-format %pixel-type %data)
+      (gl:tex-image-2d :texture-2d 0 %internal-format %width %height 0 %pixel-format %pixel-type
+                       %data)
       (gl:generate-mipmap :texture-2d)
       (gl:tex-parameter :texture-2d :texture-wrap-s wrap)
       (gl:tex-parameter :texture-2d :texture-wrap-t wrap)

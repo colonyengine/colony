@@ -13,8 +13,7 @@
 (defgeneric make-display (core-state)
   (:method ((core-state core-state))
     (let ((hz (calculate-refresh-rate)))
-      (with-cfg (title width height delta periodic-interval
-                       debug-frames-interval)
+      (with-cfg (title width height delta periodic-interval debug-frames-interval)
           (context core-state)
         (setf (slot-value core-state '%display)
               (make-instance 'display
@@ -29,8 +28,7 @@
         (simple-logger:emit :display.init width height hz)))))
 
 (defmethod make-display :before ((core-state core-state))
-  (with-cfg (log-level gl-version-major gl-version-minor anti-alias-level)
-      (context core-state)
+  (with-cfg (log-level gl-version-major gl-version-minor anti-alias-level) (context core-state)
     (setf simple-logger:*current-level* log-level)
     (dolist (attr `((:context-major-version ,gl-version-major)
                     (:context-minor-version ,gl-version-minor)
@@ -39,8 +37,7 @@
       (apply #'sdl2:gl-set-attr attr))))
 
 (defmethod make-display :after ((core-state core-state))
-  (with-cfg (gl-capabilities gl-blend-mode gl-depth-mode vsync)
-      (context core-state)
+  (with-cfg (gl-capabilities gl-blend-mode gl-depth-mode vsync) (context core-state)
     (setf (kit.sdl2:idle-render (display core-state)) t)
     (apply #'gl:enable gl-capabilities)
     (apply #'gl:blend-func gl-blend-mode)
