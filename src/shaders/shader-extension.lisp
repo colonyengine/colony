@@ -29,8 +29,7 @@
 
 (defun %type-check-shader-function (symbol)
   (or (find-symbol (symbol-name symbol) :fl.shader)
-      (error "Function ~a not defined in the :FL.SHADER package."
-             symbol)))
+      (error "Function ~a not defined in the :FL.SHADER package." symbol)))
 
 (defun %type-check-stages (forms)
   (let ((fn-symbols))
@@ -38,11 +37,9 @@
       (loop :for (nil . fns) :in data
             :do (alexandria:appendf fn-symbols fns))
       (%shader-symbol-duplicate-check (data #'car)
-        (error "Stage ~s cannot be defined more than once in the same ~s form."
-               x type))
+        (error "Stage ~s cannot be defined more than once in the same ~s form." x type))
       (%shader-symbol-duplicate-check (fn-symbols #'identity)
-        (error "Function ~s cannot be defined more than once in all ~s forms."
-               x type)))))
+        (error "Function ~s cannot be defined more than once in all ~s forms." x type)))))
 
 (defun %type-check-programs (forms)
   (let ((program-names))
@@ -55,8 +52,7 @@
       (flet ((%check (program stages)
                (when (> (length stages)
                         (length (remove-duplicates stages)))
-                 (error "Program ~s must not have multiple of the same stage."
-                        (car program)))))
+                 (error "Program ~s must not have multiple of the same stage." (car program)))))
         (dolist (program data)
           (loop :for (key value) :on (cadr program) :by #'cddr
                 :collect key :into stages
@@ -80,8 +76,7 @@
                                          :expand-uniforms t))
            :append (loop :for (lisp nil nil . properties) :in uniforms
                          :for components = (getf properties :components)
-                         :append (mapcar #'%generate-uniform-symbol
-                                         components))))))
+                         :append (mapcar #'%generate-uniform-symbol components))))))
 
 (defun %make-dictionary-programs (data)
   (flet ((%generate-stages (stages)
@@ -101,9 +96,7 @@
                       :collect
                       `(,func-symbol
                         ,(alexandria:make-keyword (alexandria:symbolicate type '-shader))
-                        (:generate ,(getf options :version)
-                                   ,type
-                                   ,func-symbol)))))
+                        (:generate ,(getf options :version) ,type ,func-symbol)))))
 
 (defun %process-stage-forms (forms)
   (let ((result))
@@ -113,9 +106,7 @@
                     :do (loop :for func :in funcs
                               :for options = (cdr (alexandria:ensure-list func))
                               :unless (getf options :version)
-                                :do (setf func (append
-                                                (list func)
-                                                `(:version ,default-version)))
+                                :do (setf func (append (list func) `(:version ,default-version)))
                               :do (push (list type func) result))))
     (loop :with table = (make-hash-table)
           :for (type func) :in result
@@ -141,8 +132,8 @@
                  (return (values (%process-stage-forms stages)
                                  (%process-program-forms programs)))))
 
-(defmethod kit.gl.shader:parse-shader-source-complex
-    ((key (eql :generate)) params shader-type shader-list)
+(defmethod kit.gl.shader:parse-shader-source-complex ((key (eql :generate)) params shader-type
+                                                      shader-list)
   (destructuring-bind (version stage function) params
     (3bgl-shaders:generate-stage stage function :version version)))
 
@@ -150,8 +141,7 @@
   "shd")
 
 (defmethod prepare-extension ((extension-type (eql 'shader)) owner path)
-  (setf (shaders owner)
-        (make-instance 'shaders :data (make-shader-dictionary path))))
+  (setf (shaders owner) (make-instance 'shaders :data (make-shader-dictionary path))))
 
 (defun make-shader-dictionary (extension-path)
   (multiple-value-bind (stages programs) (%collect-shader-forms extension-path)
@@ -168,10 +158,8 @@
           (union x (modified-functions (shaders core-state))))))
 
 (defun compile-shaders (core-state)
-  (setf (compiled-shaders (shaders core-state))
-        (kit.gl.shader:compile-shader-dictionary :shaders))
-  (pushnew (shaders-modified-hook-generator core-state)
-           3bgl-shaders:*modified-function-hook*)
+  (setf (compiled-shaders (shaders core-state)) (kit.gl.shader:compile-shader-dictionary :shaders))
+  (pushnew (shaders-modified-hook-generator core-state) 3bgl-shaders:*modified-function-hook*)
   (dolist (func (modified-functions (shaders core-state)))
     (simple-logger:emit :shader.function.compiled func)))
 

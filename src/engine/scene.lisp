@@ -2,9 +2,9 @@
 
 (defun %type-check-actor (actor actors-list)
   (unless (char= (char (symbol-name actor) 0) #\@)
-    (error (format nil "Actor names must begin with '@': ~a" actor)))
+    (error "Actor names must begin with '@': ~a" actor))
   (when (find actor actors-list)
-    (error (format nil "Actors cannot be duplicated: ~a" actor))))
+    (error "Actors cannot be duplicated: ~a" actor)))
 
 (defun %generate-actor-names (scene-spec)
   (let ((result))
