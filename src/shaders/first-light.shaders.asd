@@ -11,4 +11,4 @@
   :components
   ((:file "package")
    (:file "shader-extension")
-   (:file "shader-stages")))
+   (:file "3bgl-shader-stages")))
