@@ -15,7 +15,7 @@
                #:cl-opengl
                #:glkit
                #:shadow
-               #:gamebox-math
+               #:gamebox-math.vari
                #:gamebox-frame-manager
                #:pngload)
   :serial t
