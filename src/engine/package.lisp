@@ -3,6 +3,7 @@
 (defpackage+ #:fl.core
     (:nicknames #:first-light)
   (:use #:cl)
+  (:use #:shadow #:vari)
   (:export #:start-engine
            #:quit-engine)
 
