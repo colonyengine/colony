@@ -14,6 +14,7 @@
                #:sdl2kit
                #:cl-opengl
                #:glkit
+               #:shadow
                #:gamebox-math
                #:gamebox-frame-manager
                #:pngload)
