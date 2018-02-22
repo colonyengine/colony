@@ -75,7 +75,7 @@ CORE-STATE."
   (with-slots (%context) core-state
     (let* ((actor (make-actor %context :id (alexandria:make-gensym '@universe) :scene t))
            (transform (make-component 'transform %context :actor actor)))
-      (add-component actor transform)
+      (attach-component actor transform)
       (spawn-actor actor %context :parent nil)
       (execute-flow core-state :default 'initialize-phase 'entry/initialize-phase
                     :come-from-state-name 'ef-make-scene-tree)

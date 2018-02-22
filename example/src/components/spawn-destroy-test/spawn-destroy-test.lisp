@@ -27,11 +27,11 @@
   (when (plusp (spawn component))
     (simple-logger:emit :comp.spawn-destroy-test.spawn component)
     (let ((new-actor (make-actor context :id '@spawn-destroy-test-new-actor)))
-      (add-multiple-components new-actor
-                               (list
-                                (make-component 'transform context)
-                                (make-component 'spawn-destroy-test context
-                                                :destroy-self t)))
+      (attach-multiple-components new-actor
+                                  (list
+                                   (make-component 'transform context)
+                                   (make-component 'spawn-destroy-test context
+                                                   :destroy-self t)))
       (spawn-actor new-actor context)
       (decf (spawn component)))))
 

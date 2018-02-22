@@ -25,30 +25,29 @@
 (defun make-actor (context &rest args)
   (apply #'make-instance 'actor :core-state (core-state context) args))
 
-(defun add-component (actor component)
+(defun attach-component (actor component)
   (unless (actor component)
     (setf (actor component) actor))
   (setf (gethash component (components actor)) component)
   (push component (gethash (component-type component)
                            (components-by-type actor))))
 
-(defun add-multiple-components (actor components)
+(defun attach-multiple-components (actor components)
   (dolist (component components)
-    (add-component actor component)))
+    (attach-component actor component)))
 
 (defun number-of-components (actor)
   (hash-table-count (components actor)))
 
-(defun remove-component (actor component)
+(defun detach-component (actor component)
   "If COMPONENT is contained in the ACTOR. Remove it. Otherwise, do nothing."
   (when (remhash component (components actor))
-    (symbol-macrolet ((the-typed-components
-                        (gethash (component-type component)
-                                 (components-by-type actor))))
-      (setf the-typed-components
+    (symbol-macrolet ((typed-components (gethash (component-type component)
+                                                 (components-by-type actor))))
+      (setf typed-components
             (remove-if
              (lambda (c) (eq c component))
-             the-typed-components)))))
+             typed-components)))))
 
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."

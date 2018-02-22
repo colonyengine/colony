@@ -42,16 +42,16 @@
   (:export #:actor
            #:id
            #:make-actor
-           #:spawn-actor)
+           #:spawn-actor
+           #:attach-component
+           #:attach-multiple-components
+           #:detach-component)
 
   ;; components
   (:export #:component
            #:state
            #:define-component
            #:make-component
-           #:add-component
-           #:remove-component
-           #:add-multiple-components
            #:initialize-component
            #:physics-update-component
            #:update-component

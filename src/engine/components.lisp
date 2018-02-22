@@ -96,7 +96,7 @@ COMPONENT-PACKAGE-SEARCH-ORDER."
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))
     (with-slots (%tables) core-state
       (remhash component (type-table component-type (component-destroy-by-type-view %tables)))
-      (remove-component (actor component) component))))
+      (detach-component (actor component) component))))
 
 (defun component/countdown-to-destruction (core-state component)
   (when (plusp (ttl component))
