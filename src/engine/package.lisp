@@ -1,9 +1,8 @@
-(in-package :defpackage+-1)
+(in-package :defpackage+-user-1)
 
 (defpackage+ #:fl.core
   (:nicknames #:first-light)
   (:use #:cl)
-  (:use #:shadow #:vari)
   (:export #:start-engine
            #:quit-engine)
 
@@ -61,14 +60,13 @@
            #:actor-components-by-type
            #:actor-component-by-type))
 
-
 (defpackage+ #:fl.shaders-new
   (:use #:cl #:shadow)
-  (:inherit #:fl.core #:box.math.vari #:vari)
   (:local-nicknames (#:v2 #:box.math.vec2)
                     (#:v3 #:box.math.vec3)
                     (#:v4 #:box.math.vec4)
                     (#:m2 #:box.math.mat2)
                     (#:m3 #:box.math.mat3)
                     (#:m4 #:box.math.mat4)
-                    (#:q #:box.math.quat)))
+                    (#:q #:box.math.quat))
+  (:inherit #:box.math.vari #:vari))

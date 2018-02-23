@@ -33,7 +33,7 @@
                                  (color :vec4)
                                  (uv1 :vec2)
                                  (uv2 :vec2))
-  (if (= (.a color) 0)
+  (if (= (.w color) 0)
       (discard)
       color))
 
@@ -59,7 +59,7 @@
 
 (initialize-shaders)
 
-(make-shader-program :unlit-color-decal (:version 330 :primitive :triangles)
+(make-shader-program :unlit-color-decal (:version 430 :primitive :triangles)
   (:vertex () (default-vertex :vec3 :vec3 :vec3 :vec4 :vec2 :vec2 :vec4 :vec4))
   (:fragment () (color-decal-fragment :vec3 :vec3 :vec4 :vec2 :vec2)))
 
