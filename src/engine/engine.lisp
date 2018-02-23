@@ -6,7 +6,7 @@
     (prepare-extensions core-state (get-extension-path package))
     (load-default-scene core-state)
     (make-display core-state)
-    (compile-shaders core-state)
+    #++(compile-shaders core-state)
 
     ;; TODO: This is proof of concept code for integrating shadow/varjo.
     (prepare-shader-programs core-state)

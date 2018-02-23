@@ -6,7 +6,6 @@
   (sampler1 :sampler-2d :accessor sampler1)
   (sampler2 :sampler-2d :accessor sampler2))
 
-
 (defun-gpu default-vertex (;; These become vertex attributes
                            (pos :vec3)
                            (normal :vec3)
@@ -54,12 +53,9 @@
                              (uv2 :vec2)
                              &uniform
                              (tex texture-struct))
-
   (values (texture (sampler1 tex) uv1)))
 
-
 ;; test enacting the shaders stuff.....
-
 
 (make-shader-program :unlit-color-decal (:version 430 :primitive :triangles)
   (:vertex () (default-vertex :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))

@@ -53,10 +53,7 @@
           (when texture-id
             (gl:active-texture 0)
             (gl:bind-texture :texture-2d texture-id)
-            (shadow:uniform-int :tex.sampler1 0))
-          ))
-
-
+            (shadow:uniform-int :tex.sampler1 0))))
       (dolist (primitive (primitives mesh))
         (funcall (fl.assets:draw-func primitive))))))
 
