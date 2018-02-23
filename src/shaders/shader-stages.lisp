@@ -1,4 +1,4 @@
-(in-package :fl.shaders-new)
+(in-package :fl.shaders)
 
 (initialize-shaders)
 

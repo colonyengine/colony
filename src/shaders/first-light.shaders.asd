@@ -6,10 +6,8 @@
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :version "0.1.0"
-  :depends-on (#:3bgl-shader)
+  :depends-on (#:shadow)
   :serial t
   :components
   ((:file "package")
-   (:file "shader-extension")
-   (:file "3bgl-shader-stages")
    (:file "shader-stages")))

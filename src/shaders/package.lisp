@@ -1,4 +1,5 @@
-(in-package :cl-user)
+(in-package :defpackage+-user-1)
 
-(defpackage #:fl.shader
-  (:use #:3bgl-glsl/cl))
+(defpackage+ #:fl.shaders
+  (:use #:cl #:shadow)
+  (:inherit #:box.math.vari #:vari))
