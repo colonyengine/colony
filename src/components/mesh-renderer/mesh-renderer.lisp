@@ -32,14 +32,31 @@
       component
     (alexandria:when-let* ((shaders (shaders context))
                            (camera (active-camera context)))
-      (kit.gl.shader:use-program shaders shader)
-      (uniform-matrix shaders :model (model transform))
-      (uniform-matrix shaders :view (view camera))
-      (uniform-matrix shaders :proj (projection camera))
-      (when texture-id
-        (gl:active-texture 0)
-        (gl:bind-texture :texture-2d texture-id)
-        (uniform-integer shaders :tex.sampler1 0))
+
+      #++(progn
+           (kit.gl.shader:use-program shaders shader)
+           (uniform-matrix shaders :model (model transform))
+           (uniform-matrix shaders :view (view camera))
+           (uniform-matrix shaders :proj (projection camera))
+           (when texture-id
+             (gl:active-texture 0)
+             (gl:bind-texture :texture-2d texture-id)
+             (uniform-integer shaders :tex.sampler1 0)))
+
+      (progn
+        #++(format t "Attempting to render with shader: ~S (texture-id: ~A)~%"
+                   shader texture-id)
+        (shadow:with-shader-program shader
+          (shadow:uniform-mat4 :model (model transform))
+          (shadow:uniform-mat4 :view (view camera))
+          (shadow:uniform-mat4 :proj (projection camera))
+          (when texture-id
+            (gl:active-texture 0)
+            (gl:bind-texture :texture-2d texture-id)
+            (shadow:uniform-int :tex.sampler1 0))
+          ))
+
+
       (dolist (primitive (primitives mesh))
         (funcall (fl.assets:draw-func primitive))))))
 

@@ -8,6 +8,7 @@
    (%cameras :accessor cameras
              :initform nil)
    (%shaders :accessor shaders)
+   (%shaders-new :accessor shaders-new)
    (%context :reader context)
    (%tables :reader tables
             :initform (make-instance 'bookkeeping-tables))

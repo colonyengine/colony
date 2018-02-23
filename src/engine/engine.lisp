@@ -7,7 +7,16 @@
     (load-default-scene core-state)
     (make-display core-state)
     (compile-shaders core-state)
+
+    ;; TODO: This is proof of concept code for integrating shadow/varjo.
+    (prepare-shader-programs core-state)
+
     core-state))
+
+(defun prepare-shader-programs (core-state)
+  (format t "Attempting to shadow:build-shader-dictionary...~%")
+  (setf (shaders-new core-state) (shadow::build-shader-dictionary)))
+
 
 (defun start-engine ()
   (let ((user-package-name (alexandria:make-keyword (package-name *package*))))
