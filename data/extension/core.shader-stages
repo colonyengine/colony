@@ -22,7 +22,7 @@
   (values (* proj view model (vec4 pos 1))
           uv1))
 
-(defun-gpu frag/unlit-texture ((uv :vec2) &uniform (tex texture-struct))
+(defun-gpu frag/unlit-texture-decal ((uv :vec2) &uniform (tex texture-struct))
   (let ((color (texture (sampler1 tex) uv)))
     (if (= (.w color) 0)
         (discard)

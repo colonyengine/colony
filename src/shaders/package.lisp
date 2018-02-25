@@ -2,4 +2,8 @@
 
 (defpackage+ #:fl.shaders
   (:use #:cl #:shadow)
-  (:inherit #:box.math.vari #:vari))
+  (:inherit #:box.math.vari #:vari)
+  (:export
+   ;; shader programs defined in *.shader-programs files that are in this
+   ;; package.
+   #:unlit-texture-decal))
