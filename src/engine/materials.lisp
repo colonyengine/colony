@@ -55,8 +55,11 @@
 
 (defun mat/doit ()
 
+  ;; Pretty
   (parse-material
+
    'pbr-material
+
    '(:enabled t
      :shader :pbr-texture)
 
@@ -83,7 +86,38 @@
 
      (alpha-mode 0)
      (alpha-cutoff .3))
-   ))
+   )
+
+
+  ;; Ugly
+  (parse-material
+
+   'pbr-material
+
+   '(:enabled t
+     :shader :pbr-texture)
+
+   '(
+     (:pbr-metallic-roughness.base-color.factor (vec4 .1 .2 .3 1))
+     (:pbr-metallic-roughness.base-color.texture "file")
+     (:pbr-metallic-roughness.metallic-factor .4)
+     (:pbr-metallic-roughness.roughness-factor .7)
+     (:pbr-metallic-roughness.metallic-roughness-texture.factor (vec4 0 0 0 0))
+     (:pbr-metallic-roughness.metallic-roughness-texture.texture "file")
+
+     (:normal.factor (vec4 1 1 1 1))
+     (:normal.texture "file3")
+
+     (:occlusion.factor (vec4 1 1 1 1))
+     (:occlusion.texture "file4")
+
+     (:emissive (vec3 0 0 0))
+     (:alpha-mode 0)
+     (:alpha-cutoff .3))
+
+   )
+
+  )
 
 
 ;; The materials DSL.
