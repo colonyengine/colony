@@ -6,4 +6,7 @@
   (:export
    ;; shader programs defined in *.shader-programs files that are in this
    ;; package.
+   #:unlit-color
+   #:unlit-color-decal
+   #:unlit-texture
    #:unlit-texture-decal))

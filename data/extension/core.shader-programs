@@ -2,7 +2,22 @@
 
 (in-package :fl.shaders)
 
+(make-shader-program unlit-color
+    (:version 430 :primitive :triangles)
+  (:vertex () (vert/default :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:fragment () (frag/unlit-color :vec3 :vec4 :vec4 :vec2 :vec2)))
+
+(make-shader-program unlit-color-decal
+    (:version 430 :primitive :triangles)
+  (:vertex () (vert/default :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:fragment () (frag/unlit-color-decal :vec3 :vec4 :vec4 :vec2 :vec2)))
+
+(make-shader-program unlit-texture
+    (:version 430 :primitive :triangles)
+  (:vertex () (vert/default :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:fragment () (frag/unlit-texture :vec3 :vec4 :vec4 :vec2 :vec2)))
+
 (make-shader-program unlit-texture-decal
     (:version 430 :primitive :triangles)
   (:vertex () (vert/default :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
-  (:fragment () (frag/unlit-texture-decal :vec2)))
+  (:fragment () (frag/unlit-texture-decal :vec3 :vec4 :vec4 :vec2 :vec2)))

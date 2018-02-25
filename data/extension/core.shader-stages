@@ -6,6 +6,9 @@
   (sampler1 :sampler-2d :accessor sampler1)
   (sampler2 :sampler-2d :accessor sampler2))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Vertex stages
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun-gpu vert/default ((pos :vec3)
                          (normal :vec3)
@@ -20,10 +23,51 @@
                          (view :mat4)
                          (proj :mat4))
   (values (* proj view model (vec4 pos 1))
-          uv1))
+          normal
+          tangent
+          color
+          uv1
+          uv2))
 
-(defun-gpu frag/unlit-texture-decal ((uv :vec2) &uniform (tex texture-struct))
-  (let ((color (texture (sampler1 tex) uv)))
-    (if (= (.w color) 0)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Fragment stages
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun-gpu frag/unlit-color ((normal :vec3)
+                             (tangent :vec4)
+                             (color :vec4)
+                             (uv1 :vec2)
+                             (uv2 :vec2))
+  (values color))
+
+
+(defun-gpu frag/unlit-color-decal ((normal :vec3)
+                                   (tangent :vec4)
+                                   (color :vec4)
+                                   (uv1 :vec2)
+                                   (uv2 :vec2))
+  (if (= (.w color) 0)
+      (discard)
+      (values color)))
+
+
+(defun-gpu frag/unlit-texture ((normal :vec3)
+                               (tangent :vec4)
+                               (color :vec4)
+                               (uv1 :vec2)
+                               (uv2 :vec2)
+                               &uniform
+                               (tex texture-struct))
+  (values (texture (sampler1 tex) uv1)))
+
+(defun-gpu frag/unlit-texture-decal ((normal :vec3)
+                                     (tangent :vec4)
+                                     (color :vec4)
+                                     (uv1 :vec2)
+                                     (uv2 :vec2)
+                                     &uniform
+                                     (tex texture-struct))
+  (let ((tex-color (texture (sampler1 tex) uv1)))
+    (if (= (.w tex-color) 0)
         (discard)
-        color)))
+        (values tex-color))))
