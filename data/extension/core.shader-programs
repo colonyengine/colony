@@ -1,0 +1,7 @@
+;; -*- mode: common-lisp -*-
+
+(in-package :fl.shaders)
+
+(make-shader-program :texture (:version 430 :primitive :triangles)
+  (:vertex () (vert/default :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:fragment () (frag/unlit-texture :vec2)))

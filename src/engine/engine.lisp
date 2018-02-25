@@ -3,6 +3,7 @@
 (defun prepare-engine (package)
   (let ((*package* (find-package :fl.core))
         (core-state (make-core-state :user-package package)))
+    (shadow:initialize-shaders)
     (prepare-extensions core-state (get-extension-path package))
     (load-default-scene core-state)
     (make-display core-state)
@@ -10,7 +11,6 @@
     core-state))
 
 (defun prepare-shader-programs (core-state)
-  (format t "Attempting to shadow:build-shader-dictionary...~%")
   (setf (shaders core-state) (shadow::build-shader-dictionary)))
 
 (defun start-engine ()

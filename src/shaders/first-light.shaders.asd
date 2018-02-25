@@ -9,5 +9,4 @@
   :depends-on (#:shadow)
   :serial t
   :components
-  ((:file "package")
-   (:file "shader-stages")))
+  ((:file "package")))

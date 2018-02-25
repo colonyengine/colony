@@ -36,4 +36,5 @@
    (:file "input")
    (:file "texture")
    (:file "materials")
+   (:file "shaders")
    (:file "engine")))
