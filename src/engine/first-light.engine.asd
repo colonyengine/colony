@@ -1,5 +1,5 @@
 (asdf:defsystem #:first-light.engine
-  :description "The core game engine for First Light."
+  :description "The core game engine for first-light."
   :author ("Michael Fiano <michael.fiano@gmail.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
   :maintainer ("Michael Fiano <michael.fiano@gmail.com>"

@@ -1,5 +1,5 @@
 (asdf:defsystem #:first-light.materials
-  :description "Materials for the First Light game engine."
+  :description "Materials for the first-light game engine."
   :author ("Michael Fiano <michael.fiano@gmail.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
   :maintainer ("Michael Fiano <michael.fiano@gmail.com>"

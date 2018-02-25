@@ -1,5 +1,5 @@
 (asdf:defsystem #:first-light.assets
-  :description "Asset management for the First Light game engine."
+  :description "Asset management for the first-light game engine."
   :author ("Michael Fiano <michael.fiano@gmail.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
   :maintainer ("Michael Fiano <michael.fiano@gmail.com>"
