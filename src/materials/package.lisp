@@ -2,7 +2,6 @@
 
 (defpackage+ #:fl.materials
   (:use #:cl #:shadow)
-  (:inherit #:box.math.vari #:vari)
   (:local-nicknames
    (#:v2 #:box.math.vec2)
    (#:v3 #:box.math.vec3)

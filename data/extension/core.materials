@@ -39,23 +39,25 @@
 
 
 ;; When I get the shader for this working I'll comment this in.
-#++(define-material pbr-material
-       (:enabled t
-        :shader :pbr-texture)
+(define-material pbr-material
+    (:enabled t
+     :shader :pbr-texture)
 
-     (:pbr-metallic-roughness.base-color.factor (vec4 .1 .2 .3 1))
-     (:pbr-metallic-roughness.base-color.texture "file")
-     (:pbr-metallic-roughness.metallic-factor .4)
-     (:pbr-metallic-roughness.roughness-factor .7)
-     (:pbr-metallic-roughness.metallic-roughness-texture.factor (vec4 0 0 0 0))
-     (:pbr-metallic-roughness.metallic-roughness-texture.texture "file")
+  (:pbr-metallic-roughness.base-color.factor (v4:make .1 .2 .3 1))
+  (:pbr-metallic-roughness.base-color.texture "file")
+  (:pbr-metallic-roughness.metallic-factor .4)
+  (:pbr-metallic-roughness.roughness-factor .7)
+  (:pbr-metallic-roughness.metallic-roughness-texture.factor
+   (v4:make 0.0 0.0 0.0 0.0))
 
-     (:normal.factor (vec4 1 1 1 1))
-     (:normal.texture "file3")
+  (:pbr-metallic-roughness.metallic-roughness-texture.texture "file")
 
-     (:occlusion.factor (vec4 1 1 1 1))
-     (:occlusion.texture "file4")
+  (:normal.factor (v4:make 1.0 1.0 1.0 1.0))
+  (:normal.texture "file3")
 
-     (:emissive (vec3 0 0 0))
-     (:alpha-mode 0)
-     (:alpha-cutoff .3))
+  (:occlusion.factor (v4:make 1.0 1.0 1.0 1.0))
+  (:occlusion.texture "file4")
+
+  (:emissive (v3:make 0.0 0.0 0.0))
+  (:alpha-mode 0.0)
+  (:alpha-cutoff .3))

@@ -8,6 +8,7 @@
     (load-default-scene core-state)
     (make-display core-state)
     (prepare-shader-programs core-state)
+    (resolve-all-materials core-state)
     core-state))
 
 (defun prepare-shader-programs (core-state)
