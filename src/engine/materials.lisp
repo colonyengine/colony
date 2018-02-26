@@ -11,7 +11,19 @@
 ;; :shader
 ;; :texture
 
-(defparameter %temp-material (make-hash-table))
+;; Held in core-state, the material database for all materials everywhere.
+;; THere is a better API to this than just raw hash tables.
+(defclass materials-table ()
+  ((%material-table :reader material-table
+                    :initarg :material-table
+                    :initform (make-hash-table))))
+
+(defun make-materials-table (&rest init-args)
+  (apply #'make-instance 'materials-table init-args))
+
+
+
+
 
 (defclass material ()
   ((%id :reader id
@@ -21,33 +33,83 @@
    (%uniforms :reader uniforms
               :initarg :uniforms
               ;; key is a uniform keyword, value is suitable for uniform.
-              :initform (make-hash-table))))
+              :initform (make-hash-table))
+   (%source-form :reader source-form
+                 :initarg :source-form)))
 
-;; Held in core-state, the material database for all materials everywhere.
-(defclass materials-table ()
-  ((%material-table :reader material-table
-                    :initarg :material-table
-                    :initform (make-hash-table))))
+(defun make-material (id shader source-form)
+  (make-instance 'material :id id :shader shader :source-form source-form))
 
-(defun make-materials-table (&rest init-args)
-  (apply #'make-instance 'materials-table init-args))
 
-;; NOTE: This eval when is here just until this works, then I move the
-;; define-materials into an extension for loading.
-(defun parse-material (shader name body)
-  (format t "parse-material: shader: ~A, name: ~A, body: ~A~%"
-          shader name body)
+(defmethod bind-uniforms ((mat material))
   nil)
 
 
-;; standins until I write the code
+
+
+
+
+
+;; NOTE: This eval when is here just until this works, then I move the
+;; define-materials into an extension for loading.
+;; what should this return? A function that takes a core-state? Then I
+;; can finish the construction at that time?
+(defun parse-material (shader name body)
+  (make-material name shader body))
+
+
+
+
+
+
+
+
+(defmethod extension-file-type ((extension-type (eql 'materials)))
+  "materials")
+
+(defmethod prepare-extension ((extension-type (eql 'materials)) owner path)
+  (let ((%temp-materials (make-hash-table)))
+    (declare (special %temp-materials))
+    (flet ((%prepare ()
+             (load-extensions extension-type path)
+             %temp-materials))
+      (maphash
+       (lambda (material-name material-instance)
+         (declare (ignorable material-instance))
+
+         ;; TODO: change this to use the materials-table interface.
+         ;; Also, do the type checking of the materials, etc, etc.
+         #++(setf (gethash material-name (materials owner)) material-instance)
+         (format t "prepare-extension(materials): processing ~A~%"
+                 material-name)
+
+         )
+
+       (%prepare)))))
+
 (defmacro define-material (name (&body options) &body body)
   `(let* ((material ,(parse-material (second (member :shader options))
                                      `',name
                                      body)))
-     (declare (special %temp-material))
+     (declare (special %temp-materials))
      ,(when (second (member :enabled options))
-        `(setf (gethash ',name %temp-material) material))))
+        `(setf (gethash ',name %temp-materials) material))))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -55,41 +117,6 @@
 
 (defun mat/doit ()
 
-  ;; Pretty
-  (parse-material
-
-   'pbr-material
-
-   '(:enabled t
-     :shader :pbr-texture)
-
-   '(
-     (pbr-metallic-roughness
-      (base-color
-       (factor (vec4 .1 .2 .3 1))
-       (texture "file"))
-      (metallic-factor .4)
-      (roughness-factor .7)
-      (metallic-roughness-texture
-       (factor (vec4 0 0 0 0))
-       (texture "file3")))
-
-     (normal
-      (factor (vec4 1 1 1 1))
-      (texture "file4"))
-
-     (occlusion
-      (factor (vec4 1 1 1 1))
-      (texture "file6"))
-
-     (emissive (vec3 0 0 0))
-
-     (alpha-mode 0)
-     (alpha-cutoff .3))
-   )
-
-
-  ;; Ugly
   (parse-material
 
    'pbr-material
@@ -118,55 +145,3 @@
    )
 
   )
-
-
-;; The materials DSL.
-
-#|
-;; This form happens in the user codes.
-;; FirstLight/example/data/extensions/materials.matdict
-(define-material unlit-color
-    (:enabled t
-     :shader :unlit-color)
-  ;; This shader uses no uniforms.
-  ;; The color is derived from the vertex attributes.
-  )
-
-(define-material unlit-texture
-    (:enabled t
-     :shader :unlit-texture)
-  (tex
-   (sampler1 "file")
-   (sampler2 "file")))
-
-;; And now, define a real named instance of a template.
-(define-material pbr-material
-    (:enabled t
-     :shader :pbr-texture)
-
-  (pbr-metallic-roughness
-   (base-color
-    (factor (vec4 .1 .2 .3 1))
-    (texture "file"))
-   (metallic-factor .4)
-   (roughness-factor .7)
-   (metallic-roughness-texture
-    (factor (vec4 0 0 0 0))
-    (texture "file3")))
-
-  (normal
-   (factor (vec4 1 1 1 1))
-   (texture "file4"))
-
-  (occlusion
-   (factor (vec4 1 1 1 1))
-   (texture "file6"))
-
-  (emissive (vec3 0 0 0))
-
-  (alpha-mode 0)
-  (alpha-cutoff .3))
-
-
-;; :pbr-metallic-roughness.base-color.factor -> (vec4 .1 .2 .3 1)
-|#

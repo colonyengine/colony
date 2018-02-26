@@ -28,6 +28,9 @@
   ;; textures
   (:export #:load-texture)
 
+  ;; materials
+  (:export #:define-material)
+
   ;; input
   (:export #:key-down
            #:key-up

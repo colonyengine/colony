@@ -8,6 +8,8 @@
    (%cameras :accessor cameras
              :initform nil)
    (%shaders :accessor shaders)
+   (%materials :accessor materials
+	       :initform (make-hash-table))
    (%context :reader context)
    (%tables :reader tables
             :initform (make-instance 'bookkeeping-tables))
