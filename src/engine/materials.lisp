@@ -23,6 +23,9 @@
 
 
 
+;; TODO: I think I should put a back reference to core-state in here to make
+;; it easier to deal with changing the texture at runtime and needing to find
+;; info relevant to core-state to do so.
 (defclass material-value ()
   ((%value :accessor value
            :initarg :value)
