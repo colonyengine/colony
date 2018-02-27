@@ -22,6 +22,7 @@
   :components
   ((:file "package")
    (:file "common")
+   (:file "utils")
    (:file "logging")
    (:file "extensions")
    (:file "context")

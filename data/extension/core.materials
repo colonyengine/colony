@@ -25,7 +25,8 @@
   ;;
   ;; Any :sampler-2d types will ultimately be converted into the right
   ;; thing when this material is used.
-  (:tex.sampler1 "data/texture/debug.png"))
+  (uniforms
+   (:tex.sampler1 "data/texture/debug.png")))
 
 (define-material unlit-texture-decal
     (:enabled t
@@ -35,29 +36,31 @@
   ;;
   ;; Any :sampler-2d types will ultimately be converted into the right
   ;; thing when this material is used.
-  (:tex.sampler1 "data/texture/debug.png"))
+  (uniforms
+   (:tex.sampler1 "data/texture/debug.png")))
 
 
 ;; When I get the shader for this working I'll comment this in.
-(define-material pbr-material
-    (:enabled t
-     :shader :pbr-texture)
+#++(define-material pbr-material
+       (:enabled t
+        :shader :pbr-texture)
 
-  (:pbr-metallic-roughness.base-color.factor (v4:make .1 .2 .3 1))
-  (:pbr-metallic-roughness.base-color.texture "file")
-  (:pbr-metallic-roughness.metallic-factor .4)
-  (:pbr-metallic-roughness.roughness-factor .7)
-  (:pbr-metallic-roughness.metallic-roughness-texture.factor
-   (v4:make 0.0 0.0 0.0 0.0))
+     (uniforms
+      (:pbr-metallic-roughness.base-color.factor (v4:make .1 .2 .3 1))
+      (:pbr-metallic-roughness.base-color.texture "file")
+      (:pbr-metallic-roughness.metallic-factor .4)
+      (:pbr-metallic-roughness.roughness-factor .7)
+      (:pbr-metallic-roughness.metallic-roughness-texture.factor
+       (v4:make 0.0 0.0 0.0 0.0))
 
-  (:pbr-metallic-roughness.metallic-roughness-texture.texture "file")
+      (:pbr-metallic-roughness.metallic-roughness-texture.texture "file")
 
-  (:normal.factor (v4:make 1.0 1.0 1.0 1.0))
-  (:normal.texture "file3")
+      (:normal.factor (v4:make 1.0 1.0 1.0 1.0))
+      (:normal.texture "file3")
 
-  (:occlusion.factor (v4:make 1.0 1.0 1.0 1.0))
-  (:occlusion.texture "file4")
+      (:occlusion.factor (v4:make 1.0 1.0 1.0 1.0))
+      (:occlusion.texture "file4")
 
-  (:emissive (v3:make 0.0 0.0 0.0))
-  (:alpha-mode 0.0)
-  (:alpha-cutoff .3))
+      (:emissive (v3:make 0.0 0.0 0.0))
+      (:alpha-mode 0.0)
+      (:alpha-cutoff .3)))

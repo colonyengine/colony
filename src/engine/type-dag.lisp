@@ -125,16 +125,6 @@ instance as value.")))
   (apply #'make-instance 'graph-annotation/component-package-search-order
          init-args))
 
-;; TODO: stick in a util file somewhere.
-(defun eql/package-relaxed (obj1 obj2)
-  (cond
-    ((eql obj1 obj2) t) ; It succeeded? Oh good. Return quickly.
-    ((and (symbolp obj1) (symbolp obj2)) ; Otherwise do a slower check.
-     (string= (symbol-name obj1)
-              (symbol-name obj2)))
-    (t ; Hrm, sorry. It didn't EQL match,
-     nil)))
-
 (defun graph-roots (graph)
   "Find all vertex roots (vertexes with no parents) in the directed graph GRAPH and return them as a
 list in no particular order."
