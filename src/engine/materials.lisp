@@ -174,7 +174,6 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
 
   )
 
-
 ;; TODO: After the partial materials and shaders have been loaded, we need to
 ;; resolve the materials to something we can actually bind to a real shader.
 (defun resolve-all-materials (core-state)
@@ -231,54 +230,3 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
      (declare (special %temp-materials))
      ,(when (second (member :enabled options))
         `(setf (gethash ',name %temp-materials) material-func))))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(defun mat/doit ()
-
-  (parse-material
-
-   'pbr-material
-
-   '(:enabled t
-     :shader :pbr-texture)
-
-   '(
-     (:pbr-metallic-roughness.base-color.factor (vec4 .1 .2 .3 1))
-     (:pbr-metallic-roughness.base-color.texture "file")
-     (:pbr-metallic-roughness.metallic-factor .4)
-     (:pbr-metallic-roughness.roughness-factor .7)
-     (:pbr-metallic-roughness.metallic-roughness-texture.factor (vec4 0 0 0 0))
-     (:pbr-metallic-roughness.metallic-roughness-texture.texture "file")
-
-     (:normal.factor (vec4 1 1 1 1))
-     (:normal.texture "file3")
-
-     (:occlusion.factor (vec4 1 1 1 1))
-     (:occlusion.texture "file4")
-
-     (:emissive (vec3 0 0 0))
-     (:alpha-mode 0)
-     (:alpha-cutoff .3))
-
-   )
-
-  )
