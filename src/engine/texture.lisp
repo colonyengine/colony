@@ -15,13 +15,13 @@
           :initarg :data)
    ;; stuff for material dsl
    (%name :reader name
-	  :initarg :name)
+          :initarg :name)
    (%source :reader source
-	    :initarg :source)
+            :initarg :source)
    (%sampler :accessor sampler
-	     :initarg :sampler)
+             :initarg :sampler)
    (%location :reader location
-	      :initarg :location)))
+              :initarg :location)))
 
 (defun get-pixel-format (color-type)
   (ecase color-type
@@ -55,11 +55,23 @@
       (read-texture context location)
     (let ((id (gl:gen-texture)))
       (gl:bind-texture :texture-2d id)
-      (gl:tex-image-2d :texture-2d 0 %internal-format %width %height 0 %pixel-format %pixel-type
-                       %data)
+      (gl:tex-image-2d :texture-2d 0 %internal-format %width %height 0
+                       %pixel-format %pixel-type %data)
       (gl:generate-mipmap :texture-2d)
       (gl:tex-parameter :texture-2d :texture-wrap-s wrap)
       (gl:tex-parameter :texture-2d :texture-wrap-t wrap)
       (gl:tex-parameter :texture-2d :texture-min-filter filter-min)
       (gl:tex-parameter :texture-2d :texture-mag-filter filter-mag)
       id)))
+
+
+;; Interim use of the RCACHE API.
+
+(defmethod rcache-load ((entry-type (eql :texture)) (core-state core-state)
+                        texture-location &key)
+  (let ((texture-id (load-texture (context core-state) texture-location)))
+    texture-id))
+
+(defmethod rcache-unload ((entry-type (eql :texture)) (core-state core-state)
+                          texture-location texture-id &key)
+  (gl:delete-texture texture-id))

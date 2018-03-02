@@ -17,19 +17,32 @@
            #:display
            #:cameras
            #:context
+	   #:lookup-material
            #:active-camera
            #:shaders
            #:shared-storage
            #:define-settings
            #:find-resource
            #:cfg
-           #:with-cfg)
+           #:with-cfg
+
+	   ;; and rcache API
+	   #:rcache
+	   #:rcache-lookup
+	   #:rcache-load
+	   #:rcahe-remove
+	   #:rcache-unload)
 
   ;; textures
   (:export #:load-texture)
 
   ;; materials
-  (:export #:define-material)
+  (:export #:define-material
+	   #:bind-material
+	   #:mat-ref
+	   #:mat-computed-ref
+	   #:shader)
+
 
   ;; input
   (:export #:key-down

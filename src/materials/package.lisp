@@ -10,9 +10,11 @@
    (#:m3 #:box.math.mat3)
    (#:m4 #:box.math.mat4)
    (#:q #:box.math.quat))
-  (:import-from #:fl.core #:define-material)
+  (:import-from #:fl.core
+                #:define-material)
   (:export
    ;; Materials defined in FL core.
+   #:missing-material
    #:unlit-color
    #:unlit-color-decal
    #:unlit-texture

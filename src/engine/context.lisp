@@ -11,3 +11,13 @@
                    :initform nil)
    (%shared-storage-table :reader shared-storage-table
                           :initform (make-hash-table))))
+
+
+(defun lookup-material (material-name context)
+  (multiple-value-bind (material presentp)
+      (gethash material-name (materials (core-state context)))
+    (if presentp
+	material
+	;; Oops, material mistake, so return the missing material.
+	(gethash (alexandria:ensure-symbol 'missing-material 'fl.materials)
+		 (materials (core-state context))))))

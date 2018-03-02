@@ -40,6 +40,17 @@
    (:tex.sampler1 "data/texture/debug.png")))
 
 
+;; NOTE: If there is a problem looking up a material, this is what a material
+;; will become to indicate there is a problem.
+(define-material missing-material
+    (:enabled t
+     :shader 'fl.shaders:unlit-texture)
+
+  (uniforms
+   (:tex.sampler1 "data/texture/missing-material.png")))
+
+
+
 ;; When I get the shader for this working I'll comment this in.
 #++(define-material pbr-material
        (:enabled t

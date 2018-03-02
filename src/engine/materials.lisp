@@ -24,8 +24,14 @@
 
 
 (defclass material-value ()
-  ((%value :accessor value
-           :initarg :value)
+  (;; This is the semantic value for a uniform. In the case of a :sampler-2d
+   ;; it is a string to a texture found on disk, etc.
+   (%semantic-value :accessor semantic-value
+                    :initarg :semantic-value)
+   ;; This is the processed value that is suitable to bind to a uniform.
+
+   (%computed-value :accessor computed-value
+                    :initarg :computed-value)
    ;; The function that knows how to bind this value to a shader.
    (%binder :accessor binder
             :initarg :binder)))
@@ -42,6 +48,7 @@
    ;; core-state.
    (%core-state :reader core-state
                 :initarg :core-state)
+   ;; This is the shader NAME
    (%shader :reader shader
             :initarg :shader)
    (%uniforms :reader uniforms
@@ -59,12 +66,33 @@
   (make-instance 'material :id id :shader shader :source-form source-form
                            :core-state core-state))
 
-(defmethod bind-uniforms ((mat material))
+(defun bind-material-uniforms (mat)
+  (when mat
+    (maphash
+     (lambda (uniform-name material-value)
+       (funcall (binder material-value)
+                uniform-name
+                (computed-value material-value)))
+     (uniforms mat))))
+
+(defun bind-material-buffers (mat)
   nil)
 
+(defun bind-material (mat)
+  (bind-material-uniforms mat)
+  (bind-material-buffers mat))
+
+;; Todo, these modify the semantic-buffer which then gets processed into a
+;; new computed buffer.
 (defun mat-ref (mat var)
   nil)
 
+;; This is read only, it is the computed value in the material.
+(defun mat-computed-ref (mat var)
+  nil)
+
+;; We can only set the semantic-value, which gets automatically upgraded to
+;; the computed-value.
 (defun (setf mat-ref) (new-val mat var)
   nil)
 
@@ -90,7 +118,7 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
                     ;; we don't yet know the official type of this uniform as
                     ;; defined by the shader program. We can only compute that
                     ;; after all shader programs are built.
-                    (make-material-value :value ,val))))
+                    (make-material-value :semantic-value ,val))))
 
          (setf
           ,@(loop :for (var val) :in blocks :appending
@@ -99,19 +127,18 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
                     ;; we don't yet know the official type of this uniform as
                     ;; defined by the shader program. We can only compute that
                     ;; after all shader programs are built.
-                    (make-material-value :value ,val))))
-
+                    (make-material-value :semantic-value ,val))))
 
          mat))))
-
-(defun determine-material-value-types (material shader-program)
-  nil)
 
 (defun determine-binder-function (glsl-type)
   (cond
     ((symbolp glsl-type)
      (ecase glsl-type
-       (:sampler-2d #'shadow:uniform-int)
+       (:sampler-2d (lambda (uniform-name texture-id)
+                      (gl:active-texture 0)
+                      (gl:bind-texture :texture-2d texture-id)
+                      (shadow:uniform-int uniform-name 0)))
        (:bool #'shadow:uniform-int)
        (:int #'shadow:uniform-int)
        (:float #'shadow:uniform-float)
@@ -123,7 +150,10 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
        (:mat4 #'shadow:uniform-mat4)))
     ((consp glsl-type)
      (ecase (first glsl-type)
-       (:sampler-2d #'shadow:uniform-int-array)
+       (:sampler-2d (lambda (uniform-name texture-id)
+                      (gl:active-texture 0)
+                      (gl:bind-texture :texture-2d texture-id)
+                      (shadow:uniform-int-array uniform-name 0)))
        (:bool #'shadow:uniform-int-array)
        (:int #'shadow:uniform-int-array)
        (:float #'shadow:uniform-float-array)
@@ -158,14 +188,36 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
          (setf (binder material-value)
                (determine-binder-function uniform-type))
 
-         ;; TODO 3. Convert certain types like :sampler-2d away from the file
-         ;; path and to a real texture-id. Poke through the core-state to get to
-         ;; the texture-cache--which isn't written yet. :(
-         (when (and (eq uniform-type :sampler-2d)
-                    (stringp (value material-value)))
-           ;; TODO: cache into to a real texture-id
-	   (format t "Convert :sampler-2d to a texture-id.~%")
-           nil))))
+         ;; 3. Convert certain types like :sampler-2d away from the file
+         ;; path and to a real texture-id. Poke through the core-state
+         ;; to set up the textures/etc into the cache in core-state.
+         (case uniform-type
+           (:sampler-2d
+            (cond
+              ((and (stringp (semantic-value material-value))
+                    (not (zerop (length (semantic-value material-value)))))
+
+               (setf (computed-value material-value)
+                     (rcache-lookup :texture core-state
+                                    (semantic-value material-value)))
+
+               (format t "annotate-material: material ~A uniform ~A :sampler-2d ~A -> texutre-id: ~A~%"
+                       (id material) uniform-name
+                       (semantic-value material-value)
+                       (computed-value material-value)))
+              (t
+               (error "material ~A has a badly formed :sampler-2d value: ~A"
+                      (id material) (semantic-value material-value)))))
+           (otherwise
+            ;; copy it over as identity.
+            (setf (computed-value material-value)
+                  (let ((thing (semantic-value material-value)))
+                    (if (or (stringp thing)
+                            (arrayp thing)
+                            (listp thing)
+                            (vectorp thing))
+                        (copy-seq thing)
+                        thing))))))))
 
    (uniforms material))
 

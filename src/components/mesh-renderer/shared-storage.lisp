@@ -1,5 +1,10 @@
 (in-package :fl.comp.mesh-renderer)
 
+;; TODO: This file isn't used anymore since I now use a more general cache
+;; api in core-state. Since that was the only thing being held in the
+;; mesh-renderer's shared-storage, this can go. I'll remove it in a bit
+;; if no other need for it arises.
+
 (defclass mesh-renderer-shared-storage ()
   ((%texture-cache :accessor texture-cache
                    :initform (make-hash-table :test #'equalp))))

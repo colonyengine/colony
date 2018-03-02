@@ -3,13 +3,15 @@
 (defclass core-state ()
   ((%user-package :reader user-package
                   :initarg :user-package)
+   (%rcache :reader rcache
+            :initform (make-hash-table :test #'equal))
    (%display :reader display)
    (%scene-tree :reader scene-tree)
    (%cameras :accessor cameras
              :initform nil)
    (%shaders :accessor shaders)
    (%materials :accessor materials
-	       :initform (make-hash-table))
+               :initform (make-hash-table))
    (%context :reader context)
    (%tables :reader tables
             :initform (make-instance 'bookkeeping-tables))
@@ -106,3 +108,43 @@ CORE-STATE."
     (or (uiop:file-exists-p user-path)
         (uiop:file-exists-p core-path)
         (error "Resource not found: ~a" path))))
+
+;;;; Interim caching code for (often) resources
+;;;; TODO: change this when the reasl cache code shows up.
+(defgeneric rcache-lookup (entry-type core-state key &key &allow-other-keys)
+  (:method ((entry-type symbol) (context context) key &key)
+    (rcache-lookup entry-type (core-state context) key)))
+
+
+(defgeneric rcache-load (entry-type core-state key &key &allow-other-keys)
+  (:method ((entry-type symbol) (context context) key &key)
+    (rcache-load entry-type (core-state context) key)))
+
+(defgeneric rcache-remove (entry-type core-state key &key &allow-other-keys)
+  (:method ((entry-type symbol) (context context) key &key)
+    (rcache-remove entry-type (core-state context) key)))
+
+(defgeneric rcache-unload (entry-type core-state key val
+                           &key &allow-other-keys)
+  (:method ((entry-type symbol) (context context) key val &key)
+    (rcache-unload entry-type (core-state context) key val)))
+
+
+
+(defmethod rcache-lookup ((entry-type symbol) (core-state core-state) key
+                          &key)
+  (multiple-value-bind (value presentp)
+      (gethash key (rcache core-state))
+    (if presentp
+        value)
+    (let ((val (rcache-load entry-type core-state key)))
+      (setf (gethash key (rcache core-state)) val)
+      val)))
+
+(defmethod rcache-remove ((entry-type symbol) (core-state core-state) key
+                          &key)
+  (multiple-value-bind (val presentp)
+      (gethash key (rcache core-state))
+    (when presentp
+      (remhash key (rcache core-state))
+      (rcache-unload entry-type core-state key val))))
