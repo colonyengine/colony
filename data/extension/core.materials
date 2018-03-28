@@ -49,6 +49,13 @@
   (uniforms
    (:tex.sampler1 "data/texture/missing-material.png")))
 
+(define-material pbr-damaged-helmet
+    (:enabled t
+     :shader 'fl.shaders:pbr-damaged-helmet)
+
+  ;; TODO uniforms
+  )
+
 
 
 ;; When I get the shader for this working I'll comment this in.

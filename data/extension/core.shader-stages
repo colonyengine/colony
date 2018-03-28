@@ -37,24 +37,24 @@
 
 (defun-gpu vert/pbr-damaged-helmet (;; Vertex Attributes
                                     (pos :vec4)
-                                    (normal :vec3)
+                                    (nml :vec3)
                                     (uv1 :vec2)
                                     ;; Uniforms
                                     &uniform
-                                    (model-mat :mat4)
-                                    (normal-mat :mat4)
-                                    (view-mat :mat4)
-                                    (proj-mat :mat4))
-  (let* ((pvm (* proj-mat view-mat model-mat))
-         (world-pos (* model-mat pos))
-         (homo-world-pos (/ (.xyz world_pos) (.w world-pos)))
-         (vert-normal (normalize (vec3 (* model-mat (vec4 normal.xyz 0.0))))))
+                                    (model :mat4)
+                                    (normal :mat4)
+                                    (view :mat4)
+                                    (proj :mat4))
+  (let* ((pvm (* proj view model))
+         (world-pos (* model pos))
+         (homo-world-pos (/ (.xyz world-pos) (.w world-pos)))
+         (vert-normal
+           (normalize (.xyz (* model (vec4 (.xyz nml) 0.0))))))
 
     (values (* pvm pos)
             vert-normal
             uv1
             world-pos)))
-
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fragment stages
@@ -98,3 +98,11 @@
     (if (= (.w tex-color) 0)
         (discard)
         (values tex-color))))
+
+
+
+(defun-gpu frag/pbr-damaged-helmet ((vert-normal :vec3)
+                                    (uv1 :vec2)
+                                    (world-pos :vec4))
+  (values
+   (vec4 1 1 1 1)))
