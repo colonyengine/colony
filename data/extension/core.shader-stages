@@ -29,6 +29,33 @@
           uv1
           uv2))
 
+;; PBR vertex shader stage:
+;;
+;; created specifically for the DamagedHelmet model:
+;;
+;; USE_IBL HAS_NORMALS HAS_UV
+
+(defun-gpu vert/pbr-damaged-helmet (;; Vertex Attributes
+                                    (pos :vec4)
+                                    (normal :vec3)
+                                    (uv1 :vec2)
+                                    ;; Uniforms
+                                    &uniform
+                                    (model-mat :mat4)
+                                    (normal-mat :mat4)
+                                    (view-mat :mat4)
+                                    (proj-mat :mat4))
+  (let* ((pvm (* proj-mat view-mat model-mat))
+         (world-pos (* model-mat pos))
+         (homo-world-pos (/ (.xyz world_pos) (.w world-pos)))
+         (vert-normal (normalize (vec3 (* model-mat (vec4 normal.xyz 0.0))))))
+
+    (values (* pvm pos)
+            vert-normal
+            uv1
+            world-pos)))
+
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fragment stages
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
