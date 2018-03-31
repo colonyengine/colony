@@ -54,6 +54,10 @@
      :shader 'fl.shaders:pbr-damaged-helmet)
 
   ;; TODO uniforms
+  (uniforms
+   ;; metallic first, roughness second
+   (:metallic-roughness-values (v2:make 1.0 1.0))
+   (:metallic-roughness-sampler "data/texture/Default_albedo.png"))
   )
 
 

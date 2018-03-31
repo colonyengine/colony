@@ -28,5 +28,7 @@
 
 (make-shader-program pbr-damaged-helmet
     (:version 430 :primitive :triangles)
-  (:vertex () (vert/pbr-damaged-helmet :vec4 :vec3 :vec2))
-  (:fragment () (frag/pbr-damaged-helmet :vec3 :vec2 :vec4)))
+  (:vertex () (vert/pbr-damaged-helmet
+	       :vec3 :vec3 :vec3 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:fragment () (frag/pbr-damaged-helmet
+		 :vec3 :vec2 :vec4)))

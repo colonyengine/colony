@@ -36,22 +36,27 @@
 ;; USE_IBL HAS_NORMALS HAS_UV
 
 (defun-gpu vert/pbr-damaged-helmet (;; Vertex Attributes
-                                    (pos :vec4)
-                                    (nml :vec3)
+                                    (pos :vec3)
+                                    (normal :vec3)
+                                    (tangent :vec3)
+                                    (color :vec4)
                                     (uv1 :vec2)
+                                    (uv2 :vec2)
+                                    (joints :vec4)
+                                    (weights :vec4)
                                     ;; Uniforms
                                     &uniform
                                     (model :mat4)
-                                    (normal :mat4)
+                                    (normmat :mat4)
                                     (view :mat4)
                                     (proj :mat4))
   (let* ((pvm (* proj view model))
-         (world-pos (* model pos))
+         (world-pos (* model (vec4 pos 1.0)))
          (homo-world-pos (/ (.xyz world-pos) (.w world-pos)))
          (vert-normal
-           (normalize (.xyz (* model (vec4 (.xyz nml) 0.0))))))
+           (normalize (.xyz (* model (vec4 (.xyz normal) 0.0))))))
 
-    (values (* pvm pos)
+    (values (* pvm (vec4 pos 1.0))
             vert-normal
             uv1
             world-pos)))
@@ -103,6 +108,40 @@
 
 (defun-gpu frag/pbr-damaged-helmet ((vert-normal :vec3)
                                     (uv1 :vec2)
-                                    (world-pos :vec4))
-  (values
-   (vec4 1 1 1 1)))
+                                    (world-pos :vec4)
+                                    &uniform
+                                    (metallic-roughness-values :vec2)
+                                    (metallic-roughness-sampler :sampler-2d)
+                                    )
+  ;; Metallic and Roughness material properties are packed together
+  ;; In glTF, these factors can be specified by fixed scalar values
+  ;; or from a metallic-roughness map
+
+  (let* ((perceptual-roughness (.y metallic-roughness-values))
+         (metallic (.x metallic-roughness-values))
+
+         ;; damaged-helmet uses a metallic roughness value texture
+         (mr-sample (texture metallic-roughness-sampler uv1))
+         (perceptual-roughness (* (.y mr-sample) perceptual-roughness))
+         (metallic (* (.z mr-sample) metallic))
+
+         (perceptual-roughness (* perceptual-roughness perceptual-roughness))
+         (metallic (clamp metallic 0.0 1.0))
+         (a (+ (.x vert-normal) (.y vert-normal) (.z vert-normal))))
+
+    ;; machinations to use normal as an identity computation.
+    (when (= a 0.0)
+      (setf a 1.0))
+
+    (setf a (/ a a))
+
+    ;; test rendering the metallic roughness map
+    #++(values (vec4 (/ (.x mr-sample) a)
+                  (/ (.y mr-sample) a)
+                  (/ (.z mr-sample) a)
+                  (.w mr-sample))
+	       )
+    (values
+     (texture metallic-roughness-sampler uv1))
+
+    ))
