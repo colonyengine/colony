@@ -36,7 +36,11 @@
 (defun read-texture (context location)
   (let* ((core-state (core-state context))
          (path (find-resource core-state location))
-         (image (pngload:load-file path :flatten t :flip-y t))
+	 ;; NOTE: :flip-y is nil to support GLTF2 textures. That is not
+	 ;; how it is for all formats. So, we'll need to do something
+	 ;; intelligent here. This is because OGL textures and GLTF2
+	 ;; textures use different origins. :/
+         (image (pngload:load-file path :flatten t :flip-y nil))
          (pixel-format (get-pixel-format (pngload:color-type image))))
     (make-instance 'texture
                    :width (pngload:width image)
@@ -50,7 +54,7 @@
 (defun load-texture (context location &key
                                         (filter-min :linear-mipmap-linear)
                                         (filter-mag :linear)
-                                        (wrap :clamp-to-edge))
+                                        (wrap :repeat))
   (with-slots (%width %height %internal-format %pixel-format %pixel-type %data)
       (read-texture context location)
     (let ((id (gl:gen-texture)))

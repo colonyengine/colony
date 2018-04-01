@@ -78,7 +78,7 @@
                                    (color :vec4)
                                    (uv1 :vec2)
                                    (uv2 :vec2))
-  (if (= (.w color) 0)
+  (if (= (.a color) 0)
       (discard)
       (values color)))
 
@@ -100,7 +100,7 @@
                                      &uniform
                                      (tex texture-struct))
   (let ((tex-color (texture (sampler1 tex) uv1)))
-    (if (= (.w tex-color) 0)
+    (if (= (.a tex-color) 0)
         (discard)
         (values tex-color))))
 
@@ -122,8 +122,8 @@
 
          ;; damaged-helmet uses a metallic roughness value texture
          (mr-sample (texture metallic-roughness-sampler uv1))
-         (perceptual-roughness (* (.y mr-sample) perceptual-roughness))
-         (metallic (* (.z mr-sample) metallic))
+         (perceptual-roughness (* (.g mr-sample) perceptual-roughness))
+         (metallic (* (.b mr-sample) metallic))
 
          (perceptual-roughness (* perceptual-roughness perceptual-roughness))
          (metallic (clamp metallic 0.0 1.0))
@@ -142,6 +142,8 @@
                   (.w mr-sample))
 	       )
     (values
-     (texture metallic-roughness-sampler uv1))
+     mr-sample
+     ;;(vec4 perceptual-roughness perceptual-roughness perceptual-roughness 1.0)
+     )
 
     ))
