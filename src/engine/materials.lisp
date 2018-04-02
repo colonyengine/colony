@@ -59,8 +59,12 @@
             :initarg :blocks
             ;; key is a block keyword, value is material-value
             :initform (make-hash-table))
+   (%active-texture-unit :accessor active-texture-unit
+                         :initarg :active-texture-unit
+                         :initform 0)
    (%source-form :reader source-form
                  :initarg :source-form)))
+
 
 (defun make-material (id shader source-form core-state)
   (make-instance 'material :id id :shader shader :source-form source-form
@@ -131,14 +135,16 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
 
          mat))))
 
-(defun determine-binder-function (glsl-type)
+(defun determine-binder-function (material glsl-type)
   (cond
     ((symbolp glsl-type)
      (ecase glsl-type
-       (:sampler-2d (lambda (uniform-name texture-id)
-                      (gl:active-texture 0)
-                      (gl:bind-texture :texture-2d texture-id)
-                      (shadow:uniform-int uniform-name 0)))
+       (:sampler-2d (let ((unit (active-texture-unit material)))
+                      (incf (active-texture-unit material))
+                      (lambda (uniform-name texture-id)
+                        (gl:active-texture unit)
+                        (gl:bind-texture :texture-2d texture-id)
+                        (shadow:uniform-int uniform-name unit))))
        (:bool #'shadow:uniform-int)
        (:int #'shadow:uniform-int)
        (:float #'shadow:uniform-float)
@@ -150,10 +156,12 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
        (:mat4 #'shadow:uniform-mat4)))
     ((consp glsl-type)
      (ecase (first glsl-type)
-       (:sampler-2d (lambda (uniform-name texture-id)
-                      (gl:active-texture 0)
-                      (gl:bind-texture :texture-2d texture-id)
-                      (shadow:uniform-int-array uniform-name 0)))
+       (:sampler-2d (let ((unit (active-texture-unit material)))
+                      (incf (active-texture-unit material))
+                      (lambda (uniform-name texture-id)
+                        (gl:active-texture unit)
+                        (gl:bind-texture :texture-2d texture-id)
+                        (shadow:uniform-int-array uniform-name unit))))
        (:bool #'shadow:uniform-int-array)
        (:int #'shadow:uniform-int-array)
        (:float #'shadow:uniform-float-array)
@@ -186,7 +194,7 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
          ;; 2. Find the uniform in the shader-program and get its type-info. Use
          ;; that to set the binder function.
          (setf (binder material-value)
-               (determine-binder-function uniform-type))
+               (determine-binder-function material uniform-type))
 
          ;; 3. Convert certain types like :sampler-2d away from the file
          ;; path and to a real texture-id. Poke through the core-state
