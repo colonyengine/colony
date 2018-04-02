@@ -51,8 +51,8 @@
                                     (view :mat4)
                                     (proj :mat4))
   (let* ((pvm (* proj view model))
-         (world-pos (* model (vec4 pos 1.0)))
-         (homo-world-pos (/ (.xyz world-pos) (.w world-pos)))
+         (homo-world-pos (* model (vec4 pos 1.0)))
+         (world-pos (/ (.xyz homo-world-pos) (.w homo-world-pos)))
          (vert-normal
            (normalize (.xyz (* model (vec4 (.xyz normal) 0.0))))))
 
@@ -106,18 +106,57 @@
 
 
 
+(defun-gpu pbr/srbg-to-linear ((srgb-in :vec4))
+  ;; TODO: Implement me.
+
+  srgb-in)
+
+(defun-gpu pbr/get-normal ((world-pos :vec3) (vert-normal :vec3) (uv1 :vec2)
+                           (normal-sampler :sampler-2d) (normal-scale :float))
+
+  ;; I'm assuming that we don't have tangents, but we have normals at the
+  ;; vertex and also a normal map.
+
+  (let* ((pos-dx (d-fdx world-pos))
+         (pos-dy (d-fdy world-pos))
+         (tex-dx (d-fdx (v3:make uv1 0.0)))
+         (tex-dy (d-fdy (v3:make uv1 0.0)))
+         (tv (/ (- (* (.t tex-dy) pos-dx)
+                   (* (.t tex-dx) pos-dy))
+                (- (* (.s tex-dx) (.t tex-dy))
+                   (* (.s tex-dy) (.t tex-dx)))))
+
+         ;; assume we have a normal vertex attribute
+         (ngv (normalize vert-normal))
+
+         (tv (normalize (- tv (* ngv (dot ngv tv)))))
+         (bv (normalize (cross ngv tv)))
+         (tbn (m3:make tv bv ngv))
+
+         ;; assume we have a normal map
+         (n (.rgb (texture normal-sampler uv1)))
+         (n (normalize (* tbn (- (* 2.0 n) (v3:make 1.0 1.0 1.0))
+			  (v3:make normal-scale normal-scale 1.0)))))
+    n))
+
 (defun-gpu frag/pbr-damaged-helmet ((vert-normal :vec3)
                                     (uv1 :vec2)
-                                    (world-pos :vec4)
+                                    (world-pos :vec3)
                                     &uniform
                                     (metallic-roughness-values :vec2)
                                     (metallic-roughness-sampler :sampler-2d)
+                                    (base-color-sampler :sampler-2d)
+                                    (base-color-factor :vec4)
+                                    (normal-sampler :sampler-2d)
+                                    (normal-scale :float)
                                     )
   ;; Metallic and Roughness material properties are packed together
   ;; In glTF, these factors can be specified by fixed scalar values
   ;; or from a metallic-roughness map
 
-  (let* ((perceptual-roughness (.y metallic-roughness-values))
+  (let* ((min-roughness 0.04)
+
+         (perceptual-roughness (.y metallic-roughness-values))
          (metallic (.x metallic-roughness-values))
 
          ;; damaged-helmet uses a metallic roughness value texture
@@ -125,24 +164,43 @@
          (perceptual-roughness (* (.g mr-sample) perceptual-roughness))
          (metallic (* (.b mr-sample) metallic))
 
-         (perceptual-roughness (* perceptual-roughness perceptual-roughness))
+         (perceptual-roughness (clamp perceptual-roughness min-roughness 1.0))
          (metallic (clamp metallic 0.0 1.0))
-         (a (+ (.x vert-normal) (.y vert-normal) (.z vert-normal))))
 
-    ;; machinations to use normal as an identity computation.
-    (when (= a 0.0)
-      (setf a 1.0))
+         ;; roughness is authored as perceptual roughness, as is convention
+         ;; convert to material roughness by squaring the perceptual roughness.
+         (alpha-roughness (* perceptual-roughness perceptual-roughness))
 
-    (setf a (/ a a))
+         ;; we also have a basecolor map
+         (base-color (* (pbr/srbg-to-linear (texture base-color-sampler uv1))
+                        base-color-factor))
+
+         (f0 (v3:make 0.04))
+         (diffuse-color (* (.rgb base-color) (- (v3:make 1.0) f0)))
+         (diffuse-color (* diffuse-color (- 1.0 metallic)))
+         (specular-color (mix f0 (.rgb base-color) metallic))
+
+         ;; compute reflectance
+         (reflectance (max (max (.r specular-color) (.g specular-color))
+                           (.b specular-color)))
+         ;; For typical incident reflections range (between 4% and 100%) set
+         ;; the grazing reflectance to 100% for typical fresnel effect.
+         ;; For very low reflectance range on highly diffuse objects (below 4%)
+         ;; incrementally reduce grazing reflectance to 0%.
+         (reflectance-90 (clamp (* reflectance 25.0) 0.0 1.0))
+         (specular-environment-r0 (.rgb specular-color))
+         (specular-environment-r90 (* (v3:make 1.0 1.0 1.0) reflectance-90))
+
+         (n (pbr/get-normal world-pos vert-normal uv1
+                            normal-sampler normal-scale))
+
+	 ;; TODO Not done.
+         )
+
 
     ;; test rendering the metallic roughness map
-    #++(values (vec4 (/ (.x mr-sample) a)
-                  (/ (.y mr-sample) a)
-                  (/ (.z mr-sample) a)
-                  (.w mr-sample))
-	       )
     (values
-     mr-sample
+     (texture base-color-sampler uv1)
      ;;(vec4 perceptual-roughness perceptual-roughness perceptual-roughness 1.0)
      )
 
