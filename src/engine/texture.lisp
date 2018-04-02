@@ -36,10 +36,10 @@
 (defun read-texture (context location)
   (let* ((core-state (core-state context))
          (path (find-resource core-state location))
-	 ;; NOTE: :flip-y is nil to support GLTF2 textures. That is not
-	 ;; how it is for all formats. So, we'll need to do something
-	 ;; intelligent here. This is because OGL textures and GLTF2
-	 ;; textures use different origins. :/
+         ;; NOTE: :flip-y is nil to support GLTF2 textures. That is not
+         ;; how it is for all formats. So, we'll need to do something
+         ;; intelligent here. This is because OGL textures and GLTF2
+         ;; textures use different origins. :/
          (image (pngload:load-file path :flatten t :flip-y nil))
          (pixel-format (get-pixel-format (pngload:color-type image))))
     (make-instance 'texture
@@ -54,7 +54,9 @@
 (defun load-texture (context location &key
                                         (filter-min :linear-mipmap-linear)
                                         (filter-mag :linear)
-                                        (wrap :repeat))
+                                        (wrap :repeat)
+                                        (wrap-s wrap)
+                                        (wrap-t wrap))
   (with-slots (%width %height %internal-format %pixel-format %pixel-type %data)
       (read-texture context location)
     (let ((id (gl:gen-texture)))
@@ -62,8 +64,8 @@
       (gl:tex-image-2d :texture-2d 0 %internal-format %width %height 0
                        %pixel-format %pixel-type %data)
       (gl:generate-mipmap :texture-2d)
-      (gl:tex-parameter :texture-2d :texture-wrap-s wrap)
-      (gl:tex-parameter :texture-2d :texture-wrap-t wrap)
+      (gl:tex-parameter :texture-2d :texture-wrap-s wrap-s)
+      (gl:tex-parameter :texture-2d :texture-wrap-t wrap-t)
       (gl:tex-parameter :texture-2d :texture-min-filter filter-min)
       (gl:tex-parameter :texture-2d :texture-mag-filter filter-mag)
       id)))
