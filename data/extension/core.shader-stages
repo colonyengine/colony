@@ -255,10 +255,7 @@
          )
 
 
-    ;; test rendering the metallic roughness map
-    (values
-     (texture base-color-sampler uv1)
-     ;;(vec4 perceptual-roughness perceptual-roughness perceptual-roughness 1.0)
-     )
+    (values base-color
+            )
 
     ))
