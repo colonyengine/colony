@@ -62,6 +62,7 @@
    (:base-color-factor (v4:make 1.0 1.0 1.0 1.0))
    (:normal-sampler "data/texture/Default_normal.png")
    (:normal-scale 1.0)
+   (:light-direction (v3:make 0.0 -1.0 0.0))
    )
 
   )
