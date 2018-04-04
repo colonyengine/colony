@@ -53,7 +53,6 @@
     (:enabled t
      :shader 'fl.shaders:pbr-damaged-helmet)
 
-  ;; TODO uniforms
   (uniforms
    ;; metallic first, roughness second
    (:metallic-roughness-values (v2:make 1.0 1.0))
@@ -62,7 +61,13 @@
    (:base-color-factor (v4:make 1.0 1.0 1.0 1.0))
    (:normal-sampler "data/texture/Default_normal.png")
    (:normal-scale 1.0)
-   (:light-direction (v3:make 0.0 -1.0 0.0))
+   ;; TODO: I am not sure this direction is semantically correct...
+   (:light-direction (v3:make 0.0 1.0 0.0))
+   (:light-color (v3:make 1.0 1.0 1.0))
+   (:occlusion-sampler "data/texture/Default_AO.png")
+   (:occlusion-strength 1.0)
+   (:emissive-sampler "data/texture/Default_emissive.png")
+   (:emissive-factor .3)
    )
 
   )
