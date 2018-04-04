@@ -4,7 +4,7 @@
   (slave-camera nil)
   (target-actor nil)
   (target-transform nil)
-  (offset (v3zero)))
+  (offset (v3:zero)))
 
 (defmethod initialize-component ((component following-camera) (context context))
   (with-accessors ((slave slave-camera) (actor actor) (target target-actor)) component
