@@ -61,7 +61,7 @@
    (:base-color-factor (v4:make 1.0 1.0 1.0 1.0))
    (:normal-sampler "data/texture/Default_normal.png")
    (:normal-scale 1.0)
-   ;; TODO: I am not sure this direction is semantically correct...
+   ;; NOTE: This vector points TOWARDS the light.
    (:light-direction (v3:make 0.0 1.0 1.0))
    (:light-color (v3:make 1.0 1.0 1.0))
    (:occlusion-sampler "data/texture/Default_AO.png")
