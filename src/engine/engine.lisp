@@ -30,7 +30,7 @@
        (sb-profile:profile
         "FIRST-LIGHT"
         "FIRST-LIGHT-EXAMPLE"
-        "GAMEBOX-FRAME-MANAGER")
+        "BOX.FRAME")
        (sleep ,seconds)
        (sb-profile:report)
        (sb-profile:unprofile)
