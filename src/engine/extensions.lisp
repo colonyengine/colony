@@ -7,7 +7,10 @@
   (map-files
    path
    (lambda (x)
-     (load x)
+     (let ((package *package*))
+       (with-standard-io-syntax
+         (let ((*package* package))
+           (load x))))
      (simple-logger:emit :extension.load owner x))
    :filter (extension-type-filter extension-type)))
 
