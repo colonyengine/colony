@@ -12,7 +12,7 @@
     core-state))
 
 (defun prepare-shader-programs (core-state)
-  (setf (shaders core-state) (shadow::build-shader-dictionary)))
+  (setf (shaders core-state) (shadow:build-shader-dictionary)))
 
 (defun start-engine ()
   (let ((user-package-name (alexandria:make-keyword (package-name *package*))))
