@@ -42,11 +42,13 @@
     ;; This must be done FIRST, to provide a binding id for the interface block.
 
     ;; NOTE: In shadow, we need this done before we can create the ssbo on the
-    ;; GPU.
-
+    ;; GPU. This is here because varjo is for all ogl versions, and only in 4.2
+    ;; or later could you specify the binding value in the layour in the shader.
+    ;; so, we must manually bind the ssbo to the layout number we want first.
     (bind-shader-storage-block 'pbr-damaged-helmet :junk 1)
 
-    ;; Now, we can create a buffer and bind it to that binding id
+    ;; Now, we can create a buffer on the GPU itself and bind it to that binding
+    ;; id.
     (when create
       (create-buffer :ssbo :junk-ssbo-snazzy-name 1))
 
