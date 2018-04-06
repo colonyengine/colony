@@ -25,11 +25,14 @@
 
 (defun get-pixel-format (color-type)
   (ecase color-type
+    (:greyscale :red) ; TODO: We only support 8 bit non-palette version of
+		      ; greyscale. We should support more.
     (:truecolour :rgb)
     (:truecolour-alpha :rgba)))
 
 (defun get-internal-format (pixel-format)
   (ecase pixel-format
+    (:red :r8)
     (:rgb :rgb8)
     (:rgba :rgba8)))
 
