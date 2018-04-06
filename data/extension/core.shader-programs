@@ -51,4 +51,13 @@
       (create-buffer :ssbo :junk-ssbo-snazzy-name 1))
 
     ;; And write to it, which puts it onto the GPU.
-    (write-buffer-path :junk-ssbo-snazzy-name :scale (v3:make 2.0 0.5 2.0))))
+
+    ;; NOTE: Here even if I am passing a single scalar type, it must be in
+    ;; a sequence.
+    (write-buffer-path :junk-ssbo-snazzy-name :valid (vector 1))
+
+    (write-buffer-path
+     ;; NOTE: we're passing one entity to the ssbo of a :vec3, hence we wrap it
+     ;; in a vector. Otherwise, just the v3:make form alone would represent a
+     ;; (:float 3) array type.
+     :junk-ssbo-snazzy-name :scale (vector (v3:make 2.0 0.5 2.0)))))

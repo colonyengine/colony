@@ -7,6 +7,7 @@
   (sampler2 :sampler-2d :accessor sampler2))
 
 (defstruct-gpu test-ssbo ()
+  (valid :int :accessor valid) ;; 0 if not valid, 1 if valid.
   (scale :vec3 :accessor scale))
 
 (defstruct-gpu pbr-info ()
@@ -82,7 +83,9 @@
                                     (proj :mat4)
                                     (junk test-ssbo :ssbo :std-430))
   (let* ((new-pos pos)
-	 (new-pos (* new-pos (scale junk)))
+         (new-pos (if (= (valid junk) 1)
+		      (* new-pos (scale junk))
+		      new-pos))
          (pvm (* proj view model))
          (homo-world-pos (* model (vec4 new-pos 1.0)))
          (world-pos (/ (.xyz homo-world-pos) (.w homo-world-pos)))
