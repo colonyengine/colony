@@ -6,6 +6,9 @@
   (sampler1 :sampler-2d :accessor sampler1)
   (sampler2 :sampler-2d :accessor sampler2))
 
+(defstruct-gpu test-ssbo ()
+  (scale :vec3 :accessor scale))
+
 (defstruct-gpu pbr-info ()
   ;; cos angle between normal and light direction
   (n-dot-l :float :accessor n-dot-l)
@@ -76,14 +79,17 @@
                                     (model :mat4)
                                     (normmat :mat4)
                                     (view :mat4)
-                                    (proj :mat4))
-  (let* ((pvm (* proj view model))
-         (homo-world-pos (* model (vec4 pos 1.0)))
+                                    (proj :mat4)
+                                    (junk test-ssbo :ssbo :std-430))
+  (let* ((new-pos pos)
+	 (new-pos (* new-pos (scale junk)))
+         (pvm (* proj view model))
+         (homo-world-pos (* model (vec4 new-pos 1.0)))
          (world-pos (/ (.xyz homo-world-pos) (.w homo-world-pos)))
          (vert-normal
            (normalize (.xyz (* model (vec4 (.xyz normal) 0.0))))))
 
-    (values (* pvm (vec4 pos 1.0))
+    (values (* pvm (vec4 new-pos 1.0))
             vert-normal
             uv1
             world-pos)))

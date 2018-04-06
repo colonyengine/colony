@@ -29,6 +29,26 @@
 (make-shader-program pbr-damaged-helmet
     (:version 430 :primitive :triangles)
   (:vertex () (vert/pbr-damaged-helmet
-	       :vec3 :vec3 :vec3 :vec4 :vec2 :vec2 :vec4 :vec4))
+               :vec3 :vec3 :vec3 :vec4 :vec2 :vec2 :vec4 :vec4))
   (:fragment () (frag/pbr-damaged-helmet
-		 :vec3 :vec2 :vec3)))
+                 :vec3 :vec2 :vec3)))
+
+
+(defun doit-ssbo (&optional create)
+  (sdl2:in-main-thread ()
+
+    ;; Testing binding & making & filling in the SSBO data.
+
+    ;; This must be done FIRST, to provide a binding id for the interface block.
+
+    ;; NOTE: In shadow, we need this done before we can create the ssbo on the
+    ;; GPU.
+
+    (bind-shader-storage-block 'pbr-damaged-helmet :junk 1)
+
+    ;; Now, we can create a buffer and bind it to that binding id
+    (when create
+      (create-buffer :ssbo :junk-ssbo-snazzy-name 1))
+
+    ;; And write to it, which puts it onto the GPU.
+    (write-buffer-path :junk-ssbo-snazzy-name :scale (v3:make 2.0 0.5 2.0))))
