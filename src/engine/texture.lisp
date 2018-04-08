@@ -23,18 +23,17 @@
    (%location :reader location
               :initarg :location)))
 
-(defun get-pixel-format (color-type)
-  (ecase color-type
-    (:greyscale :red) ; TODO: We only support 8 bit non-palette version of
-		      ; greyscale. We should support more.
-    (:truecolour :rgb)
-    (:truecolour-alpha :rgba)))
+(defun get-pixel-format (channels)
+  (ecase channels
+    (1 :red)
+    (3 :bgr)
+    (4 :bgra)))
 
 (defun get-internal-format (pixel-format)
   (ecase pixel-format
     (:red :r8)
-    (:rgb :rgb8)
-    (:rgba :rgba8)))
+    (:bgr :rgb8)
+    (:bgra :rgba8)))
 
 (defun read-texture (context location)
   (let* ((core-state (core-state context))
@@ -43,16 +42,16 @@
          ;; how it is for all formats. So, we'll need to do something
          ;; intelligent here. This is because OGL textures and GLTF2
          ;; textures use different origins. :/
-         (image (pngload:load-file path :flatten t :flip-y nil))
-         (pixel-format (get-pixel-format (pngload:color-type image))))
+         (image (tga:read-tga path))
+         (pixel-format (get-pixel-format (tga:image-channels image))))
     (make-instance 'texture
-                   :width (pngload:width image)
-                   :height (pngload:height image)
+                   :width (tga:image-width image)
+                   :height (tga:image-height image)
                    :pixel-format pixel-format
                    :internal-format (get-internal-format pixel-format)
                    :pixel-type :unsigned-byte
                    :location location
-                   :data (pngload:data image))))
+                   :data (tga:image-data image))))
 
 (defun load-texture (context location &key
                                         (filter-min :linear-mipmap-linear)

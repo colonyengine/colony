@@ -8,7 +8,7 @@
   :version "0.1.0"
   :depends-on (#:sdl2
                #:cl-opengl
-               #:pngload
+               #:cl-tga
                #:parsley
                #:jsown)
   :serial t

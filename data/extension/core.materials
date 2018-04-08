@@ -26,7 +26,7 @@
   ;; Any :sampler-2d types will ultimately be converted into the right
   ;; thing when this material is used.
   (uniforms
-   (:tex.sampler1 "data/texture/debug.png")))
+   (:tex.sampler1 "data/texture/debug.tga")))
 
 (define-material unlit-texture-decal
     (:enabled t
@@ -37,7 +37,7 @@
   ;; Any :sampler-2d types will ultimately be converted into the right
   ;; thing when this material is used.
   (uniforms
-   (:tex.sampler1 "data/texture/debug.png")))
+   (:tex.sampler1 "data/texture/debug.tga")))
 
 
 ;; NOTE: If there is a problem looking up a material, this is what a material
@@ -47,7 +47,7 @@
      :shader 'fl.shaders:unlit-texture)
 
   (uniforms
-   (:tex.sampler1 "data/texture/missing-material.png")))
+   (:tex.sampler1 "data/texture/debug.tga")))
 
 (define-material pbr-damaged-helmet
     (:enabled t
@@ -56,17 +56,17 @@
   (uniforms
    ;; metallic first, roughness second
    (:metallic-roughness-values (v2:make 1.0 1.0))
-   (:metallic-roughness-sampler "data/texture/Default_metalRoughness.png")
-   (:base-color-sampler "data/texture/Default_albedo.png")
+   (:metallic-roughness-sampler "data/texture/Default_metalRoughness.tga")
+   (:base-color-sampler "data/texture/Default_albedo.tga")
    (:base-color-factor (v4:make 1.0 1.0 1.0 1.0))
-   (:normal-sampler "data/texture/Default_normal.png")
+   (:normal-sampler "data/texture/Default_normal.tga")
    (:normal-scale 1.0)
    ;; NOTE: This vector points TOWARDS the light.
    (:light-direction (v3:make 0.0 1.0 1.0))
    (:light-color (v3:make 1.0 1.0 1.0))
-   (:occlusion-sampler "data/texture/Default_AO.png")
+   (:occlusion-sampler "data/texture/Default_AO.tga")
    (:occlusion-strength 1.0)
-   (:emissive-sampler "data/texture/Default_emissive.png")
+   (:emissive-sampler "data/texture/Default_emissive.tga")
    (:emissive-factor .3)
    )
 

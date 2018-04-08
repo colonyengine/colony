@@ -17,7 +17,7 @@
                #:shadow
                #:gamebox-math.vari
                #:gamebox-frame-manager
-               #:pngload)
+               #:cl-tga)
   :serial t
   :components
   ((:file "package")
