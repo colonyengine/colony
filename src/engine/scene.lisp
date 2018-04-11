@@ -133,7 +133,7 @@
        (%prepare)))))
 
 (defmacro define-scene (name (&key enabled) &body body)
-  `(let ((scene ,(apply #'parse-scene `',name body)))
+  `(let ((scene ,(parse-scene `',name body)))
      (declare (special %temp-scene))
      ,(when enabled
         `(setf (gethash ',name %temp-scene) scene))))

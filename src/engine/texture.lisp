@@ -59,8 +59,8 @@
       (read-texture context location)
     (let ((id (gl:gen-texture)))
       (gl:bind-texture :texture-2d id)
-      (gl:tex-image-2d :texture-2d 0 %internal-format %width %height 0
-                       %pixel-format %pixel-type %data)
+      (gl:tex-image-2d :texture-2d 0 %internal-format %width %height 0 %pixel-format %pixel-type
+                       %data)
       (gl:generate-mipmap :texture-2d)
       (gl:tex-parameter :texture-2d :texture-wrap-s wrap-s)
       (gl:tex-parameter :texture-2d :texture-wrap-t wrap-t)
@@ -88,12 +88,12 @@
   ;; TODO: Note make policy optional, set to :default-policy if not specified.
   (multiple-value-bind (name target policy true-body)
       (if (symbolp (first body))
-	  ;; maybe we can name the texture descriptor....
-	  (destructuring-bind (name (target policy) . true-body) body
-	    (values name target policy true-body))
-	  ;; or make it anonymous
-	  (destructuring-bind ((target policy) . true-body) body
-	    (values nil target policy true-body)))
+          ;; maybe we can name the texture descriptor....
+          (destructuring-bind (name (target policy) . true-body) body
+            (values name target policy true-body))
+          ;; or make it anonymous
+          (destructuring-bind ((target policy) . true-body) body
+            (values nil target policy true-body)))
 
     ;; all variables are now valid.
     `(progn
@@ -110,7 +110,7 @@
   :depth-stencil-texture-mode :depth-component ;; note: ogl 4.3 or greater
   :texture-base-level 0
   :texture-border-color :todo-add-local-nicknames #++(v4:make 0.0 0.0 0.0 0.0)
-  :texture-compare-func :never ;; unknown default
+                                                  :texture-compare-func :never ;; unknown default
   :texture-compare-mode :none ;; unknown default
   :texture-min-filter :nearest-mipmap-linear
   :texture-mag-filter :linear
@@ -139,4 +139,4 @@
   :generate-mipmaps-p t ;; must only have a single base image. error otherwise
   :flip-y t
   :images #("path/to/texture.tga" ;; mipmap 0, or base image, always
-	    ))
+            ))
