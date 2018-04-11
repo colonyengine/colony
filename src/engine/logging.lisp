@@ -49,10 +49,22 @@
   "Exiting flow: (~a ~a ~a).")
 
 (simple-logger:define-message :debug :shader.function.compiled
-  "Compiled shader function: ~a")
+  "Compiled shader function: ~a.")
 
-(simple-logger:define-message :trace :component.mesh.cache.used
-  "Used a cached copy of mesh: ~a")
+(simple-logger:define-message :debug :component.mesh.cache.used
+  "Used a cached copy of mesh: ~a.")
 
-(simple-logger:define-message :trace :component.mesh.cache.created
-  "Creating a new cached mesh for: ~a")
+(simple-logger:define-message :debug :component.mesh.cache.created
+  "Creating a new cached mesh for: ~a.")
+
+(simple-logger:define-message :debug :material.check-uniform
+  "Checking material: ~a, using uniform ~s.")
+
+(simple-logger:define-message :debug :material.annotate
+  "Annotate material: ~a, uniform: ~a, sampler: ~a, texture ID: ~a.")
+
+(simple-logger:define-message :debug :material.resolve
+  "Resolving material: ~a.")
+
+(simple-logger:define-message :debug :material.extension.process
+  "Processing material extension: ~a.")

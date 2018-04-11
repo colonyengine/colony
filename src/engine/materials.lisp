@@ -207,8 +207,7 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
 (defun annotate-material (material shader-program core-state)
   (maphash
    (lambda (uniform-name material-value)
-     (format t "Checking material: ~A, uniform: ~A~%"
-             (id material) uniform-name)
+     (simple-logger:emit :material.check-uniform (id material) uniform-name)
 
      (multiple-value-bind (shader-uniform-type-info presentp)
          (gethash uniform-name (shadow::uniforms shader-program))
@@ -233,15 +232,14 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
             (cond
               ((and (stringp (semantic-value material-value))
                     (not (zerop (length (semantic-value material-value)))))
-
                (setf (computed-value material-value)
                      (rcache-lookup :texture core-state
                                     (semantic-value material-value)))
-
-               (format t "annotate-material: material ~A uniform ~A :sampler-2d ~A -> texutre-id: ~A~%"
-                       (id material) uniform-name
-                       (semantic-value material-value)
-                       (computed-value material-value)))
+               (simple-logger:emit :material.annotate
+                                   (id material)
+                                   uniform-name
+                                   (semantic-value material-value)
+                                   (computed-value material-value)))
               (t
                (error "material ~A has a badly formed :sampler-2d value: ~A"
                       (id material) (semantic-value material-value)))))
@@ -266,22 +264,16 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
 ;; TODO: After the partial materials and shaders have been loaded, we need to
 ;; resolve the materials to something we can actually bind to a real shader.
 (defun resolve-all-materials (core-state)
-  (format t "Attempting to resolve materials...~%")
-
   (maphash
    (lambda (material-name material-instance)
-     (format t "Resolving material: ~A~%" material-name)
+     (simple-logger:emit :material.resolve material-name)
      (multiple-value-bind (shader-program present-p)
          (gethash (shader material-instance) (shaders core-state))
-
        (unless present-p
          (error "Material ~S uses an undefined shader: ~S~%"
                 (id material-instance)
                 (shader material-instance)))
-
-       (annotate-material material-instance shader-program core-state)
-
-       ))
+       (annotate-material material-instance shader-program core-state)))
    (materials core-state)))
 
 
@@ -297,10 +289,7 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
              %temp-materials))
       (maphash
        (lambda (material-name gen-material-func)
-
-         (format t "prepare-extension(materials): processing ~A~%"
-                 material-name)
-
+         (simple-logger:emit :material.extension.process material-name)
          (setf (gethash material-name (materials owner))
                ;; Create the partially resolved material.... we will fully
                ;; resolve it later by type checking the uniforms specified

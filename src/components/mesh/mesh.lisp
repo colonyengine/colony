@@ -26,4 +26,4 @@
                    (cached (make-cached-mesh location id new-primitives)))
               (setf (cached-mesh store location id) cached
                     primitives (primitives cached))
-              (simple-logger:emit :component.mesh.cache.created cached)))))))
+              (simple-logger:emit :component.mesh.cache.created location)))))))
