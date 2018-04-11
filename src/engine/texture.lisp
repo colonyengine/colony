@@ -38,10 +38,6 @@
 (defun read-texture (context location)
   (let* ((core-state (core-state context))
          (path (find-resource core-state location))
-         ;; NOTE: :flip-y is nil to support GLTF2 textures. That is not
-         ;; how it is for all formats. So, we'll need to do something
-         ;; intelligent here. This is because OGL textures and GLTF2
-         ;; textures use different origins. :/
          (image (tga:read-tga path))
          (pixel-format (get-pixel-format (tga:image-channels image))))
     (make-instance 'texture
