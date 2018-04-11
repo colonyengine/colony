@@ -12,17 +12,42 @@
 ;; :texture
 
 ;; Held in core-state, the material database for all materials everywhere.
-;; THere is a better API to this than just raw hash tables.
 (defclass materials-table ()
   ((%material-table :reader material-table
                     :initarg :material-table
                     :initform (make-hash-table))))
 
-(defun make-materials-table (&rest init-args)
+;;; Materials-table API
+(defun %make-materials-table (&rest init-args)
   (apply #'make-instance 'materials-table init-args))
 
+(defun %lookup-material (id core-state)
+  "Find a material by its ID in CORE-STATE and return a gethash-like values."
+  (gethash id (material-table (materials core-state))))
+
+(defun %add-material (material core-state)
+  "Add the MATERIAL by its id into CORE-STATE."
+  (setf (gethash (id material) (material-table (materials core-state)))
+        material))
+
+(defun %remove-material (material core-state)
+  "Remove the MATERIAL by its id from CORE-STATE."
+  (remhash (id material) (material-table (materials core-state))))
+
+(defun %map-materials (func core-state)
+  "Map the function FUNC, which expects a material, across all materials in
+CORE-STATE. Return a list of the return values of the FUNC."
+  (let ((results ()))
+    (maphash (lambda (id material)
+               (declare (ignore id))
+               (push (funcall func material) results))
+             (material-table (materials core-state)))
+    (nreverse results)))
 
 
+;;; The value of a uniform or block designation is one of these values.
+;;; It holds the original semantic value and any transformation of it that
+;;; is actually the usable material value.
 (defclass material-value ()
   (;; This is the semantic value for a uniform. In the case of a :sampler-2d
    ;; it is a string to a texture found on disk, etc.
@@ -38,6 +63,7 @@
 
 (defun make-material-value (&rest init-args)
   (apply #'make-instance 'material-value init-args))
+
 
 
 (defclass material ()
@@ -66,9 +92,11 @@
                  :initarg :source-form)))
 
 
-(defun make-material (id shader source-form core-state)
+;; export PUBLIC API
+(defun make-material (id shader core-state &key source-form)
   (make-instance 'material :id id :shader shader :source-form source-form
                            :core-state core-state))
+
 
 (defun bind-material-uniforms (mat)
   (when mat
@@ -82,9 +110,12 @@
 (defun bind-material-buffers (mat)
   nil)
 
+
+;; export PUBLIC API
 (defun bind-material (mat)
   (bind-material-uniforms mat)
   (bind-material-buffers mat))
+
 
 ;; Todo, these modify the semantic-buffer which then gets processed into a
 ;; new computed buffer.
@@ -102,8 +133,6 @@
 
 
 
-
-
 (defun parse-material (shader name body)
   "Return a function which creates a partially complete material instance.
 It is partially complete because it does not yet have the shader binder
@@ -113,7 +142,7 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
         (blocks (cdar (member 'blocks body
                               :key #'first :test #'eql/package-relaxed))))
     `(lambda (core-state)
-       (let ((mat (make-material ,name ,shader ',body core-state)))
+       (let ((mat (make-material ,name ,shader core-state :source-form ',body)))
 
          (setf
           ,@(loop :for (var val) :in uniforms :appending
@@ -245,11 +274,10 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
      (multiple-value-bind (shader-program present-p)
          (gethash (shader material-instance) (shaders core-state))
 
-       ;; TODO: Add in when it actually works.
-       #++(unless presentp
-            (error "Material ~S uses an undefined shader: ~S~%"
-                   (id material-instance)
-                   (shader material-instance)))
+       (unless present-p
+         (error "Material ~S uses an undefined shader: ~S~%"
+                (id material-instance)
+                (shader material-instance)))
 
        (annotate-material material-instance shader-program core-state)
 
