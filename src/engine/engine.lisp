@@ -3,16 +3,12 @@
 (defun prepare-engine (package)
   (let ((*package* (find-package :fl.core))
         (core-state (make-core-state :user-package package)))
-    (shadow:initialize-shaders)
     (prepare-extensions core-state (get-extension-path package))
     (load-default-scene core-state)
     (make-display core-state)
     (prepare-shader-programs core-state)
     (resolve-all-materials core-state)
     core-state))
-
-(defun prepare-shader-programs (core-state)
-  (setf (shaders core-state) (shadow:build-shader-dictionary)))
 
 (defun start-engine ()
   (let ((user-package-name (alexandria:make-keyword (package-name *package*))))
