@@ -38,7 +38,7 @@
   "Determine if the symbol COMPONENT-TYPE represents a real component. If so, return the
 package-qualified symbol of the actual type that is acceptable to pass to MAKE-INSTANCE. This
 qualification algorithm follows the search order defined in the graph category
-COMPONENT-PACKAGE-SEARCH-ORDER."
+COMPONENT-PACKAGE-ORDER."
   (let ((search-table (component-search-table (tables core-state))))
     (multiple-value-bind (pkg-sym presentp) (gethash component-type search-table)
       (when presentp
@@ -48,7 +48,7 @@ COMPONENT-PACKAGE-SEARCH-ORDER."
       (if (or (null component-type/class)
               (not (subtypep (class-name component-type/class)
                              (class-name base-component-type/class))))
-          (let* ((graph (gethash 'component-package-search-order (analyzed-graphs core-state)))
+          (let* ((graph (gethash 'component-package-order (analyzed-graphs core-state)))
                  (annotation (annotation graph)))
             (dolist (potential-package (toposort graph))
               (let ((potential-package-name (second potential-package)))

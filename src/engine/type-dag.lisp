@@ -115,14 +115,14 @@ instance as value.")))
 (defmethod make-graph-annotation ((category (eql 'component-dependency)) &rest init-args)
   (apply #'make-instance 'graph-annotation/component-dependency init-args))
 
-;; For category COMPONENT-PACKAGE-SEARCH-ORDER
-(defclass graph-annotation/component-package-search-order ()
+;; For category COMPONENT-PACKAGE-ORDER
+(defclass graph-annotation/component-package-order ()
   ((%pattern-matched-packages :accessor pattern-matched-packages
                               :initarg :pattern-matched-packages
                               :initform (make-hash-table))))
 
-(defmethod make-graph-annotation ((category (eql 'component-package-search-order)) &rest init-args)
-  (apply #'make-instance 'graph-annotation/component-package-search-order
+(defmethod make-graph-annotation ((category (eql 'component-package-order)) &rest init-args)
+  (apply #'make-instance 'graph-annotation/component-package-order
          init-args))
 
 (defun graph-roots (graph)
@@ -171,7 +171,7 @@ list in no particular order."
           (t
            `(component-type ,element)))))
 
-(defmethod canonicalize-dependency-form ((category (eql 'component-package-search-order))
+(defmethod canonicalize-dependency-form ((category (eql 'component-package-order))
                                          dependency-form)
   (loop :for element :in dependency-form
         :collect
@@ -477,7 +477,7 @@ holding real references to the named subforms."
            (setf (gethash (second elem-v) (referenced-types annotation)) t)))))
     (setf (annotation graph) annotation)))
 
-(defmethod generate-graph-annotation ((category (eql 'component-package-search-order)) graph)
+(defmethod generate-graph-annotation ((category (eql 'component-package-order)) graph)
   (let* ((clg (graph graph))
          (contains-cycles-p
            (cl-graph:find-vertex-if
