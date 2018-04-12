@@ -281,7 +281,7 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
 
 
 (defmethod extension-file-type ((extension-type (eql 'materials)))
-  "materials")
+  "mat")
 
 (defmethod prepare-extension ((extension-type (eql 'materials)) owner path)
   (let ((%temp-materials (make-hash-table)))
