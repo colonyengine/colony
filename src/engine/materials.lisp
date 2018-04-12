@@ -17,7 +17,7 @@
                     :initarg :material-table
                     :initform (make-hash-table))))
 
-;;; Materials-table API
+;;; Internal Materials-table API
 (defun %make-materials-table (&rest init-args)
   (apply #'make-instance 'materials-table init-args))
 
@@ -92,8 +92,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
                  :initarg :source-form)))
 
 
-;; export PUBLIC API
-(defun make-material (id shader core-state &key source-form)
+(defun %make-material (id shader core-state source-form)
   (make-instance 'material :id id :shader shader :source-form source-form
                            :core-state core-state))
 
@@ -116,6 +115,9 @@ CORE-STATE. Return a list of the return values of the FUNC."
   (bind-material-uniforms mat)
   (bind-material-buffers mat))
 
+;; export PUBLIC API
+(defun lookup-material (id context)
+  (%lookup-material id (core-state context)))
 
 ;; Todo, these modify the semantic-buffer which then gets processed into a
 ;; new computed buffer.
@@ -142,7 +144,7 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
         (blocks (cdar (member 'blocks body
                               :key #'first :test #'eql/package-relaxed))))
     `(lambda (core-state)
-       (let ((mat (make-material ,name ,shader core-state :source-form ',body)))
+       (let ((mat (%make-material ,name ,shader core-state ',body)))
 
          (setf
           ,@(loop :for (var val) :in uniforms :appending
@@ -264,9 +266,9 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
 ;; TODO: After the partial materials and shaders have been loaded, we need to
 ;; resolve the materials to something we can actually bind to a real shader.
 (defun resolve-all-materials (core-state)
-  (maphash
-   (lambda (material-name material-instance)
-     (simple-logger:emit :material.resolve material-name)
+  (%map-materials
+   (lambda (material-instance)
+     (simple-logger:emit :material.resolve (id material-instance))
      (multiple-value-bind (shader-program present-p)
          (gethash (shader material-instance) (shaders core-state))
        (unless present-p
@@ -274,7 +276,7 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
                 (id material-instance)
                 (shader material-instance)))
        (annotate-material material-instance shader-program core-state)))
-   (materials core-state)))
+   core-state))
 
 
 
@@ -287,17 +289,16 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
     (flet ((%prepare ()
              (load-extensions extension-type path)
              %temp-materials))
+      ;; Transfer all parsed, but unresolved, materials in the %temp-materials
+      ;; to the core-state's materials table.
       (maphash
        (lambda (material-name gen-material-func)
          (simple-logger:emit :material.extension.process material-name)
-         (setf (gethash material-name (materials owner))
-               ;; Create the partially resolved material.... we will fully
-               ;; resolve it later by type checking the uniforms specified
-               ;; and creating the binder annotations for the values.
-               (funcall gen-material-func owner))
-
-         )
-
+         ;; But first, create the partially resolved material.... we will fully
+         ;; resolve it later by type checking the uniforms specified and
+         ;; creating the binder annotations for the values. This has to be done
+         ;; after the shader programs are built.
+         (%add-material (funcall gen-material-func owner) owner))
        (%prepare)))))
 
 (defmacro define-material (name (&body options) &body body)
