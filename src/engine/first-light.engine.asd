@@ -13,7 +13,6 @@
                #:sdl2
                #:sdl2kit
                #:cl-opengl
-               #:glkit
                #:shadow
                #:gamebox-math.vari
                #:gamebox-frame-manager
