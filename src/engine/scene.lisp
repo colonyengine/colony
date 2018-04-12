@@ -112,9 +112,10 @@
   (funcall (get-scene core-state name) core-state))
 
 (defun load-default-scene (core-state)
-  (alexandria:if-let ((default (cfg (context core-state) :default-scene)))
+  (alexandria:if-let ((default (or *override-scene*
+                                   (cfg (context core-state) :default-scene))))
     (load-scene core-state default)
-    (error "No default scene specified in settings.cfg.")))
+    (error "No default scene specified.")))
 
 (defmethod extension-file-type ((extension-type (eql 'scene)))
   "scene")

@@ -1,5 +1,7 @@
 (in-package :fl.core)
 
+(defvar *override-scene* nil)
+
 (defun prepare-engine (package)
   (let ((*package* (find-package :fl.core))
         (core-state (make-core-state :user-package package)))
@@ -10,12 +12,14 @@
     (resolve-all-materials core-state)
     core-state))
 
-(defun start-engine ()
+(defun start-engine (&optional override-scene)
   (let ((user-package-name (alexandria:make-keyword (package-name *package*))))
     (when (eq user-package-name :fl.core)
       (error "Cannot start the engine from the :FL.CORE package."))
     (kit.sdl2:init)
-    (prog1 (sdl2:in-main-thread () (prepare-engine user-package-name))
+    (prog1 (sdl2:in-main-thread ()
+             (let ((*override-scene* override-scene))
+               (prepare-engine user-package-name)))
       (kit.sdl2:start))))
 
 #+sbcl
