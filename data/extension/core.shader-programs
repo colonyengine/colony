@@ -2,64 +2,30 @@
 
 (in-package :fl.shaders)
 
-(make-shader-program unlit-color
-    (:version 430 :primitive :triangles)
+(make-shader-program unlit-color (:version 430)
   (:vertex () (vert/default :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
   (:fragment () (frag/unlit-color :vec3 :vec4 :vec4 :vec2 :vec2)))
 
-(make-shader-program unlit-color-decal
-    (:version 430 :primitive :triangles)
+(make-shader-program unlit-color-decal (:version 430)
   (:vertex () (vert/default :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
   (:fragment () (frag/unlit-color-decal :vec3 :vec4 :vec4 :vec2 :vec2)))
 
-(make-shader-program unlit-texture
-    (:version 430 :primitive :triangles)
+(make-shader-program unlit-texture (:version 430)
   (:vertex () (vert/default :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
   (:fragment () (frag/unlit-texture :vec3 :vec4 :vec4 :vec2 :vec2)))
 
-(make-shader-program unlit-texture-decal
-    (:version 430 :primitive :triangles)
+(make-shader-program unlit-texture-decal (:version 430)
   (:vertex () (vert/default :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
   (:fragment () (frag/unlit-texture-decal :vec3 :vec4 :vec4 :vec2 :vec2)))
 
-
-
-;; The PBR shader for the Damaged Helmet
-
-(make-shader-program pbr-damaged-helmet
-    (:version 430 :primitive :triangles)
-  (:vertex () (vert/pbr-damaged-helmet
-               :vec3 :vec3 :vec3 :vec4 :vec2 :vec2 :vec4 :vec4))
-  (:fragment () (frag/pbr-damaged-helmet
-                 :vec3 :vec2 :vec3)))
-
+(make-shader-program pbr-damaged-helmet (:version 430)
+  (:vertex () (vert/pbr-damaged-helmet :vec3 :vec3 :vec3 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:fragment () (frag/pbr-damaged-helmet :vec3 :vec2 :vec3)))
 
 (defun doit-ssbo (&optional create)
   (sdl2:in-main-thread ()
-
-    ;; Testing binding & making & filling in the SSBO data.
-
-    ;; This must be done FIRST, to provide a binding id for the interface block.
-
-    ;; NOTE: In shadow, we need this done before we can create the ssbo on the
-    ;; GPU. This is here because varjo is for all ogl versions, and only in 4.2
-    ;; or later could you specify the binding value in the layour in the shader.
-    ;; so, we must manually bind the ssbo to the layout number we want first.
     (bind-shader-storage-block 'pbr-damaged-helmet :junk 1)
-
-    ;; Now, we can create a buffer on the GPU itself and bind it to that binding
-    ;; id.
     (when create
       (create-buffer :ssbo :junk-ssbo-snazzy-name 1))
-
-    ;; And write to it, which puts it onto the GPU.
-
-    ;; NOTE: Here even if I am passing a single scalar type, it must be in
-    ;; a sequence.
     (write-buffer-path :junk-ssbo-snazzy-name :valid (vector 1))
-
-    (write-buffer-path
-     ;; NOTE: we're passing one entity to the ssbo of a :vec3, hence we wrap it
-     ;; in a vector. Otherwise, just the v3:make form alone would represent a
-     ;; (:float 3) array type.
-     :junk-ssbo-snazzy-name :scale (vector (v3:make 2.0 0.5 2.0)))))
+    (write-buffer-path :junk-ssbo-snazzy-name :scale (vector (v3:make 2.0 0.5 2.0)))))
