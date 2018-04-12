@@ -263,9 +263,9 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
 
   )
 
-;; TODO: After the partial materials and shaders have been loaded, we need to
-;; resolve the materials to something we can actually bind to a real shader.
 (defun resolve-all-materials (core-state)
+  "Convert all semantic-values to computed-values in the materials. This
+must be executed after all the shader programs have been comipiled."
   (%map-materials
    (lambda (material-instance)
      (simple-logger:emit :material.resolve (id material-instance))
@@ -296,8 +296,8 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
          (simple-logger:emit :material.extension.process material-name)
          ;; But first, create the partially resolved material.... we will fully
          ;; resolve it later by type checking the uniforms specified and
-         ;; creating the binder annotations for the values. This has to be done
-         ;; after the shader programs are built.
+         ;; creating the binder annotations for the values. Resolving has to be
+         ;; done after the shader programs are built.
          (%add-material (funcall gen-material-func owner) owner))
        (%prepare)))))
 
