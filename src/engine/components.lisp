@@ -26,9 +26,6 @@
      slots)
     shared-keys))
 
-(defun %generate-component-slot-names (slots)
-  (mapcar #'first slots))
-
 (defun %generate-component-slot-forms (slots)
   (loop :for slot :in slots
         :collect
@@ -59,7 +56,7 @@
   (let ((entry-symbol (alexandria:symbolicate name '-shared-storage-entry))
         (shared-keys (%generate-component-shared-keys slots)))
     (alexandria:with-gensyms (store-var entry-var)
-      `(progn
+      `(eval-when (:compile-toplevel :load-toplevel :execute)
          (defclass ,name (,@(append (unless super-classes '(component)) super-classes))
            ,(%generate-component-slot-forms slots))
          (defclass ,(alexandria:symbolicate name '-shared-storage) ()

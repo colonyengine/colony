@@ -14,7 +14,7 @@
     (unless location
       (error "A mesh component must have a location set."))
     (with-shared-storage (mesh
-                          (store (shared-storage context component))
+                          store
                           cached-entry
                           (values location id)
                           (values location id (load-mesh context location id)))
