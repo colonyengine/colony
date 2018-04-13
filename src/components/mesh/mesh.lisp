@@ -9,6 +9,10 @@
   (let ((core-state (core-state context)))
     (fl.assets:load-mesh (find-resource core-state location) id)))
 
+(defmethod fl.comp.mesh-renderer:draw-mesh ((mesh mesh))
+  (dolist (primitive (primitives mesh))
+    (funcall (fl.assets:draw-func primitive))))
+
 (defmethod initialize-component ((component mesh) (context context))
   (with-accessors ((location location) (id id) (primitives primitives)) component
     (unless location

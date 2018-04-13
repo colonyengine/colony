@@ -71,7 +71,8 @@
             #:fl.comp.transform
             #:fl.comp.camera
             #:fl.comp.mesh)
-  (:export-only #:mesh-renderer))
+  (:export-only #:mesh-renderer
+                #:draw-mesh))
 
 (defpackage+ #:fl.comp.tags
   (:use #:cl)
