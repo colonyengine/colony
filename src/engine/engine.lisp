@@ -1,7 +1,5 @@
 (in-package :fl.core)
 
-(defvar *override-scene* nil)
-
 (defun prepare-engine (package)
   (let ((*package* (find-package :fl.core))
         (core-state (make-core-state :user-package package)))

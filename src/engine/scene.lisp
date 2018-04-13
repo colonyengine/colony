@@ -1,5 +1,7 @@
 (in-package :fl.core)
 
+(defvar *override-scene* nil)
+
 (defun %type-check-actor (actor actors-list)
   (unless (char= (char (symbol-name actor) 0) #\@)
     (error "Actor names must begin with '@': ~a" actor))
