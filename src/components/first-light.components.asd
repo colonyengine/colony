@@ -10,6 +10,7 @@
   :serial t
   :components
   ((:file "package")
+   (:file "common")
    (:module "transform"
     :components
     ((:file "transform")
@@ -25,12 +26,10 @@
     ((:file "tracking-camera")))
    (:module "mesh"
     :components
-    ((:file "mesh")
-     (:file "shared-storage")))
+    ((:file "mesh")))
    (:module "mesh-renderer"
     :components
-    ((:file "mesh-renderer")
-     (:file "shared-storage")))
+    ((:file "mesh-renderer")))
    (:module "tags"
     :components
     ((:file "tags")))))
