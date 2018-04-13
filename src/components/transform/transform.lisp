@@ -1,15 +1,13 @@
 (in-package :fl.comp.transform)
 
 (define-component transform ()
-  (parent nil)
-  (children nil)
-  (translation (%make-transform-state 'transform-state-vector))
-  (rotation (%make-transform-state 'transform-state-quaternion
-                                   :incremental (v3:zero)))
-  (scale (%make-transform-state 'transform-state-vector
-                                :current (v3:make 1.0 1.0 1.0)))
-  (local (m4:id))
-  (model (m4:id)))
+  (parent :default nil)
+  (children :default nil)
+  (translation :default (%make-transform-state 'transform-state-vector))
+  (rotation :default (%make-transform-state 'transform-state-quaternion :incremental (v3:zero)))
+  (scale :default (%make-transform-state 'transform-state-vector :current (v3:make 1.0 1.0 1.0)))
+  (local :default (m4:id))
+  (model :default (m4:id)))
 
 (defun add-child (parent child)
   (push child (children parent))

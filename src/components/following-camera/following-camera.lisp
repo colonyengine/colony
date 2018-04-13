@@ -1,10 +1,10 @@
 (in-package :fl.comp.following-camera)
 
 (define-component following-camera ()
-  (slave-camera nil)
-  (target-actor nil)
-  (target-transform nil)
-  (offset (v3:zero)))
+  (slave-camera :default nil)
+  (target-actor :default nil)
+  (target-transform :default nil)
+  (offset :default (v3:zero)))
 
 (defmethod initialize-component ((component following-camera) (context context))
   (with-accessors ((slave slave-camera) (actor actor) (target target-actor)) component

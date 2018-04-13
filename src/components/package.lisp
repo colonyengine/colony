@@ -1,6 +1,6 @@
 (in-package :defpackage+-1)
 
-(defpackage+ #:fl.comp-common
+(defpackage+ #:fl.comp
   (:use #:cl)
   (:inherit #:fl.core)
   (:export-only #:define-shared-storage
@@ -9,7 +9,7 @@
 (defpackage+ #:fl.comp.transform
   (:use #:cl)
   (:inherit #:fl.core
-            #:fl.comp-common)
+            #:fl.comp)
   (:local-nicknames (#:v3 #:box.math.vec3)
                     (#:m4 #:box.math.mat4)
                     (#:q #:box.math.quat))
@@ -23,7 +23,7 @@
 (defpackage+ #:fl.comp.camera
   (:use #:cl)
   (:inherit #:fl.core
-            #:fl.comp-common
+            #:fl.comp
             #:fl.comp.transform)
   (:local-nicknames (#:v3 #:box.math.vec3)
                     (#:m4 #:box.math.mat4)
@@ -41,7 +41,7 @@
                     (#:m4 #:box.math.mat4)
                     (#:q #:box.math.quat))
   (:inherit #:fl.core
-            #:fl.comp-common
+            #:fl.comp
             #:fl.comp.transform
             #:fl.comp.camera)
   (:export-only #:following-camera))
@@ -52,7 +52,7 @@
                     (#:m4 #:box.math.mat4)
                     (#:q #:box.math.quat))
   (:inherit #:fl.core
-            #:fl.comp-common
+            #:fl.comp
             #:fl.comp.transform
             #:fl.comp.camera)
   (:export-only #:tracking-camera))
@@ -60,14 +60,14 @@
 (defpackage+ #:fl.comp.mesh
   (:use #:cl)
   (:inherit #:fl.core
-            #:fl.comp-common)
+            #:fl.comp)
   (:export-only #:mesh
                 #:primitives))
 
 (defpackage+ #:fl.comp.mesh-renderer
   (:use #:cl)
   (:inherit #:fl.core
-            #:fl.comp-common
+            #:fl.comp
             #:fl.comp.transform
             #:fl.comp.camera
             #:fl.comp.mesh)
@@ -76,5 +76,5 @@
 (defpackage+ #:fl.comp.tags
   (:use #:cl)
   (:inherit #:fl.core
-            #:fl.comp-common)
+            #:fl.comp)
   (:export-only #:tags))

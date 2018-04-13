@@ -16,19 +16,62 @@
                        :initarg :initializer-thunk
                        :initform nil)))
 
+(defun %generate-component-shared-keys (slots)
+  (let ((shared-keys))
+    (mapcar
+     (lambda (x)
+       (destructuring-bind (slot-name &key shared &allow-other-keys) x
+         (when shared
+           (push slot-name shared-keys))))
+     slots)
+    shared-keys))
+
+(defun %generate-component-slot-names (slots)
+  (mapcar #'first slots))
+
+(defun %generate-component-slot-forms (slots)
+  (loop :for slot :in slots
+        :collect
+        (destructuring-bind (slot-name &key default type &allow-other-keys) slot
+          (append
+           `(,(alexandria:symbolicate '% slot-name)
+             :accessor ,slot-name
+             :initarg ,(alexandria:make-keyword slot-name)
+             :initform ,default)
+           (when type
+             `(:type ,type))))))
+
+(defun %generate-shared-storage-slot-forms (slots)
+  (loop :for slot :in slots
+        :collect
+        (destructuring-bind (slot-name &key &allow-other-keys) slot
+          `(,(alexandria:symbolicate '% slot-name)
+            :reader ,slot-name
+            :initarg ,(alexandria:make-keyword slot-name)))))
+
+(defun %generate-shared-storage-initargs (slots)
+  (loop :for slot :in slots
+        :append
+        (destructuring-bind (slot-name &key &allow-other-keys) slot
+          (list (alexandria:make-keyword slot-name) slot-name))))
+
 (defmacro define-component (name super-classes &body slots)
-  `(progn
-     (defclass ,name (,@(append (unless super-classes '(component)) super-classes))
-       ,(loop :for slot :in slots
-              :collect
-              (destructuring-bind (slot-name slot-value &key type) slot
-                (append
-                 `(,(alexandria:symbolicate '% slot-name)
-                   :accessor ,slot-name
-                   :initarg ,(alexandria:make-keyword slot-name)
-                   :initform ,slot-value)
-                 (when type
-                   `(:type ,type))))))))
+  (let ((entry-symbol (alexandria:symbolicate name '-shared-storage-entry))
+        (shared-keys (%generate-component-shared-keys slots)))
+    (alexandria:with-gensyms (store-var entry-var)
+      `(progn
+         (defclass ,name (,@(append (unless super-classes '(component)) super-classes))
+           ,(%generate-component-slot-forms slots))
+         (defclass ,(alexandria:symbolicate name '-shared-storage) ()
+           ((%cache :accessor cache :initform (make-hash-table :test #'equalp))))
+         (defclass ,entry-symbol ()
+           ,(%generate-shared-storage-slot-forms slots))
+         (defun ,(alexandria:symbolicate 'make- name '-shared-storage-entry) ,(mapcar #'first slots)
+           (make-instance ',entry-symbol ,@(%generate-shared-storage-initargs slots)))
+         (defun ,entry-symbol (,store-var ,@shared-keys)
+           (gethash (list ,@shared-keys) (cache ,store-var)))
+         (defun (setf ,entry-symbol) (,entry-var ,store-var ,@shared-keys)
+           (setf (gethash (list ,@shared-keys) (cache ,store-var)) ,entry-var))))))
 
 (defmethod make-component (component-type context &rest initargs)
   (let ((qualified-type (qualify-component (core-state context) component-type)))
@@ -48,12 +91,12 @@ COMPONENT-PACKAGE-ORDER."
       (if (or (null component-type/class)
               (not (subtypep (class-name component-type/class)
                              (class-name base-component-type/class))))
-          (let* ((graph (gethash 'component-package-order (analyzed-graphs core-state)))
-                 (annotation (annotation graph)))
+          (let ((graph (gethash 'component-package-order (analyzed-graphs core-state))))
             (dolist (potential-package (toposort graph))
               (let ((potential-package-name (second potential-package)))
                 (dolist (pkg-to-search
-                         (gethash potential-package-name (pattern-matched-packages annotation)))
+                         (gethash potential-package-name
+                                  (pattern-matched-packages (annotation graph))))
                   (multiple-value-bind (symbol kind)
                       (find-symbol (symbol-name component-type) pkg-to-search)
                     (when (and (eq kind :external)

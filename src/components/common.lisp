@@ -1,71 +1,4 @@
-(in-package #:fl.comp-common)
-
-;;;; Utilities used for components.
-
-;; Used for writing components.
-(defmacro define-shared-storage (component-name
-                                 (&rest slots)
-                                 (&rest key-vars)
-                                 &optional (package t))
-  "Define a Shared Storage mechanism for COMPONENT-NAME. Useful for components.
-Creates class <COMPONENT-NAME>-SHARED-STORAGE.
-Creates class <COMPONENT-NAME>-SHARED-STORAGE-ENTRY.
-  The SLOTS of this class are specified as slots of in this class. They will
-  have :reader methods on them only.
-Creates maker function MAKE-<COMPONENT-NAME>-SHARED-STORAGE-ENTRY.
-  This function requires the initial value of ALL SLOTS to be passed to it.
-Creates storage lookup function <COMPONENT-NAME>-SHARED-STORAGE-ENTRY.
-  TODO: Describe this function's arguments better.
-Creates storage setter function (setf <COMPONENT-NAME>-SHARED-STORAGE-ENTRY).
-  TODO: Describe this function's arguments better.
-
-  You can optionally supply a PACKAGE into which the generated symbol will be
-  interned. By default it is the reasd package, but we recommend specifying
-  the actual component package as a keyword in which this form is used."
-  (let* ((shared-storage-class-symbol
-           (alexandria:format-symbol package "~A-SHARED-STORAGE" component-name))
-         (shared-storage-entry-class-symbol
-           (alexandria:format-symbol package "~A-SHARED-STORAGE-ENTRY" component-name))
-         (entry-slots
-           (mapcar (lambda (slot)
-                     `(,(alexandria:format-symbol package "%~A" slot)
-                       :reader ,slot
-                       :initarg ,(intern (symbol-name slot) :keyword)))
-                   slots))
-         (make-instance-slots-assignments
-           (mapcan (lambda (slot)
-                     `(,(intern (symbol-name slot) :keyword) ,slot))
-                   slots))
-         (make-function-symbol
-           (alexandria:format-symbol package "MAKE-~A-SHARED-STORAGE-ENTRY"
-                                     component-name))
-         (cache-slot-hidden
-           (alexandria:format-symbol package "%CACHE"))
-         (cache-slot
-           (alexandria:format-symbol package "CACHE"))
-         (lookup-function-symbol shared-storage-entry-class-symbol)
-         (store-var (gensym "STORE"))
-         (entry-var (gensym "ENTRY")))
-
-    `(progn
-       (defclass ,shared-storage-class-symbol ()
-         ((,cache-slot-hidden :accessor ,cache-slot
-                              :initform (make-hash-table :test #'equalp))))
-
-       (defclass ,shared-storage-entry-class-symbol ()
-         ,entry-slots)
-
-       (defun ,make-function-symbol ,slots
-         (make-instance ',shared-storage-entry-class-symbol
-                        ,@make-instance-slots-assignments))
-
-       (defun ,lookup-function-symbol (,store-var ,@key-vars)
-         (gethash (list ,@key-vars) (,cache-slot ,store-var)))
-
-       (defun (setf ,lookup-function-symbol) (,entry-var ,store-var ,@key-vars)
-         (setf (gethash (list ,@key-vars) (,cache-slot ,store-var))
-               ,entry-var)))))
-
+(in-package #:fl.comp)
 
 (defmacro with-shared-storage
     ;; the symbol name of the component for which we are use the shared storage
@@ -84,7 +17,6 @@ Creates storage setter function (setf <COMPONENT-NAME>-SHARED-STORAGE-ENTRY).
       ;; to insert into the cached entry.
       generate-cache-values-form
       &optional (package t))
-
      ;; The body form, store and cached-entry-var is valid here and the slots
      ;; filled in.  User can use it for further initialization.
      &body body)
@@ -110,12 +42,12 @@ COMPONENT-NAME.
   returns, in the order specified in the CRITICAL section below, the keys used
   to look up the cached entry in the shared storage.
 
-  GENERATE-CACHE-VALUES-FORM is a single form that conputes a VALUES form that
+  GENERATE-CACHE-VALUES-FORM is a single form that computes a VALUES form that
   are the values of what should be put into the cache entry. The order must
   match the CRITICAL section below.
 
   You can optionally supply a PACKAGE into which the generated symbol will be
-  interned. By default it is the reasd package, but we recommend specifying
+  interned. By default it is the read package, but we recommend specifying
   the actual component package as a keyword in which this form is used.
 
   CRITICAL SECTION
@@ -158,7 +90,6 @@ COMPONENT-NAME.
                ;; First lookup to see if I already have a cache entry.
                (multiple-value-bind (,cached-entry-var ,presentp)
                    (apply (function ,lookup-function) ,store-var ,key-args)
-
                  ;; if it isn't present, then create the cached entry and store
                  ;; it in the cache and fixup the cached-entry-var to hold the
                  ;; right value.
@@ -170,16 +101,13 @@ COMPONENT-NAME.
                                (lambda (&rest args)
                                  (apply (function ,make-function) args))
                              ,generate-cache-values-form)))
-
                      ;; Now insert the cached entry.  NOTE: We call it exactly
                      ;; as the setf function lambda list indicates!
                      (apply (function (setf ,lookup-function))
                             ,new-entry ,store-var ,key-args)
 
                      (setf ,cached-entry-var ,new-entry)))
-
                  ;; Then run the BODY with the bound ,cached-entry-var to
                  ;; comething real.
                  ,@body))
-
            ,key-vars-values-form)))))

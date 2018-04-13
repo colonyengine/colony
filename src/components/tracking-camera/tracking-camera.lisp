@@ -1,9 +1,9 @@
 (in-package :fl.comp.tracking-camera)
 
 (define-component tracking-camera ()
-  (slave-camera nil)
-  (target-actor nil)
-  (target-transform nil))
+  (slave-camera :default nil)
+  (target-actor :default nil)
+  (target-transform :default nil))
 
 (defmethod initialize-component ((component tracking-camera) (context context))
   (with-accessors ((slave slave-camera) (actor actor) (target target-actor)) component
