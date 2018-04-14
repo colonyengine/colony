@@ -114,9 +114,9 @@
         (when (string= attr "POSITION")
           (setf %count (get-property "count" accessor)
                 %draw-func
-                (lambda ()
+                (lambda (&key (instance-count 1))
                   (gl:bind-vertex-array %vao)
-                  (gl:draw-arrays %mode 0 %count))))))))
+                  (gl:draw-arrays-instanced %mode 0 %count instance-count))))))))
 
 (defun make-index-buffer (primitive data)
   (alexandria:when-let* ((indices (get-property "indices" data))
@@ -126,10 +126,10 @@
             %type (get-component-type accessor)
             %index-buffer (make-gpu-buffer :element-array-buffer accessor)
             %draw-func
-            (lambda ()
+            (lambda (&key (instance-count 1))
               (gl:bind-vertex-array %vao)
               (gl:bind-buffer :element-array-buffer %index-buffer)
-              (%gl:draw-elements %mode %count %type 0))))))
+              (%gl:draw-elements-instanced %mode %count %type 0 instance-count))))))
 
 (defun make-primitive (data)
   (let ((primitive (make-instance 'primitive
