@@ -23,7 +23,7 @@
 (defmethod render-component ((component mesh-renderer) (context context))
   (with-accessors ((transform transform) (mesh mesh) (material material)) component
     (with-accessors ((draw-mesh draw)) mesh
-      (alexandria:when-let* ((camera (active-camera context)))
+      (alexandria:when-let ((camera (active-camera context)))
         (shadow:with-shader-program (shader material)
           (shadow:uniform-mat4 :model (model transform))
           (shadow:uniform-mat4 :view (view camera))

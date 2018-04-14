@@ -74,6 +74,12 @@
   (let ((qualified-type (qualify-component (core-state context) component-type)))
     (apply #'make-instance qualified-type :type qualified-type initargs)))
 
+(defun %get-component-precedence-list (component-type)
+  (loop :for class :in (c2mop:class-precedence-list (find-class component-type))
+        :for name = (class-name class)
+        :until (eq name 'component)
+        :collect name))
+
 (defun qualify-component (core-state component-type)
   "Determine if the symbol COMPONENT-TYPE represents a real component. If so, return the
 package-qualified symbol of the actual type that is acceptable to pass to MAKE-INSTANCE. This

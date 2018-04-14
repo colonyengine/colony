@@ -6,7 +6,8 @@
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :version "0.1.0"
-  :depends-on (#:cl-ppcre
+  :depends-on (#:closer-mop
+               #:cl-ppcre
                #:split-sequence
                #:simple-logger
                #:cl-graph

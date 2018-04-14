@@ -19,8 +19,7 @@ supplied in real seconds, how long the thing has yet to live."))
            (process-files (dir)
              (map nil #'maybe-affect (uiop/filesystem:directory-files dir))))
     (uiop/filesystem:collect-sub*directories
-     (uiop/pathname:ensure-directory-pathname path)
-     t recursivep #'process-files)))
+     (uiop/pathname:ensure-directory-pathname path) t recursivep #'process-files)))
 
 (defun type-table (key type-table)
   (gethash key type-table))
