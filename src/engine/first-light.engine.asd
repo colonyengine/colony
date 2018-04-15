@@ -35,6 +35,7 @@
    (:file "scene")
    (:file "display")
    (:file "input")
+   (:file "image")
    (:file "texture")
    (:file "materials")
    (:file "shaders")

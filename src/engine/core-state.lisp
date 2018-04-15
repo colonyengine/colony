@@ -4,7 +4,7 @@
   ((%user-package :reader user-package
                   :initarg :user-package)
    (%rcache :reader rcache
-            :initform (make-hash-table :test #'equal))
+            :initform (make-hash-table :test #'equalp))
    (%display :reader display)
    (%scene-tree :reader scene-tree)
    (%cameras :accessor cameras
