@@ -1,72 +1,68 @@
 (in-package :fl.core)
 
+;; this class is currently unused, but it should be!
 (defclass texture ()
-  ((%width :reader width
-           :initarg :width)
-   (%height :reader height
-            :initarg :height)
-   (%pixel-format :reader pixel-format
-                  :initarg :pixel-format)
-   (%pixel-type :reader pixel-type
-                :initarg :pixel-type)
-   (%internal-format :reader internal-format
-                     :initarg :internal-format)
-   (%data :reader data
-          :initarg :data)
+  (;; The texture id.
+   (%texid :reader texid
+           :initarg :texid)
+
+   (%image :reader image
+           :initarg :image)
+
    ;; stuff for material dsl
    (%name :reader name
           :initarg :name)
    (%source :reader source
             :initarg :source)
    (%sampler :accessor sampler
-             :initarg :sampler)
-   (%location :reader location
-              :initarg :location)))
+             :initarg :sampler)))
 
-(defun get-pixel-format (channels)
-  (ecase channels
-    (1 :red)
-    (3 :bgr)
-    (4 :bgra)))
+(defclass texture-descriptor ()
+  ((%name :reader name
+          :initarg :name)
+   (%texture-type :reader texture-type
+                  :initarg :texture-type)
+   (%default-profile :reader default-profile
+                     :initarg :default-profile)
+   (%parameters :reader parameters
+                :initarg :parameters
+                :initform (make-hash-table))))
 
-(defun get-internal-format (pixel-format)
-  (ecase pixel-format
-    (:red :r8)
-    (:bgr :rgb8)
-    (:bgra :rgba8)))
+(defun make-texture-descriptor (&rest init-args)
+  (apply #'make-instance 'texture-descriptor init-args))
 
-(defun read-texture (context location)
-  (let* ((core-state (core-state context))
-         (path (find-resource core-state location))
-         (image (tga:read-tga path))
-         (pixel-format (get-pixel-format (tga:image-channels image))))
-    (make-instance 'texture
-                   :width (tga:image-width image)
-                   :height (tga:image-height image)
-                   :pixel-format pixel-format
-                   :internal-format (get-internal-format pixel-format)
-                   :pixel-type :unsigned-byte
-                   :location location
-                   :data (tga:image-data image))))
 
+
+
+
+;; TODO: Convert to taking a texture-decriptor instead of a location.
+;; TODO: Make this return a texture object for the right kind of texture.
+;; The texture object should get cached properly and ensure that is true.
 (defun load-texture (context location &key
                                         (filter-min :linear-mipmap-linear)
                                         (filter-mag :linear)
                                         (wrap :repeat)
                                         (wrap-s wrap)
                                         (wrap-t wrap))
-  (with-slots (%width %height %internal-format %pixel-format %pixel-type %data)
-      (read-texture context location)
-    (let ((id (gl:gen-texture)))
-      (gl:bind-texture :texture-2d id)
-      (gl:tex-image-2d :texture-2d 0 %internal-format %width %height 0 %pixel-format %pixel-type
-                       %data)
-      (gl:generate-mipmap :texture-2d)
-      (gl:tex-parameter :texture-2d :texture-wrap-s wrap-s)
-      (gl:tex-parameter :texture-2d :texture-wrap-t wrap-t)
-      (gl:tex-parameter :texture-2d :texture-min-filter filter-min)
-      (gl:tex-parameter :texture-2d :texture-mag-filter filter-mag)
-      id)))
+  (let ((image (read-image context location)))
+
+
+    (with-slots (%width %height %internal-format %pixel-format
+                 %pixel-type %data)
+        image
+
+      (let ((id (gl:gen-texture)))
+        (gl:bind-texture :texture-2d id)
+        (gl:tex-image-2d :texture-2d 0
+                         %internal-format %width %height 0 %pixel-format
+                         %pixel-type %data)
+        (gl:generate-mipmap :texture-2d)
+        (gl:tex-parameter :texture-2d :texture-wrap-s wrap-s)
+        (gl:tex-parameter :texture-2d :texture-wrap-t wrap-t)
+        (gl:tex-parameter :texture-2d :texture-min-filter filter-min)
+        (gl:tex-parameter :texture-2d :texture-mag-filter filter-mag)
+        (free-storage image)
+        id))))
 
 
 ;; Interim use of the RCACHE API.
@@ -82,22 +78,34 @@
 
 
 
-;; TODO Not done.
-;; experimental texture descriptor work.
 (defmacro deftexdesc (&body body)
   ;; TODO: Note make policy optional, set to :default-policy if not specified.
-  (multiple-value-bind (name target policy true-body)
+  (multiple-value-bind (name textype profile true-body)
       (if (symbolp (first body))
           ;; maybe we can name the texture descriptor....
-          (destructuring-bind (name (target policy) . true-body) body
-            (values name target policy true-body))
+          (destructuring-bind (name (textype profile) . true-body) body
+            (values name textype profile true-body))
           ;; or make it anonymous
-          (destructuring-bind ((target policy) . true-body) body
-            (values nil target policy true-body)))
+          (destructuring-bind ((textype profile) . true-body) body
+            (values nil textype profile true-body)))
 
-    ;; all variables are now valid.
-    `(progn
-       (list :name ',name :target ',target :policy ',policy :body ',true-body))))
+    ;; all macro variables are now valid.
+
+    (assert (zerop (mod (length true-body) 2)))
+    (let ((texdesc (gensym "TEXDESC")))
+
+      `(let ((,texdesc (make-texture-descriptor
+                        :name ',name
+                        :texture-type ',textype
+                        :default-profile ',profile)))
+         ;; Now, fill in the specified parameters
+         (setf
+          ,@(loop :for (key value) :on true-body :by #'cddr :appending
+                  `((gethash ,key (parameters ,texdesc)) ,value)))
+
+         ;; TODO: If there is a name, store it into an extensions hash table....
+         ,texdesc))))
+
 
 ;; TODO Not done. define a texture parameter profile. MAybe rename.
 (defmacro deftexdesc-profile (&body args)
@@ -110,7 +118,7 @@
   :depth-stencil-texture-mode :depth-component ;; note: ogl 4.3 or greater
   :texture-base-level 0
   :texture-border-color :todo-add-local-nicknames #++(v4:make 0.0 0.0 0.0 0.0)
-                                                  :texture-compare-func :never ;; unknown default
+  :texture-compare-func :never ;; unknown default
   :texture-compare-mode :none ;; unknown default
   :texture-min-filter :nearest-mipmap-linear
   :texture-mag-filter :linear
@@ -132,7 +140,7 @@
 ;; material DSL.  It is probably good that this be a real macro or function. I
 ;; would change the syntax to make it easier to make a function. The materials
 ;; DSL will evaluate the values for the uniforms, so this could be either.
-(deftexdesc name (:2d default-profile)
+(deftexdesc name (:texture-2d default-profile)
   ;; the default-profile for texture parameters is what is used above, you can
   ;; override it here.
 
