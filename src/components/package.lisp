@@ -2,9 +2,9 @@
 
 (defpackage+ #:fl.comp
   (:use #:cl)
-  (:inherit #:fl.core)
-  (:export-only #:define-shared-storage
-                #:with-shared-storage))
+  (:inherit #:fl.core #:au)
+  (:export #:define-shared-storage
+           #:with-shared-storage))
 
 (defpackage+ #:fl.comp.transform
   (:use #:cl)
@@ -73,9 +73,3 @@
             #:fl.comp.mesh)
   (:export-only #:mesh-renderer
                 #:draw-mesh))
-
-(defpackage+ #:fl.comp.tags
-  (:use #:cl)
-  (:inherit #:fl.core
-            #:fl.comp)
-  (:export-only #:tags))

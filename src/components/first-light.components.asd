@@ -29,7 +29,4 @@
     ((:file "mesh")))
    (:module "mesh-renderer"
     :components
-    ((:file "mesh-renderer")))
-   (:module "tags"
-    :components
-    ((:file "tags")))))
+    ((:file "mesh-renderer")))))

@@ -20,5 +20,4 @@
 (defmethod camera-target-actor ((camera tracking-camera) (actor actor))
   (setf (target-actor camera) actor)
   (when actor
-    (setf (target-transform camera)
-          (actor-component-by-type actor 'transform))))
+    (setf (target-transform camera) (actor-component-by-type actor 'transform))))

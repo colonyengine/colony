@@ -18,18 +18,16 @@
     (push component (cameras (core-state context)))))
 
 (defmethod destroy-component ((component camera) (context context))
-  (alexandria:deletef (cameras (core-state context)) component)
+  (deletef (cameras (core-state context)) component)
   (setf (active-camera context) nil))
 
 (defmethod make-projection ((mode (eql :perspective)) camera (context context))
-  (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far) (fovy fovy))
-      camera
+  (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far) (fovy fovy)) camera
     (with-cfg (width height) context
       (m4:perspective-projection! proj (/ fovy zoom) (/ width height) near far))))
 
 (defmethod make-projection ((mode (eql :orthographic)) camera (context context))
-  (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far))
-      camera
+  (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far)) camera
     (with-cfg (width height) context
       (let ((w (/ width (zoom camera) 2))
             (h (/ height (zoom camera) 2)))
@@ -52,5 +50,5 @@
   (let* ((core-state (core-state display))
          (camera (find-active-camera core-state)))
     (with-accessors ((zoom zoom) (mode mode)) camera
-      (setf zoom (alexandria:clamp (+ zoom (/ direction 2)) 1 10))
+      (setf zoom (clamp (+ zoom (/ direction 2)) 1 10))
       (make-projection mode camera (context core-state)))))
