@@ -14,10 +14,11 @@
                #:sdl2
                #:sdl2kit
                #:cl-opengl
+               #:cl-tga
+               #:golden-utils
                #:shadow
                #:gamebox-math.vari
-               #:gamebox-frame-manager
-               #:cl-tga)
+               #:gamebox-frame-manager)
   :serial t
   :components
   ((:file "package")

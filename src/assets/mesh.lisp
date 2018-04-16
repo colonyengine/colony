@@ -30,7 +30,7 @@
     (5126 :float)))
 
 (defun get-component-count (data-type)
-  (ecase (alexandria:make-keyword data-type)
+  (ecase (au:make-keyword data-type)
     (:scalar 1)
     (:vec2 2)
     (:vec3 3)
@@ -39,7 +39,7 @@
     (:mat4 16)))
 
 (defun get-attribute-location (name)
-  (cdr (assoc name *attribute-locations* :test #'string=)))
+  (alist-get *attribute-locations* name :test #'string=))
 
 (defun get-attribute-normalization (name component-type)
   (if (and (or (eq component-type :unsigned-byte)
@@ -62,11 +62,10 @@
 (defun find-mesh (name/index)
   (let ((meshes (get-property "meshes")))
     (flet ((%find-by-name (name)
-             (or
-              (find-if
-               (lambda (x) (string= (get-property "name" x) name))
-               meshes)
-              (first meshes))))
+             (or (find-if
+                  (lambda (x) (string= (get-property "name" x) name))
+                  meshes)
+                 (first meshes))))
       (get-property
        "primitives"
        (etypecase name/index

@@ -6,10 +6,7 @@
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :version "0.1.0"
-  :depends-on (#:sdl2
-               #:cl-opengl
-               #:cl-tga
-               #:parsley
+  :depends-on (#:parsley
                #:jsown)
   :serial t
   :components

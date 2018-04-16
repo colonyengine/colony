@@ -32,6 +32,11 @@
     (let ((*chunk* object))
       (format stream "~s" (chunk-type)))))
 
+(defun get-property (key &optional object)
+  (let ((object (or object (json *object*))))
+    (when (jsown:keyp object key)
+      (jsown:val (or object (json *object*)) key))))
+
 (defun chunk-type ()
   (case (%chunk-type *chunk*)
     (#x4e4f534a :json-content)
@@ -97,11 +102,6 @@
       (setf %header (parse-header)
             %chunks (parse-chunks)))
     datastream))
-
-(defun get-property (key &optional object)
-  (let ((object (or object (json *object*))))
-    (when (jsown:keyp object key)
-      (jsown:val (or object (json *object*)) key))))
 
 (defun load-gltf (path)
   (with-open-file (in path :element-type '(unsigned-byte 8))
