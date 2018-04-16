@@ -6,9 +6,7 @@
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :version "0.1.0"
-  :depends-on (#:alexandria
-               #:gamebox-math
-               #:first-light)
+  :depends-on (#:first-light)
   :pathname "src"
   :serial t
   :components

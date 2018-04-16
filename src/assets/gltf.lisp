@@ -39,27 +39,28 @@
     (otherwise :unknown)))
 
 (defun last-chunk-p ()
-  (= (file-length (buffer-stream)) (buffer-position)))
+  (= (file-length (parsley:buffer-stream))
+     (parsley:buffer-position)))
 
 (defun parse-header ()
   (let ((header (make-instance 'gltf-header)))
     (with-slots (%magic %version %length) header
-      (with-buffer-read (:sequence (read-bytes 12))
-        (let ((magic (read-string :bytes 4)))
+      (parsley:with-buffer-read (:sequence (parsley:read-bytes 12))
+        (let ((magic (parsley:read-string :bytes 4)))
           (if (not (string= magic "glTF"))
               (error "Invalid glTF2 file.")
               (setf %magic magic
-                    %version (read-uint-le 4)
-                    %length (read-uint-le 4))))))
+                    %version (parsley:read-uint-le 4)
+                    %length (parsley:read-uint-le 4))))))
     header))
 
 (defgeneric parse-chunk-data (chunk-type)
   (:method :around (chunk-type)
-    (with-buffer-read (:sequence (read-bytes (chunk-length *chunk*)))
+    (parsley:with-buffer-read (:sequence (parsley:read-bytes (chunk-length *chunk*)))
       (call-next-method))))
 
 (defmethod parse-chunk-data ((chunk-type (eql :json-content)))
-  (let ((data (read-string :encoding :utf-8)))
+  (let ((data (parsley:read-string :encoding :utf-8)))
     (setf (json *object*) (jsown:parse data))
     data))
 
@@ -69,7 +70,7 @@
         :for buffer :in buffers
         :for index :below (length buffers)
         :for size = (get-property "byteLength" buffer)
-        :do (setf (aref data index) (read-bytes size))
+        :do (setf (aref data index) (parsley:read-bytes size))
         :finally (setf (buffers *object*) data))
   nil)
 
@@ -79,13 +80,13 @@
 (defun parse-chunk ()
   (let ((*chunk* (make-instance 'gltf-chunk)))
     (with-slots (%length %type %data) *chunk*
-      (setf %length (read-uint-le 4)
-            %type (read-uint-le 4)
+      (setf %length (parsley:read-uint-le 4)
+            %type (parsley:read-uint-le 4)
             %data (parse-chunk-data (chunk-type))))
     *chunk*))
 
 (defun parse-chunks ()
-  (loop :with stream = (buffer-stream)
+  (loop :with stream = (parsley:buffer-stream)
         :until (= (file-position stream) (file-length stream))
         :for chunk = (parse-chunk)
         :collect chunk))
@@ -104,7 +105,7 @@
 
 (defun load-gltf (path)
   (with-open-file (in path :element-type '(unsigned-byte 8))
-    (with-buffer-read (:stream in)
+    (parsley:with-buffer-read (:stream in)
       (let ((*object* (make-instance 'gltf)))
         (setf (parse-tree *object*) (parse-datastream))
         *object*))))

@@ -16,5 +16,4 @@
                #:first-light.components
                #:first-light.shaders
                #:first-light.materials
-               #:alexandria
                #:defpackage-plus))
