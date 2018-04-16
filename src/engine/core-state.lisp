@@ -77,7 +77,7 @@ CORE-STATE."
 
 (defun %make-scene-tree (core-state)
   (with-slots (%context) core-state
-    (let* ((actor (make-actor %context :id (alexandria:make-gensym '@universe) :scene t))
+    (let* ((actor (make-actor %context :id (unique-name '@universe) :scene t))
            (transform (make-component 'transform %context :actor actor)))
       (attach-component actor transform)
       (spawn-actor actor %context :parent nil)

@@ -3,6 +3,7 @@
 (defpackage+ #:fl.core
   (:nicknames #:first-light)
   (:use #:cl)
+  (:inherit #:au)
   (:export #:start-engine
            #:quit-engine)
 

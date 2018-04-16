@@ -37,7 +37,7 @@
 
 (defmethod interpolate-state ((state transform-state-scalar) factor)
   (with-slots (%previous %current %interpolated) state
-    (setf %interpolated (alexandria:lerp factor %previous %current))))
+    (setf %interpolated (lerp factor %previous %current))))
 
 (defmethod interpolate-state ((state transform-state-vector) factor)
   (with-slots (%previous %current %interpolated) state

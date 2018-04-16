@@ -118,7 +118,7 @@
                   (gl:draw-arrays-instanced %mode 0 %count instance-count))))))))
 
 (defun make-index-buffer (primitive data)
-  (alexandria:when-let* ((indices (get-property "indices" data))
+  (when-let* ((indices (get-property "indices" data))
               (accessor (elt (get-property "accessors") indices)))
     (with-slots (%vao %mode %count %type %index-buffer %draw-func) primitive
       (setf %count (get-property "count" accessor)

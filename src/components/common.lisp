@@ -30,10 +30,10 @@ KEY-VARS-VALUES-FORM _MUST_ have the same order as the slots with the :SHARED sp
 
 GENERATE-CACHE-VALUES-FORM _MUST_ have the same order as the slots with the :SHARED specifier in the
 specified component's DEFINE-COMPONENT form."
-  (let* ((class-symbol (alexandria:symbolicate component-name '-shared-storage))
-         (lookup-function (alexandria:symbolicate class-symbol '-entry))
-         (make-function (alexandria:symbolicate 'make- lookup-function)))
-    (alexandria:with-gensyms (presentp new-entry key-args)
+  (let* ((class-symbol (symbolicate component-name '-shared-storage))
+         (lookup-function (symbolicate class-symbol '-entry))
+         (make-function (symbolicate 'make- lookup-function)))
+    (with-unique-names (presentp new-entry key-args)
       `(let (,cached-entry-var)
          (declare (ignorable ,cached-entry-var))
          (symbol-macrolet ((,store-var (shared-storage context component)))

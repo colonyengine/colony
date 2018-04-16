@@ -31,9 +31,9 @@
         :collect
         (destructuring-bind (slot-name &key default type &allow-other-keys) slot
           (append
-           `(,(alexandria:symbolicate '% slot-name)
+           `(,(symbolicate '% slot-name)
              :accessor ,slot-name
-             :initarg ,(alexandria:make-keyword slot-name)
+             :initarg ,(make-keyword slot-name)
              :initform ,default)
            (when type
              `(:type ,type))))))
@@ -42,28 +42,28 @@
   (loop :for slot :in slots
         :collect
         (destructuring-bind (slot-name &key &allow-other-keys) slot
-          `(,(alexandria:symbolicate '% slot-name)
+          `(,(symbolicate '% slot-name)
             :reader ,slot-name
-            :initarg ,(alexandria:make-keyword slot-name)))))
+            :initarg ,(make-keyword slot-name)))))
 
 (defun %generate-shared-storage-initargs (slots)
   (loop :for slot :in slots
         :append
         (destructuring-bind (slot-name &key &allow-other-keys) slot
-          (list (alexandria:make-keyword slot-name) slot-name))))
+          (list (make-keyword slot-name) slot-name))))
 
 (defmacro define-component (name super-classes &body slots)
-  (let ((entry-symbol (alexandria:symbolicate name '-shared-storage-entry))
+  (let ((entry-symbol (symbolicate name '-shared-storage-entry))
         (shared-keys (%generate-component-shared-keys slots)))
-    (alexandria:with-gensyms (store-var entry-var)
+    (with-unique-names (store-var entry-var)
       `(eval-when (:compile-toplevel :load-toplevel :execute)
          (defclass ,name (,@(append (unless super-classes '(component)) super-classes))
            ,(%generate-component-slot-forms slots))
-         (defclass ,(alexandria:symbolicate name '-shared-storage) ()
+         (defclass ,(symbolicate name '-shared-storage) ()
            ((%cache :accessor cache :initform (make-hash-table :test #'equalp))))
          (defclass ,entry-symbol ()
            ,(%generate-shared-storage-slot-forms slots))
-         (defun ,(alexandria:symbolicate 'make- name '-shared-storage-entry) ,(mapcar #'first slots)
+         (defun ,(symbolicate 'make- name '-shared-storage-entry) ,(mapcar #'first slots)
            (make-instance ',entry-symbol ,@(%generate-shared-storage-initargs slots)))
          (defun ,entry-symbol (,store-var ,@shared-keys)
            (gethash (list ,@shared-keys) (cache ,store-var)))
@@ -109,7 +109,7 @@ COMPONENT-PACKAGE-ORDER."
           component-type))))
 
 (defun component/preinit->init (core-state component)
-  (alexandria:when-let ((thunk (initializer-thunk component)))
+  (when-let ((thunk (initializer-thunk component)))
     (funcall thunk)
     (setf (initializer-thunk component) nil))
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))

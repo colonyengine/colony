@@ -72,9 +72,9 @@ keyword argument :PARENT is supplied it is an actor reference which will be the 
 spawning actor. It defaults to :universe, which means make this actor a child of the universe
 actor."
   (let* ((core-state (core-state context))
-         (sym/transform (alexandria:ensure-symbol 'transform 'fl.comp.transform))
-         (sym/add-child-func (alexandria:ensure-symbol 'add-child 'fl.comp.transform))
-         (sym/parent-func (alexandria:ensure-symbol 'parent 'fl.comp.transform))
+         (sym/transform (ensure-symbol 'transform 'fl.comp.transform))
+         (sym/add-child-func (ensure-symbol 'add-child 'fl.comp.transform))
+         (sym/parent-func (ensure-symbol 'parent 'fl.comp.transform))
          (actor-transform (actor-component-by-type actor sym/transform)))
     (cond
       ((eq parent :universe)
@@ -136,8 +136,8 @@ actor."
    (components actor)))
 
 (defun actor/destroy-descendants (core-state actor)
-  (let ((sym/transform (alexandria:ensure-symbol 'transform 'fl.comp.transform))
-        (sym/map-nodes (alexandria:ensure-symbol 'map-nodes 'fl.comp.transform)))
+  (let ((sym/transform (ensure-symbol 'transform 'fl.comp.transform))
+        (sym/map-nodes (ensure-symbol 'map-nodes 'fl.comp.transform)))
     (flet ((destroy-actor (descendant-actor-transform)
              (let ((destroying-actor (actor descendant-actor-transform)))
                (setf (ttl destroying-actor) 0)
@@ -149,9 +149,9 @@ actor."
 ;; TODO: this should probably never be run on the @universe actor. :)
 (defun actor/disconnect (core-state actor)
   (declare (ignore core-state))
-  (let* ((sym/transform (alexandria:ensure-symbol 'transform 'fl.comp.transform))
-         (sym/remove-child (alexandria:ensure-symbol 'remove-child 'fl.comp.transform))
-         (sym/parent (alexandria:ensure-symbol 'parent 'fl.comp.transform))
+  (let* ((sym/transform (ensure-symbol 'transform 'fl.comp.transform))
+         (sym/remove-child (ensure-symbol 'remove-child 'fl.comp.transform))
+         (sym/parent (ensure-symbol 'parent 'fl.comp.transform))
          (actor-transform (actor-component-by-type actor sym/transform)))
     (funcall sym/remove-child (funcall sym/parent actor-transform) actor-transform)))
 

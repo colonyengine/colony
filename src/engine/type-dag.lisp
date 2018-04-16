@@ -258,11 +258,11 @@ hyper-edge pairs, :hyperedges"
   ;; in addition to a symbol. A) Ensure if subdag, all are subdag. B) Ensure if subgraph, all are
   ;; subgraph.
   ;; TODO: convert each category to appropriate cl-graph version
-  (dolist (graph (alexandria:hash-table-values (analyzed-graphs owner)))
+  (dolist (graph (hash-values (analyzed-graphs owner)))
     (analyze-graph graph)))
 
 (defun add-cross-product-edges (clg source-list target-list)
-  (alexandria:map-product
+  (map-product
    (lambda (v1 v2)
      (cl-graph:add-edge-between-vertexes clg v1 v2 :edge-type :directed))
    source-list
@@ -310,7 +310,7 @@ leaves as elements."
 (defun analyze-graphdef-depends-on (graph)
   "Transmute the :depends-on form in each graphdef object in the GRAPH into real graphdef references
 holding real references to the named subforms."
-  (loop :for gdef :in (alexandria:hash-table-values(graphdefs graph))
+  (loop :for gdef :in (hash-values (graphdefs graph))
         :for whole-depends-on-form = (depends-on gdef)
         :do (setf (depends-on gdef) (make-hash-table))
             (loop :for (gdef-name subform-names) :in whole-depends-on-form
@@ -342,10 +342,10 @@ holding real references to the named subforms."
   "Find the subform describing SPLICE-FORM in GDEF, or in any available depends-on in that GDEF."
   (let ((splice-name (second splice-form)))
     ;; Check if the splice is natively in the current gdef.
-    (alexandria:when-let ((splice (gethash splice-name (subforms gdef))))
+    (when-let ((splice (gethash splice-name (subforms gdef))))
       (return-from lookup-splice (values splice gdef)))
     ;; If it isn't, then check which depends-on in the current gdef
-    (dolist (dep-inst (alexandria:hash-table-values (depends-on gdef)))
+    (dolist (dep-inst (hash-values (depends-on gdef)))
       (multiple-value-bind (subform present) (gethash splice-name (subforms dep-inst))
         (when present
           (return-from lookup-splice (values subform (graphdef dep-inst))))))
@@ -367,7 +367,7 @@ holding real references to the named subforms."
     ;; We do an iterative algorithm where we continuously refine the graph we're making by expanding
     ;; slices in additional passes until there are no splices left. First, add the initial depforms
     ;; from the roots.
-    (loop :for gdef :in (alexandria:hash-table-values (graphdefs graph))
+    (loop :for gdef :in (hash-values (graphdefs graph))
           :when (roots gdef)
             :do (dolist (root (roots gdef))
                   ;; For the initial seeding, we don't care about the roots/leaves of the initial
@@ -442,7 +442,7 @@ holding real references to the named subforms."
             (lambda (vert) (cl-graph:in-cycle-p clg vert))))
          (annotation (make-graph-annotation
                       (category graph)
-                      :unknown-type-id (gensym "UNKNOWN-TYPE-ID-"))))
+                      :unknown-type-id (unique-name "UNKNOWN-TYPE-ID-"))))
     ;; compute/store toposort, can only do if no cycles.
     (unless contains-cycles-p
       (let ((tsort (mapcar #'cl-graph:element (cl-graph:topological-sort clg))))
@@ -480,9 +480,9 @@ holding real references to the named subforms."
               (putative-package-name-regex (concatenate 'string "^" putative-package-name "$")))
          ;; Kind of a terrible Big-O...
          (dolist (pkg-name all-packages)
-           (alexandria:when-let* ((matched-pkg-name (ppcre:scan-to-strings
-                                                     putative-package-name-regex pkg-name))
-                                  (found-pkg (find-package matched-pkg-name)))
+           (when-let* ((matched-pkg-name (ppcre:scan-to-strings
+                                          putative-package-name-regex pkg-name))
+                       (found-pkg (find-package matched-pkg-name)))
              (pushnew found-pkg (gethash (second elem-v) (pattern-matched-packages annotation))))))))
     (setf (annotation graph) annotation)))
 
