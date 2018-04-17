@@ -14,8 +14,9 @@
 
 
 (defun lookup-material (material-name context)
-  (multiple-value-bind (material presentp) (gethash material-name (materials (core-state context)))
-    (if presentp
-        material
-        (gethash (au:ensure-symbol 'missing-material 'fl.materials)
-                 (materials (core-state context))))))
+  (symbol-macrolet ((mat-table
+		      (material-table (materials (core-state context)))))
+    (au:if-found (material (au:href mat-table material-name))
+                 material
+                 (au:href mat-table
+                          (au:ensure-symbol 'missing-material 'fl.materials)))))
