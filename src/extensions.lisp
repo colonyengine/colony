@@ -1,10 +1,10 @@
 (in-package :fl.core)
 
 (defun get-extension-path (&optional (system-name :first-light))
-  (get-path system-name "data/extension"))
+  (au:resolve-path system-name "data/extension"))
 
 (defun map-extensions (extension-type path &optional owner)
-  (map-files
+  (au:map-files
    path
    (lambda (x)
      (let ((package *package*))
@@ -12,7 +12,7 @@
          (let ((*package* package))
            (load x))))
      (simple-logger:emit :extension.load owner x))
-   :filter (extension-type-filter extension-type)))
+   :test (extension-type-filter extension-type)))
 
 (defun extension-type-filter (extension-type)
   (lambda (path)
@@ -37,15 +37,15 @@
   (let ((*package* (find-package :fl.core))
         (results))
     (flet ((%collect (type path)
-             (map-files
+             (au:map-files
               path
               (lambda (x)
-                (with-open-file (in x)
+                (au:with-file-input (in x)
                   (loop :for form = (read in nil in)
                         :until (eq form in)
                         :for (nil options nil) = form
                         :do (push form results))))
-              :filter (extension-type-filter type))))
+              :test (extension-type-filter type))))
       (%collect type (get-extension-path))
       (%collect type path))
     (nreverse results)))

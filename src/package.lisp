@@ -5,9 +5,6 @@
   (:use #:cl)
   (:export #:start-engine
            #:quit-engine)
-  ;; common
-  (:export #:get-path
-           #:destroy)
   ;; core state
   (:export #:core-state
            #:make-core-state
