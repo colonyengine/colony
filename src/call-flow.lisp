@@ -59,17 +59,16 @@ but return them as a values in the specific order of selector, action, and trans
       (when func-form
         (setf (gethash (first func-form) ht)
               (second func-form))))
-    (multiple-value-bind (selector sel-present-p) (gethash 'selector ht)
-      (multiple-value-bind (action act-present-p) (gethash 'action ht)
-        (multiple-value-bind (transition trans-present-p) (gethash 'transition ht)
-          (unless sel-present-p
-            (error "Missing selector function in flow-state: ~A" name))
-          (unless act-present-p
-            (error "Missing action functions in flow-state: ~A" name))
-          (unless trans-present-p
-            (error "Missing transition function in flow-state: ~A" name))
-          ;; now return them in the canonical order.
-          (values selector action transition))))))
+    (au:mvlet ((selector selector-present-p (gethash 'selector ht))
+               (action action-present-p (gethash 'action ht))
+               (transition transition-present-p (gethash 'transition ht)))
+      (unless selector-present-p
+        (error "Missing selector function in flow-state: ~a" name))
+      (unless action-present-p
+        (error "Missing action function in flow-state: ~a" name))
+      (unless transition-present-p
+        (error "Missing transition function in flow-state: ~a" name))
+      (values selector action transition))))
 
 (defun parse-flow-state (form)
   "Parse a single flow-state DSL form and return a form which creates the flow-state CLOS instance
@@ -185,11 +184,8 @@ The previous state name and the current state name which resulted in the exiting
 
                      (act-on-type-table (type-key type-table)
                        ;; Get the hash of components for the type-key
-                       (multiple-value-bind (component-table presentp)
-                           (type-table type-key type-table)
-                         (when presentp
-                           ;; Yes, there are components for this type....
-                           (act-on-item component-table)))))
+                       (au:when-found (component-table (type-table type-key type-table))
+                         (act-on-item component-table))))
 
               (ecase policy
                 ;; TODO: :type-policy is in this branch until I write

@@ -56,7 +56,7 @@
   (let ((entry-symbol (au:symbolicate name '-shared-storage-entry))
         (shared-keys (%generate-component-shared-keys slots)))
     (au:with-unique-names (store-var entry-var)
-      `(eval-when (:compile-toplevel :load-toplevel :execute)
+      `(progn
          (defclass ,name (,@(append (unless super-classes '(component)) super-classes))
            ,(%generate-component-slot-forms slots))
          (defclass ,(au:symbolicate name '-shared-storage) ()
@@ -68,7 +68,7 @@
          (defun ,entry-symbol (,store-var ,@shared-keys)
            (gethash (list ,@shared-keys) (cache ,store-var)))
          (defun (setf ,entry-symbol) (,entry-var ,store-var ,@shared-keys)
-           (setf (gethash (list ,@shared-keys) (cache ,store-var)) ,entry-var))))))
+           (setf (au:href (cache ,store-var) (list ,@shared-keys)) ,entry-var))))))
 
 (defmethod make-component (component-type context &rest initargs)
   (let ((qualified-type (qualify-component (core-state context) component-type)))
@@ -86,25 +86,24 @@ package-qualified symbol of the actual type that is acceptable to pass to MAKE-I
 qualification algorithm follows the search order defined in the graph category
 COMPONENT-PACKAGE-ORDER."
   (let ((search-table (component-search-table (tables core-state))))
-    (multiple-value-bind (pkg-sym presentp) (gethash component-type search-table)
-      (when presentp
-        (return-from qualify-component pkg-sym)))
+    (au:when-found (pkg-symbol (au:href search-table component-type))
+      (return-from qualify-component pkg-symbol))
     (let ((component-type/class (find-class component-type nil))
           (base-component-type/class (find-class 'fl.core:component)))
       (if (or (null component-type/class)
               (not (subtypep (class-name component-type/class)
                              (class-name base-component-type/class))))
-          (let ((graph (gethash 'component-package-order (analyzed-graphs core-state))))
+          (let ((graph (au:href (analyzed-graphs core-state) 'component-package-order)))
             (dolist (potential-package (toposort graph))
               (let ((potential-package-name (second potential-package)))
                 (dolist (pkg-to-search
-                         (gethash potential-package-name
-                                  (pattern-matched-packages (annotation graph))))
+                         (au:href (pattern-matched-packages (annotation graph))
+                                  potential-package-name))
                   (multiple-value-bind (symbol kind)
                       (find-symbol (symbol-name component-type) pkg-to-search)
                     (when (and (eq kind :external)
                                (find-class symbol nil))
-                      (setf (gethash component-type search-table) symbol)
+                      (setf (au:href search-table component-type) symbol)
                       (return-from qualify-component symbol)))))))
           component-type))))
 
@@ -127,7 +126,7 @@ COMPONENT-PACKAGE-ORDER."
 (defmethod destroy ((thing component) (context context) &key (ttl 0))
   (let ((core-state (core-state context)))
     (setf (ttl thing) (if (< ttl 0) 0 ttl)
-          (gethash thing (component-predestroy-view (tables core-state))) thing)))
+          (au:href (component-predestroy-view (tables core-state)) thing) thing)))
 
 (defun component/init-or-active->destroy (core-state component)
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))

@@ -124,7 +124,7 @@
     datastream))
 
 (defun load-gltf (path)
-  (with-open-file (in path :element-type '(unsigned-byte 8))
+  (au:with-binary-input (in path)
     (parsley:with-buffer-read (:stream in)
       (let ((*object* (make-instance 'gltf)))
         (setf (parse-tree *object*) (parse-datastream))
@@ -193,7 +193,7 @@
              (buffer (aref (buffers *object*) index))
              (data (static-vectors:make-static-vector
                     size
-                    :element-type '(unsigned-byte 8)
+                    :element-type 'au:octet
                     :initial-contents (subseq buffer offset (+ offset size))))
              (pointer (static-vectors:static-vector-pointer data))
              (buffer-id (gl:gen-buffer)))

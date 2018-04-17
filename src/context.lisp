@@ -15,7 +15,7 @@
 
 (defun lookup-material (material-name context)
   (symbol-macrolet ((mat-table
-		      (material-table (materials (core-state context)))))
+                      (material-table (materials (core-state context)))))
     (au:if-found (material (au:href mat-table material-name))
                  material
                  (au:href mat-table
