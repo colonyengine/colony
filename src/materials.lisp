@@ -212,7 +212,7 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
      (simple-logger:emit :material.check-uniform (id material) uniform-name)
 
      (multiple-value-bind (shader-uniform-type-info presentp)
-         (gethash uniform-name (shadow::uniforms shader-program))
+         (gethash uniform-name (shadow:uniforms shader-program))
 
        ;; 1. figure out of the variable name/path is present in the shader
        ;; program. good if so, error if not.

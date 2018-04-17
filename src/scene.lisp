@@ -24,7 +24,7 @@
            (lambda (x)
              (or (not (symbolp x))
                  (not (char= (char (symbol-name x) 0) #\@))))
-           (flatten component))))
+           (au:flatten component))))
     (dolist (actor component-actors)
       (unless (find actor actor-names)
         (error (format nil "A component references the undefined actor: ~a" actor))))))
@@ -63,7 +63,7 @@
         :for components = (gethash actor component-table)
         :append
         (loop :for (component . initargs) :in components
-              :for symbol = (unique-name "COMPONENT-")
+              :for symbol = (au:unique-name "COMPONENT-")
               :collect `(let ((,symbol (actor-component-by-type ,actor ',component)))
                           (setf (initializer-thunk ,symbol)
                                 (lambda ()
@@ -82,7 +82,7 @@
     (loop :with root = `(scene-tree ,core-state)
           :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
-          :collect `(,(ensure-symbol 'add-child 'fl.comp.transform)
+          :collect `(,(au:ensure-symbol 'add-child 'fl.comp.transform)
                      (actor-component-by-type ,(or parent root) 'transform)
                      (actor-component-by-type ,child 'transform)))))
 
@@ -91,7 +91,7 @@
         :collect `(spawn-actor ,actor (context ,core-state))))
 
 (defun parse-scene (scene-name scene-spec)
-  (with-unique-names (core-state actor-table actor-name)
+  (au:with-unique-names (core-state actor-table actor-name)
     (let* ((actor-names (%generate-actor-names scene-spec))
            (actor-components (%generate-actor-components-table scene-spec actor-names))
            (bindings (%generate-actor-bindings actor-names actor-table)))
@@ -114,7 +114,7 @@
   (funcall (get-scene core-state name) core-state))
 
 (defun load-default-scene (core-state)
-  (if-let ((default (or *override-scene* (cfg (context core-state) :default-scene))))
+  (au:if-let ((default (or *override-scene* (cfg (context core-state) :default-scene))))
     (load-scene core-state default)
     (error "No default scene specified.")))
 

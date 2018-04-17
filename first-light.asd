@@ -11,9 +11,48 @@
   :version "0.1.0"
   :encoding :utf-8
   :long-description #.(uiop:read-file-string (uiop/pathname:subpathname *load-pathname* "README.md"))
-  :depends-on (#:first-light.engine
-               #:first-light.assets
-               #:first-light.components
-               #:first-light.shaders
-               #:first-light.materials
-               #:defpackage-plus))
+  :depends-on (#:closer-mop
+               #:defpackage-plus
+               #:cl-ppcre
+               #:split-sequence
+               #:simple-logger
+               #:cl-graph
+               #:jsown
+               #:sdl2
+               #:sdl2kit
+               #:cl-opengl
+               #:cl-tga
+               #:golden-utils
+               #:parsley
+               #:shadow
+               #:gamebox-math.vari
+               #:gamebox-frame-manager)
+  :pathname "src"
+  :serial t
+  :components
+  ((:file "package")
+   (:file "common")
+   (:file "logging")
+   (:file "extensions")
+   (:file "context")
+   (:file "settings")
+   (:file "components")
+   (:file "actor")
+   (:file "call-flow")
+   (:file "core-state")
+   (:file "type-dag")
+   (:file "scene")
+   (:file "display")
+   (:file "input")
+   (:file "image")
+   (:file "texture")
+   (:file "materials")
+   (:file "shaders")
+   (:file "mesh")
+   (:file "engine")
+   (:file "components/transform")
+   (:file "components/camera")
+   (:file "components/camera-following")
+   (:file "components/camera-tracking")
+   (:file "components/mesh-renderer")
+   (:file "components/mesh")))

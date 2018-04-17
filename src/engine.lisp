@@ -11,7 +11,7 @@
     core-state))
 
 (defun start-engine (&optional override-scene)
-  (let ((user-package-name (make-keyword (package-name *package*))))
+  (let ((user-package-name (au:make-keyword (package-name *package*))))
     (when (eq user-package-name :fl.core)
       (error "Cannot start the engine from the :FL.CORE package."))
     (kit.sdl2:init)

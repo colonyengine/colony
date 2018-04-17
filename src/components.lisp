@@ -31,9 +31,9 @@
         :collect
         (destructuring-bind (slot-name &key default type &allow-other-keys) slot
           (append
-           `(,(symbolicate '% slot-name)
+           `(,(au:symbolicate '% slot-name)
              :accessor ,slot-name
-             :initarg ,(make-keyword slot-name)
+             :initarg ,(au:make-keyword slot-name)
              :initform ,default)
            (when type
              `(:type ,type))))))
@@ -42,28 +42,28 @@
   (loop :for slot :in slots
         :collect
         (destructuring-bind (slot-name &key &allow-other-keys) slot
-          `(,(symbolicate '% slot-name)
+          `(,(au:symbolicate '% slot-name)
             :reader ,slot-name
-            :initarg ,(make-keyword slot-name)))))
+            :initarg ,(au:make-keyword slot-name)))))
 
 (defun %generate-shared-storage-initargs (slots)
   (loop :for slot :in slots
         :append
         (destructuring-bind (slot-name &key &allow-other-keys) slot
-          (list (make-keyword slot-name) slot-name))))
+          (list (au:make-keyword slot-name) slot-name))))
 
 (defmacro define-component (name super-classes &body slots)
-  (let ((entry-symbol (symbolicate name '-shared-storage-entry))
+  (let ((entry-symbol (au:symbolicate name '-shared-storage-entry))
         (shared-keys (%generate-component-shared-keys slots)))
-    (with-unique-names (store-var entry-var)
+    (au:with-unique-names (store-var entry-var)
       `(eval-when (:compile-toplevel :load-toplevel :execute)
          (defclass ,name (,@(append (unless super-classes '(component)) super-classes))
            ,(%generate-component-slot-forms slots))
-         (defclass ,(symbolicate name '-shared-storage) ()
+         (defclass ,(au:symbolicate name '-shared-storage) ()
            ((%cache :accessor cache :initform (make-hash-table :test #'equalp))))
          (defclass ,entry-symbol ()
            ,(%generate-shared-storage-slot-forms slots))
-         (defun ,(symbolicate 'make- name '-shared-storage-entry) ,(mapcar #'first slots)
+         (defun ,(au:symbolicate 'make- name '-shared-storage-entry) ,(mapcar #'first slots)
            (make-instance ',entry-symbol ,@(%generate-shared-storage-initargs slots)))
          (defun ,entry-symbol (,store-var ,@shared-keys)
            (gethash (list ,@shared-keys) (cache ,store-var)))
@@ -109,7 +109,7 @@ COMPONENT-PACKAGE-ORDER."
           component-type))))
 
 (defun component/preinit->init (core-state component)
-  (when-let ((thunk (initializer-thunk component)))
+  (au:when-let ((thunk (initializer-thunk component)))
     (funcall thunk)
     (setf (initializer-thunk component) nil))
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))

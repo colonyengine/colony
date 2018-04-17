@@ -19,12 +19,12 @@
 
 (defun (setf cfg) (value context key)
   (check-type key symbol)
-  (setf (gethash (make-keyword key) (settings context)) value))
+  (setf (gethash (au:make-keyword key) (settings context)) value))
 
 (defmacro with-cfg (options context &body body)
   `(symbol-macrolet
        (,@(loop :for option :in options
-                :collect `(,option (cfg ,context ,(make-keyword option)))))
+                :collect `(,option (cfg ,context ,(au:make-keyword option)))))
      ,@body))
 
 (defmacro define-settings (() &body body)

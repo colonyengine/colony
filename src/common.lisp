@@ -1,4 +1,46 @@
-(in-package #:fl.comp)
+(in-package :fl.core)
+
+(defgeneric destroy (thing context &key ttl)
+  (:documentation "Destroy may take either an ACTOR or a COMPONENT. The keyword argument :TTL
+supplied in real seconds, how long the thing has yet to live."))
+
+(defun get-path (system-name &optional path)
+  (if uiop/image:*image-dumped-p*
+      (truename
+       (uiop/pathname:merge-pathnames*
+        path
+        (uiop:pathname-directory-pathname (uiop:argv0))))
+      (asdf/system:system-relative-pathname (au:make-keyword system-name) path)))
+
+(defun map-files (path effect &key (filter (constantly t)) (recursivep t))
+  (labels ((maybe-affect (file)
+             (when (funcall filter file)
+               (funcall effect file)))
+           (process-files (dir)
+             (map nil #'maybe-affect (uiop/filesystem:directory-files dir))))
+    (uiop/filesystem:collect-sub*directories
+     (uiop/pathname:ensure-directory-pathname path) t recursivep #'process-files)))
+
+(defun type-table (key type-table)
+  (gethash key type-table))
+
+(defun (setf type-table) (entry type-name-key type-table)
+  (symbol-macrolet ((entry-ht (gethash type-name-key type-table)))
+    (multiple-value-bind (looked-up-type-table presentp) entry-ht
+      (unless presentp
+        (let ((new-table (make-hash-table)))
+          (setf entry-ht new-table
+                looked-up-type-table new-table)))
+      (setf (gethash entry looked-up-type-table) entry))))
+
+(defun eql/package-relaxed (obj1 obj2)
+  (cond
+    ((eql obj1 obj2) t) ; It succeeded? Oh good. Return quickly.
+    ((and (symbolp obj1) (symbolp obj2)) ; Otherwise do a slower check.
+     (string= (symbol-name obj1)
+              (symbol-name obj2)))
+    (t ; Hrm, sorry. It didn't EQL match,
+     nil)))
 
 (defmacro with-shared-storage
     ((component-name
@@ -30,10 +72,10 @@ KEY-VARS-VALUES-FORM _MUST_ have the same order as the slots with the :SHARED sp
 
 GENERATE-CACHE-VALUES-FORM _MUST_ have the same order as the slots with the :SHARED specifier in the
 specified component's DEFINE-COMPONENT form."
-  (let* ((class-symbol (symbolicate component-name '-shared-storage))
-         (lookup-function (symbolicate class-symbol '-entry))
-         (make-function (symbolicate 'make- lookup-function)))
-    (with-unique-names (presentp new-entry key-args)
+  (let* ((class-symbol (au:symbolicate component-name '-shared-storage))
+         (lookup-function (au:symbolicate class-symbol '-entry))
+         (make-function (au:symbolicate 'make- lookup-function)))
+    (au:with-unique-names (presentp new-entry key-args)
       `(let (,cached-entry-var)
          (declare (ignorable ,cached-entry-var))
          (symbol-macrolet ((,store-var (shared-storage context component)))

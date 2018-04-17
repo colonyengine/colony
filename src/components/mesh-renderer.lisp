@@ -23,10 +23,10 @@
 (defmethod render-component ((component mesh-renderer) (context context))
   (with-accessors ((transform transform) (mesh mesh) (material material)) component
     (with-accessors ((draw-mesh draw)) mesh
-      (when-let ((camera (active-camera context)))
+      (au:when-let ((camera (active-camera context)))
         (shadow:with-shader-program (shader material)
-          (shadow:uniform-mat4 :model (model transform))
-          (shadow:uniform-mat4 :view (view camera))
-          (shadow:uniform-mat4 :proj (projection camera))
+          (shadow:uniform-mat4 :model (fl.comp.transform:model transform))
+          (shadow:uniform-mat4 :view (fl.comp.camera:view camera))
+          (shadow:uniform-mat4 :proj (fl.comp.camera:projection camera))
           (bind-material material)
           (draw-mesh mesh :instance-count 5))))))

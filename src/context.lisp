@@ -17,5 +17,5 @@
   (multiple-value-bind (material presentp) (gethash material-name (materials (core-state context)))
     (if presentp
         material
-        (gethash (ensure-symbol 'missing-material 'fl.materials)
+        (gethash (au:ensure-symbol 'missing-material 'fl.materials)
                  (materials (core-state context))))))

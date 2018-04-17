@@ -33,7 +33,7 @@
 (defun gen-reset-function (symbols values)
   (let* ((tmp-symbols
            (loop :for sym :in symbols
-                 :collect (unique-name (concatenate 'string (symbol-name sym) "-ONCE-ONLY-"))))
+                 :collect (au:unique-name (concatenate 'string (symbol-name sym) "-ONCE-ONLY-"))))
          (once-only-bindings (mapcar
                               (lambda (tsym value) `(,tsym ,value))
                               tmp-symbols
@@ -104,7 +104,7 @@ for it."
 flow-state indexed by name."
   (destructuring-bind (match flow-name . flow-states) form
     (multiple-value-bind (binds ignores) (get-flow-state-variables flow-states)
-      (let ((flow-table (unique-name 'flow-table)))
+      (let ((flow-table (au:unique-name 'flow-table)))
         (ensure-matched-symbol match "flow")
         `(,flow-name
           (let ((,flow-table (make-hash-table))
@@ -117,7 +117,7 @@ flow-state indexed by name."
 (defun parse-call-flows (form)
   "Parse an entire call-flow and return a list of the name of it and a form which evaluates to a
 hash table of flows keyed by their name."
-  (let ((call-flows (unique-name 'call-flows)))
+  (let ((call-flows (au:unique-name 'call-flows)))
     `(let ((,call-flows (make-hash-table)))
        ,@(loop :for (name flow) :in (mapcar #'parse-flow form)
                :collect `(setf (gethash ',name ,call-flows) ,flow))

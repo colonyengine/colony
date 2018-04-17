@@ -18,7 +18,7 @@
     (push component (cameras (core-state context)))))
 
 (defmethod destroy-component ((component camera) (context context))
-  (deletef (cameras (core-state context)) component)
+  (au:deletef (cameras (core-state context)) component)
   (setf (active-camera context) nil))
 
 (defmethod make-projection ((mode (eql :perspective)) camera (context context))
@@ -50,5 +50,5 @@
   (let* ((core-state (core-state display))
          (camera (find-active-camera core-state)))
     (with-accessors ((zoom zoom) (mode mode)) camera
-      (setf zoom (clamp (+ zoom (/ direction 2)) 1 10))
+      (setf zoom (au:clamp (+ zoom (/ direction 2)) 1 10))
       (make-projection mode camera (context core-state)))))
