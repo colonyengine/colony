@@ -13,8 +13,10 @@
                           :initform (make-hash-table))))
 
 
-(defun lookup-material (material-name context)
-  (symbol-macrolet ((materials (materials (core-state context))))
-    (au:if-found (material (gethash material-name materials))
-                 material
-                 (au:href materials (au:ensure-symbol 'missing-material 'fl.materials)))))
+(defun lookup-material (material-name context))
+(symbol-macrolet ((mat-table
+                    (material-table (materials (core-state context)))))
+  (au:if-found (material (au:href mat-table material-name))
+               material
+               (au:href mat-table
+                        (au:ensure-symbol 'missing-material 'fl.materials)))))
