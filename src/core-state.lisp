@@ -109,6 +109,10 @@ CORE-STATE."
 
 ;;;; Interim caching code for (often) resources
 ;;;; TODO: change this when the real cache code shows up.
+
+;;;; TODO: The rcache code should be broken into 4 hash tables, each with
+;;;; EQ, EQL, EQUAL, and EQUALP tests. Then, a new method should be added here
+;;;; so people can decide which test they want to use for which entry-type.
 (defgeneric rcache-lookup (entry-type core-state key &key &allow-other-keys)
   (:method ((entry-type symbol) (context context) key &key)
     (rcache-lookup entry-type (core-state context) key)))
