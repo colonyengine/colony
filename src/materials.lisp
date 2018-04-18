@@ -21,15 +21,19 @@
 (defun %make-materials-table (&rest init-args)
   (apply #'make-instance 'materials-table init-args))
 
-(defun %lookup-material (id core-state)
-  "Find a material by its ID in CORE-STATE and return a gethash-like values."
-  (au:href (material-table (materials core-state)) id))
-
-(defun lookup-material (material-name context)
-  (symbol-macrolet ((table (material-table (materials (core-state context)))))
+(defun %lookup-material (material-name core-state)
+  "Find a material by its ID in CORE-STATE and return a gethash-like values.
+If the material isn't there, return the 'fl.materials:missing-material.
+The return value is two values, the first is a material instance, and the
+second is T if the material being looked up was actually found, or NIL if it
+wasn't (and the missing material used)."
+  (symbol-macrolet ((table (material-table (materials core-state))))
     (au:if-found (material (au:href table material-name))
                  material
-                 (au:href table (au:ensure-symbol 'missing-material 'fl.materials)))))
+                 (au:href table (au:ensure-symbol 'missing-material
+                                                  'fl.materials)))))
+
+
 
 (defun %add-material (material core-state)
   "Add the MATERIAL by its id into CORE-STATE."
@@ -48,6 +52,10 @@ CORE-STATE. Return a list of the return values of the FUNC."
        (push (funcall func x) results))
      (material-table (materials core-state)))
     (nreverse results)))
+
+;; export PUBLIC API
+(defun lookup-material (id context)
+  (%lookup-material id (core-state context)))
 
 ;;; The value of a uniform or block designation is one of these values.
 ;;; It holds the original semantic value and any transformation of it that
@@ -119,9 +127,6 @@ CORE-STATE. Return a list of the return values of the FUNC."
   (bind-material-uniforms mat)
   (bind-material-buffers mat))
 
-;; export PUBLIC API
-(defun lookup-material (id context)
-  (%lookup-material id (core-state context)))
 
 ;; Todo, these modify the semantic-buffer which then gets processed into a
 ;; new computed buffer.
