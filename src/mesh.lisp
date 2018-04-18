@@ -47,10 +47,9 @@
    (%index-buffer :accessor index-buffer)
    (%draw-func :accessor draw-func)))
 
-(defmethod print-object ((object gltf-chunk) stream)
-  (print-unreadable-object (object stream :type t)
-    (let ((*chunk* object))
-      (format stream "~s" (chunk-type)))))
+(au:define-printer (gltf-chunk stream :type t)
+  (let ((*chunk* gltf-chunk))
+    (format stream "~s" (chunk-type))))
 
 (defun get-property (key &optional object)
   (let ((object (or object (json *object*))))

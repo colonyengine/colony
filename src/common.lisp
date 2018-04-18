@@ -5,13 +5,13 @@
 supplied in real seconds, how long the thing has yet to live."))
 
 (defun type-table (key type-table)
-  (gethash key type-table))
+  (au:href type-table key))
 
 (defun (setf type-table) (entry type-name-key type-table)
-  (symbol-macrolet ((entry-table (gethash type-name-key type-table)))
+  (symbol-macrolet ((entry-table (au:href type-table type-name-key)))
     (unless (nth-value 1 entry-table)
-      (setf entry-table (make-hash-table)))
-    (setf (gethash entry entry-table) entry)))
+      (setf entry-table (au:dict #'eq)))
+    (setf (au:href entry-table entry) entry)))
 
 (defun eql/package-relaxed (obj1 obj2)
   (cond

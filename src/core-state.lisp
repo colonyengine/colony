@@ -4,7 +4,7 @@
   ((%user-package :reader user-package
                   :initarg :user-package)
    (%rcache :reader rcache
-            :initform (make-hash-table :test #'equalp))
+            :initform (au:dict #'equalp))
    (%display :reader display)
    (%scene-tree :reader scene-tree)
    (%cameras :accessor cameras
@@ -16,44 +16,43 @@
    (%tables :reader tables
             :initform (make-instance 'bookkeeping-tables))
    (%call-flows :reader call-flows
-                :initform (make-hash-table))
+                :initform (au:dict #'eq))
    (%analyzed-graphs :reader analyzed-graphs
-                     :initform (make-hash-table :test #'equalp))
+                     :initform (au:dict #'equalp))
    (%scenes :reader scenes
-            :initform (make-hash-table))))
+            :initform (au:dict #'eq))))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table
-                            :initform (make-hash-table))
+                            :initform (au:dict #'eq))
    (%component-preinit-by-type-view :reader component-preinit-by-type-view
-                                    :initform (make-hash-table))
+                                    :initform (au:dict #'eq))
    (%component-init-by-type-view :reader component-init-by-type-view
-                                 :initform (make-hash-table))
+                                 :initform (au:dict #'eq))
    (%component-active-by-type-view :reader component-active-by-type-view
-                                   :initform (make-hash-table))
+                                   :initform (au:dict #'eq))
    (%component-predestroy-view :reader component-predestroy-view
-                               :initform (make-hash-table))
+                               :initform (au:dict #'eq))
    (%component-destroy-by-type-view :reader component-destroy-by-type-view
-                                    :initform (make-hash-table))
+                                    :initform (au:dict #'eq))
    (%actor-predestroy-view :reader actor-predestroy-view
-                           :initform (make-hash-table))
+                           :initform (au:dict #'eq))
    (%actor-preinit-db :reader actor-preinit-db
-                      :initform (make-hash-table))
+                      :initform (au:dict #'eq))
    (%actor-init-db :reader actor-init-db
-                   :initform (make-hash-table))
+                   :initform (au:dict #'eq))
    (%actor-active-db :reader actor-active-db
-                     :initform (make-hash-table))
+                     :initform (au:dict #'eq))
    (%actor-destroy-db :reader actor-destroy-db
-                      :initform (make-hash-table))))
+                      :initform (au:dict #'eq))))
 
 (defun pending-preinit-tasks-p (core-state)
   "Return T if there are ANY components or actors in the preinit data structures in CORE-STATE."
   (or (plusp (hash-table-count (actor-preinit-db (tables core-state))))
       (block done
-        (maphash
-         (lambda (k v)
-           (declare (ignore k))
-           (when (plusp (hash-table-count v))
+        (au:maphash-values
+         (lambda (x)
+           (when (plusp (hash-table-count x))
              (return-from done t)))
          (component-preinit-by-type-view (tables core-state))))))
 
@@ -68,10 +67,9 @@ CORE-STATE."
 CORE-STATE."
   (or (plusp (hash-table-count (actor-destroy-db (tables core-state))))
       (block done
-        (maphash
-         (lambda (k v)
-           (declare (ignore k))
-           (when (plusp (hash-table-count v))
+        (au:maphash-values
+         (lambda (x)
+           (when (plusp (hash-table-count x))
              (return-from done t)))
          (component-destroy-by-type-view (tables core-state))))))
 
@@ -92,13 +90,13 @@ CORE-STATE."
 
 (defgeneric shared-storage (context key)
   (:method ((context context) key)
-    (gethash key (shared-storage-table context)))
+    (au:href (shared-storage-table context) key))
   (:method ((context context) (key component))
     (shared-storage context (component-type key))))
 
 (defgeneric (setf shared-storage) (value context key)
   (:method (value (context context) key)
-    (setf (gethash key (shared-storage-table context)) value))
+    (setf (au:href (shared-storage-table context) key) value))
   (:method (value (context context) (key component))
     (setf (shared-storage context (component-type key)) value)))
 
@@ -110,11 +108,10 @@ CORE-STATE."
         (error "Resource not found: ~a" path))))
 
 ;;;; Interim caching code for (often) resources
-;;;; TODO: change this when the reasl cache code shows up.
+;;;; TODO: change this when the real cache code shows up.
 (defgeneric rcache-lookup (entry-type core-state key &key &allow-other-keys)
   (:method ((entry-type symbol) (context context) key &key)
     (rcache-lookup entry-type (core-state context) key)))
-
 
 (defgeneric rcache-load (entry-type core-state key &key &allow-other-keys)
   (:method ((entry-type symbol) (context context) key &key)
@@ -124,27 +121,14 @@ CORE-STATE."
   (:method ((entry-type symbol) (context context) key &key)
     (rcache-remove entry-type (core-state context) key)))
 
-(defgeneric rcache-unload (entry-type core-state key val
-                           &key &allow-other-keys)
+(defgeneric rcache-unload (entry-type core-state key val &key &allow-other-keys)
   (:method ((entry-type symbol) (context context) key val &key)
     (rcache-unload entry-type (core-state context) key val)))
 
+(defmethod rcache-lookup ((entry-type symbol) (core-state core-state) key &key)
+  (au:ensure-gethash key (rcache core-state) (rcache-load entry-type core-state key)))
 
-
-(defmethod rcache-lookup ((entry-type symbol) (core-state core-state) key
-                          &key)
-  (multiple-value-bind (value presentp)
-      (gethash key (rcache core-state))
-    (if presentp
-        value)
-    (let ((val (rcache-load entry-type core-state key)))
-      (setf (gethash key (rcache core-state)) val)
-      val)))
-
-(defmethod rcache-remove ((entry-type symbol) (core-state core-state) key
-                          &key)
-  (multiple-value-bind (val presentp)
-      (gethash key (rcache core-state))
-    (when presentp
-      (remhash key (rcache core-state))
-      (rcache-unload entry-type core-state key val))))
+(defmethod rcache-remove ((entry-type symbol) (core-state core-state) key &key)
+  (au:when-found (value (au:href (rcache core-state) key))
+    (remhash key (rcache core-state))
+    (rcache-unload entry-type core-state key value)))

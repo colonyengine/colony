@@ -26,7 +26,7 @@
                      :initarg :default-profile)
    (%parameters :reader parameters
                 :initarg :parameters
-                :initform (make-hash-table))))
+                :initform (au:dict #'eq))))
 
 (defun make-texture-descriptor (&rest init-args)
   (apply #'make-instance 'texture-descriptor init-args))
@@ -93,7 +93,6 @@
 
     (assert (zerop (mod (length true-body) 2)))
     (let ((texdesc (gensym "TEXDESC")))
-
       `(let ((,texdesc (make-texture-descriptor
                         :name ',name
                         :texture-type ',textype
@@ -101,7 +100,7 @@
          ;; Now, fill in the specified parameters
          (setf
           ,@(loop :for (key value) :on true-body :by #'cddr :appending
-                  `((gethash ,key (parameters ,texdesc)) ,value)))
+                  `((au:href (parameters ,texdesc) ,key) ,value)))
 
          ;; TODO: If there is a name, store it into an extensions hash table....
          ,texdesc))))

@@ -27,21 +27,21 @@
            (au:flatten component))))
     (dolist (actor component-actors)
       (unless (find actor actor-names)
-        (error (format nil "A component references the undefined actor: ~a" actor))))))
+        (error "A component references the undefined actor: ~a" actor)))))
 
 (defun %generate-actor-components-table (scene-spec actor-names &optional table)
-  (loop :with table = (or table (make-hash-table))
+  (loop :with table = (or table (au:dict #'eq))
         :for (actor components . child) :in scene-spec
         :do (dolist (component (reverse components))
               (%type-check-actor-component actor-names component)
-              (push component (gethash actor table)))
+              (push component (au:href table actor)))
             (%generate-actor-components-table child actor-names table)
         :finally (return table)))
 
 (defun %generate-actor-bindings (actor-names table)
   (mapcan
    (lambda (actor)
-     `((,actor (gethash ',actor ,table))))
+     `((,actor (au:href ,table ',actor))))
    actor-names))
 
 (defun %generate-component-initializers (core-state actor-components)
@@ -60,7 +60,7 @@
 
 (defun %generate-component-thunks (actor-names component-table)
   (loop :for actor :in actor-names
-        :for components = (gethash actor component-table)
+        :for components = (au:href component-table actor)
         :append
         (loop :for (component . initargs) :in components
               :for symbol = (au:unique-name "COMPONENT-")
@@ -96,9 +96,9 @@
            (actor-components (%generate-actor-components-table scene-spec actor-names))
            (bindings (%generate-actor-bindings actor-names actor-table)))
       `(lambda (,core-state)
-         (let ((,actor-table (make-hash-table)))
+         (let ((,actor-table (au:dict #'eq)))
            (dolist (,actor-name ',actor-names)
-             (setf (gethash ,actor-name ,actor-table)
+             (setf (au:href ,actor-table ,actor-name)
                    (make-actor (context ,core-state) :id ,actor-name :scene ,scene-name)))
            (let ,bindings
              ,@(%generate-component-initializers core-state actor-components)
@@ -108,7 +108,7 @@
              (values ,core-state ,actor-table)))))))
 
 (defun get-scene (core-state scene-name)
-  (gethash scene-name (scenes core-state)))
+  (au:href (scenes core-state) scene-name))
 
 (defun load-scene (core-state name)
   (funcall (get-scene core-state name) core-state))
@@ -122,7 +122,7 @@
   "scene")
 
 (defmethod prepare-extension ((extension-type (eql 'scene)) owner path)
-  (let ((%temp-scene (make-hash-table)))
+  (let ((%temp-scene (au:dict #'eq)))
     (declare (special %temp-scene))
     (flet ((%prepare ()
              (load-extensions extension-type path)
@@ -131,11 +131,11 @@
         (setf %scene-tree (%make-scene-tree owner)))
       (maphash
        (lambda (key value)
-         (setf (gethash key (scenes owner)) value))
+         (setf (au:href (scenes owner) key) value))
        (%prepare)))))
 
 (defmacro define-scene (name (&key enabled) &body body)
   `(let ((scene ,(parse-scene `',name body)))
      (declare (special %temp-scene))
      ,(when enabled
-        `(setf (gethash ',name %temp-scene) scene))))
+        `(setf (au:href %temp-scene ',name) scene))))

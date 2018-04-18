@@ -54,14 +54,13 @@
 (defun parse-flow-state-functions (name funcs)
   "Parse the selection, action, and transition form from the FUNCS list. They can be in any order,
 but return them as a values in the specific order of selector, action, and transition."
-  (let ((ht (make-hash-table)))
+  (let ((ht (au:dict #'eq)))
     (dolist (func-form funcs)
       (when func-form
-        (setf (gethash (first func-form) ht)
-              (second func-form))))
-    (au:mvlet ((selector selector-present-p (gethash 'selector ht))
-               (action action-present-p (gethash 'action ht))
-               (transition transition-present-p (gethash 'transition ht)))
+        (setf (au:href ht (first func-form)) (second func-form))))
+    (au:mvlet ((selector selector-present-p (au:href ht 'selector))
+               (action action-present-p (au:href ht 'action))
+               (transition transition-present-p (au:href ht 'transition)))
       (unless selector-present-p
         (error "Missing selector function in flow-state: ~a" name))
       (unless action-present-p
@@ -74,23 +73,23 @@ but return them as a values in the specific order of selector, action, and trans
   "Parse a single flow-state DSL form and return a form which creates the flow-state CLOS instance
 for it."
   (destructuring-bind (match name policy binds . funcs) form
-    (multiple-value-bind (selector action transition) (parse-flow-state-functions name funcs)
-      (let ((binds (mapcar #'canonicalize-binding binds)))
-        (multiple-value-bind (bind-syms bind-vals) (binding-partition binds)
-          (ensure-matched-symbol match "flow-state")
-          (let ((reset-function (gen-reset-function bind-syms bind-vals)))
-            ;; Generate the instance maker for this flow-state.
-            `(,name
-              (let ,binds ; these are canonicalized, available for user.
-                ;; TODO: Add a generated function to get the binding values out
-                ;; in order of definition.
-                (make-flow-state :name ',name
-                                 :policy ,policy
-                                 :exitingp ,(null transition)
-                                 :selector ,selector
-                                 :action ,action
-                                 :transition ,transition
-                                 :reset ,reset-function)))))))))
+    (let ((binds (mapcar #'canonicalize-binding binds)))
+      (au:mvlet* ((selector action transition (parse-flow-state-functions name funcs))
+                  (bind-syms bind-vals (binding-partition binds)))
+        (ensure-matched-symbol match "flow-state")
+        (let ((reset-function (gen-reset-function bind-syms bind-vals)))
+          ;; Generate the instance maker for this flow-state.
+          `(,name
+            (let ,binds             ; these are canonicalized, available for user.
+              ;; TODO: Add a generated function to get the binding values out
+              ;; in order of definition.
+              (make-flow-state :name ',name
+                               :policy ,policy
+                               :exitingp ,(null transition)
+                               :selector ,selector
+                               :action ,action
+                               :transition ,transition
+                               :reset ,reset-function))))))))
 
 (defun get-flow-state-variables (flow-states)
   (loop :for (nil name . nil) :in flow-states
@@ -106,20 +105,20 @@ flow-state indexed by name."
       (let ((flow-table (au:unique-name 'flow-table)))
         (ensure-matched-symbol match "flow")
         `(,flow-name
-          (let ((,flow-table (make-hash-table))
+          (let ((,flow-table (au:dict #'eq))
                 ,@binds)
             ,@ignores
             ,@(loop :for (name state) :in (mapcar #'parse-flow-state flow-states)
-                    :collect `(setf (gethash ',name ,flow-table) ,state))
+                    :collect `(setf (au:href ,flow-table ',name) ,state))
             ,flow-table))))))
 
 (defun parse-call-flows (form)
   "Parse an entire call-flow and return a list of the name of it and a form which evaluates to a
 hash table of flows keyed by their name."
   (let ((call-flows (au:unique-name 'call-flows)))
-    `(let ((,call-flows (make-hash-table)))
+    `(let ((,call-flows (au:dict #'eq)))
        ,@(loop :for (name flow) :in (mapcar #'parse-flow form)
-               :collect `(setf (gethash ',name ,call-flows) ,flow))
+               :collect `(setf (au:href ,call-flows ',name) ,flow))
        ,call-flows)))
 
 (defun execute-flow (core-state call-flow-name flow-name flow-state-name &key come-from-state-name)
@@ -172,10 +171,9 @@ The previous state name and the current state name which resulted in the exiting
                          ((hash-table-p item)
                           (when (action flow-state)
                             (simple-logger:emit :flow.call.action.hash)
-                            (maphash
-                             (lambda (k v)
-                               (declare (ignore k))
-                               (funcall (action flow-state) core-state v))
+                            (au:maphash-values
+                             (lambda (x)
+                               (funcall (action flow-state) core-state x))
                              item)))
                          ((atom item)
                           (when (action flow-state)
@@ -193,16 +191,15 @@ The previous state name and the current state name which resulted in the exiting
                 ;; policy.
                 ((:identity-policy)
                  (if (consp selections)
-                     (map nil #'act-on-item selections)
+                     (au:do-seq (item selections)
+                       (act-on-item item))
                      (act-on-item selections)))
 
                 ((:type-policy)
                  (let* ((component-dependency-graph
-                          (gethash 'component-dependency
-                                   (analyzed-graphs core-state)))
+                          (au:href (analyzed-graphs core-state) 'component-dependency))
                         (annotation (annotation component-dependency-graph))
-                        (dependency-type-order
-                          (toposort component-dependency-graph)))
+                        (dependency-type-order (toposort component-dependency-graph)))
 
                    ;; Now, walk the list of dependency order and run the action
                    ;; in the topologically sorted type order.
@@ -228,34 +225,33 @@ The previous state name and the current state name which resulted in the exiting
             ;; flow-state. Currently, a transition can only go into the SAME
             ;; flow.
             (simple-logger:emit :flow.call.transition)
-            (setf flow-state (gethash (funcall (transition flow-state) core-state) flow))))
+            (setf flow-state (au:href flow (funcall (transition flow-state) core-state)))))
 
 (defun get-call-flow (call-flow-name core-state)
-  (gethash call-flow-name (call-flows core-state)))
+  (au:href (call-flows core-state) call-flow-name))
 
 (defun get-flow (flow-name call-flow)
-  (gethash flow-name call-flow))
+  (au:href call-flow flow-name))
 
 (defun get-flow-state (flow-state-name flow)
-  (gethash flow-state-name flow))
+  (au:href flow flow-state-name))
 
 (defmethod extension-file-type ((extension-type (eql 'call-flow)))
   "flow")
 
 (defmethod prepare-extension ((extension-type (eql 'call-flow)) owner path)
-  (let ((%temp-call-flow (make-hash-table)))
+  (let ((%temp-call-flow (au:dict #'eq)))
     (declare (special %temp-call-flow))
     (flet ((%prepare ()
              (load-extensions extension-type path)
              %temp-call-flow))
       (maphash
        (lambda (key value)
-         (setf (gethash key (call-flows owner)) value))
+         (setf (au:href (call-flows owner) key) value))
        (%prepare)))))
 
 (defmacro define-call-flow (name (&key enabled) &body body)
   `(let ()
      (declare (special %temp-call-flow))
      ,(when enabled
-        `(setf (gethash ,name %temp-call-flow)
-               ,(parse-call-flows body)))))
+        `(setf (au:href %temp-call-flow ,name) ,(parse-call-flows body)))))

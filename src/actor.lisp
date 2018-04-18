@@ -7,9 +7,9 @@
            :initarg :state
            :initform :initialize)
    (%components :reader components
-                :initform (make-hash-table))
+                :initform (au:dict #'eq))
    (%components-by-type :reader components-by-type
-                        :initform (make-hash-table))
+                        :initform (au:dict #'eq))
    (%scene :accessor scene
            :initarg :scene)
    (%ttl :accessor ttl
@@ -18,9 +18,8 @@
    (%core-state :reader core-state
                 :initarg :core-state)))
 
-(defmethod print-object ((object actor) stream)
-  (print-unreadable-object (object stream :type t)
-    (format stream "~a" (id object))))
+(au:define-printer (actor stream :type t)
+  (format stream "~a" (id actor)))
 
 (defun make-actor (context &rest args)
   (apply #'make-instance 'actor :core-state (core-state context) args))
@@ -28,9 +27,8 @@
 (defun attach-component (actor component)
   (unless (actor component)
     (setf (actor component) actor))
-  (setf (gethash component (components actor)) component)
-  (push component (gethash (component-type component)
-                           (components-by-type actor))))
+  (setf (au:href (components actor) component) component)
+  (push component (au:href (components-by-type actor) (component-type component))))
 
 (defun attach-multiple-components (actor components)
   (dolist (component components)
@@ -42,8 +40,8 @@
 (defun detach-component (actor component)
   "If COMPONENT is contained in the ACTOR. Remove it. Otherwise, do nothing."
   (when (remhash component (components actor))
-    (symbol-macrolet ((typed-components (gethash (component-type component)
-                                                 (components-by-type actor))))
+    (symbol-macrolet ((typed-components (au:href (components-by-type actor)
+                                                 (component-type component))))
       (setf typed-components
             (remove-if
              (lambda (c) (eq c component))
@@ -51,15 +49,14 @@
 
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
-  (gethash component-type (components-by-type actor)))
+  (au:href (components-by-type actor) component-type))
 
 (defun actor-component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
 Returns T as a secondary value if there exists more than one component of that type."
   (let* ((qualified-type (qualify-component (core-state actor) component-type))
          (components (actor-components-by-type actor qualified-type)))
-    (values (first components)
-            (> (length components) 1))))
+    (values (first components) (> (length components) 1))))
 
 ;; TODO: This uses ensure-symbol a lot because it wants to know about the
 ;; fl.comp.transform:transform component. However, that package is not available
@@ -99,40 +96,38 @@ actor."
        nil)
       (t
        (error "Cannot parent actor ~A to unknown parent ~A" actor parent)))
-    (setf (gethash actor (actor-preinit-db (tables core-state))) actor)
-    (maphash
-     (lambda (k v)
-       (declare (ignore k))
-       (setf (type-table (canonicalize-component-type (component-type v) core-state)
+    (setf (au:href (actor-preinit-db (tables core-state)) actor) actor)
+    (au:maphash-values
+     (lambda (x)
+       (setf (type-table (canonicalize-component-type (component-type x) core-state)
                          (component-preinit-by-type-view (tables core-state)))
-             v))
+             x))
      (components actor))))
 
 (defun actor/preinit->init (core-state actor)
   (remhash actor (actor-preinit-db (tables core-state)))
-  (setf (gethash actor (actor-init-db (tables core-state))) actor))
+  (setf (au:href (actor-init-db (tables core-state)) actor) actor))
 
 (defun actor/init->active (core-state actor)
   (remhash actor (actor-init-db (tables core-state)))
   (setf (state actor) :active
-        (gethash actor (actor-active-db (tables core-state))) actor))
+        (au:href (actor-active-db (tables core-state)) actor) actor))
 
 (defmethod destroy ((thing actor) (context context) &key (ttl 0))
   (let ((core-state (core-state context)))
     (setf (ttl thing) (if (minusp ttl) 0 ttl)
-          (gethash thing (actor-predestroy-view (tables core-state))) thing)))
+          (au:href (actor-predestroy-view (tables core-state)) thing) thing)))
 
 (defun actor/init-or-active->destroy (core-state actor)
-  (setf (gethash actor (actor-destroy-db (tables core-state))) actor
+  (setf (au:href (actor-destroy-db (tables core-state)) actor) actor
         (state actor) :destroy)
   (remhash actor (actor-predestroy-view (tables core-state)))
   (unless (remhash actor (actor-active-db (tables core-state)))
     (remhash actor (actor-preinit-db (tables core-state))))
-  (maphash
-   (lambda (k component)
-     (declare (ignore k))
-     (setf (ttl component) 0)
-     (component/init-or-active->destroy core-state component))
+  (au:maphash-values
+   (lambda (x)
+     (setf (ttl x) 0)
+     (component/init-or-active->destroy core-state x))
    (components actor)))
 
 (defun actor/destroy-descendants (core-state actor)

@@ -14,7 +14,7 @@
                 :initform nil)
    (%graphdefs :accessor graphdefs
                :initarg :graphdefs
-               :initform  (make-hash-table))))
+               :initform  (au:dict #'eq))))
 
 (defun make-analyzed-graph (&rest init-args)
   (apply #'make-instance 'analyzed-graph init-args))
@@ -54,7 +54,7 @@
    ;; graphdef instance.
    (%subforms :accessor subforms
               :initarg :subforms
-              :initform (make-hash-table))))
+              :initform (au:dict #'eq))))
 
 (defun make-graphdef-depends-on (name &rest init-args)
   (apply #'make-instance 'graphdef-depends-on :name name init-args))
@@ -101,7 +101,7 @@
                      :initarg :unknown-type-id)
    (%referenced-types :accessor referenced-types
                       :initarg :referenced-types
-                      :initform (make-hash-table))))
+                      :initform (au:dict #'eq))))
 
 (defmethod make-graph-annotation ((category (eql 'component-dependency)) &rest init-args)
   (apply #'make-instance 'graph-annotation/component-dependency init-args))
@@ -110,7 +110,7 @@
 (defclass graph-annotation/component-package-order ()
   ((%pattern-matched-packages :accessor pattern-matched-packages
                               :initarg :pattern-matched-packages
-                              :initform (make-hash-table))))
+                              :initform (au:dict #'eq))))
 
 (defmethod make-graph-annotation ((category (eql 'component-package-order)) &rest init-args)
   (apply #'make-instance 'graph-annotation/component-package-order
@@ -217,7 +217,7 @@ hyper-edge pairs, :hyperedges"
   (assert (is-syntax-form-p '(define-graph) form))
   (destructuring-bind (name options . subforms) (rest form)
     (let ((category (get-graph-option :category options))
-          (subform-db (make-hash-table)))
+          (subform-db (au:dict #'eq)))
       (make-graphdef name
                      :original-form form
                      :enabled (get-graph-option :enabled options)
@@ -227,7 +227,7 @@ hyper-edge pairs, :hyperedges"
                      :subforms
                      (loop :for i :in subforms
                            :for subform = (parse-subform category i)
-                           :do (setf (gethash (name subform) subform-db) subform)
+                           :do (setf (au:href subform-db (name subform)) subform)
                            :finally (return subform-db))))))
 
 (defmethod extension-file-type ((extension-type (eql 'graphs)))
@@ -236,18 +236,15 @@ hyper-edge pairs, :hyperedges"
 (defmethod prepare-extension ((extension-type (eql 'graphs)) owner path)
   ;; Collect ALL graph-definitions into the appropriate analyzed-graph objects. The graphs aren't
   ;; fully analyzed yet. This is only the parsing phase.
-  (loop :with defs = (collect-extension-forms extension-type path)
-        :for def :in defs
-        :for parsed-def = (parse-graph-definition def)
-        :do (multiple-value-bind (analyzed-graph present)
-                (gethash (category parsed-def) (analyzed-graphs owner))
-              (unless present
-                (let ((new-analyzed-graph (make-analyzed-graph :category (category parsed-def))))
-                  (setf (gethash (category parsed-def) (analyzed-graphs owner))
-                        new-analyzed-graph
-                        analyzed-graph new-analyzed-graph)))
+  (symbol-macrolet ((analyzed-graph (au:href (analyzed-graphs owner) (category parsed-def))))
+    (loop :with defs = (collect-extension-forms extension-type path)
+          :for def :in defs
+          :for parsed-def = (parse-graph-definition def)
+          :do (unless (nth-value 1 analyzed-graph)
+                (setf (au:href (analyzed-graphs owner) (category parsed-def))
+                      (make-analyzed-graph :category (category parsed-def))))
               (when (enabled parsed-def)
-                (setf (gethash (name parsed-def) (graphdefs analyzed-graph)) parsed-def))))
+                (setf (au:href (graphdefs analyzed-graph) (name parsed-def)) parsed-def))))
   ;; TODO: perform the analysis for each graph category type. Note: a category may be a consp form
   ;; in addition to a symbol. A) Ensure if subdag, all are subdag. B) Ensure if subgraph, all are
   ;; subgraph.
@@ -306,9 +303,9 @@ leaves as elements."
 holding real references to the named subforms."
   (loop :for gdef :in (au:hash-values (graphdefs graph))
         :for whole-depends-on-form = (depends-on gdef)
-        :do (setf (depends-on gdef) (make-hash-table))
+        :do (setf (depends-on gdef) (au:dict #'eq))
             (loop :for (gdef-name subform-names) :in whole-depends-on-form
-                  :for gdef-reference = (gethash gdef-name (graphdefs graph))
+                  :for gdef-reference = (au:href (graphdefs graph) gdef-name)
                   :for analyzed-depends-on = (make-graphdef-depends-on
                                               gdef-name
                                               :graphdef gdef-reference
@@ -319,30 +316,29 @@ holding real references to the named subforms."
                           ;; get all subform names in gdef
                           (maphash
                            (lambda (subform-name subform-instance)
-                             (setf (gethash subform-name (subforms analyzed-depends-on))
+                             (setf (au:href (subforms analyzed-depends-on) subform-name)
                                    subform-instance))
                            (subforms gdef-reference))
                           ;; find the listed subform-names (which if it is NIL, do nothing) in the
                           ;; gdef and assign them.
                           (dolist (subform-name subform-names)
-                            (setf (gethash subform-name (subforms analyzed-depends-on))
-                                  (gethash subform-name (subforms gdef-reference)))))
+                            (setf (au:href (subforms analyzed-depends-on) subform-name)
+                                  (au:href (subforms gdef-reference) subform-name))))
                       ;; store the semantic analysis of the depends-on form, transmuted into its new
                       ;; graphdef-depends-on form, back into the initiating gdef.
-                      (setf (gethash (name analyzed-depends-on) (depends-on gdef))
+                      (setf (au:href (depends-on gdef) (name analyzed-depends-on))
                             analyzed-depends-on))))
 
 (defun lookup-splice (splice-form gdef)
   "Find the subform describing SPLICE-FORM in GDEF, or in any available depends-on in that GDEF."
   (let ((splice-name (second splice-form)))
     ;; Check if the splice is natively in the current gdef.
-    (au:when-let ((splice (gethash splice-name (subforms gdef))))
+    (au:when-let ((splice (au:href (subforms gdef) splice-name)))
       (return-from lookup-splice (values splice gdef)))
     ;; If it isn't, then check which depends-on in the current gdef
     (dolist (dep-inst (au:hash-values (depends-on gdef)))
-      (multiple-value-bind (subform present) (gethash splice-name (subforms dep-inst))
-        (when present
-          (return-from lookup-splice (values subform (graphdef dep-inst))))))
+      (au:when-found (subform (au:href (subforms dep-inst) splice-name))
+        (return-from lookup-splice (values subform (graphdef dep-inst)))))
     ;; Otheriwse, you're out of luck. Prolly should put an error here.
     (values nil nil)))
 
@@ -372,7 +368,7 @@ holding real references to the named subforms."
                    gdef
                    ;; ...in which all splices must be looked up in, either directly or through a
                    ;; graphdef-depends-on object.
-                   (depforms (gethash root (subforms gdef))))))
+                   (depforms (au:href (subforms gdef) root)))))
     ;; Then, iterate the graph. Each iteration will substitute the current splice forms for the
     ;; actual graphs indicated by those splice names. This may introduce more splices the next
     ;; iteration will get. Stop when there are no more splices to substitute. Don't convert to
@@ -401,10 +397,7 @@ holding real references to the named subforms."
                           (absorb-depforms clg lookedup-gdef (depforms lookedup-splice))
                         ;; delete the original parent edges.
                         (dolist (parent parents)
-                          (cl-graph:delete-edge-between-vertexes
-                           clg
-                           parent
-                           splice))
+                          (cl-graph:delete-edge-between-vertexes clg parent splice))
                         ;; add the new edges from the parents to the new-roots.
                         (add-cross-product-edges
                          clg
@@ -412,10 +405,7 @@ holding real references to the named subforms."
                          (annotate-splices splice-roots lookedup-gdef))
                         ;; delete the original child edges.
                         (dolist (child children)
-                          (cl-graph:delete-edge-between-vertexes
-                           clg
-                           splice
-                           child))
+                          (cl-graph:delete-edge-between-vertexes clg splice child))
                         ;; add the new edges from the new-leaves to the children.
                         (add-cross-product-edges
                          clg
@@ -447,7 +437,7 @@ holding real references to the named subforms."
      (lambda (v)
        (let ((elem-v (cl-graph:element v)))
          (when (is-syntax-form-p '(component-type) elem-v)
-           (setf (gethash (second elem-v) (referenced-types annotation)) t)))))
+           (setf (au:href (referenced-types annotation) (second elem-v)) t)))))
     (setf (annotation graph) annotation)))
 
 (defmethod generate-graph-annotation ((category (eql 'component-package-order)) graph)
@@ -467,7 +457,8 @@ holding real references to the named subforms."
      clg
      (lambda (v)
        (let* ((elem-v (cl-graph:element v))
-              (putative-package-name (symbol-name (second elem-v)))
+              (second (second elem-v))
+              (putative-package-name (symbol-name second))
               ;; This regex is mildly wrong and will match a extraneous stuff because it isn't
               ;; escaped properly, stuff like . + ? | whatever in the package name will mess things
               ;; up.
@@ -477,17 +468,17 @@ holding real references to the named subforms."
            (au:when-let* ((matched-pkg-name (ppcre:scan-to-strings
                                              putative-package-name-regex pkg-name))
                           (found-pkg (find-package matched-pkg-name)))
-             (pushnew found-pkg (gethash (second elem-v) (pattern-matched-packages annotation))))))))
+             (pushnew found-pkg (au:href (pattern-matched-packages annotation) second)))))))
     (setf (annotation graph) annotation)))
 
 (defun canonicalize-component-type (component-type core-state)
   "If the COMPONENT-TYPE is reference in the component-dependency graph, then return it, otherwise
 return the unknown-type-id symbol."
   (let* ((putative-component-type component-type)
-         (component-dependency-graph (gethash 'component-dependency (analyzed-graphs core-state)))
+         (component-dependency-graph (au:href (analyzed-graphs core-state) 'component-dependency))
          (annotation (annotation component-dependency-graph)))
     (assert annotation)
-    (unless (gethash putative-component-type (referenced-types annotation))
+    (unless (au:href (referenced-types annotation) putative-component-type)
       ;; Nope, so we use the unknown type
       (setf putative-component-type (unknown-type-id annotation)))
     ;; The canonicalized component-type
