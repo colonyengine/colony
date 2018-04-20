@@ -77,42 +77,31 @@
   (gl:delete-texture texture-id))
 
 
-
-(defmacro deftexdesc (&body body)
-  ;; TODO: Note make policy optional, set to :default-policy if not specified.
-  (multiple-value-bind (name textype profile true-body)
-      (if (symbolp (first body))
-          ;; maybe we can name the texture descriptor....
-          (destructuring-bind (name (textype profile) . true-body) body
-            (values name textype profile true-body))
-          ;; or make it anonymous
-          (destructuring-bind ((textype profile) . true-body) body
-            (values nil textype profile true-body)))
-
-    ;; all macro variables are now valid.
-
-    (assert (zerop (mod (length true-body) 2)))
-    (let ((texdesc (gensym "TEXDESC")))
-      `(let ((,texdesc (make-texture-descriptor
-                        :name ',name
-                        :texture-type ',textype
-                        :default-profile ',profile)))
-         ;; Now, fill in the specified parameters
-         (setf
-          ,@(loop :for (key value) :on true-body :by #'cddr :appending
-                  `((au:href (parameters ,texdesc) ,key) ,value)))
-
-         ;; TODO: If there is a name, store it into an extensions hash table....
-         ,texdesc))))
-
-
-;; TODO Not done. define a texture parameter profile. MAybe rename.
-(defmacro deftexdesc-profile (&body args)
+;; TODO Not done. define a texture parameter profile. Tihs holds not only
+;; texture parameters but other texture defaults that may exist.
+(defmacro define-texture-profile (&body args)
   `(progn (list ',args)))
 
 
+(defmacro define-texture (name (textype profile) &body body)
+  (let ((texdesc (gensym "TEXDESC")))
+    `(let ((,texdesc (make-texture-descriptor
+                      :name ',name
+                      :texture-type ',textype
+                      :default-profile ',profile)))
+       ;; Now, fill in the specified parameters
+       (setf
+        ,@(loop :for (key value) :on body :by #'cddr :appending
+                `((au:href (parameters ,texdesc) ,key) ,value)))
+
+       ;; TODO: If there is a name, store it into an extensions hash table....
+       ,texdesc)))
+
+
+
+
 ;; Define a profile to provide defaults for texture parameters.
-(deftexdesc-profile default-profile
+(define-texture-profile default-profile
   ;; texparameter stuff, opengl defaults
   :depth-stencil-texture-mode :depth-component ;; note: ogl 4.3 or greater
   :texture-base-level 0
@@ -139,7 +128,7 @@
 ;; material DSL.  It is probably good that this be a real macro or function. I
 ;; would change the syntax to make it easier to make a function. The materials
 ;; DSL will evaluate the values for the uniforms, so this could be either.
-(deftexdesc name (:texture-2d default-profile)
+(define-texture name (:texture-2d default-profile)
   ;; the default-profile for texture parameters is what is used above, you can
   ;; override it here.
 
