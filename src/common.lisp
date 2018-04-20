@@ -13,6 +13,9 @@ supplied in real seconds, how long the thing has yet to live."))
       (setf entry-table (au:dict #'eq)))
     (setf (au:href entry-table entry) entry)))
 
+(defun type-table-drop (component component-type type-table)
+  (remhash component (type-table component-type type-table)))
+
 (defun eql/package-relaxed (obj1 obj2)
   (cond
     ((eql obj1 obj2) t) ; It succeeded? Oh good. Return quickly.

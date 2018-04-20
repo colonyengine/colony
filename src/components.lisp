@@ -113,13 +113,15 @@ COMPONENT-PACKAGE-ORDER."
     (setf (initializer-thunk component) nil))
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))
     (with-slots (%tables) core-state
-      (remhash component (type-table component-type (component-preinit-by-type-view %tables)))
+      (type-table-drop
+       component component-type (component-preinit-by-type-view %tables))
       (setf (type-table component-type (component-init-by-type-view %tables)) component))))
 
 (defun component/init->active (core-state component)
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))
     (with-slots (%tables) core-state
-      (remhash component (type-table component-type (component-init-by-type-view %tables)))
+      (type-table-drop
+       component component-type (component-init-by-type-view %tables))
       (setf (state component) :active
             (type-table component-type (component-active-by-type-view %tables)) component))))
 
@@ -133,14 +135,18 @@ COMPONENT-PACKAGE-ORDER."
     (with-slots (%tables) core-state
       (setf (state component) :destroy
             (type-table component-type (component-destroy-by-type-view %tables)) component)
-      (remhash component (component-predestroy-view %tables))
-      (unless (remhash component (type-table component-type (component-active-by-type-view %tables)))
-        (remhash component (type-table component-type (component-preinit-by-type-view %tables)))))))
+      (type-table-drop
+       component component-type (component-destroy-by-type-view %tables))
+      (unless (type-table-drop
+               component component-type (component-active-by-type-view %tables))
+        (type-table-drop
+         component component-type (component-preinit-by-type-view %tables))))))
 
 (defun component/destroy->released (core-state component)
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))
     (with-slots (%tables) core-state
-      (remhash component (type-table component-type (component-destroy-by-type-view %tables)))
+      (type-table-drop
+       component component-type (component-destroy-by-type-view %tables))
       (detach-component (actor component) component))))
 
 (defun component/countdown-to-destruction (core-state component)
