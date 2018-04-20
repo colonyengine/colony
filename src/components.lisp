@@ -113,13 +113,13 @@ COMPONENT-PACKAGE-ORDER."
     (setf (initializer-thunk component) nil))
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))
     (with-slots (%tables) core-state
-      (remhash component (type-table component-type (component-preinit-by-type-view %tables)))
+      (type-table-drop core-state 'component-preinit-by-type-view component)
       (setf (type-table component-type (component-init-by-type-view %tables)) component))))
 
 (defun component/init->active (core-state component)
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))
     (with-slots (%tables) core-state
-      (remhash component (type-table component-type (component-init-by-type-view %tables)))
+      (type-table-drop core-state 'component-init-by-type-view component)
       (setf (state component) :active
             (type-table component-type (component-active-by-type-view %tables)) component))))
 
@@ -134,14 +134,12 @@ COMPONENT-PACKAGE-ORDER."
       (setf (state component) :destroy
             (type-table component-type (component-destroy-by-type-view %tables)) component)
       (remhash component (component-predestroy-view %tables))
-      (unless (remhash component (type-table component-type (component-active-by-type-view %tables)))
-        (remhash component (type-table component-type (component-preinit-by-type-view %tables)))))))
+      (unless (type-table-drop core-state 'component-active-by-type-view component)
+        (type-table-drop core-state 'component-preinit-by-type-view component)))))
 
 (defun component/destroy->released (core-state component)
-  (let ((component-type (canonicalize-component-type (component-type component) core-state)))
-    (with-slots (%tables) core-state
-      (remhash component (type-table component-type (component-destroy-by-type-view %tables)))
-      (detach-component (actor component) component))))
+  (type-table-drop core-state 'component-destroy-by-type-view component)
+  (detach-component (actor component) component))
 
 (defun component/countdown-to-destruction (core-state component)
   (when (plusp (ttl component))
