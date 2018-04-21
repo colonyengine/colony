@@ -11,3 +11,6 @@
                    :initform nil)
    (%shared-storage-table :reader shared-storage-table
                           :initform (au:dict #'eq))))
+
+(defun frame-time (context)
+  (box.frame:frame-time (display (core-state context))))

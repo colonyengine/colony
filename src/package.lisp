@@ -12,6 +12,7 @@
            #:display
            #:cameras
            #:context
+	   #:frame-time
            #:lookup-material
            #:active-camera
            #:shaders
