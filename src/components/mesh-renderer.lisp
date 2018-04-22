@@ -29,4 +29,4 @@
           (shadow:uniform-mat4 :view (fl.comp.camera:view camera))
           (shadow:uniform-mat4 :proj (fl.comp.camera:projection camera))
           (bind-material material)
-          (draw-mesh mesh :instance-count 5))))))
+          (draw-mesh mesh))))))
