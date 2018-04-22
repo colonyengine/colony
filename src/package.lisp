@@ -12,10 +12,7 @@
            #:display
            #:cameras
            #:context
-	   #:frame-time
            #:lookup-material
-           #:active-camera
-           #:shaders
            #:shared-storage
            #:define-settings
            #:find-resource
@@ -27,6 +24,14 @@
            #:rcache-load
            #:rcahe-remove
            #:rcache-unload)
+  ;; context
+  (:export #:context
+           #:settings
+           #:shaders
+           #:shared-storage-table
+           #:active-camera
+           #:delta
+           #:frame-time)
   ;; textures
   (:export #:load-texture)
   ;; materials
