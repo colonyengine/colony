@@ -13,10 +13,11 @@
 (defgeneric make-display (core-state)
   (:method ((core-state core-state))
     (let ((hz (calculate-refresh-rate)))
-      (with-cfg (title width height delta periodic-interval debug-frames-interval)
+      (with-cfg (vsync title width height delta periodic-interval debug-frames-interval)
           (context core-state)
         (setf (slot-value core-state '%display)
               (make-instance 'display
+                             :vsyncp vsync
                              :core-state core-state
                              :title title
                              :w width
