@@ -14,10 +14,8 @@
   (setf (parent child) parent))
 
 (defun remove-child (parent child)
-  (setf (children parent)
-        (remove-if (lambda (c) (eq c child))
-                   (children parent)))
-  (setf (parent child) nil))
+  (setf (children parent) (remove-if (lambda (c) (eq c child)) (children parent))
+        (parent child) nil))
 
 (defun translate-node (node delta)
   (with-slots (%current %incremental %previous) (translation node)
