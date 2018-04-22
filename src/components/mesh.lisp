@@ -6,7 +6,7 @@
   (primitives :default nil))
 
 (defun %load-mesh (context location id)
-  (load-mesh (find-resource (core-state context) location) id))
+  (load-mesh (find-resource context location) id))
 
 (defmethod fl.comp.mesh-renderer:draw-mesh ((mesh mesh) &key (instance-count 1))
   (dolist (primitive (primitives mesh))

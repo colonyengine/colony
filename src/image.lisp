@@ -42,8 +42,7 @@
 ;; TODO: Currently, this only reads TGA files. We can abstract it later to
 ;; different image files if it becomes important.
 (defun read-image (context location)
-  (let* ((core-state (core-state context))
-         (path (find-resource core-state location))
+  (let* ((path (find-resource context location))
          (image (tga:read-tga path))
          (pixel-format (get-pixel-format (tga:image-channels image))))
     (make-image :width (tga:image-width image)
