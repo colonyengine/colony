@@ -19,25 +19,26 @@
                    (children parent)))
   (setf (parent child) nil))
 
-(defun translate-node (node)
+(defun translate-node (node delta)
   (with-slots (%current %incremental %previous) (translation node)
     (v3:copy! %previous %current)
-    (v3:+! %current %current %incremental)))
+    (v3:+! %current %current (v3:scale %incremental delta))))
 
-(defun rotate-node (node)
+(defun rotate-node (node delta)
   (with-slots (%current %incremental %previous) (rotation node)
     (q:copy! %previous %current)
-    (q:rotate! %current %current %incremental)))
+    (q:rotate! %current %current (v3:scale %incremental delta))))
 
-(defun scale-node (node)
+(defun scale-node (node delta)
   (with-slots (%current %incremental %previous) (scale node)
     (v3:copy! %previous %current)
-    (v3:+! %current %current %incremental)))
+    (v3:+! %current %current (v3:scale %incremental delta))))
 
-(defun transform-node (node)
-  (scale-node node)
-  (rotate-node node)
-  (translate-node node))
+(defun transform-node (core-state node)
+  (let ((delta (box.frame:delta (display core-state))))
+    (scale-node node delta)
+    (rotate-node node delta)
+    (translate-node node delta)))
 
 (defun resolve-local (node alpha)
   (with-slots (%scale %rotation %translation %local) node
