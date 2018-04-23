@@ -67,7 +67,8 @@
            #:render-component
            #:destroy-component
            #:actor-components-by-type
-           #:actor-component-by-type)
+           #:actor-component-by-type
+           #:shared-storage-metadata)
   ;; assets
   (:export #:load-mesh
            #:draw-func))

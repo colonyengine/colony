@@ -16,6 +16,29 @@
                        :initarg :initializer-thunk
                        :initform nil)))
 
+;;; BEGIN User API Component Protocol
+
+;; TODO: Make this empty one export properly from fl.core so we always see it.
+(defgeneric shared-storage-metadata (component-name)
+  (:method (component-name)))
+
+(defgeneric initialize-component (component context)
+  (:method ((component component) (context context))))
+
+(defgeneric physics-update-component (component context)
+  (:method ((component component) (context context))))
+
+(defgeneric update-component (component context)
+  (:method ((component component) (context context))))
+
+(defgeneric render-component (component context)
+  (:method ((component component) (context context))))
+
+(defgeneric destroy-component (component context)
+  (:method ((component component) (context context))))
+
+;;; END User API Component Protocol
+
 (defun %generate-component-shared-keys (slots)
   (let ((shared-keys))
     (mapcar
@@ -59,12 +82,40 @@
          ;; or arguments for destructuring. We rely on the fact these accessors
          ;; return NIL for things beyond the end of the body.
          (slots (first body))
+         (shared-storage-metadata (second body))
          (shared-keys (%generate-component-shared-keys slots)))
     (au:with-unique-names (store-var entry-var)
       `(progn
          (defclass ,name (,@(append (unless super-classes '(component)) super-classes))
            ,(%generate-component-slot-forms slots))
 
+         ;; Create a method which provides the shared-storage-metadata for this
+         ;; component-name.
+         ;;
+         ;; TODO: It is possible to make an individual function concerning this
+         ;; concept like shared-storage-metadata/NAME. It would provide a
+         ;; non-expensive function to get the data, but one for each
+         ;; component. So the user API is a bit wonky. However, the actual game
+         ;; dev probably wouldn't see this function too often. Still, pacakges
+         ;; make it interesting....
+         (defmethod ,(intern (symbol-name 'shared-storage-metadata)
+                             :fl.core)
+             ((component-name (eql ',name)))
+
+           (declare (ignore component-name))
+           ;; TODO: for now, a hack, but make this more efficient in what it
+           ;; returns. Namely, a static hash table or something related to the
+           ;; data so it is easier to look up.
+           ;;
+           ;; TODO: Technically, it would be awesome if this could search the
+           ;; package searching graph to figure out the info, but it might be
+           ;; impossible here. However, the caller of this, SS-HREF, MIGHT
+           ;; always have a context around, so they could qualify the
+           ;; component-name!
+           ',shared-storage-metadata)
+
+         ;; TODO: this stuff below gets trashed (and the macro code to make
+         ;; it)when the new shared storage works.
          (defclass ,(au:symbolicate name '-shared-storage) ()
            ((%cache :accessor cache :initform (au:dict #'equalp))))
          (defclass ,entry-symbol ()
@@ -158,20 +209,3 @@ COMPONENT-PACKAGE-ORDER."
 (defun component/countdown-to-destruction (core-state component)
   (when (plusp (ttl component))
     (decf (ttl component) (box.frame:frame-time (display core-state)))))
-
-;;; User API Component Protocol
-
-(defgeneric initialize-component (component context)
-  (:method ((component component) (context context))))
-
-(defgeneric physics-update-component (component context)
-  (:method ((component component) (context context))))
-
-(defgeneric update-component (component context)
-  (:method ((component component) (context context))))
-
-(defgeneric render-component (component context)
-  (:method ((component component) (context context))))
-
-(defgeneric destroy-component (component context)
-  (:method ((component component) (context context))))
