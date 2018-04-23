@@ -1,9 +1,9 @@
 (in-package :fl.comp.mesh-renderer)
 
 (define-component mesh-renderer ()
-  (mesh :default nil)
-  (transform :default nil)
-  (material :default nil))
+  ((mesh :default nil)
+   (transform :default nil)
+   (material :default nil)))
 
 (defmethod initialize-component ((component mesh-renderer) (context context))
   (symbol-macrolet ((store (shared-storage context component)))

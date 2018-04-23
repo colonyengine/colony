@@ -52,13 +52,19 @@
         (destructuring-bind (slot-name &key &allow-other-keys) slot
           (list (au:make-keyword slot-name) slot-name))))
 
-(defmacro define-component (name super-classes &body slots)
-  (let ((entry-symbol (au:symbolicate name '-shared-storage-entry))
-        (shared-keys (%generate-component-shared-keys slots)))
+(defmacro define-component (name super-classes &body body)
+  (let* ((entry-symbol (au:symbolicate name '-shared-storage-entry))
+         ;; NOTE: Can't use destructuring-bind because these forms might
+         ;; not actually be present in the form so there would be a mismatch
+         ;; or arguments for destructuring. We rely on the fact these accessors
+         ;; return NIL for things beyond the end of the body.
+         (slots (first body))
+         (shared-keys (%generate-component-shared-keys slots)))
     (au:with-unique-names (store-var entry-var)
       `(progn
          (defclass ,name (,@(append (unless super-classes '(component)) super-classes))
            ,(%generate-component-slot-forms slots))
+
          (defclass ,(au:symbolicate name '-shared-storage) ()
            ((%cache :accessor cache :initform (au:dict #'equalp))))
          (defclass ,entry-symbol ()
