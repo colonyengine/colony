@@ -31,7 +31,8 @@
            #:shared-storage-table
            #:active-camera
            #:delta
-           #:frame-time)
+           #:frame-time
+           #:ss-href)
   ;; textures
   (:export #:load-texture)
   ;; materials
