@@ -1,0 +1,105 @@
+* Actor Life Cycle
+
+From the =core.flow= point of view. This is the state machine for Actors in terms of flow-states.
+
+*NOTE:* This sequence of flow states is a subset of the entire =core.flow= state machine. So for
+example, the =protocol-update-component= flow-state is missing in this state transition. In the
+=protocol-update-component=, which represents one of the points of game code execution in a project,
+new actors can arise via =spawn-actor= or current actors may be =destroy='ed.
+
+#+BEGIN_SRC
+[FRAME-START] ->
+init-actors -> realize-actors -> prepare-predestroy-actors ->
+destroy-actor-children -> decrement-actor-destroy-timer ->
+disconnect-destroyed-actors -> release-actors ->
+[FRAME-END]
+#+END_SRC
+
+The above flow-states call an API in the =src/engine/actor.lisp= file that performs the above book
+keeping. Here is the correspondence between the flow-state described above and the API functions
+called:
+
+| flow-state                    | Actor API Function             |
+|-------------------------------+--------------------------------|
+| init-actors                   | actor/preinit->init            |
+| realize-actors                | actor/init->active             |
+| prepare-predestroy-actors     | actor/init-or-active->destroy  |
+| destroy-actor-children        | actor/destroy-descendants      |
+| decrement-actor-destroy-timer | actor/countdown-to-destruction |
+| disconnect-destroyed-actors   | actor/disconnect               |
+| release-actors                | actor/destroy->released        |
+
+Now, in the =bookkeeping-tables= defclass found in =core-state.lisp=, we define some hash table slots to
+represent the actual places where actors are kept. For each hash table, the key is an actor
+instance-ref, and the value is the same actor instance-ref. We do this to make additions and
+deletions amortize to O(1). Using lists here would cause a severe performance drop in order to
+perform the list search.
+
+#+BEGIN_SRC lisp
+;; ...
+(%actor-predestroy-view :reader actor-predestroy-view
+                        :initform (make-hash-table))
+(%actor-preinit-db :reader actor-preinit-db
+                   :initform (make-hash-table))
+(%actor-init-db :reader actor-init-db
+                :initform (make-hash-table))
+(%actor-active-db :reader actor-active-db
+                  :initform (make-hash-table))
+(%actor-destroy-db :reader actor-destroy-db
+                   :initform (make-hash-table)))
+;; ...
+#+END_SRC
+
+Note that by convention =*-view= means a data structure that *does not own* the values in it, but
+instead have a view of them in other data structures. A =*-db= data structure actually *owns* the
+instances in them. So, to be clear, if an actor's instance is in =actor-predestroy-view=, that means
+it is a reference to an instance owned by another =*-db= hash table, in this case =actor-preinit-db= _or_
+=actor-active-db=.
+
+These slots represent the storage location for actor instances as they move through their life
+cycle.
+
+Let's describe what each API function does with the above tables. In addition, we will add two more
+API calls the user may use during the execution of the component-protocol:
+
+** spawn-actor
+  - The state of the actor should be =:initialize=.
+  - Add the specified actor instance to =actor-preinit-db=.
+
+** destroy
+  - Set the destruction-timer of the actor, if applicable.
+  - Add the actor to the =actor-predestroy-view=.
+
+** actor/preinit->init
+  - Remove actor from =actor-preinit-db=.
+  - Mark the actor's state as =:active=.
+  - Add actor to =actor-init-db=.
+
+** actor/init->active
+  - Remove actor from =actor-init-db=.
+  - Add actor to =actor-active-db=.
+
+** actor/init-or-active->destroy
+  - Add actor to =actor-destroy-db=.
+  - Mark the actor's state as =:destroy=.
+  - Remove actor from =actor-predestroy-view=.
+  - If unable to remove actor from =actor-active-db=, then remove from =actor-preinit-db=.
+  - Any components in this destroying actor are moved in their specific state machine to their
+    equivalent destroy state.
+
+** actor/destroy-descendants
+  - Recurse down the children of the actor, set destruction timer to zero, then move from
+    =actor-active-db= or =actor-preinit-db= (as appropriate) to =actor-destroy-db=.
+
+** actor/countdown-to-destruction
+  - Decrement the time to live for this actor by the frame time if appropriate.
+
+** actor/disconnect
+  - Unhook the actor and all of its children from the scene tree.
+
+** actor/destroy->released
+  - This function assumes that previously to this call, the components for this actor have all been
+    destroyed and released, leaving an empty actor.
+  - Remove the actor from =actor-destroy-db=.
+  - At this point, FL has no more references to this actor. If the user's code also has no more
+    references, then the GC will eventually collect this actor.
