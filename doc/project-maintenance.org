@@ -1,0 +1,14 @@
+* Project Maintenance
+
+** Issue Limit
+
+Currently, we allow having up to a maximum of 10 open issues posted. Any more than that requires
+fixing and closing existing issues before being added.
+
+** Issue Priority
+
+Issues are assigned to individual developers as another developer sees fit. In addition, issues have
+labels applied to them, two of which are =high-priority= and =low-priority=. When a developer wants to
+work towards fixing an issue, they should search for an issue to work on in the following order: =is
+assigned / high-priority= -> =high-priority= -> =is assigned / low-priority= -> =low-priority= ->
+=un-assigned / un-prioritized=.

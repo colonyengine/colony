@@ -1,0 +1,31 @@
+* User Documentation
+
+This page aims to document the current way to run the engine. It is to be edited when changes to the
+API are made. The purpose is to briefly instruct other developers how to use the engine during
+development.
+
+1. Start the engine (including the graphics loop)
+
+#+BEGIN_SRC lisp
+(ql:quickload :first-light-example)
+(in-package :first-light-example)
+(start-engine)
+#+END_SRC
+
+Note: A recent change requires that you be "in" the user package, not the core package when starting
+the engine.
+
+Note: You *cannot* run the engine at all unless you are "in" the user package. This is because the
+engine tries to figure out where to load user extensions from, and by being "in" the user package,
+you help the engine figure this out without needing to pass an argument (since we cannot make the
+directory a context variable, as the context DSL is an extension to be loaded).
+
+2. Quit the engine
+
+Press =Escape= while the graphics window is focused.
+
+3. Debug the state machine
+
+State machine debugging is disabled by default. To print flow state debugging information to the
+REPL each frame, edit the =example/data/settings.cfg= file, changing the key/value pair
+=:log-level :debug= to =:log-level :trace=, and then follow step =1= above to start the engine.
