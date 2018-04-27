@@ -12,6 +12,8 @@
    (%shaders :accessor shaders)
    (%materials :accessor materials
                :initform (%make-materials-table))
+   (%textures :accessor textures
+	      :initform (%make-textures-table))
    (%context :reader context)
    (%tables :reader tables
             :initform (make-instance 'bookkeeping-tables))

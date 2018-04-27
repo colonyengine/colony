@@ -34,7 +34,9 @@
            #:frame-time
            #:ss-href)
   ;; textures
-  (:export #:load-texture)
+  (:export #:load-texture
+           #:define-texture-profile
+           #:define-texture)
   ;; materials
   (:export #:define-material
            #:bind-material
@@ -140,6 +142,7 @@
 
 (defpackage+ #:fl.materials
   (:use #:cl #:shadow)
+  (:inherit #:box.math.vari #:vari)
   (:local-nicknames (#:v2 #:box.math.vec2)
                     (#:v3 #:box.math.vec3)
                     (#:v4 #:box.math.vec4)
@@ -154,3 +157,17 @@
                 #:unlit-texture
                 #:unlit-texture-decal
                 #:pbr-damaged-helmet))
+
+(defpackage+ #:fl.textures
+  (:use #:cl #:shadow)
+  (:inherit #:box.math.vari #:vari)
+  (:local-nicknames (#:v2 #:box.math.vec2)
+                    (#:v3 #:box.math.vec3)
+                    (#:v4 #:box.math.vec4)
+                    (#:m2 #:box.math.mat2)
+                    (#:m3 #:box.math.mat3)
+                    (#:m4 #:box.math.mat4))
+  (:import-from #:fl.core
+                #:define-texture-profile
+                #:define-texture)
+  (:export-only #:default-profile))
