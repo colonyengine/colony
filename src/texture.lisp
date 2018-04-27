@@ -1,5 +1,58 @@
 (in-package :fl.core)
 
+;; The textures-table is a data store of everything in the .tex extension.  This
+;; includes any texture-profiles, and defined textures (as texture-descriptors.
+;; It is kept in a slot in core-state.
+(defclass textures-table ()
+  ((%profiles :reader profiles
+              :initarg :profiles
+              :initform (au:dict #'eq))
+   (%texture-descriptors :reader texture-descriptors
+                         :initarg :texture-descriptors
+                         :initform (au:dict #'eq))))
+
+
+(defun %make-textures-table (&rest init-args)
+  (apply #'make-instance 'textures-table init-args))
+
+(defun %add-texture-profile (profile core-state)
+  (setf (au:href (profiles (textures core-state)) (name profile))
+        profile))
+
+(defun %add-texture-descriptor (texdesc core-state)
+  (setf (au:href (texture-descriptors (textures core-state)) (name texdesc))
+        texdesc))
+
+
+(defclass texture-profile ()
+  ((%name :reader name
+          :initarg :name)
+   (%attributes :reader attributes
+                :initform (au:dict #'eq))))
+
+;; TODO candidate for public API
+(defun make-texture-profile (&rest init-args)
+  (apply #'make-instance 'texture-profile init-args))
+
+
+(defclass texture-descriptor ()
+  ((%name :reader name
+          :initarg :name)
+   (%texture-type :reader texture-type
+                  :initarg :texture-type)
+   (%default-profile :reader default-profile
+                     :initarg :default-profile)
+   (%attributes :reader attributes
+                :initarg :attributes
+                :initform (au:dict #'eq))))
+
+;; TODO candidate for public API
+(defun make-texture-descriptor (&rest init-args)
+  (apply #'make-instance 'texture-descriptor init-args))
+
+
+
+
 ;; this class is currently unused, but it should be!
 (defclass texture ()
   (;; The texture id.
@@ -16,21 +69,6 @@
             :initarg :source)
    (%sampler :accessor sampler
              :initarg :sampler)))
-
-(defclass texture-descriptor ()
-  ((%name :reader name
-          :initarg :name)
-   (%texture-type :reader texture-type
-                  :initarg :texture-type)
-   (%default-profile :reader default-profile
-                     :initarg :default-profile)
-   (%parameters :reader parameters
-                :initarg :parameters
-                :initform (au:dict #'eq))))
-
-(defun make-texture-descriptor (&rest init-args)
-  (apply #'make-instance 'texture-descriptor init-args))
-
 
 
 
@@ -77,10 +115,25 @@
   (gl:delete-texture texture-id))
 
 
-;; TODO Not done. define a texture parameter profile. Tihs holds not only
-;; texture parameters but other texture defaults that may exist.
-(defmacro define-texture-profile (&body args)
-  `(progn (list ',args)))
+
+
+(defun parse-texture-profile (name body-form)
+  (let ((texprof (gensym "TEXTURE-PROFILE")))
+    `(let* ((,texprof (make-texture-profile :name ',name)))
+       (setf
+        ,@(loop :for (attribute value) :in body-form :appending
+                `((au:href (attributes ,texprof) ,attribute) ,value)))
+       ,texprof)))
+
+
+(defmacro define-texture-profile (name &body body)
+  "Define a set of attribute defaults that can be applied while defining
+a texture."
+  (let ((texprof (gensym "TEXPROF")))
+    `(let* ((,texprof ,(parse-texture-profile name body)))
+       (declare (special %temp-texture-profiles))
+       (setf (au:href %temp-texture-profiles (name ,texprof)) ,texprof))))
+
 
 
 (defmacro define-texture (name (textype profile) &body body)
@@ -89,50 +142,36 @@
                       :name ',name
                       :texture-type ',textype
                       :default-profile ',profile)))
-       ;; Now, fill in the specified parameters
+       (declare (special %temp-texture-descriptors))
+       ;; Record the parameters we'll overlay on the profile at use time.
        (setf
-        ,@(loop :for (key value) :on body :by #'cddr :appending
-                `((au:href (parameters ,texdesc) ,key) ,value)))
-
-       ;; TODO: If there is a name, store it into an extensions hash table....
-       ,texdesc)))
+        ,@(loop :for (key value) :in body :appending
+                `((au:href (attributes ,texdesc) ,key) ,value)))
+       (setf (au:href %temp-texture-descriptors (name ,texdesc)) ,texdesc))))
 
 
+(defmethod extension-file-type ((extension-type (eql 'textures)))
+  "tex")
 
 
-;; Define a profile to provide defaults for texture parameters.
-(define-texture-profile default-profile
-  ;; texparameter stuff, opengl defaults
-  :depth-stencil-texture-mode :depth-component ;; note: ogl 4.3 or greater
-  :texture-base-level 0
-  :texture-border-color :todo-add-local-nicknames #++(v4:make 0.0 0.0 0.0 0.0)
-  :texture-compare-func :never ;; unknown default
-  :texture-compare-mode :none ;; unknown default
-  :texture-min-filter :nearest-mipmap-linear
-  :texture-mag-filter :linear
-  :texture-min-lod -1000
-  :texture-max-lod 1000
-  :texture-max-level 1000
-  :texture-swizzle-r :red
-  :texture-swizzle-g :green
-  :texture-swizzle-b :blue
-  :texture-swizzle-a :alpha
-  :texture-wrap-s :repeat
-  :texture_wrap-t :repeat
-  :texture-wrap-r :repeat)
+(defmethod prepare-extension ((extension-type (eql 'textures)) owner path)
+  (let ((%temp-texture-descriptors (au:dict #'eq))
+        (%temp-texture-profiles (au:dict #'eq)))
+    (declare (special %temp-texture-descriptors %temp-texture-profiles))
+    (flet ((%prepare ()
+             (load-extensions extension-type path)
+             (values %temp-texture-profiles %temp-texture-descriptors)))
 
+      (multiple-value-bind (profiles texdescs) (%prepare)
+        ;; The order doesn't matter. we can type check the texture-descriptors
+        ;; after reading _all_ the available textures extensions.
 
+        ;; Process all defined profiles.
+        (au:maphash-values (lambda (profile)
+                             (%add-texture-profile profile owner))
+                           profiles)
 
-;; example texture descriptor, This one is named, 'name', probably
-;; fl.textures:name, but they can also be anonymous when used directly in the
-;; material DSL.  It is probably good that this be a real macro or function. I
-;; would change the syntax to make it easier to make a function. The materials
-;; DSL will evaluate the values for the uniforms, so this could be either.
-(define-texture name (:texture-2d default-profile)
-  ;; the default-profile for texture parameters is what is used above, you can
-  ;; override it here.
-
-  :generate-mipmaps-p t ;; must only have a single base image. error otherwise
-  :flip-y t
-  :images #("path/to/texture.tga" ;; mipmap 0, or base image, always
-            ))
+        ;; Process all texture-descriptors
+        (au:maphash-values (lambda (texdesc)
+                             (%add-texture-descriptor texdesc owner))
+                           texdescs)))))

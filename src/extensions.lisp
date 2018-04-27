@@ -26,6 +26,7 @@
   (prepare-extension 'call-flow core-state path)
   (prepare-extension 'shader-stages core-state path)
   (prepare-extension 'shader-programs core-state path)
+  (prepare-extension 'textures core-state path)
   (prepare-extension 'materials core-state path)
   (prepare-extension 'scene core-state path))
 
