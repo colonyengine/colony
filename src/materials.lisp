@@ -251,9 +251,10 @@ etc. Return NIL otherwise."
      (if (sampler-p glsl-type)
          (let ((unit (active-texture-unit material)))
            (incf (active-texture-unit material))
-           (lambda (uniform-name texture-id)
+           (lambda (uniform-name texture)
              (gl:active-texture unit)
-             (gl:bind-texture (sampler-type->texture-type glsl-type) texture-id)
+             (gl:bind-texture (sampler-type->texture-type glsl-type)
+                              (texid texture))
              (shadow:uniform-int uniform-name unit)))
          (ecase glsl-type
            (:bool #'shadow:uniform-int)
@@ -271,10 +272,10 @@ etc. Return NIL otherwise."
          ;; Shouldn't I be binding more than one texture?
          (let ((unit (active-texture-unit material)))
            (incf (active-texture-unit material))
-           (lambda (uniform-name texture-id)
+           (lambda (uniform-name texture)
              (gl:active-texture unit)
              (gl:bind-texture (sampler-type->texture-type (first glsl-type))
-                              texture-id)
+                              (texid texture))
              (shadow:uniform-int-array uniform-name unit)))
          (ecase (first glsl-type)
            (:bool #'shadow:uniform-int-array)
@@ -317,9 +318,11 @@ etc. Return NIL otherwise."
                          ((and (stringp (semantic-value material-value))
                                (not (zerop
                                      (length (semantic-value material-value)))))
+
                           (setf (computed-value material-value)
                                 (rcache-lookup :texture core-state
                                                (semantic-value material-value)))
+
                           (simple-logger:emit :material.annotate
                                               (id material)
                                               uniform-name

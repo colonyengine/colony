@@ -63,11 +63,6 @@
    (%texid :reader texid
            :initarg :texid)))
 
-
-
-
-
-
 ;; TODO: Convert to taking a texture-decriptor instead of a location.
 ;; TODO: Make this return a texture object for the right kind of texture
 ;; that also holds the texture-id and the texture desdcriptor from when
@@ -97,7 +92,9 @@
         (gl:tex-parameter :texture-2d :texture-min-filter filter-min)
         (gl:tex-parameter :texture-2d :texture-mag-filter filter-mag)
         (free-storage image)
-        id))))
+
+        ;; Wrap it all into a real texture instance for better bookeeping.
+        (make-instance 'texture :texid id)))))
 
 
 (defun parse-texture-profile (name body-form)
@@ -178,9 +175,8 @@ a texture."
 (defmethod rcache-construct ((entry-type (eql :texture)) (core-state core-state)
                              &rest keys)
   (destructuring-bind (texture-location) keys
-    (let ((texture-id (load-texture (context core-state) texture-location)))
-      texture-id)))
+    (load-texture (context core-state) texture-location)))
 
 (defmethod rcache-dispose ((entry-type (eql :texture)) (core-state core-state)
-                           texture-id)
-  (gl:delete-texture texture-id))
+                           texture)
+  (gl:delete-texture (texid texture)))
