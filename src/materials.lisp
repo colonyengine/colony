@@ -175,42 +175,117 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
 
          mat))))
 
+(defun sampler-type->texture-type (sampler-type)
+  "Given a SAMPLER-TYPE, like :sampler-2d-array, return the kind of texture-type
+that is appropriate for it, such as :texture-2d-array.  Do this for all sampler
+types and texture types."
+  (let ((ht (au:dict #'eq
+                     :sampler-1d :texture-1d
+                     :isampler-1d :texture-1d
+                     :usampler-1d :texture-1d
+
+                     :sampler-2d :texture-2d
+                     :isampler-2d :texture-2d
+                     :usampler-2d :texture-2d
+
+                     :sampler-3d :texture-3d
+                     :isampler-3d :texture-3d
+                     :usampler-3d :texture-3d
+
+                     :sampler-cube :texture-cube-map
+                     :isampler-cube :texture-cube-map
+                     :usampler-cube :texture-cube-map
+
+                     :sampler-2d-rect :texture-rectangle
+                     :isampler-2d-rect :texture-rectangle
+                     :usampler-2d-rect :texture-rectangle
+
+                     :sampler-1d-array :texture-1d-array
+                     :isampler-1d-array :texture-1d-array
+                     :usampler-1d-array :texture-1d-array
+
+                     :sampler-2d-array :texture-2d-array
+                     :isampler-2d-array :texture-2d-array
+                     :usampler-2d-array :texture-2d-array
+
+                     :sampler-cube-array :texture-cube-map-array
+                     :isampler-cube-array :texture-cube-map-array
+                     :usampler-cube-array :texture-cube-map-array
+
+                     :sampler-buffer :texture-buffer
+                     :isampler-buffer :texture-buffer
+                     :usampler-buffer :texture-buffer
+
+                     :sampler-2d-ms :texture-2d-multisample
+                     :isampler-2d-ms :texture-2d-multisample
+                     :usampler-2d-ms :texture-2d-multisample
+
+                     :sampler-2d-ms-array :texture-2d-multisample-array
+                     :isampler-2d-ms-array :texture-2d-multisample-array
+                     :usampler-2d-ms-array :texture-2d-multisample-array)))
+
+    (au:if-found (texture-type (au:href ht sampler-type))
+                 texture-type
+                 (error "Unknown sampler-type: ~A~%" sampler-type))))
+
+(defun sampler-p (glsl-type)
+  "Return T if the GLSL-TYPE is a sampler like :sampler-2d or :sampler-buffer,
+etc. Return NIL otherwise."
+  (member glsl-type
+          '(:sampler-1d :isampler-1d :usampler-1d
+            :sampler-2d :isampler-2d :usampler-2d
+            :sampler-3d :isampler-3d :usampler-3d
+            :sampler-cube :isampler-cube :usampler-cube
+            :sampler-2d-rect :isampler-2d-rect :usampler-2d-rect
+            :sampler-1d-array :isampler-1d-array :usampler-1d-array
+            :sampler-2d-array :isampler-2d-array :usampler-2d-array
+            :sampler-cube-array :isampler-cube-array :usampler-cube-array
+            :sampler-buffer :isampler-buffer :usampler-buffer
+            :sampler-2d-ms :isampler-2d-ms :usamplers-2d-ms
+            :sampler-2d-ms-array :isampler-2d-ms-array :usampler-2d-ms-array)
+          :test #'eq))
+
 (defun determine-binder-function (material glsl-type)
   (cond
     ((symbolp glsl-type)
-     (ecase glsl-type
-       (:sampler-2d (let ((unit (active-texture-unit material)))
-                      (incf (active-texture-unit material))
-                      (lambda (uniform-name texture-id)
-                        (gl:active-texture unit)
-                        (gl:bind-texture :texture-2d texture-id)
-                        (shadow:uniform-int uniform-name unit))))
-       (:bool #'shadow:uniform-int)
-       (:int #'shadow:uniform-int)
-       (:float #'shadow:uniform-float)
-       (:vec2 #'shadow:uniform-vec2)
-       (:vec3 #'shadow:uniform-vec3)
-       (:vec4 #'shadow:uniform-vec4)
-       (:mat2 #'shadow:uniform-mat2)
-       (:mat3 #'shadow:uniform-mat3)
-       (:mat4 #'shadow:uniform-mat4)))
+     (if (sampler-p glsl-type)
+         (let ((unit (active-texture-unit material)))
+           (incf (active-texture-unit material))
+           (lambda (uniform-name texture-id)
+             (gl:active-texture unit)
+             (gl:bind-texture (sampler-type->texture-type glsl-type) texture-id)
+             (shadow:uniform-int uniform-name unit)))
+         (ecase glsl-type
+           (:bool #'shadow:uniform-int)
+           (:int #'shadow:uniform-int)
+           (:float #'shadow:uniform-float)
+           (:vec2 #'shadow:uniform-vec2)
+           (:vec3 #'shadow:uniform-vec3)
+           (:vec4 #'shadow:uniform-vec4)
+           (:mat2 #'shadow:uniform-mat2)
+           (:mat3 #'shadow:uniform-mat3)
+           (:mat4 #'shadow:uniform-mat4))))
     ((consp glsl-type)
-     (ecase (first glsl-type)
-       (:sampler-2d (let ((unit (active-texture-unit material)))
-                      (incf (active-texture-unit material))
-                      (lambda (uniform-name texture-id)
-                        (gl:active-texture unit)
-                        (gl:bind-texture :texture-2d texture-id)
-                        (shadow:uniform-int-array uniform-name unit))))
-       (:bool #'shadow:uniform-int-array)
-       (:int #'shadow:uniform-int-array)
-       (:float #'shadow:uniform-float-array)
-       (:vec2 #'shadow:uniform-vec2-array)
-       (:vec3 #'shadow:uniform-vec3-array)
-       (:vec4 #'shadow:uniform-vec4-array)
-       (:mat2 #'shadow:uniform-mat2-array)
-       (:mat3 #'shadow:uniform-mat3-array)
-       (:mat4 #'shadow:uniform-mat4-array)))
+     (if (sampler-p (first glsl-type))
+         ;; TODO: Is this actually correct code for an array of samplers?
+         ;; Shouldn't I be binding more than one texture?
+         (let ((unit (active-texture-unit material)))
+           (incf (active-texture-unit material))
+           (lambda (uniform-name texture-id)
+             (gl:active-texture unit)
+             (gl:bind-texture (sampler-type->texture-type (first glsl-type))
+                              texture-id)
+             (shadow:uniform-int-array uniform-name unit)))
+         (ecase (first glsl-type)
+           (:bool #'shadow:uniform-int-array)
+           (:int #'shadow:uniform-int-array)
+           (:float #'shadow:uniform-float-array)
+           (:vec2 #'shadow:uniform-vec2-array)
+           (:vec3 #'shadow:uniform-vec3-array)
+           (:vec4 #'shadow:uniform-vec4-array)
+           (:mat2 #'shadow:uniform-mat2-array)
+           (:mat3 #'shadow:uniform-mat3-array)
+           (:mat4 #'shadow:uniform-mat4-array))))
     (t
      (error "Cannot determine binder function for glsl-type: ~S~%"
             glsl-type))))
@@ -223,17 +298,19 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
 
      (au:if-found (uniform-type-info (au:href (shadow:uniforms shader-program) uniform-name))
 
-                  ;; 1. figure out of the variable name/path is present in the shader
-                  ;; program. good if so, error if not.
+                  ;; 1. figure out of the variable name/path is present in the
+                  ;; shader program. good if so, error if not.
 
                   (let ((uniform-type (aref uniform-type-info 1)))
-                    ;; 2. Find the uniform in the shader-program and get its type-info. Use
-                    ;; that to set the binder function.
-                    (setf (binder material-value) (determine-binder-function material uniform-type))
+                    ;; 2. Find the uniform in the shader-program and get its
+                    ;; type-info. Use that to set the binder function.
+                    (setf (binder material-value)
+                          (determine-binder-function material uniform-type))
 
-                    ;; 3. Convert certain types like :sampler-2d away from the file
-                    ;; path and to a real texture-id. Poke through the core-state
-                    ;; to set up the textures/etc into the cache in core-state.
+                    ;; 3. Convert certain types like :sampler-2d away from the
+                    ;; file path and to a real texture-id. Poke through the
+                    ;; core-state to set up the textures/etc into the cache in
+                    ;; core-state.
                     (case uniform-type
                       (:sampler-2d
                        (cond
