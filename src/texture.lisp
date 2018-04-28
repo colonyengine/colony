@@ -178,5 +178,6 @@ a texture."
   "Ensure that these aspects of texture profiles and desdcriptors are ok:
 1. The FL.TEXTURES:DEFAULT-PROFILE exists.
 2. All currently known about texture descriptors have valid profile references.
-3. All images specified by paths actually exist at that path."
+3. All images specified by paths actually exist at that path.
+4. The texture type is valid."
   nil)
