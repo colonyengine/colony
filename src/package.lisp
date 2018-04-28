@@ -21,9 +21,9 @@
            #:with-shared-storage
            #:rcache
            #:rcache-lookup
-           #:rcache-load
-           #:rcahe-remove
-           #:rcache-unload)
+           #:rcache-construct
+           #:rcache-remove
+           #:rcache-dispose)
   ;; context
   (:export #:context
            #:settings

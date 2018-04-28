@@ -4,7 +4,7 @@
   ((%user-package :reader user-package
                   :initarg :user-package)
    (%rcache :reader rcache
-            :initform (au:dict #'equalp))
+            :initform (au:dict #'eq))
    (%display :reader display)
    (%scene-tree :reader scene-tree)
    (%cameras :accessor cameras
@@ -13,7 +13,7 @@
    (%materials :accessor materials
                :initform (%make-materials-table))
    (%textures :accessor textures
-	      :initform (%make-textures-table))
+              :initform (%make-textures-table))
    (%context :reader context)
    (%tables :reader tables
             :initform (make-instance 'bookkeeping-tables))
@@ -109,32 +109,54 @@ CORE-STATE."
         (uiop:file-exists-p core-path)
         (error "Resource not found: ~a" path))))
 
-;;;; Interim caching code for (often) resources
+;;;; Interim caching code for (often) resources. Uses nested hash tables like
+;;;; the shared-storage for componnets.
 ;;;; TODO: change this when the real cache code shows up.
 
-;;;; TODO: The rcache code should be broken into 4 hash tables, each with
-;;;; EQ, EQL, EQUAL, and EQUALP tests. Then, a new method should be added here
-;;;; so people can decide which test they want to use for which entry-type.
-(defgeneric rcache-lookup (entry-type core-state key &key &allow-other-keys)
-  (:method ((entry-type symbol) (context context) key &key)
-    (rcache-lookup entry-type (core-state context) key)))
+(defgeneric rcache-layout (entry-type)
+  (:method ((entry-type symbol))
+    '(eql)))
 
-(defgeneric rcache-load (entry-type core-state key &key &allow-other-keys)
-  (:method ((entry-type symbol) (context context) key &key)
-    (rcache-load entry-type (core-state context) key)))
+(defgeneric rcache-lookup (entry-type core-state &rest keys)
+  (:method ((entry-type symbol) (context context) &rest keys)
+    (apply #'rcache-lookup entry-type (core-state context) keys)))
 
-(defgeneric rcache-remove (entry-type core-state key &key &allow-other-keys)
-  (:method ((entry-type symbol) (context context) key &key)
-    (rcache-remove entry-type (core-state context) key)))
+(defgeneric rcache-construct (entry-type core-state &rest keys)
+  (:method ((entry-type symbol) (context context) &rest keys)
+    (apply #'rcache-construct entry-type (core-state context) keys)))
 
-(defgeneric rcache-unload (entry-type core-state key val &key &allow-other-keys)
-  (:method ((entry-type symbol) (context context) key val &key)
-    (rcache-unload entry-type (core-state context) key val)))
+(defgeneric rcache-remove (entry-type core-state &rest keys)
+  (:method ((entry-type symbol) (context context) &rest keys)
+    (apply #'rcache-remove entry-type (core-state context) keys)))
 
-(defmethod rcache-lookup ((entry-type symbol) (core-state core-state) key &key)
-  (au:ensure-gethash key (rcache core-state) (rcache-load entry-type core-state key)))
+(defgeneric rcache-dispose (entry-type core-state removed-value)
+  (:method ((entry-type symbol) (context context) removed-value)
+    (rcache-dispose entry-type (core-state context) removed-value)))
 
-(defmethod rcache-remove ((entry-type symbol) (core-state core-state) key &key)
-  (au:when-found (value (au:href (rcache core-state) key))
-    (remhash key (rcache core-state))
-    (rcache-unload entry-type core-state key value)))
+;; This might call rcache-construct if needed.
+(defmethod rcache-lookup ((entry-type symbol) (core-state core-state)
+                          &rest keys)
+  (ensure-nested-hash-table (rcache core-state)
+                            ;; NOTE: 'eq is for the rcache table itself.
+                            (list* 'eq (rcache-layout entry-type))
+                            (list* entry-type keys))
+
+  (multiple-value-bind (value presentp)
+      (apply #'au:href (rcache core-state) (list* entry-type keys))
+    (unless presentp
+      (setf value
+            (apply #'rcache-construct entry-type core-state keys)
+
+            (apply #'au:href (rcache core-state) (list* entry-type keys))
+            value))
+    value))
+
+;; This might call rcache-dispose if needed.
+(defmethod rcache-remove ((entry-type symbol) (core-state core-state)
+                          &rest keys)
+  (multiple-value-bind (value presentp)
+      (apply #'au:href (rcache core-state) (list* entry-type keys))
+    (when presentp
+      (remhash (apply #'au:href (rcache core-state) (list* entry-type keys))
+               (rcache core-state))
+      (rcache-dispose entry-type core-state value))))

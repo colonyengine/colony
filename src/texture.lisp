@@ -100,20 +100,6 @@
         id))))
 
 
-;; Interim use of the RCACHE API.
-
-(defmethod rcache-load ((entry-type (eql :texture)) (core-state core-state)
-                        texture-location &key)
-  (let ((texture-id (load-texture (context core-state) texture-location)))
-    texture-id))
-
-(defmethod rcache-unload ((entry-type (eql :texture)) (core-state core-state)
-                          texture-location texture-id &key)
-  (gl:delete-texture texture-id))
-
-
-
-
 (defun parse-texture-profile (name body-form)
   (let ((texprof (gensym "TEXTURE-PROFILE")))
     `(let* ((,texprof (make-texture-profile :name ',name)))
@@ -181,3 +167,20 @@ a texture."
 3. All images specified by paths actually exist at that path.
 4. The texture type is valid."
   nil)
+
+
+
+;; Interim use of the RCACHE API.
+
+(defmethod rcache-layout ((entry-type (eql :texture)))
+  '(equalp))
+
+(defmethod rcache-construct ((entry-type (eql :texture)) (core-state core-state)
+                             &rest keys)
+  (destructuring-bind (texture-location) keys
+    (let ((texture-id (load-texture (context core-state) texture-location)))
+      texture-id)))
+
+(defmethod rcache-dispose ((entry-type (eql :texture)) (core-state core-state)
+                           texture-id)
+  (gl:delete-texture texture-id))

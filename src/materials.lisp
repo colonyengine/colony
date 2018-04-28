@@ -315,9 +315,11 @@ etc. Return NIL otherwise."
                       (:sampler-2d
                        (cond
                          ((and (stringp (semantic-value material-value))
-                               (not (zerop (length (semantic-value material-value)))))
+                               (not (zerop
+                                     (length (semantic-value material-value)))))
                           (setf (computed-value material-value)
-                                (rcache-lookup :texture core-state (semantic-value material-value)))
+                                (rcache-lookup :texture core-state
+                                               (semantic-value material-value)))
                           (simple-logger:emit :material.annotate
                                               (id material)
                                               uniform-name
@@ -325,7 +327,8 @@ etc. Return NIL otherwise."
                                               (computed-value material-value)))
                          (t
                           (error "material ~a has a badly formed :sampler-2d value: ~a"
-                                 (id material) (semantic-value material-value)))))
+                                 (id material)
+                                 (semantic-value material-value)))))
                       (otherwise
                        ;; copy it over as identity.
                        (setf (computed-value material-value)
