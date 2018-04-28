@@ -21,35 +21,6 @@
   (cfg context :delta))
 
 
-(defun %ensure-nested-hash-table (ht test-fn-list key-list)
-  ;; Now, we walk down the nested hash tables ensuring that we have
-  ;; the correct number of hash tables made with the correct tests.
-
-  ;; TODO: This looks painful for performance., oh well, we'll see if the
-  ;; profiler actually cares or not. It is likely that these won't be
-  ;; nested deeply. Also, the algorithm is slightly painful, but the deal
-  ;; is that we can't make a hash table containing the last key, since the
-  ;; last key is where we'll either look something up or store it.
-  (loop :with keylen = (length key-list)
-        :for test-fn :in (cdr test-fn-list)
-        :for key :in key-list
-        :for i :below keylen
-        :for lastp = (= i (1- keylen))
-        :with current-ht = ht
-        :do
-           (unless (nth-value 1 (gethash key current-ht))
-             ;; If the key doesn't exist, we make a new hash table
-             ;; and store it at the key UNLESS it is the last entry,
-             ;; in which case we do nothing.
-             (unless lastp
-               (setf (gethash key current-ht)
-                     (au:dict (fdefinition test-fn)))))
-
-           ;; The key is potentially newly minted.
-           (setf current-ht (gethash key current-ht)))
-  ht)
-
-
 ;; These functions can use qualify-component. That'll be magic.
 (defun ss-href (context component-name namespace &rest keys)
   (let* ((qualified-component-name
@@ -69,11 +40,11 @@
     (assert (= (length metadata-ht-test-fns)
                (length keys)))
 
-    (%ensure-nested-hash-table (shared-storage-table context)
-                               (list* 'eq 'eql metadata-ht-test-fns)
-                               (list* qualified-component-name
-                                      namespace
-                                      keys))
+    (ensure-nested-hash-table (shared-storage-table context)
+                              (list* 'eq 'eql metadata-ht-test-fns)
+                              (list* qualified-component-name
+                                     namespace
+                                     keys))
     ;; How, we can just do the lookup
     (apply #'au:href
            (shared-storage-table context)
@@ -90,11 +61,11 @@
     (assert (= (length metadata-ht-test-fns)
                (length keys)))
 
-    (%ensure-nested-hash-table (shared-storage-table context)
-                               (list* 'eq 'eql metadata-ht-test-fns)
-                               (list* qualified-component-name
-                                      namespace
-                                      keys))
+    (ensure-nested-hash-table (shared-storage-table context)
+                              (list* 'eq 'eql metadata-ht-test-fns)
+                              (list* qualified-component-name
+                                     namespace
+                                     keys))
     ;; How, we can perform the setting.
     (apply #'(setf au:href) new-value
            (shared-storage-table context)
