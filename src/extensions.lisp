@@ -1,7 +1,7 @@
 (in-package :fl.core)
 
 (defun get-extension-path (&optional (system-name :first-light))
-  (au:resolve-path system-name "data/extension"))
+  (au:resolve-system-path system-name "data/extension"))
 
 (defun map-extensions (extension-type path &optional owner)
   (au:map-files
