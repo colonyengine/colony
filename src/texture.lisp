@@ -40,8 +40,8 @@
           :initarg :name)
    (%texture-type :reader texture-type
                   :initarg :texture-type)
-   (%default-profile :reader default-profile
-                     :initarg :default-profile)
+   (%applied-profiles :reader applied-profiles
+                      :initarg :applied-profiles)
    (%attributes :reader attributes
                 :initarg :attributes
                 :initform (au:dict #'eq))))
@@ -116,12 +116,12 @@ a texture."
 
 
 
-(defmacro define-texture (name (textype profile) &body body)
+(defmacro define-texture (name (textype &rest applied-profiles) &body body)
   (let ((texdesc (gensym "TEXDESC")))
     `(let ((,texdesc (make-texture-descriptor
                       :name ',name
                       :texture-type ',textype
-                      :default-profile ',profile)))
+                      :applied-profiles ',applied-profiles)))
        (declare (special %temp-texture-descriptors))
        ;; Record the parameters we'll overlay on the profile at use time.
        (setf
