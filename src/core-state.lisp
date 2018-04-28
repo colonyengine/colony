@@ -103,8 +103,8 @@ CORE-STATE."
     (setf (shared-storage context (component-type key)) value)))
 
 (defun find-resource (context path)
-  (let ((core-path (au:resolve-path :first-light path))
-        (user-path (au:resolve-path (user-package (core-state context)) path)))
+  (let ((core-path (au:resolve-system-path :first-light path))
+        (user-path (au:resolve-system-path (user-package (core-state context)) path)))
     (or (uiop:file-exists-p user-path)
         (uiop:file-exists-p core-path)
         (error "Resource not found: ~a" path))))
