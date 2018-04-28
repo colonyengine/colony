@@ -55,26 +55,23 @@
 
 ;; this class is currently unused, but it should be!
 (defclass texture ()
-  (;; The texture id.
+  (;; The descriptr from when we derived this texture.
+   (%descriptor :reader descriptor
+                :initarg :descriptor)
+
+   ;; The allocated opengl texture id.
    (%texid :reader texid
-           :initarg :texid)
+           :initarg :texid)))
 
-   (%image :reader image
-           :initarg :image)
 
-   ;; stuff for material dsl
-   (%name :reader name
-          :initarg :name)
-   (%source :reader source
-            :initarg :source)
-   (%sampler :accessor sampler
-             :initarg :sampler)))
 
 
 
 
 ;; TODO: Convert to taking a texture-decriptor instead of a location.
-;; TODO: Make this return a texture object for the right kind of texture.
+;; TODO: Make this return a texture object for the right kind of texture
+;; that also holds the texture-id and the texture desdcriptor from when
+;; it came.
 ;; The texture object should get cached properly and ensure that is true.
 (defun load-texture (context location &key
                                         (filter-min :linear-mipmap-linear)
@@ -175,3 +172,11 @@ a texture."
         (au:maphash-values (lambda (texdesc)
                              (%add-texture-descriptor texdesc owner))
                            texdescs)))))
+
+
+(defun validate-texture-definitions (core-state)
+  "Ensure that these aspects of texture profiles and desdcriptors are ok:
+1. The FL.TEXTURES:DEFAULT-PROFILE exists.
+2. All currently known about texture descriptors have valid profile references.
+3. All images specified by paths actually exist at that path."
+  nil)
