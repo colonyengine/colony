@@ -257,12 +257,12 @@ Ensure that these aspects of texture profiles and desdcriptors are ok:
 
 ;; public API
 (defun general-volume-data-descriptor (&key width height depth internal-format
-                                       pixel-format pixel-type data)
+                                         pixel-format pixel-type data)
   "Produce a descriptor for generalized volumetric data to be loaded into a
 :texture-3d type texture."
   ;; TODO: Implement me!
   (declare (ignore width height depth internal-format pixel-format pixel-type
-		   data))
+                   data))
   nil)
 
 
