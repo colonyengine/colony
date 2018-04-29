@@ -74,9 +74,8 @@
                                         (wrap :repeat)
                                         (wrap-s wrap)
                                         (wrap-t wrap))
+
   (let ((image (read-image context location)))
-
-
     (with-slots (%width %height %internal-format %pixel-format
                  %pixel-type %data)
         image
@@ -96,12 +95,44 @@
         ;; Wrap it all into a real texture instance for better bookeeping.
         (make-instance 'texture :texid id)))))
 
-(defun load-texture-new (context texture-name)
-  ;; 1. Find the texture-descriptor in core-state for texture-name
-  ;; 2. Apply all attributes and profiles to make completed defaults.
-  ;; 3. Set all of the mentioned opengl texture parameters
-  ;; 4. Do whatever other defaults exist
+(defun set-opengl-texture-parameters (texdesc)
+  (with-accessors ((texture-type texture-type)
+                   (applied-attributes applied-attributes))
+      texdesc
+    (let ((texture-parameters
+            '(:depth-stencil-texture-mode :texture-base-level
+              :texture-border-color :texture-compare-func
+              :texture-compare-mode :texture-lod-bias
+              :texture-min-filter :texture-mag-filter
+              :texture-min-lod :texture-max-lod
+              :texture-max-level :texture-swizzle-r
+              :texture-swizzle-g :texture-swizzle-b
+              :texture-swizzle-a :texture-swizzle-rgba
+              :texture-wrap-s :texture-wrap-t :texture-wrap-r)))
+      (loop :for putative-parameter :in texture-parameters
+            :do (au:when-found (value (au:href applied-attributes
+                                               putative-parameter))
+                  (gl:tex-parameter texture-type putative-parameter value))))))
+
+(defun upload-texture-images-to-gpu (context texdesc)
+  ;; maybe split the body into individual function responible for each kind
+  ;; of texture type.... ?
   nil)
+
+(defun load-texture-new (context texture-name)
+  (let ((texdesc (au:href (texture-descriptors (textures (core-state context)))
+                          texture-name)))
+    (unless texdesc
+      (error "Cannot load texture with unknown name: ~A" texture-name))
+
+    (let ((id (gl:gen-texture)))
+      (gl:bind-texture (texture-type texdesc) id)
+
+      (upload-texture-images-to-gpu context texdesc)
+
+      (set-opengl-texture-parameters texdesc)
+
+      (make-instance 'texture :texdesc texdesc :texid id))))
 
 
 
