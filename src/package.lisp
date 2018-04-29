@@ -36,7 +36,8 @@
   ;; textures
   (:export #:load-texture
            #:define-texture-profile
-           #:define-texture)
+           #:define-texture
+           #:general-volume-data-descriptor)
   ;; materials
   (:export #:define-material
            #:bind-material
@@ -169,5 +170,6 @@
                     (#:m4 #:box.math.mat4))
   (:import-from #:fl.core
                 #:define-texture-profile
-                #:define-texture)
+                #:define-texture
+                #:general-volume-data-descriptor)
   (:export-only #:default-profile))

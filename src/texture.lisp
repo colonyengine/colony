@@ -114,9 +114,8 @@
                                                putative-parameter))
                   (gl:tex-parameter texture-type putative-parameter value))))))
 
-(defun upload-texture-images-to-gpu (context texdesc)
-  ;; maybe split the body into individual function responible for each kind
-  ;; of texture type.... ?
+(defun upload-texture-images-to-gpu (texdesc context)
+
   nil)
 
 (defun load-texture-new (context texture-name)
@@ -128,7 +127,7 @@
     (let ((id (gl:gen-texture)))
       (gl:bind-texture (texture-type texdesc) id)
 
-      (upload-texture-images-to-gpu context texdesc)
+      (upload-texture-images-to-gpu texdesc context)
 
       (set-opengl-texture-parameters texdesc)
 
@@ -256,6 +255,15 @@ Ensure that these aspects of texture profiles and desdcriptors are ok:
 
     nil))
 
+;; public API
+(defun general-volume-data-descriptor (&key width height depth internal-format
+                                       pixel-format pixel-type data)
+  "Produce a descriptor for generalized volumetric data to be loaded into a
+:texture-3d type texture."
+  ;; TODO: Implement me!
+  (declare (ignore width height depth internal-format pixel-format pixel-type
+		   data))
+  nil)
 
 
 ;; Interim use of the RCACHE API.
