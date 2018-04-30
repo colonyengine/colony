@@ -171,5 +171,6 @@
   (:import-from #:fl.core
                 #:define-texture-profile
                 #:define-texture
-                #:general-volume-data-descriptor)
+                #:general-volume-data-descriptor
+                #:general-planar-data-descriptor)
   (:export-only #:default-profile))

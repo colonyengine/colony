@@ -259,9 +259,21 @@ Ensure that these aspects of texture profiles and desdcriptors are ok:
 (defun general-volume-data-descriptor (&key width height depth internal-format
                                          pixel-format pixel-type data)
   "Produce a descriptor for generalized volumetric data to be loaded into a
-:texture-3d type texture."
+:texture-3d type texture. If :data has the value :empty, allocate the memory of
+the size and types specified on the GPU."
   ;; TODO: Implement me!
   (declare (ignore width height depth internal-format pixel-format pixel-type
+                   data))
+  nil)
+
+;; public API
+(defun general-planar-data-descriptor (&key width height internal-format
+                                         pixel-format pixel-type data)
+  "Produce a descriptor for generalized plane data to be loaded into a
+:texture-2d type texture. If :data has the value :empty, allocate the memory of
+the size and types specified on the GPU."
+  ;; TODO: Implement me!
+  (declare (ignore width height internal-format pixel-format pixel-type
                    data))
   nil)
 
