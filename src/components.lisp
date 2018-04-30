@@ -43,14 +43,17 @@
 (defun %generate-component-slot-forms (slots)
   (loop :for slot :in slots
         :collect
-        (destructuring-bind (slot-name &key default type &allow-other-keys) slot
+        (destructuring-bind (slot-name &key default allocation type
+                             &allow-other-keys) slot
           (append
            `(,(au:symbolicate '% slot-name)
              :accessor ,slot-name
              :initarg ,(au:make-keyword slot-name)
              :initform ,default)
            (when type
-             `(:type ,type))))))
+             `(:type ,type))
+           (when allocation
+             `(:allocation ,allocation))))))
 
 (defmacro define-component (name super-classes &body body)
   (let* (;; NOTE: Can't use destructuring-bind because these forms might
