@@ -37,7 +37,8 @@
   (:export #:load-texture
            #:define-texture-profile
            #:define-texture
-           #:general-volume-data-descriptor)
+           #:general-volume-data-descriptor
+	   #:general-planar-data-descriptor)
   ;; materials
   (:export #:define-material
            #:bind-material
