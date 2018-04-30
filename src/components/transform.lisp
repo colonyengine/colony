@@ -3,9 +3,14 @@
 (define-component transform ()
   ((parent :default nil)
    (children :default nil)
-   (translation :default (%make-transform-state 'transform-state-vector))
-   (rotation :default (%make-transform-state 'transform-state-quaternion :incremental (v3:zero)))
-   (scale :default (%make-transform-state 'transform-state-vector :current (v3:make 1.0 1.0 1.0)))
+   (translation :default (%make-transform-state 'transform-state-vector
+                                                :incremental-delta (v3:zero)))
+   (rotation :default (%make-transform-state 'transform-state-quaternion
+                                             :incremental (v3:zero)
+                                             :incremental-delta (v3:zero)))
+   (scale :default (%make-transform-state 'transform-state-vector
+                                          :current (v3:make 1.0 1.0 1.0)
+                                          :incremental-delta (v3:zero)))
    (local :default (m4:id))
    (model :default (m4:id))))
 
@@ -18,19 +23,25 @@
         (parent child) nil))
 
 (defun translate-node (node delta)
-  (with-slots (%current %incremental %previous) (translation node)
+  (with-slots (%current %incremental %incremental-delta %previous)
+      (translation node)
     (v3:copy! %previous %current)
-    (v3:+! %current %current (v3:scale %incremental delta))))
+    (v3:+! %current %current
+           (v3:scale! %incremental-delta %incremental delta))))
 
 (defun rotate-node (node delta)
-  (with-slots (%current %incremental %previous) (rotation node)
+  (with-slots (%current %incremental %incremental-delta %previous)
+      (rotation node)
     (q:copy! %previous %current)
-    (q:rotate! %current %current (v3:scale %incremental delta))))
+    (q:rotate! %current %current
+               (v3:scale! %incremental-delta %incremental delta))))
 
 (defun scale-node (node delta)
-  (with-slots (%current %incremental %previous) (scale node)
+  (with-slots (%current %incremental %incremental-delta %previous)
+      (scale node)
     (v3:copy! %previous %current)
-    (v3:+! %current %current (v3:scale %incremental delta))))
+    (v3:+! %current %current
+           (v3:scale! %incremental-delta %incremental delta))))
 
 (defun transform-node (core-state node)
   (let ((delta (box.frame:delta (display core-state))))
@@ -95,6 +106,8 @@
              :initarg :current)
    (%incremental :accessor incremental
                  :initarg :incremental)
+   (%incremental-delta :accessor incremental-delta
+                       :initarg :incremental-delta)
    (%previous :accessor previous
               :initarg :previous)
    (%interpolated :accessor interpolated
@@ -117,7 +130,7 @@
 (defun %generate-default-state-initargs (type)
   (mapcan
    (lambda (key) (list key (%generate-default-state-value type)))
-   '(:current :incremental :previous :interpolated)))
+   '(:current :incremental :incremental-delta :previous :interpolated)))
 
 (defun %make-transform-state (type &rest initargs)
   (apply #'make-instance type
