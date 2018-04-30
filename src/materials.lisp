@@ -258,7 +258,7 @@ etc. Return NIL otherwise."
              (shadow:uniform-int uniform-name unit)))
          (ecase glsl-type
            (:bool #'shadow:uniform-int)
-           (:int #'shadow:uniform-int)
+           ((:int :int32) #'shadow:uniform-int)
            (:float #'shadow:uniform-float)
            (:vec2 #'shadow:uniform-vec2)
            (:vec3 #'shadow:uniform-vec3)
@@ -279,7 +279,7 @@ etc. Return NIL otherwise."
              (shadow:uniform-int-array uniform-name unit)))
          (ecase (first glsl-type)
            (:bool #'shadow:uniform-int-array)
-           (:int #'shadow:uniform-int-array)
+           ((:int :int32) #'shadow:uniform-int-array)
            (:float #'shadow:uniform-float-array)
            (:vec2 #'shadow:uniform-vec2-array)
            (:vec3 #'shadow:uniform-vec3-array)
