@@ -37,8 +37,7 @@
   (:export #:load-texture
            #:define-texture-profile
            #:define-texture
-           #:general-volume-data-descriptor
-	   #:general-planar-data-descriptor)
+           #:general-data-format-descriptor)
   ;; materials
   (:export #:define-material
            #:bind-material
@@ -172,6 +171,12 @@
   (:import-from #:fl.core
                 #:define-texture-profile
                 #:define-texture
-                #:general-volume-data-descriptor
-                #:general-planar-data-descriptor)
-  (:export-only #:default-profile))
+                #:general-data-format-descriptor)
+  (:export-only #:default-profile
+                #:missing-texture
+                #:debug-texture
+                #:damaged-helmet/metallic-roughness
+                #:damaged-helmet/color
+                #:damaged-helmet/normal
+                #:damaged-helmet/ambient-occlusion
+                #:damaged-helmet/emissive))

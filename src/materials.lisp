@@ -266,15 +266,13 @@ etc. Return NIL otherwise."
                           (determine-binder-function material uniform-type))
 
                     ;; 3. Convert certain types like :sampler-2d away from the
-                    ;; file path and to a real texture-id. Poke through the
+                    ;; texture-name and to a real texture-id. Poke through the
                     ;; core-state to set up the textures/etc into the cache in
                     ;; core-state.
                     (case uniform-type
                       (:sampler-2d
                        (cond
-                         ((and (stringp (semantic-value material-value))
-                               (not (zerop
-                                     (length (semantic-value material-value)))))
+                         ((symbolp (semantic-value material-value))
 
                           (setf (computed-value material-value)
                                 (rcache-lookup :texture core-state
