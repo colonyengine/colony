@@ -63,7 +63,10 @@
          (slots (first body))
          (shared-storage-metadata (second body)))
     `(progn
-       (defclass ,name (,@(append (unless super-classes '(component)) super-classes))
+       ;; It is ok if COMPONENT is added more than once in the heirarchy
+       ;; because since it is the same type, there will only be one
+       ;; version of it in the type heirarchy for the resultant class.
+       (defclass ,name (,@(append '(component) super-classes))
          ,(%generate-component-slot-forms slots))
 
        ;; Create a method which provides the shared-storage-metadata for this
@@ -93,17 +96,35 @@
   (let ((qualified-type (qualify-component (core-state context) component-type)))
     (apply #'make-instance qualified-type :type qualified-type initargs)))
 
-(defun %get-component-precedence-list (component-type)
-  (loop :for class :in (c2mop:class-precedence-list (find-class component-type))
+(defun %get-computed-component-precedence-list (component-type)
+  ;; NOTE: We may very well be asking for classes that have not been finalized
+  ;; because we haven't yet (or might not ever) call make-instance on them.
+  ;; Hence we will compute right now the class precedence for it.
+  ;; TODO: Fix this when FIND-CLASS returns NIL too.
+  (loop :for class :in (c2mop:compute-class-precedence-list
+                        (find-class component-type nil))
         :for name = (class-name class)
         :until (eq name 'component)
         :collect name))
 
 (defun qualify-component (core-state component-type)
-  "Determine if the symbol COMPONENT-TYPE represents a real component. If so, return the
-package-qualified symbol of the actual type that is acceptable to pass to MAKE-INSTANCE. This
-qualification algorithm follows the search order defined in the graph category
-COMPONENT-PACKAGE-ORDER."
+  "This function tries to resolve the COMPONENT-TYPE symbol into a potentially
+different packaged symbol of the same name that corresponds to a component
+definition in that package. The packages are searched in the order they are are
+defined in a toposort of the graph category COMPONENT-PACKAGE-ORDER. The result
+should be a symbol suitable for MAKE-INSTANCE in all cases, but in the case of
+mixin superclasses, it might not be desireable.
+
+NOTE: If the component-type is a mixin class/component that is a superclass to a
+component, then the first external to the package superclass definition found in
+the package search order will be returned as the package qualified symbol.
+
+NOTE: This function can not confirm that a symbol is a component defined by
+DEFINE-COMPONENT. It can only confirm that the symbol passed to it is a
+superclass of a DEFINE-COMPONENT form (up to but not including the COMPONENT
+superclass type all components have), or a component created by the
+DEFINE-COMPONENT form.
+"
   (let ((search-table (component-search-table (tables core-state)))
         (component-type/class (find-class component-type nil))
         (base-component-type/class (find-class 'fl.core:component)))
