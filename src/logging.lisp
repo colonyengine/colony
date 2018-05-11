@@ -48,8 +48,8 @@
 (simple-logger:define-message :trace :flow.exit
   "Exiting flow: (~a ~a ~a).")
 
-(simple-logger:define-message :debug :shader.function.compiled
-  "Compiled shader function: ~a.")
+(simple-logger:define-message :debug :shader.programs.updated
+  "Shader programs updated: ~{~s~^, ~}")
 
 (simple-logger:define-message :debug :component.mesh.cache.used
   "Used a cached copy of mesh: ~a.")
