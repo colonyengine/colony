@@ -28,7 +28,10 @@
   (unless (actor component)
     (setf (actor component) actor))
   (setf (au:href (components actor) component) component)
-  (push component (au:href (components-by-type actor) (component-type component))))
+  (let ((qualified-type
+	  (qualify-component (core-state actor) (component-type component))))
+    (push component
+          (au:href (components-by-type actor) qualified-type))))
 
 (defun attach-multiple-components (actor components)
   (dolist (component components)
