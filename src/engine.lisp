@@ -29,6 +29,15 @@
        (sb-profile:profile
         "FIRST-LIGHT"
         "FIRST-LIGHT-EXAMPLE"
+	"FL.COMP.TRANSFORM"
+	"FL.COMP.CAMERA"
+	"FL.COMP.FOLLOWING-CAMERA"
+	"FL.COMP.TRACKING-CAMERA"
+	"FL.COMP.MESH"
+	"FL.COMP.MESH-RENDERER"
+	"FL.SHADERS"
+	"FL.MATERIALS"
+	"FL.TEXTURES"
         "BOX.FRAME")
        (sleep ,seconds)
        (sb-profile:report)

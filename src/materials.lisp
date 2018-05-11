@@ -179,54 +179,11 @@ function available for it so BIND-UNIFORMS cannot yet be called on it."
   "Given a SAMPLER-TYPE, like :sampler-2d-array, return the kind of texture-type
 that is appropriate for it, such as :texture-2d-array.  Do this for all sampler
 types and texture types."
-  (let ((ht (au:dict #'eq
-                     :sampler-1d :texture-1d
-                     :isampler-1d :texture-1d
-                     :usampler-1d :texture-1d
 
-                     :sampler-2d :texture-2d
-                     :isampler-2d :texture-2d
-                     :usampler-2d :texture-2d
-
-                     :sampler-3d :texture-3d
-                     :isampler-3d :texture-3d
-                     :usampler-3d :texture-3d
-
-                     :sampler-cube :texture-cube-map
-                     :isampler-cube :texture-cube-map
-                     :usampler-cube :texture-cube-map
-
-                     :sampler-2d-rect :texture-rectangle
-                     :isampler-2d-rect :texture-rectangle
-                     :usampler-2d-rect :texture-rectangle
-
-                     :sampler-1d-array :texture-1d-array
-                     :isampler-1d-array :texture-1d-array
-                     :usampler-1d-array :texture-1d-array
-
-                     :sampler-2d-array :texture-2d-array
-                     :isampler-2d-array :texture-2d-array
-                     :usampler-2d-array :texture-2d-array
-
-                     :sampler-cube-array :texture-cube-map-array
-                     :isampler-cube-array :texture-cube-map-array
-                     :usampler-cube-array :texture-cube-map-array
-
-                     :sampler-buffer :texture-buffer
-                     :isampler-buffer :texture-buffer
-                     :usampler-buffer :texture-buffer
-
-                     :sampler-2d-ms :texture-2d-multisample
-                     :isampler-2d-ms :texture-2d-multisample
-                     :usampler-2d-ms :texture-2d-multisample
-
-                     :sampler-2d-ms-array :texture-2d-multisample-array
-                     :isampler-2d-ms-array :texture-2d-multisample-array
-                     :usampler-2d-ms-array :texture-2d-multisample-array)))
-
-    (au:if-found (texture-type (au:href ht sampler-type))
-                 texture-type
-                 (error "Unknown sampler-type: ~A~%" sampler-type))))
+  (au:if-found (texture-type (au:href +sampler-type->texture-type+
+                                      sampler-type))
+               texture-type
+               (error "Unknown sampler-type: ~A~%" sampler-type)))
 
 (defun sampler-p (glsl-type)
   "Return T if the GLSL-TYPE is a sampler like :sampler-2d or :sampler-buffer,
@@ -309,15 +266,13 @@ etc. Return NIL otherwise."
                           (determine-binder-function material uniform-type))
 
                     ;; 3. Convert certain types like :sampler-2d away from the
-                    ;; file path and to a real texture-id. Poke through the
+                    ;; texture-name and to a real texture-id. Poke through the
                     ;; core-state to set up the textures/etc into the cache in
                     ;; core-state.
                     (case uniform-type
                       (:sampler-2d
                        (cond
-                         ((and (stringp (semantic-value material-value))
-                               (not (zerop
-                                     (length (semantic-value material-value)))))
+                         ((symbolp (semantic-value material-value))
 
                           (setf (computed-value material-value)
                                 (rcache-lookup :texture core-state

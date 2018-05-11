@@ -60,45 +60,18 @@
 
 (defclass texture ()
   (;; The descriptor from when we derived this texture.
-   (%descriptor :reader descriptor
-                :initarg :descriptor)
+   (%texdesc :reader texdesc
+             :initarg :texdesc)
 
    ;; The allocated opengl texture id.
    (%texid :reader texid
            :initarg :texid)))
 
-;; TODO: Convert to taking a texture-decriptor instead of a location.
-(defun load-texture (context location &key
-                                        (filter-min :linear-mipmap-linear)
-                                        (filter-mag :linear)
-                                        (wrap :repeat)
-                                        (wrap-s wrap)
-                                        (wrap-t wrap))
 
-  (let ((image (read-image context location)))
-    (with-slots (%width %height %internal-format %pixel-format
-                 %pixel-type %data)
-        image
-
-      (let ((id (gl:gen-texture)))
-        (gl:bind-texture :texture-2d id)
-        (gl:tex-image-2d :texture-2d 0
-                         %internal-format %width %height 0 %pixel-format
-                         %pixel-type %data)
-        (gl:generate-mipmap :texture-2d)
-        (gl:tex-parameter :texture-2d :texture-wrap-s wrap-s)
-        (gl:tex-parameter :texture-2d :texture-wrap-t wrap-t)
-        (gl:tex-parameter :texture-2d :texture-min-filter filter-min)
-        (gl:tex-parameter :texture-2d :texture-mag-filter filter-mag)
-        (free-storage image)
-
-        ;; Wrap it all into a real texture instance for better bookeeping.
-        (make-instance 'texture :texid id)))))
-
-(defun set-opengl-texture-parameters (texdesc)
+(defun set-opengl-texture-parameters (texture)
   (with-accessors ((texture-type texture-type)
                    (applied-attributes applied-attributes))
-      texdesc
+      (texdesc texture)
     (let ((texture-parameters
             '(:depth-stencil-texture-mode :texture-base-level
               :texture-border-color :texture-compare-func
@@ -114,25 +87,108 @@
                                                putative-parameter))
                   (gl:tex-parameter texture-type putative-parameter value))))))
 
-(defun upload-texture-images-to-gpu (texdesc context)
 
+(defun get-applied-attribute (texture attribute-name)
+  (au:href (applied-attributes (texdesc texture)) attribute-name))
+
+;; TODO: These are cut into individual functions for their context. Maybe later
+;; I'll see about condensing them to be more concise.
+
+(defgeneric load-texture-data (texture-type texture context)
+  (:documentation "Load actual data described in the TEXTURE's texdesc of
+TEXTURE-TYPE into the texture memory."))
+
+(defmethod load-texture-data ((texture-type (eql :texture-1d)) texture context)
+  ;; TODO: This assumes no use of the general-data-descriptor
+  ;; TODO: This assumes generate-mipmaps is true.
+  ;; TODO: As a consequence, it does not yet handle loading mipmap data.
+
+  (let* ((data (get-applied-attribute texture :data))
+         (generate-mipmaps-p (get-applied-attribute texture :generate-mipmaps))
+         (base-image-path (aref data 0))
+         (image (read-image context base-image-path)))
+
+    (assert (= (length data) 1))
+
+    (with-slots (%width %height %internal-format %pixel-format %pixel-type
+                 %data)
+        image
+      (gl:tex-image-2d texture-type 0
+                       %internal-format %width %height 0 %pixel-format
+                       %pixel-type %data)
+      (assert generate-mipmaps-p)
+      (gl:generate-mipmap texture-type)
+      (free-storage image))))
+
+(defmethod load-texture-data ((texture-type (eql :texture-2d)) texture context)
+  ;; TODO: This assumes no use of the general-data-descriptor
+  ;; TODO: This assumes generate-mipmaps is true.
+  ;; TODO: As a consequence, it does not yet handle loading mipmap data.
+
+  (let* ((data (get-applied-attribute texture :data))
+         (generate-mipmaps-p (get-applied-attribute texture :generate-mipmaps))
+         (base-image-path (aref data 0))
+         (image (read-image context base-image-path)))
+
+    (assert (= (length data) 1))
+
+    (with-slots (%width %height %internal-format %pixel-format %pixel-type
+                 %data)
+        image
+      (gl:tex-image-2d texture-type 0
+                       %internal-format %width %height 0 %pixel-format
+                       %pixel-type %data)
+      (assert generate-mipmaps-p)
+      (gl:generate-mipmap texture-type)
+      (free-storage image))))
+
+
+(defmethod load-texture-data ((texture-type (eql :texture-3d))
+                              texture context)
+  ;; Determine if loading :images or :volume
+  (error "load-texture-data: :texture-3d implement me")
   nil)
 
-(defun load-texture-new (context texture-name)
+(defmethod load-texture-data ((texture-type (eql :texture-cube-map))
+                              texture context)
+  (error "load-texture-data: :texture-cube-map implement me")
+  nil)
+
+(defmethod load-texture-data ((texture-type (eql :texture-rectangle))
+                              texture context)
+  (error "load-texture-data: :texture-rectangle implement me")
+  ;; Determine if loading :image or :planar
+  nil)
+
+(defmethod load-texture-data ((texture-type (eql :texture-1d-array))
+                              texture context)
+  (error "load-texture-data: :texture-1d-array implement me")
+  nil)
+
+(defmethod load-texture-data ((texture-type (eql :texture-2d-array))
+                              texture context)
+  (error "load-texture-data: :texture-2d-array implement me")
+  nil)
+
+(defmethod load-texture-data ((texture-type (eql :texture-cube-map-array))
+                              texture context)
+  (error "load-texture-data: :texture-cube-map-array implement me")
+  nil)
+
+
+(defun load-texture (context texture-name)
   (let ((texdesc (au:href (texture-descriptors (textures (core-state context)))
                           texture-name)))
     (unless texdesc
       (error "Cannot load texture with unknown name: ~A" texture-name))
 
-    (let ((id (gl:gen-texture)))
+    (let* ((id (gl:gen-texture))
+           (texture (make-instance 'texture :texdesc texdesc :texid id)))
+
       (gl:bind-texture (texture-type texdesc) id)
-
-      (upload-texture-images-to-gpu texdesc context)
-
-      (set-opengl-texture-parameters texdesc)
-
-      (make-instance 'texture :texdesc texdesc :texid id))))
-
+      (set-opengl-texture-parameters texture)
+      (load-texture-data (texture-type texdesc) texture context)
+      texture)))
 
 
 (defun parse-texture-profile (name body-form)
@@ -256,7 +312,7 @@ Ensure that these aspects of texture profiles and desdcriptors are ok:
     nil))
 
 ;; public API
-(defun general-volume-data-descriptor (&key width height depth internal-format
+(defun general-data-format-descriptor (&key width height depth internal-format
                                          pixel-format pixel-type data)
   "Produce a descriptor for generalized volumetric data to be loaded into a
 :texture-3d type texture. If :data has the value :empty, allocate the memory of
@@ -264,19 +320,7 @@ the size and types specified on the GPU."
   ;; TODO: Implement me!
   (declare (ignore width height depth internal-format pixel-format pixel-type
                    data))
-  nil)
-
-;; public API
-(defun general-planar-data-descriptor (&key width height internal-format
-                                         pixel-format pixel-type data)
-  "Produce a descriptor for generalized plane data to be loaded into a
-:texture-2d type texture. If :data has the value :empty, allocate the memory of
-the size and types specified on the GPU."
-  ;; TODO: Implement me!
-  (declare (ignore width height internal-format pixel-format pixel-type
-                   data))
-  nil)
-
+  #())
 
 ;; Interim use of the RCACHE API.
 

@@ -55,3 +55,54 @@ test function for HT itself."
            ;; The key is potentially newly minted.
            (setf current-ht (gethash key current-ht)))
   ht)
+
+
+(au:define-constant +sampler-type->texture-type+
+    (au:dict #'eq
+             :sampler-1d :texture-1d
+             :isampler-1d :texture-1d
+             :usampler-1d :texture-1d
+
+             :sampler-2d :texture-2d
+             :isampler-2d :texture-2d
+             :usampler-2d :texture-2d
+
+             :sampler-3d :texture-3d
+             :isampler-3d :texture-3d
+             :usampler-3d :texture-3d
+
+             :sampler-cube :texture-cube-map
+             :isampler-cube :texture-cube-map
+             :usampler-cube :texture-cube-map
+
+             :sampler-2d-rect :texture-rectangle
+             :isampler-2d-rect :texture-rectangle
+             :usampler-2d-rect :texture-rectangle
+
+             :sampler-1d-array :texture-1d-array
+             :isampler-1d-array :texture-1d-array
+             :usampler-1d-array :texture-1d-array
+
+             :sampler-2d-array :texture-2d-array
+             :isampler-2d-array :texture-2d-array
+             :usampler-2d-array :texture-2d-array
+
+             :sampler-cube-array :texture-cube-map-array
+             :isampler-cube-array :texture-cube-map-array
+             :usampler-cube-array :texture-cube-map-array
+
+             :sampler-buffer :texture-buffer
+             :isampler-buffer :texture-buffer
+             :usampler-buffer :texture-buffer
+
+             :sampler-2d-ms :texture-2d-multisample
+             :isampler-2d-ms :texture-2d-multisample
+             :usampler-2d-ms :texture-2d-multisample
+
+             :sampler-2d-ms-array :texture-2d-multisample-array
+             :isampler-2d-ms-array :texture-2d-multisample-array
+             :usampler-2d-ms-array :texture-2d-multisample-array)
+  :test #'equalp
+  :documentation
+  "This variable is a hash table to map sampler types to texture types. It is
+a constant and will never be changed at runtime.")
