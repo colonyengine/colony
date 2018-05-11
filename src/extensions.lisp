@@ -16,8 +16,16 @@
 
 (defun extension-type-filter (extension-type)
   (lambda (path)
-    (string= (pathname-type path)
-             (extension-file-type extension-type))))
+    (let ((name (namestring (pathname-name path))))
+      (and (string= (pathname-type path)
+                    (extension-file-type extension-type))
+           ;; NOTE: Ignore emacs lockfiles.
+           ;;
+           ;; TODO: Probably should use real regexes for this and have a config
+           ;; file entry for all the stuff we can ignore.
+           (if (>= (length name) 2)
+               (not (string= ".#" name :end2 2))
+               t)))))
 
 (defun prepare-extensions (core-state path)
   ;; https://github.com/HackerTheory/first-light/wiki/Developer-Rules#extension-order
