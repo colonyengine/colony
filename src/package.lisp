@@ -157,6 +157,7 @@
                 #:unlit-color-decal
                 #:unlit-texture
                 #:unlit-texture-decal
+                #:unlit-texture-decal-bright
                 #:pbr-damaged-helmet))
 
 (defpackage+ #:fl.textures
