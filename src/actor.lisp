@@ -52,7 +52,9 @@
 
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
-  (au:href (components-by-type actor) component-type))
+  (let ((qualified-type
+	  (qualify-component (core-state actor) component-type)))
+    (au:href (components-by-type actor) qualified-type)))
 
 (defun actor-component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
