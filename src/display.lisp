@@ -55,9 +55,11 @@
                 :come-from-state-name :ef))
 
 (defmethod kit.sdl2:close-window :around ((display display))
-  (with-cfg (width height) (context (core-state display))
-    (call-next-method)
-    (simple-logger:emit :display.stop width height (hz display))))
+  (with-slots (%core-state) display
+    (with-cfg (width height) (context %core-state)
+      (call-next-method)
+      (simple-logger:emit :display.stop width height (hz display))
+      (setf (slot-value %core-state '%display) nil))))
 
 (defmethod quit-engine ((display display))
   (with-cfg (title) (context (core-state display))

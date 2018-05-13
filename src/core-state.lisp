@@ -52,11 +52,9 @@
   "Return T if there are ANY components or actors in the preinit data structures in CORE-STATE."
   (or (plusp (hash-table-count (actor-preinit-db (tables core-state))))
       (block done
-        (au:maphash-values
-         (lambda (x)
-           (when (plusp (hash-table-count x))
-             (return-from done t)))
-         (component-preinit-by-type-view (tables core-state))))))
+        (au:do-hash-values (v (component-preinit-by-type-view (tables core-state)))
+          (when (plusp (hash-table-count v))
+            (return-from done t))))))
 
 (defun pending-predestroy-tasks-p (core-state)
   "Return T if there are ANY components or actors that are in the predestroy data structures in
@@ -69,11 +67,9 @@ CORE-STATE."
 CORE-STATE."
   (or (plusp (hash-table-count (actor-destroy-db (tables core-state))))
       (block done
-        (au:maphash-values
-         (lambda (x)
-           (when (plusp (hash-table-count x))
-             (return-from done t)))
-         (component-destroy-by-type-view (tables core-state))))))
+        (au:do-hash-values (v (component-destroy-by-type-view (tables core-state)))
+          (when (plusp (hash-table-count v))
+            (return-from done t))))))
 
 (defun %make-scene-tree (core-state)
   (with-slots (%context) core-state
