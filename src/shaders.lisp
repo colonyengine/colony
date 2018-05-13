@@ -15,9 +15,7 @@
 
 (defun gen-shaders-modified-hook (core-state)
   (lambda (programs-list)
-    ;; NOTE: core-state is closed over and now available in the body of this
-    ;; returned function.
-    (when t ;; this needs to be a guard to check if (display core-state) is non-nil
+    (when (display core-state)
       (sdl2:in-main-thread ()
         (shadow:update-shader-programs programs-list))
       (when programs-list
