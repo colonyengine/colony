@@ -16,7 +16,8 @@
 (defun shaders-modified-hook (programs-list)
   (sdl2:in-main-thread ()
     (shadow:update-shader-programs programs-list))
-  (simple-logger:emit :shader.programs.updated programs-list))
+  (when programs-list
+    (simple-logger:emit :shader.programs.updated programs-list)))
 
 (defun prepare-shader-programs (core-state)
   (setf (shaders core-state) (shadow:build-shader-dictionary))
