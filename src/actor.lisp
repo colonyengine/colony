@@ -102,12 +102,10 @@ actor."
       (t
        (error "Cannot parent actor ~A to unknown parent ~A" actor parent)))
     (setf (au:href (actor-preinit-db (tables core-state)) actor) actor)
-    (au:maphash-values
-     (lambda (x)
-       (setf (type-table (canonicalize-component-type (component-type x) core-state)
-                         (component-preinit-by-type-view (tables core-state)))
-             x))
-     (components actor))))
+    (au:do-hash-values (v (components actor))
+      (setf (type-table (canonicalize-component-type (component-type v) core-state)
+                        (component-preinit-by-type-view (tables core-state)))
+            v))))
 
 (defun actor/preinit->init (core-state actor)
   (remhash actor (actor-preinit-db (tables core-state)))
@@ -129,11 +127,9 @@ actor."
   (remhash actor (actor-predestroy-view (tables core-state)))
   (unless (remhash actor (actor-active-db (tables core-state)))
     (remhash actor (actor-preinit-db (tables core-state))))
-  (au:maphash-values
-   (lambda (x)
-     (setf (ttl x) 0)
-     (component/init-or-active->destroy core-state x))
-   (components actor)))
+  (au:do-hash-values (v (components actor))
+    (setf (ttl v) 0)
+    (component/init-or-active->destroy core-state v)))
 
 (defun actor/destroy-descendants (core-state actor)
   (let ((sym/transform (au:ensure-symbol 'transform 'fl.comp.transform))

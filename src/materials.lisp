@@ -47,10 +47,8 @@ wasn't (and the missing material used)."
   "Map the function FUNC, which expects a material, across all materials in
 CORE-STATE. Return a list of the return values of the FUNC."
   (let ((results ()))
-    (au:maphash-values
-     (lambda (x)
-       (push (funcall func x) results))
-     (material-table (materials core-state)))
+    (au:do-hash-values (v (material-table (materials core-state)))
+      (push (funcall func v) results))
     (nreverse results)))
 
 ;; export PUBLIC API

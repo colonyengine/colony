@@ -171,10 +171,8 @@ The previous state name and the current state name which resulted in the exiting
                          ((hash-table-p item)
                           (when (action flow-state)
                             (simple-logger:emit :flow.call.action.hash)
-                            (au:maphash-values
-                             (lambda (x)
-                               (funcall (action flow-state) core-state x))
-                             item)))
+                            (au:do-hash-values (v item)
+                              (funcall (action flow-state) core-state v))))
                          ((atom item)
                           (when (action flow-state)
                             (simple-logger:emit :flow.call.action.instance)
