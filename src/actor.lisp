@@ -37,6 +37,9 @@
   (dolist (component components)
     (attach-component actor component)))
 
+;; TODO: This function is going to be hard to implement with the type tables
+;; just a set of nested hash tables. It might force us to move the type table
+;; to a real object, so it can keep track of what is stored inside of it.
 (defun number-of-components (actor)
   (hash-table-count (components actor)))
 
