@@ -4,7 +4,7 @@
   (:nicknames #:first-light)
   (:use #:cl)
   (:export #:start-engine
-           #:quit-engine)
+           #:stop-engine)
   ;; core state
   (:export #:core-state
            #:make-core-state

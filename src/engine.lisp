@@ -21,6 +21,9 @@
                (prepare-engine user-package-name)))
       (kit.sdl2:start))))
 
+(defun stop-engine (core-state)
+  (quit-display (display core-state)))
+
 #+sbcl
 (defmacro profile (seconds)
   `(progn
