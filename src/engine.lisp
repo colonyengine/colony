@@ -22,7 +22,9 @@
       (kit.sdl2:start))))
 
 (defun stop-engine (core-state)
-  (quit-display (display core-state)))
+  (with-cfg (title) (context core-state)
+    (quit-display (display core-state))
+    (simple-logger:emit :engine.quit title)))
 
 #+sbcl
 (defmacro profile (seconds)

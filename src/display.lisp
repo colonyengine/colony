@@ -62,7 +62,5 @@
       (setf (slot-value %core-state '%display) nil))))
 
 (defmethod quit-display ((display display))
-  (with-cfg (title) (context (core-state display))
-    (kit.sdl2:close-window display)
-    (kit.sdl2:quit)
-    (simple-logger:emit :engine.quit title)))
+  (kit.sdl2:close-window display)
+  (kit.sdl2:quit))
