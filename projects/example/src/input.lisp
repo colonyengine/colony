@@ -1,7 +1,7 @@
 (in-package :first-light-example)
 
 (defmethod key-down ((display display) (key (eql :scancode-escape)))
-  (quit-engine display))
+  (stop-engine (core-state display)))
 
 (defmethod mouse-scroll-up ((display display))
   (fl.comp.camera:zoom-camera display 1))

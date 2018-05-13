@@ -48,4 +48,4 @@
        (sb-profile:report)
        (sb-profile:unprofile)
        (sb-profile:reset)
-       (quit-engine display))))
+       (stop-engine (core-state display)))))
