@@ -4,13 +4,13 @@
   "shd")
 
 (defmethod prepare-extension ((extension-type (eql 'shader-stages)) owner path)
-  (shadow:initialize-state)
   (load-extensions extension-type path))
 
 (defmethod extension-file-type ((extension-type (eql 'shader-programs)))
   "prog")
 
 (defmethod prepare-extension ((extension-type (eql 'shader-programs)) owner path)
+  (shadow:reset-program-state)
   (load-extensions extension-type path))
 
 (defun generate-shaders-modified-hook (core-state)
