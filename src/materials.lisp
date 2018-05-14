@@ -296,7 +296,7 @@ etc. Return NIL otherwise."
                                    (copy-seq thing)
                                    thing))))))
                   (error "Material ~s uses unknown uniform ~s in shader ~s. If it is an implicit uniform, those are not supported in materials."
-                         (id material) uniform-name (id shader-program))))
+                         (id material) uniform-name (shader material))))
 
    (uniforms material))
 
