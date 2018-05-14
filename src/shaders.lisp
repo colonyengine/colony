@@ -4,7 +4,7 @@
   "shd")
 
 (defmethod prepare-extension ((extension-type (eql 'shader-stages)) owner path)
-  (shadow:initialize-shaders)
+  (shadow:initialize-state)
   (load-extensions extension-type path))
 
 (defmethod extension-file-type ((extension-type (eql 'shader-programs)))
@@ -13,7 +13,7 @@
 (defmethod prepare-extension ((extension-type (eql 'shader-programs)) owner path)
   (load-extensions extension-type path))
 
-(defun gen-shaders-modified-hook (core-state)
+(defun generate-shaders-modified-hook (core-state)
   (lambda (programs-list)
     (when (display core-state)
       (sdl2:in-main-thread ()
@@ -23,4 +23,4 @@
 
 (defun prepare-shader-programs (core-state)
   (setf (shaders core-state) (shadow:build-shader-dictionary))
-  (shadow:set-modify-hook (gen-shaders-modified-hook core-state)))
+  (shadow:set-modify-hook (generate-shaders-modified-hook core-state)))
