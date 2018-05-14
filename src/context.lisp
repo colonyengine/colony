@@ -18,6 +18,9 @@
   "Return the physics update delta. This is :delta from the cfg file."
   (cfg context :delta))
 
+(defun debug-p (context)
+  (eq (cfg context :log-level) :debug))
+
 ;; These functions can use qualify-component. That'll be magic.
 (defun ss-href (context component-name namespace &rest keys)
   (let* ((qualified-component-name (qualify-component (core-state context) component-name))
