@@ -252,49 +252,51 @@ etc. Return NIL otherwise."
    (lambda (uniform-name material-value)
      (simple-logger:emit :material.check-uniform (id material) uniform-name)
 
-     (au:when-found (uniform-type-info (au:href (shadow:uniforms shader-program) uniform-name))
+     (au:if-found (uniform-type-info (au:href (shadow:uniforms shader-program) uniform-name))
 
-       ;; 1. figure out of the variable name/path is present in the
-       ;; shader program. good if so, error if not.
+                  ;; 1. figure out of the variable name/path is present in the
+                  ;; shader program. good if so, error if not.
 
-       (let ((uniform-type (aref uniform-type-info 1)))
-         ;; 2. Find the uniform in the shader-program and get its
-         ;; type-info. Use that to set the binder function.
-         (setf (binder material-value)
-               (determine-binder-function material uniform-type))
+                  (let ((uniform-type (aref uniform-type-info 1)))
+                    ;; 2. Find the uniform in the shader-program and get its
+                    ;; type-info. Use that to set the binder function.
+                    (setf (binder material-value)
+                          (determine-binder-function material uniform-type))
 
-         ;; 3. Convert certain types like :sampler-2d away from the
-         ;; texture-name and to a real texture-id. Poke through the
-         ;; core-state to set up the textures/etc into the cache in
-         ;; core-state.
-         (case uniform-type
-           (:sampler-2d
-            (cond
-              ((symbolp (semantic-value material-value))
+                    ;; 3. Convert certain types like :sampler-2d away from the
+                    ;; texture-name and to a real texture-id. Poke through the
+                    ;; core-state to set up the textures/etc into the cache in
+                    ;; core-state.
+                    (case uniform-type
+                      (:sampler-2d
+                       (cond
+                         ((symbolp (semantic-value material-value))
 
-               (setf (computed-value material-value)
-                     (rcache-lookup :texture core-state
-                                    (semantic-value material-value)))
+                          (setf (computed-value material-value)
+                                (rcache-lookup :texture core-state
+                                               (semantic-value material-value)))
 
-               (simple-logger:emit :material.annotate
-                                   (id material)
-                                   uniform-name
-                                   (semantic-value material-value)
-                                   (computed-value material-value)))
-              (t
-               (error "material ~a has a badly formed :sampler-2d value: ~a"
-                      (id material)
-                      (semantic-value material-value)))))
-           (otherwise
-            ;; copy it over as identity.
-            (setf (computed-value material-value)
-                  (let ((thing (semantic-value material-value)))
-                    (if (or (stringp thing)
-                            (arrayp thing)
-                            (listp thing)
-                            (vectorp thing))
-                        (copy-seq thing)
-                        thing))))))))
+                          (simple-logger:emit :material.annotate
+                                              (id material)
+                                              uniform-name
+                                              (semantic-value material-value)
+                                              (computed-value material-value)))
+                         (t
+                          (error "material ~a has a badly formed :sampler-2d value: ~a"
+                                 (id material)
+                                 (semantic-value material-value)))))
+                      (otherwise
+                       ;; copy it over as identity.
+                       (setf (computed-value material-value)
+                             (let ((thing (semantic-value material-value)))
+                               (if (or (stringp thing)
+                                       (arrayp thing)
+                                       (listp thing)
+                                       (vectorp thing))
+                                   (copy-seq thing)
+                                   thing))))))
+                  (error "Material ~s uses unknown uniform ~s in shader ~s."
+                         (id material) uniform-name (id shader-program))))
 
    (uniforms material))
 
