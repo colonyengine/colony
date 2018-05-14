@@ -45,9 +45,16 @@
     (gl:depth-func gl-depth-mode)
     (sdl2:gl-set-swap-interval (if vsync 1 0))))
 
+(defmethod clear-screen ((display display))
+  (let ((elapsed-time (box.frame:total-time display)))
+    (multiple-value-call #'gl:clear-color
+      (if (debug-p (context (core-state display)))
+          (values (* 0.2 (abs (sin elapsed-time))) 0 0 1)
+          (values 0 0 0 1)))
+    (gl:clear :color-buffer :depth-buffer)))
+
 (defmethod kit.sdl2:render ((display display))
-  (gl:clear-color (* 0.2 (abs (sin (box.frame:total-time display)))) 0 0 1)
-  (gl:clear :color-buffer :depth-buffer)
+  (clear-screen display)
   (execute-flow (core-state display)
                 :default
                 'perform-one-frame
