@@ -9,6 +9,15 @@
     (prepare-shader-programs core-state)
     (resolve-all-textures core-state)
     (resolve-all-materials core-state)
+
+    ;; NOTE: This must happen when we're ALL DONE preparing the internals
+    ;; of the engine. It is still part of preparing the engine though.
+    (let ((prologue-func
+            (au:ensure-symbol 'prologue (user-package core-state))))
+      (when (fboundp prologue-func)
+        (setf (state (context core-state))
+              (funcall prologue-func (context core-state)))))
+
     core-state))
 
 (defun start-engine (&optional override-scene)
@@ -22,6 +31,12 @@
       (kit.sdl2:start))))
 
 (defun stop-engine (core-state)
+  ;; NOTE: This must happen before we do anything technical in tearing down
+  ;; the engine.
+  (let ((epilogue-func (au:ensure-symbol 'epilogue (user-package core-state))))
+    (when (fboundp epilogue-func)
+      (funcall epilogue-func (context core-state))))
+
   (with-cfg (title) (context core-state)
     (quit-display (display core-state))
     (simple-logger:emit :engine.quit title)))
@@ -34,15 +49,15 @@
        (sb-profile:profile
         "FIRST-LIGHT"
         "FIRST-LIGHT-EXAMPLE"
-	"FL.COMP.TRANSFORM"
-	"FL.COMP.CAMERA"
-	"FL.COMP.FOLLOWING-CAMERA"
-	"FL.COMP.TRACKING-CAMERA"
-	"FL.COMP.MESH"
-	"FL.COMP.MESH-RENDERER"
-	"FL.SHADERS"
-	"FL.MATERIALS"
-	"FL.TEXTURES"
+        "FL.COMP.TRANSFORM"
+        "FL.COMP.CAMERA"
+        "FL.COMP.FOLLOWING-CAMERA"
+        "FL.COMP.TRACKING-CAMERA"
+        "FL.COMP.MESH"
+        "FL.COMP.MESH-RENDERER"
+        "FL.SHADERS"
+        "FL.MATERIALS"
+        "FL.TEXTURES"
         "BOX.FRAME")
        (sleep ,seconds)
        (sb-profile:report)
