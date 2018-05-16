@@ -25,6 +25,7 @@
                #:golden-utils
                #:parsley
                #:shadow
+               #:umbra
                #:gamebox-math.vari
                #:gamebox-frame-manager)
   :pathname "src"
