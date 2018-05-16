@@ -8,7 +8,10 @@
    (%active-camera :accessor active-camera
                    :initform nil)
    (%shared-storage-table :reader shared-storage-table
-                          :initform (au:dict #'eq))))
+                          :initform (au:dict #'eq))
+   (%state :accessor state
+           :initarg :state
+           :initform NIL)))
 
 (defun frame-time (context)
   "Return the amount of time in seconds the last frame as a REAL."
