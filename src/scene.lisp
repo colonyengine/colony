@@ -111,7 +111,9 @@
   (au:href (scenes core-state) scene-name))
 
 (defun load-scene (core-state name)
-  (funcall (get-scene core-state name) core-state))
+  (au:if-let ((scene (get-scene core-state name)))
+    (funcall (get-scene core-state name) core-state)
+    (error "Cannot find the scene name: ~s." name)))
 
 (defun load-default-scene (core-state)
   (au:if-let ((default (or *override-scene* (cfg (context core-state) :default-scene))))
