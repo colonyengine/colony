@@ -65,8 +65,7 @@
   (with-slots (%core-state) display
     (with-cfg (width height) (context %core-state)
       (call-next-method)
-      (simple-logger:emit :display.stop width height (hz display))
-      (setf (slot-value %core-state '%display) nil))))
+      (simple-logger:emit :display.stop width height (hz display)))))
 
 (defmethod quit-display ((display display))
   (kit.sdl2:close-window display)

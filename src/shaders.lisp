@@ -13,14 +13,13 @@
   (shadow:reset-program-state)
   (load-extensions extension-type path))
 
-(defun generate-shaders-modified-hook (core-state)
-  (lambda (programs-list)
-    (when (display core-state)
-      (sdl2:in-main-thread ()
-        (shadow:update-shader-programs programs-list))
-      (when programs-list
-        (simple-logger:emit :shader.programs.updated programs-list)))))
+(defun shaders-modified-hook (programs-list)
+  (when (boundp '*core-state*)
+    (sdl2:in-main-thread ()
+      (shadow:update-shader-programs programs-list))
+    (when programs-list
+      (simple-logger:emit :shader.programs.updated programs-list))))
 
 (defun prepare-shader-programs (core-state)
   (setf (shaders core-state) (shadow:build-shader-dictionary))
-  (shadow:set-modify-hook (generate-shaders-modified-hook core-state)))
+  (shadow:set-modify-hook #'shaders-modified-hook))
