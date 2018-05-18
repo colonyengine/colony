@@ -33,8 +33,6 @@ wasn't (and the missing material used)."
                  (au:href table (au:ensure-symbol 'missing-material
                                                   'fl.materials)))))
 
-
-
 (defun %add-material (material core-state)
   "Add the MATERIAL by its id into CORE-STATE."
   (setf (au:href (material-table (materials core-state)) (id material)) material))
@@ -74,8 +72,6 @@ CORE-STATE. Return a list of the return values of the FUNC."
 (defun make-material-value (&rest init-args)
   (apply #'make-instance 'material-value init-args))
 
-
-
 (defclass material ()
   ((%id :reader id
         :initarg :id)
@@ -97,17 +93,13 @@ CORE-STATE. Return a list of the return values of the FUNC."
             :initform (au:dict #'eq))
    (%active-texture-unit :accessor active-texture-unit
                          :initarg :active-texture-unit
-                         :initform 0)
-   (%source-form :reader source-form
-                 :initarg :source-form)))
+                         :initform 0)))
 
 
-(defun %make-material (id shader core-state source-form)
+(defun %make-material (id shader core-state)
   (make-instance 'material :id id
                            :shader shader
-                           :source-form source-form
                            :core-state core-state))
-
 
 (defun bind-material-uniforms (mat)
   (when mat
@@ -119,12 +111,10 @@ CORE-STATE. Return a list of the return values of the FUNC."
 (defun bind-material-buffers (mat)
   nil)
 
-
 ;; export PUBLIC API
 (defun bind-material (mat)
   (bind-material-uniforms mat)
   (bind-material-buffers mat))
-
 
 ;; Todo, these modify the semantic-buffer which then gets processed into a
 ;; new computed buffer.
@@ -140,38 +130,21 @@ CORE-STATE. Return a list of the return values of the FUNC."
 (defun (setf mat-ref) (new-val mat var)
   nil)
 
-
-
-(defun parse-material (shader name body)
+(defun parse-material (name shader uniforms blocks)
   "Return a function which creates a partially complete material instance.
-It is partially complete because it does not yet have the shader binder
-function available for it so BIND-UNIFORMS cannot yet be called on it."
-  (let ((uniforms (cdar (member 'uniforms body
-                                :key #'first :test #'eql/package-relaxed)))
-        (blocks (cdar (member 'blocks body
-                              :key #'first :test #'eql/package-relaxed))))
-    `(lambda (core-state)
-       (let ((mat (%make-material ,name ,shader core-state ',body)))
-
-         (setf
-          ,@(loop :for (var val) :in uniforms :appending
-                  `((au:href (uniforms mat) ,var)
-                    ;; we don't know the binder function we need yet...  because
-                    ;; we don't yet know the official type of this uniform as
-                    ;; defined by the shader program. We can only compute that
-                    ;; after all shader programs are built.
-                    (make-material-value :semantic-value ,val))))
-
-         (setf
-          ,@(loop :for (var val) :in blocks :appending
-                  `((au:href (blocks mat) ,var)
-                    ;; we don't know the binder function we need yet...  because
-                    ;; we don't yet know the official type of this uniform as
-                    ;; defined by the shader program. We can only compute that
-                    ;; after all shader programs are built.
-                    (make-material-value :semantic-value ,val))))
-
-         mat))))
+It is partially complete because it does not yet have the shader binder function available for it so
+BIND-UNIFORMS cannot yet be called on it."
+  `(lambda (core-state)
+     (let ((mat (%make-material ',name ,shader core-state)))
+       (setf ,@(loop :for (var val) :in uniforms
+                     :append
+                     `((au:href (uniforms mat) ,var)
+                       (make-material-value :semantic-value ,val))))
+       (setf ,@(loop :for (var val) :in blocks
+                     :append
+                     `((au:href (blocks mat) ,var)
+                       (make-material-value :semantic-value ,val))))
+       mat)))
 
 (defun sampler-type->texture-type (sampler-type)
   "Given a SAMPLER-TYPE, like :sampler-2d-array, return the kind of texture-type
@@ -297,11 +270,8 @@ etc. Return NIL otherwise."
                                    thing))))))
                   (error "Material ~s uses unknown uniform ~s in shader ~s. If it is an implicit uniform, those are not supported in materials."
                          (id material) uniform-name (shader material))))
-
-   (uniforms material))
-
-  ;; TODO: Do something with blocks, if required.
-  )
+   ;; TODO: Do something with blocks, if required.
+   (uniforms material)))
 
 (defun resolve-all-materials (core-state)
   "Convert all semantic-values to computed-values in the materials. This
@@ -314,8 +284,6 @@ must be executed after all the shader programs have been comipiled."
                   (error "Material ~s uses an undefined shader: ~s."
                          (id material-instance) (shader material-instance))))
    core-state))
-
-
 
 (defmethod extension-file-type ((extension-type (eql 'materials)))
   "mat")
@@ -338,8 +306,9 @@ must be executed after all the shader programs have been comipiled."
          (%add-material (funcall gen-material-func owner) owner))
        (%prepare)))))
 
-(defmacro define-material (name (&body options) &body body)
-  `(let* ((material-func ,(parse-material (second (member :shader options)) `',name body)))
-     (declare (special %temp-materials))
-     ,(when (second (member :enabled options))
-        `(setf (au:href %temp-materials ',name) material-func))))
+(defmacro define-material (name &body (body))
+  (destructuring-bind (&key enabled shader uniforms blocks &allow-other-keys) body
+    `(let ((func ,(parse-material name shader uniforms blocks)))
+       (declare (special %temp-materials))
+       ,(when enabled
+          `(setf (au:href %temp-materials ',name) func)))))
