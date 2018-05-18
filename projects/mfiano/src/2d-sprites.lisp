@@ -1,4 +1,4 @@
-(in-package :fl.example.mfiano)
+(in-package :fl.mfiano)
 
 (defclass sprite-sheet-animations ()
   ((%animvec :reader animvec
@@ -35,7 +35,7 @@
    (animations :default nil)))
 
 (defun make-sprite-sheet-buffer (sprite-sheet)
-  (shadow:create-buffer :ssbo :sprite-sheet 'fl.example.mfiano.shaders:sprite-shader :sprite-sheet)
+  (shadow:create-buffer :ssbo :sprite-sheet 'fl.mfiano.shaders:sprite-shader :sprite-sheet)
 
   (loop :with length = (length (spec sprite-sheet))
         :with xs = (make-array length :element-type 'single-float)
@@ -101,7 +101,7 @@ for later use with the shaders."
         (let* ((mat-uniforms (fl.core::uniforms %material))
                (tex.sprite-value (au:href mat-uniforms :tex.sprite)))
           (setf (fl.core::computed-value tex.sprite-value) %sprite)
-          (shadow:bind-shader-storage-block 'fl.example.mfiano.shaders:sprite-shader :sprite-sheet 8)
+          (shadow:bind-shader-storage-block 'fl.mfiano.shaders:sprite-shader :sprite-sheet 8)
           (shadow:bind-buffer :sprite-sheet 8)
           (bind-material %material)
           (gl:bind-vertex-array %vao-id)
