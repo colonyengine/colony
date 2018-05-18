@@ -27,27 +27,32 @@
     core-state))
 
 (defun start-engine (&optional override-scene)
-  (let ((user-package-name (au:make-keyword (package-name *package*))))
-    (when (eq user-package-name :fl.core)
-      (error "Cannot start the engine from the :FL.CORE package."))
-    (kit.sdl2:init)
-    (setf *core-state*
-          (prog1 (sdl2:in-main-thread ()
-                   (let ((*override-scene* override-scene))
-                     (prepare-engine user-package-name)))
-            (kit.sdl2:start)))))
+  (unwind-protect
+       (let ((user-package-name (au:make-keyword (package-name *package*))))
+         (when (eq user-package-name :fl.core)
+           (error "Cannot start the engine from the :FL.CORE package."))
+         (kit.sdl2:init)
+         (setf *core-state*
+               (prog1 (sdl2:in-main-thread ()
+                        (let ((*override-scene* override-scene))
+                          (prepare-engine user-package-name)))
+                 (kit.sdl2:start))))
+    (makunbound '*core-state)))
 
 (defun stop-engine (core-state)
   ;; NOTE: This must happen before we do anything technical in tearing down
   ;; the engine.
-  (let ((epilogue-func (au:ensure-symbol 'epilogue (user-package core-state))))
-    (when (fboundp epilogue-func)
-      (funcall epilogue-func (context core-state))))
+  (unwind-protect
+       (progn
+         (let ((epilogue-func
+                 (au:ensure-symbol 'epilogue (user-package core-state))))
+           (when (fboundp epilogue-func)
+             (funcall epilogue-func (context core-state))))
 
-  (with-cfg (title) (context core-state)
-    (quit-display (display core-state))
-    (simple-logger:emit :engine.quit title))
-  (makunbound '*core-state*))
+         (with-cfg (title) (context core-state)
+           (quit-display (display core-state))
+           (simple-logger:emit :engine.quit title)))
+    (makunbound '*core-state*)))
 
 #+sbcl
 (defmacro profile (seconds)
