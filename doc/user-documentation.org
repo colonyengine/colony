@@ -7,8 +7,8 @@ development.
 1. Start the engine (including the graphics loop)
 
 #+BEGIN_SRC lisp
-(ql:quickload :first-light-example)
-(in-package :first-light-example)
+(ql:quickload :fl.example)
+(in-package :fl.example)
 (start-engine)
 #+END_SRC
 

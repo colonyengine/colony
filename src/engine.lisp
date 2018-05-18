@@ -47,8 +47,8 @@
      (let ((display (display (start-engine))))
        (sb-profile:unprofile)
        (sb-profile:profile
-        "FIRST-LIGHT"
-        "FIRST-LIGHT-EXAMPLE"
+        "FL.CORE"
+        "FL.EXAMPLE"
         "FL.COMP.TRANSFORM"
         "FL.COMP.CAMERA"
         "FL.COMP.FOLLOWING-CAMERA"
