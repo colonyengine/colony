@@ -1,7 +1,6 @@
 (in-package :defpackage+-user-1)
 
 (defpackage+ #:fl.core
-  (:nicknames #:first-light)
   (:use #:cl)
   (:export #:start-engine
            #:stop-engine)
@@ -127,8 +126,7 @@
                 #:draw-mesh))
 
 (defpackage+ #:fl.shaders
-  (:use #:cl #:shadow)
-  (:inherit #:box.math.vari #:vari)
+  (:use #:cl #:shadow #:box.math.vari)
   (:local-nicknames (#:v2 #:box.math.vec2)
                     (#:v3 #:box.math.vec3)
                     (#:v4 #:box.math.vec4)
@@ -144,7 +142,6 @@
 
 (defpackage+ #:fl.materials
   (:use #:cl #:shadow)
-  (:inherit #:box.math.vari #:vari)
   (:local-nicknames (#:v2 #:box.math.vec2)
                     (#:v3 #:box.math.vec3)
                     (#:v4 #:box.math.vec4)
@@ -191,12 +188,10 @@
                 #:easing-graph-26
                 #:easing-graph-27
                 #:easing-graph-28
-                #:easing-graph-29
-                ))
+                #:easing-graph-29))
 
 (defpackage+ #:fl.textures
   (:use #:cl #:shadow)
-  (:inherit #:box.math.vari #:vari)
   (:local-nicknames (#:v2 #:box.math.vec2)
                     (#:v3 #:box.math.vec3)
                     (#:v4 #:box.math.vec4)
