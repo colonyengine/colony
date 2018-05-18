@@ -8,17 +8,19 @@ development.
 
 #+BEGIN_SRC lisp
 (ql:quickload :fl.example)
-(in-package :fl.example)
-(start-engine)
+(start-engine :fl.example)
 #+END_SRC
 
-Note: A recent change requires that you be "in" the user package, not the core package when starting
-the engine.
+This will start the default example scene. If you would like to start a different scene, you can
+pass the scene name as an optional second argument to `start-engine`, like so:
 
-Note: You *cannot* run the engine at all unless you are "in" the user package. This is because the
-engine tries to figure out where to load user extensions from, and by being "in" the user package,
-you help the engine figure this out without needing to pass an argument (since we cannot make the
-directory a context variable, as the context DSL is an extension to be loaded).
+#+BEGIN_SRC lisp
+(ql:quickload :fl.example)
+(start-engine :fl.example 'geometric-volumes)
+#+END_SRC
+
+Note: The optional scene name to load should be in the package specified, `:fl-example` in the
+example above.
 
 2. Quit the engine
 

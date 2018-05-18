@@ -26,22 +26,20 @@
 
     core-state))
 
-(defun start-engine (&optional override-scene)
+(defun start-engine (package-name &optional override-scene)
   (unwind-protect
-       (let ((user-package-name (au:make-keyword (package-name *package*))))
-         (when (eq user-package-name :fl.core)
-           (error "Cannot start the engine from the :FL.CORE package."))
-         (kit.sdl2:init)
-         (setf *core-state*
-               (prog1 (sdl2:in-main-thread ()
-                        (let ((*override-scene* override-scene))
-                          (prepare-engine user-package-name)))
-                 (kit.sdl2:start))))
+       (when (eq package-name :fl.core)
+         (error "Cannot start the engine from the :FL.CORE package."))
+    (kit.sdl2:init)
+    (setf *core-state*
+          (prog1 (sdl2:in-main-thread ()
+                   (let ((*override-scene* (au:format-symbol package-name "~a" override-scene)))
+                     (prepare-engine package-name)))
+            (kit.sdl2:start)))
     (makunbound '*core-state*)))
 
 (defun stop-engine (core-state)
-  ;; NOTE: This must happen before we do anything technical in tearing down
-  ;; the engine.
+  ;; NOTE: This must happen before we do anything technical in tearing down the engine.
   (unwind-protect
        (progn
          (let ((epilogue-func

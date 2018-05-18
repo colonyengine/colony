@@ -2,7 +2,9 @@
 
 (defpackage+ #:fl.example
   (:use #:cl #:fl.core)
-  (:local-nicknames (#:v3 #:box.math.vec3)))
+  (:local-nicknames (#:v3 #:box.math.vec3))
+  (:export-only #:damaged-helmet
+                #:geometric-volumes))
 
 (defpackage+ #:fl.example.shaders
   (:use #:cl #:shadow #:box.math.vari)
