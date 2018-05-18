@@ -1,0 +1,108 @@
+(in-package :fl.example.mfiano)
+
+(defclass sprite-sheet-animations ()
+  ((%animvec :reader animvec
+             :initarg :animvec
+             :initform nil)
+   (%elapsed-time :accessor elapsed-time
+                  :initarg :elapsed-time
+                  :initform 0.0)
+   (%cell-time :accessor cell-time
+               :initarg :cell-time)
+   (%current-cell :accessor current-cell
+                  :initarg :current-cell)
+   (%current-animation :accessor current-animation
+                       :initarg :current-animation)))
+
+(defun make-sprite-sheet-animations (current-animation current-cell animation-vector)
+  (let ((cell-time (/ (aref (aref animation-vector current-animation) 0)
+                      (1- (length (aref animation-vector current-animation))))))
+    (make-instance 'sprite-sheet-animations
+                   :animvec animation-vector
+                   :current-animation current-animation
+                   :cell-time cell-time
+                   :current-cell current-cell)))
+
+(define-component sprite-sheet ()
+  ((transform :default nil)
+   (spec-path :default nil)
+   (spec :default nil)
+   (material :default nil)
+   (vao-id :default nil)
+   (vbo-id :default nil)
+   (sprite :default nil)
+   (sprites :default (au:dict #'equalp))
+   (animations :default nil)))
+
+(defun make-sprite-sheet-buffer (sprite-sheet)
+  (shadow:create-buffer :ssbo :sprite-sheet 'fl.example.mfiano.shaders:sprite-shader :sprite-sheet)
+
+  (loop :with length = (length (spec sprite-sheet))
+        :with xs = (make-array length :element-type 'single-float)
+        :with ys = (make-array length :element-type 'single-float)
+        :with ws = (make-array length :element-type 'single-float)
+        :with hs = (make-array length :element-type 'single-float)
+        :for sprite :in (spec sprite-sheet)
+        :for i :from 0
+        :do (destructuring-bind (&key id x y w h) sprite
+              (when (and id x y w h)
+                (setf (aref xs i) x
+                      (aref ys i) y
+                      (aref ws i) w
+                      (aref hs i) h
+                      (au:href (sprites sprite-sheet) id) i)))
+        :finally (shadow:write-buffer-path :sprite-sheet :x xs)
+                 (shadow:write-buffer-path :sprite-sheet :y ys)
+                 (shadow:write-buffer-path :sprite-sheet :w ws)
+                 (shadow:write-buffer-path :sprite-sheet :h hs)))
+
+(defun convert-current-sprite (sprite-sheet)
+  "Convert the current-animation and current-cell into an integer and store it in the sprite sheet
+for later use with the shaders."
+  (with-slots (%animvec %current-animation %current-cell) (animations sprite-sheet)
+    (setf (sprite sprite-sheet)
+          (au:href (sprites sprite-sheet)
+                   (aref (aref %animvec %current-animation) (1+ %current-cell))))))
+
+(defmethod initialize-component ((sprite-sheet sprite-sheet) (context context))
+  (with-slots (%spec-path %spec %material %transform %vao-id) sprite-sheet
+    (let ((path (find-resource context %spec-path)))
+      (setf %spec (au:safe-read-file-form path)
+            %material (lookup-material %material context)
+            %transform (actor-component-by-type (actor sprite-sheet) 'transform)
+            %vao-id (gl:gen-vertex-array))
+      (make-sprite-sheet-buffer sprite-sheet)
+      (convert-current-sprite sprite-sheet))))
+
+(defun maybe-update-current-animation-cell (sprite-sheet frame-time)
+  (with-slots (%elapsed-time %cell-time %current-animation %current-cell %animvec)
+      (animations sprite-sheet)
+    (incf %elapsed-time frame-time)
+    (when (>= %elapsed-time %cell-time)
+      (loop :until (< %elapsed-time %cell-time)
+            :do (setf %current-cell
+                      (mod (1+ %current-cell)
+                           (1- (length (aref %animvec %current-animation)))))
+                (decf %elapsed-time %cell-time)
+                (when (zerop %elapsed-time)
+                  (setf %elapsed-time 0)))
+      (convert-current-sprite sprite-sheet))))
+
+(defmethod update-component ((sprite-sheet sprite-sheet) (context context))
+  (maybe-update-current-animation-cell sprite-sheet (frame-time context)))
+
+(defmethod render-component ((sprite-sheet sprite-sheet) (context context))
+  (with-slots (%transform %material %sprite %vao-id) sprite-sheet
+    (au:when-let ((camera (active-camera context)))
+      (shadow:with-shader-program (shader %material)
+        (shadow:uniform-mat4 :model (fl.comp.transform:model %transform))
+        (shadow:uniform-mat4 :view (fl.comp.camera:view camera))
+        (shadow:uniform-mat4 :proj (fl.comp.camera:projection camera))
+        (let* ((mat-uniforms (fl.core::uniforms %material))
+               (tex.sprite-value (au:href mat-uniforms :tex.sprite)))
+          (setf (fl.core::computed-value tex.sprite-value) %sprite)
+          (shadow:bind-shader-storage-block 'fl.example.mfiano.shaders:sprite-shader :sprite-sheet 8)
+          (shadow:bind-buffer :sprite-sheet 8)
+          (bind-material %material)
+          (gl:bind-vertex-array %vao-id)
+          (gl:draw-arrays :points 0 1))))))
