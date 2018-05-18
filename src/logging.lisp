@@ -9,22 +9,22 @@
 (simple-logger:define-message :trace :extension.load
   "Loaded extension (~(~a~)): ~a.")
 
-(simple-logger:define-message :debug :display.init
+(simple-logger:define-message :info :display.init
   "Display ~dx~d @ ~dHz created.")
 
-(simple-logger:define-message :debug :display.stop
+(simple-logger:define-message :info :display.stop
   "Display ~dx~d @ ~dHz destroyed.")
 
-(simple-logger:define-message :debug :input.key.down
+(simple-logger:define-message :trace :input.key.down
   "Key pressed: ~a.")
 
-(simple-logger:define-message :debug :input.key.up
+(simple-logger:define-message :trace :input.key.up
   "Key released: ~a.")
 
-(simple-logger:define-message :debug :input.scroll.up
+(simple-logger:define-message :trace :input.scroll.up
   "Mouse wheel scrolled up.")
 
-(simple-logger:define-message :debug :input.scroll.down
+(simple-logger:define-message :trace :input.scroll.down
   "Mouse wheel scrolled down.")
 
 (simple-logger:define-message :trace :flow.enter
@@ -57,14 +57,14 @@
 (simple-logger:define-message :debug :component.mesh.cache.created
   "Creating a new cached mesh for: ~a.")
 
-(simple-logger:define-message :debug :material.check-uniform
+(simple-logger:define-message :trace :material.check-uniform
   "Checking material: ~a, using uniform ~s.")
 
-(simple-logger:define-message :debug :material.annotate
+(simple-logger:define-message :trace :material.annotate
   "Annotate material: ~a, uniform: ~a, sampler: ~a, texture ID: ~a.")
 
-(simple-logger:define-message :debug :material.resolve
+(simple-logger:define-message :trace :material.resolve
   "Resolving material: ~a.")
 
-(simple-logger:define-message :debug :material.extension.process
+(simple-logger:define-message :trace :material.extension.process
   "Processing material extension: ~a.")
