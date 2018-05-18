@@ -37,7 +37,7 @@
                         (let ((*override-scene* override-scene))
                           (prepare-engine user-package-name)))
                  (kit.sdl2:start))))
-    (makunbound '*core-state)))
+    (makunbound '*core-state*)))
 
 (defun stop-engine (core-state)
   ;; NOTE: This must happen before we do anything technical in tearing down
