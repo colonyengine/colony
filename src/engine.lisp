@@ -1,5 +1,11 @@
 (in-package :fl.core)
 
+;; NOTE: This is used for debugging and live recompilation of things that need
+;; to reinsert them selves into core-state. It doesn't work with multiple
+;; core-states, so don't do that. This is only bound when the game is running.
+;; DO NOT USE THIS FOR ANYTHING ELSE THAN DYNAMIC RECOMPILATION SOLUTIONS!
+(defvar *core-state*)
+
 (defun prepare-engine (package)
   (let ((*package* (find-package :fl.core))
         (core-state (make-core-state :user-package package)))
@@ -25,10 +31,11 @@
     (when (eq user-package-name :fl.core)
       (error "Cannot start the engine from the :FL.CORE package."))
     (kit.sdl2:init)
-    (prog1 (sdl2:in-main-thread ()
-             (let ((*override-scene* override-scene))
-               (prepare-engine user-package-name)))
-      (kit.sdl2:start))))
+    (setf *core-state*
+          (prog1 (sdl2:in-main-thread ()
+                   (let ((*override-scene* override-scene))
+                     (prepare-engine user-package-name)))
+            (kit.sdl2:start)))))
 
 (defun stop-engine (core-state)
   ;; NOTE: This must happen before we do anything technical in tearing down
@@ -39,7 +46,8 @@
 
   (with-cfg (title) (context core-state)
     (quit-display (display core-state))
-    (simple-logger:emit :engine.quit title)))
+    (simple-logger:emit :engine.quit title))
+  (makunbound '*core-state*))
 
 #+sbcl
 (defmacro profile (seconds)
