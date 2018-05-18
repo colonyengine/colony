@@ -156,7 +156,6 @@
                 #:unlit-texture
                 #:unlit-texture-decal
                 #:unlit-texture-decal-bright
-                #:pbr-damaged-helmet
                 #:easing-graph
                 ;; TODO: Remove the below when materials public API is done.
                 #:easing-graph-0
@@ -204,9 +203,4 @@
                 #:general-data-format-descriptor)
   (:export-only #:default-profile
                 #:missing-texture
-                #:debug-texture
-                #:damaged-helmet/metallic-roughness
-                #:damaged-helmet/color
-                #:damaged-helmet/normal
-                #:damaged-helmet/ambient-occlusion
-                #:damaged-helmet/emissive))
+                #:debug-texture))

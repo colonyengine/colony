@@ -10,9 +10,15 @@
 (defpackage+ #:fl.example.materials
   (:use #:cl #:shadow)
   (:import-from #:fl.core
-                #:define-material))
+                #:define-material)
+  (:export-only #:pbr-damaged-helmet))
 
 (defpackage+ #:fl.example.textures
   (:use #:cl #:shadow)
   (:import-from #:fl.core
-                #:define-texture))
+                #:define-texture)
+  (:export-only #:damaged-helmet/metallic-roughness
+                #:damaged-helmet/color
+                #:damaged-helmet/normal
+                #:damaged-helmet/ambient-occlusion
+                #:damaged-helmet/emissive))
