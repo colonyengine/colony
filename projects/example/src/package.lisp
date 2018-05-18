@@ -11,7 +11,8 @@
                     (#:v4 #:box.math.vec4)
                     (#:m2 #:box.math.mat2)
                     (#:m3 #:box.math.mat3)
-                    (#:m4 #:box.math.mat4)))
+                    (#:m4 #:box.math.mat4))
+  (:export-only #:damaged-helmet))
 
 (defpackage+ #:fl.example.materials
   (:use #:cl #:shadow)
@@ -23,7 +24,7 @@
                     (#:m4 #:box.math.mat4))
   (:import-from #:fl.core
                 #:define-material)
-  (:export-only #:pbr-damaged-helmet))
+  (:export-only #:damaged-helmet))
 
 (defpackage+ #:fl.example.textures
   (:use #:cl #:shadow)

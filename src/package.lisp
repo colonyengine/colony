@@ -136,9 +136,7 @@
   (:export-only #:unlit-color
                 #:unlit-color-decal
                 #:unlit-texture
-                #:unlit-texture-decal
-                #:pbr-damaged-helmet
-                #:easing-graph))
+                #:unlit-texture-decal))
 
 (defpackage+ #:fl.materials
   (:use #:cl #:shadow)
@@ -155,39 +153,7 @@
                 #:unlit-color-decal
                 #:unlit-texture
                 #:unlit-texture-decal
-                #:unlit-texture-decal-bright
-                #:easing-graph
-                ;; TODO: Remove the below when materials public API is done.
-                #:easing-graph-0
-                #:easing-graph-1
-                #:easing-graph-2
-                #:easing-graph-3
-                #:easing-graph-4
-                #:easing-graph-5
-                #:easing-graph-6
-                #:easing-graph-7
-                #:easing-graph-8
-                #:easing-graph-9
-                #:easing-graph-10
-                #:easing-graph-11
-                #:easing-graph-12
-                #:easing-graph-13
-                #:easing-graph-14
-                #:easing-graph-15
-                #:easing-graph-16
-                #:easing-graph-17
-                #:easing-graph-18
-                #:easing-graph-19
-                #:easing-graph-20
-                #:easing-graph-21
-                #:easing-graph-22
-                #:easing-graph-23
-                #:easing-graph-24
-                #:easing-graph-25
-                #:easing-graph-26
-                #:easing-graph-27
-                #:easing-graph-28
-                #:easing-graph-29))
+                #:unlit-texture-decal-bright))
 
 (defpackage+ #:fl.textures
   (:use #:cl #:shadow)
