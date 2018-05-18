@@ -14,7 +14,7 @@
                 #:define-material)
   (:export-only #:sprite))
 
-(defpackage+ #:mfiano.example.textures
+(defpackage+ #:fl.example.mfiano.textures
   (:use #:cl #:shadow)
   (:import-from #:fl.core
                 #:define-texture)
