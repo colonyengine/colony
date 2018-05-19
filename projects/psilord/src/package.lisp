@@ -2,9 +2,16 @@
 
 (defpackage+ #:fl.psilord
   (:use #:cl
-        #:fl.core)
-  (:local-nicknames (#:v3 #:box.math.vec3)
-                    (#:m4 #:box.math.mat4)))
+        #:fl.core
+        #:fl.comp.mesh-renderer)
+  (:local-nicknames (#:v2 #:box.math.vec2)
+                    (#:v3 #:box.math.vec3)
+                    (#:v4 #:box.math.vec4)
+                    (#:m2 #:box.math.mat2)
+                    (#:m3 #:box.math.mat3)
+                    (#:m4 #:box.math.mat4))
+  (:export-only #:demo
+                #:material-test))
 
 (defpackage+ #:fl.psilord.shaders
   (:use #:cl #:shadow)

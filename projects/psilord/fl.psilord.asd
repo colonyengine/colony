@@ -10,4 +10,5 @@
   :components
   ((:file "package")
    (:file "input")
-   (:file "sprite-sheet")))
+   (:file "sprite-sheet")
+   (:file "mat-test")))

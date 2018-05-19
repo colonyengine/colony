@@ -39,9 +39,10 @@
            #:general-data-format-descriptor)
   ;; materials
   (:export #:define-material
+           #:copy-material
            #:bind-material
-           #:mat-ref
-           #:mat-computed-ref
+           #:mat-uniform-ref
+           #:mat-computed-uniform-ref
            #:shader)
   ;; input
   (:export #:key-down
@@ -123,6 +124,7 @@
 (defpackage+ #:fl.comp.mesh-renderer
   (:use #:cl #:fl.core)
   (:export-only #:mesh-renderer
+		#:material
                 #:draw-mesh))
 
 (defpackage+ #:fl.shaders
