@@ -168,6 +168,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
      (uniforms mat))))
 
 (defun bind-material-buffers (mat)
+  (declare (ignore mat))
   ;; TODO
   nil)
 
