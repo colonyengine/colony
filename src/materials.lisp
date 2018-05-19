@@ -234,7 +234,7 @@ at the completion of this function."
               semantic-value)))))
 
 
-(defun gen-default/sem->com (core-state)
+(defun gen-default-copy/sem->com (core-state)
   (declare (ignore core-state))
   (lambda (semantic-value)
     (if (or (stringp semantic-value)
@@ -366,7 +366,7 @@ etc. Return NIL otherwise."
                  ;; computed-value so it must be last in the list.
                  (push (if (sampler-p uniform-type)
                            (gen-sampler/sem->com core-state)
-                           (gen-default/sem->com core-state))
+                           (gen-default-copy/sem->com core-state))
                        (semantic->computed material-value))
 
                  ;; 3. Put the user specified semantic->computed transformer
