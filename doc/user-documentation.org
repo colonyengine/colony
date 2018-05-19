@@ -8,19 +8,10 @@ development.
 
 #+BEGIN_SRC lisp
 (ql:quickload :fl.example)
-(start-engine :fl.example)
+(start-engine 'fl.example:damaged-helmet)
 #+END_SRC
 
-This will start the default example scene. If you would like to start a different scene, you can
-pass the scene name as an optional second argument to `start-engine`, like so:
-
-#+BEGIN_SRC lisp
-(ql:quickload :fl.example)
-(start-engine :fl.example 'geometric-volumes)
-#+END_SRC
-
-Note: The optional scene name to load should be in the package specified, `:fl-example` in the
-example above.
+This will start the example scene named =damaged-helmet=.
 
 2. Quit the engine
 

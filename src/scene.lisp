@@ -1,7 +1,5 @@
 (in-package :fl.core)
 
-(defvar *override-scene* nil)
-
 (defun %type-check-actor (actor actors-list)
   (unless (char= (char (symbol-name actor) 0) #\@)
     (error "Actor names must begin with '@': ~a" actor))
@@ -116,9 +114,7 @@
     (error "Cannot find the scene name: ~s." name)))
 
 (defun load-default-scene (core-state)
-  (au:if-let ((default (or *override-scene* (cfg (context core-state) :default-scene))))
-    (load-scene core-state default)
-    (error "No default scene specified.")))
+  (load-scene core-state (default-scene core-state)))
 
 (defmethod extension-file-type ((extension-type (eql 'scene)))
   "scene")

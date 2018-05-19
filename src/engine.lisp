@@ -1,77 +1,68 @@
 (in-package :fl.core)
 
-;; NOTE: This is used for debugging and live recompilation of things that need
-;; to reinsert them selves into core-state. It doesn't work with multiple
-;; core-states, so don't do that. This is only bound when the game is running.
-;; DO NOT USE THIS FOR ANYTHING ELSE THAN DYNAMIC RECOMPILATION SOLUTIONS!
+;; This is a toplevel variable that is treated as a true global, rather than a special variable.
+;; NOTE; This is purely used for debugging, and should definitely not be used for user code or
+;; running multiple core-state objects.
 (defvar *core-state*)
 
-(defun prepare-engine (package)
-  (let ((*package* (find-package :fl.core))
-        (core-state (make-core-state :user-package package)))
-    (prepare-extensions core-state (get-extension-path package))
-    (load-default-scene core-state)
-    (make-display core-state)
-    (prepare-shader-programs core-state)
-    (resolve-all-textures core-state)
-    (resolve-all-materials core-state)
+(defun run-prologue (core-state)
+  "The prologue is a function defined in the user's project, that if it exists, is called before any
+setup procedure occurs when starting the engine."
+  (let ((prologue-func (au:ensure-symbol 'prologue (user-package core-state))))
+    (when (fboundp prologue-func)
+      (setf (state (context core-state)) (funcall prologue-func (context core-state))))))
 
-    ;; NOTE: This must happen when we're ALL DONE preparing the internals
-    ;; of the engine. It is still part of preparing the engine though.
-    (let ((prologue-func
-            (au:ensure-symbol 'prologue (user-package core-state))))
-      (when (fboundp prologue-func)
-        (setf (state (context core-state))
-              (funcall prologue-func (context core-state)))))
+(defun run-epilogue (core-state)
+  "The epilogue is a function defined in the user's project, that if it exists, is called before any
+tear-down procedure occurs when stopping the engine."
+  (let ((epilogue-func (au:ensure-symbol 'epilogue (user-package core-state))))
+    (when (fboundp epilogue-func)
+      (funcall epilogue-func (context core-state)))))
 
-    core-state))
+(defun prepare-engine (scene-name)
+  "Bring up the engine on the main thread, while keeping the REPL unblocked for interactive
+development."
+  (sdl2:in-main-thread ()
+    (let* ((*package* (find-package :fl.core))
+           (user-package (au:make-keyword (package-name (symbol-package scene-name))))
+           (core-state (make-core-state :default-scene scene-name :user-package user-package)))
+      (prepare-extensions core-state (get-extension-path user-package))
+      (load-default-scene core-state)
+      (make-display core-state)
+      (prepare-shader-programs core-state)
+      (resolve-all-textures core-state)
+      (resolve-all-materials core-state)
+      (run-prologue core-state)
+      core-state)))
 
-(defun start-engine (package-name &optional override-scene)
-  (unwind-protect
-       (when (eq package-name :fl.core)
-         (error "Cannot start the engine from the :FL.CORE package."))
-    (kit.sdl2:init)
-    (setf *core-state*
-          (prog1 (sdl2:in-main-thread ()
-                   (let ((*override-scene* (au:format-symbol package-name "~a" override-scene)))
-                     (prepare-engine package-name)))
-            (kit.sdl2:start)))
-    (makunbound '*core-state*)))
+(defun start-engine (scene-name)
+  "Start the engine by running the specified scene."
+  (kit.sdl2:init)
+  (kit.sdl2:start)
+  (setf *core-state* (prepare-engine scene-name)))
 
 (defun stop-engine (core-state)
-  ;; NOTE: This must happen before we do anything technical in tearing down the engine.
+  "Stop the engine, making sure to call any user-define epilogue function first, and finally
+cleaning up."
   (unwind-protect
-       (progn
-         (let ((epilogue-func
-                 (au:ensure-symbol 'epilogue (user-package core-state))))
-           (when (fboundp epilogue-func)
-             (funcall epilogue-func (context core-state))))
-
-         (with-cfg (title) (context core-state)
-           (quit-display (display core-state))
-           (simple-logger:emit :engine.quit title)))
+       (with-cfg (title) (context core-state)
+         (run-epilogue core-state)
+         (quit-display (display core-state))
+         (simple-logger:emit :engine.quit title))
     (makunbound '*core-state*)))
 
 #+sbcl
 (defmacro profile (seconds)
-  `(progn
-     (let ((display (display (start-engine))))
+  "Profile for `SECONDS`, all packages that begin with 'FL.', along with some key third-party
+  library packages."
+  (let ((packages (remove-if-not
+                   (lambda (x) (au:string-starts-with? x "FL."))
+                   (mapcar #'package-name (list-all-packages)))))
+    `(let ((engine (start-engine :fl.example)))
        (sb-profile:unprofile)
-       (sb-profile:profile
-        "FL.CORE"
-        "FL.EXAMPLE"
-        "FL.COMP.TRANSFORM"
-        "FL.COMP.CAMERA"
-        "FL.COMP.FOLLOWING-CAMERA"
-        "FL.COMP.TRACKING-CAMERA"
-        "FL.COMP.MESH"
-        "FL.COMP.MESH-RENDERER"
-        "FL.SHADERS"
-        "FL.MATERIALS"
-        "FL.TEXTURES"
-        "BOX.FRAME")
+       (sb-profile:profile ,@packages "AU" "BOX.FRAME" "SHADOW" "CL-OPENGL")
        (sleep ,seconds)
        (sb-profile:report)
        (sb-profile:unprofile)
        (sb-profile:reset)
-       (stop-engine (core-state display)))))
+       (stop-engine engine))))

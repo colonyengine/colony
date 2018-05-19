@@ -3,6 +3,8 @@
 (defclass core-state ()
   ((%user-package :reader user-package
                   :initarg :user-package)
+   (%default-scene :reader default-scene
+                   :initarg :default-scene)
    (%rcache :reader rcache
             :initform (au:dict #'eq))
    (%display :reader display)
