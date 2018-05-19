@@ -129,7 +129,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
                (id current-mat) new-mat-name)
         (return-from %deep-copy-material error-value)))
 
-  (let* ((new-id (id current-mat))
+  (let* ((new-id new-mat-name)
          (new-shader (shader current-mat))
          (new-uniforms (au:dict #'eq))
          (new-blocks (au:dict #'eq))
