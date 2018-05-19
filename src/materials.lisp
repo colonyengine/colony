@@ -80,6 +80,9 @@ CORE-STATE. Return a list of the return values of the FUNC."
 (defun %make-material-value (&rest init-args)
   (apply #'make-instance 'material-value init-args))
 
+
+;; TODO: I don't think this will make copies of the semantic/computed values, so
+;; there could be shared structure stuff going on here.
 (defun %deep-copy-material-value (material-value)
   (%make-material-value
    :semantic-value (semantic-value material-value)
