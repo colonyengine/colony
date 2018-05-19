@@ -52,13 +52,13 @@ cleaning up."
     (makunbound '*core-state*)))
 
 #+sbcl
-(defmacro profile (seconds)
+(defmacro profile (seconds scene-name)
   "Profile for `SECONDS`, all packages that begin with 'FL.', along with some key third-party
   library packages."
   (let ((packages (remove-if-not
                    (lambda (x) (au:string-starts-with? x "FL."))
                    (mapcar #'package-name (list-all-packages)))))
-    `(let ((engine (start-engine :fl.example)))
+    `(let ((engine (start-engine ,scene-name)))
        (sb-profile:unprofile)
        (sb-profile:profile ,@packages "AU" "BOX.FRAME" "SHADOW" "CL-OPENGL")
        (sleep ,seconds)
