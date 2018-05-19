@@ -48,10 +48,10 @@
 
     ;; Then make a new fuzz-delta given the fuzz-range
     (v4:with-components ((d color-fuzz-delta) (r color-fuzz-range))
-      (setf dx (zero-mean-random rx)
-            dy (zero-mean-random ry)
-            dz (zero-mean-random rz)
-            dw (zero-mean-random rw)))
+      (setf dr (zero-mean-random rr)
+            dg (zero-mean-random rg)
+            db (zero-mean-random rb)
+            da (zero-mean-random ra)))
 
     ;; compute the new color, and clamp it.
     (v4:clamp! current-color
