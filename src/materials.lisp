@@ -80,6 +80,9 @@ CORE-STATE. Return a list of the return values of the FUNC."
 (defun %make-material-value (&rest init-args)
   (apply #'make-instance 'material-value init-args))
 
+
+;; TODO: I don't think this will make copies of the semantic/computed values, so
+;; there could be shared structure stuff going on here.
 (defun %deep-copy-material-value (material-value)
   (%make-material-value
    :semantic-value (semantic-value material-value)
@@ -129,7 +132,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
                (id current-mat) new-mat-name)
         (return-from %deep-copy-material error-value)))
 
-  (let* ((new-id (id current-mat))
+  (let* ((new-id new-mat-name)
          (new-shader (shader current-mat))
          (new-uniforms (au:dict #'eq))
          (new-blocks (au:dict #'eq))
@@ -168,6 +171,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
      (uniforms mat))))
 
 (defun bind-material-buffers (mat)
+  (declare (ignore mat))
   ;; TODO
   nil)
 
@@ -233,7 +237,7 @@ at the completion of this function."
               semantic-value)))))
 
 
-(defun gen-default/sem->com (core-state)
+(defun gen-default-copy/sem->com (core-state)
   (declare (ignore core-state))
   (lambda (semantic-value)
     (if (or (stringp semantic-value)
@@ -365,7 +369,7 @@ etc. Return NIL otherwise."
                  ;; computed-value so it must be last in the list.
                  (push (if (sampler-p uniform-type)
                            (gen-sampler/sem->com core-state)
-                           (gen-default/sem->com core-state))
+                           (gen-default-copy/sem->com core-state))
                        (semantic->computed material-value))
 
                  ;; 3. Put the user specified semantic->computed transformer
