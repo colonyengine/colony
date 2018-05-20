@@ -9,7 +9,8 @@
    (lambda (x)
      (let ((package *package*))
        (with-standard-io-syntax
-         (let ((*package* package))
+         (let ((*package* package)
+               (*print-readably* nil))
            (load x))))
      (simple-logger:emit :extension.load owner x))
    :test (extension-type-filter extension-type)))

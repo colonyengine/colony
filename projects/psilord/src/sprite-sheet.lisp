@@ -51,8 +51,14 @@
 
 (defun make-sprite-sheet-buffer (sprite-sheet)
 
-  (shadow:create-buffer :ssbo :sprite-sheet
-                        'fl.psilord.shaders:sprite-shader :sprite-sheet)
+  (unless (shadow:find-block :sprite-sheet-block)
+    (shadow::create-block-alias :buffer
+                                :sprite-sheet
+                                'fl.psilord.shaders:sprite-shader
+                                :sprite-sheet-block))
+  (shadow:bind-block :sprite-sheet-block 8)
+  (shadow:create-buffer :sprite-sheet-buffer :sprite-sheet-block)
+  (shadow:bind-buffer :sprite-sheet-buffer 8)
 
   (loop :with length = (length (spec sprite-sheet))
         :with xs = (make-array length :element-type 'single-float)
@@ -68,10 +74,10 @@
                       (aref ws i) w
                       (aref hs i) h
                       (au:href (sprites sprite-sheet) id) i)))
-        :finally (shadow:write-buffer-path :sprite-sheet :x xs)
-                 (shadow:write-buffer-path :sprite-sheet :y ys)
-                 (shadow:write-buffer-path :sprite-sheet :w ws)
-                 (shadow:write-buffer-path :sprite-sheet :h hs)))
+        :finally (shadow:write-buffer-path :sprite-sheet-buffer :x xs)
+                 (shadow:write-buffer-path :sprite-sheet-buffer :y ys)
+                 (shadow:write-buffer-path :sprite-sheet-buffer :w ws)
+                 (shadow:write-buffer-path :sprite-sheet-buffer :h hs)))
 
 (defun convert-current-sprite (sprite-sheet)
   "Convert the current-animation and current-cell into an integer and store it in the sprite sheet
@@ -146,11 +152,6 @@ for later use with the shaders."
           ;; personally don't have to choose a real binding point integer and
           ;; the FL or shadow system can do it for me.
           ;;
-          ;; Now, lazily bind the desired interface block....
-          (shadow:bind-shader-storage-block
-           'fl.psilord.shaders:sprite-shader :sprite-sheet 8)
-          ;; ....and the desired buffer together at the same binding point.
-          (shadow:bind-buffer :sprite-sheet 8)
 
           ;; Normally bind the uniforms (which includes the above value) that we
           ;; currently understand like the sprite sheet texture.

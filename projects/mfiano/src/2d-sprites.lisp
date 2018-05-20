@@ -35,7 +35,15 @@
    (animations :default nil)))
 
 (defun make-sprite-sheet-buffer (sprite-sheet)
-  (shadow:create-buffer :ssbo :sprite-sheet 'fl.mfiano.shaders:sprite-shader :sprite-sheet)
+
+  (unless (shadow:find-block :sprite-sheet-block)
+    (shadow::create-block-alias :buffer
+                                :sprite-sheet
+                                'fl.mfiano.shaders:sprite-shader
+                                :sprite-sheet-block))
+  (shadow:bind-block :sprite-sheet-block 8)
+  (shadow:create-buffer :sprite-sheet-buffer :sprite-sheet-block)
+  (shadow:bind-buffer :sprite-sheet-buffer 8)
 
   (loop :with length = (length (spec sprite-sheet))
         :with xs = (make-array length :element-type 'single-float)
@@ -51,10 +59,10 @@
                       (aref ws i) w
                       (aref hs i) h
                       (au:href (sprites sprite-sheet) id) i)))
-        :finally (shadow:write-buffer-path :sprite-sheet :x xs)
-                 (shadow:write-buffer-path :sprite-sheet :y ys)
-                 (shadow:write-buffer-path :sprite-sheet :w ws)
-                 (shadow:write-buffer-path :sprite-sheet :h hs)))
+        :finally (shadow:write-buffer-path :sprite-sheet-buffer :x xs)
+                 (shadow:write-buffer-path :sprite-sheet-buffer :y ys)
+                 (shadow:write-buffer-path :sprite-sheet-buffer :w ws)
+                 (shadow:write-buffer-path :sprite-sheet-buffer :h hs)))
 
 (defun convert-current-sprite (sprite-sheet)
   "Convert the current-animation and current-cell into an integer and store it in the sprite sheet
@@ -101,8 +109,6 @@ for later use with the shaders."
         (let* ((mat-uniforms (fl.core::uniforms %material))
                (tex.sprite-value (au:href mat-uniforms :tex.sprite)))
           (setf (fl.core::computed-value tex.sprite-value) %sprite)
-          (shadow:bind-shader-storage-block 'fl.mfiano.shaders:sprite-shader :sprite-sheet 8)
-          (shadow:bind-buffer :sprite-sheet 8)
           (bind-material %material)
           (gl:bind-vertex-array %vao-id)
           (gl:draw-arrays :points 0 1))))))
