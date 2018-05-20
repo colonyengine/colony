@@ -17,7 +17,6 @@
    ;; raw symbols, no quotes or #' or (function eq) allowed.
    (:cached-mesh-data equal eql)))
 
-
 (defun %load-mesh (context location id)
   (load-mesh (find-resource context location) id))
 
@@ -59,6 +58,4 @@
                                        (%load-mesh context location id)))
 
       ;; Body of the with-shared-storage
-      (setf primitives cached-mesh))
-
-    ))
+      (setf primitives cached-mesh))))

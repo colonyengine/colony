@@ -98,14 +98,12 @@ TEXTURE-TYPE into the texture memory."))
 
   (let* ((data (get-applied-attribute texture :data))
          (generate-mipmaps-p (get-applied-attribute texture :generate-mipmaps))
-         (base-image-path (aref data 0))
-         (image (read-image context base-image-path)))
+         (location (aref data 0))
+         (image (read-image context location)))
 
     (assert (= (length data) 1))
 
-    (with-slots (%width %height %internal-format %pixel-format %pixel-type
-                 %data)
-        image
+    (with-slots (%width %height %internal-format %pixel-format %pixel-type %data) image
       (gl:tex-image-2d texture-type 0 %internal-format %width %height 0 %pixel-format %pixel-type
                        %data)
       (assert generate-mipmaps-p)
@@ -118,8 +116,8 @@ TEXTURE-TYPE into the texture memory."))
   ;; TODO: As a consequence, it does not yet handle loading mipmap data.
   (let* ((data (get-applied-attribute texture :data))
          (generate-mipmaps-p (get-applied-attribute texture :generate-mipmaps))
-         (base-image-path (aref data 0))
-         (image (read-image context base-image-path)))
+         (location (aref data 0))
+         (image (read-image context location)))
     (assert (= (length data) 1))
     (with-slots (%width %height %internal-format %pixel-format %pixel-type %data) image
       (gl:tex-image-2d texture-type 0 %internal-format %width %height 0 %pixel-format %pixel-type

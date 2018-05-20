@@ -38,7 +38,6 @@
     (:bgr :rgb8)
     (:bgra :rgba8)))
 
-
 ;; TODO: Currently, this only reads TGA files. We can abstract it later to
 ;; different image files if it becomes important.
 (defun read-image (context location)

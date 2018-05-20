@@ -100,12 +100,13 @@ CORE-STATE."
   (:method (value (context context) (key component))
     (setf (shared-storage context (component-type key)) value)))
 
-(defun find-resource (context path)
-  (let ((core-path (au:resolve-system-path :first-light path))
-        (user-path (au:resolve-system-path (user-package (core-state context)) path)))
-    (or (uiop:file-exists-p user-path)
-        (uiop:file-exists-p core-path)
-        (error "Resource not found: ~a" path))))
+(defun find-resource (context location)
+  (destructuring-bind (owner path) location
+    (or (uiop:file-exists-p
+         (case owner
+           (:core (au:resolve-system-path :first-light path))
+           (:local (au:resolve-system-path (user-package (core-state context)) path))))
+        (error "Resource not found: ~s" location))))
 
 ;;;; Interim caching code for (often) resources. Uses nested hash tables like
 ;;;; the shared-storage for componnets.
@@ -138,20 +139,15 @@ CORE-STATE."
                             ;; NOTE: 'eq is for the rcache table itself.
                             (list* 'eq (rcache-layout entry-type))
                             (list* entry-type keys))
-
   (multiple-value-bind (value presentp)
       (apply #'au:href (rcache core-state) (list* entry-type keys))
     (unless presentp
-      (setf value
-            (apply #'rcache-construct entry-type core-state keys)
-
-            (apply #'au:href (rcache core-state) (list* entry-type keys))
-            value))
+      (setf value (apply #'rcache-construct entry-type core-state keys)
+            (apply #'au:href (rcache core-state) (list* entry-type keys)) value))
     value))
 
 ;; This might call rcache-dispose if needed.
-(defmethod rcache-remove ((entry-type symbol) (core-state core-state)
-                          &rest keys)
+(defmethod rcache-remove ((entry-type symbol) (core-state core-state) &rest keys)
   (multiple-value-bind (value presentp)
       (apply #'au:href (rcache core-state) (list* entry-type keys))
     (when presentp
