@@ -21,14 +21,3 @@ reasons, please don't do this for any symbols written in source code.
 
 *** Column width
 Please set your editor to have a maximum column width of 100.
-
-*** Component Shared Storage
-When using the built-in shared storage functionality, a component should follow these rules:
-
-**** Class name
-The shared storage for a particular component type should be represented as a class of the name
-=<component>-shared-storage=, where =<component>= is the name of the component.
-
-**** Separate file for class and related functions
-All shared storage code, including the above class, should be defined in a separate file, named
-=shared-storage.lisp=, located within a particular component's directory.
