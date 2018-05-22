@@ -44,6 +44,7 @@
    (:file "type-dag")
    (:file "scene")
    (:file "display")
+   (:file "viewport")
    (:file "input")
    (:file "image")
    (:file "texture")

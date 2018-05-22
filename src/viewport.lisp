@@ -1,0 +1,10 @@
+(in-package :fl.core)
+
+(defmethod generate-viewport ((display display) position size)
+  (with-cfg (width height) (context (core-state display))
+    (let ((map-fn (au:op (au:map-domain 0 1 0 _ _))))
+      (box.math.vec2:with-components ((p position) (s size))
+        (gl:viewport (funcall map-fn width px)
+                     (funcall map-fn height py)
+                     (funcall map-fn width sx)
+                     (funcall map-fn height sy))))))
