@@ -47,6 +47,12 @@
   ;; input
   (:export #:key-down
            #:key-up
+           #:mouse-down-left
+           #:mouse-down-middle
+           #:mouse-down-right
+           #:mouse-up-left
+           #:mouse-up-middle
+           #:mouse-up-right
            #:mouse-scroll-up
            #:mouse-scroll-down)
   ;; scene

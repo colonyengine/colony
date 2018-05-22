@@ -27,6 +27,12 @@
 (simple-logger:define-message :trace :input.scroll.down
   "Mouse wheel scrolled down.")
 
+(simple-logger:define-message :trace :input.mouse.down
+  "Mouse button pressed: ~a at position (~a,~a).")
+
+(simple-logger:define-message :trace :input.mouse.up
+  "Mouse button released: ~a at position (~a,~a).")
+
 (simple-logger:define-message :trace :flow.enter
   "Entering flow: (~a ~a ~a).")
 
