@@ -27,7 +27,7 @@ development."
            (user-package (au:make-keyword (package-name (symbol-package scene-name))))
            (core-state (make-core-state :default-scene scene-name :user-package user-package)))
       (prepare-extensions core-state (get-extension-path user-package))
-      (load-default-scene core-state)
+      (load-scene core-state scene-name)
       (make-display core-state)
       (prepare-shader-programs core-state)
       (resolve-all-textures core-state)

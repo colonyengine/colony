@@ -113,9 +113,6 @@
     (funcall (get-scene core-state name) core-state)
     (error "Cannot find the scene name: ~s." name)))
 
-(defun load-default-scene (core-state)
-  (load-scene core-state (default-scene core-state)))
-
 (defmethod extension-file-type ((extension-type (eql 'scene)))
   "scene")
 
@@ -132,7 +129,7 @@
          (setf (au:href (scenes owner) key) value))
        (%prepare)))))
 
-(defmacro define-scene (name (&key enabled) &body body)
+(defmacro define-scene (name (&key enabled viewport) &body body)
   `(let ((scene ,(parse-scene `',name body)))
      (declare (special %temp-scene))
      ,(when enabled
