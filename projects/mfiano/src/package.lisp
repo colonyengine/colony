@@ -2,7 +2,6 @@
 
 (defpackage+ #:fl.mfiano
   (:use #:cl #:fl.core)
-  (:local-nicknames (#:v3 #:box.math.vec3)))
 
 (defpackage+ #:fl.mfiano.shaders
   (:use #:cl #:shadow #:box.math.vari)

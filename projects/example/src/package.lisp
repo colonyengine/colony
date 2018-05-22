@@ -2,28 +2,15 @@
 
 (defpackage+ #:fl.example
   (:use #:cl #:fl.core)
-  (:local-nicknames (#:v3 #:box.math.vec3))
   (:export-only #:damaged-helmet
                 #:geometric-volumes))
 
 (defpackage+ #:fl.example.shaders
   (:use #:cl #:shadow #:box.math.vari)
-  (:local-nicknames (#:v2 #:box.math.vec2)
-                    (#:v3 #:box.math.vec3)
-                    (#:v4 #:box.math.vec4)
-                    (#:m2 #:box.math.mat2)
-                    (#:m3 #:box.math.mat3)
-                    (#:m4 #:box.math.mat4))
   (:export-only #:damaged-helmet))
 
 (defpackage+ #:fl.example.materials
   (:use #:cl #:shadow)
-  (:local-nicknames (#:v2 #:box.math.vec2)
-                    (#:v3 #:box.math.vec3)
-                    (#:v4 #:box.math.vec4)
-                    (#:m2 #:box.math.mat2)
-                    (#:m3 #:box.math.mat3)
-                    (#:m4 #:box.math.mat4))
   (:import-from #:fl.core
                 #:define-material)
   (:export-only #:damaged-helmet))

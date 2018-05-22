@@ -85,9 +85,6 @@
 
 (defpackage+ #:fl.comp.transform
   (:use #:cl #:fl.core)
-  (:local-nicknames (#:v3 #:box.math.vec3)
-                    (#:m4 #:box.math.mat4)
-                    (#:q #:box.math.quat))
   (:export-only #:transform
                 #:model
                 #:local
@@ -99,8 +96,6 @@
 
 (defpackage+ #:fl.comp.camera
   (:use #:cl #:fl.core #:fl.comp.transform)
-  (:local-nicknames (#:v3 #:box.math.vec3)
-                    (#:m4 #:box.math.mat4))
   (:export-only #:camera
                 #:transform
                 #:view
@@ -112,14 +107,10 @@
 
 (defpackage+ #:fl.comp.following-camera
   (:use #:cl #:fl.core #:fl.comp.transform #:fl.comp.camera)
-  (:local-nicknames (#:v3 #:box.math.vec3)
-                    (#:m4 #:box.math.mat4))
   (:export-only #:following-camera))
 
 (defpackage+ #:fl.comp.tracking-camera
   (:use #:cl #:fl.core #:fl.comp.transform #:fl.comp.camera)
-  (:local-nicknames (#:v3 #:box.math.vec3)
-                    (#:m4 #:box.math.mat4))
   (:export-only #:tracking-camera))
 
 (defpackage+ #:fl.comp.mesh
@@ -135,12 +126,6 @@
 
 (defpackage+ #:fl.shaders
   (:use #:cl #:shadow #:box.math.vari)
-  (:local-nicknames (#:v2 #:box.math.vec2)
-                    (#:v3 #:box.math.vec3)
-                    (#:v4 #:box.math.vec4)
-                    (#:m2 #:box.math.mat2)
-                    (#:m3 #:box.math.mat3)
-                    (#:m4 #:box.math.mat4))
   (:export-only #:unlit-color
                 #:unlit-color-decal
                 #:unlit-texture
@@ -148,12 +133,6 @@
 
 (defpackage+ #:fl.materials
   (:use #:cl #:shadow)
-  (:local-nicknames (#:v2 #:box.math.vec2)
-                    (#:v3 #:box.math.vec3)
-                    (#:v4 #:box.math.vec4)
-                    (#:m2 #:box.math.mat2)
-                    (#:m3 #:box.math.mat3)
-                    (#:m4 #:box.math.mat4))
   (:import-from #:fl.core
                 #:define-material)
   (:export-only #:missing-material
@@ -165,12 +144,6 @@
 
 (defpackage+ #:fl.textures
   (:use #:cl #:shadow)
-  (:local-nicknames (#:v2 #:box.math.vec2)
-                    (#:v3 #:box.math.vec3)
-                    (#:v4 #:box.math.vec4)
-                    (#:m2 #:box.math.mat2)
-                    (#:m3 #:box.math.mat3)
-                    (#:m4 #:box.math.mat4))
   (:import-from #:fl.core
                 #:define-texture-profile
                 #:define-texture
