@@ -49,17 +49,27 @@ CORE-STATE. Return a list of the return values of the FUNC."
 ;;; It holds the original semantic value and any transformation of it that
 ;;; is actually the usable material value.
 (defclass material-value ()
-  (;; This is the semantic value for a uniform. In the case of a :sampler-2d
+  (;; This is a back reference to the material that owns this material-value.
+   (%material :accessor material
+              :initarg :material)
+   ;; This is the semantic value for a uniform. In the case of a :sampler-2d
    ;; it is a string to a texture found on disk, etc.
    (%semantic-value :accessor semantic-value
                     :initarg :semantic-value)
+
    ;; A function the user supplies that performs some a-prioi conversion of
    ;; the semantic value to something apprpropriate for the next stages of
    ;; conversion. This will be added to the below composition chain at the
    ;; right time to form the complete transform of the semantic to the computed
-   ;; value. The funciton in this slot is always FIRST in the composition.
+   ;; value. The function in this slot is always FIRST in the composition.
    (%semantic-transformer :reader semantic-transformer
                           :initarg :semantic-transformer)
+
+   ;; When materials get copied, material-values get copied, and if the user
+   ;; is using some custom semantic value, they need to supply the function
+   ;; which will deep copy it.
+   (%semantic-copier :reader semantic-copier
+                     :initarg :semantic-copier)
 
    ;; This is a composition of functions, stored as a list, where the first
    ;; function on the left's result is passed to the next function until the
@@ -69,11 +79,18 @@ CORE-STATE. Return a list of the return values of the FUNC."
                         :initarg :semantic->computed
                         :initform ())
 
-   ;; This is the processed value that is suitable to bind to a uniform.
+   ;; When we're converting the semantic-value to to computed-value, do we
+   ;; attempt to force a copy between the semantic-value and the computed value
+   ;; even though they COULD be the same in common circumstances?
+   (%force-copy :accessor force-copy
+                :initarg :force-copy)
+
+   ;; This is the final processed value that is suitable (or nearly suitable) to
+   ;; bind to a uniform.
    (%computed-value :accessor computed-value
                     :initarg :computed-value)
 
-   ;; The function that knows how to bind this value to a shader.
+   ;; The function that knows how to bind the computed value to a shader.
    (%binder :accessor binder
             :initarg :binder)))
 
@@ -81,17 +98,26 @@ CORE-STATE. Return a list of the return values of the FUNC."
   (apply #'make-instance 'material-value init-args))
 
 
-;; TODO: I don't think this will make copies of the semantic/computed values, so
-;; there could be shared structure stuff going on here.
-(defun %deep-copy-material-value (material-value)
-  (%make-material-value
-   :semantic-value (semantic-value material-value)
-   :semantic-transformer (semantic-transformer material-value)
-   :semantic->computed (semantic->computed material-value)
-   :computed-value (computed-value material-value)
-   ;; TODO: Carefully check if there are closures in this binder function
-   ;; that I need to deal with in a better manner.
-   :binder (binder material-value)))
+(defun %deep-copy-material-value (material-value new-mat)
+  (let ((copy-mat-value
+          (%make-material-value
+           :material new-mat
+           ;; Copier func lambda list is (semantic-value context new-mat)
+           :semantic-value (funcall (semantic-copier material-value)
+                                    (semantic-value material-value)
+                                    (context (core-state new-mat))
+                                    new-mat)
+           :semantic-transformer (semantic-transformer material-value)
+           :semantic-copier (semantic-copier material-value)
+           :semantic->computed (copy-seq (semantic->computed material-value))
+           :force-copy (force-copy material-value)
+           :computed-value nil
+           :binder (binder material-value))))
+
+    ;; NOTE: Repair the nil computed-value!
+    (execute-composition/semantic->computed copy-mat-value)
+
+    copy-mat-value))
 
 (defclass material ()
   ((%id :reader id
@@ -101,7 +127,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
    ;; core-state.
    (%core-state :reader core-state
                 :initarg :core-state)
-   ;; This is the shader NAME
+   ;; This is the name of the shader as its symbol.
    (%shader :reader shader
             :initarg :shader)
    (%uniforms :reader uniforms
@@ -150,16 +176,14 @@ CORE-STATE. Return a list of the return values of the FUNC."
     (maphash
      (lambda (uniform-name material-value)
        (setf (au:href new-uniforms uniform-name)
-             (%deep-copy-material-value material-value)))
+             (%deep-copy-material-value material-value new-mat)))
      (uniforms current-mat))
 
     ;; Now we compy over the blocks.
     ;; TODO: need to get blocks sorted out as a whole.
 
     ;; Finally, insert into core-state so everyone can see it.
-    (setf (au:href (material-table (materials (core-state current-mat)))
-                   new-mat-name)
-          new-mat)
+    (%add-material new-mat (core-state new-mat))
 
     new-mat))
 
@@ -167,7 +191,10 @@ CORE-STATE. Return a list of the return values of the FUNC."
   (when mat
     (maphash
      (lambda (uniform-name material-value)
-       (funcall (binder material-value) uniform-name (computed-value material-value)))
+       (when (functionp (semantic-value material-value))
+         (execute-composition/semantic->computed material-value))
+       (let ((cv (computed-value material-value)))
+         (funcall (binder material-value) uniform-name cv)))
      (uniforms mat))))
 
 (defun bind-material-buffers (mat)
@@ -228,7 +255,8 @@ Converts the symbolp SEMANTIC-VALUE, which names a define-texture definition to
 be used as the source for any sampler type, to a real TEXTURE instance and
 return it. The images required by the texture will have been laoded onto the GPU
 at the completion of this function."
-  (lambda (semantic-value)
+  (lambda (semantic-value context mat)
+    (declare (ignore context mat))
     (cond
       ((symbolp semantic-value)
        (rcache-lookup :texture core-state semantic-value))
@@ -239,7 +267,8 @@ at the completion of this function."
 
 (defun gen-default-copy/sem->com (core-state)
   (declare (ignore core-state))
-  (lambda (semantic-value)
+  (lambda (semantic-value context mat)
+    (declare (ignore context mat))
     (if (or (stringp semantic-value)
             (arrayp semantic-value)
             (listp semantic-value)
@@ -247,8 +276,11 @@ at the completion of this function."
         (copy-seq semantic-value)
         semantic-value)))
 
-
-
+(defun identity/for-material-custom-functions (semval context material)
+  "This is effectively IDENTITY in that it returns SEMVAL unchanged, but accepts
+and ignores the CONTEXT and MATERIAL arguments."
+  (declare (ignore context material))
+  semval)
 
 (defun parse-material (name shader uniforms blocks)
   "Return a function which creates a partially complete material instance.
@@ -256,21 +288,26 @@ It is partially complete because it does not yet have the shader binder function
 BIND-UNIFORMS cannot yet be called on it."
   `(lambda (core-state)
      (let ((mat (%make-material ',name ,shader core-state)))
-       (setf ,@(loop :for (var val . transformer) :in uniforms
+       (setf ,@(loop :for (var val . options) :in uniforms
                      :append
                      `((au:href (uniforms mat) ,var)
                        (%make-material-value
+                        :material mat
                         :semantic-value ,val
                         :semantic-transformer
-                        (or ,(first transformer) #'identity)))))
+                        (or ,(getf options :semantic-transformer)
+                            #'identity/for-material-custom-functions)
+                        :semantic-copier
+                        (or ,(getf options :semantic-copier)
+                            #'identity/for-material-custom-functions)
+                        ;; force-copy is nil by default.
+                        :force-copy ,(getf options :force-copy)))))
 
-       (setf ,@(loop :for (var val . transformer) :in blocks
-                     :append
-                     `((au:href (blocks mat) ,var)
-                       (%make-material-value
-                        :semantic-value ,val
-                        :semantic-transformer
-                        (or ,(first transformer) #'identity)))))
+
+       ;; TODO: When the format of whatever is inside of :blocks is known then
+       ;; we write something for it!
+       (when ,blocks
+         (error "define-material: Interface blocks are not supported yet!"))
 
        mat)))
 
@@ -322,6 +359,8 @@ etc. Return NIL otherwise."
            (:mat2 #'shadow:uniform-mat2)
            (:mat3 #'shadow:uniform-mat3)
            (:mat4 #'shadow:uniform-mat4))))
+
+    ;; THis array of uniforms code is in disrepair. Need to test and complete.
     ((consp glsl-type)
      (if (sampler-p (first glsl-type))
          ;; TODO: Is this actually correct code for an array of samplers?
@@ -348,10 +387,19 @@ etc. Return NIL otherwise."
             glsl-type))))
 
 (defun execute-composition/semantic->computed (material-value)
-  (loop :with value = (semantic-value material-value)
-        :for transformer :in (semantic->computed material-value)
-        :do (setf value (funcall transformer value))
-        :finally (setf (computed-value material-value) value)))
+  ;; Execute a compositional sequence of functions whose inputs start with the
+  ;; semantic-value and end with the computed-value. If the semantic-value is
+  ;; actually a function, then invoke it and get the juice it produced and shove
+  ;; it down the pipeline.
+  (let ((context (context (core-state (material material-value))))
+        (mat (material material-value))
+        (sv (semantic-value material-value)))
+    (loop :with value = (if (functionp sv)
+                            (funcall sv context mat)
+                            sv)
+          :for transformer :in (semantic->computed material-value)
+          :do (setf value (funcall transformer value context mat))
+          :finally (setf (computed-value material-value) value))))
 
 (defun annotate-material-uniform (uniform-name material-value
                                   material shader-program core-state)
@@ -365,16 +413,19 @@ etc. Return NIL otherwise."
                        (determine-binder-function material uniform-type))
 
                  ;; 2. Figure out the semantic->computed composition function
-                 ;; for this specific uniform type. This finally comverts to the
-                 ;; computed-value so it must be last in the list.
+                 ;; for this specific uniform type. This will be the last
+                 ;; function executed and will convert the in-flight semantic
+                 ;; value into a real computed value for use by the binder
+                 ;; function.
                  (push (if (sampler-p uniform-type)
                            (gen-sampler/sem->com core-state)
-                           (gen-default-copy/sem->com core-state))
+                           (if (force-copy material-value)
+                               (gen-default-copy/sem->com core-state)
+                               #'identity/for-material-custom-functions))
                        (semantic->computed material-value))
 
-                 ;; 3. Put the user specified semantic->computed transformer
-                 ;; function into the composition function before the current
-                 ;; things.
+                 ;; 3. Put the user specified semantic transformer
+                 ;; function into the composition sequence before the above.
                  (push (semantic-transformer material-value)
                        (semantic->computed material-value))
 
@@ -431,7 +482,12 @@ must be executed after all the shader programs have been comipiled."
        (%prepare)))))
 
 (defmacro define-material (name &body (body))
-  (destructuring-bind (&key enabled shader uniforms blocks &allow-other-keys) body
+  (let ((enabled (getf body :enabled))
+        (shader (getf body :shader))
+        (uniforms (getf body :uniforms))
+        (blocks (getf body :blocks)))
+    ;; TODO: better parsing and type checking of material forms...
+
     `(let ((func ,(parse-material name shader uniforms blocks)))
        (declare (special %temp-materials))
        ,(when enabled

@@ -16,7 +16,9 @@
   (:use #:cl #:shadow)
   (:import-from #:fl.core
                 #:define-material)
-  (:export-only #:sprite))
+  (:export-only #:sprite
+                #:unlit-texture-test-0
+                #:unlit-texture-test-1))
 
 (defpackage+ #:fl.psilord.textures
   (:use #:cl #:shadow)
