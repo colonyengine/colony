@@ -59,7 +59,8 @@
                :min 0.0
                :max 1.0)
 
+    ;; TODO: Make a better test.
+
     ;; now update, in real time, the unique material's uniform
-    ;; t
-    (setf (mat-uniform-ref (material mesh-rend) :mix-color)
-          current-color)))
+    #++(setf (mat-uniform-ref (material mesh-rend) :mix-color)
+             current-color)))
