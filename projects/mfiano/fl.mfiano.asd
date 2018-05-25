@@ -10,4 +10,5 @@
   :components
   ((:file "package")
    (:file "input")
-   (:file "2d-sprites")))
+   (:file "2d-sprites")
+   (:file "noise-test")))

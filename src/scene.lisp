@@ -129,7 +129,7 @@
          (setf (au:href (scenes owner) key) value))
        (%prepare)))))
 
-(defmacro define-scene (name (&key enabled viewport) &body body)
+(defmacro define-scene (name (&key enabled) &body body)
   `(let ((scene ,(parse-scene `',name body)))
      (declare (special %temp-scene))
      ,(when enabled
