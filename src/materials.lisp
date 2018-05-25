@@ -62,14 +62,14 @@ CORE-STATE. Return a list of the return values of the FUNC."
    ;; conversion. This will be added to the below composition chain at the
    ;; right time to form the complete transform of the semantic to the computed
    ;; value. The function in this slot is always FIRST in the composition.
-   (%semantic-transformer :reader semantic-transformer
-                          :initarg :semantic-transformer)
+   (%transformer :reader transformer
+                 :initarg :transformer)
 
    ;; When materials get copied, material-values get copied, and if the user
    ;; is using some custom semantic value, they need to supply the function
    ;; which will deep copy it.
-   (%semantic-copier :reader semantic-copier
-                     :initarg :semantic-copier)
+   (%copier :reader copier
+            :initarg :copier)
 
    ;; This is a composition of functions, stored as a list, where the first
    ;; function on the left's result is passed to the next function until the
@@ -103,12 +103,12 @@ CORE-STATE. Return a list of the return values of the FUNC."
           (%make-material-value
            :material new-mat
            ;; Copier func lambda list is (semantic-value context new-mat)
-           :semantic-value (funcall (semantic-copier material-value)
+           :semantic-value (funcall (copier material-value)
                                     (semantic-value material-value)
                                     (context (core-state new-mat))
                                     new-mat)
-           :semantic-transformer (semantic-transformer material-value)
-           :semantic-copier (semantic-copier material-value)
+           :transformer (transformer material-value)
+           :copier (copier material-value)
            :semantic->computed (copy-seq (semantic->computed material-value))
            :force-copy (force-copy material-value)
            :computed-value nil
@@ -294,11 +294,11 @@ BIND-UNIFORMS cannot yet be called on it."
                        (%make-material-value
                         :material mat
                         :semantic-value ,val
-                        :semantic-transformer
-                        (or ,(getf options :semantic-transformer)
+                        :transformer
+                        (or ,(getf options :transformer)
                             #'identity/for-material-custom-functions)
-                        :semantic-copier
-                        (or ,(getf options :semantic-copier)
+                        :copier
+                        (or ,(getf options :copier)
                             #'identity/for-material-custom-functions)
                         ;; force-copy is nil by default.
                         :force-copy ,(getf options :force-copy)))))
@@ -426,7 +426,7 @@ etc. Return NIL otherwise."
 
                  ;; 3. Put the user specified semantic transformer
                  ;; function into the composition sequence before the above.
-                 (push (semantic-transformer material-value)
+                 (push (transformer material-value)
                        (semantic->computed material-value))
 
                  ;; 4. Execute the composition function sequence to produce the
