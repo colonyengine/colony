@@ -31,7 +31,9 @@
            #:active-camera
            #:delta
            #:frame-time
-           #:ss-href)
+           #:ss-href
+           #:prologue
+           #:epilogue)
   ;; textures
   (:export #:load-texture
            #:define-texture-profile
@@ -121,7 +123,7 @@
 (defpackage+ #:fl.comp.mesh-renderer
   (:use #:cl #:fl.core)
   (:export-only #:mesh-renderer
-		#:material
+                #:material
                 #:draw-mesh))
 
 (defpackage+ #:fl.shaders
