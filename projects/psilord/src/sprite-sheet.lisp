@@ -56,6 +56,10 @@
                                 :sprite-sheet
                                 'fl.psilord.shaders:sprite-shader
                                 :sprite-sheet-block))
+
+  ;; TODO: This should be moved to materials when interface blocks are
+  ;; done. Also, the create-buffer should be done once and put into shared
+  ;; storage for this type. The bindings should be more intelligent.
   (shadow:bind-block :sprite-sheet-block 8)
   (shadow:create-buffer :sprite-sheet-buffer :sprite-sheet-block)
   (shadow:bind-buffer :sprite-sheet-buffer 8)
