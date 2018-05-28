@@ -248,10 +248,14 @@ NEW-MAT-NAME. Return the new material."
 (defun gen-sampler/sem->com (core-state)
   "Generates a function that:
 
-Converts the symbolp SEMANTIC-VALUE, which names a define-texture definition to
-be used as the source for any sampler type, to a real TEXTURE instance and
-return it. The images required by the texture will have been laoded onto the GPU
-at the completion of this function."
+Returns a function that takes three arguments: SEMANTIC-VALUE, CONTEXT, and MAT.
+SEMANTIC-VALUE must be a symbol naming a DEFINE-TEXTURE form, or a vector of
+such names. CONTEXT, the context object, and MAT the material that contains this
+semantic value are ignored in the returned function. The returned function will
+convert the symbolic names to actual TEXTURE objects and load all the images
+from the texture into the GPU. It will only do this once per TEXTURE name no
+matter how many times this is called to perform a conversion. The result is a
+TEXTURE object, or a vector of them corresponding in order to the input."
   (lambda (semantic-value context mat)
     (declare (ignore context mat))
     (cond
