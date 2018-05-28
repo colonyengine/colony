@@ -327,7 +327,7 @@ types and texture types."
 
 (defun sampler-p (glsl-type)
   "Return T if the GLSL-TYPE is a sampler like :sampler-2d or :sampler-buffer,
-etc. Return NIL otherwise."
+or if it a vector of the same. Return NIL otherwise."
   (let ((raw-type (if (symbolp glsl-type)
                       glsl-type
                       (car glsl-type))))
