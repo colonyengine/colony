@@ -1,8 +1,5 @@
 (in-package :fl.core)
 
-;;; TODO: figure out how to deal with uniform arrays. THey are partially
-;;; implemented currently.
-
 ;; Held in core-state, the material database for all materials everywhere.
 (defclass materials-table ()
   ((%material-table :reader material-table
@@ -258,8 +255,11 @@ at the completion of this function."
   (lambda (semantic-value context mat)
     (declare (ignore context mat))
     (cond
-      ((symbolp semantic-value)
+      ((symbolp semantic-value) ;; a single texture symbolic name
        (rcache-lookup :texture core-state semantic-value))
+      ((vectorp semantic-value) ;; an array of texture symbolic names
+       (map 'vector (lambda (sv) (rcache-lookup :texture core-state sv))
+            semantic-value))
       (t
        (error "sampler/sem->com: Unable to convert sampler semantic-value: ~A"
               semantic-value)))))
@@ -324,19 +324,22 @@ types and texture types."
 (defun sampler-p (glsl-type)
   "Return T if the GLSL-TYPE is a sampler like :sampler-2d or :sampler-buffer,
 etc. Return NIL otherwise."
-  (member glsl-type
-          '(:sampler-1d :isampler-1d :usampler-1d
-            :sampler-2d :isampler-2d :usampler-2d
-            :sampler-3d :isampler-3d :usampler-3d
-            :sampler-cube :isampler-cube :usampler-cube
-            :sampler-2d-rect :isampler-2d-rect :usampler-2d-rect
-            :sampler-1d-array :isampler-1d-array :usampler-1d-array
-            :sampler-2d-array :isampler-2d-array :usampler-2d-array
-            :sampler-cube-array :isampler-cube-array :usampler-cube-array
-            :sampler-buffer :isampler-buffer :usampler-buffer
-            :sampler-2d-ms :isampler-2d-ms :usamplers-2d-ms
-            :sampler-2d-ms-array :isampler-2d-ms-array :usampler-2d-ms-array)
-          :test #'eq))
+  (let ((raw-type (if (symbolp glsl-type)
+                      glsl-type
+                      (car glsl-type))))
+    (member raw-type
+            '(:sampler-1d :isampler-1d :usampler-1d
+              :sampler-2d :isampler-2d :usampler-2d
+              :sampler-3d :isampler-3d :usampler-3d
+              :sampler-cube :isampler-cube :usampler-cube
+              :sampler-2d-rect :isampler-2d-rect :usampler-2d-rect
+              :sampler-1d-array :isampler-1d-array :usampler-1d-array
+              :sampler-2d-array :isampler-2d-array :usampler-2d-array
+              :sampler-cube-array :isampler-cube-array :usampler-cube-array
+              :sampler-buffer :isampler-buffer :usampler-buffer
+              :sampler-2d-ms :isampler-2d-ms :usamplers-2d-ms
+              :sampler-2d-ms-array :isampler-2d-ms-array :usampler-2d-ms-array)
+            :test #'eq)))
 
 (defun determine-binder-function (material glsl-type)
   (cond
@@ -360,19 +363,24 @@ etc. Return NIL otherwise."
            (:mat3 #'shadow:uniform-mat3)
            (:mat4 #'shadow:uniform-mat4))))
 
-    ;; THis array of uniforms code is in disrepair. Need to test and complete.
     ((consp glsl-type)
-     (if (sampler-p (first glsl-type))
-         ;; TODO: Is this actually correct code for an array of samplers?
-         ;; Shouldn't I be binding more than one texture?
-         (let ((unit (active-texture-unit material)))
-           (incf (active-texture-unit material))
-           (lambda (uniform-name texture)
-             (gl:active-texture unit)
-             (gl:bind-texture (sampler-type->texture-type (first glsl-type))
-                              (texid texture))
-             (shadow:uniform-int-array uniform-name unit)))
-         (ecase (first glsl-type)
+     (if (sampler-p (car glsl-type))
+         (let* ((units
+                  (loop :for i :from 0 :below (cdr glsl-type)
+                        :collect (prog1 (active-texture-unit material)
+                                   (incf (active-texture-unit material)))))
+                (units (coerce units 'vector)))
+           (lambda (uniform-name texture-array)
+             ;; Bind all of the textures to their active units first
+             (loop :for texture :across texture-array
+                   :for unit :across units
+                   :do (gl:active-texture unit)
+                       (gl:bind-texture
+                        (sampler-type->texture-type (car glsl-type))
+                        (texid texture)))
+             (shadow:uniform-int-array uniform-name units)))
+
+         (ecase (car glsl-type)
            (:bool #'shadow:uniform-int-array)
            ((:int :int32) #'shadow:uniform-int-array)
            (:float #'shadow:uniform-float-array)
