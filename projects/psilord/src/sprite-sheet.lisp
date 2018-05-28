@@ -140,24 +140,14 @@ for later use with the shaders."
         (shadow:uniform-mat4 :model (fl.comp.transform:model %transform))
         (shadow:uniform-mat4 :view (fl.comp.camera:view camera))
         (shadow:uniform-mat4 :proj (fl.comp.camera:projection camera))
-        ;; HACK! TODO: Update the computed-value in the material for the sprite
-        ;; to render. I need to implement the setf uniform codes for materials.
-        (let* ((mat-uniforms (fl.core::uniforms %material))
-               (tex.sprite-value (au:href mat-uniforms :tex.sprite)))
-          ;; Set the sprite uniform value in the material so we'll bind it
-          ;; correctly in the next call.
-          (setf (fl.core::computed-value tex.sprite-value) %sprite)
 
-          ;; TODO: Figure out how to do this next operation such that I
-          ;; personally don't have to choose a real binding point integer and
-          ;; the FL or shadow system can do it for me.
-          ;;
+        ;; Update the sprite index I need.
+        (setf (mat-uniform-ref %material :tex.sprite) %sprite)
 
-          ;; Normally bind the uniforms (which includes the above value) that we
-          ;; currently understand like the sprite sheet texture.
-          (bind-material %material)
-          ;; Manually draw the empty point buffer. This kicks off the bound
-          ;; shader to do its work. There are no vbo or vertex attributes bound
-          ;; into this vao.
-          (gl:bind-vertex-array %vao-id)
-          (gl:draw-arrays :points 0 1))))))
+        (bind-material %material)
+
+        ;; Manually draw the empty point buffer. This kicks off the bound
+        ;; shader to do its work. There are no vbo or vertex attributes bound
+        ;; into this vao.
+        (gl:bind-vertex-array %vao-id)
+        (gl:draw-arrays :points 0 1)))))
