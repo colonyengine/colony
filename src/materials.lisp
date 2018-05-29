@@ -54,10 +54,6 @@ CORE-STATE. Return a list of the return values of the FUNC."
 ;;; is actually the usable material value.
 (defclass material-uniform-value (material-value)
   (
-   ;; This is a back reference to the material that owns this
-   ;; material-uniform-value.
-   (%material :accessor material
-              :initarg :material)
    ;; This is the semantic value for a uniform. In the case of a :sampler-2d
    ;; it is a string to a texture found on disk, etc.
    (%semantic-value :accessor semantic-value
