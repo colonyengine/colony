@@ -43,11 +43,18 @@ CORE-STATE. Return a list of the return values of the FUNC."
 (defun lookup-material (id context)
   (%lookup-material id (core-state context)))
 
+(defclass material-value ()
+  (;; This is a back reference to the material that owns this
+   ;; material-uniform-value.
+   (%material :accessor material
+              :initarg :material)))
+
 ;;; The value of a uniform is this type in the material.
 ;;; It holds the original semantic value and any transformation of it that
 ;;; is actually the usable material value.
-(defclass material-uniform-value ()
-  (;; This is a back reference to the material that owns this
+(defclass material-uniform-value (material-value)
+  (
+   ;; This is a back reference to the material that owns this
    ;; material-uniform-value.
    (%material :accessor material
               :initarg :material)
