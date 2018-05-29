@@ -43,7 +43,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
 (defun lookup-material (id context)
   (%lookup-material id (core-state context)))
 
-;;; The value of a uniform or block designation is one of these values.
+;;; The value of a uniform is this type in the material.
 ;;; It holds the original semantic value and any transformation of it that
 ;;; is actually the usable material value.
 (defclass material-uniform-value ()
