@@ -310,7 +310,7 @@ BIND-UNIFORMS cannot yet be called on it."
 
        ;; TODO: When the format of whatever is inside of :blocks is known then
        ;; we write something for it!
-       (when ,blocks
+       (when ',blocks
          (error "define-material: Interface blocks are not supported yet!"))
 
        mat)))
