@@ -37,14 +37,16 @@
    (spec :default nil)
    ;; material describing the specific sprite sheet I want.
    (material :default nil)
+   ;; The ssbo buffer reference (possibly shared between instances).
+   (ssbo-buffer :default nil)
    ;; The empty vao we create and draw
    (vao-id :default nil)
    ;; The empty vertex buffer object we draw to initiate shader generation.
    (vbo-id :default nil)
    ;; The integral location of the sprite suitable for the shader to draw it.
    (sprite :default nil)
-   ;; mapping from sprite names to integral locations  "ship33" -> 373 (actual number may be
-   ;; different)
+   ;; mapping from sprite names to integral locations "ship33" -> 373 (actual
+   ;; number may be different)
    (sprites :default (au:dict #'equalp))
    ;; DB of animations and the cells involved in them.
    (animations :default nil))
@@ -79,6 +81,8 @@
                          (symbol-name :sprite-sheet-buffer))
                         'fl.psilord.materials:ssbo/specification-data)))
 
+    ;; Store a reference to the (possibly shared) buffer.
+    (setf (ssbo-buffer sprite-sheet) ssbo/spec-data)
 
     ;; When ssbo-presentp is NIL, it means the cache was ust populated by the
     ;; required buffer, so we need to initialize it.
