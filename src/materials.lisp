@@ -99,7 +99,6 @@ CORE-STATE. Return a list of the return values of the FUNC."
 (defun %make-material-uniform-value (&rest init-args)
   (apply #'make-instance 'material-uniform-value init-args))
 
-
 (defun %deep-copy-material-uniform-value (material-uniform-value new-mat)
   (let ((copy-mat-value
           (%make-material-uniform-value
@@ -122,6 +121,58 @@ CORE-STATE. Return a list of the return values of the FUNC."
 
     copy-mat-value))
 
+
+
+
+;; Shader interface blocks get a wildly different material-value implementation
+;; and semantics.
+(defclass material-block-value (material-value)
+  (
+   ;; Store which block-name this originated from for debugging
+   (%block-name :reader block-name
+                :initarg :block-name)
+   ;; The storage type of the block-alias for which this is a value.
+   ;; Useful for error messages.
+   (%storage-type :reader storage-type
+                  :initarg :storage-type)
+   ;; each time I request bindings on the material to be performed, how shall
+   ;; I deal with it?
+   (%binding-policy :accessor binding-policy
+                    :initarg :binding-policy
+                    ;; next value can be :repeat, :once, or :manual
+                    :initform :repeat)
+   ;; The buffer-name to bind with the block-alias for which this is a value.
+   (%binding-buffer :accessor binding-buffer
+                    :initarg :binding-buffer)
+   ;; TODO: Add in range information for range binding
+
+   ;; If the binding-policy is :once, then this slot represents if we did the
+   ;; binding work. Whenever this goes nil, and the policy is once, we'll rebind
+   ;; the block-alias to the binding-buffer name and set bound-once-p to T
+   ;; again.
+   (%bound-once-p :accessor bound-once-p
+                  :initarg :bound-once-p
+                  :initform nil)
+
+   ))
+
+(defun %make-material-block-value (&rest init-args)
+  (apply #'make-instance 'material-block-value init-args))
+
+(defun %deep-copy-material-block-value (material-block-value new-mat)
+  (%make-material-block-value
+   :material new-mat
+   :block-name (block-name material-block-value)
+   :storage-type (storage-type material-block-value)
+   :binding-policy (binding-policy material-block-value)
+   :binding-buffer (binding-buffer material-block-value)
+   :bound-once-p (bound-once-p material-block-value)
+   ))
+
+
+
+
+
 (defclass material ()
   ((%id :reader id
         :initarg :id)
@@ -139,7 +190,9 @@ CORE-STATE. Return a list of the return values of the FUNC."
               :initform (au:dict #'eq))
    (%blocks :reader blocks
             :initarg :blocks
-            ;; key is a block keyword, value is material-uniform-value
+            ;; Hash tables:
+            ;; key1 = <block-alias>,
+            ;; value = material-block-value
             :initform (au:dict #'eq))
    (%active-texture-unit :accessor active-texture-unit
                          :initarg :active-texture-unit
@@ -183,8 +236,13 @@ CORE-STATE. Return a list of the return values of the FUNC."
                                                 new-mat)))
      (uniforms current-mat))
 
-    ;; Now we compy over the blocks.
-    ;; TODO: need to get blocks sorted out as a whole.
+    ;; Now we copy over the blocks.
+    (maphash
+     (lambda (block-alias-name material-block-value)
+       (setf (au:href new-blocks block-alias-name)
+             (%deep-copy-material-block-value material-block-value
+                                              new-mat)))
+     (blocks current-mat))
 
     ;; Finally, insert into core-state so everyone can see it.
     (%add-material new-mat (core-state new-mat))
@@ -202,9 +260,14 @@ CORE-STATE. Return a list of the return values of the FUNC."
      (uniforms mat))))
 
 (defun bind-material-buffers (mat)
-  (declare (ignore mat))
-  ;; TODO
-  nil)
+  (when mat
+    (maphash
+     (lambda (block-alias-name material-block-value)
+       (declare (ignore block-alias-name material-block-value))
+       ;; TODO: we probably need to call into core-state buffer binding
+       ;; management services to perform the binding right here.
+       nil)
+     (blocks mat))))
 
 ;; export PUBLIC API
 (defun bind-material (mat)
@@ -315,11 +378,20 @@ available for it so BIND-UNIFORMS cannot yet be called on it."
                         :force-copy ,(getf options :force-copy)))))
 
 
-       ;; TODO: When the format of whatever is inside of :blocks is known then
-       ;; we write something for it!
-       (when ',blocks
-         (error "define-material: Interface blocks are not supported yet!"))
-
+       (setf ,@(loop :for form :in blocks
+                     :append (let ((block-name (getf form :block-name))
+                                   (storage-type (getf form :storage-type))
+                                   (block-alias (getf form :block-alias))
+                                   (binding-buffer (getf form :binding-buffer))
+                                   (binding-policy (getf form :binding-policy)))
+                               `((au:href (blocks mat) ,block-alias)
+                                 (%make-material-block-value
+                                  :material mat
+                                  :block-name ,block-name
+                                  :storage-type ,storage-type
+                                  :binding-policy (or ,binding-policy :repeat)
+                                  :binding-buffer ,binding-buffer
+                                  :bound-once-p nil)))))
        mat)))
 
 (defun sampler-type->texture-type (sampler-type)
@@ -464,6 +536,33 @@ or if it a vector of the same. Return NIL otherwise."
                                 material shader-program core-state))
    (uniforms material)))
 
+
+
+(defun annotate-material-block (block-alias-name material-block-value
+                                material shader-program core-state)
+
+  ;; 1. Validate that this material-block-value is present in the shaders
+  ;; in core-state
+  ;; TODO
+
+
+  ;; 2. Create the block-name-alias, but only once.
+  (unless (shadow:find-block block-alias-name)
+    (shadow::create-block-alias (storage-type material-block-value)
+                                (block-name material-block-value)
+                                (shader material)
+                                block-alias-name))
+  )
+
+(defun annotate-material-blocks (material shader-program core-state)
+  ;; TODO: Ensure that all :block-alias names are unique in the material
+
+  (maphash
+   (lambda (block-alias-name material-block-value)
+     (annotate-material-block block-alias-name material-block-value
+                              material shader-program core-state))
+   (blocks material)))
+
 (defun resolve-all-materials (core-state)
   "Convert all semantic-values to computed-values in the materials. This
 must be executed after all the shader programs have been comipiled."
@@ -474,10 +573,15 @@ must be executed after all the shader programs have been comipiled."
                   (progn
                     (annotate-material-uniforms material-instance shader-program
                                                 core-state)
-                    ;; TODO, process blocks here, when appropriate
+                    (annotate-material-blocks material-instance shader-program
+                                              core-state)
                     )
                   (error "Material ~s uses an undefined shader: ~s."
                          (id material-instance) (shader material-instance))))
+
+   ;; TODO: Check that all :block-alias names are actually unique between
+   ;; materials.
+
    core-state))
 
 (defmethod extension-file-type ((extension-type (eql 'materials)))

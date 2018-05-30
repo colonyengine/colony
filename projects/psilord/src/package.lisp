@@ -21,7 +21,10 @@
   (:export-only #:sprite
                 #:unlit-texture-test-0
                 #:unlit-texture-test-1
-                #:test-material-0))
+                #:test-material-0
+                ;; ssbo/ubo names for material "sprite"
+                #:ssbo/specification-data
+                ))
 
 (defpackage+ #:fl.psilord.textures
   (:use #:cl #:shadow)

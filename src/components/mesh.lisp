@@ -53,7 +53,10 @@
     ;; Assumes you store the generated value in the same place
     ;; you tried to find it.
     (with-shared-storage (context context)
-                         ((cached-mesh ('mesh :cached-mesh-data location id)
+                         ((cached-mesh mesh-presentp
+                                       ;; this is what type to look it up in,
+                                       ;; and the key.
+                                       ('mesh :cached-mesh-data location id)
                                        ;; Store this value if not in cache.
                                        (%load-mesh context location id)))
 

@@ -71,13 +71,16 @@ set it into the shared-storatge in CONTEXT, and keep expanding with further bind
 emit the body in the final and most dense lexical scope."
   (if (null bindings)
       `(progn ,@body)
-      (destructuring-bind (lexical-var lookup-form cache-value-form) (first bindings)
-        (let* ((presentp (gensym "PRESENTP-"))
-               (lookup-binding-forms (%lookup-form-to-bindings lookup-form))
+      (destructuring-bind (lexical-var presentp-var lookup-form
+                           cache-value-form)
+          (first bindings)
+
+        (let* ((lookup-binding-forms (%lookup-form-to-bindings lookup-form))
                (lookup-args (mapcar #'first lookup-binding-forms)))
           `(let ,lookup-binding-forms
-             (au:mvlet (,lexical-var ,presentp) (ss-href ,context ,@lookup-args)
-               (unless ,presentp
+             (au:mvlet ((,lexical-var ,presentp-var
+                                      (ss-href ,context ,@lookup-args)))
+               (unless ,presentp-var
                  (setf ,lexical-var ,cache-value-form
                        (ss-href ,context ,@lookup-args) ,lexical-var))
                ,(%generate-ss-get/set context (rest bindings) body)))))))
