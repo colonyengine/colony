@@ -131,8 +131,16 @@
     ;; and subsequently:
     ;; (fl.core:unbind-block-from-buffer :sprite-sheet-block :sprite-sheet-buffer)
 
-    ;; TODO: The 9 is very wrong here. This binding needs to get shoved into
-    ;; an FL API to manage the actual binding point integers selected.
+    ;; TODO: The 9 is very wrong here. This binding needs to get shoved into an
+    ;; FL API to manage the actual binding point integers selected.  also,
+    ;; depending on the binding policy we need to do different things.  for
+    ;; example, of :manual, we need a call right here to ask FL to do the
+    ;; binding and get it right for multiple instances trying to do it.  If
+    ;; :once, then the material internally does the binding the first time it is
+    ;; used, and then not until somethign happens to disable the once flag. If
+    ;; :repeat, then it does the binding each rendering frame, if it is not
+    ;; already done. This would be used for things like changing the buffer-name
+    ;; you want to bind each update for buffer recycling, etc, etc, etc.
     (shadow:bind-buffer (shadow:buffer-name ssbo/spec-data) 9)
     (shadow:bind-block 'fl.psilord.materials:ssbo/specification-data 9)
 
