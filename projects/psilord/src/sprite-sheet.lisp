@@ -37,47 +37,119 @@
    (spec :default nil)
    ;; material describing the specific sprite sheet I want.
    (material :default nil)
+   ;; The ssbo buffer reference (possibly shared between instances).
+   (ssbo-buffer :default nil)
    ;; The empty vao we create and draw
    (vao-id :default nil)
    ;; The empty vertex buffer object we draw to initiate shader generation.
    (vbo-id :default nil)
    ;; The integral location of the sprite suitable for the shader to draw it.
    (sprite :default nil)
-   ;; mapping from sprite names to integral locations  "ship33" -> 373 (actual number may be
-   ;; different)
+   ;; mapping from sprite names to integral locations "ship33" -> 373 (actual
+   ;; number may be different)
    (sprites :default (au:dict #'equalp))
    ;; DB of animations and the cells involved in them.
-   (animations :default nil)))
+   (animations :default nil))
 
-(defun make-sprite-sheet-buffer (sprite-sheet)
+  ;; Shared storage definitions.
+  (;; Key: spec-path location tuple,
+   ;; Value: buffer-name of created buffer to hold it
+   (:ssbo/specification-data equal)
+   ))
 
-  (unless (shadow:find-block :sprite-sheet-block)
-    (shadow::create-block-alias :buffer
-                                :sprite-sheet
-                                'fl.psilord.shaders:sprite-shader
-                                :sprite-sheet-block))
-  (shadow:bind-block :sprite-sheet-block 8)
-  (shadow:create-buffer :sprite-sheet-buffer :sprite-sheet-block)
-  (shadow:bind-buffer :sprite-sheet-buffer 8)
+(defun make-sprite-sheet-buffer (sprite-sheet context)
+  ;; 1. I know the block-alias I need is:
+  ;; 'fl.psilord.materials:ssbo/specification-data
+  ;; since I wrote it in the material definition.
+  ;; The material itself performed the creation of the above alias.
 
-  (loop :with length = (length (spec sprite-sheet))
-        :with xs = (make-array length :element-type 'single-float)
-        :with ys = (make-array length :element-type 'single-float)
-        :with ws = (make-array length :element-type 'single-float)
-        :with hs = (make-array length :element-type 'single-float)
-        :for sprite :in (spec sprite-sheet)
-        :for i :from 0
-        :do (destructuring-bind (&key id x y w h) sprite
-              (when (and id x y w h)
-                (setf (aref xs i) x
-                      (aref ys i) y
-                      (aref ws i) w
-                      (aref hs i) h
-                      (au:href (sprites sprite-sheet) id) i)))
-        :finally (shadow:write-buffer-path :sprite-sheet-buffer :x xs)
-                 (shadow:write-buffer-path :sprite-sheet-buffer :y ys)
-                 (shadow:write-buffer-path :sprite-sheet-buffer :w ws)
-                 (shadow:write-buffer-path :sprite-sheet-buffer :h hs)))
+  ;; 2. create a buffer which must be unique for all buffers of the same spec.
+  (with-shared-storage
+      (context context)
+      ((ssbo/spec-data ssbo-presentp
+                       ;; Which type storage to look at
+                       ('sprite-sheet
+                        ;; which shared-storage namespace
+                        :ssbo/specification-data
+                        ;; the key(s) to look up.
+                        (spec-path sprite-sheet))
+
+                       ;; If not present insert result of this
+                       ;; form at that above key.
+                       (shadow:create-buffer
+                        (gensym
+                         (symbol-name :sprite-sheet-buffer))
+                        'fl.psilord.materials:ssbo/specification-data)))
+
+    ;; Store a reference to the (possibly shared) buffer.
+    (setf (ssbo-buffer sprite-sheet) ssbo/spec-data)
+
+    ;; When ssbo-presentp is NIL, it means the cache was ust populated by the
+    ;; required buffer, so we need to initialize it.
+    (unless ssbo-presentp
+      ;; 3. only a single instance should fill the GPU buffer appropriately the
+      ;; first time it is created.
+      (loop :with length = (length (spec sprite-sheet))
+            :with xs = (make-array length :element-type 'single-float)
+            :with ys = (make-array length :element-type 'single-float)
+            :with ws = (make-array length :element-type 'single-float)
+            :with hs = (make-array length :element-type 'single-float)
+            :for sprite :in (spec sprite-sheet)
+            :for i :from 0
+            :do (destructuring-bind (&key id x y w h) sprite
+                  (when (and id x y w h)
+                    (setf (aref xs i) x
+                          (aref ys i) y
+                          (aref ws i) w
+                          (aref hs i) h)))
+            :finally
+               (shadow:write-buffer-path
+                (shadow:buffer-name ssbo/spec-data) :x xs)
+               (shadow:write-buffer-path
+                (shadow:buffer-name ssbo/spec-data) :y ys)
+               (shadow:write-buffer-path
+                (shadow:buffer-name ssbo/spec-data) :w ws)
+               (shadow:write-buffer-path
+                (shadow:buffer-name ssbo/spec-data) :h hs)))
+
+
+    ;; Initialize the ids, we do this for each sprite-sheet instance we make
+    ;; I could put this into a shared storage thing, but meh.
+    ;; TODO: I should jam this into the shared storage too, since it is copied
+    ;; for all sprite-sheets that use the same spec-path.
+    (loop :for sprite :in (spec sprite-sheet)
+          :for i :from 0
+          :do (destructuring-bind (&key id x y w h) sprite
+                (when (and id x y w h)
+                  (setf (au:href (sprites sprite-sheet) id) i))))
+
+
+    ;; 4. then there should be an FL call to perform the binding of the block
+    ;; alias :sprite-sheet-block to the appropriate buffer
+    ;; :sprite-sheet-buffer. It will ensure the binding only happens once and
+    ;; binding-ids are used appropriately, and etc.
+    ;;
+    ;; Technically, I want:
+    ;; (fl.core:bind-block-to-buffer :sprite-sheet-block :sprite-sheet-buffer)
+    ;; instead of the next two calls.
+    ;; and subsequently:
+    ;; (fl.core:unbind-block-from-buffer :sprite-sheet-block :sprite-sheet-buffer)
+
+    ;; TODO: The 9 is very wrong here. This binding needs to get shoved into an
+    ;; FL API to manage the actual binding point integers selected.  also,
+    ;; depending on the binding policy we need to do different things.  for
+    ;; example, of :manual, we need a call right here to ask FL to do the
+    ;; binding and get it right for multiple instances trying to do it.  If
+    ;; :once, then the material internally does the binding the first time it is
+    ;; used, and then not until somethign happens to disable the once flag. If
+    ;; :repeat, then it does the binding each rendering frame, if it is not
+    ;; already done. This would be used for things like changing the buffer-name
+    ;; you want to bind each update for buffer recycling, etc, etc, etc.
+    (shadow:bind-buffer (shadow:buffer-name ssbo/spec-data) 9)
+    (shadow:bind-block 'fl.psilord.materials:ssbo/specification-data 9)
+
+    ))
+
 
 (defun convert-current-sprite (sprite-sheet)
   "Convert the current-animation and current-cell into an integer and store it in the sprite sheet
@@ -87,8 +159,6 @@ for later use with the shaders."
           (au:href (sprites sprite-sheet)
                    (aref (aref %animvec %current-animation) (1+ %current-cell))))))
 
-;; TODO: Shared storage is messed up semantically. We sometimes need different
-;; kinds of things in shared storage with keys of differnet test functions.
 (defmethod initialize-component ((sprite-sheet sprite-sheet) (context context))
   (with-slots (%spec-path %spec %material %transform %vao-id) sprite-sheet
     (let ((path (find-resource context %spec-path)))
@@ -102,7 +172,7 @@ for later use with the shaders."
             %material (lookup-material %material context)
             %transform (actor-component-by-type (actor sprite-sheet) 'transform)
             %vao-id (gl:gen-vertex-array))
-      (make-sprite-sheet-buffer sprite-sheet)
+      (make-sprite-sheet-buffer sprite-sheet context)
       (convert-current-sprite sprite-sheet))))
 
 (defun maybe-update-current-animation-cell (sprite-sheet frame-time)
@@ -140,24 +210,14 @@ for later use with the shaders."
         (shadow:uniform-mat4 :model (fl.comp.transform:model %transform))
         (shadow:uniform-mat4 :view (fl.comp.camera:view camera))
         (shadow:uniform-mat4 :proj (fl.comp.camera:projection camera))
-        ;; HACK! TODO: Update the computed-value in the material for the sprite
-        ;; to render. I need to implement the setf uniform codes for materials.
-        (let* ((mat-uniforms (fl.core::uniforms %material))
-               (tex.sprite-value (au:href mat-uniforms :tex.sprite)))
-          ;; Set the sprite uniform value in the material so we'll bind it
-          ;; correctly in the next call.
-          (setf (fl.core::computed-value tex.sprite-value) %sprite)
 
-          ;; TODO: Figure out how to do this next operation such that I
-          ;; personally don't have to choose a real binding point integer and
-          ;; the FL or shadow system can do it for me.
-          ;;
+        ;; Update the sprite index I need.
+        (setf (mat-uniform-ref %material :tex.sprite) %sprite)
 
-          ;; Normally bind the uniforms (which includes the above value) that we
-          ;; currently understand like the sprite sheet texture.
-          (bind-material %material)
-          ;; Manually draw the empty point buffer. This kicks off the bound
-          ;; shader to do its work. There are no vbo or vertex attributes bound
-          ;; into this vao.
-          (gl:bind-vertex-array %vao-id)
-          (gl:draw-arrays :points 0 1))))))
+        (bind-material %material)
+
+        ;; Manually draw the empty point buffer. This kicks off the bound
+        ;; shader to do its work. There are no vbo or vertex attributes bound
+        ;; into this vao.
+        (gl:bind-vertex-array %vao-id)
+        (gl:draw-arrays :points 0 1)))))

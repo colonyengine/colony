@@ -5,23 +5,30 @@
 ;; running multiple core-state objects.
 (defvar *core-state*)
 
+(defgeneric prologue (context)
+  (:method (context) nil))
+
+(defgeneric epilogue (context)
+  (:method (context) nil))
+
 (defun run-prologue (core-state)
-  "The prologue is a function defined in the user's project, that if it exists, is called before any
-setup procedure occurs when starting the engine."
-  (let ((prologue-func (au:ensure-symbol 'prologue (user-package core-state))))
-    (when (fboundp prologue-func)
-      (setf (state (context core-state)) (funcall prologue-func (context core-state))))))
+  "The prologue is a (defmethod prologue ((context context)) ...) method
+optionally defined in the user's project. If it exists, it is called after
+internal engine setup, but before the first frame (specifically, before any
+component protocol methods are called for the first time). The result of the
+prologue function is automatically stored in the STATE slot of the CONTEXT."
+  (setf (state (context core-state)) (prologue (context core-state))))
 
 (defun run-epilogue (core-state)
-  "The epilogue is a function defined in the user's project, that if it exists, is called before any
-tear-down procedure occurs when stopping the engine."
-  (let ((epilogue-func (au:ensure-symbol 'epilogue (user-package core-state))))
-    (when (fboundp epilogue-func)
-      (funcall epilogue-func (context core-state)))))
+  "The epilogue is a (defmethod epilogue ((context context)) ..) defined in the
+user's project. If it exists, is called after the last frame, and after the last
+invocations of any component protocol method, but before any engine tear-down
+procedure occurs when stopping the engine."
+  (epilogue (context core-state)))
 
 (defun prepare-engine (scene-name)
-  "Bring up the engine on the main thread, while keeping the REPL unblocked for interactive
-development."
+  "Bring up the engine on the main thread, while keeping the REPL unblocked for
+interactive development."
   (sdl2:in-main-thread ()
     (let* ((*package* (find-package :fl.core))
            (user-package (au:make-keyword (package-name (symbol-package scene-name))))
