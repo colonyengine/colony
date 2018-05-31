@@ -15,10 +15,10 @@ Defines OpenGL Shader Language (GLSL) stages and programs.
 
 There are two shader extensions: =shader-stages= and =shader-programs=. The first is loaded before the
 second. The =shader-stages= extension is where you use =defstruct-gpu= and =defun-gpu= to define vertex,
-geometry, tessellation, fragment, etc shader stages. Then, in =shader-programs= you use
-=make-shader-program= to wire together the stages into full shader programs. Each of these files
-should have an =in-package= at the top indicating what packages the stages and programs are in. Then,
-you must specify the package qualified shader name in the scene file to use it.
+geometry, tessellation, fragment, etc shader stages. Then, in =shader-programs= you use =define-shader=
+to wire together the stages into full shader programs. Each of these files should have an =in-package=
+at the top indicating what packages the stages and programs are in. Then, you must specify the
+package qualified shader name in the scene file to use it.
 
 *** [[Graphs]]
 Graphs are grouped into categories, and all graphs of a particular category are effectively unioned
