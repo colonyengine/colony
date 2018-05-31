@@ -494,9 +494,10 @@ or if it a vector of the same. Return NIL otherwise."
 
 (defun annotate-material-uniform (uniform-name material-uniform-value
                                   material shader-program core-state)
-  (au:if-found (uniform-type-info (au:href (shadow:uniforms shader-program) uniform-name))
+  (au:if-found (uniform-type-info
+                (au:href (shadow:uniforms shader-program) uniform-name))
 
-               (let ((uniform-type (au:href uniform-type-info :type)))
+               (let ((uniform-type (aref uniform-type-info 1)))
                  ;; 1. Find the uniform in the shader-program and get its
                  ;; type-info. Use that to set the binder function.
                  (setf (binder material-uniform-value)
@@ -525,8 +526,7 @@ or if it a vector of the same. Return NIL otherwise."
                   material-uniform-value))
 
                ;; else
-               (error "Material ~s uses unknown uniform ~s in shader ~s. If it is an implicit ~
-uniform, those are not supported in materials."
+               (error "Material ~s uses unknown uniform ~s in shader ~s. If it is an implicit uniform, those are not supported in materials."
                       (id material) uniform-name (shader material))))
 
 (defun annotate-material-uniforms (material shader-program core-state)
