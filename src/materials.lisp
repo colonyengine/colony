@@ -541,6 +541,8 @@ or if it a vector of the same. Return NIL otherwise."
 (defun annotate-material-block (block-alias-name material-block-value
                                 material shader-program core-state)
 
+  (declare (ignore shader-program core-state))
+
   ;; 1. Validate that this material-block-value is present in the shaders
   ;; in core-state
   ;; TODO
