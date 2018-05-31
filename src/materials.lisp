@@ -409,7 +409,7 @@ types and texture types."
 or if it a vector of the same. Return NIL otherwise."
   (let ((raw-type (if (symbolp glsl-type)
                       glsl-type
-                      (car glsl-type))))
+                      (first glsl-type))))
     (member raw-type
             '(:sampler-1d :isampler-1d :usampler-1d
               :sampler-2d :isampler-2d :usampler-2d
@@ -447,9 +447,9 @@ or if it a vector of the same. Return NIL otherwise."
            (:mat4 #'shadow:uniform-mat4))))
 
     ((consp glsl-type)
-     (if (sampler-p (car glsl-type))
+     (if (sampler-p (first glsl-type))
          (let* ((units
-                  (loop :for i :from 0 :below (cdr glsl-type)
+                  (loop :for i :from 0 :below (second glsl-type)
                         :collect (prog1 (active-texture-unit material)
                                    (incf (active-texture-unit material)))))
                 (units (coerce units 'vector)))
@@ -459,7 +459,7 @@ or if it a vector of the same. Return NIL otherwise."
                    :for unit :across units
                    :do (gl:active-texture unit)
                        (gl:bind-texture
-                        (sampler-type->texture-type (car glsl-type))
+                        (sampler-type->texture-type (first glsl-type))
                         (texid texture)))
              (shadow:uniform-int-array uniform-name units)))
 
