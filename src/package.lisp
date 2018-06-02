@@ -31,6 +31,7 @@
            #:active-camera
            #:delta
            #:frame-time
+           #:total-time
            #:ss-href
            #:prologue
            #:epilogue)

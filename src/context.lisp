@@ -13,8 +13,12 @@
            :initarg :state
            :initform NIL)))
 
+(defun total-time (context)
+  "Return the total time in seconds that the engine has been running."
+  (box.frame:total-time (display (core-state context))))
+
 (defun frame-time (context)
-  "Return the amount of time in seconds the last frame as a REAL."
+  "Return the amount of time in seconds of the last frame as a REAL."
   (box.frame:frame-time (display (core-state context))))
 
 (defun delta (context)
