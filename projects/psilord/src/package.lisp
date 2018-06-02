@@ -1,34 +1,20 @@
 (in-package :defpackage+-user-1)
 
 (defpackage+ #:fl.psilord
-  (:use #:cl
-        #:fl.core
-        #:fl.comp.mesh-renderer)
+  (:use #:cl #:fl.core #:fl.comp.mesh-renderer)
   (:export-only #:demo
                 #:material-test))
 
 (defpackage+ #:fl.psilord.shaders
-  (:use #:shadow #:shadow.lang)
+  (:use #:fl.core #:shadow.lang)
   (:export-only #:sprite-shader
                 #:test-shader-0))
 
 (defpackage+ #:fl.psilord.materials
-  (:use #:cl #:shadow)
-  (:inherit #:box.math.vari #:vari)
-  (:import-from #:fl.core
-                #:define-material)
-  (:export-only #:sprite
-                #:unlit-texture-test-0
-                #:unlit-texture-test-1
-                #:test-material-0
-                ;; ssbo/ubo names for material "sprite"
-                #:ssbo/specification-data
-                ))
+  (:use #:cl #:fl.core)
+  (:export-only
+   ;; ssbo/ubo names for material "sprite"
+   #:ssbo/specification-data))
 
 (defpackage+ #:fl.psilord.textures
-  (:use #:cl #:shadow)
-  (:import-from #:fl.core
-                #:define-texture
-                #:general-data-format-descriptor)
-  (:export-only #:sprite-sheet-00
-                #:alignment))
+  (:use #:cl #:fl.core))

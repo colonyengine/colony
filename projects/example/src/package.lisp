@@ -6,21 +6,11 @@
                 #:geometric-volumes))
 
 (defpackage+ #:fl.example.shaders
-  (:use #:shadow #:shadow.lang)
+  (:use #:fl.core #:shadow.lang)
   (:export-only #:damaged-helmet))
 
 (defpackage+ #:fl.example.materials
-  (:use #:cl #:shadow)
-  (:import-from #:fl.core
-                #:define-material)
-  (:export-only #:damaged-helmet))
+  (:use #:cl #:fl.core))
 
 (defpackage+ #:fl.example.textures
-  (:use #:cl #:shadow)
-  (:import-from #:fl.core
-                #:define-texture)
-  (:export-only #:damaged-helmet/metallic-roughness
-                #:damaged-helmet/color
-                #:damaged-helmet/normal
-                #:damaged-helmet/ambient-occlusion
-                #:damaged-helmet/emissive))
+  (:use #:cl #:fl.core))

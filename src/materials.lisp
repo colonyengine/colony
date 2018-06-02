@@ -608,13 +608,11 @@ must be executed after all the shader programs have been comipiled."
        (%prepare)))))
 
 (defmacro define-material (name &body (body))
-  (let ((enabled (getf body :enabled))
-        (shader (getf body :shader))
-        (uniforms (getf body :uniforms))
-        (blocks (getf body :blocks)))
-    ;; TODO: better parsing and type checking of material forms...
-
-    `(let ((func ,(parse-material name shader uniforms blocks)))
-       (declare (special %temp-materials))
-       ,(when enabled
-          `(setf (au:href %temp-materials ',name) func)))))
+  ;; TODO: better parsing and type checking of material forms...
+  (au:with-unique-names (func)
+    (destructuring-bind (&key enabled shader uniforms blocks) body
+      `(let ((,func ,(parse-material name shader uniforms blocks)))
+         (declare (special %temp-materials))
+         ,(when enabled
+            `(setf (au:href %temp-materials ',name) ,func))
+         (export ',name)))))

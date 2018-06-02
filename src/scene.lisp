@@ -133,4 +133,5 @@
   `(let ((scene ,(parse-scene `',name body)))
      (declare (special %temp-scene))
      ,(when enabled
-        `(setf (au:href %temp-scene ',name) scene))))
+        `(setf (au:href %temp-scene ',name) scene))
+     (export ',name)))

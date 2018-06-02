@@ -185,8 +185,9 @@ TEXTURE-TYPE into the texture memory."))
        (declare (special %temp-texture-descriptors))
        ;; Record the parameters we'll overlay on the profile at use time.
        (setf ,@(loop :for (key value) :in body
-                     :append `((au:href (attributes ,texdesc) ,key) ,value)))
-       (setf (au:href %temp-texture-descriptors (name ,texdesc)) ,texdesc))))
+                     :append `((au:href (attributes ,texdesc) ,key) ,value))
+             (au:href %temp-texture-descriptors (name ,texdesc)) ,texdesc)
+       (export ',name))))
 
 (defmethod extension-file-type ((extension-type (eql 'textures)))
   "tex")

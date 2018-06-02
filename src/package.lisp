@@ -47,6 +47,8 @@
            #:mat-uniform-ref
            #:mat-computed-uniform-ref
            #:shader)
+  ;; shaders
+  (:export #:define-shader)
   ;; input
   (:export #:key-down
            #:key-up
@@ -128,16 +130,14 @@
                 #:draw-mesh))
 
 (defpackage+ #:fl.shaders
-  (:use #:shadow #:shadow.lang)
+  (:use #:fl.core #:shadow.lang)
   (:export-only #:unlit-color
                 #:unlit-color-decal
                 #:unlit-texture
                 #:unlit-texture-decal))
 
 (defpackage+ #:fl.materials
-  (:use #:cl #:shadow)
-  (:import-from #:fl.core
-                #:define-material)
+  (:use #:cl #:fl.core)
   (:export-only #:missing-material
                 #:unlit-color
                 #:unlit-color-decal
@@ -146,11 +146,7 @@
                 #:unlit-texture-decal-bright))
 
 (defpackage+ #:fl.textures
-  (:use #:cl #:shadow)
-  (:import-from #:fl.core
-                #:define-texture-profile
-                #:define-texture
-                #:general-data-format-descriptor)
+  (:use #:cl #:fl.core)
   (:export-only #:default-profile
                 #:missing-texture
                 #:debug-texture))

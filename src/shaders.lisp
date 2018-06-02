@@ -24,3 +24,9 @@
 (defun prepare-shader-programs (core-state)
   (setf (shaders core-state) (shadow:build-shader-dictionary))
   (shadow:set-modify-hook #'shaders-modified-hook))
+
+(defmacro define-shader (name (&key (version 330) (primitive :triangles)) &body body)
+  `(progn
+     (shadow:define-shader ,name (:version ,version :primitive ,primitive)
+       ,@body)
+     (export ',name)))
