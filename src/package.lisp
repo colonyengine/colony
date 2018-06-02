@@ -127,7 +127,7 @@
                 #:draw-mesh))
 
 (defpackage+ #:fl.shaders
-  (:use #:cl #:shadow #:box.math.vari)
+  (:use #:shadow #:shadow.lang)
   (:export-only #:unlit-color
                 #:unlit-color-decal
                 #:unlit-texture

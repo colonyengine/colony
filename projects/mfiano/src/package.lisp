@@ -6,7 +6,7 @@
                 #:noise-test))
 
 (defpackage+ #:fl.mfiano.shaders
-  (:use #:cl #:shadow #:box.math.vari)
+  (:use #:shadow #:shadow.lang)
   (:export-only #:sprite-shader
                 #:screen-draw
                 #:noise-test))

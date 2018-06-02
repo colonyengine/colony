@@ -6,7 +6,7 @@
                 #:geometric-volumes))
 
 (defpackage+ #:fl.example.shaders
-  (:use #:cl #:shadow #:box.math.vari)
+  (:use #:shadow #:shadow.lang)
   (:export-only #:damaged-helmet))
 
 (defpackage+ #:fl.example.materials

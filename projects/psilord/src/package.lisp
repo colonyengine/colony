@@ -8,8 +8,7 @@
                 #:material-test))
 
 (defpackage+ #:fl.psilord.shaders
-  (:use #:cl #:shadow)
-  (:inherit #:box.math.vari #:vari)
+  (:use #:shadow #:shadow.lang)
   (:export-only #:sprite-shader
                 #:test-shader-0))
 
