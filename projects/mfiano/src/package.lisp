@@ -2,17 +2,20 @@
 
 (defpackage+ #:fl.mfiano
   (:use #:cl #:fl.core)
-  (:export-only #:2d-sprites
+  (:export-only #:sprite-test
+                #:graph-test
                 #:noise-test))
 
 (defpackage+ #:fl.mfiano.shaders
   (:use #:fl.core #:shadow.lang)
-  (:export-only #:sprite-shader
-                #:screen-draw
+  (:export-only #:screen-draw
+                #:sprite-test
+                #:graph-test
                 #:noise-test))
 
 (defpackage+ #:fl.mfiano.materials
-  (:use #:cl #:fl.core))
+  (:use #:cl)
+  (:import-from #:fl.core #:define-material))
 
 (defpackage+ #:fl.mfiano.textures
   (:use #:cl #:fl.core))
