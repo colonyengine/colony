@@ -204,12 +204,18 @@ for later use with the shaders."
   (with-slots (%transform %material %sprite %vao-id) sprite-sheet
     (au:when-let ((camera (active-camera context)))
       (shadow:with-shader-program (shader %material)
-        ;; TODO: Maybe I can merge this in to the material better--either by
-        ;; making the setf uniform for materials work, or by doing something
-        ;; with an ssbo that many materials use.
-        (shadow:uniform-mat4 :model (fl.comp.transform:model %transform))
-        (shadow:uniform-mat4 :view (fl.comp.camera:view camera))
-        (shadow:uniform-mat4 :proj (fl.comp.camera:projection camera))
+        (setf
+         ;; This is required for this model, so it must stay here.
+         (mat-uniform-ref %material :model)
+         (fl.comp.transform:model %transform)
+
+         ;; Move these next two to a gpu buffer since they only have to happen
+         ;; once per frame. We can move this into the core.flow.
+         (mat-uniform-ref %material :view)
+         (fl.comp.camera:view camera)
+
+         (mat-uniform-ref %material :proj)
+         (fl.comp.camera:projection camera))
 
         ;; Update the sprite index I need.
         (setf (mat-uniform-ref %material :tex.sprite) %sprite)
