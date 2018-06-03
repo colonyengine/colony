@@ -23,14 +23,14 @@
 
 (defmethod make-projection ((mode (eql :perspective)) camera (context context))
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far) (fovy fovy)) camera
-    (with-cfg (width height) context
-      (m4:perspective-projection! proj (/ fovy zoom) (/ width height) near far))))
+    (with-cfg (window-width window-height) context
+      (m4:perspective-projection! proj (/ fovy zoom) (/ window-width window-height) near far))))
 
 (defmethod make-projection ((mode (eql :orthographic)) camera (context context))
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far)) camera
-    (with-cfg (width height) context
-      (let ((w (/ width (zoom camera) 2))
-            (h (/ height (zoom camera) 2)))
+    (with-cfg (window-width window-height) context
+      (let ((w (/ window-width (zoom camera) 2))
+            (h (/ window-height (zoom camera) 2)))
         (m4:orthographic-projection! proj (- w) w (- h) h near far)))))
 
 (defgeneric compute-camera-view (camera context)

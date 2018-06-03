@@ -13,20 +13,20 @@
 (defgeneric make-display (core-state)
   (:method ((core-state core-state))
     (let ((hz (calculate-refresh-rate)))
-      (with-cfg (vsync title width height delta periodic-interval debug-frames-interval)
+      (with-cfg (vsync title window-width window-height delta periodic-interval debug-interval)
           (context core-state)
         (setf (slot-value core-state '%display)
               (make-instance 'display
                              :vsyncp vsync
                              :core-state core-state
                              :title title
-                             :w width
-                             :h height
+                             :w window-width
+                             :h window-height
                              :hz hz
                              :delta delta
                              :period periodic-interval
-                             :debug-interval debug-frames-interval))
-        (simple-logger:emit :display.init width height hz)))))
+                             :debug-interval debug-interval))
+        (simple-logger:emit :display.init window-width window-height hz)))))
 
 (defmethod make-display :before ((core-state core-state))
   (with-cfg (log-level gl-version-major gl-version-minor anti-alias-level) (context core-state)
@@ -63,9 +63,9 @@
 
 (defmethod kit.sdl2:close-window :around ((display display))
   (with-slots (%core-state) display
-    (with-cfg (width height) (context %core-state)
+    (with-cfg (window-width window-height) (context %core-state)
       (call-next-method)
-      (simple-logger:emit :display.stop width height (hz display)))))
+      (simple-logger:emit :display.stop window-width window-height (hz display)))))
 
 (defmethod quit-display ((display display))
   (kit.sdl2:close-window display)
