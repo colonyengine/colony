@@ -30,14 +30,15 @@
 
 (defun prepare-extensions (core-state path)
   ;; https://github.com/HackerTheory/first-light/wiki/Developer-Rules#extension-order
-  (prepare-extension 'settings (context core-state) path)
-  (prepare-extension 'graphs core-state path)
-  (prepare-extension 'call-flow core-state path)
-  (prepare-extension 'shader-stages core-state path)
-  (prepare-extension 'shader-programs core-state path)
-  (prepare-extension 'textures core-state path)
-  (prepare-extension 'materials core-state path)
-  (prepare-extension 'scene core-state path))
+  (let ((*context* (context core-state)))
+    (prepare-extension 'settings (context core-state) path)
+    (prepare-extension 'graphs core-state path)
+    (prepare-extension 'call-flow core-state path)
+    (prepare-extension 'shader-stages core-state path)
+    (prepare-extension 'shader-programs core-state path)
+    (prepare-extension 'textures core-state path)
+    (prepare-extension 'materials core-state path)
+    (prepare-extension 'scene core-state path)))
 
 (defun load-extensions (type path)
   (map-extensions type (get-extension-path) :builtin)

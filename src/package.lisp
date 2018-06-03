@@ -25,6 +25,7 @@
            #:rcache-dispose)
   ;; context
   (:export #:context
+           #:*context*
            #:settings
            #:shaders
            #:shared-storage-table
