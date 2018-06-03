@@ -32,7 +32,7 @@ interactive development."
   (sdl2:in-main-thread ()
     (let* ((*package* (find-package :fl.core))
            (user-package (au:make-keyword (package-name (symbol-package scene-name))))
-           (core-state (make-core-state :default-scene scene-name :user-package user-package)))
+           (core-state (make-core-state :user-package user-package)))
       (prepare-extensions core-state (get-extension-path user-package))
       (load-scene core-state scene-name)
       (make-display core-state)
