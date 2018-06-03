@@ -28,13 +28,16 @@
         (error "A component references the undefined actor: ~a" actor)))))
 
 (defun %generate-actor-components-table (scene-spec actor-names &optional table)
-  (loop :with table = (or table (au:dict #'eq))
-        :for (actor components . child) :in scene-spec
-        :do (dolist (component (reverse components))
-              (%type-check-actor-component actor-names component)
-              (push component (au:href table actor)))
-            (%generate-actor-components-table child actor-names table)
-        :finally (return table)))
+  (let ((table (or table (au:dict #'eq))))
+    (dolist (actor scene-spec)
+      (destructuring-bind (actor components . child) actor
+        (unless (member 'transform components :key #'car)
+          (push '(transform) components))
+        (dolist (component (reverse components))
+          (%type-check-actor-component actor-names component)
+          (push component (au:href table actor)))
+        (%generate-actor-components-table child actor-names table)))
+    table))
 
 (defun %generate-actor-bindings (actor-names table)
   (mapcan
@@ -125,8 +128,8 @@
       (with-slots (%scene-tree) owner
         (setf %scene-tree (%make-scene-tree owner)))
       (maphash
-       (lambda (key value)
-         (setf (au:href (scenes owner) key) value))
+       (lambda (k v)
+         (setf (au:href (scenes owner) k) v))
        (%prepare)))))
 
 (defmacro define-scene (name (&key enabled) &body body)
