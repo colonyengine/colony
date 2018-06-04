@@ -21,12 +21,7 @@
 (defun total-time (context)
   "Return the total time in seconds that the engine has been running."
   (let ((display (display (core-state context))))
-    ;; TODO: This is here because material profiles can ask for total-time
-    ;; before the display is configured. Technically this is correct, but the
-    ;; branch here sorta sucks. Think about ways to deal with it.
-    (if display
-        (box.frame:total-time display)
-        0)))
+    (box.frame:total-time display)))
 
 (defun frame-time (context)
   "Return the amount of time in seconds of the last frame as a REAL."

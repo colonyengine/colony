@@ -31,7 +31,6 @@
 (defun prepare-extensions (core-state path)
   ;; https://github.com/HackerTheory/first-light/wiki/Developer-Rules#extension-order
   (let ((*context* (context core-state)))
-    (prepare-extension 'settings (context core-state) path)
     (prepare-extension 'graphs core-state path)
     (prepare-extension 'call-flow core-state path)
     (prepare-extension 'shader-stages core-state path)
