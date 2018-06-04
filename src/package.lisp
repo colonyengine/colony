@@ -49,15 +49,7 @@
            #:mat-uniform-ref
            #:mat-computed-uniform-ref
            #:shader
-           ;; Material Profiles
-           #:u-model
-           #:u-view
-           #:u-proj
-           #:u-total-time
-           #:u-mvp
-           #:u-vp
-           #:u-mvpt
-           #:u-vpt)
+           )
   ;; shaders
   (:export #:define-shader)
   ;; input
@@ -149,15 +141,30 @@
 
 (defpackage+ #:fl.materials
   (:use #:cl #:fl.core)
-  (:export-only #:missing-material
-                #:unlit-color
-                #:unlit-color-decal
-                #:unlit-texture
-                #:unlit-texture-decal
-                #:unlit-texture-decal-bright))
+  (:export-only
+   ;; Material Profiles
+   #:u-model
+   #:u-view
+   #:u-proj
+   #:u-total-time
+   #:u-mvp
+   #:u-vp
+   #:u-mvpt
+   #:u-vpt
+   ;; Materials
+   #:missing-material
+   #:unlit-color
+   #:unlit-color-decal
+   #:unlit-texture
+   #:unlit-texture-decal
+   #:unlit-texture-decal-bright))
 
 (defpackage+ #:fl.textures
   (:use #:cl #:fl.core)
-  (:export-only #:default-profile
-                #:missing-texture
-                #:debug-texture))
+  (:export-only
+   ;; Texture Profiles
+   #:default-profile
+   #:clamp-all-edges
+   ;; Textures
+   #:missing-texture
+   #:debug-texture))
