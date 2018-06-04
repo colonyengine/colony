@@ -5,7 +5,8 @@
                   :initarg :user-package)
    (%rcache :reader rcache
             :initform (au:dict #'eq))
-   (%display :reader display)
+   (%display :reader display
+             :initform nil)
    (%scene-tree :reader scene-tree)
    (%cameras :accessor cameras
              :initform nil)
