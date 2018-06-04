@@ -146,7 +146,7 @@
    #:u-model
    #:u-view
    #:u-proj
-   #:u-total-time
+   #:u-time
    #:u-mvp
    #:u-vp
    #:u-mvpt
