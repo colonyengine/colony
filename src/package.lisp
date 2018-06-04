@@ -43,11 +43,21 @@
            #:general-data-format-descriptor)
   ;; materials
   (:export #:define-material
+           #:define-material-profile
            #:copy-material
            #:bind-material
            #:mat-uniform-ref
            #:mat-computed-uniform-ref
-           #:shader)
+           #:shader
+           ;; Material Profiles
+           #:u-model
+           #:u-view
+           #:u-proj
+           #:u-total-time
+           #:u-mvp
+           #:u-vp
+           #:u-mvpt
+           #:u-vpt)
   ;; shaders
   (:export #:define-shader)
   ;; input
