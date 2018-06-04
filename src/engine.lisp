@@ -12,28 +12,26 @@
   (:method (context) nil))
 
 (defun run-prologue (core-state)
-  "The prologue is a (defmethod prologue ((context context)) ...) method
-optionally defined in the user's project. If it exists, it is called after
-internal engine setup, but before the first frame (specifically, before any
-component protocol methods are called for the first time). The result of the
-prologue function is automatically stored in the STATE slot of the CONTEXT."
+  "The prologue is a (defmethod prologue ((context context)) ...) method optionally defined in the
+user's project. If it exists, it is called after internal engine setup, but before the first
+frame (specifically, before any component protocol methods are called for the first time). The
+result of the prologue function is automatically stored in the STATE slot of the CONTEXT."
   (setf (state (context core-state)) (prologue (context core-state))))
 
 (defun run-epilogue (core-state)
-  "The epilogue is a (defmethod epilogue ((context context)) ..) defined in the
-user's project. If it exists, is called after the last frame, and after the last
-invocations of any component protocol method, but before any engine tear-down
-procedure occurs when stopping the engine."
+  "The epilogue is a (defmethod epilogue ((context context)) ..) defined in the user's project. If
+it exists, it is called after the last frame, and after the last invocations of any component protocol
+method, but before any engine tear-down procedure occurs when stopping the engine."
   (epilogue (context core-state)))
 
 (defun prepare-engine (scene-name)
-  "Bring up the engine on the main thread, while keeping the REPL unblocked for
-interactive development."
+  "Bring up the engine on the main thread, while keeping the REPL unblocked for interactive
+development."
   (sdl2:in-main-thread ()
     (let* ((*package* (find-package :fl.core))
            (user-package (au:make-keyword (package-name (symbol-package scene-name))))
-           (core-state (make-core-state :user-package user-package))
-           (user-path (get-extension-path user-package)))
+           (user-path (get-extension-path user-package))
+           (core-state (make-core-state :user-package user-package)))
       (prepare-extension 'settings (context core-state) user-path)
       (make-display core-state)
       (prepare-extensions core-state user-path)
@@ -51,7 +49,7 @@ interactive development."
   (setf *core-state* (prepare-engine scene-name)))
 
 (defun stop-engine (core-state)
-  "Stop the engine, making sure to call any user-define epilogue function first, and finally
+  "Stop the engine, making sure to call any user-defined epilogue function first, and finally
 cleaning up."
   (unwind-protect
        (with-cfg (title) (context core-state)

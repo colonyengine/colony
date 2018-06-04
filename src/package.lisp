@@ -91,6 +91,17 @@
   (:export #:load-mesh
            #:draw-func))
 
+(defpackage+ #:fl.host
+  (:use #:cl)
+  (:export #:initialize-host
+           #:shutdown-host
+           #:make-window
+           #:make-opengl-context
+           #:close-window
+           #:window-size
+           #:resize-window
+           #:window-fullscreen))
+
 (defpackage+ #:fl.comp.transform
   (:use #:cl #:fl.core)
   (:export-only #:transform
