@@ -157,7 +157,9 @@
    #:unlit-color-decal
    #:unlit-texture
    #:unlit-texture-decal
-   #:unlit-texture-decal-bright))
+   #:unlit-texture-decal-bright
+   ;; Helper functions
+   #:total-time/uniform))
 
 (defpackage+ #:fl.textures
   (:use #:cl #:fl.core)
