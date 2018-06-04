@@ -14,7 +14,7 @@
                 #:noise-test))
 
 (defpackage+ #:fl.mfiano.materials
-  (:use #:cl)
+  (:use #:cl #:fl.materials)
   (:import-from #:fl.core #:define-material))
 
 (defpackage+ #:fl.mfiano.textures
