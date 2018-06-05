@@ -234,10 +234,10 @@ The previous state name and the current state name which resulted in the exiting
 (defun get-flow-state (flow-state-name flow)
   (au:href flow flow-state-name))
 
-(defmethod extension-file-type ((extension-type (eql 'call-flow)))
+(defmethod extension-file-type ((extension-type (eql :call-flow)))
   "flow")
 
-(defmethod prepare-extension ((extension-type (eql 'call-flow)) owner path)
+(defmethod prepare-extension ((extension-type (eql :call-flow)) owner path)
   (let ((%temp-call-flow (au:dict #'eq)))
     (declare (special %temp-call-flow))
     (flet ((%prepare ()

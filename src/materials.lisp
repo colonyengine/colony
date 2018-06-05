@@ -658,11 +658,11 @@ must be executed after all the shader programs have been compiled."
 
    core-state))
 
-(defmethod extension-file-type ((extension-type (eql 'materials)))
+(defmethod extension-file-type ((extension-type (eql :materials)))
   "mat")
 
 
-(defmethod prepare-extension ((extension-type (eql 'materials)) owner path)
+(defmethod prepare-extension ((extension-type (eql :materials)) owner path)
   (let ((%temp-materials (au:dict #'eq))
         (%temp-material-profiles (au:dict #'eq)))
     (declare (special %temp-materials %temp-material-profiles))

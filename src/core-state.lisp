@@ -3,6 +3,9 @@
 (defclass core-state ()
   ((%user-package :reader user-package
                   :initarg :user-package)
+   (%host :reader host)
+   (%running-p :accessor running-p
+               :initform nil)
    (%rcache :reader rcache
             :initform (au:dict #'eq))
    (%display :reader display
@@ -83,8 +86,11 @@ CORE-STATE."
       actor)))
 
 (defun make-core-state (&rest args)
-  (let ((core-state (apply #'make-instance 'core-state args)))
-    (setf (slot-value core-state '%context) (make-instance 'context :core-state core-state))
+  (let* ((core-state (apply #'make-instance 'core-state args))
+         (context (make-instance 'context :core-state core-state)))
+    (prepare-extension :settings context (get-extension-path (user-package core-state)))
+    (setf (slot-value core-state '%context) context
+          (slot-value core-state '%host) (cfg context :host))
     core-state))
 
 (defgeneric shared-storage (context key)

@@ -27,25 +27,22 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 (defun prepare-engine (scene-name)
   "Bring up the engine on the main thread, while keeping the REPL unblocked for interactive
 development."
-  (sdl2:in-main-thread ()
-    (let* ((*package* (find-package :fl.core))
-           (user-package (au:make-keyword (package-name (symbol-package scene-name))))
-           (user-path (get-extension-path user-package))
-           (core-state (make-core-state :user-package user-package)))
-      (prepare-extension 'settings (context core-state) user-path)
-      (make-display core-state)
-      (prepare-extensions core-state user-path)
-      (load-scene core-state scene-name)
-      (prepare-shader-programs core-state)
-      (resolve-all-textures core-state)
-      (resolve-all-materials core-state)
-      (run-prologue core-state)
-      core-state)))
+  (let* ((*package* (find-package :fl.core))
+         (user-package (au:make-keyword (package-name (symbol-package scene-name))))
+         (user-path (get-extension-path user-package))
+         (core-state (make-core-state :user-package user-package)))
+    (prepare-extensions core-state user-path)
+    (make-display core-state)
+    (load-scene core-state scene-name)
+    (prepare-shader-programs core-state)
+    (resolve-all-textures core-state)
+    (resolve-all-materials core-state)
+    (main-loop core-state)
+    (run-prologue core-state)
+    core-state))
 
 (defun start-engine (scene-name)
   "Start the engine by running the specified scene."
-  (kit.sdl2:init)
-  (kit.sdl2:start)
   (setf *core-state* (prepare-engine scene-name)))
 
 (defun stop-engine (core-state)
@@ -57,6 +54,14 @@ cleaning up."
          (quit-display (display core-state))
          (simple-logger:emit :engine.quit title))
     (makunbound '*core-state*)))
+
+(defun main-loop (core-state)
+  (with-continue-restart
+    (setf (running-p core-state) t)
+    (loop
+      (fl.host:handle-events (host core-state) core-state)
+      (update-lisp-repl)
+      (render core-state))))
 
 #+sbcl
 (defmacro profile (scene-name duration)

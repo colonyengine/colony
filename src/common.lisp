@@ -1,5 +1,30 @@
 (in-package :fl.core)
 
+(defmacro with-continue-restart (&body body)
+  `(restart-case (progn ,@body)
+     (continue () :report "First Light: Continue")))
+
+(macrolet ((install-repl-support ()
+             (let ((repl-package (car (intersection '(:swank :slynk) *features*))))
+               `(progn
+                  (defun find-lisp-repl ()
+                    (or ,(au:ensure-symbol "*EMACS-CONNECTION*" repl-package)
+                        (,(au:ensure-symbol "DEFAULT-CONNECTION" repl-package))))
+                  (defun setup-lisp-repl ()
+                    (if ,(eq repl-package :slynk)
+                        (slynk-mrepl::send-prompt
+                         (find (bt:current-thread)
+                               (slynk::channels)
+                               :key #'slynk::channel-thread))
+                        (au:noop)))
+                  (defun update-lisp-repl ()
+                    (if ,repl-package
+                        (au:when-let ((repl (find-lisp-repl)))
+                          (with-continue-restart
+                            (,(au:ensure-symbol "HANDLE-REQUESTS" repl-package) repl t)))
+                        (au:noop)))))))
+  (install-repl-support))
+
 (defgeneric destroy (thing context &key ttl)
   (:documentation "Destroy may take either an ACTOR or a COMPONENT. The keyword argument :TTL
 supplied in real seconds, how long the thing has yet to live."))

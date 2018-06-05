@@ -189,10 +189,10 @@ TEXTURE-TYPE into the texture memory."))
              (au:href %temp-texture-descriptors (name ,texdesc)) ,texdesc)
        (export ',name))))
 
-(defmethod extension-file-type ((extension-type (eql 'textures)))
+(defmethod extension-file-type ((extension-type (eql :textures)))
   "tex")
 
-(defmethod prepare-extension ((extension-type (eql 'textures)) owner path)
+(defmethod prepare-extension ((extension-type (eql :textures)) owner path)
   (let ((%temp-texture-descriptors (au:dict #'eq))
         (%temp-texture-profiles (au:dict #'eq)))
     (declare (special %temp-texture-descriptors %temp-texture-profiles))

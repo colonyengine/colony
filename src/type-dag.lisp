@@ -230,10 +230,10 @@ hyper-edge pairs, :hyperedges"
                            :do (setf (au:href subform-db (name subform)) subform)
                            :finally (return subform-db))))))
 
-(defmethod extension-file-type ((extension-type (eql 'graphs)))
+(defmethod extension-file-type ((extension-type (eql :graphs)))
   "gph")
 
-(defmethod prepare-extension ((extension-type (eql 'graphs)) owner path)
+(defmethod prepare-extension ((extension-type (eql :graphs)) owner path)
   ;; Collect ALL graph-definitions into the appropriate analyzed-graph objects. The graphs aren't
   ;; fully analyzed yet. This is only the parsing phase.
   (symbol-macrolet ((analyzed-graph (au:href (analyzed-graphs owner) (category parsed-def))))

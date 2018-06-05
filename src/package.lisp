@@ -9,6 +9,7 @@
            #:make-core-state
            #:user-package
            #:display
+           #:window
            #:cameras
            #:context
            #:lookup-material
@@ -23,6 +24,10 @@
            #:rcache-construct
            #:rcache-remove
            #:rcache-dispose)
+  ;; extensions
+  (:export #:extension-file-type
+           #:prepare-extension
+           #:load-extensions)
   ;; context
   (:export #:context
            #:*context*
@@ -92,15 +97,27 @@
            #:draw-func))
 
 (defpackage+ #:fl.host
-  (:use #:cl)
+  (:use #:cl #:fl.core)
   (:export #:initialize-host
            #:shutdown-host
-           #:make-window
-           #:make-opengl-context
+           #:create-window
+           #:create-opengl-context
            #:close-window
-           #:window-size
-           #:resize-window
-           #:window-fullscreen))
+           #:get-refresh-rate
+           #:redraw-window
+           #:set-draw-mode
+           #:get-window-title
+           #:set-window-title
+           #:get-window-size
+           #:set-window-size
+           #:get-window-mode
+           #:set-window-mode
+           #:set-window-hidden
+           #:set-window-visible
+           #:set-cursor-hidden
+           #:set-cursor-visible
+           #:handle-events
+           #:get-key-name))
 
 (defpackage+ #:fl.comp.transform
   (:use #:cl #:fl.core)

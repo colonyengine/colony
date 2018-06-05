@@ -116,10 +116,10 @@
     (funcall (get-scene core-state name) core-state)
     (error "Cannot find the scene name: ~s." name)))
 
-(defmethod extension-file-type ((extension-type (eql 'scene)))
+(defmethod extension-file-type ((extension-type (eql :scene)))
   "scene")
 
-(defmethod prepare-extension ((extension-type (eql 'scene)) owner path)
+(defmethod prepare-extension ((extension-type (eql :scene)) owner path)
   (let ((%temp-scene (au:dict #'eq)))
     (declare (special %temp-scene))
     (flet ((%prepare ()

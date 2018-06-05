@@ -1,9 +1,9 @@
 (in-package :fl.core)
 
-(defmethod extension-file-type ((extension-type (eql 'settings)))
+(defmethod extension-file-type ((extension-type (eql :settings)))
   "cfg")
 
-(defmethod prepare-extension ((extension-type (eql 'settings)) owner path)
+(defmethod prepare-extension ((extension-type (eql :settings)) owner path)
   (let ((%temp-settings (au:dict #'eq)))
     (declare (special %temp-settings))
     (flet ((%prepare ()

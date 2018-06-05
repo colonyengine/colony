@@ -18,8 +18,6 @@
                #:simple-logger
                #:cl-graph
                #:jsown
-               #:sdl2
-               #:sdl2kit
                #:cl-opengl
                #:cl-tga
                #:golden-utils
@@ -35,10 +33,10 @@
    (:file "common")
    (:file "logging")
    (:file "context")
+   (:file "host")
    (:file "extensions")
    (:file "settings")
    (:file "components")
-   (:file "host")
    (:file "core-state")
    (:file "display")
    (:file "actor")
@@ -46,7 +44,6 @@
    (:file "type-dag")
    (:file "scene")
    (:file "viewport")
-   (:file "input")
    (:file "image")
    (:file "texture")
    (:file "materials")
