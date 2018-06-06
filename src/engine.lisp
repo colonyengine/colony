@@ -62,9 +62,10 @@ cleaning up."
 (defun main-loop (core-state)
   (setf (running-p core-state) t)
   (loop
-    (fl.host:handle-events (host core-state) core-state)
-    (update-lisp-repl)
-    (render core-state)))
+    (with-continue-restart "First Light"
+      (fl.host:handle-events (host core-state) core-state)
+      (update-lisp-repl)
+      (render core-state))))
 
 #+sbcl
 (defmacro profile (scene-name duration)

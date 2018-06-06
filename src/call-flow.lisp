@@ -149,8 +149,7 @@ The previous state name and the current state name which resulted in the exiting
                 (cond
                   ((selector flow-state)
                    (simple-logger:emit :flow.call.selector)
-                   (with-continue-restart "First Light"
-                     (funcall (selector flow-state) core-state)))
+                   (funcall (selector flow-state) core-state))
                   (t
                    (values :identity-policy nil)))
               (setf selections the-selections
@@ -182,8 +181,7 @@ The previous state name and the current state name which resulted in the exiting
                      (act-on-type-table (type-key type-table)
                        ;; Get the hash of components for the type-key
                        (au:when-found (component-table (type-table type-key type-table))
-                         (with-continue-restart "First Light"
-                           (act-on-item component-table)))))
+                         (act-on-item component-table))))
 
               (ecase policy
                 ;; TODO: :type-policy is in this branch until I write
@@ -226,9 +224,7 @@ The previous state name and the current state name which resulted in the exiting
             ;; flow.
             (simple-logger:emit :flow.call.transition)
             (setf flow-state
-                  (au:href flow (with-continue-restart "First Light"
-                                  (funcall (transition flow-state)
-                                           core-state))))))
+                  (au:href flow (funcall (transition flow-state) core-state)))))
 
 (defun get-call-flow (call-flow-name core-state)
   (au:href (call-flows core-state) call-flow-name))
