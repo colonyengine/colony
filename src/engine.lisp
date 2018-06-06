@@ -47,8 +47,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (resolve-all-textures core-state)
     (resolve-all-materials core-state)
     (run-prologue core-state)
-    (main-loop core-state)
-    core-state))
+    (main-loop core-state)))
 
 (defun stop-engine (core-state)
   "Stop the engine, making sure to call any user-defined epilogue function first, and finally
