@@ -125,7 +125,7 @@
 
 (defgeneric handle-events (host window)
   (:method (host window)
-    (error "Host ~s does not implement COLLECT-EVENTS." host))
+    (error "Host ~s does not implement HANDLE-EVENTS." host))
   (:documentation "Handle the host's events."))
 
 ;;; Event system
