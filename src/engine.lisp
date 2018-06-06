@@ -1,10 +1,5 @@
 (in-package :fl.core)
 
-;; This is a toplevel variable that is treated as a true global, rather than a special variable.
-;; NOTE; This is purely used for debugging, and should definitely not be used for user code or
-;; running multiple core-state objects.
-(defvar *core-state*)
-
 (defgeneric prologue (context)
   (:method (context) nil))
 
@@ -36,7 +31,6 @@ method, but before any engine tear-down procedure occurs when stopping the engin
          (user-package (au:make-keyword (package-name (symbol-package scene-name))))
          (user-path (get-extension-path user-package))
          (core-state (make-core-state :user-package user-package)))
-    (setf *core-state* core-state)
     (prepare-extension :settings (context core-state) user-path)
     (set-host core-state)
     (set-log-level core-state)
@@ -52,12 +46,10 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 (defun stop-engine (core-state)
   "Stop the engine, making sure to call any user-defined epilogue function first, and finally
 cleaning up."
-  (unwind-protect
-       (with-cfg (title) (context core-state)
-         (run-epilogue core-state)
-         (quit-display (display core-state))
-         (simple-logger:emit :engine.quit title))
-    (makunbound '*core-state*)))
+  (with-cfg (title) (context core-state)
+    (run-epilogue core-state)
+    (quit-display (display core-state))
+    (simple-logger:emit :engine.quit title)))
 
 (defun main-loop (core-state)
   (setf (running-p core-state) t)
