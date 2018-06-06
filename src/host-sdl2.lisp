@@ -1,9 +1,10 @@
 (in-package :fl.host)
 
-(defmethod initialize-host ((host (eql :sdl2)) &key (flags '(:everything)))
-  (unless (apply #'sdl2:was-init flags)
-    (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
-      (sdl2::check-rc (sdl2::sdl-init flags)))))
+(defmethod initialize-host ((host (eql :sdl2)))
+  (let ((flags '(:everything)))
+    (unless (apply #'sdl2:was-init flags)
+      (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
+        (sdl2::check-rc (sdl2::sdl-init flags))))))
 
 (defmethod shutdown-host ((host (eql :sdl2)))
   (let ((channel sdl2::*main-thread-channel*))
@@ -71,8 +72,6 @@
 
 (defmethod set-cursor-visible ((host (eql :sdl2)))
   (sdl2:show-cursor))
-
-;;; Event handling
 
 (defmacro event-case ((event) &body handlers)
   `(case (sdl2:get-event-type ,event)

@@ -33,8 +33,8 @@
 
 ;;; Protocol
 
-(defgeneric initialize-host (host &key &allow-other-keys)
-  (:method (host &key)
+(defgeneric initialize-host (host)
+  (:method (host)
     (error "Host ~s does not implement INITIALIZE-HOST." host))
   (:documentation "Perform any steps needed to initialize the host system."))
 
@@ -123,12 +123,15 @@
     (error "Host ~s does not implement SET-CURSOR-VISIBLE." host))
   (:documentation "Request the host to unhide the cursor."))
 
-(defgeneric handle-events (host window)
-  (:method (host window)
+(defgeneric on-event (host event core-state)
+  (:method (host event core-state)
+    (error "Host ~s does not implement ON-EVENT." host))
+  (:documentation "Dispatch events."))
+
+(defgeneric handle-events (host core-state)
+  (:method (host core-state)
     (error "Host ~s does not implement HANDLE-EVENTS." host))
   (:documentation "Handle the host's events."))
-
-;;; Event system
 
 (defun get-key-name (index)
   (aref +key-names+ index))
