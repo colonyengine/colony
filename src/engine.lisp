@@ -46,8 +46,8 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (prepare-shader-programs core-state)
     (resolve-all-textures core-state)
     (resolve-all-materials core-state)
-    (main-loop core-state)
     (run-prologue core-state)
+    (main-loop core-state)
     core-state))
 
 (defun stop-engine (core-state)
