@@ -1,16 +1,5 @@
 (in-package :fl.core)
 
-(defclass thread-safe-queue ()
-  ((%queue-lock :accessor queue-lock
-                :initarg :shader-lock
-                :initform (bt:make-lock))
-   (%queue :accessor queue
-           :initarg :queue
-           :initform (make-queue))))
-
-(defun make-thread-safe-queue ()
-  (make-instance 'thread-safe-queue))
-
 (defclass core-state ()
   ((%user-package :reader user-package
                   :initarg :user-package)
@@ -66,6 +55,12 @@
    (%actor-destroy-db :reader actor-destroy-db
                       :initform (au:dict #'eq))))
 
+(defun make-core-state (&rest args)
+  (let* ((core-state (apply #'make-instance 'core-state args))
+         (context (make-instance 'context :core-state core-state)))
+    (setf (slot-value core-state '%context) context)
+    core-state))
+
 (defun pending-preinit-tasks-p (core-state)
   "Return T if there are ANY components or actors in the preinit data structures in CORE-STATE."
   (or (plusp (hash-table-count (actor-preinit-db (tables core-state))))
@@ -98,12 +93,6 @@ CORE-STATE."
       (execute-flow core-state :default 'initialize-phase 'entry/initialize-phase
                     :come-from-state-name 'ef-make-scene-tree)
       actor)))
-
-(defun make-core-state (&rest args)
-  (let* ((core-state (apply #'make-instance 'core-state args))
-         (context (make-instance 'context :core-state core-state)))
-    (setf (slot-value core-state '%context) context)
-    core-state))
 
 (defgeneric shared-storage (context key)
   (:method ((context context) key)

@@ -1,5 +1,16 @@
 (in-package :fl.core)
 
+(defclass thread-safe-queue ()
+  ((%queue-lock :accessor queue-lock
+                :initarg :shader-lock
+                :initform (bt:make-lock))
+   (%queue :accessor queue
+           :initarg :queue
+           :initform (make-queue))))
+
+(defun make-thread-safe-queue ()
+  (make-instance 'thread-safe-queue))
+
 (defmacro with-continue-restart (report &body body)
   `(restart-case (progn ,@body)
      (continue () :report ,report)))
@@ -50,18 +61,15 @@ supplied in real seconds, how long the thing has yet to live."))
     (t ; Hrm, sorry. It didn't EQL match,
      nil)))
 
-
 (defun ensure-nested-hash-table (ht test-fn-list key-list)
-  "Walk down the nested hash table HT ensuring that we have the correct number
-of hash tables made (one less than the KEY-LIST set of keys) with the correct
-tests, gotten from TEST-FN-LIST. NOTE: The first entry in TEST-FN-LIST is the
-test function for HT itself."
+  "Walk down the nested hash table HT ensuring that we have the correct number of hash tables
+made (one less than the KEY-LIST set of keys) with the correct tests, gotten from TEST-FN-LIST.
+NOTE: The first entry in TEST-FN-LIST is the test function for HT itself."
 
-  ;; TODO: This looks painful for performance., oh well, we'll see if the
-  ;; profiler actually cares or not. It is likely that these won't be
-  ;; nested deeply. Also, the algorithm is slightly painful, but the deal
-  ;; is that we can't make a hash table containing the last key, since the
-  ;; last key is where we'll either look something up or store it.
+  ;; TODO: This looks painful for performance., oh well, we'll see if the profiler actually cares or
+  ;; not. It is likely that these won't be nested deeply. Also, the algorithm is slightly painful,
+  ;; but the deal is that we can't make a hash table containing the last key, since the last key is
+  ;; where we'll either look something up or store it.
   (loop :with keylen = (length key-list)
         :for test-fn :in (cdr test-fn-list)
         :for key :in key-list
@@ -70,9 +78,8 @@ test function for HT itself."
         :with current-ht = ht
         :do
            (unless (nth-value 1 (gethash key current-ht))
-             ;; If the key doesn't exist, we make a new hash table
-             ;; and store it at the key UNLESS it is the last entry,
-             ;; in which case we do nothing.
+             ;; If the key doesn't exist, we make a new hash table and store it at the key UNLESS it
+             ;; is the last entry, in which case we do nothing.
              (unless lastp
                (setf (gethash key current-ht)
                      (au:dict (fdefinition test-fn)))))
@@ -80,7 +87,6 @@ test function for HT itself."
            ;; The key is potentially newly minted.
            (setf current-ht (gethash key current-ht)))
   ht)
-
 
 (au:define-constant +sampler-type->texture-type+
     (au:dict #'eq
@@ -129,11 +135,11 @@ test function for HT itself."
              :usampler-2d-ms-array :texture-2d-multisample-array)
   :test #'equalp
   :documentation
-  "This variable is a hash table to map sampler types to texture types. It is
-a constant and will never be changed at runtime.")
+  "This variable is a hash table to map sampler types to texture types. It is a constant and will
+never be changed at runtime.")
 
+;;; Simple queue implementation, from Paul Graham.
 
-;; Simple queue implementation, from Paul Graham.
 (defun make-queue (&rest body)
   (if (null body)
       (cons nil nil)

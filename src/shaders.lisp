@@ -13,14 +13,12 @@
   (shadow:reset-program-state)
   (load-extensions extension-type path))
 
-;; NOTE: The returned function is called by the result of doing a C-c, which
-;; might be on a different thread due to slynx, or anything else that forced
-;; recompilation of shader programs that happened on a different thread.
-;; Then in core.flow, in the rendering thread, we dequeue the task and
-;; perform the work. This allows us to A) schedule when the recompilation
-;; _actually_ happens, and B) not have to worry about different threads making
-;; recompilation tasks.
-(defun gen-shaders-modified-hook (core-state)
+;; NOTE: The returned function is called by the result of doing a C-c, which might be on a different
+;; thread due to slynk, or anything else that forced recompilation of shader programs that happened
+;; on a different thread. Then in core.flow, in the rendering thread, we dequeue the task and
+;; perform the work. This allows us to A) schedule when the recompilation _actually_ happens, and B)
+;; not have to worry about different threads making recompilation tasks.
+(defun generate-shaders-modified-hook (core-state)
   (lambda (programs-list)
     (when (boundp '*core-state*)
       (simple-logger:emit :shader.programs.to.recompile programs-list)

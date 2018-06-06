@@ -233,11 +233,10 @@
       (setf %count (get-property "count" accessor)
             %type (get-component-type accessor)
             %index-buffer (make-gpu-buffer :element-array-buffer accessor)
-            %draw-func
-            (lambda (&key (instance-count 1))
-              (gl:bind-vertex-array %vao)
-              (gl:bind-buffer :element-array-buffer %index-buffer)
-              (%gl:draw-elements-instanced %mode %count %type 0 instance-count))))))
+            %draw-func (lambda (&key (instance-count 1))
+                         (gl:bind-vertex-array %vao)
+                         (gl:bind-buffer :element-array-buffer %index-buffer)
+                         (%gl:draw-elements-instanced %mode %count %type 0 instance-count))))))
 
 (defun make-primitive (data)
   (let ((primitive (make-instance 'primitive

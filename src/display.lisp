@@ -45,7 +45,7 @@
 
 (defun render (core-state)
   (with-slots (%host %running-p %display) core-state
-    (when (and %running-p %display)
+    (when %running-p
       (clear-screen %display)
       (execute-flow core-state
                     :default
@@ -56,9 +56,8 @@
 
 (defmethod quit-display ((display display))
   (with-slots (%core-state %window) display
-    (let ((host (host %core-state)))
-      (unwind-protect
-           (progn
-             (fl.host:close-window host %window)
-             (fl.host:shutdown-host host))
-        (setf (running-p %core-state) nil)))))
+    (unwind-protect
+         (let ((host (host %core-state)))
+           (fl.host:close-window host %window)
+           (fl.host:shutdown-host host))
+      (setf (running-p %core-state) nil))))
