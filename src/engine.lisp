@@ -48,8 +48,7 @@ cleaning up."
           :while %running-p
           :do (with-continue-restart "First Light"
                 (render core-state)
-                (fl.host:handle-events (host core-state) core-state)
-                (update-lisp-repl)))))
+                (fl.host:handle-events (host core-state) core-state)))))
 
 #+sbcl
 (defmacro profile (scene-name duration)
