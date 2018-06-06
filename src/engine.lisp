@@ -43,12 +43,13 @@ cleaning up."
     (simple-logger:emit :engine.quit title)))
 
 (defun main-loop (core-state)
-  (setf (running-p core-state) t)
-  (loop
-    (with-continue-restart "First Light"
-      (fl.host:handle-events (host core-state) core-state)
-      (update-lisp-repl)
-      (render core-state))))
+  (with-slots (%running-p) core-state
+    (loop :initially (setf %running-p t)
+          :while %running-p
+          :do (with-continue-restart "First Light"
+                (render core-state)
+                (fl.host:handle-events (host core-state) core-state)
+                (update-lisp-repl)))))
 
 #+sbcl
 (defmacro profile (scene-name duration)

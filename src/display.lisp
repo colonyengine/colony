@@ -44,15 +44,14 @@
     (gl:clear :color-buffer :depth-buffer)))
 
 (defun render (core-state)
-  (with-slots (%host %running-p %display) core-state
-    (when %running-p
-      (clear-screen %display)
-      (execute-flow core-state
-                    :default
-                    'perform-one-frame
-                    'entry/perform-one-frame
-                    :come-from-state-name :ef)
-      (fl.host:redraw-window %host (window %display)))))
+  (with-slots (%host %display) core-state
+    (clear-screen %display)
+    (execute-flow core-state
+                  :default
+                  'perform-one-frame
+                  'entry/perform-one-frame
+                  :come-from-state-name :ef)
+    (fl.host:redraw-window %host (window %display))))
 
 (defmethod quit-display ((display display))
   (with-slots (%core-state %window) display
