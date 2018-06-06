@@ -1,8 +1,8 @@
 (in-package :fl.core)
 
-(defmacro with-continue-restart (&body body)
+(defmacro with-continue-restart (report &body body)
   `(restart-case (progn ,@body)
-     (continue () :report "First Light: Continue")))
+     (continue () :report ,report)))
 
 (macrolet ((install-repl-support ()
              (let ((repl-package (car (intersection '(:swank :slynk) *features*))))
@@ -20,7 +20,7 @@
                   (defun update-lisp-repl ()
                     (if ,repl-package
                         (au:when-let ((repl (find-lisp-repl)))
-                          (with-continue-restart
+                          (with-continue-restart "REPL"
                             (,(au:ensure-symbol "HANDLE-REQUESTS" repl-package) repl t)))
                         (au:noop)))))))
   (install-repl-support))
