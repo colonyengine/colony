@@ -31,14 +31,6 @@
       :kbdillumtoggle :kbdillumdown :kbdillumup :eject :sleep)
   :test #'equalp)
 
-;;; Extension registration
-
-(defmethod fl.core:extension-file-type ((extension-type (eql :host)))
-  "host")
-
-(defmethod fl.core:prepare-extension ((extension-type (eql :host)) owner path)
-  (fl.core:load-extensions extension-type path))
-
 ;;; Protocol
 
 (defgeneric initialize-host (host &key &allow-other-keys)
