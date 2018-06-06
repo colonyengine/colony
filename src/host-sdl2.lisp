@@ -1,5 +1,3 @@
-;; -*- mode: common-lisp -*-
-
 (in-package :fl.host)
 
 (defmethod initialize-host ((host (eql :sdl2)) &key (flags '(:everything)))
