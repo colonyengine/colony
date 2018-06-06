@@ -100,7 +100,7 @@
      (let ((key (fl.host:get-key-name (sdl2:scancode-value keysym))))
        (format t "~s~%" key)
        (when (eq key :escape)
-         (fl.core::quit-display (fl.core:display core-state)))))))
+         (fl.core:stop-engine core-state))))))
 
 (defmethod handle-events ((host (eql :sdl2)) core-state)
   (loop :with event = (sdl2:new-event)
