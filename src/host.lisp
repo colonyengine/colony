@@ -66,8 +66,8 @@
     (error "Host ~s does not implement CLOSE-WINDOW." host))
   (:documentation "Close a display window."))
 
-(defgeneric get-refresh-rate (host)
-  (:method (host)
+(defgeneric get-refresh-rate (host window)
+  (:method (host window)
     (error "Host ~s does not implement GET-REFRESH-RATE." host))
   (:documentation "Request the display's refresh rate."))
 

@@ -36,7 +36,8 @@
 (defmethod close-window ((host (eql :cl-sdl2)) window)
   (sdl2:destroy-window window))
 
-(defmethod get-refresh-rate ((host (eql :cl-sdl2)))
+(defmethod get-refresh-rate ((host (eql :cl-sdl2)) window)
+  (declare (ignore window))
   (nth-value 3 (sdl2:get-current-display-mode 0)))
 
 (defmethod redraw-window ((host (eql :cl-sdl2)) window)

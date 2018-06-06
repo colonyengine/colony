@@ -1,0 +1,44 @@
+;; -*- mode: common-lisp -*-
+
+(in-package :fl.host)
+
+(handler-bind ((warning #'muffle-warning))
+  (asdf:load-system :cl-glfw3))
+
+(defmethod initialize-host ((host (eql :glfw3)) &key)
+  (glfw:initialize))
+
+(defmethod shutdown-host ((host (eql :glfw3)))
+  (glfw:terminate))
+
+(defmethod create-window ((host (eql :glfw3)) title width height &key)
+  (glfw:create-window :title title
+                      :width width
+                      :height height
+                      :context-version-major 4
+                      :context-version-minor 3))
+
+(defmethod create-opengl-context ((host (eql :glfw3)) window major-version minor-version)
+  (values))
+
+(defmethod close-window ((host (eql :glfw3)) window)
+  (glfw:destroy-window glfw:*window*))
+
+(defmethod get-refresh-rate ((host (eql :glfw3)) window)
+  60
+  #++(au:plist-get
+      (glfw:get-video-mode
+       (glfw:get-window-monitor glfw:*window*))
+      '%glfw::refresh-rate))
+
+(defmethod redraw-window ((host (eql :glfw3)) window)
+  (glfw:swap-buffers glfw:*window*))
+
+(defmethod set-draw-mode ((host (eql :glfw3)) mode)
+  (ecase mode
+    (:immediate (glfw:swap-interval 0))
+    (:sync (glfw:swap-interval 1))))
+
+(defmethod on-event ((host (eql :glfw3)) event core-state))
+
+(defmethod handle-events ((host (eql :glfw3)) core-state))

@@ -14,8 +14,8 @@
         (context core-state)
       (fl.host:initialize-host host)
       (setup-lisp-repl)
-      (let ((hz (fl.host:get-refresh-rate host))
-            (window (fl.host:create-window host title window-width window-height)))
+      (let* ((window (print (fl.host:create-window host title window-width window-height)))
+             (hz (fl.host:get-refresh-rate host window)))
         (fl.host:create-opengl-context host window 4 3)
         (setf (slot-value core-state '%display)
               (make-instance 'display
