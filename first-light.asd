@@ -26,7 +26,8 @@
                #:shadow
                #:umbra
                #:gamebox-math.vari
-               #:gamebox-frame-manager)
+               #:gamebox-frame-manager
+               #:bordeaux-threads)
   :pathname "src"
   :serial t
   :components

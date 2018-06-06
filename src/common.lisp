@@ -131,3 +131,25 @@ test function for HT itself."
   :documentation
   "This variable is a hash table to map sampler types to texture types. It is
 a constant and will never be changed at runtime.")
+
+
+;; Simple queue implementation, from Paul Graham.
+(defun make-queue (&rest body)
+  (if (null body)
+      (cons nil nil)
+      (cons body (last body))))
+
+(defun empty-queue-p (q)
+  (if (null (car q))
+      t
+      nil))
+
+(defun enqueue (obj q)
+  (if (null (car q))
+      (setf (cdr q) (setf (car q) (list obj)))
+      (setf (cdr (cdr q)) (list obj)
+            (cdr q) (cdr (cdr q))))
+  (car q))
+
+(defun dequeue (q)
+  (pop (car q)))

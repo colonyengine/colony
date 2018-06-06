@@ -54,8 +54,11 @@
 (simple-logger:define-message :trace :flow.exit
   "Exiting flow: (~a ~a ~a).")
 
-(simple-logger:define-message :debug :shader.programs.updated
-  "Shader programs updated: ~{~s~^, ~}")
+(simple-logger:define-message :debug :shader.programs.to.recompile
+  "Shader programs enqueued for recompilation: ~{~s~^, ~}")
+
+(simple-logger:define-message :debug :shader.programs.recompiled
+  "Shader programs recompiled: ~{~s~^, ~}")
 
 (simple-logger:define-message :debug :component.mesh.cache.used
   "Used a cached copy of mesh: ~a.")
