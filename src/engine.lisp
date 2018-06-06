@@ -24,6 +24,9 @@ it exists, it is called after the last frame, and after the last invocations of 
 method, but before any engine tear-down procedure occurs when stopping the engine."
   (epilogue (context core-state)))
 
+(defun set-host (core-state)
+  (setf (slot-value core-state '%host) (cfg (context core-state) :host)))
+
 (defun prepare-engine (scene-name)
   "Bring up the engine on the main thread, while keeping the REPL unblocked for interactive
 development."
@@ -31,6 +34,8 @@ development."
          (user-package (au:make-keyword (package-name (symbol-package scene-name))))
          (user-path (get-extension-path user-package))
          (core-state (make-core-state :user-package user-package)))
+    (prepare-extension :settings (context core-state) user-path)
+    (set-host core-state)
     (make-display core-state)
     (prepare-extensions core-state user-path)
     (load-scene core-state scene-name)

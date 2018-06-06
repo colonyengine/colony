@@ -88,9 +88,7 @@ CORE-STATE."
 (defun make-core-state (&rest args)
   (let* ((core-state (apply #'make-instance 'core-state args))
          (context (make-instance 'context :core-state core-state)))
-    (prepare-extension :settings context (get-extension-path (user-package core-state)))
-    (setf (slot-value core-state '%context) context
-          (slot-value core-state '%host) (cfg context :host))
+    (setf (slot-value core-state '%context) context)
     core-state))
 
 (defgeneric shared-storage (context key)
