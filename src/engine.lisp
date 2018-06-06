@@ -19,21 +19,12 @@ it exists, it is called after the last frame, and after the last invocations of 
 method, but before any engine tear-down procedure occurs when stopping the engine."
   (epilogue (context core-state)))
 
-(defun set-host (core-state)
-  (setf (slot-value core-state '%host) (cfg (context core-state) :host)))
-
-(defun set-log-level (core-state)
-  (setf simple-logger:*current-level* (cfg (context core-state) :log-level)))
-
 (defun start-engine (scene-name)
   "Start the engine."
   (let* ((*package* (find-package :fl.core))
          (user-package (au:make-keyword (package-name (symbol-package scene-name))))
          (user-path (get-extension-path user-package))
-         (core-state (make-core-state :user-package user-package)))
-    (prepare-extension :settings (context core-state) user-path)
-    (set-host core-state)
-    (set-log-level core-state)
+         (core-state (make-instance 'core-state :user-package user-package)))
     (make-display core-state)
     (prepare-extensions core-state user-path)
     (load-scene core-state scene-name)

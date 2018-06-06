@@ -55,11 +55,13 @@
    (%actor-destroy-db :reader actor-destroy-db
                       :initform (au:dict #'eq))))
 
-(defun make-core-state (&rest args)
-  (let* ((core-state (apply #'make-instance 'core-state args))
-         (context (make-instance 'context :core-state core-state)))
-    (setf (slot-value core-state '%context) context)
-    core-state))
+(defmethod initialize-instance :after ((instance core-state) &key)
+  (let ((context (make-instance 'context :core-state instance)))
+    (with-slots (%user-package %context %host) instance
+      (prepare-extension :settings context (get-extension-path %user-package))
+      (setf %context context
+            %host (cfg context :host)
+            simple-logger:*current-level* (cfg context :log-level)))))
 
 (defun pending-preinit-tasks-p (core-state)
   "Return T if there are ANY components or actors in the preinit data structures in CORE-STATE."
