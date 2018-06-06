@@ -27,13 +27,13 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 (defun set-host (core-state)
   (setf (slot-value core-state '%host) (cfg (context core-state) :host)))
 
-(defun prepare-engine (scene-name)
-  "Bring up the engine on the main thread, while keeping the REPL unblocked for interactive
-development."
+(defun start-engine (scene-name)
+  "Start the engine."
   (let* ((*package* (find-package :fl.core))
          (user-package (au:make-keyword (package-name (symbol-package scene-name))))
          (user-path (get-extension-path user-package))
          (core-state (make-core-state :user-package user-package)))
+    (setf *core-state* core-state)
     (prepare-extension :settings (context core-state) user-path)
     (set-host core-state)
     (make-display core-state)
@@ -45,10 +45,6 @@ development."
     (main-loop core-state)
     (run-prologue core-state)
     core-state))
-
-(defun start-engine (scene-name)
-  "Start the engine by running the specified scene."
-  (setf *core-state* (prepare-engine scene-name)))
 
 (defun stop-engine (core-state)
   "Stop the engine, making sure to call any user-defined epilogue function first, and finally
