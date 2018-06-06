@@ -43,8 +43,8 @@
     (error "Host ~s does not implement SHUTDOWN-HOST." host))
   (:documentation "Perform any steps needed to shutdown the host system."))
 
-(defgeneric create-window (host title width height &key &allow-other-keys)
-  (:method (host title width height &key)
+(defgeneric create-window (host title width height)
+  (:method (host title width height)
     (error "Host ~s does not implement CREATE-WINDOW." host))
   (:documentation "Create a display window."))
 

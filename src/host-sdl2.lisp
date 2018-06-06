@@ -13,13 +13,8 @@
     (when channel
       (sdl2::sendmsg channel nil))))
 
-(defmethod create-window ((host (eql :sdl2)) title width height &key fullscreen-p hidden-p)
+(defmethod create-window ((host (eql :sdl2)) title width height)
   (let ((flags '(:opengl)))
-    (if hidden-p
-        (push :hidden flags)
-        (push :shown flags))
-    (when fullscreen-p
-      (push :fullscreen-desktop flags))
     (sdl2:create-window :title title :w width :h height :flags flags)))
 
 (defmethod create-opengl-context ((host (eql :sdl2)) window major-version minor-version)
@@ -103,8 +98,9 @@
     ((:keydown :keyup)
      (:timestamp ts :state state :repeat repeat :keysym keysym)
      (let ((key (fl.host:get-key-name (sdl2:scancode-value keysym))))
-       (format t "~s~%" key))
-     (fl.core::quit-display (fl.core:display core-state)))))
+       (format t "~s~%" key)
+       (when (eq key :escape)
+         (fl.core::quit-display (fl.core:display core-state)))))))
 
 (defmethod handle-events ((host (eql :sdl2)) core-state)
   (loop :with event = (sdl2:new-event)
