@@ -20,7 +20,7 @@
 
 (defun total-time (context)
   "Return the total time in seconds that the engine has been running."
-  (au:when-let ((display (display (core-state context))))
+  (let ((display (display (core-state context))))
     (box.frame:total-time display)))
 
 (defun frame-time (context)
