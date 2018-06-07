@@ -4,7 +4,7 @@
   ((%core-state :reader core-state
                 :initarg :core-state)
    (%settings :reader settings
-              :initform (au:dict #'eq))
+              :initarg :settings)
    (%active-camera :accessor active-camera
                    :initform nil)
    (%shared-storage-table :reader shared-storage-table

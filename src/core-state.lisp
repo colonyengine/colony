@@ -1,8 +1,9 @@
 (in-package :fl.core)
 
 (defclass core-state ()
-  ((%user-package :reader user-package
-                  :initarg :user-package)
+  ((%user-package :reader user-package)
+   (%settings :reader settings
+              :initform (au:dict #'eq))
    (%host :reader host)
    (%running-p :accessor running-p
                :initform nil)
@@ -54,14 +55,6 @@
                      :initform (au:dict #'eq))
    (%actor-destroy-db :reader actor-destroy-db
                       :initform (au:dict #'eq))))
-
-(defmethod initialize-instance :after ((instance core-state) &key)
-  (let ((context (make-instance 'context :core-state instance)))
-    (with-slots (%user-package %context %host) instance
-      (prepare-extension :settings context (get-extension-path %user-package))
-      (setf %context context
-            %host (cfg context :host)
-            simple-logger:*current-level* (cfg context :log-level)))))
 
 (defun pending-preinit-tasks-p (core-state)
   "Return T if there are ANY components or actors in the preinit data structures in CORE-STATE."

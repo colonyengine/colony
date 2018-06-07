@@ -108,6 +108,9 @@
              ,@(%generate-actor-spawn core-state actor-names)
              (values ,core-state ,actor-table)))))))
 
+(defun get-scene-package (scene-name)
+  (au:make-keyword (package-name (symbol-package scene-name))))
+
 (defun get-scene (core-state scene-name)
   (au:href (scenes core-state) scene-name))
 

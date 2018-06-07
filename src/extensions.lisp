@@ -7,11 +7,10 @@
   (au:map-files
    path
    (lambda (x)
-     (let ((package *package*))
-       (with-standard-io-syntax
-         (let ((*package* package)
-               (*print-readably* nil))
-           (load x))))
+     (with-standard-io-syntax
+       (let ((*package* (find-package :fl.core))
+             (*print-readably* nil))
+         (load x)))
      (simple-logger:emit :extension.load owner x))
    :test (extension-type-filter extension-type)))
 
@@ -28,9 +27,9 @@
                (not (string= ".#" name :end2 2))
                t)))))
 
-(defun prepare-extensions (core-state path)
+(defun prepare-extensions (core-state)
   ;; https://github.com/HackerTheory/first-light/wiki/Developer-Rules#extension-order
-  (let ((*context* (context core-state)))
+  (let ((path (get-extension-path (user-package core-state))))
     (prepare-extension :graphs core-state path)
     (prepare-extension :call-flow core-state path)
     (prepare-extension :shader-stages core-state path)

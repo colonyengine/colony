@@ -19,18 +19,29 @@ it exists, it is called after the last frame, and after the last invocations of 
 method, but before any engine tear-down procedure occurs when stopping the engine."
   (epilogue (context core-state)))
 
+(defmethod %initialize-engine :before ((core-state core-state) scene-name)
+  (with-slots (%user-package %context %settings %host) core-state
+    (setf %user-package (get-scene-package scene-name))
+    (let ((path (get-extension-path (user-package core-state))))
+      (prepare-extension :settings core-state path)
+      (setf %context (make-instance 'context :core-state core-state :settings %settings)
+            %host (cfg %context :host)
+            simple-logger:*current-level* (cfg %context :log-level)))))
+
+(defmethod %initialize-engine ((core-state core-state) scene-name)
+  (make-display core-state)
+  (prepare-extensions core-state)
+  (prepare-shader-programs core-state)
+  (resolve-all-textures core-state)
+  (resolve-all-materials core-state)
+  (load-scene core-state scene-name))
+
 (defun start-engine (scene-name)
-  "Start the engine."
-  (let* ((*package* (find-package :fl.core))
-         (user-package (au:make-keyword (package-name (symbol-package scene-name))))
-         (user-path (get-extension-path user-package))
-         (core-state (make-instance 'core-state :user-package user-package)))
-    (make-display core-state)
-    (prepare-extensions core-state user-path)
-    (load-scene core-state scene-name)
-    (prepare-shader-programs core-state)
-    (resolve-all-textures core-state)
-    (resolve-all-materials core-state)
+  "Start the engine. First we initialize the engine, which is split up into 2 methods - everything
+that needs to be performed before the display is created, and everything else. Next we run the
+prologue as the last step, before finally starting the main game loop."
+  (let ((core-state (make-instance 'core-state)))
+    (%initialize-engine core-state scene-name)
     (run-prologue core-state)
     (main-loop core-state)))
 
