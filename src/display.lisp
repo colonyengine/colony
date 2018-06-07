@@ -60,3 +60,39 @@
            (fl.host:close-window host %window)
            (fl.host:shutdown-host host))
       (setf (running-p %core-state) nil))))
+
+(defun on-window-show (core-state)
+  (declare (ignore core-state)))
+
+(defun on-window-hide (core-state)
+  (declare (ignore core-state)))
+
+(defun on-window-move (core-state &key x y)
+  (declare (ignore core-state x y)))
+
+(defun on-window-resize (core-state &key width height)
+  (declare (ignore core-state width height)))
+
+(defun on-window-minimize (core-state)
+  (declare (ignore core-state)))
+
+(defun on-window-maximize (core-state)
+  (declare (ignore core-state)))
+
+(defun on-window-restore (core-state)
+  (declare (ignore core-state)))
+
+(defun on-window-mouse-focus-enter (core-state)
+  (declare (ignore core-state)))
+
+(defun on-window-mouse-focus-leave (core-state)
+  (declare (ignore core-state)))
+
+(defun on-window-keyboard-focus-enter (core-state)
+  (declare (ignore core-state)))
+
+(defun on-window-keyboard-focus-leave (core-state)
+  (declare (ignore core-state)))
+
+(defun on-window-close (core-state)
+  (declare (ignore core-state)))

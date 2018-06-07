@@ -2,6 +2,11 @@
 
 ;;; Constants
 
+(au:define-constant +window-event-names+
+    #(nil :show :hide nil :move :resize nil :minimize :maximize :restore :mouse-focus-enter
+      :mouse-focus-leave :keyboard-focus-enter :keyboard-focus-leave :close nil nil)
+  :test #'equalp)
+
 (au:define-constant +key-names+
     #(:unknown nil nil nil
       :a :b :c :d :e :f :g :h :i :j :k :l :m :n :o :p :q :r :s :t :u :v :w :x :y :z :1 :2 :3 :4 :5
@@ -29,6 +34,19 @@
       :audiomute :mediaselect :www :mail :calculator :computer :ac_search :ac_home :ac_back
       :ac_forward :ac_stop :ac_refresh :ac_bookmarks :brightnessdown :brightnessup :displayswitch
       :kbdillumtoggle :kbdillumdown :kbdillumup :eject :sleep)
+  :test #'equalp)
+
+(au:define-constant +mouse-button-names+
+    #(nil :left :middle :right :x1 :x2)
+  :test #'equalp)
+
+(au:define-constant +gamepad-axis-names+
+    #(nil :left-x :left-y :right-x :right-y :trigger-x :trigger-y nil)
+  :test #'equalp)
+
+(au:define-constant +gamepad-button-names+
+    #(nil :a :b :x :y :back :guide :start :left-stick :right-stick :left-shoulder :right-shoulder
+      :dpad-up :dpad-down :dpad-left :dpad-right nil)
   :test #'equalp)
 
 ;;; Protocol
@@ -132,6 +150,3 @@
   (:method (host core-state)
     (error "Host ~s does not implement HANDLE-EVENTS." host))
   (:documentation "Handle the host's events."))
-
-(defun get-key-name (index)
-  (aref +key-names+ index))

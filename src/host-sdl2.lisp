@@ -83,27 +83,74 @@
                  (au:when-let ((x (sdl2::expand-handler event type options body)))
                    (collect x)))))))))
 
-(defmethod on-event ((host (eql :sdl2)) event core-state)
+(defmethod dispatch-event ((host (eql :sdl2)) core-state event)
   (event-case (event)
+    (:windowevent
+     (:timestamp ts :window-id id :event event-type :data1 data1 :data2 data2)
+     (let ((event-type (aref +window-event-names+ event-type)))
+       (case event-type
+         (:show (on-window-show core-state))
+         (:hide (on-window-hide core-state))
+         (:move (on-window-move core-state :x data1 :y data2))
+         (:resize (on-window-resize core-state :width data1 :height data2))
+         (:minimize (on-window-minimize core-state))
+         (:maximize (on-window-maximize core-state))
+         (:restore (on-window-restore core-state))
+         (:mouse-focus-enter (on-window-mouse-focus-enter core-state))
+         (:mouse-focus-leave (on-window-mouse-focus-leave core-state))
+         (:keyboard-focus-enter (on-window-keyboard-focus-enter core-state))
+         (:keyboard-focus-leave (on-window-keyboard-focus-leave core-state))
+         (:close (fl.core::on-window-close core-state)))))
     (:mousebuttonup
-     (:which id :timestamp ts :button button :state state :clicks clicks :x x :y y))
+     (:which id :timestamp ts :button button :state state :clicks clicks :x x :y y)
+     (let ((button (aref +mouse-button-names+ button)))
+       (on-mouse-button-up core-state button)))
     (:mousebuttondown
-     (:which id :timestamp ts :button button :state state :clicks clicks :x x :y y))
+     (:which id :timestamp ts :button button :state state :clicks clicks :x x :y y)
+     (let ((button (aref +mouse-button-names+ button)))
+       (on-mouse-button-down core-state button)))
     (:mousewheel
-     (:which id :timestamp ts :x x :y y))
+     (:which id :timestamp ts :x x :y y)
+     (unless (zerop x)
+       (on-mouse-scroll-horizontal core-state x))
+     (unless (zerop y)
+       (on-mouse-scroll-vertical core-state y)))
     (:mousemotion
-     (:which id :timestamp ts :state state :x x :y y :xrel xrel :yrel yrel))
+     (:which id :timestamp ts :state state :x x :y y :xrel xrel :yrel yrel)
+     (on-mouse-move core-state id x y xrel yrel))
     (:keyup
-     (:timestamp ts :state state :repeat repeat :keysym keysym))
+     (:timestamp ts :state state :repeat repeat :keysym keysym)
+     (let ((key (aref +key-names+ (sdl2:scancode-value keysym))))
+       (on-key-up core-state key)))
     (:keydown
      (:timestamp ts :state state :repeat repeat :keysym keysym)
-     (let ((key (fl.host:get-key-name (sdl2:scancode-value keysym))))
-       (format t "~s~%" key)
+     (let ((key (aref +key-names+ (sdl2:scancode-value keysym))))
+       (on-key-down core-state key)
+       ;; TODO: Remove the following when we are able to consume events.
        (when (eq key :escape)
-         (fl.core:stop-engine core-state))))))
+         (stop-engine core-state))))
+    (:controllerdeviceadded
+     (:which id :timestamp ts)
+     (on-gamepad-attach core-state id))
+    (:controllerdeviceremoved
+     (:which id :timestamp ts)
+     (on-gamepad-detach core-state id))
+    (:controlleraxismotion
+     (:which id :timestamp ts :axis axis :value value)
+     (let ((axis (aref +gamepad-axis-names+ axis))
+           (value (au:map-domain -32768 32767 0 1 value)))
+       (on-gamepad-axis-move core-state id axis value)))
+    (:controllerbuttonup
+     (:which id :timestamp ts :button button)
+     (let ((button (aref +gamepad-button-names+ button)))
+       (on-gamepad-button-up core-state id button)))
+    (:controllerbuttondown
+     (:which id :timestamp ts :button button)
+     (let ((button (aref +gamepad-button-names+ button)))
+       (on-gamepad-button-down core-state id button)))))
 
 (defmethod handle-events ((host (eql :sdl2)) core-state)
   (loop :with event = (sdl2:new-event)
         :until (zerop (sdl2:next-event event :poll))
-        :do (on-event host event core-state)
+        :do (dispatch-event host core-state event)
         :finally (sdl2:free-event event)))

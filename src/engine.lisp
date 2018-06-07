@@ -26,7 +26,8 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (prepare-extension :settings core-state)
     (setf %context (make-instance 'context :core-state core-state :settings %settings)
           %host (cfg %context :host)
-          simple-logger:*current-level* (cfg %context :log-level))))
+          simple-logger:*current-level* (cfg %context :log-level)
+          *core-state-debug* core-state)))
 
 (defmethod %initialize-engine ((core-state core-state) scene-name)
   (make-display core-state)

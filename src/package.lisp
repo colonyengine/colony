@@ -57,16 +57,30 @@
   ;; shaders
   (:export #:define-shader)
   ;; input
-  (:export #:key-down
-           #:key-up
-           #:mouse-down-left
-           #:mouse-down-middle
-           #:mouse-down-right
-           #:mouse-up-left
-           #:mouse-up-middle
-           #:mouse-up-right
-           #:mouse-scroll-up
-           #:mouse-scroll-down)
+  (:export #:on-window-show
+           #:on-window-hide
+           #:on-window-move
+           #:on-window-resize
+           #:on-window-minimize
+           #:on-window-maximize
+           #:on-window-restore
+           #:on-window-mouse-focus-enter
+           #:on-window-mouse-focus-leave
+           #:on-window-keyboard-focus-enter
+           #:on-window-keyboard-focus-leave
+           #:on-window-close
+           #:on-mouse-button-up
+           #:on-mouse-button-down
+           #:on-mouse-scroll-horizontal
+           #:on-mouse-scroll-vertical
+           #:on-mouse-move
+           #:on-key-up
+           #:on-key-down
+           #:on-gamepad-attach
+           #:on-gamepad-detach
+           #:on-gamepad-axis-move
+           #:on-gamepad-button-up
+           #:on-gamepad-button-down)
   ;; scene
   (:export #:define-scene
            #:get-scene)
@@ -115,8 +129,7 @@
            #:set-window-visible
            #:set-cursor-hidden
            #:set-cursor-visible
-           #:handle-events
-           #:get-key-name))
+           #:handle-events))
 
 (defpackage+ #:fl.comp.transform
   (:use #:cl #:fl.core)

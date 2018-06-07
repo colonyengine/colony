@@ -16,7 +16,7 @@
    (%cameras :accessor cameras
              :initform nil)
    (%input-table :reader input-table
-                 :initform (au:dict #'eq))
+                 :initform (make-input-table))
    (%shaders :accessor shaders)
    (%materials :accessor materials
                :initform (%make-materials-table))
