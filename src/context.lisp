@@ -1,10 +1,5 @@
 (in-package :fl.core)
 
-;; NOTE: This dynamic variable is only bound during the extension loading process and should not be
-;; used at runtime. This is to allow extensions, such as scenes, access to context-specific
-;; information, such as the initial display's resolution. Do _not_ use this variable at runtime.
-(defvar *context*)
-
 (defclass context ()
   ((%core-state :reader core-state
                 :initarg :core-state)

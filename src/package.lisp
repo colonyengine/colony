@@ -30,7 +30,6 @@
            #:load-extensions)
   ;; context
   (:export #:context
-           #:*context*
            #:settings
            #:shaders
            #:shared-storage-table
