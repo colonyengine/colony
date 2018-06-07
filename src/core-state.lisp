@@ -2,6 +2,7 @@
 
 (defclass core-state ()
   ((%user-package :reader user-package)
+   (%data-path :reader data-path)
    (%settings :reader settings
               :initform (au:dict #'eq))
    (%host :reader host)
@@ -14,6 +15,8 @@
    (%scene-tree :reader scene-tree)
    (%cameras :accessor cameras
              :initform nil)
+   (%input-table :reader input-table
+                 :initform (au:dict #'eq))
    (%shaders :accessor shaders)
    (%materials :accessor materials
                :initform (%make-materials-table))
@@ -108,7 +111,6 @@ CORE-STATE."
            (:core (au:resolve-system-path :first-light path))
            (:local (au:resolve-system-path (user-package (core-state context)) path))))
         (error "Resource not found: ~s" location))))
-
 
 ;; TODO: Fix this to take &rest argument and queue everything.
 (defun enqueue-recompilation-task (core-state kind data)
