@@ -100,7 +100,7 @@
          (:mouse-focus-leave (on-window-mouse-focus-leave core-state))
          (:keyboard-focus-enter (on-window-keyboard-focus-enter core-state))
          (:keyboard-focus-leave (on-window-keyboard-focus-leave core-state))
-         (:close (fl.core::on-window-close core-state)))))
+         (:close (on-window-close core-state)))))
     (:mousebuttonup
      (:which id :timestamp ts :button button :state state :clicks clicks :x x :y y)
      (let ((button (aref +mouse-button-names+ button)))
