@@ -33,6 +33,10 @@
   (setf (shaders core-state) (shadow:build-shader-dictionary))
   (shadow:set-modify-hook (generate-shaders-modified-hook core-state)))
 
+(defun shutdown-shader-programs (core-state)
+  (declare (ignore core-state))
+  (shadow:set-modify-hook (constantly nil)))
+
 (defmacro define-shader (name (&key (version 330) (primitive :triangles)) &body body)
   `(progn
      (shadow:define-shader ,name (:version ,version :primitive ,primitive)
