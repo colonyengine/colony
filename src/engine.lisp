@@ -56,7 +56,7 @@ prologue as the last step, before finally starting the main game loop."
 cleaning up."
   (with-cfg (title) (context core-state)
     (run-epilogue core-state)
-    (shutdown-shader-programs core-state)
+    (shutdown-shader-programs)
     (quit-display (display core-state))
     (simple-logger:emit :engine.quit title)))
 
