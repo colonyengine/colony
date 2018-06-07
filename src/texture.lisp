@@ -192,22 +192,22 @@ TEXTURE-TYPE into the texture memory."))
 (defmethod extension-file-type ((extension-type (eql :textures)))
   "tex")
 
-(defmethod prepare-extension ((extension-type (eql :textures)) owner path)
+(defmethod prepare-extension ((extension-type (eql :textures)) core-state)
   (let ((%temp-texture-descriptors (au:dict #'eq))
         (%temp-texture-profiles (au:dict #'eq)))
     (declare (special %temp-texture-descriptors %temp-texture-profiles))
     (flet ((%prepare ()
-             (load-extensions extension-type path)
+             (load-extensions extension-type (data-path core-state))
              (values %temp-texture-profiles %temp-texture-descriptors)))
       (multiple-value-bind (profiles texdescs) (%prepare)
         ;; The order doesn't matter. we can type check the texture-descriptors
         ;; after reading _all_ the available textures extensions.
         ;; Process all defined profiles.
         (au:do-hash-values (v profiles)
-          (%add-texture-profile v owner))
+          (%add-texture-profile v core-state))
         ;; Process all texture-descriptors
         (au:do-hash-values (v texdescs)
-          (%add-texture-descriptor v owner))))))
+          (%add-texture-descriptor v core-state))))))
 
 (defun resolve-all-textures (core-state)
   "This is called after all the textures are loaded in the extensions.

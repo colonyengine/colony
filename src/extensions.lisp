@@ -3,7 +3,7 @@
 (defun get-extension-path (&optional (system-name :first-light))
   (au:resolve-system-path system-name "data/"))
 
-(defun map-extensions (extension-type path &optional owner)
+(defun map-extensions (extension-type path owner)
   (au:map-files
    path
    (lambda (x)
@@ -39,8 +39,8 @@
     (prepare-extension :scene core-state path)))
 
 (defun load-extensions (type path)
-  (map-extensions type (get-extension-path) :builtin)
-  (map-extensions type path :user))
+  (map-extensions type (get-extension-path) :core)
+  (map-extensions type path :local))
 
 (defun collect-extension-forms (type path)
   (let ((*package* (find-package :fl.core))

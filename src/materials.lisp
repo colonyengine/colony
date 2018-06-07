@@ -662,13 +662,13 @@ must be executed after all the shader programs have been compiled."
   "mat")
 
 
-(defmethod prepare-extension ((extension-type (eql :materials)) owner path)
+(defmethod prepare-extension ((extension-type (eql :materials)) core-state)
   (let ((%temp-materials (au:dict #'eq))
         (%temp-material-profiles (au:dict #'eq)))
     (declare (special %temp-materials %temp-material-profiles))
 
     (flet ((%prepare ()
-             (load-extensions extension-type path)
+             (load-extensions extension-type (data-path core-state))
              (values %temp-material-profiles %temp-materials)))
 
       (multiple-value-bind (profiles materials) (%prepare)
@@ -678,11 +678,11 @@ must be executed after all the shader programs have been compiled."
 
         ;; Process all profiles.
         (au:do-hash-values (profile profiles)
-          (%add-material-profile profile owner))
+          (%add-material-profile profile core-state))
 
         ;; Process all materials.
         (au:do-hash-values (gen-material-func materials)
-          (%add-material (funcall gen-material-func owner) owner))))))
+          (%add-material (funcall gen-material-func core-state) core-state))))))
 
 
 (defun parse-material-profile (name uniforms blocks)

@@ -122,17 +122,17 @@
 (defmethod extension-file-type ((extension-type (eql :scene)))
   "scene")
 
-(defmethod prepare-extension ((extension-type (eql :scene)) owner path)
+(defmethod prepare-extension ((extension-type (eql :scene)) core-state)
   (let ((%temp-scene (au:dict #'eq)))
     (declare (special %temp-scene))
     (flet ((%prepare ()
-             (load-extensions extension-type path)
+             (load-extensions extension-type (data-path core-state))
              %temp-scene))
-      (with-slots (%scene-tree) owner
-        (setf %scene-tree (%make-scene-tree owner)))
+      (with-slots (%scene-tree) core-state
+        (setf %scene-tree (%make-scene-tree core-state)))
       (maphash
        (lambda (k v)
-         (setf (au:href (scenes owner) k) v))
+         (setf (au:href (scenes core-state) k) v))
        (%prepare)))))
 
 (defmacro define-scene (name (&key enabled) &body body)

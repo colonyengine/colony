@@ -3,15 +3,15 @@
 (defmethod extension-file-type ((extension-type (eql :shader-stages)))
   "shd")
 
-(defmethod prepare-extension ((extension-type (eql :shader-stages)) owner path)
-  (load-extensions extension-type path))
+(defmethod prepare-extension ((extension-type (eql :shader-stages)) core-state)
+  (load-extensions extension-type (data-path core-state)))
 
 (defmethod extension-file-type ((extension-type (eql :shader-programs)))
   "prog")
 
-(defmethod prepare-extension ((extension-type (eql :shader-programs)) owner path)
+(defmethod prepare-extension ((extension-type (eql :shader-programs)) core-state)
   (shadow:reset-program-state)
-  (load-extensions extension-type path))
+  (load-extensions extension-type (data-path core-state)))
 
 ;; NOTE: The returned function is called by the result of doing a C-c, which might be on a different
 ;; thread due to slynk, or anything else that forced recompilation of shader programs that happened

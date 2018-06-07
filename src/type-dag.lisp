@@ -233,15 +233,15 @@ hyper-edge pairs, :hyperedges"
 (defmethod extension-file-type ((extension-type (eql :graphs)))
   "gph")
 
-(defmethod prepare-extension ((extension-type (eql :graphs)) owner path)
+(defmethod prepare-extension ((extension-type (eql :graphs)) core-state)
   ;; Collect ALL graph-definitions into the appropriate analyzed-graph objects. The graphs aren't
   ;; fully analyzed yet. This is only the parsing phase.
-  (symbol-macrolet ((analyzed-graph (au:href (analyzed-graphs owner) (category parsed-def))))
-    (loop :with defs = (collect-extension-forms extension-type path)
+  (symbol-macrolet ((analyzed-graph (au:href (analyzed-graphs core-state) (category parsed-def))))
+    (loop :with defs = (collect-extension-forms extension-type (data-path core-state))
           :for def :in defs
           :for parsed-def = (parse-graph-definition def)
           :do (unless (nth-value 1 analyzed-graph)
-                (setf (au:href (analyzed-graphs owner) (category parsed-def))
+                (setf (au:href (analyzed-graphs core-state) (category parsed-def))
                       (make-analyzed-graph :category (category parsed-def))))
               (when (enabled parsed-def)
                 (setf (au:href (graphdefs analyzed-graph) (name parsed-def)) parsed-def))))
@@ -249,7 +249,7 @@ hyper-edge pairs, :hyperedges"
   ;; in addition to a symbol. A) Ensure if subdag, all are subdag. B) Ensure if subgraph, all are
   ;; subgraph.
   ;; TODO: convert each category to appropriate cl-graph version
-  (dolist (graph (au:hash-values (analyzed-graphs owner)))
+  (dolist (graph (au:hash-values (analyzed-graphs core-state)))
     (analyze-graph graph)))
 
 (defun add-cross-product-edges (clg source-list target-list)

@@ -3,15 +3,15 @@
 (defmethod extension-file-type ((extension-type (eql :settings)))
   "cfg")
 
-(defmethod prepare-extension ((extension-type (eql :settings)) owner path)
+(defmethod prepare-extension ((extension-type (eql :settings)) core-state)
   (let ((%temp-settings (au:dict #'eq)))
     (declare (special %temp-settings))
     (flet ((%prepare ()
-             (load-extensions extension-type path)
+             (load-extensions extension-type (data-path core-state))
              %temp-settings))
       (maphash
        (lambda (key value)
-         (setf (au:href (settings owner) key) value))
+         (setf (au:href (settings core-state) key) value))
        (%prepare)))))
 
 (defun cfg (context key)

@@ -238,15 +238,15 @@ The previous state name and the current state name which resulted in the exiting
 (defmethod extension-file-type ((extension-type (eql :call-flow)))
   "flow")
 
-(defmethod prepare-extension ((extension-type (eql :call-flow)) owner path)
+(defmethod prepare-extension ((extension-type (eql :call-flow)) core-state)
   (let ((%temp-call-flow (au:dict #'eq)))
     (declare (special %temp-call-flow))
     (flet ((%prepare ()
-             (load-extensions extension-type path)
+             (load-extensions extension-type (data-path core-state))
              %temp-call-flow))
       (maphash
        (lambda (key value)
-         (setf (au:href (call-flows owner) key) value))
+         (setf (au:href (call-flows core-state) key) value))
        (%prepare)))))
 
 (defmacro define-call-flow (name (&key enabled) &body body)
