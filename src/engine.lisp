@@ -24,10 +24,10 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (setf %user-package (get-scene-package scene-name)
           %data-path (get-extension-path %user-package))
     (prepare-extension :settings core-state)
-    (setf %context (make-instance 'context :core-state core-state :settings %settings)
+    (setf *core-state-debug* core-state
+          %context (make-instance 'context :core-state core-state :settings %settings)
           %host (cfg %context :host)
-          simple-logger:*current-level* (cfg %context :log-level)
-          *core-state-debug* core-state)))
+          simple-logger:*current-level* (cfg %context :log-level))))
 
 (defmethod %initialize-engine ((core-state core-state) scene-name)
   (make-display core-state)
@@ -55,11 +55,13 @@ prologue as the last step, before finally starting the main game loop."
 (defun stop-engine (core-state)
   "Stop the engine, making sure to call any user-defined epilogue function first, and finally
 cleaning up."
-  (with-cfg (title) (context core-state)
-    (run-epilogue core-state)
-    (shutdown-shader-programs)
-    (quit-display (display core-state))
-    (simple-logger:emit :engine.quit title)))
+  (unwind-protect
+       (with-cfg (title) (context core-state)
+         (run-epilogue core-state)
+         (shutdown-shader-programs)
+         (quit-display (display core-state))
+         (simple-logger:emit :engine.quit title))
+    (makunbound '*core-state-debug*)))
 
 (defun main-loop (core-state)
   (with-slots (%running-p) core-state

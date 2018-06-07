@@ -1,5 +1,7 @@
 (in-package :fl.core)
 
+(defvar *core-state-debug*)
+
 (defclass core-state ()
   ((%user-package :reader user-package)
    (%data-path :reader data-path)
