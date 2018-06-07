@@ -28,7 +28,6 @@
      ,@body))
 
 (defmacro define-settings (() &body body)
-  `(let ()
-     (declare (special %temp-settings))
+  `(locally (declare (special %temp-settings))
      (loop :for (key value) :on ',@body :by #'cddr
            :do (setf (au:href %temp-settings key) value))))

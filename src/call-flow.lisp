@@ -250,7 +250,6 @@ The previous state name and the current state name which resulted in the exiting
        (%prepare)))))
 
 (defmacro define-call-flow (name (&key enabled) &body body)
-  `(let ()
-     (declare (special %temp-call-flow))
+  `(locally (declare (special %temp-call-flow))
      ,(when enabled
         `(setf (au:href %temp-call-flow ,name) ,(parse-call-flows body)))))
