@@ -15,19 +15,19 @@
                #:defpackage-plus
                #:cl-ppcre
                #:split-sequence
-               #:simple-logger
+               #:bordeaux-threads
                #:cl-graph
                #:jsown
                #:cl-opengl
                #:sdl2
                #:cl-tga
                #:golden-utils
+               #:simple-logger
                #:parsley
                #:shadow
                #:umbra
                #:gamebox-math.vari
-               #:gamebox-frame-manager
-               #:bordeaux-threads)
+               #:gamebox-frame-manager)
   :pathname "src"
   :serial t
   :components
@@ -42,6 +42,7 @@
    (:file "components")
    (:file "core-state")
    (:file "display")
+   (:file "input")
    (:file "actor")
    (:file "call-flow")
    (:file "type-dag")

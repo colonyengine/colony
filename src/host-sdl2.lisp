@@ -85,16 +85,17 @@
 
 (defmethod on-event ((host (eql :sdl2)) event core-state)
   (event-case (event)
-    ((:mousebuttondown :mousebuttonup)
+    (:mousebuttonup
      (:which id :timestamp ts :button button :state state :clicks clicks :x x :y y))
-
+    (:mousebuttondown
+     (:which id :timestamp ts :button button :state state :clicks clicks :x x :y y))
     (:mousewheel
      (:which id :timestamp ts :x x :y y))
-
     (:mousemotion
      (:which id :timestamp ts :state state :x x :y y :xrel xrel :yrel yrel))
-
-    ((:keydown :keyup)
+    (:keyup
+     (:timestamp ts :state state :repeat repeat :keysym keysym))
+    (:keydown
      (:timestamp ts :state state :repeat repeat :keysym keysym)
      (let ((key (fl.host:get-key-name (sdl2:scancode-value keysym))))
        (format t "~s~%" key)
