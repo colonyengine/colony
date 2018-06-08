@@ -36,7 +36,6 @@
    (:file "logging")
    (:file "context")
    (:file "host")
-   (:file "host-sdl2")
    (:file "extensions")
    (:file "settings")
    (:file "components")
