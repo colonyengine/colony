@@ -11,6 +11,7 @@
 
 (defmethod prepare-extension ((extension-type (eql :shader-programs)) core-state)
   (shadow:reset-program-state)
+  (shadow:enable-dependency-tracking)
   (load-extensions extension-type (data-path core-state)))
 
 ;; NOTE: The returned function is called by the result of doing a C-c, which might be on a different
