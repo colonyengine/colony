@@ -4,14 +4,16 @@
   (:use #:cl #:fl.core)
   (:export-only #:sprite-test
                 #:graph-test
-                #:noise-test))
+                #:noise-test
+                #:noise-test/playground))
 
 (defpackage+ #:fl.mfiano.shaders
   (:use #:fl.core #:shadow.lang)
   (:export-only #:screen-draw
                 #:sprite-test
                 #:graph-test
-                #:noise-test))
+                #:noise-test
+                #:noise-test/playground))
 
 (defpackage+ #:fl.mfiano.materials
   (:use #:cl #:fl.materials)
