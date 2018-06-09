@@ -5,7 +5,8 @@
   (:export-only #:sprite-test
                 #:graph-test
                 #:noise-test
-                #:noise-test/playground))
+                #:noise-test/playground
+                #:mesh-test))
 
 (defpackage+ #:fl.mfiano.shaders
   (:use #:fl.core #:shadow.lang)
@@ -13,7 +14,8 @@
                 #:sprite-test
                 #:graph-test
                 #:noise-test
-                #:noise-test/playground))
+                #:noise-test/playground
+                #:mesh-test))
 
 (defpackage+ #:fl.mfiano.materials
   (:use #:cl #:fl.materials)
