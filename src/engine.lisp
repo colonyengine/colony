@@ -43,14 +43,19 @@ method, but before any engine tear-down procedure occurs when stopping the engin
   (resolve-all-materials core-state)
   (load-scene core-state scene-name))
 
-(defun start-engine (scene-name)
-  "Start the engine. First we initialize the engine, which is split up into 2 methods - everything
-that needs to be performed before the display is created, and everything else. Next we run the
-prologue as the last step, before finally starting the main game loop."
+(defun start-engine (scene-name &key (seconds-to-run nil))
+  "Start the engine. First we initialize the engine, which is split up into 2
+methods - everything that needs to be performed before the display is created,
+and everything else. Next we run the prologue as the last step, before finally
+starting the main game loop. If the keyword argument SECONDS-TO-RUN is
+supplied, it must be a >= 0 integer"
   (let ((core-state (make-instance 'core-state)))
     (%initialize-engine core-state scene-name)
     (run-prologue core-state)
-    (main-loop core-state)))
+    (when (and (numberp seconds-to-run) (<= seconds-to-run 0))
+      (error "START-ENGINE: SECONDS-TO-RUN:~A must be > 0 if supplied!"
+             seconds-to-run))
+    (main-loop core-state :seconds-to-run seconds-to-run)))
 
 (defun stop-engine (core-state)
   "Stop the engine, making sure to call any user-defined epilogue function first, and finally
@@ -63,26 +68,33 @@ cleaning up."
          (simple-logger:emit :engine.quit title))
     (makunbound '*core-state-debug*)))
 
-(defun main-loop (core-state)
+(defun main-loop (core-state &key (seconds-to-run nil))
   (with-slots (%running-p) core-state
     (loop :initially (setf %running-p t)
           :while %running-p
+          :while (if (numberp seconds-to-run)
+                     (<= (total-time (context core-state)) seconds-to-run)
+                     t)
           :do (with-continue-restart "First Light"
                 (render core-state)
-                (fl.host:handle-events (host core-state) core-state)))))
+                (fl.host:handle-events (host core-state) core-state)))
+    core-state))
 
 #+sbcl
 (defmacro profile (scene-name duration)
   "Profile the scene `SCENE-NAME` for the given `DURATION` in seconds, all packages that begin with
   'FL.', along with some key third-party library packages."
   (let ((packages (remove-if-not
-                   (lambda (x) (au:string-starts-with? x "FL."))
+                   (lambda (x) (or (au:string-starts-with? x "FL.")
+                                   (au:string-starts-with? x "BOX.")))
                    (mapcar #'package-name (list-all-packages)))))
-    `(let ((engine (start-engine ,scene-name)))
-       (sb-profile:unprofile)
-       (sb-profile:profile ,@packages "AU" "BOX.FRAME" "SHADOW" "CL-OPENGL")
-       (sleep ,duration)
+    `(progn
+       (sb-profile:profile ,@packages "AU" "SHADOW" "CL-OPENGL"
+                           "UIOP" "UIOP/FILESYSTEM"
+                           "UIOP/PATHNAME" "ASDF")
+       (let ((core-state (start-engine ,scene-name :seconds-to-run ,duration)))
+         (when (running-p core-state)
+           (stop-engine core-state)))
        (sb-profile:report)
        (sb-profile:unprofile)
-       (sb-profile:reset)
-       (stop-engine engine))))
+       (sb-profile:reset))))
