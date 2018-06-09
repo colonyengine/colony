@@ -6,16 +6,15 @@
   :test #'equalp)
 
 (au:define-constant +key-names+
-    #(:unknown nil nil nil
-      :a :b :c :d :e :f :g :h :i :j :k :l :m :n :o :p :q :r :s :t :u :v :w :x :y :z :1 :2 :3 :4 :5
-      :6 :7 :8 :9 :0 :return :escape :backspace :tab :space :minus :equals :leftbracket
-      :rightbracket :backslash :nonushash :semicolon :apostrophe :grave :comma :period :slash
-      :capslock :f1 :f2 :f3 :f4 :f5 :f6 :f7 :f8 :f9 :f10 :f11 :f12 :printscreen :scrolllock :pause
-      :insert :home :pageup :delete :end :pagedown :right :left :down :up :numlockclear :kp_divide
-      :kp_multiply :kp_minus :kp_plus :kp_enter :kp_1 :kp_2 :kp_3 :kp_4 :kp_5 :kp_6 :kp_7 :kp_8
-      :kp_9 :kp_0 :kp_period :nonusbackslash :application :power :kp_equals :f13 :f14 :f15 :f16
-      :f17 :f18 :f19 :f20 :f21 :f22 :f23 :f24 :execute :help :menu :select :stop :again :undo :cut
-      :copy :paste :find :mute :volumeup :volumedown :lockingcapslock :lockingnumlock
+    #(:unknown nil nil nil :a :b :c :d :e :f :g :h :i :j :k :l :m :n :o :p :q :r :s :t :u :v :w :x :y
+      :z :1 :2 :3 :4 :5 :6 :7 :8 :9 :0 :return :escape :backspace :tab :space :minus :equals
+      :leftbracket :rightbracket :backslash :nonushash :semicolon :apostrophe :grave :comma :period
+      :slash :capslock :f1 :f2 :f3 :f4 :f5 :f6 :f7 :f8 :f9 :f10 :f11 :f12 :printscreen :scrolllock
+      :pause :insert :home :pageup :delete :end :pagedown :right :left :down :up :numlockclear
+      :kp_divide :kp_multiply :kp_minus :kp_plus :kp_enter :kp_1 :kp_2 :kp_3 :kp_4 :kp_5 :kp_6 :kp_7
+      :kp_8 :kp_9 :kp_0 :kp_period :nonusbackslash :application :power :kp_equals :f13 :f14 :f15
+      :f16 :f17 :f18 :f19 :f20 :f21 :f22 :f23 :f24 :execute :help :menu :select :stop :again :undo
+      :cut :copy :paste :find :mute :volumeup :volumedown :lockingcapslock :lockingnumlock
       :lockingscrolllock :kp_comma :kp_equalsas400 :international1 :international2 :international3
       :international4 :international5 :international6 :international7 :international8
       :international9 :lang1 :lang2 :lang3 :lang4 :lang5 :lang6 :lang7 :lang8 :lang9 :alterase
@@ -38,13 +37,18 @@
     #(nil :left :middle :right :x1 :x2)
   :test #'equalp)
 
+(au:define-constant +gamepad-device-names+
+    #(:player1 :player2 :player3 :player4 :player5 :player6 :player7 :player8)
+  :test #'equalp)
+
 (au:define-constant +gamepad-axis-names+
-    #(nil :left-x :left-y :right-x :right-y :trigger-x :trigger-y nil)
+    #(nil :left-horizontal :left-vertical :right-horizontal :right-vertical :trigger-left
+      :trigger-right nil)
   :test #'equalp)
 
 (au:define-constant +gamepad-button-names+
-    #(nil :a :b :x :y :back :guide :start :left-stick :right-stick :left-shoulder :right-shoulder
-      :dpad-up :dpad-down :dpad-left :dpad-right nil)
+    #(nil :a :b :x :y :back :guide :start :left-stick :right-stick :left-shoulder :right-shoulder :up
+      :down :left :right nil)
   :test #'equalp)
 
 (defgeneric initialize-host (host)
@@ -206,22 +210,22 @@
            (:keyboard-focus-leave (on-window-keyboard-focus-leave core-state))
            (:close (on-window-close core-state)))))
       (:mousebuttonup
-       (:which id :timestamp ts :button button :state state :clicks clicks :x x :y y)
+       (:which device-id :timestamp ts :button button :state state :clicks clicks :x x :y y)
        (let ((button (aref +mouse-button-names+ button)))
          (on-mouse-button-up core-state button)))
       (:mousebuttondown
-       (:which id :timestamp ts :button button :state state :clicks clicks :x x :y y)
+       (:which device-id :timestamp ts :button button :state state :clicks clicks :x x :y y)
        (let ((button (aref +mouse-button-names+ button)))
          (on-mouse-button-down core-state button)))
       (:mousewheel
-       (:which id :timestamp ts :x x :y y)
+       (:which device-id :timestamp ts :x x :y y)
        (unless (zerop x)
          (on-mouse-scroll-horizontal core-state x))
        (unless (zerop y)
          (on-mouse-scroll-vertical core-state y)))
       (:mousemotion
-       (:which id :timestamp ts :state state :x x :y y :xrel xrel :yrel yrel)
-       (on-mouse-move core-state id x y xrel yrel))
+       (:which device-id :timestamp ts :state state :x x :y y :xrel xrel :yrel yrel)
+       (on-mouse-move core-state x y xrel yrel))
       (:keyup
        (:timestamp ts :state state :repeat repeat :keysym keysym)
        (let ((key (aref +key-names+ (sdl2:scancode-value keysym))))
@@ -229,29 +233,35 @@
       (:keydown
        (:timestamp ts :state state :repeat repeat :keysym keysym)
        (let ((key (aref +key-names+ (sdl2:scancode-value keysym))))
-         (on-key-down core-state key)
-         ;; TODO: Remove the following when we are able to consume events.
-         (when (eq key :escape)
-           (stop-engine core-state))))
+         (on-key-down core-state key)))
       (:controllerdeviceadded
-       (:which id :timestamp ts)
-       (on-gamepad-attach core-state id))
+       (:which device-id :timestamp ts)
+       (let ((device-id (aref +gamepad-device-names+ device-id)))
+         (on-gamepad-attach core-state device-id)))
       (:controllerdeviceremoved
-       (:which id :timestamp ts)
-       (on-gamepad-detach core-state id))
+       (:which device-id :timestamp ts)
+       (let ((device-id (aref +gamepad-device-names+ device-id)))
+         (on-gamepad-detach core-state device-id)))
       (:controlleraxismotion
-       (:which id :timestamp ts :axis axis :value value)
-       (let ((axis (aref +gamepad-axis-names+ axis))
-             (value (au:map-domain -32768 32767 0 1 value)))
-         (on-gamepad-axis-move core-state id axis value)))
+       (:which device-id :timestamp ts :axis axis :value value)
+       (let* ((device-id (aref +gamepad-device-names+ device-id))
+              (axis (aref +gamepad-axis-names+ axis))
+              (value (case axis
+                       ((:trigger-left :trigger-right)
+                        (au:map-domain 0 32767 0 1 value))
+                       (t
+                        (au:map-domain -32768 32767 -1 1 value)))))
+         (on-gamepad-axis-move core-state device-id axis value)))
       (:controllerbuttonup
-       (:which id :timestamp ts :button button)
-       (let ((button (aref +gamepad-button-names+ button)))
-         (on-gamepad-button-up core-state id button)))
+       (:which device-id :timestamp ts :button button)
+       (let ((device-id (aref +gamepad-device-names+ device-id))
+             (button (aref +gamepad-button-names+ button)))
+         (on-gamepad-button-up core-state device-id button)))
       (:controllerbuttondown
-       (:which id :timestamp ts :button button)
-       (let ((button (aref +gamepad-button-names+ button)))
-         (on-gamepad-button-down core-state id button))))))
+       (:which device-id :timestamp ts :button button)
+       (let ((device-id (aref +gamepad-device-names+ device-id))
+             (button (aref +gamepad-button-names+ button)))
+         (on-gamepad-button-down core-state device-id button))))))
 
 (defgeneric handle-events (host core-state)
   (:method (host core-state)

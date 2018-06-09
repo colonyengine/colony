@@ -1,9 +1,9 @@
 (in-package :fl.core)
 
 (defstruct button-state
-  (on nil)
-  (transition-on nil)
-  (transition-off nil))
+  (enabled nil)
+  (enter nil)
+  (leave nil))
 
 (defun make-input-table ()
   (au:dict #'eq
@@ -26,14 +26,16 @@
 (defun on-mouse-scroll-horizontal (core-state amount)
   (declare (ignore core-state amount)))
 
-(defun on-mouse-move (core-state id x y xrel yrel)
-  (declare (ignore core-state id x y xrel yrel)))
+(defun on-mouse-move (core-state x y dx dy)
+  (declare (ignore core-state x y dx dy)))
 
 (defun on-key-up (core-state key)
   (declare (ignore core-state key)))
 
 (defun on-key-down (core-state key)
-  (declare (ignore core-state key)))
+  ;; TODO: Remove this later when possible.
+  (when (eq key :escape)
+    (stop-engine core-state)))
 
 (defun on-gamepad-attach (core-state id)
   (declare (ignore core-state id)))
