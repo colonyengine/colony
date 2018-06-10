@@ -9,7 +9,7 @@
               :initform (au:dict #'eq))
    (%host :reader host)
    (%running-p :accessor running-p
-               :initform nil)
+               :initarg :running-p)
    (%rcache :reader rcache
             :initform (au:dict #'eq))
    (%display :reader display
