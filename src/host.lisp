@@ -78,13 +78,15 @@
     (let ((flags '(:opengl)))
       (sdl2:create-window :title title :w width :h height :flags flags))))
 
-(defgeneric create-opengl-context (host window major-version minor-version)
-  (:method (host window major-version minor-version)
+(defgeneric create-opengl-context (host &key)
+  (:method (host &key &allow-other-keys)
     (error "Host ~s does not implement CREATE-OPENGL-CONTEXT." host))
-  (:method ((host (eql :sdl2)) window major-version minor-version)
+  (:method ((host (eql :sdl2)) &key window major-version minor-version anti-alias-level)
     (sdl2:gl-set-attrs :context-profile-mask sdl2-ffi::+sdl-gl-context-profile-core+
                        :context-major-version major-version
-                       :context-minor-version minor-version)
+                       :context-minor-version minor-version
+                       :multisamplebuffers (if (zerop anti-alias-level) 0 1)
+                       :multisamplesamples anti-alias-level)
     (sdl2:gl-create-context window)))
 
 (defgeneric close-window (host window)

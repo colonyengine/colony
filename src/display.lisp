@@ -10,13 +10,21 @@
 
 (defgeneric make-display (core-state)
   (:method ((core-state core-state))
-    (with-cfg (host vsync title window-width window-height delta periodic-interval debug-interval)
+    (with-cfg (host vsync title window-width window-height delta periodic-interval debug-interval
+                    gl-version-major gl-version-minor anti-alias-level)
         (context core-state)
       (fl.host:initialize-host host)
       (setup-lisp-repl)
       (let* ((window (fl.host:create-window host title window-width window-height))
              (hz (fl.host:get-refresh-rate host window)))
-        (fl.host:create-opengl-context host window 4 3)
+        (format t "thread before context is created: ~a~%" (bt:current-thread))
+        (format t "setting multi-sample samples here on thread:~a~%" (bt:current-thread))
+        (fl.host:create-opengl-context host
+                                       :window window
+                                       :major-version gl-version-major
+                                       :minor-version gl-version-minor
+                                       :anti-alias-level anti-alias-level)
+        (format t "thread after context is created: ~a~%" (bt:current-thread))
         (setf (slot-value core-state '%display)
               (make-instance 'display
                              :window window
