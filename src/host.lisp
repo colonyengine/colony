@@ -47,7 +47,7 @@
   :test #'equalp)
 
 (au:define-constant +gamepad-button-names+
-    #(nil :a :b :x :y :back :guide :start :left-stick :right-stick :left-shoulder :right-shoulder :up
+    #(:a :b :x :y :back :guide :start :left-stick :right-stick :left-shoulder :right-shoulder :up
       :down :left :right nil)
   :test #'equalp)
 
@@ -241,11 +241,16 @@
        (let ((device-name (aref +gamepad-device-names+ device-id)))
          (sdl2:game-controller-open device-id)
          (on-gamepad-attach core-state device-name)))
-      (:controllerdeviceremoved
+      (:joydeviceadded
+       (:which device-id :timestamp ts)
+       (let ((device-name (aref +gamepad-device-names+ device-id)))
+         (sdl2:joystick-open device-id)
+         (on-gamepad-attach core-state device-name)))
+      ((:controllerdeviceremoved :joydeviceremoved)
        (:which device-id :timestamp ts)
        (let ((device-id (aref +gamepad-device-names+ device-id)))
          (on-gamepad-detach core-state device-id)))
-      (:controlleraxismotion
+      ((:controlleraxismotion :joyaxismotion)
        (:which device-id :timestamp ts :axis axis :value value)
        (let* ((device-id (aref +gamepad-device-names+ device-id))
               (axis (aref +gamepad-axis-names+ axis))
@@ -255,12 +260,12 @@
                        (t
                         (au:map-domain -32768 32767 -1 1 value)))))
          (on-gamepad-axis-move core-state device-id axis value)))
-      (:controllerbuttonup
+      ((:controllerbuttonup :joybuttonup)
        (:which device-id :timestamp ts :button button)
        (let ((device-id (aref +gamepad-device-names+ device-id))
              (button (aref +gamepad-button-names+ button)))
          (on-gamepad-button-up core-state device-id button)))
-      (:controllerbuttondown
+      ((:controllerbuttondown :joybuttondown)
        (:which device-id :timestamp ts :button button)
        (let ((device-id (aref +gamepad-device-names+ device-id))
              (button (aref +gamepad-button-names+ button)))
