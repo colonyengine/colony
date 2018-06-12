@@ -238,8 +238,9 @@
          (on-key-down core-state key)))
       (:controllerdeviceadded
        (:which device-id :timestamp ts)
-       (let ((device-id (aref +gamepad-device-names+ device-id)))
-         (on-gamepad-attach core-state device-id)))
+       (let ((device-name (aref +gamepad-device-names+ device-id)))
+         (sdl2:game-controller-open device-id)
+         (on-gamepad-attach core-state device-name)))
       (:controllerdeviceremoved
        (:which device-id :timestamp ts)
        (let ((device-id (aref +gamepad-device-names+ device-id)))

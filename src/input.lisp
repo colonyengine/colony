@@ -37,17 +37,17 @@
   (when (eq key :escape)
     (stop-engine core-state)))
 
-(defun on-gamepad-attach (core-state id)
-  (declare (ignore core-state id)))
+(defun on-gamepad-attach (core-state gamepad-id)
+  (declare (ignore core-state gamepad-id)))
 
-(defun on-gamepad-detach (core-state id)
-  (declare (ignore core-state id)))
+(defun on-gamepad-detach (core-state gamepad-id)
+  (declare (ignore core-state gamepad-id)))
 
 (defun on-gamepad-axis-move (core-state gamepad-id axis value)
   (declare (ignore core-state gamepad-id axis value)))
 
-(defun on-gamepad-button-up (core-state id button)
-  (declare (ignore core-state id button)))
+(defun on-gamepad-button-up (core-state gamepad-id button)
+  (declare (ignore core-state gamepad-id button)))
 
-(defun on-gamepad-button-down (core-state id button)
-  (declare (ignore core-state id button)))
+(defun on-gamepad-button-down (core-state gamepad-id button)
+  (declare (ignore core-state gamepad-id button)))
