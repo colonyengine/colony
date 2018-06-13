@@ -13,8 +13,6 @@
     (with-cfg (host vsync title window-width window-height delta periodic-interval debug-interval
                     gl-version-major gl-version-minor anti-alias-level)
         (context core-state)
-      (fl.host:initialize-host host)
-      (setup-lisp-repl)
       (let* ((window (fl.host:create-window host
                                             :title title
                                             :width window-width

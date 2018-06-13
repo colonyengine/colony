@@ -5,14 +5,27 @@
   (enter nil)
   (leave nil))
 
-(defun make-input-table ()
-  (au:dict #'eq
-           :mouse-button (au:dict #'eq)
-           :mouse-scroll (au:dict #'eq)
-           :mouse-move (au:dict #'eq)
-           :key (au:dict #'eq)
-           :gamepad-axis (au:dict #'equal)
-           :gamepad-button (au:dict #'equal)))
+(defstruct mouse-motion-state
+  (position (v2i:make 0 0))
+  (delta (v2i:make 0 0)))
+
+(defstruct gamepad
+  (id nil)
+  (name nil)
+  (handle nil))
+
+(defclass input-data ()
+  ((%attached-gamepads :reader attached-gamepads
+                       :initform (au:dict #'eq))
+   (%detached-gamepads :accessor detached-gamepads
+                       :initform nil)
+   (%states :reader states
+            :initform (au:dict #'equal))))
+
+(defun make-input-data ()
+  (make-instance 'input-data))
+
+;;; Input events
 
 (defun on-mouse-button-up (core-state button)
   (declare (ignore core-state button)))
@@ -37,17 +50,43 @@
   (when (eq key :escape)
     (stop-engine core-state)))
 
-(defun on-gamepad-attach (core-state gamepad-id)
-  (declare (ignore core-state gamepad-id)))
+(defun on-gamepad-attach (core-state gamepad-id gamepad-handle)
+  (let* ((attached (attached-gamepads (input-data core-state)))
+         (gamepad-name (get-gamepad-name core-state)))
+    (setf (au:href attached gamepad-id)
+          (make-gamepad :id gamepad-id :name gamepad-name :handle gamepad-handle))))
 
 (defun on-gamepad-detach (core-state gamepad-id)
-  (declare (ignore core-state gamepad-id)))
+  (let* ((attached (attached-gamepads (input-data core-state)))
+         (gamepad (au:href attached gamepad-id)))
+    (fl.host:close-gamepad (host core-state) (gamepad-handle gamepad))
+    (au:appendf (detached-gamepads (input-data core-state)) (list (gamepad-name gamepad)))
+    (remhash gamepad-id attached)))
 
-(defun on-gamepad-axis-move (core-state gamepad-id axis value)
-  (declare (ignore core-state gamepad-id axis value)))
+(defun on-gamepad-axis-move (core-state gamepad-id axis value))
 
 (defun on-gamepad-button-up (core-state gamepad-id button)
   (declare (ignore core-state gamepad-id button)))
 
 (defun on-gamepad-button-down (core-state gamepad-id button)
-  (declare (ignore core-state gamepad-id button)))
+  (format t "~s~%" button))
+
+;;; Gamepad management
+
+(defun get-gamepad-name (core-state)
+  (with-slots (%attached-gamepads %detached-gamepads) (input-data core-state)
+    (or (pop %detached-gamepads)
+        (au:format-symbol :keyword "GAMEPAD~d" (1+ (hash-table-count %attached-gamepads))))))
+
+(defun shutdown-gamepads (core-state)
+  (let ((attached (attached-gamepads (input-data core-state))))
+    (au:do-hash-values (v attached)
+      (fl.host:close-gamepad (host core-state) (gamepad-handle v)))
+    (clrhash attached)))
+
+(defun load-gamepad-database ()
+  (sdl2:game-controller-add-mappings-from-file
+   (namestring
+    (uiop/pathname:merge-pathnames*
+     (get-extension-path)
+     (make-pathname :defaults *default-pathname-defaults* :name "gamepad-db" :type "txt")))))

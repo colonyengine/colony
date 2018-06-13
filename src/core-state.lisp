@@ -17,8 +17,8 @@
    (%scene-tree :reader scene-tree)
    (%cameras :accessor cameras
              :initform nil)
-   (%input-table :reader input-table
-                 :initform (make-input-table))
+   (%input-data :reader input-data
+                :initform (make-input-data))
    (%shaders :accessor shaders)
    (%materials :accessor materials
                :initform (%make-materials-table))

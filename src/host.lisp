@@ -34,21 +34,17 @@
   :test #'equalp)
 
 (au:define-constant +mouse-button-names+
-    #(nil :left :middle :right :x1 :x2)
-  :test #'equalp)
-
-(au:define-constant +gamepad-device-names+
-    #(:player1 :player2 :player3 :player4 :player5 :player6 :player7 :player8)
+    #(nil :mouse-left :mouse-middle :mouse-right :mouse-x1 :mouse-x2)
   :test #'equalp)
 
 (au:define-constant +gamepad-axis-names+
-    #(nil :left-horizontal :left-vertical :right-horizontal :right-vertical :trigger-left
-      :trigger-right nil)
+    #(:left-horizontal :left-vertical :right-horizontal :right-vertical :trigger-left
+      :trigger-right)
   :test #'equalp)
 
 (au:define-constant +gamepad-button-names+
     #(:a :b :x :y :back :guide :start :left-stick :right-stick :left-shoulder :right-shoulder :up
-      :down :left :right nil)
+      :down :left :right)
   :test #'equalp)
 
 (defgeneric initialize-host (host)
@@ -176,6 +172,12 @@
   (:method ((host (eql :sdl2)))
     (sdl2:show-cursor)))
 
+(defgeneric close-gamepad (host gamepad-handle)
+  (:method (host gamepad-handle)
+    (error "Host ~s does not implement CLOSE-GAMEPAD." host))
+  (:method ((host (eql :sdl2)) gamepad-handle)
+    (sdl2:game-controller-close gamepad-handle)))
+
 (defmacro event-case ((event) &body handlers)
   `(case (sdl2:get-event-type ,event)
      ,@(au:collecting
@@ -191,81 +193,78 @@
     (error "Host ~s does not implement DISPATCH-EVENT." host))
   (:method ((host (eql :sdl2)) core-state event)
     (event-case (event)
+
       (:windowevent
        (:timestamp ts :window-id id :event event-type :data1 data1 :data2 data2)
-       (let ((event-type (aref +window-event-names+ event-type)))
-         (case event-type
-           (:show (on-window-show core-state))
-           (:hide (on-window-hide core-state))
-           (:move (on-window-move core-state :x data1 :y data2))
-           (:resize (on-window-resize core-state :width data1 :height data2))
-           (:minimize (on-window-minimize core-state))
-           (:maximize (on-window-maximize core-state))
-           (:restore (on-window-restore core-state))
-           (:mouse-focus-enter (on-window-mouse-focus-enter core-state))
-           (:mouse-focus-leave (on-window-mouse-focus-leave core-state))
-           (:keyboard-focus-enter (on-window-keyboard-focus-enter core-state))
-           (:keyboard-focus-leave (on-window-keyboard-focus-leave core-state))
-           (:close (on-window-close core-state)))))
+       (case (aref +window-event-names+ event-type)
+         (:show (on-window-show core-state))
+         (:hide (on-window-hide core-state))
+         (:move (on-window-move core-state :x data1 :y data2))
+         (:resize (on-window-resize core-state :width data1 :height data2))
+         (:minimize (on-window-minimize core-state))
+         (:maximize (on-window-maximize core-state))
+         (:restore (on-window-restore core-state))
+         (:mouse-focus-enter (on-window-mouse-focus-enter core-state))
+         (:mouse-focus-leave (on-window-mouse-focus-leave core-state))
+         (:keyboard-focus-enter (on-window-keyboard-focus-enter core-state))
+         (:keyboard-focus-leave (on-window-keyboard-focus-leave core-state))
+         (:close (on-window-close core-state))))
+
       (:mousebuttonup
-       (:which device-id :timestamp ts :button button :state state :clicks clicks :x x :y y)
-       (let ((button (aref +mouse-button-names+ button)))
-         (on-mouse-button-up core-state button)))
+       (:which mouse-id :timestamp ts :button button :state state :clicks clicks :x x :y y)
+       (on-mouse-button-up core-state (aref +mouse-button-names+ button)))
+
       (:mousebuttondown
-       (:which device-id :timestamp ts :button button :state state :clicks clicks :x x :y y)
-       (let ((button (aref +mouse-button-names+ button)))
-         (on-mouse-button-down core-state button)))
+       (:which mouse-id :timestamp ts :button button :state state :clicks clicks :x x :y y)
+       (on-mouse-button-down core-state (aref +mouse-button-names+ button)))
+
       (:mousewheel
-       (:which device-id :timestamp ts :x x :y y)
+       (:which mouse-id :timestamp ts :x x :y y)
        (unless (zerop x)
          (on-mouse-scroll-horizontal core-state x))
        (unless (zerop y)
          (on-mouse-scroll-vertical core-state y)))
+
       (:mousemotion
-       (:which device-id :timestamp ts :state state :x x :y y :xrel xrel :yrel yrel)
+       (:which mouse-id :timestamp ts :state state :x x :y y :xrel xrel :yrel yrel)
        (on-mouse-move core-state x y xrel yrel))
+
       (:keyup
        (:timestamp ts :state state :repeat repeat :keysym keysym)
-       (let ((key (aref +key-names+ (sdl2:scancode-value keysym))))
-         (on-key-up core-state key)))
+       (on-key-up core-state (aref +key-names+ (sdl2:scancode-value keysym))))
+
       (:keydown
        (:timestamp ts :state state :repeat repeat :keysym keysym)
-       (let ((key (aref +key-names+ (sdl2:scancode-value keysym))))
-         (on-key-down core-state key)))
+       (on-key-down core-state (aref +key-names+ (sdl2:scancode-value keysym))))
+
       (:controllerdeviceadded
-       (:which device-id :timestamp ts)
-       (let ((device-name (aref +gamepad-device-names+ device-id)))
-         (sdl2:game-controller-open device-id)
-         (on-gamepad-attach core-state device-name)))
-      (:joydeviceadded
-       (:which device-id :timestamp ts)
-       (let ((device-name (aref +gamepad-device-names+ device-id)))
-         (sdl2:joystick-open device-id)
-         (on-gamepad-attach core-state device-name)))
-      ((:controllerdeviceremoved :joydeviceremoved)
-       (:which device-id :timestamp ts)
-       (let ((device-id (aref +gamepad-device-names+ device-id)))
-         (on-gamepad-detach core-state device-id)))
-      ((:controlleraxismotion :joyaxismotion)
-       (:which device-id :timestamp ts :axis axis :value value)
-       (let* ((device-id (aref +gamepad-device-names+ device-id))
-              (axis (aref +gamepad-axis-names+ axis))
+       (:which index :timestamp ts)
+       (when (sdl2:game-controller-p index)
+         (let* ((gamepad-handle (sdl2:game-controller-open index))
+                (gamepad-id (sdl2:game-controller-instance-id gamepad-handle)))
+           (on-gamepad-attach core-state gamepad-id gamepad-handle))))
+
+      (:controllerdeviceremoved
+       (:which gamepad-id :timestamp ts)
+       (on-gamepad-detach core-state gamepad-id))
+
+      (:controlleraxismotion
+       (:which gamepad-id :timestamp ts :axis axis :value value)
+       (let* ((axis (aref +gamepad-axis-names+ axis))
               (value (case axis
                        ((:trigger-left :trigger-right)
                         (au:map-domain 0 32767 0 1 value))
                        (t
                         (au:map-domain -32768 32767 -1 1 value)))))
-         (on-gamepad-axis-move core-state device-id axis value)))
-      ((:controllerbuttonup :joybuttonup)
-       (:which device-id :timestamp ts :button button)
-       (let ((device-id (aref +gamepad-device-names+ device-id))
-             (button (aref +gamepad-button-names+ button)))
-         (on-gamepad-button-up core-state device-id button)))
-      ((:controllerbuttondown :joybuttondown)
-       (:which device-id :timestamp ts :button button)
-       (let ((device-id (aref +gamepad-device-names+ device-id))
-             (button (aref +gamepad-button-names+ button)))
-         (on-gamepad-button-down core-state device-id button))))))
+         (on-gamepad-axis-move core-state gamepad-id axis value)))
+
+      (:controllerbuttonup
+       (:which gamepad-id :timestamp ts :button button)
+       (on-gamepad-button-up core-state gamepad-id (aref +gamepad-button-names+ button)))
+
+      (:controllerbuttondown
+       (:which gamepad-id :timestamp ts :button button)
+       (on-gamepad-button-down core-state gamepad-id (aref +gamepad-button-names+ button))))))
 
 (defgeneric handle-events (host core-state)
   (:method (host core-state)

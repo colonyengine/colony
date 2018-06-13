@@ -49,6 +49,9 @@ method, but before any engine tear-down procedure occurs when stopping the engin
           simple-logger:*current-level* (cfg %context :log-level))))
 
 (defmethod %initialize-engine ((core-state core-state) scene-name)
+  (setup-lisp-repl)
+  (fl.host:initialize-host (host core-state))
+  (load-gamepad-database)
   (make-display core-state)
   (prepare-extension :graphs core-state)
   (prepare-extension :call-flow core-state)
@@ -72,9 +75,8 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (iterate-main-loop core-state)))
 
 (defun start-engine (scene-name &key (profile 0))
-  "Start the engine. First we initialize the engine, which is split up into 2 methods - everything
-that needs to be performed before the display is created, and everything else. Next we run the
-prologue as the last step, before finally starting the main game loop."
+  "Start the engine. First we initialize the engine. Next we run the prologue as the last step,
+before finally starting the main game loop."
   (let ((core-state (make-instance 'core-state :running-p t)))
     (%initialize-engine core-state scene-name)
     (run-prologue core-state)
@@ -89,6 +91,7 @@ cleaning up."
        (with-cfg (title) (context core-state)
          (run-epilogue core-state)
          (shutdown-shader-programs)
+         (shutdown-gamepads core-state)
          (quit-display (display core-state))
          (simple-logger:emit :engine.quit title))
     (makunbound '*core-state-debug*)))

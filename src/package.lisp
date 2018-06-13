@@ -129,6 +129,7 @@
            #:set-window-visible
            #:set-cursor-hidden
            #:set-cursor-visible
+           #:close-gamepad
            #:handle-events))
 
 (defpackage+ #:fl.comp.transform
