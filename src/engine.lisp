@@ -13,7 +13,8 @@
          (au:while (and (running-p core-state)
                         (<= (total-time (context ,core-state)) ,duration))
            (iterate-main-loop ,core-state))
-         (stop-engine ,core-state)
+         (when (running-p core-state)
+           (stop-engine ,core-state))
          (sb-profile:report)
          (sb-profile:unprofile)
          (sb-profile:reset)))))
@@ -48,9 +49,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
           simple-logger:*current-level* (cfg %context :log-level))))
 
 (defmethod %initialize-engine ((core-state core-state) scene-name)
-  (format t "thread before display is created: ~a~%" (bt:current-thread))
   (make-display core-state)
-  (format t "thread after display is created: ~a~%" (bt:current-thread))
   (prepare-extension :graphs core-state)
   (prepare-extension :call-flow core-state)
   (prepare-extension :shader-stages core-state)
@@ -76,7 +75,6 @@ method, but before any engine tear-down procedure occurs when stopping the engin
   "Start the engine. First we initialize the engine, which is split up into 2 methods - everything
 that needs to be performed before the display is created, and everything else. Next we run the
 prologue as the last step, before finally starting the main game loop."
-  (format t "thread before engine is started: ~a~%" (bt:current-thread))
   (let ((core-state (make-instance 'core-state :running-p t)))
     (%initialize-engine core-state scene-name)
     (run-prologue core-state)

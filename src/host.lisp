@@ -71,23 +71,19 @@
       (when channel
         (sdl2::sendmsg channel nil)))))
 
-(defgeneric create-window (host title width height)
-  (:method (host window major-version minor-version)
+(defgeneric create-window (host &key &allow-other-keys)
+  (:method (host &key)
     (error "Host ~s does not implement CREATE-WINDOW." host))
-  (:method ((host (eql :sdl2)) title width height)
-    (let ((flags '(:opengl)))
-      (sdl2:create-window :title title :w width :h height :flags flags))))
-
-(defgeneric create-opengl-context (host &key)
-  (:method (host &key &allow-other-keys)
-    (error "Host ~s does not implement CREATE-OPENGL-CONTEXT." host))
-  (:method ((host (eql :sdl2)) &key window major-version minor-version anti-alias-level)
-    (sdl2:gl-set-attrs :context-profile-mask sdl2-ffi::+sdl-gl-context-profile-core+
-                       :context-major-version major-version
+  (:method :before ((host (eql :sdl2)) &key major-version minor-version anti-alias-level)
+    (sdl2:gl-set-attrs :context-major-version major-version
                        :context-minor-version minor-version
                        :multisamplebuffers (if (zerop anti-alias-level) 0 1)
-                       :multisamplesamples anti-alias-level)
-    (sdl2:gl-create-context window)))
+                       :multisamplesamples anti-alias-level))
+  (:method ((host (eql :sdl2)) &key title width height)
+    (let* ((flags '(:opengl))
+           (window (sdl2:create-window :title title :w width :h height :flags flags)))
+      (sdl2:gl-create-context window)
+      window)))
 
 (defgeneric close-window (host window)
   (:method (host window)
