@@ -69,7 +69,7 @@
   (declare (ignore core-state gamepad-id button)))
 
 (defun on-gamepad-button-down (core-state gamepad-id button)
-  (format t "~s~%" button))
+  (format t "~s: ~s~%" (get-gamepad-from-id core-state gamepad-id) button))
 
 ;;; Gamepad management
 
@@ -77,6 +77,10 @@
   (with-slots (%attached-gamepads %detached-gamepads) (input-data core-state)
     (or (pop %detached-gamepads)
         (au:format-symbol :keyword "GAMEPAD~d" (1+ (hash-table-count %attached-gamepads))))))
+
+(defun get-gamepad-from-id (core-state gamepad-id)
+  (let ((gamepad (au:href (attached-gamepads (input-data core-state)) gamepad-id)))
+    (sdl2::game-controller-name (gamepad-handle gamepad))))
 
 (defun shutdown-gamepads (core-state)
   (let ((attached (attached-gamepads (input-data core-state))))
