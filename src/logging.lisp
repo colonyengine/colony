@@ -10,7 +10,7 @@
   "Loaded extension (~(~a~)): ~a.")
 
 (simple-logger:define-message :info :display.init
-  "Display ~dx~d @ ~dHz created.")
+  "Display created.")
 
 (simple-logger:define-message :info :display.stop
   "Display ~dx~d @ ~dHz destroyed.")

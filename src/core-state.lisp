@@ -7,7 +7,6 @@
    (%data-path :reader data-path)
    (%settings :reader settings
               :initform (au:dict #'eq))
-   (%host :reader host)
    (%running-p :accessor running-p
                :initarg :running-p)
    (%rcache :reader rcache

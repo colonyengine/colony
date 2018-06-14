@@ -109,29 +109,6 @@
   (:export #:load-mesh
            #:draw-func))
 
-(defpackage+ #:fl.host
-  (:use #:cl #:fl.core)
-  (:export #:initialize-host
-           #:shutdown-host
-           #:create-window
-           #:create-opengl-context
-           #:close-window
-           #:get-refresh-rate
-           #:redraw-window
-           #:set-draw-mode
-           #:get-window-title
-           #:set-window-title
-           #:get-window-size
-           #:set-window-size
-           #:get-window-mode
-           #:set-window-mode
-           #:set-window-hidden
-           #:set-window-visible
-           #:set-cursor-hidden
-           #:set-cursor-visible
-           #:close-gamepad
-           #:handle-events))
-
 (defpackage+ #:fl.comp.transform
   (:use #:cl #:fl.core)
   (:export-only #:transform

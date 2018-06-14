@@ -38,19 +38,24 @@ it exists, it is called after the last frame, and after the last invocations of 
 method, but before any engine tear-down procedure occurs when stopping the engine."
   (epilogue (context core-state)))
 
+(defun initialize-host ()
+  (let ((flags '(:everything)))
+    (unless (apply #'sdl2:was-init flags)
+      (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
+        (sdl2::check-rc (sdl2::sdl-init flags))))))
+
 (defmethod %initialize-engine :before ((core-state core-state) scene-name)
-  (with-slots (%user-package %data-path %context %settings %host) core-state
+  (with-slots (%user-package %data-path %context %settings) core-state
     (setf %user-package (get-scene-package scene-name)
           %data-path (get-extension-path %user-package))
     (prepare-extension :settings core-state)
     (setf *core-state-debug* core-state
           %context (make-instance 'context :core-state core-state :settings %settings)
-          %host (cfg %context :host)
           simple-logger:*current-level* (cfg %context :log-level))))
 
 (defmethod %initialize-engine ((core-state core-state) scene-name)
   (setup-lisp-repl)
-  (fl.host:initialize-host (host core-state))
+  (initialize-host)
   (load-gamepad-database)
   (make-display core-state)
   (prepare-extension :graphs core-state)
@@ -68,7 +73,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 (defun iterate-main-loop (core-state)
   (with-continue-restart "First Light"
     (render core-state)
-    (fl.host:handle-events (host core-state) core-state)))
+    (handle-events core-state)))
 
 (defun main-loop (core-state)
   (au:while (running-p core-state)
@@ -87,11 +92,10 @@ before finally starting the main game loop."
 (defun stop-engine (core-state)
   "Stop the engine, making sure to call any user-defined epilogue function first, and finally
 cleaning up."
-  (unwind-protect
-       (with-cfg (title) (context core-state)
-         (run-epilogue core-state)
-         (shutdown-shader-programs)
-         (shutdown-gamepads core-state)
-         (quit-display (display core-state))
-         (simple-logger:emit :engine.quit title))
-    (makunbound '*core-state-debug*)))
+  (run-epilogue core-state)
+  (shutdown-shader-programs)
+  (shutdown-gamepads core-state)
+  (quit-display (display core-state))
+  (setf (running-p core-state) nil)
+  (makunbound '*core-state-debug*)
+  (simple-logger:emit :engine.quit (cfg (context core-state) :title)))

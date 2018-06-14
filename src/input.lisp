@@ -5,15 +5,6 @@
   (enter nil)
   (leave nil))
 
-(defstruct mouse-motion-state
-  (position (v2i:make 0 0))
-  (delta (v2i:make 0 0)))
-
-(defstruct gamepad
-  (id nil)
-  (name nil)
-  (handle nil))
-
 (defclass input-data ()
   ((%attached-gamepads :reader attached-gamepads
                        :initform (au:dict #'eq))
@@ -25,72 +16,69 @@
 (defun make-input-data ()
   (make-instance 'input-data))
 
-;;; Input events
+(defmacro event-case ((event) &body handlers)
+  `(case (sdl2:get-event-type ,event)
+     ,@(au:collecting
+         (dolist (handler handlers)
+           (destructuring-bind (type options . body) handler
+             (let ((body (list* `(declare (ignorable ,@(au:plist-values options))) body)))
+               (dolist (type (au:ensure-list type))
+                 (au:when-let ((x (sdl2::expand-handler event type options body)))
+                   (collect x)))))))))
 
-(defun on-mouse-button-up (core-state button)
-  (declare (ignore core-state button)))
+(defun dispatch-event (core-state event)
+  (event-case (event)
+    (:windowevent
+     (:event event-type :data1 data1 :data2 data2)
+     (case (aref +window-event-names+ event-type)
+       (:show (on-window-show core-state))
+       (:hide (on-window-hide core-state))
+       (:move (on-window-move core-state :x data1 :y data2))
+       (:resize (on-window-resize core-state :width data1 :height data2))
+       (:minimize (on-window-minimize core-state))
+       (:maximize (on-window-maximize core-state))
+       (:restore (on-window-restore core-state))
+       (:mouse-focus-enter (on-window-mouse-focus-enter core-state))
+       (:mouse-focus-leave (on-window-mouse-focus-leave core-state))
+       (:keyboard-focus-enter (on-window-keyboard-focus-enter core-state))
+       (:keyboard-focus-leave (on-window-keyboard-focus-leave core-state))
+       (:close (on-window-close core-state))))
+    (:mousebuttonup
+     (:button button)
+     (on-mouse-button-up core-state (aref +mouse-button-names+ button)))
+    (:mousebuttondown
+     (:button button)
+     (on-mouse-button-down core-state (aref +mouse-button-names+ button)))
+    (:mousewheel
+     (:x x :y y)
+     (on-mouse-scroll core-state x y))
+    (:mousemotion
+     (:x x :y y :xrel xrel :yrel yrel)
+     (on-mouse-move core-state x y xrel yrel))
+    (:keyup
+     (:keysym keysym)
+     (on-key-up core-state (aref +key-names+ (sdl2:scancode-value keysym))))
+    (:keydown
+     (:keysym keysym)
+     (on-key-down core-state (aref +key-names+ (sdl2:scancode-value keysym))))
+    (:controllerdeviceadded
+     (:which index)
+     (on-gamepad-attach core-state index))
+    (:controllerdeviceremoved
+     (:which gamepad-id)
+     (on-gamepad-detach core-state gamepad-id))
+    (:controlleraxismotion
+     (:which gamepad-id :axis axis :value value)
+     (on-gamepad-axis-move core-state gamepad-id (aref +gamepad-axis-names+ axis) value))
+    (:controllerbuttonup
+     (:which gamepad-id :button button)
+     (on-gamepad-button-up core-state gamepad-id (aref +gamepad-button-names+ button)))
+    (:controllerbuttondown
+     (:which gamepad-id :button button)
+     (on-gamepad-button-down core-state gamepad-id (aref +gamepad-button-names+ button)))))
 
-(defun on-mouse-button-down (core-state button)
-  (declare (ignore core-state button)))
-
-(defun on-mouse-scroll-vertical (core-state amount)
-  (declare (ignore core-state amount)))
-
-(defun on-mouse-scroll-horizontal (core-state amount)
-  (declare (ignore core-state amount)))
-
-(defun on-mouse-move (core-state x y dx dy)
-  (declare (ignore core-state x y dx dy)))
-
-(defun on-key-up (core-state key)
-  (declare (ignore core-state key)))
-
-(defun on-key-down (core-state key)
-  ;; TODO: Remove this later when possible.
-  (when (eq key :escape)
-    (stop-engine core-state)))
-
-(defun on-gamepad-attach (core-state gamepad-id gamepad-handle)
-  (let* ((attached (attached-gamepads (input-data core-state)))
-         (gamepad-name (get-gamepad-name core-state)))
-    (setf (au:href attached gamepad-id)
-          (make-gamepad :id gamepad-id :name gamepad-name :handle gamepad-handle))))
-
-(defun on-gamepad-detach (core-state gamepad-id)
-  (let* ((attached (attached-gamepads (input-data core-state)))
-         (gamepad (au:href attached gamepad-id)))
-    (fl.host:close-gamepad (host core-state) (gamepad-handle gamepad))
-    (au:appendf (detached-gamepads (input-data core-state)) (list (gamepad-name gamepad)))
-    (remhash gamepad-id attached)))
-
-(defun on-gamepad-axis-move (core-state gamepad-id axis value))
-
-(defun on-gamepad-button-up (core-state gamepad-id button)
-  (declare (ignore core-state gamepad-id button)))
-
-(defun on-gamepad-button-down (core-state gamepad-id button)
-  (format t "~s: ~s~%" (get-gamepad-from-id core-state gamepad-id) button))
-
-;;; Gamepad management
-
-(defun get-gamepad-name (core-state)
-  (with-slots (%attached-gamepads %detached-gamepads) (input-data core-state)
-    (or (pop %detached-gamepads)
-        (au:format-symbol :keyword "GAMEPAD~d" (1+ (hash-table-count %attached-gamepads))))))
-
-(defun get-gamepad-from-id (core-state gamepad-id)
-  (let ((gamepad (au:href (attached-gamepads (input-data core-state)) gamepad-id)))
-    (sdl2::game-controller-name (gamepad-handle gamepad))))
-
-(defun shutdown-gamepads (core-state)
-  (let ((attached (attached-gamepads (input-data core-state))))
-    (au:do-hash-values (v attached)
-      (fl.host:close-gamepad (host core-state) (gamepad-handle v)))
-    (clrhash attached)))
-
-(defun load-gamepad-database ()
-  (sdl2:game-controller-add-mappings-from-file
-   (namestring
-    (uiop/pathname:merge-pathnames*
-     (get-extension-path)
-     (make-pathname :defaults *default-pathname-defaults* :name "gamepad-db" :type "txt")))))
+(defun handle-events (core-state)
+  (loop :with event = (sdl2:new-event)
+        :until (zerop (sdl2:next-event event :poll))
+        :do (dispatch-event core-state event)
+        :finally (sdl2:free-event event)))
