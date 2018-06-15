@@ -72,8 +72,8 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 
 (defun iterate-main-loop (core-state)
   (with-continue-restart "First Light"
-    (render core-state)
-    (handle-events core-state)))
+    (handle-events core-state)
+    (render core-state)))
 
 (defun main-loop (core-state)
   (au:while (running-p core-state)

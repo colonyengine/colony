@@ -56,14 +56,15 @@
     (gl:clear :color-buffer :depth-buffer)))
 
 (defun render (core-state)
-  (with-slots (%display) core-state
-    (clear-screen %display)
-    (execute-flow core-state
-                  :default
-                  'perform-one-frame
-                  'entry/perform-one-frame
-                  :come-from-state-name :ef)
-    (sdl2:gl-swap-window (window %display))))
+  (with-slots (%display %running-p) core-state
+    (when %running-p
+      (clear-screen %display)
+      (execute-flow core-state
+                    :default
+                    'perform-one-frame
+                    'entry/perform-one-frame
+                    :come-from-state-name :ef)
+      (sdl2:gl-swap-window (window %display)))))
 
 (defmethod quit-display ((display display))
   (with-slots (%core-state %window) display
