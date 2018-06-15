@@ -60,7 +60,7 @@
   (au:when-let ((state (au:href (states (input-data (core-state context))) (cons input-type input))))
     (button-state-enabled state)))
 
-(defun button-state-enabled-p (context input-type input)
+(defun button-state-leave-p (context input-type input)
   (au:when-let ((state (au:href (states (input-data (core-state context))) (cons input-type input))))
     (button-state-leave state)))
 
