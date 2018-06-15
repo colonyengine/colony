@@ -10,13 +10,9 @@
       :down :left :right)
   :test #'equalp)
 
-(defstruct gamepad
-  (id nil)
-  (name nil)
-  (description nil)
-  (handle nil))
+(defstruct gamepad id name description handle)
 
-(defun get-gamepad-from-id (core-state gamepad-id)
+(defun get-gamepad-by-id (core-state gamepad-id)
   (au:href (attached-gamepads (input-data core-state)) gamepad-id))
 
 (defun generate-gamepad-name (core-state)
@@ -42,7 +38,7 @@
     ((:trigger-left :trigger-right)
      (au:map-domain 0 32767 0 1 value))
     (t
-     (au:map-domain -32768 32767 -1 1 value))))
+     (au:map-domain -32767 32767 -1 1 (au:clamp value -32767 32767)))))
 
 (defun on-gamepad-attach (core-state gamepad-index)
   (when (sdl2:game-controller-p gamepad-index)
@@ -63,12 +59,15 @@
     (remhash gamepad-id attached)))
 
 (defun on-gamepad-axis-move (core-state gamepad-id axis value)
-  (declare (ignore core-state gamepad-id))
-  (let ((value (normalize-gamepad-axis-value axis value)))
-    value))
+  (let* ((gamepad (get-gamepad-by-id core-state gamepad-id))
+         (state (cons (gamepad-name gamepad) axis)))
+    (setf (au:href (states (input-data core-state)) state)
+          (normalize-gamepad-axis-value axis value))))
 
 (defun on-gamepad-button-up (core-state gamepad-id button)
-  (declare (ignore core-state gamepad-id button)))
+  (let ((gamepad (get-gamepad-by-id core-state gamepad-id)))
+    (button-transition-out core-state (cons (gamepad-name gamepad) button))))
 
 (defun on-gamepad-button-down (core-state gamepad-id button)
-  (format t "~s ~s~%" (get-gamepad-from-id core-state gamepad-id) button))
+  (let ((gamepad (get-gamepad-by-id core-state gamepad-id)))
+    (button-transition-in core-state (cons (gamepad-name gamepad) button))))

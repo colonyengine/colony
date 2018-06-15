@@ -29,9 +29,11 @@
   :test #'equalp)
 
 (defun on-key-up (core-state key)
-  (declare (ignore core-state key)))
+  (button-transition-out core-state (cons :key key)))
 
 (defun on-key-down (core-state key)
+  (button-transition-in core-state (cons :key key))
+
   ;; TODO: Remove this later when possible.
   (when (eq key :escape)
     (stop-engine core-state)))
