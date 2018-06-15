@@ -78,8 +78,10 @@
    root-node))
 
 (defmethod make-component ((component-type (eql 'transform)) context &rest args)
-  (let ((instance (make-instance component-type :type component-type)))
-    (apply #'reinitialize-instance instance :type component-type args)
+  (let ((instance (make-instance component-type
+                                 :type component-type :context context)))
+    (apply #'reinitialize-instance instance :type component-type
+					    :context context args)
     instance))
 
 (defmethod reinitialize-instance ((instance transform)
