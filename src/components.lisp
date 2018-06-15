@@ -1,7 +1,10 @@
 (in-package :fl.core)
 
 (defclass component ()
-  ((%type :reader component-type
+  ((%context :reader context
+             :initarg :context
+             :initform nil)
+   (%type :reader component-type
           :initarg :type)
    (%state :accessor state
            :initarg :state
@@ -94,7 +97,10 @@
 
 (defmethod make-component (component-type context &rest initargs)
   (let ((qualified-type (qualify-component (core-state context) component-type)))
-    (apply #'make-instance qualified-type :type qualified-type initargs)))
+    (apply #'make-instance qualified-type
+           :type qualified-type
+           :context context
+           initargs)))
 
 (defun %get-computed-component-precedence-list (component-type)
   ;; NOTE: We may very well be asking for classes that have not been finalized
