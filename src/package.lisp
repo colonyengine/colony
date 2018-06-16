@@ -56,18 +56,12 @@
   ;; shaders
   (:export #:define-shader)
   ;; input
-  (:export #:key-enter-p
-           #:key-enabled-p
-           #:key-exit-p
+  (:export #:input-enter-p
+           #:input-enabled-p
+           #:input-exit-p
            #:gamepad-attached-p
-           #:gamepad-button-enter-p
-           #:gamepad-button-enabled-p
-           #:gamepad-button-exit-p
            #:get-gamepad-axis
            #:get-gamepad-description
-           #:mouse-button-enter-p
-           #:mouse-button-enabled-p
-           #:mouse-button-exit-p
            #:get-mouse-position
            #:get-mouse-scroll)
   ;; scene

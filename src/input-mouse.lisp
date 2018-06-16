@@ -30,15 +30,6 @@
 
 ;;; User protocol
 
-(defun mouse-button-enter-p (context button)
-  (input-enter-p context :mouse button))
-
-(defun mouse-button-enabled-p (context button)
-  (input-enabled-p context :mouse button))
-
-(defun mouse-button-exit-p (context button)
-  (input-exit-p context :mouse button))
-
 (defun get-mouse-position (context)
   (let ((state (au:href (states (input-data (core-state context))) '(:mouse :motion))))
     (with-slots (x y dx dy) state

@@ -30,14 +30,14 @@
         (setf enter nil enabled nil exit nil)))
     (setf exiting nil)))
 
-(defun input-enter-p (context group button)
-  (au:when-let ((state (au:href (states (input-data (core-state context))) (list group button))))
+(defun input-enter-p (context input)
+  (au:when-let ((state (au:href (states (input-data (core-state context))) input)))
     (input-state-enter state)))
 
-(defun input-enabled-p (context group button)
-  (au:when-let ((state (au:href (states (input-data (core-state context))) (list group button))))
+(defun input-enabled-p (context input)
+  (au:when-let ((state (au:href (states (input-data (core-state context))) input)))
     (input-state-enabled state)))
 
-(defun input-exit-p (context group button)
-  (au:when-let ((state (au:href (states (input-data (core-state context))) (list group button))))
+(defun input-exit-p (context input)
+  (au:when-let ((state (au:href (states (input-data (core-state context))) input)))
     (input-state-exit state)))

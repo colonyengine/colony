@@ -38,14 +38,3 @@
   ;; TODO: Remove this later when possible.
   (when (eq key :escape)
     (stop-engine core-state)))
-
-;;; User protocol
-
-(defun key-enter-p (context key)
-  (input-enter-p context :key key))
-
-(defun key-enabled-p (context key)
-  (input-enabled-p context :key key))
-
-(defun key-exit-p (context key)
-  (input-exit-p context :key key))
