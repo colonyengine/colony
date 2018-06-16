@@ -28,12 +28,24 @@
       :kbdillumtoggle :kbdillumdown :kbdillumup :eject :sleep)
   :test #'equalp)
 
+;;; Events
+
 (defun on-key-up (core-state key)
   (button-transition-out core-state (cons :key key)))
 
 (defun on-key-down (core-state key)
   (button-transition-in core-state (cons :key key))
-
   ;; TODO: Remove this later when possible.
   (when (eq key :escape)
     (stop-engine core-state)))
+
+;;; User protocol
+
+(defun key-enter-p (context key)
+  (button-state-enter-p context :key key))
+
+(defun key-enabled-p (context key)
+  (button-state-enabled-p context :key key))
+
+(defun key-leave-p (context key)
+  (button-state-leave-p context :key key))

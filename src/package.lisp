@@ -52,35 +52,23 @@
            #:bind-material
            #:mat-uniform-ref
            #:mat-computed-uniform-ref
-           #:shader
-           )
+           #:shader)
   ;; shaders
   (:export #:define-shader)
   ;; input
-  (:export #:on-window-show
-           #:on-window-hide
-           #:on-window-move
-           #:on-window-resize
-           #:on-window-minimize
-           #:on-window-maximize
-           #:on-window-restore
-           #:on-window-mouse-focus-enter
-           #:on-window-mouse-focus-leave
-           #:on-window-keyboard-focus-enter
-           #:on-window-keyboard-focus-leave
-           #:on-window-close
-           #:on-mouse-button-up
-           #:on-mouse-button-down
-           #:on-mouse-scroll-horizontal
-           #:on-mouse-scroll-vertical
-           #:on-mouse-move
-           #:on-key-up
-           #:on-key-down
-           #:on-gamepad-attach
-           #:on-gamepad-detach
-           #:on-gamepad-axis-move
-           #:on-gamepad-button-up
-           #:on-gamepad-button-down)
+  (:export #:key-enter-p
+           #:key-enabled-p
+           #:key-leave-p
+           #:gamepad-attached-p
+           #:gamepad-button-enter-p
+           #:gamepad-button-enabled-p
+           #:gamepad-button-leave-p
+           #:get-gamepad-axis
+           #:mouse-button-enter-p
+           #:mouse-button-enabled-p
+           #:mouse-button-leave-p
+           #:get-mouse-position
+           #:get-mouse-scroll)
   ;; scene
   (:export #:define-scene
            #:get-scene)

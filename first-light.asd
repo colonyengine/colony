@@ -42,6 +42,7 @@
    (:file "input-mouse")
    (:file "input-gamepad")
    (:file "input-window")
+   (:file "input-button-states")
    (:file "input")
    (:file "core-state")
    (:file "display")

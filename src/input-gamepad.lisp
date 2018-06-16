@@ -12,6 +12,8 @@
 
 (defstruct gamepad id name description handle)
 
+;;; Utility functions
+
 (defun get-gamepad-by-id (core-state gamepad-id)
   (au:href (attached-gamepads (input-data core-state)) gamepad-id))
 
@@ -39,6 +41,8 @@
      (au:map-domain 0 32767 0 1 value))
     (t
      (au:map-domain -32767 32767 -1 1 (au:clamp value -32767 32767)))))
+
+;;; Events
 
 (defun on-gamepad-attach (core-state gamepad-index)
   (when (sdl2:game-controller-p gamepad-index)
@@ -71,3 +75,21 @@
 (defun on-gamepad-button-down (core-state gamepad-id button)
   (let ((gamepad (get-gamepad-by-id core-state gamepad-id)))
     (button-transition-in core-state (cons (gamepad-name gamepad) button))))
+
+;;; User protocol
+
+(defun gamepad-attached-p (context gamepad-id)
+  (not (member gamepad-id (detached-gamepads (input-data (core-state context))))))
+
+(defun gamepad-button-enter-p (context gamepad-id button)
+  (button-state-enter-p context gamepad-id button))
+
+(defun gamepad-button-enabled-p (context gamepad-id button)
+  (button-state-enabled-p context gamepad-id button))
+
+(defun gamepad-button-leave-p (context gamepad-id button)
+  (button-state-leave-p context gamepad-id button))
+
+(defun get-gamepad-axis (context gamepad-id stick/axis)
+  (let ((states (states (input-data (core-state context)))))
+    (au:href states (cons gamepad-id stick/axis))))

@@ -1,7 +1,5 @@
 (in-package :fl.core)
 
-(defstruct button-state enter enabled leave)
-
 (defclass input-data ()
   ((%attached-gamepads :reader attached-gamepads
                        :initform (au:dict #'eq))
@@ -12,57 +10,13 @@
    (%buttons-leaving :accessor buttons-leaving
                      :initform nil)
    (%states :reader states
-            :initform (au:dict #'equal '(:mouse . :motion) (make-mouse-motion-state)))))
+            :initform (au:dict #'equal
+                               '(:mouse . :motion) (make-mouse-motion-state)
+                               '(:mouse . :scroll-horizontal) 0
+                               '(:mouse . :scroll-vertical) 0))))
 
 (defun make-input-data ()
   (make-instance 'input-data))
-
-(defun button-transition-in (core-state button)
-  (symbol-macrolet ((state (au:href (states (input-data core-state)) button)))
-    (with-slots (enter enabled leave) state
-      (if state
-          (setf enter t enabled t leave nil)
-          (setf state (make-button-state :enter t :enabled t)))
-      (push button (buttons-entering (input-data core-state))))))
-
-(defun button-transition-out (core-state button)
-  (let ((state (au:href (states (input-data core-state)) button)))
-    (with-slots (enter enabled leave) state
-      (setf enter nil enabled nil leave t)
-      (push button (buttons-leaving (input-data core-state))))))
-
-(defun enable-entering-buttons (core-state)
-  (symbol-macrolet ((entering (buttons-entering (input-data core-state))))
-    (dolist (button entering)
-      (with-slots (enter enabled leave) (au:href (states (input-data core-state)) button)
-        (setf enter nil enabled t leave nil)))
-    (setf entering nil)))
-
-(defun disable-leaving-buttons (core-state)
-  (symbol-macrolet ((leaving (buttons-leaving (input-data core-state))))
-    (dolist (button leaving)
-      (with-slots (enter enabled leave) (au:href (states (input-data core-state)) button)
-        (setf enter nil enabled nil leave nil)))
-    (setf leaving nil)))
-
-(defun perform-input-state-tasks (core-state)
-  (let ((states (au:href (states (input-data core-state)))))
-    (setf (au:href states (cons :mouse :scroll-horizontal)) 0
-          (au:href states (cons :mouse :scroll-vertical)) 0)
-    (enable-entering-buttons core-state)
-    (disable-leaving-buttons core-state)))
-
-(defun button-state-enter-p (context input-type input)
-  (au:when-let ((state (au:href (states (input-data (core-state context))) (cons input-type input))))
-    (button-state-enter state)))
-
-(defun button-state-enabled-p (context input-type input)
-  (au:when-let ((state (au:href (states (input-data (core-state context))) (cons input-type input))))
-    (button-state-enabled state)))
-
-(defun button-state-leave-p (context input-type input)
-  (au:when-let ((state (au:href (states (input-data (core-state context))) (cons input-type input))))
-    (button-state-leave state)))
 
 (defmacro event-case ((event) &body handlers)
   `(case (sdl2:get-event-type ,event)
@@ -101,8 +55,8 @@
      (:x x :y y)
      (on-mouse-scroll core-state x y))
     (:mousemotion
-     (:x x :y y :xrel xrel :yrel yrel)
-     (on-mouse-move core-state x y xrel yrel))
+     (:x x :y y :xrel dx :yrel dy)
+     (on-mouse-move core-state x y dx dy))
     (:keyup
      (:keysym keysym)
      (on-key-up core-state (aref +key-names+ (sdl2:scancode-value keysym))))
@@ -124,6 +78,13 @@
     (:controllerbuttondown
      (:which gamepad-id :button button)
      (on-gamepad-button-down core-state gamepad-id (aref +gamepad-button-names+ button)))))
+
+(defun perform-input-state-tasks (core-state)
+  (let ((states (au:href (states (input-data core-state)))))
+    (setf (au:href states (cons :mouse :scroll-horizontal)) 0
+          (au:href states (cons :mouse :scroll-vertical)) 0)
+    (enable-entering-buttons core-state)
+    (disable-leaving-buttons core-state)))
 
 (defun handle-events (core-state)
   (perform-input-state-tasks core-state)
