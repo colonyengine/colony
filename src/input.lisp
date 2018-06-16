@@ -1,7 +1,9 @@
 (in-package :fl.core)
 
 (defclass input-data ()
-  ((%attached-gamepads :reader attached-gamepads
+  ((%active-gamepads :reader active-gamepads
+                     :initform (au:dict #'eq))
+   (%attached-gamepads :accessor attached-gamepads
                        :initform (au:dict #'eq))
    (%detached-gamepads :accessor detached-gamepads
                        :initform nil)
