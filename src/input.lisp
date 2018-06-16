@@ -1,10 +1,10 @@
 (in-package :fl.core)
 
 (defclass input-data ()
-  ((%active-gamepads :reader active-gamepads
-                     :initform (au:dict #'eq))
-   (%attached-gamepads :accessor attached-gamepads
+  ((%gamepad-instances :reader gamepad-instances
                        :initform (au:dict #'eq))
+   (%gamepad-ids :accessor gamepad-ids
+                 :initform (au:dict #'eq))
    (%detached-gamepads :accessor detached-gamepads
                        :initform nil)
    (%buttons-entering :accessor buttons-entering
