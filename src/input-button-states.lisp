@@ -31,13 +31,13 @@
     (setf exiting nil)))
 
 (defun input-enter-p (context group button)
-  (au:when-let ((state (au:href (states (input-data (core-state context))) (cons group button))))
+  (au:when-let ((state (au:href (states (input-data (core-state context))) (list group button))))
     (input-state-enter state)))
 
 (defun input-enabled-p (context group button)
-  (au:when-let ((state (au:href (states (input-data (core-state context))) (cons group button))))
+  (au:when-let ((state (au:href (states (input-data (core-state context))) (list group button))))
     (input-state-enabled state)))
 
 (defun input-exit-p (context group button)
-  (au:when-let ((state (au:href (states (input-data (core-state context))) (cons group button))))
+  (au:when-let ((state (au:href (states (input-data (core-state context))) (list group button))))
     (input-state-exit state)))

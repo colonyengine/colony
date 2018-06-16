@@ -56,7 +56,7 @@
                                   :handle handle)))
       (setf (au:href instance-table instance) gamepad
             (au:href (gamepad-ids (input-data core-state)) id) gamepad)
-      (input-transition-in core-state (cons id :attach)))))
+      (input-transition-in core-state (list id :attach)))))
 
 (defun on-gamepad-detach (core-state gamepad-instance)
   (let* ((instance-table (gamepad-instances (input-data core-state)))
@@ -66,21 +66,20 @@
     (au:appendf (detached-gamepads (input-data core-state)) (list (gamepad-id gamepad)))
     (remhash (gamepad-id gamepad) ids)
     (remhash gamepad-instance instance-table)
-    (input-transition-out core-state (cons (gamepad-id gamepad) :attach))))
+    (input-transition-out core-state (list (gamepad-id gamepad) :attach))))
 
 (defun on-gamepad-axis-move (core-state gamepad-instance axis value)
-  (let* ((gamepad (get-gamepad-by-instance core-state gamepad-instance))
-         (state (cons (gamepad-id gamepad) axis)))
-    (setf (au:href (states (input-data core-state)) state)
+  (let ((gamepad (get-gamepad-by-instance core-state gamepad-instance)))
+    (setf (au:href (states (input-data core-state)) (list (gamepad-id gamepad) axis))
           (normalize-gamepad-axis-value axis value))))
 
 (defun on-gamepad-button-up (core-state gamepad-instance button)
   (let ((gamepad (get-gamepad-by-instance core-state gamepad-instance)))
-    (input-transition-out core-state (cons (gamepad-id gamepad) button))))
+    (input-transition-out core-state (list (gamepad-id gamepad) button))))
 
 (defun on-gamepad-button-down (core-state gamepad-instance button)
   (let ((gamepad (get-gamepad-by-instance core-state gamepad-instance)))
-    (input-transition-in core-state (cons (gamepad-id gamepad) button))))
+    (input-transition-in core-state (list (gamepad-id gamepad) button))))
 
 ;;; User protocol
 
@@ -102,4 +101,4 @@
 
 (defun get-gamepad-axis (context gamepad-id stick/axis)
   (let ((states (states (input-data (core-state context)))))
-    (au:href states (cons gamepad-id stick/axis))))
+    (au:href states `(,gamepad-id ,stick/axis))))

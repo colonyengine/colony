@@ -13,9 +13,9 @@
              :initform nil)
    (%states :reader states
             :initform (au:dict #'equal
-                               '(:mouse . :motion) (make-mouse-motion-state)
-                               '(:mouse . :scroll-horizontal) 0
-                               '(:mouse . :scroll-vertical) 0))))
+                               '(:mouse :motion) (make-mouse-motion-state)
+                               '(:mouse :scroll-horizontal) 0
+                               '(:mouse :scroll-vertical) 0))))
 
 (defun make-input-data ()
   (make-instance 'input-data))
@@ -83,8 +83,8 @@
 
 (defun perform-input-state-tasks (core-state)
   (let ((states (au:href (states (input-data core-state)))))
-    (setf (au:href states (cons :mouse :scroll-horizontal)) 0
-          (au:href states (cons :mouse :scroll-vertical)) 0)
+    (setf (au:href states '(:mouse :scroll-horizontal)) 0
+          (au:href states '(:mouse :scroll-vertical)) 0)
     (enable-entering core-state)
     (disable-exiting core-state)))
 
