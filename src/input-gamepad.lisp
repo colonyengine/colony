@@ -55,25 +55,25 @@
   (when (sdl2:game-controller-p gamepad-index)
     (let* ((handle (sdl2:game-controller-open gamepad-index))
            (instance (sdl2:game-controller-instance-id handle))
-           (instance-table (gamepad-instances (input-data core-state)))
            (id (generate-gamepad-id core-state))
            (gamepad (make-gamepad :id id
                                   :instance instance
                                   :description (sdl2:game-controller-name handle)
                                   :handle handle)))
-      (setf (au:href instance-table instance) gamepad
+      (setf (au:href (gamepad-instances (input-data core-state)) instance) gamepad
             (au:href (gamepad-ids (input-data core-state)) id) gamepad)
       (input-transition-in core-state (list id :attach)))))
 
 (defun on-gamepad-detach (core-state gamepad-instance)
   (let* ((instance-table (gamepad-instances (input-data core-state)))
-         (ids (gamepad-ids (input-data core-state)))
-         (gamepad (au:href instance-table gamepad-instance)))
+         (id-table (gamepad-ids (input-data core-state)))
+         (gamepad (au:href instance-table gamepad-instance))
+         (id (gamepad-id gamepad)))
     (sdl2:game-controller-close (gamepad-handle gamepad))
-    (au:appendf (detached-gamepads (input-data core-state)) (list (gamepad-id gamepad)))
-    (remhash (gamepad-id gamepad) ids)
+    (au:appendf (detached-gamepads (input-data core-state)) (list id))
+    (remhash id id-table)
     (remhash gamepad-instance instance-table)
-    (input-transition-out core-state (list (gamepad-id gamepad) :attach))))
+    (input-transition-out core-state (list id :attach))))
 
 (defun on-gamepad-axis-move (core-state gamepad-instance axis value)
   (let ((gamepad (get-gamepad-by-instance core-state gamepad-instance)))
@@ -99,4 +99,4 @@
 
 (defun get-gamepad-axis (context gamepad-id stick/axis)
   (let ((states (states (input-data (core-state context)))))
-    (au:href states `(,gamepad-id ,stick/axis))))
+    (au:href states (list gamepad-id stick/axis))))
