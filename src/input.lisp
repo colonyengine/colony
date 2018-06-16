@@ -7,10 +7,10 @@
                  :initform (au:dict #'eq))
    (%detached-gamepads :accessor detached-gamepads
                        :initform nil)
-   (%buttons-entering :accessor buttons-entering
-                      :initform nil)
-   (%buttons-leaving :accessor buttons-leaving
-                     :initform nil)
+   (%entering :accessor entering
+              :initform nil)
+   (%leaving :accessor leaving
+             :initform nil)
    (%states :reader states
             :initform (au:dict #'equal
                                '(:mouse . :motion) (make-mouse-motion-state)
@@ -85,8 +85,8 @@
   (let ((states (au:href (states (input-data core-state)))))
     (setf (au:href states (cons :mouse :scroll-horizontal)) 0
           (au:href states (cons :mouse :scroll-vertical)) 0)
-    (enable-entering-buttons core-state)
-    (disable-leaving-buttons core-state)))
+    (enable-entering core-state)
+    (disable-leaving core-state)))
 
 (defun handle-events (core-state)
   (perform-input-state-tasks core-state)

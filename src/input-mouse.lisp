@@ -9,10 +9,10 @@
 ;;; Events
 
 (defun on-mouse-button-up (core-state button)
-  (button-transition-out core-state (cons :mouse button)))
+  (input-transition-out core-state (cons :mouse button)))
 
 (defun on-mouse-button-down (core-state button)
-  (button-transition-in core-state (cons :mouse button)))
+  (input-transition-in core-state (cons :mouse button)))
 
 (defun on-mouse-scroll (core-state x y)
   (let ((states (au:href (states (input-data core-state)))))
@@ -31,13 +31,13 @@
 ;;; User protocol
 
 (defun mouse-button-enter-p (context button)
-  (button-state-enter-p context :mouse button))
+  (input-state-enter-p context :mouse button))
 
 (defun mouse-button-enabled-p (context button)
-  (button-state-enabled-p context :mouse button))
+  (input-state-enabled-p context :mouse button))
 
 (defun mouse-button-leave-p (context button)
-  (button-state-leave-p context :mouse button))
+  (input-state-leave-p context :mouse button))
 
 (defun get-mouse-position (context)
   (let ((state (au:href (states (input-data (core-state context))) (cons :mouse :motion))))
