@@ -64,6 +64,7 @@
            #:gamepad-button-enabled-p
            #:gamepad-button-leave-p
            #:get-gamepad-axis
+           #:get-gamepad-description
            #:mouse-button-enter-p
            #:mouse-button-enabled-p
            #:mouse-button-leave-p
