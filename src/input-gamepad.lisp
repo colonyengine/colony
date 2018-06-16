@@ -28,6 +28,13 @@
       (sdl2:game-controller-close (gamepad-handle v)))
     (clrhash instance-table)))
 
+(defun normalize-gamepad-axis-value (axis value)
+  (case axis
+    ((:trigger-left :trigger-right)
+     (au:map-domain 0 32767 0 1 value))
+    (t
+     (au:map-domain -32767 32767 -1 1 (au:clamp value -32767 32767)))))
+
 (defun load-gamepad-database ()
   (sdl2:game-controller-add-mappings-from-file
    (namestring
@@ -35,12 +42,12 @@
      (get-extension-path)
      (make-pathname :defaults *default-pathname-defaults* :name "gamepad-db" :type "txt")))))
 
-(defun normalize-gamepad-axis-value (axis value)
-  (case axis
-    ((:trigger-left :trigger-right)
-     (au:map-domain 0 32767 0 1 value))
-    (t
-     (au:map-domain -32767 32767 -1 1 (au:clamp value -32767 32767)))))
+(defun enable-background-gamepad-events ()
+  (sdl2-ffi.functions:sdl-set-hint sdl2-ffi:+sdl-hint-joystick-allow-background-events+ "1"))
+
+(defun prepare-gamepads ()
+  (load-gamepad-database)
+  (enable-background-gamepad-events))
 
 ;;; Events
 

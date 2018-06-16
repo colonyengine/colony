@@ -56,7 +56,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 (defmethod %initialize-engine ((core-state core-state) scene-name)
   (setup-lisp-repl)
   (initialize-host)
-  (load-gamepad-database)
+  (prepare-gamepads)
   (make-display core-state)
   (prepare-extension :graphs core-state)
   (prepare-extension :call-flow core-state)
