@@ -9,7 +9,7 @@
                        :initform nil)
    (%entering :accessor entering
               :initform nil)
-   (%leaving :accessor leaving
+   (%exiting :accessor exiting
              :initform nil)
    (%states :reader states
             :initform (au:dict #'equal
@@ -43,9 +43,9 @@
        (:maximize (on-window-maximize core-state))
        (:restore (on-window-restore core-state))
        (:mouse-focus-enter (on-window-mouse-focus-enter core-state))
-       (:mouse-focus-leave (on-window-mouse-focus-leave core-state))
+       (:mouse-focus-leave (on-window-mouse-focus-exit core-state))
        (:keyboard-focus-enter (on-window-keyboard-focus-enter core-state))
-       (:keyboard-focus-leave (on-window-keyboard-focus-leave core-state))
+       (:keyboard-focus-leave (on-window-keyboard-focus-exit core-state))
        (:close (on-window-close core-state))))
     (:mousebuttonup
      (:button button)
@@ -86,7 +86,7 @@
     (setf (au:href states (cons :mouse :scroll-horizontal)) 0
           (au:href states (cons :mouse :scroll-vertical)) 0)
     (enable-entering core-state)
-    (disable-leaving core-state)))
+    (disable-exiting core-state)))
 
 (defun handle-events (core-state)
   (perform-input-state-tasks core-state)

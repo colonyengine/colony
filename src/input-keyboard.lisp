@@ -42,10 +42,10 @@
 ;;; User protocol
 
 (defun key-enter-p (context key)
-  (input-state-enter-p context :key key))
+  (input-enter-p context :key key))
 
 (defun key-enabled-p (context key)
-  (input-state-enabled-p context :key key))
+  (input-enabled-p context :key key))
 
-(defun key-leave-p (context key)
-  (input-state-leave-p context :key key))
+(defun key-exit-p (context key)
+  (input-exit-p context :key key))

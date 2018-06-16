@@ -88,13 +88,13 @@
   (not (member gamepad-id (detached-gamepads (input-data (core-state context))))))
 
 (defun gamepad-button-enter-p (context gamepad-id button)
-  (input-state-enter-p context gamepad-id button))
+  (input-enter-p context gamepad-id button))
 
 (defun gamepad-button-enabled-p (context gamepad-id button)
-  (input-state-enabled-p context gamepad-id button))
+  (input-enabled-p context gamepad-id button))
 
-(defun gamepad-button-leave-p (context gamepad-id button)
-  (input-state-leave-p context gamepad-id button))
+(defun gamepad-button-exit-p (context gamepad-id button)
+  (input-exit-p context gamepad-id button))
 
 (defun get-gamepad-description (context gamepad-id)
   (let ((gamepad (au:href (gamepad-ids (input-data (core-state context))) gamepad-id)))

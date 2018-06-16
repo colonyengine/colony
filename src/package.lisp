@@ -58,16 +58,16 @@
   ;; input
   (:export #:key-enter-p
            #:key-enabled-p
-           #:key-leave-p
+           #:key-exit-p
            #:gamepad-attached-p
            #:gamepad-button-enter-p
            #:gamepad-button-enabled-p
-           #:gamepad-button-leave-p
+           #:gamepad-button-exit-p
            #:get-gamepad-axis
            #:get-gamepad-description
            #:mouse-button-enter-p
            #:mouse-button-enabled-p
-           #:mouse-button-leave-p
+           #:mouse-button-exit-p
            #:get-mouse-position
            #:get-mouse-scroll)
   ;; scene

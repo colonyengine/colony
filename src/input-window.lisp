@@ -2,7 +2,7 @@
 
 (au:define-constant +window-event-names+
     #(nil :show :hide nil :move :resize nil :minimize :maximize :restore :mouse-focus-enter
-      :mouse-focus-leave :keyboard-focus-enter :keyboard-focus-leave :close nil nil)
+      :mouse-focus-exit :keyboard-focus-enter :keyboard-focus-exit :close nil nil)
   :test #'equalp)
 
 (defun get-window-title (window)
@@ -57,13 +57,13 @@
 (defun on-window-mouse-focus-enter (core-state)
   (declare (ignore core-state)))
 
-(defun on-window-mouse-focus-leave (core-state)
+(defun on-window-mouse-focus-exit (core-state)
   (declare (ignore core-state)))
 
 (defun on-window-keyboard-focus-enter (core-state)
   (declare (ignore core-state)))
 
-(defun on-window-keyboard-focus-leave (core-state)
+(defun on-window-keyboard-focus-exit (core-state)
   (declare (ignore core-state)))
 
 (defun on-window-close (core-state)
