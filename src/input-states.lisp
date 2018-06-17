@@ -1,4 +1,4 @@
-(in-package :%fl.core)
+(in-package :%fl)
 
 (defstruct input-state enter enabled exit)
 

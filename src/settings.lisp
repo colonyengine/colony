@@ -1,4 +1,4 @@
-(in-package :%fl.core)
+(in-package :%fl)
 
 (defmethod extension-file-type ((extension-type (eql :settings)))
   "cfg")

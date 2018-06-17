@@ -1,4 +1,4 @@
-(in-package :%fl.core)
+(in-package :%fl)
 
 (au:define-constant +window-event-names+
     #(nil :show :hide nil :move :resize nil :minimize :maximize :restore :mouse-focus-enter

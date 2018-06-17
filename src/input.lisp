@@ -1,4 +1,4 @@
-(in-package :%fl.core)
+(in-package :%fl)
 
 (defclass input-data ()
   ((%gamepad-instances :reader gamepad-instances

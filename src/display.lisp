@@ -1,4 +1,4 @@
-(in-package :%fl.core)
+(in-package :%fl)
 
 (defclass display (box.frame:frame-manager)
   ((%core-state :reader core-state

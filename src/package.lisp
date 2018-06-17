@@ -1,6 +1,6 @@
 (in-package :defpackage+-user-1)
 
-(defpackage+ #:%fl.core
+(defpackage+ #:%first-light
   (:nicknames #:%fl)
   (:use #:cl)
   (:export #:start-engine
@@ -102,7 +102,7 @@
            #:draw-func))
 
 (defpackage+ #:fl.comp.transform
-  (:use #:cl #:%fl.core)
+  (:use #:cl #:%fl)
   (:export-only #:transform
                 #:model
                 #:local
@@ -185,7 +185,7 @@
                  #:update-component))
 
 (defpackage+ #:fl.comp.camera
-  (:use #:cl #:%fl.core #:fl.comp.transform)
+  (:use #:cl #:%fl #:fl.comp.transform)
   (:export-only #:camera
                 #:transform
                 #:view
@@ -196,59 +196,57 @@
                 #:compute-camera-view))
 
 (defpackage+ #:fl.comp.following-camera
-  (:use #:cl #:%fl.core #:fl.comp.transform #:fl.comp.camera)
+  (:use #:cl #:%fl #:fl.comp.transform #:fl.comp.camera)
   (:export-only #:following-camera))
 
 (defpackage+ #:fl.comp.tracking-camera
-  (:use #:cl #:%fl.core #:fl.comp.transform #:fl.comp.camera)
+  (:use #:cl #:%fl #:fl.comp.transform #:fl.comp.camera)
   (:export-only #:tracking-camera))
 
 (defpackage+ #:fl.comp.mesh
-  (:use #:cl #:%fl.core)
+  (:use #:cl #:%fl)
   (:export-only #:mesh
                 #:primitives))
 
 (defpackage+ #:fl.comp.mesh-renderer
-  (:use #:cl #:%fl.core)
+  (:use #:cl #:%fl)
   (:export-only #:mesh-renderer
                 #:material
                 #:draw-mesh))
 
 (defpackage+ #:fl.shaders
-  (:use #:%fl.core #:shadow.lang)
+  (:use #:%fl #:shadow.lang)
   (:export-only #:unlit-color
                 #:unlit-color-decal
                 #:unlit-texture
                 #:unlit-texture-decal))
 
 (defpackage+ #:fl.materials
-  (:use #:cl #:%fl.core)
-  (:export-only
-   ;; Material Profiles
-   #:u-model
-   #:u-view
-   #:u-proj
-   #:u-time
-   #:u-mvp
-   #:u-vp
-   #:u-mvpt
-   #:u-vpt
-   ;; Materials
-   #:missing-material
-   #:unlit-color
-   #:unlit-color-decal
-   #:unlit-texture
-   #:unlit-texture-decal
-   #:unlit-texture-decal-bright
-   ;; Helper functions
-   #:total-time/uniform))
+  (:use #:cl #:%fl)
+  ;; helper functions
+  (:export #:total-time/uniform)
+  ;; profiles
+  (:export #:u-model
+           #:u-mvp
+           #:u-mvpt
+           #:u-proj
+           #:u-time
+           #:u-view
+           #:u-vp
+           #:u-vpt)
+  ;; materials
+  (:export #:missing-material
+           #:unlit-color
+           #:unlit-color-decal
+           #:unlit-texture
+           #:unlit-texture-decal
+           #:unlit-texture-decal-bright))
 
 (defpackage+ #:fl.textures
-  (:use #:cl #:%fl.core)
-  (:export-only
-   ;; Texture Profiles
-   #:default-profile
-   #:clamp-all-edges
-   ;; Textures
-   #:missing-texture
-   #:debug-texture))
+  (:use #:cl #:%fl)
+  ;; profiles
+  (:export #:default-profile
+           #:clamp-all-edges)
+  ;; textures
+  (:export #:missing-texture
+           #:debug-texture))

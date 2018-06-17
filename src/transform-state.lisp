@@ -1,4 +1,4 @@
-(in-package :%fl.core)
+(in-package :%fl)
 
 (defclass transform-state ()
   ((%current :accessor current

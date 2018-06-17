@@ -1,4 +1,4 @@
-(in-package :%fl.core)
+(in-package :%fl)
 
 (defclass thread-safe-queue ()
   ((%queue-lock :accessor queue-lock

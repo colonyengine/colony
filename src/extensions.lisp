@@ -1,4 +1,4 @@
-(in-package :%fl.core)
+(in-package :%fl)
 
 (defun get-extension-path (&optional (system-name :first-light))
   (au:resolve-system-path system-name "data/"))
@@ -8,7 +8,7 @@
    path
    (lambda (x)
      (with-standard-io-syntax
-       (let ((*package* (find-package :%fl.core))
+       (let ((*package* (find-package :%fl))
              (*print-readably* nil))
          (load x)))
      (simple-logger:emit :extension.load owner x))
@@ -32,7 +32,7 @@
   (map-extensions type path :local))
 
 (defun collect-extension-forms (type path)
-  (let ((*package* (find-package :%fl.core))
+  (let ((*package* (find-package :%fl))
         (results))
     (flet ((%collect (type path)
              (au:map-files
