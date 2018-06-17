@@ -179,7 +179,10 @@
   ;; components
   ;; TODO: Finish user API.
   (:inherit-from #:%fl
-                 #:define-component))
+                 #:define-component
+                 #:initialize-component
+                 #:render-component
+                 #:update-component))
 
 (defpackage+ #:fl.comp.camera
   (:use #:cl #:%fl.core #:fl.comp.transform)
