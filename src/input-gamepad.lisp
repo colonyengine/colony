@@ -96,9 +96,6 @@
 
 ;;; User protocol
 
-(defun gamepad-attached-p (context gamepad-id)
-  (not (member gamepad-id (detached-gamepads (input-data (core-state context))))))
-
 (defun get-gamepad-description (context gamepad-id)
   (let ((gamepad (au:href (gamepad-ids (input-data (core-state context))) gamepad-id)))
     (gamepad-description gamepad)))

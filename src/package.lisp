@@ -56,8 +56,7 @@
   ;; shaders
   (:export #:define-shader)
   ;; input
-  (:export #:gamepad-attached-p
-           #:get-gamepad-axis
+  (:export #:get-gamepad-axis
            #:get-gamepad-description
            #:get-mouse-position
            #:get-mouse-scroll
@@ -159,7 +158,6 @@
                  #:define-shader)
   ;; input
   (:inherit-from #:%fl
-                 #:gamepad-attached-p
                  #:get-gamepad-axis
                  #:get-gamepad-description
                  #:get-mouse-position
