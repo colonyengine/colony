@@ -31,10 +31,14 @@
 ;;; Events
 
 (defun on-key-up (core-state key)
-  (input-transition-out core-state (list :key key)))
+  (input-transition-out core-state (list :key key))
+  (input-transition-out core-state '(:key :any))
+  (input-transition-out core-state '(:button :any)))
 
 (defun on-key-down (core-state key)
   (input-transition-in core-state (list :key key))
+  (input-transition-in core-state '(:key :any))
+  (input-transition-in core-state '(:button :any))
   ;; TODO: Remove this later when possible.
   (when (eq key :escape)
     (stop-engine core-state)))

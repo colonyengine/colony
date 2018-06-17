@@ -9,10 +9,14 @@
 ;;; Events
 
 (defun on-mouse-button-up (core-state button)
-  (input-transition-out core-state `(:mouse ,button)))
+  (input-transition-out core-state (list :mouse button))
+  (input-transition-out core-state '(:mouse :any))
+  (input-transition-out core-state '(:button :any)))
 
 (defun on-mouse-button-down (core-state button)
-  (input-transition-in core-state `(:mouse ,button)))
+  (input-transition-in core-state (list :mouse button))
+  (input-transition-in core-state '(:mouse :any))
+  (input-transition-in core-state '(:button :any)))
 
 (defun on-mouse-scroll (core-state x y)
   (let ((states (au:href (states (input-data core-state)))))

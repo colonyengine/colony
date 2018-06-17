@@ -81,12 +81,18 @@
           (normalize-gamepad-axis-value axis value))))
 
 (defun on-gamepad-button-up (core-state gamepad-instance button)
-  (let ((gamepad (get-gamepad-by-instance core-state gamepad-instance)))
-    (input-transition-out core-state (list (gamepad-id gamepad) button))))
+  (let* ((gamepad (get-gamepad-by-instance core-state gamepad-instance))
+         (id (gamepad-id gamepad)))
+    (input-transition-out core-state (list id button))
+    (input-transition-out core-state (list id :any))
+    (input-transition-out core-state '(:button :any))))
 
 (defun on-gamepad-button-down (core-state gamepad-instance button)
-  (let ((gamepad (get-gamepad-by-instance core-state gamepad-instance)))
-    (input-transition-in core-state (list (gamepad-id gamepad) button))))
+  (let* ((gamepad (get-gamepad-by-instance core-state gamepad-instance))
+         (id (gamepad-id gamepad)))
+    (input-transition-in core-state (list id button))
+    (input-transition-in core-state (list id :any))
+    (input-transition-in core-state '(:button :any))))
 
 ;;; User protocol
 
