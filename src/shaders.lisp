@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 (defmethod extension-file-type ((extension-type (eql :shader-stages)))
   "shd")

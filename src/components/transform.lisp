@@ -3,14 +3,14 @@
 (define-component transform ()
   ((parent :default nil)
    (children :default nil)
-   (translation :default (%make-transform-state 'transform-state-vector
-                                                :incremental-delta (v3:zero)))
-   (rotation :default (%make-transform-state 'transform-state-quaternion
-                                             :incremental (v3:zero)
-                                             :incremental-delta (v3:zero)))
-   (scale :default (%make-transform-state 'transform-state-vector
-                                          :current (v3:make 1.0 1.0 1.0)
-                                          :incremental-delta (v3:zero)))
+   (translation :default (make-transform-state 'transform-state-vector
+                                               :incremental-delta (v3:zero)))
+   (rotation :default (make-transform-state 'transform-state-quaternion
+                                            :incremental (v3:zero)
+                                            :incremental-delta (v3:zero)))
+   (scale :default (make-transform-state 'transform-state-vector
+                                         :current (v3:make 1.0 1.0 1.0)
+                                         :incremental-delta (v3:zero)))
    (local :default (m4:id))
    (model :default (m4:id))))
 
@@ -23,25 +23,21 @@
         (parent child) nil))
 
 (defun translate-node (node delta)
-  (with-slots (%current %incremental %incremental-delta %previous)
+  (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
       (translation node)
-    (v3:copy! %previous %current)
-    (v3:+! %current %current
-           (v3:scale! %incremental-delta %incremental delta))))
+    (v3:copy! p c)
+    (v3:+! c c (v3:scale! idelta i delta))))
 
 (defun rotate-node (node delta)
-  (with-slots (%current %incremental %incremental-delta %previous)
+  (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
       (rotation node)
-    (q:copy! %previous %current)
-    (q:rotate! %current %current
-               (v3:scale! %incremental-delta %incremental delta))))
+    (q:copy! p c)
+    (q:rotate! c c (v3:scale! idelta i delta))))
 
 (defun scale-node (node delta)
-  (with-slots (%current %incremental %incremental-delta %previous)
-      (scale node)
-    (v3:copy! %previous %current)
-    (v3:+! %current %current
-           (v3:scale! %incremental-delta %incremental delta))))
+  (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous)) (scale node)
+    (v3:copy! p c)
+    (v3:+! c c (v3:scale! idelta i delta))))
 
 (defun transform-node (core-state node)
   (let ((delta (box.frame:delta (display core-state))))
@@ -78,10 +74,8 @@
    root-node))
 
 (defmethod make-component ((component-type (eql 'transform)) context &rest args)
-  (let ((instance (make-instance component-type
-                                 :type component-type :context context)))
-    (apply #'reinitialize-instance instance :type component-type
-					    :context context args)
+  (let ((instance (make-instance component-type :type component-type :context context)))
+    (apply #'reinitialize-instance instance :type component-type :context context args)
     instance))
 
 (defmethod reinitialize-instance ((instance transform)
@@ -103,51 +97,4 @@
           (current %scale) scale/current
           (incremental %scale) scale/incremental)))
 
-(defclass transform-state ()
-  ((%current :accessor current
-             :initarg :current)
-   (%incremental :accessor incremental
-                 :initarg :incremental)
-   (%incremental-delta :accessor incremental-delta
-                       :initarg :incremental-delta)
-   (%previous :accessor previous
-              :initarg :previous)
-   (%interpolated :accessor interpolated
-                  :initarg :interpolated)))
-
-(defclass transform-state-scalar (transform-state) ())
-
-(defclass transform-state-vector (transform-state) ())
-
-(defclass transform-state-quaternion (transform-state) ())
-
-(defgeneric %generate-default-state-value (type)
-  (:method ((type (eql 'transform-state-scalar)))
-    0)
-  (:method ((type (eql 'transform-state-vector)))
-    (v3:zero))
-  (:method ((type (eql 'transform-state-quaternion)))
-    (q:id)))
-
-(defun %generate-default-state-initargs (type)
-  (mapcan
-   (lambda (key) (list key (%generate-default-state-value type)))
-   '(:current :incremental :incremental-delta :previous :interpolated)))
-
-(defun %make-transform-state (type &rest initargs)
-  (apply #'make-instance type
-         (append initargs (%generate-default-state-initargs type))))
-
-(defgeneric interpolate-state (state factor))
-
-(defmethod interpolate-state ((state transform-state-scalar) factor)
-  (with-slots (%previous %current %interpolated) state
-    (setf %interpolated (au:lerp factor %previous %current))))
-
-(defmethod interpolate-state ((state transform-state-vector) factor)
-  (with-slots (%previous %current %interpolated) state
-    (v3:lerp! %interpolated %previous %current factor)))
-
-(defmethod interpolate-state ((state transform-state-quaternion) factor)
-  (with-slots (%previous %current %interpolated) state
-    (q:slerp! %interpolated %previous %current factor)))
+;;; User protocol

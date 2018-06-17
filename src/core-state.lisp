@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 (defvar *core-state-debug*)
 

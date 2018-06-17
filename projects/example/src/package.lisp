@@ -1,16 +1,16 @@
 (in-package :defpackage+-user-1)
 
 (defpackage+ #:fl.example
-  (:use #:cl #:fl.core)
+  (:use #:cl #:fl)
   (:export-only #:damaged-helmet
                 #:geometric-volumes))
 
 (defpackage+ #:fl.example.shaders
-  (:use #:fl.core #:shadow.lang)
+  (:use #:fl #:shadow.lang)
   (:export-only #:damaged-helmet))
 
 (defpackage+ #:fl.example.materials
-  (:use #:cl #:fl.core))
+  (:use #:cl #:fl))
 
 (defpackage+ #:fl.example.textures
-  (:use #:cl #:fl.core))
+  (:use #:cl #:fl))

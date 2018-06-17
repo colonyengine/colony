@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 (au:define-constant +mouse-button-names+
     #(nil :mouse-left :mouse-middle :mouse-right :mouse-x1 :mouse-x2)

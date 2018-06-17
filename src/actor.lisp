@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 (defclass actor ()
   ((%id :reader id
@@ -29,15 +29,14 @@
     (setf (actor component) actor))
   (setf (au:href (components actor) component) component)
   (let ((qualified-type
-	  (qualify-component (core-state actor) (component-type component))))
-    (push component
-          (au:href (components-by-type actor) qualified-type))))
+	        (qualify-component (core-state actor) (component-type component))))
+    (push component (au:href (components-by-type actor) qualified-type))))
 
 (defun attach-multiple-components (actor components)
   (dolist (component components)
     (attach-component actor component)))
 
-;; TODO: This function is going to be hard to implement with the type tables
+;; TODO: This function is going to be hard to implement with the type tables.
 ;; just a set of nested hash tables. It might force us to move the type table
 ;; to a real object, so it can keep track of what is stored inside of it.
 (defun number-of-components (actor)

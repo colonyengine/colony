@@ -1,99 +1,108 @@
 (in-package :defpackage+-user-1)
 
-(defpackage+ #:fl.core
+(defpackage+ #:%fl.core
+  (:nicknames #:%fl)
   (:use #:cl)
   (:export #:start-engine
            #:stop-engine)
-  ;; core state
-  (:export #:core-state
-           #:make-core-state
-           #:user-package
-           #:display
-           #:window
-           #:cameras
-           #:context
-           #:lookup-material
-           #:shared-storage
-           #:define-settings
-           #:find-resource
+  ;; common
+  (:export #:cameras
            #:cfg
-           #:with-cfg
-           #:with-shared-storage
+           #:core-state
+           #:define-settings
+           #:display
+           #:find-resource
+           #:id
+           #:make-core-state
            #:rcache
-           #:rcache-lookup
            #:rcache-construct
+           #:rcache-dispose
+           #:rcache-lookup
            #:rcache-remove
-           #:rcache-dispose)
+           #:shared-storage
+           #:user-package
+           #:window
+           #:with-cfg
+           #:with-shared-storage)
   ;; extensions
   (:export #:extension-file-type
-           #:prepare-extension
-           #:load-extensions)
+           #:load-extensions
+           #:prepare-extension)
   ;; context
-  (:export #:context
-           #:settings
-           #:shaders
-           #:shared-storage-table
-           #:active-camera
+  (:export #:active-camera
+           #:context
            #:delta
+           #:epilogue
            #:frame-time
-           #:total-time
-           #:ss-href
            #:prologue
-           #:epilogue)
+           #:settings
+           #:shared-storage-table
+           #:ss-href
+           #:total-time)
   ;; textures
-  (:export #:load-texture
+  (:export #:define-texture
            #:define-texture-profile
-           #:define-texture
-           #:general-data-format-descriptor)
+           #:general-data-format-descriptor
+           #:load-texture)
   ;; materials
-  (:export #:define-material
-           #:define-material-profile
+  (:export #:bind-material
            #:copy-material
-           #:bind-material
-           #:mat-uniform-ref
+           #:define-material
+           #:define-material-profile
+           #:lookup-material
            #:mat-computed-uniform-ref
+           #:mat-uniform-ref
            #:shader)
   ;; shaders
   (:export #:define-shader)
   ;; input
-  (:export #:input-enter-p
-           #:input-enabled-p
-           #:input-exit-p
-           #:gamepad-attached-p
+  (:export #:gamepad-attached-p
            #:get-gamepad-axis
            #:get-gamepad-description
            #:get-mouse-position
-           #:get-mouse-scroll)
+           #:get-mouse-scroll
+           #:input-enabled-p
+           #:input-enter-p
+           #:input-exit-p)
+  ;; transform-state
+  (:export #:make-transform-state
+           #:transform-state-scalar
+           #:transform-state-vector
+           #:transform-state-quaternion
+           #:current
+           #:incremental
+           #:incremental-delta
+           #:previous
+           #:interpolated
+           #:interpolate-state)
   ;; scene
-  (:export #:define-scene
-           #:get-scene)
+  (:export #:define-scene)
   ;; actor
   (:export #:actor
-           #:id
-           #:make-actor
-           #:spawn-actor
            #:attach-component
            #:attach-multiple-components
-           #:detach-component)
+           #:detach-component
+           #:make-actor
+           #:spawn-actor)
   ;; components
-  (:export #:component
-           #:state
-           #:define-component
-           #:make-component
-           #:initialize-component
-           #:physics-update-component
-           #:update-component
-           #:render-component
-           #:destroy-component
+  (:export #:actor-component-by-type
            #:actor-components-by-type
-           #:actor-component-by-type
-           #:shared-storage-metadata)
+           #:component
+           #:define-component
+           #:destroy-component
+           #:initialize-component
+           #:make-component
+           #:physics-update-component
+           #:render-component
+           #:shared-storage-metadata
+           #:state
+           #:update-component)
   ;; assets
   (:export #:load-mesh
            #:draw-func))
 
 (defpackage+ #:fl.comp.transform
-  (:use #:cl #:fl.core)
+  (:use #:cl #:%fl.core)
   (:export-only #:transform
                 #:model
                 #:local
@@ -103,8 +112,77 @@
                 #:transform-node
                 #:interpolate-transforms))
 
+(defpackage+ #:first-light
+  (:nicknames #:fl)
+  (:use #:cl)
+  ;; common
+  (:inherit-from #:%fl
+                 #:cfg
+                 #:define-settings
+                 #:find-resource
+                 #:id
+                 #:start-engine
+                 #:stop-engine
+                 #:with-shared-storage)
+  ;; extensions
+  (:inherit-from #:%fl
+                 #:extension-file-type
+                 #:prepare-extension)
+  ;; context
+  (:inherit-from #:%fl
+                 #:active-camera
+                 #:context
+                 #:delta
+                 #:epilogue
+                 #:frame-time
+                 #:prologue
+                 #:settings
+                 #:ss-href
+                 #:total-time)
+  ;; textures
+  (:inherit-from #:%fl
+                 #:define-texture
+                 #:define-texture-profile
+                 #:general-data-format-descriptor)
+  ;; materials
+  (:inherit-from #:%fl
+                 #:bind-material
+                 #:copy-material
+                 #:define-material
+                 #:define-material-profile
+                 #:lookup-material
+                 #:mat-computed-uniform-ref
+                 #:mat-uniform-ref
+                 #:shader)
+  ;; shaders
+  (:inherit-from #:%fl
+                 #:define-shader)
+  ;; input
+  (:inherit-from #:%fl
+                 #:gamepad-attached-p
+                 #:get-gamepad-axis
+                 #:get-gamepad-description
+                 #:get-mouse-position
+                 #:get-mouse-scroll
+                 #:input-enabled-p
+                 #:input-enter-p
+                 #:input-exit-p)
+  ;; scene
+  (:inherit-from #:%fl
+                 #:define-scene)
+  ;; actor
+  ;; TODO: Finish user API.
+  (:inherit-from #:%fl
+                 #:actor
+                 #:actor-component-by-type
+                 #:actor-components-by-type)
+  ;; components
+  ;; TODO: Finish user API.
+  (:inherit-from #:%fl
+                 #:define-component))
+
 (defpackage+ #:fl.comp.camera
-  (:use #:cl #:fl.core #:fl.comp.transform)
+  (:use #:cl #:%fl.core #:fl.comp.transform)
   (:export-only #:camera
                 #:transform
                 #:view
@@ -115,33 +193,33 @@
                 #:compute-camera-view))
 
 (defpackage+ #:fl.comp.following-camera
-  (:use #:cl #:fl.core #:fl.comp.transform #:fl.comp.camera)
+  (:use #:cl #:%fl.core #:fl.comp.transform #:fl.comp.camera)
   (:export-only #:following-camera))
 
 (defpackage+ #:fl.comp.tracking-camera
-  (:use #:cl #:fl.core #:fl.comp.transform #:fl.comp.camera)
+  (:use #:cl #:%fl.core #:fl.comp.transform #:fl.comp.camera)
   (:export-only #:tracking-camera))
 
 (defpackage+ #:fl.comp.mesh
-  (:use #:cl #:fl.core)
+  (:use #:cl #:%fl.core)
   (:export-only #:mesh
                 #:primitives))
 
 (defpackage+ #:fl.comp.mesh-renderer
-  (:use #:cl #:fl.core)
+  (:use #:cl #:%fl.core)
   (:export-only #:mesh-renderer
                 #:material
                 #:draw-mesh))
 
 (defpackage+ #:fl.shaders
-  (:use #:fl.core #:shadow.lang)
+  (:use #:%fl.core #:shadow.lang)
   (:export-only #:unlit-color
                 #:unlit-color-decal
                 #:unlit-texture
                 #:unlit-texture-decal))
 
 (defpackage+ #:fl.materials
-  (:use #:cl #:fl.core)
+  (:use #:cl #:%fl.core)
   (:export-only
    ;; Material Profiles
    #:u-model
@@ -163,7 +241,7 @@
    #:total-time/uniform))
 
 (defpackage+ #:fl.textures
-  (:use #:cl #:fl.core)
+  (:use #:cl #:%fl.core)
   (:export-only
    ;; Texture Profiles
    #:default-profile

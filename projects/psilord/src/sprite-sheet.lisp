@@ -130,10 +130,10 @@
     ;; binding-ids are used appropriately, and etc.
     ;;
     ;; Technically, I want:
-    ;; (fl.core:bind-block-to-buffer :sprite-sheet-block :sprite-sheet-buffer)
+    ;; (%fl.core:bind-block-to-buffer :sprite-sheet-block :sprite-sheet-buffer)
     ;; instead of the next two calls.
     ;; and subsequently:
-    ;; (fl.core:unbind-block-from-buffer :sprite-sheet-block :sprite-sheet-buffer)
+    ;; (%fl.core:unbind-block-from-buffer :sprite-sheet-block :sprite-sheet-buffer)
 
     ;; TODO: The 9 is very wrong here. This binding needs to get shoved into an
     ;; FL API to manage the actual binding point integers selected.  also,

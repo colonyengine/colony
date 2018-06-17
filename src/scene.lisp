@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 (defun %type-check-actor (actor actors-list)
   (unless (char= (char (symbol-name actor) 0) #\@)

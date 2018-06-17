@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 (defclass component ()
   ((%context :reader context
@@ -21,7 +21,7 @@
 
 ;;; BEGIN User API Component Protocol
 
-;; TODO: Make this empty one export properly from fl.core so we always see it.
+;; TODO: Make this empty one export properly from %fl.core so we always see it.
 (defgeneric shared-storage-metadata (component-name &optional namespace)
   (:method ((component-name symbol) &optional namespace)
     (declare (ignore namespace))))
@@ -81,7 +81,7 @@
        ;; component. So the user API is a bit wonky. However, the actual game
        ;; dev probably wouldn't see this function too often. Still, pacakges
        ;; make it interesting....
-       (defmethod ,(intern (symbol-name 'shared-storage-metadata) :fl.core)
+       (defmethod ,(intern (symbol-name 'shared-storage-metadata) :%fl.core)
            ((component-name (eql ',name)) &optional namespace)
 
          (declare (ignore component-name))
@@ -133,7 +133,7 @@ DEFINE-COMPONENT form.
 "
   (let ((search-table (component-search-table (tables core-state)))
         (component-type/class (find-class component-type nil))
-        (base-component-type/class (find-class 'fl.core:component)))
+        (base-component-type/class (find-class '%fl.core:component)))
     (au:when-found (pkg-symbol (au:href search-table component-type))
       (return-from qualify-component pkg-symbol))
     (if (or (null component-type/class)

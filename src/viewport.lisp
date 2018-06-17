@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 (defmethod generate-viewport ((display display) position size)
   (with-cfg (window-width window-height) (context (core-state display))

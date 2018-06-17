@@ -1,7 +1,7 @@
 (in-package :defpackage+-user-1)
 
 (defpackage+ #:fl.mfiano
-  (:use #:cl #:fl.core)
+  (:use #:cl #:fl)
   (:export-only #:sprite-test
                 #:graph-test
                 #:noise-test
@@ -9,7 +9,7 @@
                 #:mesh-test))
 
 (defpackage+ #:fl.mfiano.shaders
-  (:use #:fl.core #:shadow.lang)
+  (:use #:fl #:shadow.lang)
   (:export-only #:screen-draw
                 #:sprite-test
                 #:graph-test
@@ -19,7 +19,7 @@
 
 (defpackage+ #:fl.mfiano.materials
   (:use #:cl #:fl.materials)
-  (:import-from #:fl.core #:define-material))
+  (:import-from #:fl #:define-material))
 
 (defpackage+ #:fl.mfiano.textures
-  (:use #:cl #:fl.core))
+  (:use #:cl #:fl))

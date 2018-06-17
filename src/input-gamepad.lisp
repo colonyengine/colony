@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 (au:define-constant +gamepad-axis-names+
     #(:left-horizontal :left-vertical :right-horizontal :right-vertical :trigger-left

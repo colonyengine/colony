@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 (simple-logger:define-message :info :engine.start
   "Started ~a.")

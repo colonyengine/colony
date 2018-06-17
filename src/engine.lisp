@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 (au:eval-always
   (defmacro profile (core-state duration)
@@ -20,10 +20,12 @@
          (sb-profile:reset)))))
 
 (defgeneric prologue (context)
-  (:method (context) nil))
+  (:method (context)
+    (au:noop)))
 
 (defgeneric epilogue (context)
-  (:method (context) nil))
+  (:method (context)
+    (au:noop)))
 
 (defun run-prologue (core-state)
   "The prologue is a (defmethod prologue ((context context)) ...) method optionally defined in the

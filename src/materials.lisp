@@ -1,4 +1,4 @@
-(in-package :fl.core)
+(in-package :%fl.core)
 
 ;; Held in core-state, the material database for all materials everywhere.
 (defclass materials-table ()
