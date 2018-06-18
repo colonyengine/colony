@@ -3,8 +3,6 @@
 (defpackage+ #:%first-light
   (:nicknames #:%fl)
   (:use #:cl)
-  (:export #:start-engine
-           #:stop-engine)
   ;; common
   (:export #:cameras
            #:cfg
@@ -20,6 +18,8 @@
            #:rcache-lookup
            #:rcache-remove
            #:shared-storage
+           #:start-engine
+           #:stop-engine
            #:user-package
            #:window
            #:with-cfg
