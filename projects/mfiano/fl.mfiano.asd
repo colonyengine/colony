@@ -9,5 +9,4 @@
   :serial t
   :components
   ((:file "package")
-   (:file "sprite-test")
-   (:file "noise-test")))
+   (:file "sprite-test")))

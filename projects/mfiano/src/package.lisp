@@ -10,8 +10,7 @@
 
 (defpackage+ #:fl.mfiano.shaders
   (:use #:fl #:shadow.lang)
-  (:export-only #:screen-draw
-                #:sprite-test
+  (:export-only #:sprite-test
                 #:graph-test
                 #:noise-test
                 #:noise-test/playground
