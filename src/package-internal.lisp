@@ -95,10 +95,53 @@
            #:render-component
            #:shared-storage-metadata
            #:state
-           #:update-component)
-  ;; assets
-  (:export #:load-mesh
-           #:draw-func))
+           #:update-component))
+
+(defpackage+ #:fl.assets
+  (:use #:cl #:%fl)
+  (:export-only #:load-mesh
+                #:draw-func))
+
+(defpackage+ #:fl.shaders
+  (:use #:%fl #:shadow.lang)
+  (:export-only #:unlit-color
+                #:unlit-color-decal
+                #:unlit-texture
+                #:unlit-texture-decal))
+
+(defpackage+ #:fl.materials
+  (:use #:cl #:%fl)
+  ;; helper functions
+  (:export #:total-time/uniform)
+  ;; profiles
+  (:export #:u-model
+           #:u-mvp
+           #:u-mvpt
+           #:u-proj
+           #:u-time
+           #:u-view
+           #:u-vp
+           #:u-vpt)
+  ;; materials
+  (:export #:missing-material
+           #:unlit-color
+           #:unlit-color-decal
+           #:unlit-texture
+           #:unlit-texture-decal
+           #:unlit-texture-decal-bright))
+
+(defpackage+ #:fl.textures
+  (:use #:cl #:%fl)
+  (:export #:define-texture
+           #:define-texture-profile
+           #:general-data-format-descriptor
+           #:load-texture)
+  ;; profiles
+  (:export #:default-profile
+           #:clamp-all-edges)
+  ;; textures
+  (:export #:debug-texture
+           #:missing-texture))
 
 (defpackage+ #:fl.comp.transform
   (:use #:cl #:%fl)
@@ -141,40 +184,3 @@
   (:export-only #:mesh-renderer
                 #:material
                 #:draw-mesh))
-
-(defpackage+ #:fl.shaders
-  (:use #:%fl #:shadow.lang)
-  (:export-only #:unlit-color
-                #:unlit-color-decal
-                #:unlit-texture
-                #:unlit-texture-decal))
-
-(defpackage+ #:fl.materials
-  (:use #:cl #:%fl)
-  ;; helper functions
-  (:export #:total-time/uniform)
-  ;; profiles
-  (:export #:u-model
-           #:u-mvp
-           #:u-mvpt
-           #:u-proj
-           #:u-time
-           #:u-view
-           #:u-vp
-           #:u-vpt)
-  ;; materials
-  (:export #:missing-material
-           #:unlit-color
-           #:unlit-color-decal
-           #:unlit-texture
-           #:unlit-texture-decal
-           #:unlit-texture-decal-bright))
-
-(defpackage+ #:fl.textures
-  (:use #:cl #:%fl)
-  ;; profiles
-  (:export #:default-profile
-           #:clamp-all-edges)
-  ;; textures
-  (:export #:missing-texture
-           #:debug-texture))

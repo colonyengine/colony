@@ -57,7 +57,7 @@
    (:file "texture")
    (:file "materials")
    (:file "shaders")
-   (:file "mesh")
+   (:file "mesh-parser")
    (:file "engine")
    (:file "components/transform")
    (:file "components/camera")
