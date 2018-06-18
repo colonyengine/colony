@@ -482,5 +482,5 @@ return the unknown-type-id symbol."
 
 ;; NOTE: This is unused! It is strictly here to get indentation right in the *.gph files.
 (defmacro define-graph (name (&key (enabled t) category depends-on roots) &body body)
-  (declare (ignore name category enabled))
+  (declare (ignore name enabled category depends-on roots))
   body)
