@@ -249,7 +249,7 @@ The previous state name and the current state name which resulted in the exiting
          (setf (au:href (call-flows core-state) key) value))
        (%prepare)))))
 
-(defmacro define-call-flow (name (&key enabled) &body body)
+(defmacro define-call-flow (name (&key (enabled t)) &body body)
   `(locally (declare (special %temp-call-flow))
      ,(when enabled
         `(setf (au:href %temp-call-flow ,name) ,(parse-call-flows body)))))

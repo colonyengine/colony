@@ -210,20 +210,16 @@ hyper-edge pairs, :hyperedges"
                            :canonical-form lifted-dependency-form
                            :kind kind))))))
 
-(defun get-graph-option (option-name option-form)
-  (second (member option-name option-form)))
-
 (defun parse-graph-definition (form)
   (assert (is-syntax-form-p '(define-graph) form))
-  (destructuring-bind (name options . subforms) (rest form)
-    (let ((category (get-graph-option :category options))
-          (subform-db (au:dict #'eq)))
+  (destructuring-bind (name (&key (enabled t) category depends-on roots) . subforms) (rest form)
+    (let ((subform-db (au:dict #'eq)))
       (make-graphdef name
                      :original-form form
-                     :enabled (get-graph-option :enabled options)
+                     :enabled enabled
                      :category category
-                     :depends-on (get-graph-option :depends-on options)
-                     :roots (get-graph-option :roots options)
+                     :depends-on depends-on
+                     :roots roots
                      :subforms
                      (loop :for i :in subforms
                            :for subform = (parse-subform category i)
@@ -484,8 +480,7 @@ return the unknown-type-id symbol."
     ;; The canonicalized component-type
     putative-component-type))
 
-;; NOTE: This is unused! It is strictly here to get indentation right in the
-;; *.gph files.
-(defmacro define-graph (name (&key category enabled) &body body)
+;; NOTE: This is unused! It is strictly here to get indentation right in the *.gph files.
+(defmacro define-graph (name (&key (enabled t) category depends-on roots) &body body)
   (declare (ignore name category enabled))
   body)
