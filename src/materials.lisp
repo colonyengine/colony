@@ -720,7 +720,7 @@ applied in an overlay manner while defining a material."
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
   (au:with-unique-names (func)
-    (destructuring-bind (&key enabled shader profiles uniforms blocks) body
+    (destructuring-bind (&key (enabled t) shader profiles uniforms blocks) body
       `(let ((,func ,(parse-material name shader profiles uniforms blocks)))
          (declare (special %temp-materials))
          ,(when enabled
