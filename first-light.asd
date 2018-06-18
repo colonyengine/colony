@@ -31,7 +31,8 @@
   :pathname "src"
   :serial t
   :components
-  ((:file "package")
+  ((:file "package-internal")
+   (:file "package-api")
    (:file "common")
    (:file "logging")
    (:file "context")
