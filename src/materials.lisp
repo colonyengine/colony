@@ -313,6 +313,11 @@ CORE-STATE. Return a list of the return values of the FUNC."
 ;; new computed buffer.
 (defun mat-uniform-ref (mat uniform-var)
   (let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
+    (unless material-uniform-value
+      (error "Material ~A doesn't have the referenced uniform: ~A. Please add
+a uniform to the material, and/or check your material profile settings."
+             (id mat) uniform-var))
+
     (semantic-value material-uniform-value)))
 
 ;; export PUBLIC API
@@ -320,9 +325,13 @@ CORE-STATE. Return a list of the return values of the FUNC."
 ;; the computed-value upon setting.
 (defun (setf mat-uniform-ref) (new-val mat uniform-var)
   (let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
+    (unless material-uniform-value
+      (error "Material ~S doesn't have the referenced uniform: ~S. Please add
+a uniform to the material, and/or check your material profile settings."
+             (id mat) uniform-var))
+
     ;; TODO: Need to do something with the old computed value since it might
     ;; be consuming resources like when it is a sampler on the GPU.
-
     (setf (semantic-value material-uniform-value) new-val)
     (execute-composition/semantic->computed material-uniform-value)
 
