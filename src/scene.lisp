@@ -91,13 +91,15 @@
   (loop :for actor :in actor-names
         :collect `(spawn-actor ,actor (context ,core-state))))
 
-(defun parse-scene (scene-name scene-spec)
+(defun parse-scene (scene-name context scene-spec)
   (au:with-unique-names (core-state actor-table actor-name)
     (let* ((actor-names (%generate-actor-names scene-spec))
            (actor-components (%generate-actor-components-table scene-spec actor-names))
            (bindings (%generate-actor-bindings actor-names actor-table)))
       `(lambda (,core-state)
-         (let ((,actor-table (au:dict #'eq)))
+         (let ((,actor-table (au:dict #'eq))
+               (,context (context ,core-state)))
+           (declare (ignorable context))
            (dolist (,actor-name ',actor-names)
              (setf (au:href ,actor-table ,actor-name)
                    (make-actor (context ,core-state) :id ,actor-name :scene ,scene-name)))
@@ -128,15 +130,12 @@
     (flet ((%prepare ()
              (load-extensions extension-type (data-path core-state))
              %temp-scene))
-      (with-slots (%scene-tree) core-state
-        (setf %scene-tree (%make-scene-tree core-state)))
-      (maphash
-       (lambda (k v)
-         (setf (au:href (scenes core-state) k) v))
-       (%prepare)))))
+      (setf (slot-value core-state '%scene-tree) (%make-scene-tree core-state))
+      (au:do-hash (k v (%prepare))
+        (setf (au:href (scenes core-state) k) v)))))
 
-(defmacro define-scene (name (&key enabled) &body body)
-  `(let ((scene ,(parse-scene `',name body)))
+(defmacro define-scene (name (&key (enabled t) (context'context)) &body body)
+  `(let ((scene ,(parse-scene `',name context body)))
      (declare (special %temp-scene))
      ,(when enabled
         `(setf (au:href %temp-scene ',name) scene))
