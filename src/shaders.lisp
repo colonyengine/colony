@@ -38,7 +38,7 @@
   (shadow:set-modify-hook (constantly nil))
   (shadow:disable-dependency-tracking))
 
-(defmacro define-shader (name (&key (version 330) (primitive :triangles)) &body body)
+(defmacro define-shader (name (&key (version 430) (primitive :triangles)) &body body)
   `(progn
      (shadow:define-shader ,name (:version ,version :primitive ,primitive)
        ,@body)
