@@ -102,4 +102,4 @@
 
 (defun get-gamepad-axis (context gamepad-id stick/axis)
   (let ((states (states (input-data (core-state context)))))
-    (au:href states (list gamepad-id stick/axis))))
+    (or (au:href states (list gamepad-id stick/axis)) 0)))
