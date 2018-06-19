@@ -200,30 +200,12 @@ for later use with the shaders."
   (maybe-update-current-animation-cell sprite-sheet (frame-time context)))
 
 (defmethod render-component ((sprite-sheet sprite-sheet) (context context))
-
   (with-slots (%transform %material %sprite %vao-id) sprite-sheet
     (au:when-let ((camera (active-camera context)))
-      (shadow:with-shader-program (shader %material)
-        (setf
-         ;; This is required for this model, so it must stay here.
-         (mat-uniform-ref %material :model)
-         (fl.comp.transform:model %transform)
-
-         ;; Move these next two to a gpu buffer since they only have to happen
-         ;; once per frame. We can move this into the core.flow.
-         (mat-uniform-ref %material :view)
-         (fl.comp.camera:view camera)
-
-         (mat-uniform-ref %material :proj)
-         (fl.comp.camera:projection camera))
-
-        ;; Update the sprite index I need.
-        (setf (mat-uniform-ref %material :tex.sprite) %sprite)
-
-        (bind-material %material)
-
-        ;; Manually draw the empty point buffer. This kicks off the bound
-        ;; shader to do its work. There are no vbo or vertex attributes bound
-        ;; into this vao.
+      (using-material %material
+          (:model (fl.comp.transform:model %transform)
+           :view (fl.comp.camera:view camera)
+           :proj (fl.comp.camera:projection camera)
+           :tex.sprite %sprite)
         (gl:bind-vertex-array %vao-id)
         (gl:draw-arrays :points 0 1)))))

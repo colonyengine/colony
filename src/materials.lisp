@@ -312,30 +312,24 @@ CORE-STATE. Return a list of the return values of the FUNC."
 ;; Todo, these modify the semantic-buffer which then gets processed into a
 ;; new computed buffer.
 (defun mat-uniform-ref (mat uniform-var)
-  (let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
-    (unless material-uniform-value
-      (error "Material ~A doesn't have the referenced uniform: ~A. Please add
-a uniform to the material, and/or check your material profile settings."
-             (id mat) uniform-var))
-
-    (semantic-value material-uniform-value)))
+  (au:if-let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
+    (semantic-value material-uniform-value)
+    (error "Material ~s does not have the referenced uniform ~s. Please add a uniform to the ~
+material, and/or check your material profile settings." (id mat) uniform-var)))
 
 ;; export PUBLIC API
 ;; We can only set the semantic-value, which gets automatically upgraded to
 ;; the computed-value upon setting.
 (defun (setf mat-uniform-ref) (new-val mat uniform-var)
-  (let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
-    (unless material-uniform-value
-      (error "Material ~S doesn't have the referenced uniform: ~S. Please add
-a uniform to the material, and/or check your material profile settings."
-             (id mat) uniform-var))
-
-    ;; TODO: Need to do something with the old computed value since it might
-    ;; be consuming resources like when it is a sampler on the GPU.
-    (setf (semantic-value material-uniform-value) new-val)
-    (execute-composition/semantic->computed material-uniform-value)
-
-    (semantic-value material-uniform-value)))
+  (au:if-let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
+    (progn
+      ;; TODO: Need to do something with the old computed value since it might
+      ;; be consuming resources like when it is a sampler on the GPU.
+      (setf (semantic-value material-uniform-value) new-val)
+      (execute-composition/semantic->computed material-uniform-value)
+      (semantic-value material-uniform-value))
+    (error "Material ~s does not have the referenced uniform ~s. Please add a uniform to the ~
+material, and/or check your material profile settings." (id mat) uniform-var)))
 
 ;; export PUBLIC API
 ;; This is read only, it is the computed value in the material.
@@ -464,7 +458,7 @@ available for it so BIND-UNIFORMS cannot yet be called on it."
        ;; NOTE: This thunk happens after all materials are read and the
        ;; profiles have been loaded into core-state.
 
-       (let ((,matvar (%make-material ',name ,shader ,profiles core-state)))
+       (let ((,matvar (%make-material ',name ',shader ',profiles core-state)))
 
          ;; First, insert in order the profile overlays for this material.
          (apply-material-profile-overlays ,matvar core-state)
@@ -693,7 +687,6 @@ must be executed after all the shader programs have been compiled."
         (au:do-hash-values (gen-material-func materials)
           (%add-material (funcall gen-material-func core-state) core-state))))))
 
-
 (defun parse-material-profile (name uniforms blocks)
   (let ((matprof (gensym "MATERIAL-PROFILE")))
     `(let* ((,matprof (%make-material-profile :name ',name)))
@@ -705,7 +698,6 @@ must be executed after all the shader programs have been compiled."
        (when ',blocks
          (error "Interface blocks are not supported in material profiles: ~A"
                 ',blocks))
-
        ,matprof)))
 
 (defmacro define-material-profile (name &body (body))
@@ -726,3 +718,13 @@ applied in an overlay manner while defining a material."
          ,(when enabled
             `(setf (au:href %temp-materials ',name) ,func))
          (export ',name)))))
+
+(defmacro using-material (material (&rest bindings) &body body)
+  (au:with-unique-names (material-ref)
+    `(let ((,material-ref ,material))
+       (shadow:with-shader-program (shader ,material-ref)
+         (setf ,@(loop :for (k v) :on bindings :by #'cddr
+                       :collect `(mat-uniform-ref ,material-ref ,k)
+                       :collect v))
+         (bind-material ,material-ref)
+         ,@body))))

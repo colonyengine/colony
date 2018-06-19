@@ -134,7 +134,7 @@
       (au:do-hash (k v (%prepare))
         (setf (au:href (scenes core-state) k) v)))))
 
-(defmacro define-scene (name (&key (enabled t) (context'context)) &body body)
+(defmacro define-scene (name (&key (enabled t) (context 'context)) &body body)
   `(let ((scene ,(parse-scene `',name context body)))
      (declare (special %temp-scene))
      ,(when enabled

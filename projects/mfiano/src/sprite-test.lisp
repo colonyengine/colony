@@ -29,7 +29,6 @@
    (spec :default nil)
    (material :default nil)
    (vao-id :default nil)
-   (vbo-id :default nil)
    (sprite :default nil)
    (sprites :default (au:dict #'equalp))
    (animations :default nil)))
@@ -37,10 +36,10 @@
 (defun make-sprite-sheet-buffer (sprite-sheet)
 
   (unless (shadow:find-block :sprite-sheet-block)
-    (shadow::create-block-alias :buffer
-                                :sprite-sheet
-                                'fl.mfiano.shaders:sprite-test
-                                :sprite-sheet-block))
+    (shadow:create-block-alias :buffer
+                               :sprite-sheet
+                               'fl.mfiano.shaders:sprite-test
+                               :sprite-sheet-block))
   (shadow:bind-block :sprite-sheet-block 8)
   (shadow:create-buffer :sprite-sheet-buffer :sprite-sheet-block)
   (shadow:bind-buffer :sprite-sheet-buffer 8)
@@ -97,18 +96,16 @@ for later use with the shaders."
       (convert-current-sprite sprite-sheet))))
 
 (defmethod update-component ((sprite-sheet sprite-sheet) (context context))
-  (maybe-update-current-animation-cell sprite-sheet (frame-time context)))
+  (maybe-update-current-animation-cell sprite-sheet (frame-time context))
+  (fl.comp.transform::translate (transform sprite-sheet) :local (v3:make 0 0.01 0)))
 
 (defmethod render-component ((sprite-sheet sprite-sheet) (context context))
   (with-slots (%transform %material %sprite %vao-id) sprite-sheet
     (au:when-let ((camera (active-camera context)))
-      (shadow:with-shader-program (shader %material)
-        (shadow:uniform-mat4 :model (fl.comp.transform:model %transform))
-        (shadow:uniform-mat4 :view (fl.comp.camera:view camera))
-        (shadow:uniform-mat4 :proj (fl.comp.camera:projection camera))
-        (let* ((mat-uniforms (%fl::uniforms %material))
-               (tex.sprite-value (au:href mat-uniforms :tex.sprite)))
-          (setf (%fl::computed-value tex.sprite-value) %sprite)
-          (bind-material %material)
-          (gl:bind-vertex-array %vao-id)
-          (gl:draw-arrays :points 0 1))))))
+      (using-material (material sprite-sheet)
+          (:model (fl.comp.transform:model %transform)
+           :view (fl.comp.camera:view camera)
+           :proj (fl.comp.camera:projection camera)
+           :tex.sprite %sprite)
+        (gl:bind-vertex-array %vao-id)
+        (gl:draw-arrays :points 0 1)))))
