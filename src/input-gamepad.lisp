@@ -30,10 +30,12 @@
 
 (defun normalize-gamepad-axis-value (axis value)
   (case axis
+    ((:left-vertical :right-vertical)
+     (au:map-domain -32767 32767 1 -1 (au:clamp value -32767 32767)))
+    ((:left-horizontal :right-horizontal)
+     (au:map-domain -32767 32767 -1 1 (au:clamp value -32767 32767)))
     ((:trigger-left :trigger-right)
-     (au:map-domain 0 32767 0 1 value))
-    (t
-     (au:map-domain -32767 32767 -1 1 (au:clamp value -32767 32767)))))
+     (au:map-domain 0 32767 0 1 value))))
 
 (defun load-gamepad-database ()
   (sdl2:game-controller-add-mappings-from-file
