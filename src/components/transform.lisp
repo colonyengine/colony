@@ -8,9 +8,9 @@
    (rotation :default (make-transform-state 'transform-state-quaternion
                                             :incremental (v3:zero)
                                             :incremental-delta (v3:zero)))
-   (scale :default (make-transform-state 'transform-state-vector
-                                         :current (v3:make 1.0 1.0 1.0)
-                                         :incremental-delta (v3:zero)))
+   (scaling :default (make-transform-state 'transform-state-vector
+                                           :current (v3:make 1.0 1.0 1.0)
+                                           :incremental-delta (v3:zero)))
    (local :default (m4:id))
    (model :default (m4:id))))
 
@@ -35,7 +35,8 @@
     (q:rotate! c c (v3:scale! idelta i delta))))
 
 (defun scale-node (node delta)
-  (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous)) (scale node)
+  (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
+      (scaling node)
     (v3:copy! p c)
     (v3:+! c c (v3:scale! idelta i delta))))
 
@@ -46,13 +47,13 @@
     (translate-node node delta)))
 
 (defun resolve-local (node alpha)
-  (with-slots (%scale %rotation %translation %local) node
-    (interpolate-state %scale alpha)
+  (with-slots (%scaling %rotation %translation %local) node
+    (interpolate-state %scaling alpha)
     (interpolate-state %rotation alpha)
     (interpolate-state %translation alpha)
     (m4:*! %local
            (q:to-mat4! %local (interpolated %rotation))
-           (m4:scale-from-vec3 m4:+id+ (interpolated %scale)))
+           (m4:scale-from-vec3 m4:+id+ (interpolated %scaling)))
     (m4:translation-from-vec3! %local (interpolated %translation))))
 
 (defun resolve-model (node alpha)
@@ -87,15 +88,15 @@
                                     (rotation/incremental (v3:zero))
                                     (scale/current (v3:make 1.0 1.0 1.0))
                                     (scale/incremental (v3:zero)))
-  (with-slots (%translation %rotation %scale) instance
+  (with-slots (%translation %rotation %scaling) instance
     (setf (actor instance) actor
           (state instance) :initialize
           (current %translation) translation/current
           (incremental %translation) translation/incremental
           (current %rotation) (q:rotate q:+id+ rotation/current)
           (incremental %rotation) rotation/incremental
-          (current %scale) scale/current
-          (incremental %scale) scale/incremental)))
+          (current %scaling) scale/current
+          (incremental %scaling) scale/incremental)))
 
 ;;; User protocol
 
@@ -124,3 +125,7 @@
   (ecase space
     (:model (%translate/model-space (translation transform) vec))
     (:world (%translate/world-space (translation transform) vec))))
+
+(defun scale (transform vec)
+  (with-accessors ((current current)) (scaling transform)
+    (v3:+! current current vec)))

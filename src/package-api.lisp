@@ -98,4 +98,5 @@
            #:model
            #:local
            #:translate
-           #:rotate))
+           #:rotate
+           #:scale))
