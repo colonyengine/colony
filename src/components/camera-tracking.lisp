@@ -1,4 +1,4 @@
-(in-package :fl.comp.tracking-camera)
+(in-package :fl.comp)
 
 (define-component tracking-camera ()
   ((slave-camera :default nil)

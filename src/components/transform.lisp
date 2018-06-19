@@ -1,4 +1,4 @@
-(in-package :fl.comp.transform)
+(in-package :fl.comp)
 
 (define-component transform ()
   ((parent :default nil)

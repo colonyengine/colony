@@ -28,8 +28,7 @@
   (unless (actor component)
     (setf (actor component) actor))
   (setf (au:href (components actor) component) component)
-  (let ((qualified-type
-	        (qualify-component (core-state actor) (component-type component))))
+  (let ((qualified-type (qualify-component (core-state actor) (component-type component))))
     (push component (au:href (components-by-type actor) qualified-type))))
 
 (defun attach-multiple-components (actor components)
@@ -47,10 +46,7 @@
   (when (remhash component (components actor))
     (symbol-macrolet ((typed-components (au:href (components-by-type actor)
                                                  (component-type component))))
-      (setf typed-components
-            (remove-if
-             (lambda (c) (eq c component))
-             typed-components)))))
+      (setf typed-components (remove-if (lambda (c) (eq c component)) typed-components)))))
 
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
@@ -65,44 +61,32 @@ Returns T as a secondary value if there exists more than one component of that t
          (components (actor-components-by-type actor qualified-type)))
     (values (first components) (> (length components) 1))))
 
-;; TODO: This uses ensure-symbol a lot because it wants to know about the
-;; fl.comp.transform:transform component. However, that package is not available
-;; at read time for this code. Think about a better way, if any, to do this
-;; operation.
 (defun spawn-actor (actor context &key (parent :universe))
   "Take the ACTOR and place into the initializing db's and view's in the CORE-STATE. The actor is
 not yet in the scene and the main loop protocol will not be called on it or its components. If
 keyword argument :PARENT is supplied it is an actor reference which will be the parent of the
 spawning actor. It defaults to :universe, which means make this actor a child of the universe
 actor."
-  (let* ((core-state (core-state context))
-         (sym/transform (au:ensure-symbol 'transform 'fl.comp.transform))
-         (sym/add-child-func (au:ensure-symbol 'add-child 'fl.comp.transform))
-         (sym/parent-func (au:ensure-symbol 'parent 'fl.comp.transform))
-         (actor-transform (actor-component-by-type actor sym/transform)))
+  (let ((core-state (core-state context))
+        (actor-transform (actor-component-by-type actor 'fl.comp:transform)))
     (cond
       ((eq parent :universe)
-       ;; TODO: This isn't exactly correct, but will work in most cases. Namely,
-       ;; it works in the scene DSL expansion since we add children before
-       ;; spawning the actors. We may be able to fix the scene dsl expansion to
-       ;; just supply the :parent keyword to spawn-actor instead and forgo the
-       ;; add-child calls there. Usually, when a user calls SPAWN-ACTOR in their
-       ;; code, they will either leave :parent at default, or already have an
-       ;; actor to reference as the parent.
-       (unless (funcall sym/parent-func actor-transform)
-         (funcall sym/add-child-func
-                  (actor-component-by-type (scene-tree core-state) sym/transform)
-                  (actor-component-by-type actor sym/transform))))
+       ;; TODO: This isn't exactly correct, but will work in most cases. Namely, it works in the
+       ;; scene DSL expansion since we add children before spawning the actors. We may be able to
+       ;; fix the scene dsl expansion to just supply the :parent keyword to spawn-actor instead and
+       ;; forgo the add-child calls there. Usually, when a user calls SPAWN-ACTOR in their code,
+       ;; they will either leave :parent at default, or already have an actor to reference as the
+       ;; parent.
+       (unless (fl.comp::parent actor-transform)
+         (fl.comp::add-child (actor-component-by-type (scene-tree core-state) 'fl.comp:transform)
+                             (actor-component-by-type actor 'fl.comp:transform))))
       ((typep parent 'actor)
-       (funcall sym/add-child-func
-                (actor-component-by-type parent sym/transform)
-                (actor-component-by-type actor sym/transform)))
+       (fl.comp::add-child (actor-component-by-type parent 'fl.comp:transform)
+                           (actor-component-by-type actor 'fl.comp:transform)))
       ((null parent)
-       ;; NOTE: We're in %make-scene-tree, do nothing since we're making the
-       ;; universe!
-       nil)
+       (au:noop))
       (t
-       (error "Cannot parent actor ~A to unknown parent ~A" actor parent)))
+       (error "Cannot parent actor ~s to unknown parent ~s" actor parent)))
     (setf (au:href (actor-preinit-db (tables core-state)) actor) actor)
     (au:do-hash-values (v (components actor))
       (setf (type-table (canonicalize-component-type (component-type v) core-state)
@@ -134,27 +118,19 @@ actor."
     (component/init-or-active->destroy core-state v)))
 
 (defun actor/destroy-descendants (core-state actor)
-  (let ((sym/transform (au:ensure-symbol 'transform 'fl.comp.transform))
-        (sym/map-nodes (au:ensure-symbol 'map-nodes 'fl.comp.transform)))
-    (flet ((destroy-actor (descendant-actor-transform)
-             (let ((destroying-actor (actor descendant-actor-transform)))
-               (setf (ttl destroying-actor) 0)
-               (actor/init-or-active->destroy core-state destroying-actor))))
-      (funcall sym/map-nodes
-               #'destroy-actor
-               (actor-component-by-type actor sym/transform)))))
+  (flet ((destroy-actor (descendant-actor-transform)
+           (let ((destroying-actor (actor descendant-actor-transform)))
+             (setf (ttl destroying-actor) 0)
+             (actor/init-or-active->destroy core-state destroying-actor))))
+    (fl.comp::map-nodes #'destroy-actor (actor-component-by-type actor 'fl.comp:transform))))
 
 ;; TODO: this should probably never be run on the @universe actor. :)
 (defun actor/disconnect (core-state actor)
   (declare (ignore core-state))
-  (let* ((sym/transform (au:ensure-symbol 'transform 'fl.comp.transform))
-         (sym/remove-child (au:ensure-symbol 'remove-child 'fl.comp.transform))
-         (sym/parent (au:ensure-symbol 'parent 'fl.comp.transform))
-         (actor-transform (actor-component-by-type actor sym/transform)))
-    (funcall sym/remove-child (funcall sym/parent actor-transform) actor-transform)))
+  (let ((actor-transform (actor-component-by-type actor 'fl.comp:transform)))
+    (fl.comp::remove-child (fl.comp::parent actor-transform) actor-transform)))
 
 (defun actor/destroy->released (core-state actor)
-  ;; At this point, the actor should be empty, we'll check it just in case.
   (unless (zerop (number-of-components actor))
     (error "actor/destroy->released: destroyed actor still has components!"))
   (remhash actor (actor-destroy-db (tables core-state))))

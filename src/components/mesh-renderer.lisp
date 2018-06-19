@@ -1,4 +1,4 @@
-(in-package :fl.comp.mesh-renderer)
+(in-package :fl.comp)
 
 (define-component mesh-renderer ()
   ((mesh :default nil)
@@ -23,7 +23,7 @@
     (with-accessors ((draw-mesh draw)) mesh
       (au:when-let ((camera (active-camera context)))
         (using-material material
-            (:model (fl.comp.transform:model transform)
-             :view (fl.comp.camera:view camera)
-             :proj (fl.comp.camera:projection camera))
+            (:model (fl.comp:model transform)
+             :view (fl.comp:view camera)
+             :proj (fl.comp:projection camera))
           (draw-mesh mesh))))))

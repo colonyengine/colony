@@ -83,7 +83,7 @@
     (loop :with root = `(scene-tree ,core-state)
           :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
-          :collect `(,(au:ensure-symbol 'add-child 'fl.comp.transform)
+          :collect `(,(au:ensure-symbol 'add-child 'fl.comp)
                      (actor-component-by-type ,(or parent root) 'transform)
                      (actor-component-by-type ,child 'transform)))))
 

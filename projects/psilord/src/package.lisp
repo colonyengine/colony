@@ -1,7 +1,7 @@
 (in-package :defpackage+-user-1)
 
 (defpackage+ #:fl.psilord
-  (:use #:cl #:fl #:fl.comp.mesh-renderer)
+  (:use #:cl #:fl #:fl.comp)
   (:export-only #:demo
                 #:material-test))
 

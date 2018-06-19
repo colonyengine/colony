@@ -1,4 +1,4 @@
-(in-package :fl.comp.mesh)
+(in-package :fl.comp)
 
 (define-component mesh ()
   ;; Component slot descriptions all in one form, like defclass
@@ -20,7 +20,7 @@
 (defun load-mesh (context location id)
   (fl.assets:load-mesh (find-resource context location) id))
 
-(defmethod fl.comp.mesh-renderer:draw-mesh ((mesh mesh) &key (instance-count 1))
+(defmethod draw-mesh ((mesh mesh) &key (instance-count 1))
   (dolist (primitive (primitives mesh))
     (funcall (fl.assets:draw-func primitive) :instance-count instance-count)))
 

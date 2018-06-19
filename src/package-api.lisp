@@ -1,5 +1,7 @@
 (in-package :defpackage+-user-1)
 
+;;; User API
+
 (defpackage+ #:first-light
   (:nicknames #:fl)
   (:use #:cl)
@@ -71,3 +73,29 @@
                  #:initialize-component
                  #:render-component
                  #:update-component))
+
+;;; Components API
+
+(defpackage+ #:fl.comp
+  (:use #:cl #:%fl)
+  ;; camera
+  (:export #:camera
+           #:tracking-camera
+           #:following-camera
+           #:transform
+           #:view
+           #:projection
+           #:zoom-camera
+           #:find-active-camera
+           #:compute-camera-view)
+  ;; mesh
+  (:export #:mesh)
+  ;; mesh-renderer
+  (:export #:mesh-renderer
+           #:draw-mesh)
+  ;; transform
+  (:export #:transform
+           #:model
+           #:local
+           #:translate
+           #:rotate))

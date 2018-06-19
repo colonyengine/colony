@@ -102,9 +102,9 @@ for later use with the shaders."
   (with-slots (%transform %material %sprite %vao-id) sprite-sheet
     (au:when-let ((camera (active-camera context)))
       (using-material %material
-          (:model (fl.comp.transform:model %transform)
-           :view (fl.comp.camera:view camera)
-           :proj (fl.comp.camera:projection camera)
+          (:model (fl.comp:model %transform)
+           :view (fl.comp:view camera)
+           :proj (fl.comp:projection camera)
            :tex.sprite %sprite)
         (gl:bind-vertex-array %vao-id)
         (gl:draw-arrays :points 0 1)))))

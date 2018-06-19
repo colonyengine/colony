@@ -1,4 +1,4 @@
-(in-package :fl.comp.camera)
+(in-package :fl.comp)
 
 (define-component camera ()
   ((activep :default nil)
