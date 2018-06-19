@@ -99,17 +99,28 @@
 
 ;;; User protocol
 
-(defun rotate (transform vec3 &key (space :model))
-  (ecase space
-    (:world
-     (error "ROTATE on transform not yet implemented for :world space"))
-    (:model
-     (with-slots (%rotation) transform
-       ;; Rotate the transform in model space by a vector containing the
-       ;; radians going around each x, y, z, axis.
-       (q:rotate! (current %rotation) (current %rotation) vec3)))))
+(defun %rotate/model-space (rotation vec)
+  (with-accessors ((current current)) rotation
+    (q:rotate! current current vec)))
 
-(defgeneric translate (node space direction)
-  (:method ((node transform) (space (eql :local)) direction)
-    (with-accessors ((c current)) (translation node)
-      (v3:+! c c direction))))
+(defun %rotate/world-space (rotation vec)
+  (declare (ignore rotation vec))
+  (error "ROTATE not yet implemented for world space."))
+
+(defun rotate (transform vec &key (space :model))
+  (ecase space
+    (:model (%rotate/model-space (rotation transform) vec))
+    (:world (%rotate/world-space (rotation transform) vec))))
+
+(defun %translate/model-space (translation vec)
+  (with-accessors ((current current)) translation
+    (v3:+! current current vec)))
+
+(defun %translate/world-space (translation vec)
+  (declare (ignore translation vec))
+  (error "TRANSLATE not yet implemented for world space."))
+
+(defun translate (transform vec &key (space :model))
+  (ecase space
+    (:model (%translate/model-space (translation transform) vec))
+    (:world (%translate/world-space (translation transform) vec))))

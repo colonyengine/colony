@@ -9,4 +9,5 @@
   :serial t
   :components
   ((:file "package")
+   (:file "movement")
    (:file "sprite-test")))

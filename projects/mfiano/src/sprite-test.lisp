@@ -108,31 +108,3 @@ for later use with the shaders."
            :tex.sprite %sprite)
         (gl:bind-vertex-array %vao-id)
         (gl:draw-arrays :points 0 1)))))
-
-(define-component movable ()
-  ((transform :default nil)))
-
-(defmethod initialize-component ((component movable) (context context))
-  (with-accessors ((actor actor) (transform transform)) component
-    (setf transform (actor-component-by-type actor 'transform))))
-
-(defmethod update-component ((component movable) (context context))
-  ;; dpad
-  (when (input-enabled-p context '(:gamepad1 :up))
-    (fl.comp.transform::translate (transform component)
-                                  :local (v3:scale (v3:make 0 1 0) (delta context))))
-  (when (input-enabled-p context '(:gamepad1 :down))
-    (fl.comp.transform::translate (transform component)
-                                  :local (v3:scale (v3:make 0 -1 0) (delta context))))
-  (when (input-enabled-p context '(:gamepad1 :left))
-    (fl.comp.transform::translate (transform component)
-                                  :local (v3:scale (v3:make -1 0 0) (delta context))))
-  (when (input-enabled-p context '(:gamepad1 :right))
-    (fl.comp.transform::translate (transform component)
-                                  :local (v3:scale (v3:make 1 0 0) (delta context))))
-  ;; analog
-  (let ((x (get-gamepad-axis context :gamepad1 :left-horizontal))
-        (y (get-gamepad-axis context :gamepad1 :left-vertical)))
-    (fl.comp.transform::translate (transform component)
-                                  :local
-                                  (v3:scale (v3:make x (- y) 0) (delta context)))))
