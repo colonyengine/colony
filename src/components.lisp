@@ -197,4 +197,4 @@ DEFINE-COMPONENT form.
 
 (defun component/countdown-to-destruction (core-state component)
   (when (plusp (ttl component))
-    (decf (ttl component) (box.frame:frame-time (display core-state)))))
+    (decf (ttl component) (frame-time (context core-state)))))

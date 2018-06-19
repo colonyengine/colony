@@ -11,7 +11,7 @@
                           :initform (au:dict #'eq))
    (%state :accessor state
            :initarg :state
-           :initform NIL)))
+           :initform nil)))
 
 (defun total-time (context)
   "Return the total time in seconds that the engine has been running."
@@ -34,7 +34,7 @@
   (let* ((qualified-component-name (qualify-component (core-state context) component-name))
          (metadata-ht-test-fns (cdr (shared-storage-metadata qualified-component-name namespace))))
     (when (null metadata-ht-test-fns)
-      (error "Shared storage namespace ~S~%does not exist for component ~S~%in package ~A"
+      (error "Shared storage namespace ~s does not exist for component ~s in package ~s"
              namespace
              component-name
              (if qualified-component-name
@@ -56,7 +56,7 @@
     (ensure-nested-hash-table (shared-storage-table context)
                               (list* 'eq 'eql metadata-ht-test-fns)
                               (list* qualified-component-name namespace keys))
-    ;; How, we can perform the setting.
+    ;; Now, we can perform the setting.
     (apply #'(setf au:href)
            new-value
            (shared-storage-table context)
@@ -67,7 +67,7 @@
 b) (#:G2 c) ... (#:G26 z)) and return it."
   (mapcar
    (lambda (element)
-     `(,(gensym) ,element))
+     (list (gensym) element))
    lookup-form))
 
 (defun %generate-ss-get/set (context bindings body)
@@ -76,15 +76,11 @@ set it into the shared-storatge in CONTEXT, and keep expanding with further bind
 emit the body in the final and most dense lexical scope."
   (if (null bindings)
       `(progn ,@body)
-      (destructuring-bind (lexical-var presentp-var lookup-form
-                           cache-value-form)
-          (first bindings)
-
+      (destructuring-bind (lexical-var presentp-var lookup-form cache-value-form) (first bindings)
         (let* ((lookup-binding-forms (%lookup-form-to-bindings lookup-form))
                (lookup-args (mapcar #'first lookup-binding-forms)))
           `(let ,lookup-binding-forms
-             (au:mvlet ((,lexical-var ,presentp-var
-                                      (ss-href ,context ,@lookup-args)))
+             (au:mvlet ((,lexical-var ,presentp-var (ss-href ,context ,@lookup-args)))
                (unless ,presentp-var
                  (setf ,lexical-var ,cache-value-form
                        (ss-href ,context ,@lookup-args) ,lexical-var))

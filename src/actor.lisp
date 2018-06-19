@@ -137,4 +137,4 @@ actor."
 
 (defun actor/countdown-to-destruction (core-state actor)
   (when (plusp (ttl actor))
-    (decf (ttl actor) (box.frame:frame-time (display core-state)))))
+    (decf (ttl actor) (frame-time (context core-state)))))

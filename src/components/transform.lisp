@@ -40,7 +40,7 @@
     (v3:+! c c (v3:scale! idelta i delta))))
 
 (defun transform-node (core-state node)
-  (let ((delta (box.frame:delta (display core-state))))
+  (let ((delta (delta (context core-state))))
     (scale-node node delta)
     (rotate-node node delta)
     (translate-node node delta)))
