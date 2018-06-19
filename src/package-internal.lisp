@@ -132,10 +132,6 @@
 
 (defpackage+ #:fl.textures
   (:use #:cl #:%fl)
-  (:export #:define-texture
-           #:define-texture-profile
-           #:general-data-format-descriptor
-           #:load-texture)
   ;; profiles
   (:export #:default-profile
            #:clamp-all-edges)
