@@ -52,7 +52,8 @@
            #:lookup-material
            #:mat-computed-uniform-ref
            #:mat-uniform-ref
-           #:shader)
+           #:shader
+           #:using-material)
   ;; shaders
   (:export #:define-shader)
   ;; input

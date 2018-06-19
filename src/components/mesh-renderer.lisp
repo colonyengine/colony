@@ -22,14 +22,8 @@
   (with-accessors ((transform transform) (mesh mesh) (material material)) component
     (with-accessors ((draw-mesh draw)) mesh
       (au:when-let ((camera (active-camera context)))
-        (shadow:with-shader-program (shader material)
-          (setf (mat-uniform-ref material :model)
-                (fl.comp.transform:model transform)
-                ;; Move these next two to a gpu buffer since they only have to happen once per
-                ;; frame. We can move this into the core.flow.
-                (mat-uniform-ref material :view)
-                (fl.comp.camera:view camera)
-                (mat-uniform-ref material :proj)
-                (fl.comp.camera:projection camera))
-          (bind-material material)
+        (using-material material
+            (:model (fl.comp.transform:model transform)
+             :view (fl.comp.camera:view camera)
+             :proj (fl.comp.camera:projection camera))
           (draw-mesh mesh))))))

@@ -718,3 +718,13 @@ applied in an overlay manner while defining a material."
          ,(when enabled
             `(setf (au:href %temp-materials ',name) ,func))
          (export ',name)))))
+
+(defmacro using-material (material (&rest bindings) &body body)
+  (au:with-unique-names (material-ref)
+    `(let ((,material-ref ,material))
+       (shadow:with-shader-program (shader ,material-ref)
+         (setf ,@(loop :for (k v) :on bindings :by #'cddr
+                       :collect `(mat-uniform-ref ,material-ref ,k)
+                       :collect v))
+         (bind-material ,material-ref)
+         ,@body))))
