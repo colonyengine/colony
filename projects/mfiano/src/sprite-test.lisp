@@ -29,7 +29,6 @@
    (spec :default nil)
    (material :default nil)
    (vao-id :default nil)
-   (vbo-id :default nil)
    (sprite :default nil)
    (sprites :default (au:dict #'equalp))
    (animations :default nil)))
@@ -37,10 +36,10 @@
 (defun make-sprite-sheet-buffer (sprite-sheet)
 
   (unless (shadow:find-block :sprite-sheet-block)
-    (shadow::create-block-alias :buffer
-                                :sprite-sheet
-                                'fl.mfiano.shaders:sprite-test
-                                :sprite-sheet-block))
+    (shadow:create-block-alias :buffer
+                               :sprite-sheet
+                               'fl.mfiano.shaders:sprite-test
+                               :sprite-sheet-block))
   (shadow:bind-block :sprite-sheet-block 8)
   (shadow:create-buffer :sprite-sheet-buffer :sprite-sheet-block)
   (shadow:bind-buffer :sprite-sheet-buffer 8)
