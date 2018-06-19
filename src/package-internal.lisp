@@ -110,7 +110,8 @@
                 #:map-nodes
                 #:transform-node
                 #:interpolate-transforms
-                #:translate))
+                #:translate
+                #:rotate))
 
 (defpackage+ #:fl.comp.camera
   (:use #:cl #:%fl #:fl.comp.transform)
