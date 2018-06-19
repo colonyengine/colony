@@ -458,7 +458,7 @@ available for it so BIND-UNIFORMS cannot yet be called on it."
        ;; NOTE: This thunk happens after all materials are read and the
        ;; profiles have been loaded into core-state.
 
-       (let ((,matvar (%make-material ',name ,shader ,profiles core-state)))
+       (let ((,matvar (%make-material ',name ',shader ',profiles core-state)))
 
          ;; First, insert in order the profile overlays for this material.
          (apply-material-profile-overlays ,matvar core-state)
