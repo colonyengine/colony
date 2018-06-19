@@ -96,16 +96,43 @@ for later use with the shaders."
       (convert-current-sprite sprite-sheet))))
 
 (defmethod update-component ((sprite-sheet sprite-sheet) (context context))
-  (maybe-update-current-animation-cell sprite-sheet (frame-time context))
-  (fl.comp.transform::translate (transform sprite-sheet) :local (v3:make 0 0.01 0)))
+  (maybe-update-current-animation-cell sprite-sheet (frame-time context)))
 
 (defmethod render-component ((sprite-sheet sprite-sheet) (context context))
   (with-slots (%transform %material %sprite %vao-id) sprite-sheet
     (au:when-let ((camera (active-camera context)))
-      (using-material (material sprite-sheet)
+      (using-material %material
           (:model (fl.comp.transform:model %transform)
            :view (fl.comp.camera:view camera)
            :proj (fl.comp.camera:projection camera)
            :tex.sprite %sprite)
         (gl:bind-vertex-array %vao-id)
         (gl:draw-arrays :points 0 1)))))
+
+(define-component movable ()
+  ((transform :default nil)))
+
+(defmethod initialize-component ((component movable) (context context))
+  (with-accessors ((actor actor) (transform transform)) component
+    (setf transform (actor-component-by-type actor 'transform))))
+
+(defmethod update-component ((component movable) (context context))
+  ;; dpad
+  (when (input-enabled-p context '(:gamepad1 :up))
+    (fl.comp.transform::translate (transform component)
+                                  :local (v3:scale (v3:make 0 1 0) (delta context))))
+  (when (input-enabled-p context '(:gamepad1 :down))
+    (fl.comp.transform::translate (transform component)
+                                  :local (v3:scale (v3:make 0 -1 0) (delta context))))
+  (when (input-enabled-p context '(:gamepad1 :left))
+    (fl.comp.transform::translate (transform component)
+                                  :local (v3:scale (v3:make -1 0 0) (delta context))))
+  (when (input-enabled-p context '(:gamepad1 :right))
+    (fl.comp.transform::translate (transform component)
+                                  :local (v3:scale (v3:make 1 0 0) (delta context))))
+  ;; analog
+  (let ((x (get-gamepad-axis context :gamepad1 :left-horizontal))
+        (y (get-gamepad-axis context :gamepad1 :left-vertical)))
+    (fl.comp.transform::translate (transform component)
+                                  :local
+                                  (v3:scale (v3:make x (- y) 0) (delta context)))))

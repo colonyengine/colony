@@ -24,7 +24,7 @@
 
 (defun delta (context)
   "Return the physics update delta. This is :delta from the cfg file."
-  (cfg context :delta))
+  (box.frame:delta (display (core-state context))))
 
 (defun debug-p (context)
   (eq (cfg context :log-level) :debug))
