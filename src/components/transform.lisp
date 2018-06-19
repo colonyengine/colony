@@ -98,3 +98,13 @@
           (incremental %scale) scale/incremental)))
 
 ;;; User protocol
+
+(defun translate (transform vec3 &key (space :model))
+  (ecase space
+    (:world
+     (error "TRANSLATE on transform not yet implemented for :world space"))
+
+    (:model
+     (with-slots (%translation) transform
+       ;; Move the current position in model space by the vector.
+       (v3:+! (current %translation) (current %translation) vec3)))))
