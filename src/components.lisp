@@ -19,35 +19,10 @@
                        :initarg :initializer-thunk
                        :initform nil)))
 
-;;; BEGIN User API Component Protocol
-
-;; TODO: Make this empty one export properly from %fl so we always see it.
-(defgeneric shared-storage-metadata (component-name &optional namespace)
-  (:method ((component-name symbol) &optional namespace)
-    (declare (ignore namespace))))
-
-(defgeneric initialize-component (component context)
-  (:method ((component component) (context context))))
-
-(defgeneric physics-update-component (component context)
-  (:method ((component component) (context context))))
-
-(defgeneric update-component (component context)
-  (:method ((component component) (context context))))
-
-(defgeneric render-component (component context)
-  (:method ((component component) (context context))))
-
-(defgeneric destroy-component (component context)
-  (:method ((component component) (context context))))
-
-;;; END User API Component Protocol
-
 (defun %generate-component-slot-forms (slots)
   (loop :for slot :in slots
         :collect
-        (destructuring-bind (slot-name &key default allocation type
-                             &allow-other-keys) slot
+        (destructuring-bind (slot-name &key default allocation type &allow-other-keys) slot
           (append
            `(,(au:symbolicate '% slot-name)
              :accessor ,slot-name
@@ -94,13 +69,9 @@
                (find namespace ss-meta :key #'first)
                ss-meta))))))
 
-
 (defmethod make-component (component-type context &rest initargs)
   (let ((qualified-type (qualify-component (core-state context) component-type)))
-    (apply #'make-instance qualified-type
-           :type qualified-type
-           :context context
-           initargs)))
+    (apply #'make-instance qualified-type :type qualified-type :context context initargs)))
 
 (defun %get-computed-component-precedence-list (component-type)
   ;; NOTE: We may very well be asking for classes that have not been finalized
@@ -129,8 +100,7 @@ NOTE: This function can not confirm that a symbol is a component defined by
 DEFINE-COMPONENT. It can only confirm that the symbol passed to it is a
 superclass of a DEFINE-COMPONENT form (up to but not including the COMPONENT
 superclass type all components have), or a component created by the
-DEFINE-COMPONENT form.
-"
+DEFINE-COMPONENT form."
   (let ((search-table (component-search-table (tables core-state)))
         (component-type/class (find-class component-type nil))
         (base-component-type/class (find-class '%fl:component)))
@@ -159,15 +129,13 @@ DEFINE-COMPONENT form.
     (setf (initializer-thunk component) nil))
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))
     (with-slots (%tables) core-state
-      (type-table-drop
-       component component-type (component-preinit-by-type-view %tables))
+      (type-table-drop component component-type (component-preinit-by-type-view %tables))
       (setf (type-table component-type (component-init-by-type-view %tables)) component))))
 
 (defun component/init->active (core-state component)
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))
     (with-slots (%tables) core-state
-      (type-table-drop
-       component component-type (component-init-by-type-view %tables))
+      (type-table-drop component component-type (component-init-by-type-view %tables))
       (setf (state component) :active
             (type-table component-type (component-active-by-type-view %tables)) component))))
 
@@ -181,20 +149,36 @@ DEFINE-COMPONENT form.
     (with-slots (%tables) core-state
       (setf (state component) :destroy
             (type-table component-type (component-destroy-by-type-view %tables)) component)
-      (type-table-drop
-       component component-type (component-destroy-by-type-view %tables))
-      (unless (type-table-drop
-               component component-type (component-active-by-type-view %tables))
-        (type-table-drop
-         component component-type (component-preinit-by-type-view %tables))))))
+      (type-table-drop component component-type (component-destroy-by-type-view %tables))
+      (unless (type-table-drop component component-type (component-active-by-type-view %tables))
+        (type-table-drop component component-type (component-preinit-by-type-view %tables))))))
 
 (defun component/destroy->released (core-state component)
   (let ((component-type (canonicalize-component-type (component-type component) core-state)))
-    (with-slots (%tables) core-state
-      (type-table-drop
-       component component-type (component-destroy-by-type-view %tables))
-      (detach-component (actor component) component))))
+    (type-table-drop component component-type (component-destroy-by-type-view (tables core-state)))
+    (detach-component (actor component) component)))
 
 (defun component/countdown-to-destruction (core-state component)
   (when (plusp (ttl component))
     (decf (ttl component) (frame-time (context core-state)))))
+
+;;; User protocol
+
+(defgeneric shared-storage-metadata (component-name &optional namespace)
+  (:method ((component-name symbol) &optional namespace)
+    (declare (ignore namespace))))
+
+(defgeneric initialize-component (component context)
+  (:method ((component component) (context context))))
+
+(defgeneric physics-update-component (component context)
+  (:method ((component component) (context context))))
+
+(defgeneric update-component (component context)
+  (:method ((component component) (context context))))
+
+(defgeneric render-component (component context)
+  (:method ((component component) (context context))))
+
+(defgeneric destroy-component (component context)
+  (:method ((component component) (context context))))

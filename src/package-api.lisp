@@ -70,8 +70,11 @@
   ;; TODO: Finish user API.
   (:inherit-from #:%fl
                  #:define-component
+                 #:destroy-component
                  #:initialize-component
+                 #:physics-update-component
                  #:render-component
+                 #:shared-storage-metadata
                  #:update-component))
 
 ;;; Components API
