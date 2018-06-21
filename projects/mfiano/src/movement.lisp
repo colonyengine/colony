@@ -24,12 +24,13 @@
 
 (defmethod update-component ((component shot-emitter) (context context))
   (when (input-enter-p context '(:gamepad1 :a))
-    (let ((actor (%fl::make-actor context :id (au:unique-name 'shot) :ttl 100000000000000.0)))
-      (%fl:attach-component actor (%fl:make-component 'fl.comp:transform context))
-      (%fl:attach-component actor (%fl:make-component 'sprite-sheet
-                                                      context
-                                                      :spec-path '(:local "data/sprites.sexp")
-                                                      :material 'fl.mfiano.materials::sprite
-                                                      :animations (make-sprite-sheet-animations
-                                                                   0 0 #(#(1 "ship15")))))
-      (%fl:spawn-actor actor context))))
+    (let ((actor (make-actor context))
+          (transform (make-component 'fl.comp:transform context))
+          (sprite (make-component 'sprite-sheet
+                                  context
+                                  :spec-path '(:local "data/sprites.sexp")
+                                  :material 'fl.mfiano.materials::sprite
+                                  :animations (make-sprite-sheet-animations
+                                               0 0 #(#(1 "ship15"))))))
+      (attach-multiple-components actor transform sprite)
+      (spawn-actor actor context))))
