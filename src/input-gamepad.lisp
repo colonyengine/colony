@@ -6,8 +6,8 @@
   :test #'equalp)
 
 (au:define-constant +gamepad-button-names+
-    #(:a :b :x :y :back :guide :start :left-stick :right-stick :left-shoulder :right-shoulder :up
-      :down :left :right)
+    #(:a :b :x :y :back :guide :start :left-stick-button :right-stick-button :left-shoulder
+      :right-shoulder :up :down :left :right)
   :test #'equalp)
 
 (defstruct gamepad id instance name handle)
