@@ -25,12 +25,12 @@
     (unless (zerop y)
       (setf (au:href states '(:mouse :scroll-vertical)) y))))
 
-(defun on-mouse-move (core-state x y dx dy)
-  (symbol-macrolet ((state (au:href (states (input-data core-state)) '(:mouse :motion))))
-    (setf (mouse-motion-state-x state) x
-          (mouse-motion-state-y state) y
-          (mouse-motion-state-dx state) dx
-          (mouse-motion-state-dy state) dy)))
+(defun on-mouse-move (core-state new-x new-y new-dx new-dy)
+  (with-slots (x y dx dy) (au:href (states (input-data core-state)) '(:mouse :motion))
+    (setf x new-x
+          y new-y
+          dx new-dx
+          dy new-dy)))
 
 ;;; User protocol
 
