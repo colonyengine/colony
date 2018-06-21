@@ -1,8 +1,8 @@
 (in-package :%fl)
 
 (au:define-constant +gamepad-axis-names+
-    #(:left-horizontal :left-vertical :right-horizontal :right-vertical :trigger-left
-      :trigger-right)
+    #((:left-stick :x) (:left-stick :y) (:right-stick :x) (:right-stick :y) (:triggers :x)
+      (:triggers :y))
   :test #'equalp)
 
 (au:define-constant +gamepad-button-names+
@@ -10,7 +10,9 @@
       :down :left :right)
   :test #'equalp)
 
-(defstruct gamepad id instance description handle)
+(defstruct gamepad id instance name handle)
+
+(defstruct gamepad-analog-state x y deadzone)
 
 ;;; Utility functions
 
@@ -28,14 +30,27 @@
       (sdl2:game-controller-close (gamepad-handle v)))
     (clrhash instance-table)))
 
-(defun normalize-gamepad-axis-value (axis value)
-  (case axis
-    ((:left-vertical :right-vertical)
-     (au:map-domain -32767 32767 1 -1 (au:clamp value -32767 32767)))
-    ((:left-horizontal :right-horizontal)
-     (au:map-domain -32767 32767 -1 1 (au:clamp value -32767 32767)))
-    ((:trigger-left :trigger-right)
-     (au:map-domain 0 32767 0 1 value))))
+(defun normalize-gamepad-analog-value (sub-device axis value)
+  (if (eq sub-device :triggers)
+      (au:map-domain 0 32767 0 1 value)
+      (let ((clamped (au:clamp value -32767 32767)))
+        (case axis
+          (:x (au:map-domain -32767 32767 -1 1 clamped))
+          (:y (au:map-domain -32767 32767 1 -1 clamped))))))
+
+(defmethod %get-gamepad-analog ((deadzone-type (eql :axial)) deadzone value)
+  (v2:stabilize! value value :tolerance deadzone))
+
+(defmethod %get-gamepad-analog ((deadzone-type (eql :radial)) deadzone value)
+  (if (< (v2:magnitude value) deadzone)
+      v2:+zero+
+      value))
+
+(defmethod %get-gamepad-analog ((deadzone-type (eql :radial-scaled)) deadzone value)
+  (let ((magnitude (v2:magnitude value)))
+    (if (< magnitude deadzone)
+        v2:+zero+
+        (v2:scale! value (v2:normalize value) (/ (- magnitude deadzone) (- 1 deadzone))))))
 
 (defun load-gamepad-database ()
   (sdl2:game-controller-add-mappings-from-file
@@ -60,7 +75,7 @@
            (id (generate-gamepad-id core-state))
            (gamepad (make-gamepad :id id
                                   :instance instance
-                                  :description (sdl2:game-controller-name handle)
+                                  :name (sdl2:game-controller-name handle)
                                   :handle handle)))
       (setf (au:href (gamepad-instances (input-data core-state)) instance) gamepad
             (au:href (gamepad-ids (input-data core-state)) id) gamepad)
@@ -77,10 +92,18 @@
     (remhash gamepad-instance instance-table)
     (input-transition-out core-state (list id :attach))))
 
-(defun on-gamepad-axis-move (core-state gamepad-instance axis value)
-  (let ((gamepad (get-gamepad-by-instance core-state gamepad-instance)))
-    (setf (au:href (states (input-data core-state)) (list (gamepad-id gamepad) axis))
-          (normalize-gamepad-axis-value axis value))))
+(defun on-gamepad-analog-move (core-state gamepad-instance axis value)
+  (destructuring-bind (sub-device axis) axis
+    (let* ((gamepad (get-gamepad-by-instance core-state gamepad-instance))
+           (key (list (gamepad-id gamepad) sub-device))
+           (value (normalize-gamepad-analog-value sub-device axis value)))
+      (symbol-macrolet ((state (au:href (states (input-data core-state)) key)))
+        (if (not state)
+            (setf state (make-gamepad-analog-state :x 0.0 :y 0.0 :deadzone 0.0))
+            (with-slots (x y deadzone) state
+              (case axis
+                (:x (setf x value))
+                (:y (setf y value)))))))))
 
 (defun on-gamepad-button-up (core-state gamepad-instance button)
   (let* ((gamepad (get-gamepad-by-instance core-state gamepad-instance))
@@ -98,10 +121,13 @@
 
 ;;; User protocol
 
-(defun get-gamepad-description (context gamepad-id)
+(defun get-gamepad-name (context gamepad-id)
   (let ((gamepad (au:href (gamepad-ids (input-data (core-state context))) gamepad-id)))
-    (gamepad-description gamepad)))
+    (gamepad-name gamepad)))
 
-(defun get-gamepad-axis (context gamepad-id stick/axis)
-  (let ((states (states (input-data (core-state context)))))
-    (or (au:href states (list gamepad-id stick/axis)) 0)))
+(defun get-gamepad-analog (context gamepad-id analog-type)
+  (let ((key (list gamepad-id analog-type)))
+    (au:if-found (state (au:href (states (input-data (core-state context))) key))
+                 (with-slots (x y deadzone) state
+                   (%get-gamepad-analog :radial-scaled deadzone (v2:make x y)))
+                 v2:+zero+)))

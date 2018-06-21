@@ -73,7 +73,7 @@
      (on-gamepad-detach core-state gamepad-id))
     (:controlleraxismotion
      (:which gamepad-id :axis axis :value value)
-     (on-gamepad-axis-move core-state gamepad-id (aref +gamepad-axis-names+ axis) value))
+     (on-gamepad-analog-move core-state gamepad-id (aref +gamepad-axis-names+ axis) value))
     (:controllerbuttonup
      (:which gamepad-id :button button)
      (on-gamepad-button-up core-state gamepad-id (aref +gamepad-button-names+ button)))

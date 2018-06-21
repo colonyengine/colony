@@ -50,8 +50,8 @@
                  #:define-shader)
   ;; input
   (:inherit-from #:%fl
-                 #:get-gamepad-axis
-                 #:get-gamepad-description
+                 #:get-gamepad-analog
+                 #:get-gamepad-name
                  #:get-mouse-position
                  #:get-mouse-scroll
                  #:input-enabled-p

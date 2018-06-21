@@ -57,8 +57,8 @@
   ;; shaders
   (:export #:define-shader)
   ;; input
-  (:export #:get-gamepad-axis
-           #:get-gamepad-description
+  (:export #:get-gamepad-analog
+           #:get-gamepad-name
            #:get-mouse-position
            #:get-mouse-scroll
            #:input-enabled-p
