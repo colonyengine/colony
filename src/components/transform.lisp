@@ -9,7 +9,7 @@
                                             :incremental (v3:zero)
                                             :incremental-delta (v3:zero)))
    (scaling :default (make-transform-state 'transform-state-vector
-                                           :current (v3:make 1.0 1.0 1.0)
+                                           :current (v3:one)
                                            :incremental-delta (v3:zero)))
    (local :default (m4:id))
    (model :default (m4:id))))

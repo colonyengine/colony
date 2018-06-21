@@ -3,7 +3,7 @@
 (define-component mat-test ()
   ((mesh-rend :default nil)
    (material-copied-p :default nil)
-   (mix-color :default (v4:make 1 1 1 1))
+   (mix-color :default (v4:one))
    (color-fuzz-range :default (v4:make .2 .2 .2 0))
    (color-fuzz-delta :default (v4:zero))
    (current-color :default (v4:zero))))
