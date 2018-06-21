@@ -100,10 +100,9 @@
       (symbol-macrolet ((state (au:href (states (input-data core-state)) key)))
         (if (not state)
             (setf state (make-gamepad-analog-state :x 0.0 :y 0.0 :deadzone 0.0))
-            (with-slots (x y deadzone) state
-              (case axis
-                (:x (setf x value))
-                (:y (setf y value)))))))))
+            (case axis
+              (:x (setf (gamepad-analog-state-x state) value))
+              (:y (setf (gamepad-analog-state-y state) value))))))))
 
 (defun on-gamepad-button-up (core-state gamepad-instance button)
   (let* ((gamepad (get-gamepad-by-instance core-state gamepad-instance))
