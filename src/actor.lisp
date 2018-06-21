@@ -31,7 +31,7 @@
   (let ((qualified-type (qualify-component (core-state actor) (component-type component))))
     (push component (au:href (components-by-type actor) qualified-type))))
 
-(defun attach-multiple-components (actor components)
+(defun attach-multiple-components (actor &rest components)
   (dolist (component components)
     (attach-component actor component)))
 
