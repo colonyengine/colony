@@ -4,14 +4,14 @@
   "shd")
 
 (defmethod prepare-extension ((extension-type (eql :shader-stages)) core-state)
-  (load-extensions extension-type (data-path core-state)))
+  (map-extensions extension-type (data-path core-state)))
 
 (defmethod extension-file-type ((extension-type (eql :shader-programs)))
   "prog")
 
 (defmethod prepare-extension ((extension-type (eql :shader-programs)) core-state)
   (shadow:reset-program-state)
-  (load-extensions extension-type (data-path core-state))
+  (map-extensions extension-type (data-path core-state))
   (shadow:enable-dependency-tracking))
 
 ;; NOTE: The returned function is called by the result of doing a C-c, which might be on a different

@@ -3,16 +3,19 @@
 (defun get-extension-path (&optional (system-name :first-light))
   (au:resolve-system-path system-name "data/"))
 
-(defun map-extensions (extension-type path owner)
-  (au:map-files
-   path
-   (lambda (x)
-     (with-standard-io-syntax
-       (let ((*package* (find-package :%fl))
-             (*print-readably* nil))
-         (load x)))
-     (simple-logger:emit :extension.load owner x))
-   :test (extension-type-filter extension-type)))
+(defun map-extensions (extension-type path)
+  (flet ((%map (type path owner)
+           (au:map-files
+            path
+            (lambda (x)
+              (with-standard-io-syntax
+                (let ((*package* (find-package :%fl))
+                      (*print-readably* nil))
+                  (load x)))
+              (simple-logger:emit :extension.load owner x))
+            :test (extension-type-filter type))))
+    (%map extension-type (get-extension-path) :core)
+    (%map extension-type path :local)))
 
 (defun extension-type-filter (extension-type)
   (lambda (path)
@@ -26,10 +29,6 @@
            (if (>= (length name) 2)
                (not (string= ".#" name :end2 2))
                t)))))
-
-(defun load-extensions (type path)
-  (map-extensions type (get-extension-path) :core)
-  (map-extensions type path :local))
 
 (defun collect-extension-forms (type path)
   (let ((*package* (find-package :%fl))

@@ -11,7 +11,6 @@
            #:display
            #:find-resource
            #:id
-           #:make-core-state
            #:rcache
            #:rcache-construct
            #:rcache-dispose
@@ -26,7 +25,6 @@
            #:with-shared-storage)
   ;; extensions
   (:export #:extension-file-type
-           #:load-extensions
            #:prepare-extension)
   ;; context
   (:export #:active-camera

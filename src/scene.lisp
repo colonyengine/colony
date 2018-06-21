@@ -128,7 +128,7 @@
   (let ((%temp-scene (au:dict #'eq)))
     (declare (special %temp-scene))
     (flet ((%prepare ()
-             (load-extensions extension-type (data-path core-state))
+             (map-extensions extension-type (data-path core-state))
              %temp-scene))
       (setf (slot-value core-state '%scene-tree) (%make-scene-tree core-state))
       (au:do-hash (k v (%prepare))

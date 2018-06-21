@@ -197,7 +197,7 @@ TEXTURE-TYPE into the texture memory."))
         (%temp-texture-profiles (au:dict #'eq)))
     (declare (special %temp-texture-descriptors %temp-texture-profiles))
     (flet ((%prepare ()
-             (load-extensions extension-type (data-path core-state))
+             (map-extensions extension-type (data-path core-state))
              (values %temp-texture-profiles %temp-texture-descriptors)))
       (multiple-value-bind (profiles texdescs) (%prepare)
         ;; The order doesn't matter. we can type check the texture-descriptors
