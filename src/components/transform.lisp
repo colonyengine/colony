@@ -100,32 +100,32 @@
 
 ;;; User protocol
 
-(defun %rotate/model-space (rotation vec)
+(defun %rotate/model-space (rotation vec &optional replace-p)
   (with-accessors ((current current)) rotation
-    (q:rotate! current current vec)))
+    (q:rotate! current (if replace-p q:+id+ current) vec)))
 
-(defun %rotate/world-space (rotation vec)
-  (declare (ignore rotation vec))
+(defun %rotate/world-space (rotation vec &optional replace-p)
+  (declare (ignore rotation vec replace-p))
   (error "ROTATE not yet implemented for world space."))
 
-(defun rotate (transform vec &key (space :model))
+(defun rotate (transform vec &key (space :model) replace-p)
   (ecase space
-    (:model (%rotate/model-space (rotation transform) vec))
-    (:world (%rotate/world-space (rotation transform) vec))))
+    (:model (%rotate/model-space (rotation transform) vec replace-p))
+    (:world (%rotate/world-space (rotation transform) vec replace-p))))
 
-(defun %translate/model-space (translation vec)
+(defun %translate/model-space (translation vec &optional replace-p)
   (with-accessors ((current current)) translation
-    (v3:+! current current vec)))
+    (v3:+! current (if replace-p v3:+zero+ current) vec)))
 
-(defun %translate/world-space (translation vec)
-  (declare (ignore translation vec))
+(defun %translate/world-space (translation vec &optional replace-p)
+  (declare (ignore translation vec replace-p))
   (error "TRANSLATE not yet implemented for world space."))
 
-(defun translate (transform vec &key (space :model))
+(defun translate (transform vec &key (space :model) replace-p)
   (ecase space
-    (:model (%translate/model-space (translation transform) vec))
-    (:world (%translate/world-space (translation transform) vec))))
+    (:model (%translate/model-space (translation transform) vec replace-p))
+    (:world (%translate/world-space (translation transform) vec replace-p))))
 
-(defun scale (transform vec)
+(defun scale (transform vec &key replace-p)
   (with-accessors ((current current)) (scaling transform)
-    (v3:+! current current vec)))
+    (v3:+! current (if replace-p v3:+zero+ current) vec)))

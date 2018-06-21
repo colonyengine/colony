@@ -34,7 +34,6 @@
    (animations :default nil)))
 
 (defun make-sprite-sheet-buffer (sprite-sheet)
-
   (unless (shadow:find-block :sprite-sheet-block)
     (shadow:create-block-alias :buffer
                                :sprite-sheet
@@ -43,7 +42,6 @@
   (shadow:bind-block :sprite-sheet-block 8)
   (shadow:create-buffer :sprite-sheet-buffer :sprite-sheet-block)
   (shadow:bind-buffer :sprite-sheet-buffer 8)
-
   (loop :with length = (length (spec sprite-sheet))
         :with xs = (make-array length :element-type 'single-float)
         :with ys = (make-array length :element-type 'single-float)
@@ -87,9 +85,8 @@ for later use with the shaders."
     (incf %elapsed-time frame-time)
     (when (>= %elapsed-time %cell-time)
       (loop :until (< %elapsed-time %cell-time)
-            :do (setf %current-cell
-                      (mod (1+ %current-cell)
-                           (1- (length (aref %animvec %current-animation)))))
+            :do (setf %current-cell (mod (1+ %current-cell)
+                                         (1- (length (aref %animvec %current-animation)))))
                 (decf %elapsed-time %cell-time)
                 (when (zerop %elapsed-time)
                   (setf %elapsed-time 0)))

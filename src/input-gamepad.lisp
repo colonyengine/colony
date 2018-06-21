@@ -38,19 +38,28 @@
           (:x (au:map-domain -32767 32767 -1 1 clamped))
           (:y (au:map-domain -32767 32767 1 -1 clamped))))))
 
-(defmethod %get-gamepad-analog ((deadzone-type (eql :axial)) deadzone value)
-  (v2:stabilize! value value :tolerance deadzone))
+(defmethod %get-gamepad-analog ((deadzone-type (eql :axial)) analog-state)
+  (with-slots (deadzone x y) analog-state
+    (v2:with-components ((v (v2:make x y)))
+      (v2:stabilize! v v :tolerance deadzone)
+      (values vx vy))))
 
-(defmethod %get-gamepad-analog ((deadzone-type (eql :radial)) deadzone value)
-  (if (< (v2:magnitude value) deadzone)
-      v2:+zero+
-      value))
+(defmethod %get-gamepad-analog ((deadzone-type (eql :radial)) analog-state)
+  (with-slots (deadzone x y) analog-state
+    (v2:with-components ((v (v2:make x y)))
+      (if (< (v2:magnitude v) deadzone)
+          (values 0.0 0.0)
+          (values vx vy)))))
 
-(defmethod %get-gamepad-analog ((deadzone-type (eql :radial-scaled)) deadzone value)
-  (let ((magnitude (v2:magnitude value)))
-    (if (< magnitude deadzone)
-        v2:+zero+
-        (v2:scale! value (v2:normalize value) (/ (- magnitude deadzone) (- 1 deadzone))))))
+(defmethod %get-gamepad-analog ((deadzone-type (eql :radial-scaled)) analog-state)
+  (with-slots (deadzone x y) analog-state
+    (v2:with-components ((v (v2:make x y)))
+      (let ((magnitude (v2:magnitude v)))
+        (if (< magnitude deadzone)
+            (values 0.0 0.0)
+            (progn
+              (v2:scale! v (v2:normalize v) (/ (- magnitude deadzone) (- 1 deadzone)))
+              (values vx vy)))))))
 
 (defun load-gamepad-database ()
   (sdl2:game-controller-add-mappings-from-file
@@ -124,9 +133,7 @@
   (let ((gamepad (au:href (gamepad-ids (input-data (core-state context))) gamepad-id)))
     (gamepad-name gamepad)))
 
-(defun get-gamepad-analog (context gamepad-id analog-type)
-  (let ((key (list gamepad-id analog-type)))
-    (au:if-found (state (au:href (states (input-data (core-state context))) key))
-                 (with-slots (x y deadzone) state
-                   (%get-gamepad-analog :radial-scaled deadzone (v2:make x y)))
-                 v2:+zero+)))
+(defun get-gamepad-analog (context input)
+  (au:if-found (state (au:href (states (input-data (core-state context))) input))
+               (%get-gamepad-analog :radial-scaled state)
+               (values 0.0 0.0)))
