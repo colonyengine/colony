@@ -149,7 +149,7 @@ DEFINE-COMPONENT form."
     (with-slots (%tables) core-state
       (setf (state component) :destroy
             (type-table component-type (component-destroy-by-type-view %tables)) component)
-      (type-table-drop component component-type (component-destroy-by-type-view %tables))
+      (remhash component (component-predestroy-view %tables))
       (unless (type-table-drop component component-type (component-active-by-type-view %tables))
         (type-table-drop component component-type (component-preinit-by-type-view %tables))))))
 
