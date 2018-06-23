@@ -26,19 +26,17 @@
   (when (or (input-enter-p context '(:gamepad1 :a))
             (input-enter-p context '(:mouse :mouse-left)))
 
-    (let ((actor (%fl::make-actor context :id (au:unique-name 'shot))))
-      (%fl:attach-component
-       actor (%fl:make-component 'fl.comp:transform context
-                                 :scale/current (v3:make 1 1 1)))
-      (%fl:attach-component
-       actor (%fl:make-component 'sprite-sheet
-                                 context
-                                 :spec-path '(:local "data/sprites.sexp")
-                                 :material 'fl.mfiano.materials::sprite
-                                 :animations (make-sprite-sheet-animations
-                                              0 0 #(#(1 "ship11")))))
+    (let ((actor (%fl::make-actor context :id (au:unique-name 'shot)))
+          (transform (make-component 'fl.comp:transform context))
+          (sprite (make-component 'sprite-sheet
+                                  context
+                                  :spec-path '(:local "data/sprites.sexp")
+                                  :material 'fl.mfiano.materials::sprite
+                                  :animations (make-sprite-sheet-animations
+                                               0 0 #(#(1 "ship11"))))))
 
-      ;; For now, I recommend after spawning, to immediately destroy it and
-      ;; supply the TTL at that time. Don't specify :ttl in make-actor.
-      (%fl:spawn-actor actor context)
+      (attach-multiple-components actor transform sprite)
+      (spawn-actor actor context)
+      ;; This is the method for destroying actors and components. Add to public
+      ;; API. DOn't use :ttl in the make-actor call yet.
       (%fl::destroy actor context :ttl 1))))

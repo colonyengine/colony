@@ -65,13 +65,19 @@
   (:inherit-from #:%fl
                  #:actor
                  #:actor-component-by-type
-                 #:actor-components-by-type)
+                 #:actor-components-by-type
+                 #:attach-component
+                 #:attach-multiple-components
+                 #:detach-component
+                 #:make-actor
+                 #:spawn-actor)
   ;; components
   ;; TODO: Finish user API.
   (:inherit-from #:%fl
                  #:define-component
                  #:destroy-component
                  #:initialize-component
+                 #:make-component
                  #:physics-update-component
                  #:render-component
                  #:shared-storage-metadata

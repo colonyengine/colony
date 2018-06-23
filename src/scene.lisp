@@ -54,7 +54,7 @@
     (let ((result))
       (maphash
        (lambda (actor components)
-         (push `(attach-multiple-components ,actor (list ,@(generate-component-forms components)))
+         (push `(attach-multiple-components ,actor ,@(generate-component-forms components))
                result))
        actor-components)
       result)))
