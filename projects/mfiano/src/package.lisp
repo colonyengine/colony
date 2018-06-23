@@ -18,7 +18,8 @@
 
 (defpackage+ #:fl.mfiano.materials
   (:use #:cl #:fl.materials)
-  (:import-from #:fl #:define-material))
+  (:import-from #:fl #:define-material)
+  (:export-only #:ssbo/specification-data))
 
 (defpackage+ #:fl.mfiano.textures
   (:use #:cl #:fl))
