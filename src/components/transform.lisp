@@ -92,10 +92,24 @@
     (setf (actor instance) actor
           (state instance) :initialize
           (current %translation) translation/current
+          (previous %translation) (v3:copy translation/current)
           (incremental %translation) translation/incremental
-          (current %rotation) (quat:rotate quat:+id+ rotation/current)
+
+          (current %rotation)
+          ;; TODO: Maybe should make this conversion into a GF or something.
+          (etypecase rotation/current
+            (v3:vec
+             ;; euler angles being passed in.
+             (quat:rotate quat:+id+ rotation/current))
+            (quat:quat
+             ;; quaternion being passed in: use as is.
+             rotation/current))
+
+          (previous %rotation) (quat:copy (current %rotation))
           (incremental %rotation) rotation/incremental
+
           (current %scaling) scale/current
+          (previous %scaling) (v3:copy scale/current)
           (incremental %scaling) scale/incremental)))
 
 ;;; User protocol
