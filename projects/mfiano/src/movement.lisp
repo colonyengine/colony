@@ -18,7 +18,26 @@
         (let ((angle (atan (- rx) ry)))
           (fl.comp:rotate %transform (v3:make 0 0 angle) :replace-p t))))))
 
-(define-component shot-emitter () ())
+
+
+
+
+
+(define-component shot-mover ()
+  ((transform :default nil)
+   (velocity :default (v3:make 0 0 0))))
+
+(defmethod initialize-component ((component shot-mover) (context context))
+  (setf (transform component)
+        (actor-component-by-type (actor component) 'transform)))
+
+(defmethod update-component ((component shot-mover) (context context))
+  (fl.comp:translate (transform component) (velocity component)))
+
+
+
+
+(define-component shot-emitter ())
 
 (defmethod initialize-component ((component shot-emitter) (context context)))
 
@@ -28,15 +47,23 @@
 
     (let ((actor (%fl::make-actor context :id (au:unique-name 'shot)))
           (transform (make-component 'fl.comp:transform context))
-          (sprite (make-component 'sprite-sheet
-                                  context
+          (shot-mover (make-component
+                       'shot-mover context
+                       :velocity (v3:make 0 (* 1000 (frame-time context)) 0)))
+          (sprite (make-component 'sprite-sheet context
                                   :spec-path '(:local "data/sprites.sexp")
                                   :material 'fl.mfiano.materials::sprite
                                   :animations (make-sprite-sheet-animations
-                                               0 0 #(#(1 "ship11"))))))
+                                               0 0 #(#(.25
+                                                       "bullet01"
+                                                       "bullet02"
+                                                       ))))))
 
-      (attach-multiple-components actor transform sprite)
-      (spawn-actor actor context)
+      (attach-multiple-components actor transform shot-mover sprite)
+
+      (spawn-actor actor context :parent (actor component))
+
+
       ;; This is the method for destroying actors and components. Add to public
-      ;; API. DOn't use :ttl in the make-actor call yet.
+      ;; API. Don't use :ttl in the make-actor call yet.
       (%fl::destroy actor context :ttl 1))))
