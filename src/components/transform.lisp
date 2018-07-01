@@ -31,8 +31,8 @@
 (defun rotate-node (node delta)
   (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
       (rotation node)
-    (q:copy! p c)
-    (q:rotate! c c (v3:scale! idelta i delta))))
+    (quat:copy! p c)
+    (quat:rotate! c c (v3:scale! idelta i delta))))
 
 (defun scale-node (node delta)
   (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
@@ -52,7 +52,7 @@
     (interpolate-state %rotation alpha)
     (interpolate-state %translation alpha)
     (m4:*! %local
-           (q:to-mat4! %local (interpolated %rotation))
+           (quat:to-mat4! %local (interpolated %rotation))
            (m4:scale-from-vec3 m4:+id+ (interpolated %scaling)))
     (m4:translation-from-vec3! %local (interpolated %translation))))
 
@@ -93,7 +93,7 @@
           (state instance) :initialize
           (current %translation) translation/current
           (incremental %translation) translation/incremental
-          (current %rotation) (q:rotate q:+id+ rotation/current)
+          (current %rotation) (quat:rotate quat:+id+ rotation/current)
           (incremental %rotation) rotation/incremental
           (current %scaling) scale/current
           (incremental %scaling) scale/incremental)))
@@ -102,7 +102,7 @@
 
 (defun %rotate/model-space (rotation vec &optional replace-p)
   (with-accessors ((current current)) rotation
-    (q:rotate! current (if replace-p q:+id+ current) vec)))
+    (quat:rotate! current (if replace-p quat:+id+ current) vec)))
 
 (defun %rotate/world-space (rotation vec &optional replace-p)
   (declare (ignore rotation vec replace-p))

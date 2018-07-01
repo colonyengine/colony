@@ -24,7 +24,7 @@
   (:method ((type (eql 'transform-state-vector)))
     (v3:zero))
   (:method ((type (eql 'transform-state-quaternion)))
-    (q:id)))
+    (quat:id)))
 
 (defun %generate-default-state-initargs (type)
   (mapcan
@@ -47,4 +47,4 @@
 
 (defmethod interpolate-state ((state transform-state-quaternion) factor)
   (with-slots (%previous %current %interpolated) state
-    (q:slerp! %interpolated %previous %current factor)))
+    (quat:slerp! %interpolated %previous %current factor)))
