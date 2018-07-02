@@ -161,5 +161,5 @@
 (declaim (inline from-mat4))
 (declaim (ftype (function (m4:matrix) quat:quat) from-mat4))
 (defun from-scaled-mat4 (matrix)
-  "Convert MATRIX to a quaternion, storing the result in a freshly allocated quaternion."
+  "Convert scaled MATRIX to a quaternion, storing the result in a freshly allocated quaternion."
   (from-scaled-mat4! (quat:id) matrix))
