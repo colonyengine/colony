@@ -60,30 +60,7 @@
 
     (let* ((parent-model (fl.comp:model (emitter-transform component)))
            (parent-translation (m4:translation-to-vec3 parent-model))
-           (parent-rotation
-             ;; TODO: The model matrix has scaling on it, which fucks up the
-             ;; quat conversion algorithm. So we test getting rid of it here.
-             ;;
-             ;; This must be fixed by going into gamebox-math/src/quat.lisp and
-             ;; adding a "&key (normalize t)" argument to the function.  Then,
-             ;; when normalize is t (the default), it temporarily normalizes the
-             ;; basis vectors and uses those instead. Then the from-quat4
-             ;; conversion will work regardless of scaling on the transform.
-             (let* ((x-rot (m4:rotation-axis-to-vec3 parent-model :x))
-                    (x-rot (v3:normalize! x-rot x-rot))
-                    (y-rot (m4:rotation-axis-to-vec3 parent-model :y))
-                    (y-rot (v3:normalize! y-rot y-rot))
-                    (z-rot (m4:rotation-axis-to-vec3 parent-model :z))
-                    (z-rot (v3:normalize! z-rot z-rot))
-                    (unscaled-mat (m4:id)))
-               (m4:rotation-axis-from-vec3! unscaled-mat x-rot :x)
-               (m4:rotation-axis-from-vec3! unscaled-mat y-rot :y)
-               (m4:rotation-axis-from-vec3! unscaled-mat z-rot :z)
-               ;; finally get the rotation.
-               ;; with the above suggested fix to gamebox-math, this call will
-               ;; just do the right thing and can be replaced with
-               ;; (quat:from-mat4 parent-model)
-               (quat:from-mat4 unscaled-mat)))
+           (parent-rotation (from-scaled-mat4 parent-model))
 
            ;; here is the code to make the new shot.
            (new-actor (%fl::make-actor context :id (au:unique-name 'shot)))
@@ -112,3 +89,77 @@
       ;; This is the method for destroying actors and components. Add to public
       ;; API. Don't use :ttl in the make-actor call yet.
       (%fl::destroy new-actor context :ttl 1))))
+
+
+
+
+
+
+;; TODO: This should go into gamebox-math. It is an alternate form of
+;; QUAT:FROM-MAT4 that can handle non-orthonormal rotation matricies.
+;; Both should exist, and the user can use what they desire.
+
+
+(declaim (ftype (function (quat:quat m4:matrix) quat:quat) from-mat4!))
+(defun from-scaled-mat4! (out matrix)
+  "Convert scaled MATRIX to a quaternion, storing the result in the existing quaternion, OUT."
+  (quat:with-components ((q out))
+
+    (m4:with-components ((m matrix))
+
+      ;; Normalize the basis vectors, but don't allocate vector memory,
+      ;; and don't alter the original input matrix.
+      (let* ((x-rot-denom (sqrt (+ (* m00 m00) (* m10 m10) (* m20 m20))))
+             (y-rot-denom (sqrt (+ (* m01 m01) (* m11 m11) (* m21 m21))))
+             (z-rot-denom (sqrt (+ (* m02 m02) (* m12 m12) (* m22 m22))))
+             ;; normalize x-rotation basis vector
+             (nm00 (/ m00 x-rot-denom))
+             (nm10 (/ m10 x-rot-denom))
+             (nm20 (/ m20 x-rot-denom))
+             ;; normalize y-rotation basis vector
+             (nm01 (/ m01 y-rot-denom))
+             (nm11 (/ m11 y-rot-denom))
+             (nm21 (/ m21 y-rot-denom))
+             ;; normalize z-rotation basis vector
+             (nm02 (/ m02 z-rot-denom))
+             (nm12 (/ m12 z-rot-denom))
+             (nm22 (/ m22 z-rot-denom)))
+
+        ;; Use the newly normalized values.
+        (let ((trace (cl:+ nm00 nm11 nm22 m33))
+              (col1 (1+ (cl:- nm00 nm11 nm22)))
+              (col2 (1+ (cl:- nm11 nm00 nm22)))
+              (col3 (1+ (cl:- nm22 nm00 nm11)))
+              (s 0.0f0))
+          (cond
+            ((plusp trace)
+             (setf s (/ 0.5f0 (sqrt trace))
+                   qw (/ 0.25f0 s)
+                   qx (cl:* (cl:- nm21 nm12) s)
+                   qy (cl:* (cl:- nm02 nm20) s)
+                   qz (cl:* (cl:- nm10 nm01) s)))
+            ((and (>= col1 col2) (>= col1 col3))
+             (setf s (/ 0.5f0 (sqrt col1))
+                   qw (cl:* (cl:- nm21 nm12) s)
+                   qx (/ 0.25f0 s)
+                   qy (cl:* (cl:+ nm10 nm01) s)
+                   qz (cl:* (cl:+ nm02 nm20) s)))
+            ((and (>= col2 col1) (>= col2 col3))
+             (setf s (/ 0.5f0 (sqrt col2))
+                   qw (cl:* (cl:- nm02 nm20) s)
+                   qx (cl:* (cl:+ nm01 nm10) s)
+                   qy (/ 0.25f0 s)
+                   qz (cl:* (cl:+ nm12 nm21) s)))
+            (t
+             (setf s (/ 0.5f0 (sqrt col3))
+                   qw (cl:* (cl:- nm10 nm01) s)
+                   qx (cl:* (cl:+ nm02 nm20) s)
+                   qy (cl:* (cl:+ nm12 nm21) s)
+                   qz (/ 0.25f0 s)))))))
+    out))
+
+(declaim (inline from-mat4))
+(declaim (ftype (function (m4:matrix) quat:quat) from-mat4))
+(defun from-scaled-mat4 (matrix)
+  "Convert MATRIX to a quaternion, storing the result in a freshly allocated quaternion."
+  (from-scaled-mat4! (quat:id) matrix))
