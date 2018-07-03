@@ -1,7 +1,7 @@
 (in-package :%fl)
 
 (au:define-constant +mouse-button-names+
-    #(nil :mouse-left :mouse-middle :mouse-right :mouse-x1 :mouse-x2)
+    #(nil :left :middle :right :x1 :x2)
   :test #'equalp)
 
 (defstruct mouse-motion-state x y dx dy)

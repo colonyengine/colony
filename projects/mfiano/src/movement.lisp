@@ -22,11 +22,6 @@
                           angle)))
           (fl.comp:rotate %transform (v3:make 0 0 angle) :replace-p t))))))
 
-
-
-
-
-
 (define-component shot-mover ()
   ((transform :default nil)
    (velocity :default 0)))
@@ -34,7 +29,6 @@
 (defmethod initialize-component ((component shot-mover) (context context))
   (setf (transform component)
         (actor-component-by-type (actor component) 'transform)))
-
 
 (defmethod update-component ((component shot-mover) (context context))
   (fl.comp:translate
@@ -46,7 +40,6 @@
           (move-delta (* (velocity component) (frame-time context))))
      (v3:scale b move-delta))))
 
-
 (define-component shot-emitter ()
   ((emitter-transform :default nil)))
 
@@ -55,9 +48,8 @@
         (actor-component-by-type (actor component) 'transform)))
 
 (defmethod update-component ((component shot-emitter) (context context))
-  (when (or (input-enter-p context '(:gamepad1 :right-shoulder))
-            (input-enter-p context '(:mouse :mouse-left)))
-
+  (when (or (input-enter-p context '(:gamepad1 :a))
+            (input-enter-p context '(:mouse :left)))
     (let* ((parent-model (fl.comp:model (emitter-transform component)))
            (parent-translation (m4:translation-to-vec3 parent-model))
            (parent-rotation (from-scaled-mat4 parent-model))
@@ -78,35 +70,23 @@
                                    :animations (make-sprite-sheet-animations
                                                 0 0 #(#(.25
                                                         "bullet01"
-                                                        "bullet02"
-                                                        ))))))
-
+                                                        "bullet02"))))))
       (attach-multiple-components new-actor transform shot-mover sprite)
-
       ;; The shot is free in the universe.
       (spawn-actor new-actor context)
-
       ;; This is the method for destroying actors and components. Add to public
       ;; API. Don't use :ttl in the make-actor call yet.
       (%fl::destroy new-actor context :ttl 1))))
-
-
-
-
-
 
 ;; TODO: This should go into gamebox-math. It is an alternate form of
 ;; QUAT:FROM-MAT4 that can handle non-orthonormal rotation matricies.
 ;; Both should exist, and the user can use what they desire.
 
-
 (declaim (ftype (function (quat:quat m4:matrix) quat:quat) from-mat4!))
 (defun from-scaled-mat4! (out matrix)
   "Convert scaled MATRIX to a quaternion, storing the result in the existing quaternion, OUT."
   (quat:with-components ((q out))
-
     (m4:with-components ((m matrix))
-
       ;; Normalize the basis vectors, but don't allocate vector memory,
       ;; and don't alter the original input matrix.
       (let* ((x-rot-denom (sqrt (+ (* m00 m00) (* m10 m10) (* m20 m20))))
@@ -124,7 +104,6 @@
              (nm02 (/ m02 z-rot-denom))
              (nm12 (/ m12 z-rot-denom))
              (nm22 (/ m22 z-rot-denom)))
-
         ;; Use the newly normalized values.
         (let ((trace (cl:+ nm00 nm11 nm22 m33))
               (col1 (1+ (cl:- nm00 nm11 nm22)))
