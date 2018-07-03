@@ -22,7 +22,7 @@
 (defun generate-shaders-modified-hook (core-state)
   (lambda (programs-list)
     (simple-logger:emit :shader.programs.to.recompile programs-list)
-    (enqueue-recompilation-task core-state :shader-recompilation programs-list)))
+    (queues:qpush (recompilation-queue core-state) (list :shader-recompilation programs-list))))
 
 (defun recompile-shaders (programs-list)
   (shadow:translate-shader-programs programs-list)

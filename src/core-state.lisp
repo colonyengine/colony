@@ -34,7 +34,7 @@
             :initform (au:dict #'eq))
    (%recompilation-queue :reader recompilation-queue
                          :initarg :recompilation-queue
-                         :initform (make-thread-safe-queue))))
+                         :initform (queues:make-queue :simple-cqueue))))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table
@@ -112,20 +112,6 @@ CORE-STATE."
            (:core (au:resolve-system-path :first-light path))
            (:local (au:resolve-system-path (user-package (core-state context)) path))))
         (error "Resource not found: ~s" location))))
-
-;; TODO: Fix this to take &rest argument and queue everything.
-(defun enqueue-recompilation-task (core-state kind data)
-  (let ((q (recompilation-queue core-state)))
-    (bt:with-lock-held ((queue-lock q))
-      (enqueue (list kind data) (queue q)))))
-
-;; TODO: Fix this to return a list if everything I can dequeue (maybe up to a
-;; number I will have to supply to this function). That will increase the
-;; performance since it is few lock acquisitions.
-(defun dequeue-recompilation-task (core-state)
-  (let ((q (recompilation-queue core-state)))
-    (bt:with-lock-held ((queue-lock q))
-      (dequeue (queue q)))))
 
 ;;;; Interim caching code for (often) resources. Uses nested hash tables like
 ;;;; the shared-storage for componnets.

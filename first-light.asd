@@ -15,7 +15,7 @@
                #:defpackage-plus
                #:cl-ppcre
                #:split-sequence
-               #:bordeaux-threads
+               #:queues.simple-cqueue
                #:cl-graph
                #:jsown
                #:cl-opengl
