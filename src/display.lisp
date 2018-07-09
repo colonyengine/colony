@@ -32,7 +32,7 @@
       (setf (slot-value core-state '%display)
             (make-instance 'display
                            :window window
-                           :vsyncp (cfg context :vsync)
+                           :vsync-p (cfg context :vsync)
                            :core-state core-state
                            :hz hz
                            :delta (cfg context :delta)
