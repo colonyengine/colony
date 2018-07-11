@@ -212,7 +212,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
    (%core-state :reader core-state
                 :initarg :core-state)
    ;; This is the name of the shader as its symbol.
-   (%shader :reader shader
+   (%shader :reader shader ;; :writer defined below.
             :initarg :shader)
    (%profile-overlay-names :reader profile-overlay-names
                            :initarg :profile-overlay-names
@@ -230,6 +230,16 @@ CORE-STATE. Return a list of the return values of the FUNC."
    (%active-texture-unit :accessor active-texture-unit
                          :initarg :active-texture-unit
                          :initform 0)))
+
+(defmethod (setf shader) (new-val (mat material))
+  ;; If we change the :shader of a material, the new shader must abide by
+  ;; the old shader's uniforms and types.
+  (with-slots (%shader) mat
+    (setf %shader new-val)
+    ;; Reinitialize the material with the new shader, ensure it type checks,
+    ;; and recompute any material uniform value changes.
+    (resolve-material mat (core-state mat)))
+  new-val)
 
 
 (defun %make-material (id shader profiles core-state)
@@ -582,6 +592,13 @@ or if it a vector of the same. Return NIL otherwise."
                  ;; function executed and will convert the in-flight semantic
                  ;; value into a real computed value for use by the binder
                  ;; function.
+                 ;;
+                 ;; NOTE: We set it to NIL here because if we're changing the
+                 ;; shader on a material, we'll push multiple copies of the this
+                 ;; sequence into the list when we resolve-material on that copy
+                 ;; with the changed shader--which is wrong. This will now do
+                 ;; the right thing in any (I believe) situation.
+                 (setf (semantic->computed material-uniform-value) nil)
                  (push (if (sampler-p uniform-type)
                            (gen-sampler/sem->com core-state)
                            (if (force-copy material-uniform-value)
@@ -640,26 +657,30 @@ uniform, those are not supported in materials."
                               material shader-program core-state))
    (blocks material)))
 
+
+(defun resolve-material (material-instance core-state)
+  "Convert semantic-values to computed-values. Type check the uniforms against
+the shader program in the material."
+  (au:if-found (shader-program (au:href (shaders core-state)
+                                        (shader material-instance)))
+               (progn
+                 (annotate-material-uniforms material-instance shader-program
+                                             core-state)
+                 (annotate-material-blocks material-instance shader-program
+                                           core-state)
+                 )
+               (error "Material ~s uses an undefined shader: ~s."
+                      (id material-instance) (shader material-instance))))
+
 (defun resolve-all-materials (core-state)
-  "Convert all semantic-values to computed-values in the materials. This
+  "Convert all semantic-values to computed-values for all materials. This
 must be executed after all the shader programs have been compiled."
-  (%map-materials
-   (lambda (material-instance)
-     (au:if-found (shader-program (au:href (shaders core-state)
-                                           (shader material-instance)))
-                  (progn
-                    (annotate-material-uniforms material-instance shader-program
-                                                core-state)
-                    (annotate-material-blocks material-instance shader-program
-                                              core-state)
-                    )
-                  (error "Material ~s uses an undefined shader: ~s."
-                         (id material-instance) (shader material-instance))))
+  ;; TODO: Check that all :block-alias names are actually unique between
+  ;; materials.
 
-   ;; TODO: Check that all :block-alias names are actually unique between
-   ;; materials.
-
-   core-state))
+  (%map-materials (lambda (mat)
+                    (resolve-material mat core-state))
+                  core-state))
 
 (defmethod extension-file-type ((extension-type (eql :materials)))
   "mat")
