@@ -36,7 +36,8 @@
    ;; The actual specification form from the above file.
    (spec :default nil)
    ;; material describing the specific sprite sheet I want.
-   (material :default nil)
+   (material :default nil
+             :annotation (fl.annotations:material))
    ;; The ssbo buffer reference (possibly shared between instances).
    (ssbo-buffer :default nil)
    ;; The empty vao we create and draw
@@ -163,13 +164,6 @@ for later use with the shaders."
   (with-slots (%spec-path %spec %material %transform %vao-id) sprite-sheet
     (let ((path (find-resource context %spec-path)))
       (setf %spec (au:safe-read-file-form path)
-            ;; TODO: probably should make material id conversion to actual
-            ;; material automatic instead of doing it here, but it is a very
-            ;; general problem, so it needs thinking. Maybe specify a
-            ;; converter function in component slots that converts it
-            ;; upon load to something else? Shades of the semantic/computed
-            ;; values appear...
-            %material (lookup-material %material context)
             %transform (actor-component-by-type (actor sprite-sheet) 'transform)
             %vao-id (gl:gen-vertex-array))
       (make-sprite-sheet-buffer sprite-sheet context)

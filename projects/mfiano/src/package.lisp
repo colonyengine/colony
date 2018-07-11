@@ -13,6 +13,7 @@
   (:export-only #:sprite-test
                 #:graph-test
                 #:noise-test
+		#:noise-test/identity
                 #:noise-test/playground
                 #:mesh-test))
 

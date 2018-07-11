@@ -60,6 +60,7 @@
    (:file "shaders")
    (:file "mesh-parser")
    (:file "engine")
+   (:file "annotations")
    (:file "components/transform")
    (:file "components/camera")
    (:file "components/camera-following")

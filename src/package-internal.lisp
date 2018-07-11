@@ -94,7 +94,9 @@
            #:render-component
            #:shared-storage-metadata
            #:state
-           #:update-component))
+           #:update-component)
+  ;; annotation API
+  (:export #:define-annotation))
 
 (defpackage+ #:fl.assets
   (:use #:cl #:%fl)
@@ -137,3 +139,7 @@
   ;; textures
   (:export #:debug-texture
            #:missing-texture))
+
+(defpackage+ #:fl.annotations
+  (:use #:cl #:%fl)
+  (:export-only #:material))
