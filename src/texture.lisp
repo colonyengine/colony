@@ -167,7 +167,7 @@ TEXTURE-TYPE into the texture memory."))
   (let ((texprof (gensym "TEXTURE-PROFILE")))
     `(let* ((,texprof (make-texture-profile :name ',name)))
        (setf ,@(loop :for (attribute value) :in body-form :appending
-                `((au:href (attributes ,texprof) ,attribute) ,value)))
+                     `((au:href (attributes ,texprof) ,attribute) ,value)))
        ,texprof)))
 
 (defmacro define-texture-profile (name &body body)
@@ -279,3 +279,33 @@ GPU."
 
 (defmethod rcache-dispose ((entry-type (eql :texture)) (core-state core-state) texture)
   (gl:delete-texture (texid texture)))
+
+
+;; Utility functions for texturing, maybe move elsewhere.
+
+(defun round-down (x)
+  (ceiling (- x 1/2)))
+
+(defun round-up (x)
+  (floor (+ x 1/2)))
+
+(defun compute-mipmap-levels (width height &optional (depth 1))
+  "Compute how many mipmaps and what their resolutions must be given a
+WIDTH, HEIGHT, and DEPTH (which defaults to 1) size of a texture. We
+follow Opengl's formula in dealing with odd sizes (being rounded down).
+Return a values of:
+  the number of mipmap levels
+  the list of resolutions from biggest to smallest each mip map must have."
+  (let ((num-levels (+ 1 (floor (log (max width height depth) 2))))
+        (resolutions nil))
+    (push (list width height depth) resolutions)
+    (loop
+      :with new-width = width
+      :with new-height = height
+      :with new-depth = depth
+      :for level :below (1- num-levels) :do
+        (setf new-width (max (round-down (/ new-width 2)) 1)
+              new-height (max (round-down (/ new-height 2)) 1)
+              new-depth (max (round-down (/ new-depth 2)) 1))
+        (push (list new-width new-height new-depth) resolutions))
+    (values num-levels (nreverse resolutions))))
