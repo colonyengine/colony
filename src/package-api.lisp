@@ -101,6 +101,7 @@
   (:export #:mesh)
   ;; mesh-renderer
   (:export #:mesh-renderer
+	   #:material
            #:draw-mesh)
   ;; transform
   (:export #:transform
