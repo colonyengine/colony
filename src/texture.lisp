@@ -94,6 +94,109 @@
   (:documentation "Load actual data described in the TEXTURE's texdesc of
 TEXTURE-TYPE into the texture memory."))
 
+(defun read-mipmap-images (context data use-mipmaps-p)
+  "Read the images described in the mipmap location array DATA into main
+memory. If USE-MIPMAPS-P is true, then load all of the mipmaps, otherwise only
+load the base image, which is the first one in the array. CONTEXT is the
+core-state context slot value. Return a vector of image structure from the
+function READ-IMAGE."
+  (if use-mipmaps-p
+      (map 'vector (lambda (loc) (read-image context loc)) data)
+      (vector (read-image context (aref data 0)))))
+
+(defun free-mipmap-images (images)
+  "Free all main memory associated with the vector of image objects in IMAGES."
+  (loop :for image :across images
+        :do (free-storage image)))
+
+(defun validate-mipmap-images (images texture
+                               expected-mipmaps expected-resolutions)
+  "Given the settings in the TEXTURE, validate the real image objects in the
+IMAGES vector to see if we have the expected number and resolution of mipmaps."
+  (declare (ignorable expected-resolutions))
+
+  (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
+         (texture-max-level
+           (get-applied-attribute texture :texture-max-level))
+         (texture-base-level
+           (get-applied-attribute texture :texture-base-level))
+         (max-mipmaps (- texture-max-level texture-base-level))
+         (num-mipmaps (length images))
+         (texture-name (name (texdesc texture))))
+
+    ;; We need at least one base image.
+    ;; TODO: When dealing with procedurally generated textures, this needs
+    ;; to be evolved.
+    (unless (> num-mipmaps 0)
+      (error "Texture ~A specifies no images! Please specify an image!"
+             texture-name))
+
+    (when use-mipmaps-p
+      (cond
+        ;; We have a SINGLE base mipmap (and we're generating them all).
+        ((= num-mipmaps 1)
+         ;; TODO: Check resolution.
+         nil)
+        ;; We have the exact number of expected mipmaps.
+        ((and (= num-mipmaps expected-mipmaps)
+              (<= num-mipmaps max-mipmaps))
+         ;; TODO: Check resolutions.
+         nil)
+        ;; We have the exact number of mipmaps required that fills the
+        ;; entire range expected by this texture.
+        ((= num-mipmaps max-mipmaps)
+         ;; TODO: Check resolutions
+         nil)
+        ;; Otherwise, something went wrong.
+        ;; TODO: Should do a better error message which diagnoses what's wrong.
+        (t
+         (error "Texture ~A mipmap levels are incorrect:~%~2Ttexture-base-level = ~A~%~2Ttexture-max-level = ~A~%~2Tnumber of mipmaps specified in texture = ~A~%~2Texpected number of mipmaps = ~A~%Probably too many or to few specified mipmap images."
+                texture-name
+                texture-base-level
+                texture-max-level
+                num-mipmaps
+                expected-mipmaps))))
+    ))
+
+(defun potentially-degrade-texture-min-filter (texture)
+  "If the TEXTURE is not using mipmaps, fix the :texture-min-filter attribute
+on the texture to something appropriate if it is currently set to using
+mipmap related interpolation."
+  (let ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
+        (texture-name (name (texdesc texture))))
+    (symbol-macrolet ((current-tex-min-filter
+                        (get-applied-attribute texture :texture-min-filter)))
+
+      (unless use-mipmaps-p
+        (case current-tex-min-filter
+          ((:nearest-mipmap-nearest :nearest-mipmap-linear)
+           (warn "Down converting nearest texture min mipmap filter due to disabled mipmaps. Please specify an override :texture-min-filter for texture ~A"
+                 texture-name)
+           (setf current-tex-min-filter :nearest))
+          ((:linear-mipmap-nearest :linear-mipmap-linear)
+           (warn "Down converting linear texture min mipmap filter due to disabled mipmaps. Please specify an override :texture-min-filter for texture ~A"
+                 texture-name)
+           (setf current-tex-min-filter :linear)))))))
+
+(defun potentially-autogenerate-mipmaps (texture-type texture)
+  "If, for this TEXTURE, we are using mipmaps, and only supplied a single base
+image, then we use GL:GENERASTE-MIPMAP to auto create all of the mipmaps
+in the GPU memory."
+  (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
+         (texture-max-level
+           (get-applied-attribute texture :texture-max-level))
+         (texture-base-level
+           (get-applied-attribute texture :texture-base-level))
+         (max-mipmaps (- texture-max-level texture-base-level))
+         (data (get-applied-attribute texture :data))
+         (num-mipmaps (length data)))
+
+    (when (and use-mipmaps-p
+               (= num-mipmaps 1) ;; We didn't supply any but the base image.
+               (> max-mipmaps 1)) ;; And we're expecting some to exist.
+      (gl:generate-mipmap texture-type))))
+
+
 (defmethod load-texture-data ((texture-type (eql :texture-1d)) texture context)
   ;; TODO: This assumes no use of the general-data-descriptor
   ;; TODO: This assumes use-mipmaps is true.
@@ -116,7 +219,8 @@ TEXTURE-TYPE into the texture memory."))
       (free-storage image))))
 
 (defmethod load-texture-data ((texture-type (eql :texture-2d)) texture context)
-  ;; TODO: This assumes no use of the general-data-descriptor
+  ;; TODO: This assumes no use of the general-data-descriptor or procedurally
+  ;; generated content.
 
   (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
          (immutable-p (get-applied-attribute texture :immutable))
@@ -129,58 +233,20 @@ TEXTURE-TYPE into the texture memory."))
          (num-mipmaps (length data)))
 
     ;; load all of the images we may require.
-    (let ((images (if use-mipmaps-p
-                      ;; we can use all of them.
-                      (map 'vector (lambda (loc) (read-image context loc))
-                           data)
-                      ;; only need the first one....
-                      (vector (read-image context (aref data 0))))))
+    (let ((images (read-mipmap-images context data use-mipmaps-p)))
 
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
           (compute-mipmap-levels (width (aref images 0))
                                  (height (aref images 0)))
-        ;; TODO: Fix this so we check against the expected-resolutions.
-        (declare (ignorable expected-resolutions))
 
-        ;; TODO: This check is not complete yet. Namely we don't check against
-        ;; expected resolutions, and need more thinking to see if this is
-        ;; complete coverage.
-        (unless (or
-                 ;; "We have only one."
-                 (= num-mipmaps 1)
-                 ;; "We have all required ones less than the max allowed."
-                 (and (= num-mipmaps expected-mipmaps)
-                      (<= num-mipmaps max-mipmaps))
-                 ;; "We have an explicit continuous range."
-                 (= num-mipmaps max-mipmaps))
+        (validate-mipmap-images images texture
+                                expected-mipmaps expected-resolutions)
 
-          ;; TODO: Check the actual resolutions to the expected resolutions to
-          ;; ensure they are correct given what we expect them to be.
-          (error "Texture ~A mipmap levels are incorrect. Sorry."
-                 (name (texdesc texture))))
+        (potentially-degrade-texture-min-filter texture)
 
-        ;; Change texture-min-filter when not using mipmaps
-        ;; to something reasonable, and emit warning.
-        (unless use-mipmaps-p
-          (let ((current-tex-min-filter
-                  (get-applied-attribute texture :texture-min-filter)))
-            (case current-tex-min-filter
-              ((:nearest-mipmap-nearest :nearest-mipmap-linear)
-               (warn "Down converting nearest texture min mipmap filter due to disabled mipmaps. Please specify an override :texture-min-filter for texture ~A"
-                     (name (texdesc texture)))
-               (setf (get-applied-attribute texture :texture-min-filter)
-                     :nearest))
-              ((:linear-mipmap-nearest :linear-mipmap-linear)
-               (warn "Down converting linear texture min mipmap filter due to disabled mipmaps. Please specify an override :texture-min-filter for texture ~A"
-                     (name (texdesc texture)))
-               (setf (get-applied-attribute texture :texture-min-filter)
-                     :linear)))))
-
+        ;; Allocate immutable storage if required.
         (when immutable-p
-          ;; We either create the required number we need, or the max-mipmaps
-          ;; which, if smaller than the minimum we need indicates a subrange
-          ;; of the total mipmaps this resolution could actually have.
           (let ((num-mipmaps-to-generate
                   (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
             (%gl:tex-storage-2d texture-type num-mipmaps-to-generate
@@ -188,7 +254,8 @@ TEXTURE-TYPE into the texture memory."))
                                 (width (aref images 0))
                                 (height (aref images 0)))))
 
-        ;; Load all of the images into the texture ram.
+        ;; Upload all of the mipmap images into the texture ram.
+        ;; TODO: Make this higher order.
         (loop :for idx :below (if use-mipmaps-p (length images) 1)
               :for level = (+ texture-base-level idx)
               :for image = (aref images idx)
@@ -201,16 +268,14 @@ TEXTURE-TYPE into the texture memory."))
                                              %pixel-format %pixel-type %data)
                         (gl:tex-image-2d texture-type level %internal-format
                                          %width %height 0
-                                         %pixel-format %pixel-type %data))
-                    ;; and get rid of the image memory right away!
-                    (free-storage image)))
+                                         %pixel-format %pixel-type %data))))
+
+        ;; And clean up main memory.
+        ;; TODO: For procedural textures, this needs evolution.
+        (free-mipmap-images images)
 
         ;; Determine if opengl should generate the mipmaps.
-        (when (and use-mipmaps-p
-                   (= num-mipmaps 1) ;; We didn't supply any but the base.
-                   (> max-mipmaps 1)) ;; And we're expecting some to exist.
-          (gl:generate-mipmap texture-type))))))
-
+        (potentially-autogenerate-mipmaps texture-type texture)))))
 
 
 (defmethod load-texture-data ((texture-type (eql :texture-3d)) texture context)
