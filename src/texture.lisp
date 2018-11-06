@@ -198,25 +198,62 @@ in the GPU memory."
 
 
 (defmethod load-texture-data ((texture-type (eql :texture-1d)) texture context)
-  ;; TODO: This assumes no use of the general-data-descriptor
-  ;; TODO: This assumes use-mipmaps is true.
-  ;; TODO: As a consequence, it does not yet handle loading mipmap data.
+  ;; TODO: This assumes no use of the general-data-descriptor or procedurally
+  ;; generated content.
 
-  (let* ((data (get-applied-attribute texture :data))
-         (use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
-         (location (aref data 0))
-         (image (read-image context location)))
+  (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
+         (immutable-p (get-applied-attribute texture :immutable))
+         (texture-max-level
+           (get-applied-attribute texture :texture-max-level))
+         (texture-base-level
+           (get-applied-attribute texture :texture-base-level))
+         (max-mipmaps (- texture-max-level texture-base-level))
+         (data (get-applied-attribute texture :data))
+         (num-mipmaps (length data)))
 
-    (assert (= (length data) 1))
+    ;; load all of the images we may require.
+    (let ((images (read-mipmap-images context data use-mipmaps-p)))
 
-    (with-slots (%width %height %internal-format %pixel-format %pixel-type
-                 %data)
-        image
-      (gl:tex-image-1d texture-type 0 %internal-format %width 0 %pixel-format
-                       %pixel-type %data)
-      (assert use-mipmaps-p)
-      (gl:generate-mipmap texture-type)
-      (free-storage image))))
+      ;; Figure out the ideal mipmap count from the base resolution.
+      (multiple-value-bind (expected-mipmaps expected-resolutions)
+          (compute-mipmap-levels (width (aref images 0))
+                                 (height (aref images 0)))
+
+        (validate-mipmap-images images texture
+                                expected-mipmaps expected-resolutions)
+
+        (potentially-degrade-texture-min-filter texture)
+
+        ;; Allocate immutable storage if required.
+        (when immutable-p
+          (let ((num-mipmaps-to-generate
+                  (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
+            (%gl:tex-storage-1d texture-type num-mipmaps-to-generate
+                                (internal-format (aref images 0))
+                                (width (aref images 0)))))
+
+        ;; Upload all of the mipmap images into the texture ram.
+        ;; TODO: Make this higher order.
+        (loop :for idx :below (if use-mipmaps-p (length images) 1)
+              :for level = (+ texture-base-level idx)
+              :for image = (aref images idx)
+              :do (with-slots (%width %height %internal-format %pixel-format
+                               %pixel-type %data)
+                      image
+                    (if immutable-p
+                        (gl:tex-sub-image-1d texture-type level 0
+                                             %width
+                                             %pixel-format %pixel-type %data)
+                        (gl:tex-image-1d texture-type level %internal-format
+                                         %width 0
+                                         %pixel-format %pixel-type %data))))
+
+        ;; And clean up main memory.
+        ;; TODO: For procedural textures, this needs evolution.
+        (free-mipmap-images images)
+
+        ;; Determine if opengl should generate the mipmaps.
+        (potentially-autogenerate-mipmaps texture-type texture)))))
 
 (defmethod load-texture-data ((texture-type (eql :texture-2d)) texture context)
   ;; TODO: This assumes no use of the general-data-descriptor or procedurally
