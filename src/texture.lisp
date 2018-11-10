@@ -318,6 +318,11 @@ in the GPU memory."
 (defmethod load-texture-data ((texture-type (eql :texture-3d)) texture context)
   ;; Determine if loading :images or :volume
   (error "load-texture-data: :texture-3d implement me")
+
+  ;; Validating a 3d texture.
+  ;; 1. Ensure that all images/mipmaps are of identical and valid dimensions.
+  ;; 2. Ensure that it fits into the current limits on the card
+
   nil)
 
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map)) texture context)
