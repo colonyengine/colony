@@ -8,7 +8,8 @@
                 #:broken-scene))
 
 (defpackage+ #:fl.example.shaders
-  (:use #:fl #:shadow.lang)
+  (:use #:fl)
+  (:inherit #:shadow.vari)
   (:export-only #:damaged-helmet
                 #:unlit-color-1d))
 

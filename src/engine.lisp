@@ -5,7 +5,7 @@
     "Profile the scene `SCENE-NAME` for the given `DURATION` in seconds, all packages that begin with
   'FL.', along with some key third-party library packages."
     (let ((packages (remove-if-not
-                     (lambda (x) (au:string-starts-with? x "FL."))
+                     (lambda (x) (au:string-starts-with-p x "FL."))
                      (mapcar #'package-name (list-all-packages)))))
       `(progn
          (sb-profile:unprofile)

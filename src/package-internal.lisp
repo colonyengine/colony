@@ -104,7 +104,8 @@
                 #:draw-func))
 
 (defpackage+ #:fl.shaders
-  (:use #:%fl #:shadow.lang)
+  (:use #:%fl)
+  (:inherit #:shadow.vari)
   (:export-only #:unlit-color
                 #:unlit-color-decal
                 #:unlit-texture
