@@ -9,11 +9,12 @@
                 #:mesh-test))
 
 (defpackage+ #:fl.mfiano.shaders
-  (:use #:fl #:shadow.lang)
+  (:use #:fl)
+  (:inherit #:shadow.vari)
   (:export-only #:sprite-test
                 #:graph-test
                 #:noise-test
-		#:noise-test/identity
+                #:noise-test/identity
                 #:noise-test/playground
                 #:mesh-test))
 

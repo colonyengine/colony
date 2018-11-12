@@ -6,7 +6,8 @@
                 #:material-test))
 
 (defpackage+ #:fl.psilord.shaders
-  (:use #:fl #:shadow.lang)
+  (:use #:fl)
+  (:inherit #:shadow.vari)
   (:export-only #:sprite-shader
                 #:test-shader-0))
 
