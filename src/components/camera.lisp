@@ -5,7 +5,7 @@
    (view :default (m4:id))
    (projection :default (m4:id))
    (mode :default :perspective)
-   (clip-near :default 0.1)
+   (clip-near :default 0.001)
    (clip-far :default 1024)
    (fovy :default (* 90 (/ pi 180)))
    (zoom :default 1)
@@ -37,7 +37,8 @@
   (:method ((camera camera) (context context))
     (with-accessors ((view view) (transform transform)) camera
       (let* ((eye (m4:translation-to-vec3 (model transform)))
-             (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3 (model transform) :z))))
+             (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3
+                                           (model transform) :z))))
              (up (m4:rotation-axis-to-vec3 (model transform) :y)))
         (m4:view! view eye target up)))))
 

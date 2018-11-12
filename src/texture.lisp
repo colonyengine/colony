@@ -323,7 +323,17 @@ in the GPU memory."
   ;; 1. Ensure that all images/mipmaps are of identical and valid dimensions.
   ;; 2. Ensure that it fits into the current limits on the card
 
-  nil)
+  (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
+         (immutable-p (get-applied-attribute texture :immutable))
+         (texture-max-level
+           (get-applied-attribute texture :texture-max-level))
+         (texture-base-level
+           (get-applied-attribute texture :texture-base-level))
+         (max-mipmaps (- texture-max-level texture-base-level))
+         (data (get-applied-attribute texture :data))
+         (num-mipmaps (length data)))
+
+    nil))
 
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map)) texture context)
   (error "load-texture-data: :texture-cube-map implement me")

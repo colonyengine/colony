@@ -4,12 +4,13 @@
   (:use #:cl #:fl)
   (:export-only #:damaged-helmet
                 #:geometric-volumes
-                #:texture-test))
+                #:texture-test
+                #:broken-scene))
 
 (defpackage+ #:fl.example.shaders
   (:use #:fl #:shadow.lang)
   (:export-only #:damaged-helmet
-		#:unlit-color-1d))
+                #:unlit-color-1d))
 
 (defpackage+ #:fl.example.materials
   (:use #:cl #:fl)
