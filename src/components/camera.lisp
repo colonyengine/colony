@@ -5,7 +5,7 @@
    (view :default (m4:id))
    (projection :default (m4:id))
    (mode :default :perspective)
-   (clip-near :default 0.001)
+   (clip-near :default 0.1)
    (clip-far :default 1024)
    (fovy :default (* 90 (/ pi 180)))
    (zoom :default 1)
