@@ -27,6 +27,7 @@
 (defun recompile-shaders (programs-list)
   (shadow:translate-shader-programs programs-list)
   (shadow:build-shader-programs programs-list)
+  (shadow:rebind-blocks programs-list)
   (when programs-list
     (simple-logger:emit :shader.programs.recompiled programs-list)))
 
