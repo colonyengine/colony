@@ -208,11 +208,23 @@ in the GPU memory."
          (texture-base-level
            (get-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
-         (data (get-applied-attribute texture :data))
-         (num-mipmaps (length data)))
+         (data (get-applied-attribute texture :data)))
 
     ;; load all of the images we may require.
     (let ((images (read-mipmap-images context data use-mipmaps-p)))
+
+      ;; Check to ensure they all fit into texture memory.
+      ;;
+      ;; TODO: Refactor out of each method into validate-mipmap-images and
+      ;; generalize.
+      (loop :for image :across images
+            :for location :across data
+            :do (when (> (max (height image) (width image))
+                         (gl:get-integer :max-texture-size))
+                  (error "Image ~A for 1D texture ~A is to big to be loaded onto this card. Max resolution is ~A in either dimension."
+                         location
+                         (name (texdesc texture))
+                         (gl:get-integer :max-texture-size))))
 
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
@@ -266,11 +278,23 @@ in the GPU memory."
          (texture-base-level
            (get-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
-         (data (get-applied-attribute texture :data))
-         (num-mipmaps (length data)))
+         (data (get-applied-attribute texture :data)))
 
     ;; load all of the images we may require.
     (let ((images (read-mipmap-images context data use-mipmaps-p)))
+
+      ;; Check to ensure they all fit into texture memory.
+      ;;
+      ;; TODO: Refactor out of each method into validate-mipmap-images and
+      ;; generalize.
+      (loop :for image :across images
+            :for location :across data
+            :do (when (> (max (height image) (width image))
+                         (gl:get-integer :max-texture-size))
+                  (error "Image ~A for texture ~A is to big to be loaded onto this card. Max resolution is ~A in either dimension."
+                         location
+                         (name (texdesc texture))
+                         (gl:get-integer :max-texture-size))))
 
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
