@@ -24,6 +24,13 @@
     ;; the tga codes will auto clean up
     (setf %data nil)))
 
+(defmethod get-pixel-size ((image image))
+  "Return the size of the pixel element in this image in bytes."
+  (ecase (pixel-format image)
+    (:red 1)
+    (:bgr 3)
+    (:bgra 4)))
+
 ;; specific to TGA
 (defun get-pixel-format (channels)
   (ecase channels

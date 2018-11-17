@@ -94,20 +94,48 @@
   (:documentation "Load actual data described in the TEXTURE's texdesc of
 TEXTURE-TYPE into the texture memory."))
 
-(defun read-mipmap-images (context data use-mipmaps-p)
+(defun read-mipmap-images (context data use-mipmaps-p kind)
   "Read the images described in the mipmap location array DATA into main
 memory. If USE-MIPMAPS-P is true, then load all of the mipmaps, otherwise only
 load the base image, which is the first one in the array. CONTEXT is the
 core-state context slot value. Return a vector of image structure from the
-function READ-IMAGE."
-  (if use-mipmaps-p
-      (map 'vector (lambda (loc) (read-image context loc)) data)
-      (vector (read-image context (aref data 0)))))
+function READ-IMAGE.
 
-(defun free-mipmap-images (images)
+If KIND is :1d or :2d, then DATA must be an array of location descriptors like:
+  #((:local \"a/b/c/foo.tga\") (:local \"a/b/c/foo.tga\"))
+
+If KIND is :3d, then Data must be an array of slices of mipmap images:
+  #(#((:local \"a/b/c/slice0-mip0.tga\") (:local \"a/b/c/slice1-mip0.tga\")))
+
+The same vector structure is returned but with the local descriptor lists
+replaced by actual IMAGE instances of the loaded images.
+"
+  (flet ((read-image-contextually (loc)
+           (read-image context loc)))
+    (if use-mipmaps-p
+        (ecase kind
+          ((:1d :2d)
+           (map 'vector #'read-image-contextually data))
+          (:3d
+           (map 'vector (lambda (slices)
+                          (map 'vector #'read-image-contextually slices))
+                data)))
+        (ecase kind
+          ((:1d :2d)
+           (vector (read-image-contextually (aref data 0))))
+          (:3d
+           (vector (map 'vector #'read-image-contextually (aref data 0))))))))
+
+(defun free-mipmap-images (images kind)
   "Free all main memory associated with the vector of image objects in IMAGES."
-  (loop :for image :across images
-        :do (free-storage image)))
+  (loop :for potential-image :across images
+        :do
+           (ecase kind
+             ((:1d :2d)
+              (free-storage potential-image))
+             (:3d
+              (loop :for actual-image :across potential-image
+                    :do (free-storage actual-image))))))
 
 (defun validate-mipmap-images (images texture
                                expected-mipmaps expected-resolutions)
@@ -194,6 +222,7 @@ in the GPU memory."
     (when (and use-mipmaps-p
                (= num-mipmaps 1) ;; We didn't supply any but the base image.
                (> max-mipmaps 1)) ;; And we're expecting some to exist.
+      (format t "Generating mipmaps!~%")
       (gl:generate-mipmap texture-type))))
 
 
@@ -211,7 +240,7 @@ in the GPU memory."
          (data (get-applied-attribute texture :data)))
 
     ;; load all of the images we may require.
-    (let ((images (read-mipmap-images context data use-mipmaps-p)))
+    (let ((images (read-mipmap-images context data use-mipmaps-p :1d)))
 
       ;; Check to ensure they all fit into texture memory.
       ;;
@@ -262,7 +291,7 @@ in the GPU memory."
 
         ;; And clean up main memory.
         ;; TODO: For procedural textures, this needs evolution.
-        (free-mipmap-images images)
+        (free-mipmap-images images :1d)
 
         ;; Determine if opengl should generate the mipmaps.
         (potentially-autogenerate-mipmaps texture-type texture)))))
@@ -281,7 +310,7 @@ in the GPU memory."
          (data (get-applied-attribute texture :data)))
 
     ;; load all of the images we may require.
-    (let ((images (read-mipmap-images context data use-mipmaps-p)))
+    (let ((images (read-mipmap-images context data use-mipmaps-p :2d)))
 
       ;; Check to ensure they all fit into texture memory.
       ;;
@@ -333,31 +362,138 @@ in the GPU memory."
 
         ;; And clean up main memory.
         ;; TODO: For procedural textures, this needs evolution.
-        (free-mipmap-images images)
+        (free-mipmap-images images :2d)
 
         ;; Determine if opengl should generate the mipmaps.
         (potentially-autogenerate-mipmaps texture-type texture)))))
 
+(defun slices-to-volume (images)
+  "Take an array of image objects in IMAGES, all the same height and width and
+mipmap level, and assuming index 0 is the 'back slice' and the highest index is
+the 'front slice' (according to opengl's 3d texture definition) and then
+assemble them into a single linear array suitable for a 3d texture for
+opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
+  (let* ((first-slice (aref images 0))
+         (max-depth (length images))
+         (pixel-size (get-pixel-size first-slice)))
+
+    (with-slots (%width %height) first-slice ;; all slices the same.
+      (let* ((volume-data-size (* %width %height max-depth pixel-size))
+             (volume-data (make-array volume-data-size
+                                      :element-type '(unsigned-byte 8))))
+
+        (format t "slices-to-volume: slices = ~A, volume-data-size = ~A bytes~%"
+                (length images) volume-data-size)
+
+        ;; Recontextualize the 3d images into a real volume array specified as
+        ;; a linear array.
+        ;;
+        ;; NOTE: Assuming row major ordering for all arrays.
+        (loop :for d :below max-depth
+              :for image = (aref images d) :do
+                (format t "Processing slice image index ~A: Image ~A~%"
+                        d image)
+                ;; x and y in terms of images.
+                (loop :for w :below %width :do
+                  (loop :for h :below %height :do
+                    (let* ((pixel-start-2d
+                             (+ (* h (* %width pixel-size))
+                                (* w pixel-size)))
+                           (pixel-start-3d
+                             (+ (* d (* %width %height pixel-size))
+                                (* h (* %width pixel-size))
+                                (* w pixel-size))))
+
+                      ;; TODO: Crappily copy over the individual pixel data from
+                      ;; the 2d image to the 3d image. I should poke this more
+                      ;; to see if I can copy way more data at once.
+                      (replace volume-data (data image)
+                               :start1 pixel-start-3d
+                               :end1 (+ pixel-start-3d pixel-size)
+                               :start2 pixel-start-2d
+                               :end2 (+ pixel-start-2d pixel-size))))))
+
+        (format t "Finished constructing volume data.~%")
+        (finish-output)
+        volume-data))))
 
 (defmethod load-texture-data ((texture-type (eql :texture-3d)) texture context)
   ;; Determine if loading :images or :volume
-  (error "load-texture-data: :texture-3d implement me")
 
-  ;; Validating a 3d texture.
-  ;; 1. Ensure that all images/mipmaps are of identical and valid dimensions.
-  ;; 2. Ensure that it fits into the current limits on the card
+  ;; TODO: Validating a 3d texture.
+  ;; 0. Ensure that each mipmap level has the same number of slices.
+  ;; 1. Ensure that all mipmap levels have the same number of slices.
+  ;; 2. Ensure that all required mipmaps levels are present and correct.
+  ;; 2. Ensure that each mipmap level fits into the current limits on the card.
 
   (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
          (immutable-p (get-applied-attribute texture :immutable))
-         (texture-max-level
-           (get-applied-attribute texture :texture-max-level))
-         (texture-base-level
-           (get-applied-attribute texture :texture-base-level))
+         (texture-max-level (get-applied-attribute texture :texture-max-level))
+         (texture-base-level (get-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
+         (max-texture-3d-size (gl:get-integer :max-3d-texture-size))
          (data (get-applied-attribute texture :data))
          (num-mipmaps (length data)))
 
-    nil))
+    (format t "Attempting to load 3d texture ~A onto GPU: immutable = ~A~%"
+            (name (texdesc texture)) immutable-p)
+
+    ;; Load all of our images for each mipmap level, if needed.
+    (let* ((all-slices (read-mipmap-images context data use-mipmaps-p :3d))
+           (first-image (aref (aref all-slices 0) 0))
+           (depth (length (aref all-slices 0))))
+
+      ;; Figure out the ideal mipmap count from the base resolution.
+      (multiple-value-bind (expected-mipmaps expected-resolutions)
+          (compute-mipmap-levels (width first-image)
+                                 (height first-image)
+                                 depth)
+        (format t "expected mipmaps: ~A expected-resolutions: ~A~%"
+                expected-mipmaps expected-resolutions)
+
+        ;; TODO: Fix these two calls.
+        #++(validate-mipmap-images images texture
+                                   expected-mipmaps expected-resolutions)
+        #++(potentially-degrade-texture-min-filter texture)
+
+        ;; Allocate immutable storage if required.
+        (when immutable-p
+          (let ((num-mipmaps-to-generate
+                  (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
+            (%gl:tex-storage-3d texture-type num-mipmaps-to-generate
+                                (internal-format first-image)
+                                (width first-image)
+                                (height first-image)
+                                depth)))
+
+        ;; Load all volumetric mipmaps into the gpu.
+        (loop :for idx :below (if use-mipmaps-p num-mipmaps 1)
+              :for level = (+ texture-base-level idx)
+              :for volume = (slices-to-volume (aref all-slices idx))
+              :for (mipmap-width mipmap-height mipmap-depth)
+                :in expected-resolutions
+              :do (with-slots (%width %height %internal-format %pixel-format
+                               %pixel-type %data)
+                      (aref (aref all-slices idx) 0)
+                    (format t "Uploading tp GPU 3d mipmap image at level ~A with resolution (w:~A h:~A d:~A)~%"
+                            level mipmap-width mipmap-height mipmap-depth)
+                    (if immutable-p
+                        (gl:tex-sub-image-3d texture-type level 0 0 0
+                                             mipmap-width
+                                             mipmap-height
+                                             mipmap-depth
+                                             %pixel-format %pixel-type volume)
+                        (gl:tex-image-3d texture-type level %internal-format
+                                         mipmap-width
+                                         mipmap-height
+                                         mipmap-depth 0
+                                         %pixel-format %pixel-type volume))))
+
+        (free-mipmap-images all-slices :3d)
+
+        (potentially-autogenerate-mipmaps texture-type texture)
+
+        ))))
 
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map)) texture context)
   (error "load-texture-data: :texture-cube-map implement me")
