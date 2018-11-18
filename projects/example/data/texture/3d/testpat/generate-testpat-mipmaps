@@ -1,5 +1,9 @@
 #! /bin/bash
 
+echo "This script is not to be used for creating 3D texture mipmaps."
+echo "When I get back to this script it'll evolve more."
+exit 1
+
 # A fast and _dirty_ script to generate the mipmaps for the testpat 3D texture.
 # This assumes that slice images at mipmap level 0 are 8x8 pixels.
 # IT also assumes the 3d texture is 8x8x8.
