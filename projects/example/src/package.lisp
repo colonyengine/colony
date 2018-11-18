@@ -5,7 +5,7 @@
   (:export-only #:damaged-helmet
                 #:geometric-volumes
                 #:texture-test
-                #:broken-scene))
+                #:isometric-view-test))
 
 (defpackage+ #:fl.example.shaders
   (:use #:fl)
