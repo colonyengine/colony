@@ -11,8 +11,7 @@
 
 (defmethod prepare-extension ((extension-type (eql :shader-programs)) core-state)
   (shadow:reset-program-state)
-  (map-extensions extension-type (data-path core-state))
-  (shadow:enable-dependency-tracking))
+  (map-extensions extension-type (data-path core-state)))
 
 ;; NOTE: The returned function is called by the result of doing a C-c, which might be on a different
 ;; thread due to slynk, or anything else that forced recompilation of shader programs that happened
@@ -36,8 +35,7 @@
   (shadow:set-modify-hook (generate-shaders-modified-hook core-state)))
 
 (defun shutdown-shader-programs ()
-  (shadow:set-modify-hook (constantly nil))
-  (shadow:disable-dependency-tracking))
+  (shadow:set-modify-hook (constantly nil)))
 
 (defmacro define-shader (name (&key (version 430) (primitive :triangles)) &body body)
   `(progn
