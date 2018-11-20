@@ -426,6 +426,14 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
   ;; 2. Ensure that all required mipmaps levels are present and correct.
   ;; 2. Ensure that each mipmap level fits into the current limits on the card.
 
+  ;; TODO: Fix me.
+  (let ((hardcoded-layout '((:origin :left-back-bottom)
+                            (:shape (:slices :back-to-front))))
+        (current-layout (get-applied-attribute texture :layout)))
+    (unless (equal current-layout hardcoded-layout)
+      (error "3D Texture ~A has layout:~%  ~S~%but it can only have this as its layout:~%  ~S"
+             (name (texdesc texture)) current-layout hardcoded-layout)))
+
   (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
          (immutable-p (get-applied-attribute texture :immutable))
          (texture-max-level (get-applied-attribute texture :texture-max-level))
