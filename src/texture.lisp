@@ -426,7 +426,8 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
   ;; 2. Ensure that all required mipmaps levels are present and correct.
   ;; 2. Ensure that each mipmap level fits into the current limits on the card.
 
-  ;; TODO: Fix me.
+  ;; TODO: Fix me. Need to support :layout properly. Currently, this form
+  ;; represents opengl defaults.
   (let ((hardcoded-layout '((:origin :left-back-bottom)
                             (:shape (:slices :back-to-front))))
         (current-layout (get-applied-attribute texture :layout)))
@@ -503,15 +504,6 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
 
         ))))
 
-(defmethod load-texture-data ((texture-type (eql :texture-cube-map)) texture context)
-  (error "load-texture-data: :texture-cube-map implement me")
-  nil)
-
-(defmethod load-texture-data ((texture-type (eql :texture-rectangle)) texture context)
-  (error "load-texture-data: :texture-rectangle implement me")
-  ;; Determine if loading :image or :planar
-  nil)
-
 (defmethod load-texture-data ((texture-type (eql :texture-1d-array)) texture context)
   (error "load-texture-data: :texture-1d-array implement me")
   nil)
@@ -520,9 +512,28 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
   (error "load-texture-data: :texture-2d-array implement me")
   nil)
 
+(defmethod load-texture-data ((texture-type (eql :texture-rectangle)) texture context)
+  (error "load-texture-data: :texture-rectangle implement me")
+  ;; Determine if loading :image or :planar
+  nil)
+
+(defmethod load-texture-data ((texture-type (eql :texture-cube-map)) texture context)
+  (error "load-texture-data: :texture-cube-map implement me")
+  nil)
+
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map-array)) texture context)
   (error "load-texture-data: :texture-cube-map-array implement me")
   nil)
+
+(defmethod load-texture-data ((texture-type (eql :texture-buffer)) texture context)
+  ;; NOTE: this one might be a little harder to get right, since the rcache
+  ;; stuff might end up being wrong since this is a buffer object, not a
+  ;; traditional texture. So pay attention while implementing this one.
+  (error "load-texture-data: :texture-buffer implement me")
+  nil)
+
+
+
 
 (defun load-texture (context texture-name)
   (let ((texdesc (au:href (texture-descriptors (textures (core-state context))) texture-name)))
