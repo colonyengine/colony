@@ -222,7 +222,7 @@ in the GPU memory."
     (when (and use-mipmaps-p
                (= num-mipmaps 1) ;; We didn't supply any but the base image.
                (> max-mipmaps 1)) ;; And we're expecting some to exist.
-      (format t "Generating mipmaps!~%")
+      #++(format t "Generating mipmaps!~%")
       (gl:generate-mipmap texture-type))))
 
 
@@ -382,8 +382,8 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
              (volume-data (make-array volume-data-size
                                       :element-type '(unsigned-byte 8))))
 
-        (format t "slices-to-volume: slices = ~A, volume-data-size = ~A bytes~%"
-                (length images) volume-data-size)
+        #++(format t "slices-to-volume: slices = ~A, volume-data-size = ~A bytes~%"
+                   (length images) volume-data-size)
 
         ;; Recontextualize the 3d images into a real volume array specified as
         ;; a linear array.
@@ -391,30 +391,29 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
         ;; NOTE: Assuming row major ordering for all arrays.
         (loop :for d :below max-depth
               :for image = (aref images d) :do
-                (format t "Processing slice image index ~A: Image ~A~%"
-                        d image)
-                ;; x and y in terms of images.
-                (loop :for w :below %width :do
-                  (loop :for h :below %height :do
-                    (let* ((pixel-start-2d
-                             (+ (* h (* %width pixel-size))
-                                (* w pixel-size)))
-                           (pixel-start-3d
-                             (+ (* d (* %width %height pixel-size))
-                                (* h (* %width pixel-size))
-                                (* w pixel-size))))
+              #++(format t "Processing slice image index ~A: Image ~A~%"
+                         d image)
+              ;; x and y in terms of images.
+                 (loop :for w :below %width :do
+                   (loop :for h :below %height :do
+                     (let* ((pixel-start-2d
+                              (+ (* h (* %width pixel-size))
+                                 (* w pixel-size)))
+                            (pixel-start-3d
+                              (+ (* d (* %width %height pixel-size))
+                                 (* h (* %width pixel-size))
+                                 (* w pixel-size))))
 
-                      ;; TODO: Crappily copy over the individual pixel data from
-                      ;; the 2d image to the 3d image. I should poke this more
-                      ;; to see if I can copy way more data at once.
-                      (replace volume-data (data image)
-                               :start1 pixel-start-3d
-                               :end1 (+ pixel-start-3d pixel-size)
-                               :start2 pixel-start-2d
-                               :end2 (+ pixel-start-2d pixel-size))))))
+                       ;; TODO: Crappily copy over the individual pixel data
+                       ;; from the 2d image to the 3d image. I should poke this
+                       ;; more to see if I can copy way more data at once.
+                       (replace volume-data (data image)
+                                :start1 pixel-start-3d
+                                :end1 (+ pixel-start-3d pixel-size)
+                                :start2 pixel-start-2d
+                                :end2 (+ pixel-start-2d pixel-size))))))
 
-        (format t "Finished constructing volume data.~%")
-        (finish-output)
+        #++(format t "Finished constructing volume data.~%")
         volume-data))))
 
 (defmethod load-texture-data ((texture-type (eql :texture-3d)) texture context)
@@ -444,8 +443,8 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
          (data (get-applied-attribute texture :data))
          (num-mipmaps (length data)))
 
-    (format t "Attempting to load 3d texture ~A onto GPU: immutable = ~A~%"
-            (name (texdesc texture)) immutable-p)
+    #++(format t "Attempting to load 3d texture ~A onto GPU: immutable = ~A~%"
+               (name (texdesc texture)) immutable-p)
 
     ;; Load all of our images for each mipmap level, if needed.
     (let* ((all-slices (read-mipmap-images context data use-mipmaps-p :3d))
@@ -457,8 +456,8 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
           (compute-mipmap-levels (width first-image)
                                  (height first-image)
                                  depth)
-        (format t "expected mipmaps: ~A expected-resolutions: ~A~%"
-                expected-mipmaps expected-resolutions)
+        #++(format t "expected mipmaps: ~A expected-resolutions: ~A~%"
+                   expected-mipmaps expected-resolutions)
 
         ;; TODO: Fix these two calls.
         #++(validate-mipmap-images images texture
@@ -484,8 +483,8 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
               :do (with-slots (%width %height %internal-format %pixel-format
                                %pixel-type %data)
                       (aref (aref all-slices idx) 0)
-                    (format t "Uploading tp GPU 3d mipmap image at level ~A with resolution (w:~A h:~A d:~A)~%"
-                            level mipmap-width mipmap-height mipmap-depth)
+                    #++(format t "Uploading tp GPU 3d mipmap image at level ~A with resolution (w:~A h:~A d:~A)~%"
+                               level mipmap-width mipmap-height mipmap-depth)
                     (if immutable-p
                         (gl:tex-sub-image-3d texture-type level 0 0 0
                                              mipmap-width
