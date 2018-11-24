@@ -136,10 +136,18 @@
   (:use #:cl #:%fl)
   ;; profiles
   (:export #:default-profile
-           #:clamp-all-edges)
+           #:clamp-all-edges
+           ;; TODO: exploratory framebuffer support
+           #:framebuffer)
   ;; textures
   (:export #:debug-texture
-           #:missing-texture))
+           #:missing-texture
+           ;; TODO: Exploratory framebuffer support
+           #:framebuffer-color
+           #:framebuffer-depth
+           #:framebuffer-stencil
+           #:framebuffer-depth/stencil
+           ))
 
 (defpackage+ #:fl.annotations
   (:use #:cl #:%fl)

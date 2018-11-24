@@ -34,7 +34,8 @@
   (apply #'make-instance 'texture-profile init-args))
 
 (defclass texture-descriptor ()
-  ((%name :reader name
+  (;; The "as found" name in the texture DSL.
+   (%name :reader name
           :initarg :name)
    (%texture-type :reader texture-type
                   :initarg :texture-type)
@@ -57,6 +58,11 @@
   (;; The descriptor from when we derived this texture.
    (%texdesc :reader texdesc
              :initarg :texdesc)
+
+   ;; The name of the texture might be generated off the texdesc name
+   ;; for procedural textures.
+   (%name :reader name
+          :initarg :name)
 
    ;; The allocated opengl texture id.
    (%texid :reader texid
@@ -150,7 +156,7 @@ IMAGES vector to see if we have the expected number and resolution of mipmaps."
            (get-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
          (num-mipmaps (length images))
-         (texture-name (name (texdesc texture))))
+         (texture-name (name texture)))
 
     ;; We need at least one base image.
     ;; TODO: When dealing with procedurally generated textures, this needs
@@ -191,7 +197,7 @@ IMAGES vector to see if we have the expected number and resolution of mipmaps."
 on the texture to something appropriate if it is currently set to using
 mipmap related interpolation."
   (let ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
-        (texture-name (name (texdesc texture))))
+        (texture-name (name texture)))
     (symbol-macrolet ((current-tex-min-filter
                         (get-applied-attribute texture :texture-min-filter)))
 
@@ -252,7 +258,7 @@ in the GPU memory."
                          (gl:get-integer :max-texture-size))
                   (error "Image ~A for 1D texture ~A is to big to be loaded onto this card. Max resolution is ~A in either dimension."
                          location
-                         (name (texdesc texture))
+                         (name texture)
                          (gl:get-integer :max-texture-size))))
 
       ;; Figure out the ideal mipmap count from the base resolution.
@@ -322,7 +328,7 @@ in the GPU memory."
                          (gl:get-integer :max-texture-size))
                   (error "Image ~A for texture ~A is to big to be loaded onto this card. Max resolution is ~A in either dimension."
                          location
-                         (name (texdesc texture))
+                         (name texture)
                          (gl:get-integer :max-texture-size))))
 
       ;; Figure out the ideal mipmap count from the base resolution.
@@ -432,7 +438,7 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
         (current-layout (get-applied-attribute texture :layout)))
     (unless (equal current-layout hardcoded-layout)
       (error "3D Texture ~A has layout:~%  ~S~%but it can only have this as its layout:~%  ~S"
-             (name (texdesc texture)) current-layout hardcoded-layout)))
+             (name texture) current-layout hardcoded-layout)))
 
   (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
          (immutable-p (get-applied-attribute texture :immutable))
@@ -444,7 +450,7 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
          (num-mipmaps (length data)))
 
     #++(format t "Attempting to load 3d texture ~A onto GPU: immutable = ~A~%"
-               (name (texdesc texture)) immutable-p)
+               (name texture) immutable-p)
 
     ;; Load all of our images for each mipmap level, if needed.
     (let* ((all-slices (read-mipmap-images context data use-mipmaps-p :3d))
@@ -503,6 +509,48 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
 
         ))))
 
+(defun lines-to-plane (images)
+  "Take an array of image objects in IMAGES, all the same width and mipmap
+level, and assuming index 0 is the first layer and the highest index is the last
+layer (according to opengl's 1d texture array texture definition) and then
+assemble them into a single linear array suitable for a 2d texture for
+opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
+  (let* ((first-slice (aref images 0))
+         (max-height (length images))
+         (pixel-size (get-pixel-size first-slice)))
+
+    (with-slots (%width) first-slice ;; all slices the same.
+      (let* ((planar-data-size (* %width max-height pixel-size))
+             (planar-data (make-array planar-data-size
+                                      :element-type '(unsigned-byte 8))))
+
+        (format t "lines-to-plane: numlines = ~A, planar-data-size = ~A bytes~%"
+                (length images) planar-data-size)
+
+        ;; Recontextualize the 1d images into a planar array specified as
+        ;; a linear array.
+        ;;
+        ;; NOTE: Assuming row major ordering for all arrays.
+        (loop :for h :below max-height
+              :for image = (aref images h) :do
+                (let* ((row-start-2d
+                         ;; always start at start of a 2d row.
+                         (+ (* h (* %width pixel-size))
+                            (* 0 pixel-size)))
+                       ;; Always starting at start of 1d row.
+                       (row-start-1d 0))
+
+                  ;; Copy the whole 1d line into the 2d image.
+                  (replace planar-data (data image)
+                           :start1 row-start-2d
+                           :end1 (+ row-start-2d
+                                    (* pixel-size %width))
+                           :start2 row-start-1d
+                           :end2 (+ row-start-1d
+                                    (* pixel-size %width)))))
+
+        planar-data))))
+
 (defmethod load-texture-data ((texture-type (eql :texture-1d-array)) texture context)
   (error "load-texture-data: :texture-1d-array implement me")
   nil)
@@ -534,15 +582,33 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
 
 
 
+;; TODO: Candidate for user API.
+(defun procedural-texture-p (texture)
+  (eq (texture-type (texdesc texture)) :procedural))
+
+;; TODO: procedural textures are not bookept well in this code. I need to find
+;; out where they go, etc, etc.
 (defun load-texture (context texture-name)
   (let ((texdesc (au:href (texture-descriptors (textures (core-state context))) texture-name)))
     (unless texdesc
       (error "Cannot load texture with unknown name: ~A" texture-name))
     (let* ((id (gl:gen-texture))
-           (texture (make-instance 'texture :texdesc texdesc :texid id)))
-      (gl:bind-texture (texture-type texdesc) id)
-      (set-opengl-texture-parameters texture)
-      (load-texture-data (texture-type texdesc) texture context)
+           (tex-name (if (eq (texture-type texdesc) :procedural)
+                         (au:format-symbol (symbol-package texture-name)
+                                           "~A/PROCEDURAL-TEXTURE-~A"
+                                           (symbol-name (name texdesc))
+                                           (symbol-name (gensym)))
+                         (name texdesc)))
+           (texture (make-instance 'texture :name tex-name
+                                            :texdesc texdesc
+                                            :texid id)))
+
+      ;; Procedural textures are left for the user to fully specify and load,
+      ;; even down to the texture target.
+      (unless (procedural-texture-p texture)
+        (gl:bind-texture (texture-type texdesc) id)
+        (set-opengl-texture-parameters texture)
+        (load-texture-data (texture-type texdesc) texture context))
       texture)))
 
 (defun parse-texture-profile (name body-form)
