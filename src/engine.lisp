@@ -84,12 +84,14 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 (defun start-engine (scene-name &key (profile 0))
   "Start the engine. First we initialize the engine. Next we run the prologue as the last step,
 before finally starting the main game loop."
-  (let ((core-state (make-instance 'core-state :running-p t)))
-    (%initialize-engine core-state scene-name)
-    (run-prologue core-state)
-    (if (and (numberp profile) (plusp profile))
-        (profile core-state profile)
-        (main-loop core-state))))
+  (unwind-protect
+       (let ((core-state (make-instance 'core-state :running-p t)))
+         (%initialize-engine core-state scene-name)
+         (run-prologue core-state)
+         (if (and (numberp profile) (plusp profile))
+             (profile core-state profile)
+             (main-loop core-state)))
+    (sdl2::sdl-quit)))
 
 (defun stop-engine (core-state)
   "Stop the engine, making sure to call any user-defined epilogue function first, and finally
