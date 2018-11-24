@@ -135,8 +135,9 @@
         (setf (au:href (scenes core-state) k) v)))))
 
 (defmacro define-scene (name (&key (enabled t) (context 'context)) &body body)
-  `(let ((scene ,(parse-scene `',name context body)))
-     (declare (special %temp-scene))
-     ,(when enabled
-        `(setf (au:href %temp-scene ',name) scene))
-     (export ',name)))
+  (au:with-unique-names (scene)
+    `(let ((,scene ,(parse-scene `',name context body)))
+       (declare (special %temp-scene))
+       ,(when enabled
+          `(setf (au:href %temp-scene ',name) ,scene))
+       (export ',name))))
