@@ -657,7 +657,7 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
         (au:do-hash-values (v texdescs)
           (%add-texture-descriptor v core-state))))))
 
-(defun resolve-all-textures (core-state)
+(defun resolve-all-texture-descriptors (core-state)
   "This is called after all the textures are loaded in the extensions.
 Ensure that these aspects of texture profiles and desdcriptors are ok:
 1. The FL.TEXTURES:DEFAULT-PROFILE exists.
