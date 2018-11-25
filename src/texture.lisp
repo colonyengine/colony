@@ -55,9 +55,26 @@
   (apply #'make-instance 'texture-descriptor init-args))
 
 (defclass texture ()
-  (;; The descriptor from when we derived this texture.
+
+  (;; TODO: Get rid of this slot in lieu of the two below.
+   ;; The descriptor from when we derived this texture.
    (%texdesc :reader texdesc
              :initarg :texdesc)
+
+   ;; The texture descriptor as read from the define-texture DSL form.  This
+   ;; records the original values for that texture definition which may include
+   ;; that it is procedural or not.
+   (%semantic-texdesc :reader semantic-texdesc
+                      :initarg :semantic-texdesc)
+
+   ;; The texture descriptor as finally computed before we load/procedurally
+   ;; create the texture data or storage on the GPU. Here, the texture-type must
+   ;; be valid among other aspects of the texdesc. In the case of a non
+   ;; procedural texture, this can be computed automatically, but in the case of
+   ;; a procedural texture, the user ultimately must set the slots to valid
+   ;; things.
+   (%computed-texdesc :reader computed-texdesc
+                      :initarg :computed-texdesc)
 
    ;; The name of the texture might be generated off the texdesc name
    ;; for procedural textures.
@@ -591,7 +608,8 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
 (defun load-texture (context texture-name)
   (let ((texdesc (au:href (texture-descriptors (textures (core-state context))) texture-name)))
     (unless texdesc
-      (error "Cannot load texture with unknown name: ~A" texture-name))
+      (error "Cannot load texture-descriptor with unknown name: ~A"
+             texture-name))
     (let* ((id (gl:gen-texture))
            (tex-name (if (eq (texture-type texdesc) :procedural)
                          (au:format-symbol (symbol-package texture-name)
