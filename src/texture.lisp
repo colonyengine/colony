@@ -658,7 +658,8 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
           (%add-texture-descriptor v core-state))))))
 
 (defun resolve-all-texture-descriptors (core-state)
-  "This is called after all the textures are loaded in the extensions.
+  "This is called after all the DEFINE-TEXTURE and DEFINE-TEXTURE-PROFILE forms
+are loaded in the extensions.
 Ensure that these aspects of texture profiles and desdcriptors are ok:
 1. The FL.TEXTURES:DEFAULT-PROFILE exists.
 2. Each texture-descriptor has an updated applied-profile set of attributes.
