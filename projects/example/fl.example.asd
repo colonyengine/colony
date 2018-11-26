@@ -10,4 +10,6 @@
   :pathname "src"
   :serial t
   :components
-  ((:file "package")))
+  ((:file "package")
+   (:file "prologue")
+   (:file "epilogue")))

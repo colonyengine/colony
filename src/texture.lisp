@@ -7,21 +7,76 @@
   ((%profiles :reader profiles
               :initarg :profiles
               :initform (au:dict #'eq))
-   (%texture-descriptors :reader texture-descriptors
-                         :initarg :texture-descriptors
-                         :initform (au:dict #'eq))))
+   ;; All texture-descriptors from DEFINE-TEXTURE are stored here.
+   (%semantic-texture-descriptors :reader semantic-texture-descriptors
+                                  :initarg :semantic-texture-descriptors
+                                  :initform (au:dict #'eq))
+   ;; If a material requires a texture, but it was procedural, we mark a note
+   ;; of it in here so the gamedev can find it later and generate them before
+   ;; the game starts.
+   (%unrealized-procedural-textures :reader unrealized-procedural-textures
+                                    :initarg :unrealized-procedural-textures
+                                    :initform (au:dict #'equal))))
 
 (defun %make-textures-table (&rest init-args)
   (apply #'make-instance 'textures-table init-args))
 
-(defun %add-texture-profile (profile core-state)
+;; TODO: Candidate for public API
+(defun add-texture-profile (profile core-state)
   (setf (au:href (profiles (textures core-state)) (name profile))
         profile))
 
-(defun %add-texture-descriptor (texdesc core-state)
-  (setf (au:href (texture-descriptors (textures core-state)) (name texdesc))
+;; TODO: Candidate for public API
+(defun remove-texture-profile (profile-name core-state)
+  (remhash profile-name (profiles (textures core-state))))
+
+
+;; TODO: Candidate for public API
+(defun add-semantic-texture-descriptor (texdesc core-state)
+  (setf (au:href (semantic-texture-descriptors (textures core-state))
+                 (name texdesc))
         texdesc))
 
+;; TODO: Candidate for public API
+(defun add-unrealized-texture (texture context)
+  "Add a TEXTURE, which only has defined an opengl texid, to core-state. This
+book keeps unrealized textures for the user to finalize before the game starts."
+  (setf (au:href (unrealized-procedural-textures
+                  (textures (core-state context)))
+                 (name texture))
+        texture))
+
+;; TODO: Candidate for public API
+(defun remove-unrealized-texture (texture context)
+  "Remove the unrealized TEXTURE from the texture tables. It is assumed that
+you have just realized it by setting its opengl parameters and uploading data
+of some kind to the GPU."
+  (remhash (name texture)
+           (unrealized-procedural-textures (textures (core-state context)))))
+
+;; TODO: Candidate for public API
+(defun get-unrealized-textures (context)
+  "Return a list of textures that are specified in materials, but haven't
+been completed (no opengl parameters set for them, or data loaded into GPU)."
+  (copy-seq (unrealized-procedural-textures (textures (core-state context)))))
+
+;; TODO: Candidate for public API.
+(defun get-procedural-texture-descriptors (context)
+  "Return a list of all procedural texture descriptors."
+  (let ((results ()))
+    (au:do-hash-values (texdesc (semantic-texture-descriptors
+                                 (textures (core-state context))))
+      (when (eq (texture-type texdesc) :procedural)
+        (push texdesc results)))
+    (nreverse results)))
+
+
+;; TODO: Candidate for public API
+(defun find-semantic-texture-descriptor (semantic-texture-name context)
+  (au:href (semantic-texture-descriptors (textures (core-state context)))
+           semantic-texture-name))
+
+;; TODO: Candidate for public API
 (defclass texture-profile ()
   ((%name :reader name
           :initarg :name)
@@ -29,24 +84,25 @@
                 :initarg :attributes
                 :initform (au:dict #'eq))))
 
-;; TODO candidate for public API
+;; TODO: Candidate for public API
 (defun make-texture-profile (&rest init-args)
   (apply #'make-instance 'texture-profile init-args))
 
+;; TODO: Candidate for public API
 (defclass texture-descriptor ()
-  (;; The "as found" name in the texture DSL.
-   (%name :reader name
+  ((%name :accessor name
           :initarg :name)
-   (%texture-type :reader texture-type
+   ;; Procedural textures have :procedural as a texture-type!
+   (%texture-type :accessor texture-type
                   :initarg :texture-type)
-   (%profile-overlay-names :reader profile-overlay-names
+   (%profile-overlay-names :accessor profile-overlay-names
                            :initarg :profile-overlay-names)
    ;; Attribute specified in the define-texture form
-   (%attributes :reader attributes
+   (%attributes :accessor attributes
                 :initarg :attributes
                 :initform (au:dict #'eq))
    ;; Up to date attributes once the profiles have been applied.
-   (%applied-attributes :reader applied-attributes
+   (%applied-attributes :accessor applied-attributes
                         :initarg :applied-attributes
                         :initform (au:dict #'eq))))
 
@@ -54,26 +110,48 @@
 (defun make-texture-descriptor (&rest init-args)
   (apply #'make-instance 'texture-descriptor init-args))
 
+;; TODO: Candidate for public API.
+(defun copy-texture-descriptor (texdesc)
+  (let ((new-texdesc (make-texture-descriptor)))
+    (setf
+     ;; These are currently symbols.
+     (name new-texdesc) (name texdesc)
+     (texture-type new-texdesc) (texture-type texdesc)
+
+     ;; This is a list
+     (profile-overlay-names new-texdesc)
+     (copy-seq (profile-overlay-names texdesc)))
+
+    ;; Then copy over the attributes, we support SIMPLE values such as: string,
+    ;; array, list, vector, and symbol.
+    (au:do-hash (key value (attributes texdesc))
+      (setf (au:href (attributes new-texdesc) key) (copy-thing value)))
+
+    (au:do-hash (key value (applied-attributes texdesc))
+      (setf (au:href (applied-attributes new-texdesc) key) (copy-thing value)))
+
+    new-texdesc))
+
+
 (defclass texture ()
-
-  (;; TODO: Get rid of this slot in lieu of the two below.
-   ;; The descriptor from when we derived this texture.
-   (%texdesc :reader texdesc
-             :initarg :texdesc)
-
-   ;; The texture descriptor as read from the define-texture DSL form.  This
+  (;; The texture descriptor as read from the define-texture DSL form.  This
    ;; records the original values for that texture definition which may include
-   ;; that it is procedural or not.
+   ;; that it is procedural or not. This texdesc is a reference to the only copy
+   ;; of it as read from the DSL and stored in the texture-table in core-state.
    (%semantic-texdesc :reader semantic-texdesc
                       :initarg :semantic-texdesc)
 
-   ;; The texture descriptor as finally computed before we load/procedurally
-   ;; create the texture data or storage on the GPU. Here, the texture-type must
-   ;; be valid among other aspects of the texdesc. In the case of a non
-   ;; procedural texture, this can be computed automatically, but in the case of
-   ;; a procedural texture, the user ultimately must set the slots to valid
-   ;; things.
-   (%computed-texdesc :reader computed-texdesc
+   ;; The texture descriptor as finally computed from the semantic texture
+   ;; descriptor before we load/procedurally create the texture data or storage
+   ;; on the GPU. Here, the texture-type must be valid among other aspects of
+   ;; the texdesc. In the case of a non procedural texture, this can be computed
+   ;; automatically, but in the case of a procedural texture, the user
+   ;; ultimately must set the slots to valid things. This texdesc is unique to
+   ;; this texture instance. This means, suppose in the case of a procedural
+   ;; texture, that each texture instance contains a unique computed copy of
+   ;; that the semantic-texdesc that directly describes this version of that
+   ;; texture.
+   (%computed-texdesc :accessor computed-texdesc
                       :initarg :computed-texdesc)
 
    ;; The name of the texture might be generated off the texdesc name
@@ -85,10 +163,27 @@
    (%texid :reader texid
            :initarg :texid)))
 
+(defun get-semantic-applied-attribute (texture attribute-name)
+  (au:href (applied-attributes (semantic-texdesc texture)) attribute-name))
+
+(defun (setf get-semantic-applied-attribute) (newval texture attribute-name)
+  (setf (au:href (applied-attributes (semantic-texdesc texture))
+                 attribute-name)
+        newval))
+
+(defun get-computed-applied-attribute (texture attribute-name)
+  (au:href (applied-attributes (computed-texdesc texture)) attribute-name))
+
+(defun (setf get-computed-applied-attribute) (newval texture attribute-name)
+  (setf (au:href (applied-attributes (computed-texdesc texture))
+                 attribute-name)
+        newval))
+
+;; TODO: Candidate public API
 (defun set-opengl-texture-parameters (texture)
   (with-accessors ((texture-type texture-type)
                    (applied-attributes applied-attributes))
-      (texdesc texture)
+      (computed-texdesc texture)
     (let ((texture-parameters
             '(:depth-stencil-texture-mode :texture-base-level
               :texture-border-color :texture-compare-func
@@ -103,12 +198,6 @@
             :do (au:when-found (value (au:href applied-attributes
                                                putative-parameter))
                   (gl:tex-parameter texture-type putative-parameter value))))))
-
-(defun get-applied-attribute (texture attribute-name)
-  (au:href (applied-attributes (texdesc texture)) attribute-name))
-
-(defun (setf get-applied-attribute) (newval texture attribute-name)
-  (setf (au:href (applied-attributes (texdesc texture)) attribute-name) newval))
 
 ;; TODO: These are cut into individual functions for their context. Maybe later
 ;; I'll see about condensing them to be more concise.
@@ -166,11 +255,11 @@ replaced by actual IMAGE instances of the loaded images.
 IMAGES vector to see if we have the expected number and resolution of mipmaps."
   (declare (ignorable expected-resolutions))
 
-  (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
+  (let* ((use-mipmaps-p (get-computed-applied-attribute texture :use-mipmaps))
          (texture-max-level
-           (get-applied-attribute texture :texture-max-level))
+           (get-computed-applied-attribute texture :texture-max-level))
          (texture-base-level
-           (get-applied-attribute texture :texture-base-level))
+           (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
          (num-mipmaps (length images))
          (texture-name (name texture)))
@@ -213,10 +302,11 @@ IMAGES vector to see if we have the expected number and resolution of mipmaps."
   "If the TEXTURE is not using mipmaps, fix the :texture-min-filter attribute
 on the texture to something appropriate if it is currently set to using
 mipmap related interpolation."
-  (let ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
+  (let ((use-mipmaps-p (get-computed-applied-attribute texture :use-mipmaps))
         (texture-name (name texture)))
     (symbol-macrolet ((current-tex-min-filter
-                        (get-applied-attribute texture :texture-min-filter)))
+                        (get-computed-applied-attribute texture
+                                                        :texture-min-filter)))
 
       (unless use-mipmaps-p
         (case current-tex-min-filter
@@ -233,13 +323,13 @@ mipmap related interpolation."
   "If, for this TEXTURE, we are using mipmaps, and only supplied a single base
 image, then we use GL:GENERASTE-MIPMAP to auto create all of the mipmaps
 in the GPU memory."
-  (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
+  (let* ((use-mipmaps-p (get-computed-applied-attribute texture :use-mipmaps))
          (texture-max-level
-           (get-applied-attribute texture :texture-max-level))
+           (get-computed-applied-attribute texture :texture-max-level))
          (texture-base-level
-           (get-applied-attribute texture :texture-base-level))
+           (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
-         (data (get-applied-attribute texture :data))
+         (data (get-computed-applied-attribute texture :data))
          (num-mipmaps (length data)))
 
     (when (and use-mipmaps-p
@@ -253,14 +343,14 @@ in the GPU memory."
   ;; TODO: This assumes no use of the general-data-descriptor or procedurally
   ;; generated content.
 
-  (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
-         (immutable-p (get-applied-attribute texture :immutable))
+  (let* ((use-mipmaps-p (get-computed-applied-attribute texture :use-mipmaps))
+         (immutable-p (get-computed-applied-attribute texture :immutable))
          (texture-max-level
-           (get-applied-attribute texture :texture-max-level))
+           (get-computed-applied-attribute texture :texture-max-level))
          (texture-base-level
-           (get-applied-attribute texture :texture-base-level))
+           (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
-         (data (get-applied-attribute texture :data)))
+         (data (get-computed-applied-attribute texture :data)))
 
     ;; load all of the images we may require.
     (let ((images (read-mipmap-images context data use-mipmaps-p :1d)))
@@ -323,14 +413,14 @@ in the GPU memory."
   ;; TODO: This assumes no use of the general-data-descriptor or procedurally
   ;; generated content.
 
-  (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
-         (immutable-p (get-applied-attribute texture :immutable))
+  (let* ((use-mipmaps-p (get-computed-applied-attribute texture :use-mipmaps))
+         (immutable-p (get-computed-applied-attribute texture :immutable))
          (texture-max-level
-           (get-applied-attribute texture :texture-max-level))
+           (get-computed-applied-attribute texture :texture-max-level))
          (texture-base-level
-           (get-applied-attribute texture :texture-base-level))
+           (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
-         (data (get-applied-attribute texture :data)))
+         (data (get-computed-applied-attribute texture :data)))
 
     ;; load all of the images we may require.
     (let ((images (read-mipmap-images context data use-mipmaps-p :2d)))
@@ -452,18 +542,22 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
   ;; represents opengl defaults.
   (let ((hardcoded-layout '((:origin :left-back-bottom)
                             (:shape (:slices :back-to-front))))
-        (current-layout (get-applied-attribute texture :layout)))
+        (current-layout (get-computed-applied-attribute texture :layout)))
     (unless (equal current-layout hardcoded-layout)
       (error "3D Texture ~A has layout:~%  ~S~%but it can only have this as its layout:~%  ~S"
              (name texture) current-layout hardcoded-layout)))
 
-  (let* ((use-mipmaps-p (get-applied-attribute texture :use-mipmaps))
-         (immutable-p (get-applied-attribute texture :immutable))
-         (texture-max-level (get-applied-attribute texture :texture-max-level))
-         (texture-base-level (get-applied-attribute texture :texture-base-level))
+  (let* ((use-mipmaps-p
+           (get-computed-applied-attribute texture :use-mipmaps))
+         (immutable-p
+           (get-computed-applied-attribute texture :immutable))
+         (texture-max-level
+           (get-computed-applied-attribute texture :texture-max-level))
+         (texture-base-level
+           (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
          (max-texture-3d-size (gl:get-integer :max-3d-texture-size))
-         (data (get-applied-attribute texture :data))
+         (data (get-computed-applied-attribute texture :data))
          (num-mipmaps (length data)))
 
     #++(format t "Attempting to load 3d texture ~A onto GPU: immutable = ~A~%"
@@ -600,33 +694,55 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
 
 
 ;; TODO: Candidate for user API.
+(defun procedural-texture-descriptor-p (texdesc)
+  (eq (texture-type texdesc) :procedural))
+
+;; TODO: Candidate for user API.
 (defun procedural-texture-p (texture)
-  (eq (texture-type (texdesc texture)) :procedural))
+  (procedural-texture-descriptor-p (semantic-texdesc texture)))
 
-;; TODO: procedural textures are not bookept well in this code. I need to find
-;; out where they go, etc, etc.
+(defun generate-computed-texture-descriptor (texture)
+  "Perform an identity copy of the semantic texture descriptor in TEXTURE
+and assign it to the computed texture descriptor slot in TEXTURE."
+  (setf (computed-texdesc texture)
+        (copy-texture-descriptor (semantic-texdesc texture))))
+
 (defun load-texture (context texture-name)
-  (let ((texdesc (au:href (texture-descriptors (textures (core-state context))) texture-name)))
-    (unless texdesc
-      (error "Cannot load texture-descriptor with unknown name: ~A"
+  (let ((semantic-texdesc
+          (find-semantic-texture-descriptor
+           (semantic-texture-name texture-name) context)))
+    (unless semantic-texdesc
+      (error "Cannot load semantic texture-descriptor with unknown name: ~A"
              texture-name))
-    (let* ((id (gl:gen-texture))
-           (tex-name (if (eq (texture-type texdesc) :procedural)
-                         (au:format-symbol (symbol-package texture-name)
-                                           "~A/PROCEDURAL-TEXTURE-~A"
-                                           (symbol-name (name texdesc))
-                                           (symbol-name (gensym)))
-                         (name texdesc)))
-           (texture (make-instance 'texture :name tex-name
-                                            :texdesc texdesc
-                                            :texid id)))
 
-      ;; Procedural textures are left for the user to fully specify and load,
-      ;; even down to the texture target.
-      (unless (procedural-texture-p texture)
-        (gl:bind-texture (texture-type texdesc) id)
-        (set-opengl-texture-parameters texture)
-        (load-texture-data (texture-type texdesc) texture context))
+    (let* ((id (gl:gen-texture))
+           ;; TODO: tex-name is wrong here. It shoudl be what the material
+           ;; believed it to be or the canonicalname of it if only a symbol.
+           (texture (make-instance 'texture
+                                   :name texture-name
+                                   :semantic-texdesc semantic-texdesc
+                                   :texid id)))
+
+      (cond
+        ;; Non procedural textures have their semantic texdescs automatically
+        ;; converted to computed-texdesc and their information is loaded
+        ;; immediately onto the GPU.
+        ((not (procedural-texture-p texture))
+         (generate-computed-texture-descriptor texture)
+         (with-accessors ((computed-texdesc computed-texdesc)) texture
+           (gl:bind-texture (texture-type computed-texdesc) id)
+           (set-opengl-texture-parameters texture)
+           (load-texture-data (texture-type computed-texdesc) texture context)))
+        ;; Procedural textures are completely left alone EXCEPT for the texid
+        ;; assigned above. It is up to the user to define all the opengl
+        ;; parameters and GPU data for this texture.
+        (t
+         (add-unrealized-texture texture context)
+         ;; TODO: Possibly record a note that someone asked for this
+         ;; specific texture name, so in the prologue function, the gamedev can
+         ;; know the entire set they need to create that is eagerly going to
+         ;; be used.
+         nil))
       texture)))
 
 (defun parse-texture-profile (name body-form)
@@ -644,38 +760,46 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
        (setf (au:href %temp-texture-profiles (name ,texprof)) ,texprof))))
 
 (defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
+  "Construct a semantic TEXTURE-DESCRIPTOR and store in the special variable
+%TEMP-SEMANTIC-TEXTURE-DESCRIPTORS. NOTE: This us a user facing API macro,
+this description, while accurate is utterly not helpful. TODO: Fix."
   (let ((texdesc (gensym "TEXDESC")))
-    `(let ((,texdesc (make-texture-descriptor :name ',name
-                                              :texture-type ',textype
-                                              :profile-overlay-names ',profile-overlay-names)))
-       (declare (special %temp-texture-descriptors))
+    `(let ((,texdesc (make-texture-descriptor
+                      :name ',name
+                      :texture-type ',textype
+                      :profile-overlay-names ',profile-overlay-names)))
+       (declare (special %temp-semantic-texture-descriptors))
        ;; Record the parameters we'll overlay on the profile at use time.
        (setf ,@(loop :for (key value) :in body
                      :append `((au:href (attributes ,texdesc) ,key) ,value))
-             (au:href %temp-texture-descriptors (name ,texdesc)) ,texdesc)
+             ;; NOTE: The form is DEFINE-TEXTURE, but we're actually creating
+             ;; semantic-texture-descriptors and storing them. Maybe this naming
+             ;; skew should be fix, think about it a little.
+             (au:href %temp-semantic-texture-descriptors (name ,texdesc))
+             ,texdesc)
        (export ',name))))
 
 (defmethod extension-file-type ((extension-type (eql :textures)))
   "tex")
 
 (defmethod prepare-extension ((extension-type (eql :textures)) core-state)
-  (let ((%temp-texture-descriptors (au:dict #'eq))
+  (let ((%temp-semantic-texture-descriptors (au:dict #'eq))
         (%temp-texture-profiles (au:dict #'eq)))
-    (declare (special %temp-texture-descriptors %temp-texture-profiles))
+    (declare (special %temp-semantic-texture-descriptors %temp-texture-profiles))
     (flet ((%prepare ()
              (map-extensions extension-type (data-path core-state))
-             (values %temp-texture-profiles %temp-texture-descriptors)))
+             (values %temp-texture-profiles %temp-semantic-texture-descriptors)))
       (multiple-value-bind (profiles texdescs) (%prepare)
         ;; The order doesn't matter. we can type check the texture-descriptors
         ;; after reading _all_ the available textures extensions.
         ;; Process all defined profiles.
         (au:do-hash-values (v profiles)
-          (%add-texture-profile v core-state))
+          (add-texture-profile v core-state))
         ;; Process all texture-descriptors
         (au:do-hash-values (v texdescs)
-          (%add-texture-descriptor v core-state))))))
+          (add-semantic-texture-descriptor v core-state))))))
 
-(defun resolve-all-texture-descriptors (core-state)
+(defun resolve-all-semantic-texture-descriptors (core-state)
   "This is called after all the DEFINE-TEXTURE and DEFINE-TEXTURE-PROFILE forms
 are loaded in the extensions.
 Ensure that these aspects of texture profiles and desdcriptors are ok:
@@ -691,7 +815,7 @@ Ensure that these aspects of texture profiles and desdcriptors are ok:
       (error "Default-profile for texture descriptors is not defined."))
     ;; 2. For each texture-descriptor, apply all the profiles in order.
     ;; 3. Check that the specified profiles are valid.
-    (au:do-hash-values (v (texture-descriptors (textures core-state)))
+    (au:do-hash-values (v (semantic-texture-descriptors (textures core-state)))
       (let* ((profile-overlays
                ;; First, gather the specified profile-overlays
                (loop :for profile-overlay-name :in (profile-overlay-names v)
@@ -718,7 +842,7 @@ Ensure that these aspects of texture profiles and desdcriptors are ok:
          (lambda (key val)
            (setf (au:href (applied-attributes v) key) val))
          (attributes v)))
-      (texture-descriptors (textures core-state)))
+      (semantic-texture-descriptors (textures core-state)))
 
     ;; TODO: 4
     ;; TODO: 5
@@ -742,6 +866,7 @@ GPU."
 
 (defmethod rcache-construct ((entry-type (eql :texture)) (core-state core-state) &rest keys)
   (destructuring-bind (texture-location) keys
+    ;;(format t "Creating texture instance whose name is: ~A~%" texture-location)
     (load-texture (context core-state) texture-location)))
 
 (defmethod rcache-dispose ((entry-type (eql :texture)) (core-state core-state) texture)
@@ -755,6 +880,27 @@ GPU."
 
 (defun round-up (x)
   (floor (+ x 1/2)))
+
+(defun canonicalize-texture-name (texture-name)
+  "If the TEXTURE-NAME is a symbol, we canoniclalize it to the list:
+ (TEXTURE-NAME 0). If it is a consp, we return it unmodified."
+  (cond
+    ((symbolp texture-name)
+     (list texture-name 0))
+    ((consp texture-name)
+     texture-name)
+    (t
+     (error "Unable to canonicalize the texture name: ~A" texture-name))))
+
+;; TODO: Maybe reifiy the semantic-name, texture-instance-name specification
+;; into a CLOS object.
+(defun semantic-texture-name (texture-name)
+  "Given a TEXTURE-NAME (which could be either a symbol as the semantic name of
+a texture, or a list when it is an instance of a texture), return just the
+semantic name of it which was specified with a DEFINE-TEXTURE."
+  (if (consp texture-name)
+      (first texture-name)
+      texture-name))
 
 (defun compute-mipmap-levels (width height &optional (depth 1))
   "Compute how many mipmaps and what their resolutions must be given a

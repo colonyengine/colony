@@ -376,10 +376,14 @@ TEXTURE object, or a vector of them corresponding in order to the input."
   (lambda (semantic-value context mat)
     (declare (ignore context mat))
     (cond
-      ((symbolp semantic-value) ;; a single texture symbolic name
-       (rcache-lookup :texture core-state semantic-value))
+      ((or (consp semantic-value)
+           (symbolp semantic-value)) ;; a single texture symbolic name
+       (rcache-lookup :texture core-state
+                      (canonicalize-texture-name semantic-value)))
       ((vectorp semantic-value) ;; an array of texture symbolic names
-       (map 'vector (lambda (sv) (rcache-lookup :texture core-state sv))
+       (map 'vector (lambda (sv)
+                      (rcache-lookup :texture core-state
+                                     (canonicalize-texture-name sv)))
             semantic-value))
       (t
        (error "sampler/sem->com: Unable to convert sampler semantic-value: ~A"
@@ -390,12 +394,7 @@ TEXTURE object, or a vector of them corresponding in order to the input."
   (declare (ignore core-state))
   (lambda (semantic-value context mat)
     (declare (ignore context mat))
-    (if (or (stringp semantic-value)
-            (arrayp semantic-value)
-            (listp semantic-value)
-            (vectorp semantic-value))
-        (copy-seq semantic-value)
-        semantic-value)))
+    (copy-thing semantic-value)))
 
 (defun identity/for-material-custom-functions (semval context material)
   "This is effectively IDENTITY in that it returns SEMVAL unchanged, but accepts

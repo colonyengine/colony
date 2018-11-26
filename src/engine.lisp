@@ -68,7 +68,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
   (prepare-extension :materials core-state)
   (prepare-extension :scene core-state)
   (prepare-shader-programs core-state)
-  (resolve-all-texture-descriptors core-state)
+  (resolve-all-semantic-texture-descriptors core-state)
   (resolve-all-materials core-state)
   (load-scene core-state scene-name))
 
