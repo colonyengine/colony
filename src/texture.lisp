@@ -708,6 +708,8 @@ and assign it to the computed texture descriptor slot in TEXTURE."
         (copy-texture-descriptor (semantic-texdesc texture))))
 
 (defun load-texture (context texture-name)
+  ;; If we're calling this, it is because we didn't find a texture instance
+  ;; with the given texture-name in the rcache.
   (let ((semantic-texdesc
           (find-semantic-texture-descriptor
            (semantic-texture-name texture-name) context)))
