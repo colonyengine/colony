@@ -58,7 +58,8 @@ of some kind to the GPU."
 (defun get-unrealized-textures (context)
   "Return a list of textures that are specified in materials, but haven't
 been completed (no opengl parameters set for them, or data loaded into GPU)."
-  (copy-seq (unrealized-procedural-textures (textures (core-state context)))))
+  (au:hash-keys
+   (unrealized-procedural-textures (textures (core-state context)))))
 
 ;; TODO: Candidate for public API.
 (defun get-procedural-texture-descriptors (context)
