@@ -863,14 +863,17 @@ GPU."
 
 ;; Interim use of the RCACHE API.
 
+;; TODO: candidate for public API.
 (defmethod rcache-layout ((entry-type (eql :texture)))
   '(equalp))
 
+;; TODO: candidate for public API.
 (defmethod rcache-construct ((entry-type (eql :texture)) (core-state core-state) &rest keys)
   (destructuring-bind (texture-location) keys
     ;;(format t "Creating texture instance whose name is: ~A~%" texture-location)
     (load-texture (context core-state) texture-location)))
 
+;; TODO: candidate for public API.
 (defmethod rcache-dispose ((entry-type (eql :texture)) (core-state core-state) texture)
   (gl:delete-texture (texid texture)))
 
