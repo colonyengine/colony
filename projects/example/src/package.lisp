@@ -18,10 +18,12 @@
   (:use #:cl #:fl)
   (:export-only #:texture-test/1d-gradient
                 #:texture-test/2d-wood
-                #:texture-test/3d-testpat))
+                #:texture-test/3d-testpat
+		#:texture-test/marble))
 
 (defpackage+ #:fl.example.textures
   (:use #:cl #:fl)
   (:export-only #:texture-test/1d-gradient
                 #:texture-test/2d-wood
-                #:texture-test/3d-testpat))
+                #:texture-test/3d-testpat
+		#:texture-test/marble))

@@ -6,7 +6,7 @@
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :version "0.1.0"
-  :depends-on (#:first-light)
+  :depends-on (#:first-light #:black-tie)
   :pathname "src"
   :serial t
   :components

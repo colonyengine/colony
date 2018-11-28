@@ -50,15 +50,16 @@ book keeps unrealized textures for the user to finalize before the game starts."
 (defun remove-unrealized-texture (texture context)
   "Remove the unrealized TEXTURE from the texture tables. It is assumed that
 you have just realized it by setting its opengl parameters and uploading data
-of some kind to the GPU."
+or declaring storage of some kind to the GPU."
   (remhash (name texture)
            (unrealized-procedural-textures (textures (core-state context)))))
 
 ;; TODO: Candidate for public API
 (defun get-unrealized-textures (context)
   "Return a list of textures that are specified in materials, but haven't
-been completed (no opengl parameters set for them, or data loaded into GPU)."
-  (au:hash-keys
+been completed (no opengl parameters set for them, or data loaded into GPU).
+NOTE: These are already in the RCACHE."
+  (au:hash-values
    (unrealized-procedural-textures (textures (core-state context)))))
 
 ;; TODO: Candidate for public API.
