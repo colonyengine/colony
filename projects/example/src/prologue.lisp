@@ -91,12 +91,17 @@
                         (* h 1/100)
                         (* 10 (black-tie::fbm2d (* w 1/400) (* h 1/400)
                                                 :octaves 6))))
-                   (value
-                     (floor
-                      (* 255 (* (abs (sin noise-value)))))))
-              (setf (aref data (pixel-ref w h 0)) value
-                    (aref data (pixel-ref w h 1)) value
-                    (aref data (pixel-ref w h 2)) value
+                   (value-0/1 ;; in range of 0.0 to 1.0
+                     (* (abs (sin noise-value))))
+
+                   ;; Generate a decent marble color.
+                   (red (floor (* value-0/1 250)))
+                   (green (floor (* value-0/1 230)))
+                   (blue (floor (* value-0/1 235))))
+
+              (setf (aref data (pixel-ref w h 0)) red
+                    (aref data (pixel-ref w h 1)) green
+                    (aref data (pixel-ref w h 2)) blue
                     (aref data (pixel-ref w h 3)) 255))))
 
         ;; TODO: Need to figure out API for allocation for storage or actual
