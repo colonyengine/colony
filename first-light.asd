@@ -38,6 +38,7 @@
    (:file "context")
    (:file "extensions")
    (:file "settings")
+   (:file "attributes")
    (:file "components-mop")
    (:file "components")
    (:file "input-keyboard")
