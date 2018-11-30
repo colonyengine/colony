@@ -578,10 +578,10 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
         #++(format t "expected mipmaps: ~A expected-resolutions: ~A~%"
                    expected-mipmaps expected-resolutions)
 
-        ;; TODO: Fix these two calls.
+        ;; TODO: Fix this call.
         #++(validate-mipmap-images images texture
                                    expected-mipmaps expected-resolutions)
-        #++(potentially-degrade-texture-min-filter texture)
+        (potentially-degrade-texture-min-filter texture)
 
         ;; Allocate immutable storage if required.
         (when immutable-p
