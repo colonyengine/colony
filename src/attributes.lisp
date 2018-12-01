@@ -17,44 +17,44 @@
   (apply #'make-instance 'attributes initargs))
 
 ;; Semantic attributes API
-(defmethod semantic-attribute ((s attributes) (attribute-name symbol))
-  (au:href (semantic-attributes s) attribute-name))
+(defmethod semantic-attribute ((a attributes) (attribute-name symbol))
+  (au:href (semantic-attributes a) attribute-name))
 
 (defmethod (setf semantic-attribute) (newobj
-                                      (s attributes)
+                                      (a attributes)
                                       (attribute-name symbol))
-  (setf (au:href (semantic-attributes s) attribute-name) newobj))
+  (setf (au:href (semantic-attributes a) attribute-name) newobj))
 
-(defmethod clear-semantic-attributes ((s attributes))
-  (clrhash (semantic-attributes s)))
+(defmethod clear-semantic-attributes ((a attributes))
+  (clrhash (semantic-attributes a)))
 
-(defmethod do-semantic-attributes ((s attributes) func)
+(defmethod do-semantic-attributes ((a attributes) func)
   ;; First make a copy-ish of the hash table in case the func wants
   ;; to modify the hash table.
   ;; TODO: A little slow and memory using, but also safe.
-  (let ((attrs (au:hash->alist (semantic-attributes s))))
+  (let ((attrs (au:hash->alist (semantic-attributes a))))
     (dolist (attr attrs)
       (destructuring-bind (key value) attr
         (funcall func key value)))))
 
 ;; Computed attributes API
 
-(defmethod computed-attribute ((s attributes) (attribute-name symbol))
-  (au:href (computed-attributes s) attribute-name))
+(defmethod computed-attribute ((a attributes) (attribute-name symbol))
+  (au:href (computed-attributes a) attribute-name))
 
 (defmethod (setf computed-attribute) (newobj
-                                      (s attributes)
+                                      (a attributes)
                                       (attribute-name symbol))
-  (setf (au:href (computed-attributes s) attribute-name) newobj))
+  (setf (au:href (computed-attributes a) attribute-name) newobj))
 
-(defmethod clear-computed-attributes ((s attributes))
-  (clrhash (computed-attributes s)))
+(defmethod clear-computed-attributes ((a attributes))
+  (clrhash (computed-attributes a)))
 
-(defmethod do-computed-attributes ((s attributes) func)
+(defmethod do-computed-attributes ((a attributes) func)
   ;; First make a copy-ish of the hash table in case the func wants
   ;; to modify the hash table.
   ;; TODO: A little slow and memory using, but also safe.
-  (let ((attrs (au:hash->alist (computed-attributes s))))
+  (let ((attrs (au:hash->alist (computed-attributes a))))
     (dolist (attr attrs)
       (destructuring-bind (key value) attr
         (funcall func key value)))))
@@ -62,7 +62,7 @@
 
 ;; Attribute computation and merging API
 
-(defmethod compute-attributes ((c attributes) &key (copier-func #'identity))
+(defmethod compute-attributes ((a attributes) &key (copier-func #'identity))
   ;; Convert the semantic attributes to computed attributes using the
   ;; copier.
   ;;
@@ -70,11 +70,11 @@
   ;; the computation.
   ;; NOTE: For now, this uses the same copier func for all attributes.
 
-  (clear-computed-attributes c)
-  (do-semantic-attributes s
+  (clear-computed-attributes a)
+  (do-semantic-attributes a
     (lambda (key value)
-      (setf (computed-attribute c key) (funcall copier-func value)))))
+      (setf (computed-attribute a key) (funcall copier-func value)))))
 
 
-(defmethod overlay-computed-attributes ((c attributes) &rest ordering)
+(defmethod overlay-computed-attributes ((a attributes) &rest ordering)
   nil)
