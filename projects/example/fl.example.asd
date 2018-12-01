@@ -12,4 +12,5 @@
   :components
   ((:file "package")
    (:file "prologue")
-   (:file "epilogue")))
+   (:file "epilogue")
+   (:file "shader-sweep")))

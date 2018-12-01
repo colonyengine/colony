@@ -1,7 +1,7 @@
 (in-package :defpackage+-user-1)
 
 (defpackage+ #:fl.example
-  (:use #:cl #:fl)
+  (:use #:cl #:fl #:fl.comp)
   (:export-only #:damaged-helmet
                 #:geometric-volumes
                 #:texture-test
@@ -13,7 +13,8 @@
   (:export-only #:damaged-helmet
                 #:unlit-texture-1d
                 #:unlit-texture-3d
-                #:unlit-texture-1d-array))
+                #:unlit-texture-1d-array
+                #:noise-2d/sweep-input))
 
 (defpackage+ #:fl.example.materials
   (:use #:cl #:fl)
@@ -21,7 +22,8 @@
                 #:texture-test/2d-wood
                 #:texture-test/3d-testpat
                 #:texture-test/marble
-                #:texture-test/1d-array-testpat))
+                #:texture-test/1d-array-testpat
+                #:texture-test/2d-sweep-input))
 
 (defpackage+ #:fl.example.textures
   (:use #:cl #:fl)
