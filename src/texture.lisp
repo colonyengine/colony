@@ -708,16 +708,10 @@ and return it."
            ;; TODO: Assert num-mipmaps is same for all layers.
            (num-mipmaps (length all-layers)))
 
-      #++(format t "data = ~A~%reshaped-layers = ~A~%all-layers = ~A~%"
-                 data reshaped-layers all-layers)
-
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
           (compute-mipmap-levels (width first-image)
                                  (height first-image))
-        #++(format t "expected mipmaps: ~A expected-resolutions: ~A~%"
-                   expected-mipmaps expected-resolutions)
-
         ;; TODO: Fix this call for arrays
         #++(validate-mipmap-images images texture
                                    expected-mipmaps expected-resolutions)
@@ -743,7 +737,6 @@ and return it."
               :do (with-slots (%width %height %internal-format %pixel-format
                                %pixel-type)
                       image
-                    #++(format t "image-data[~A]: ~A~%" idx image-data)
                     (if immutable-p
                         (gl:tex-sub-image-2d texture-type level 0 0
                                              %width num-layers
@@ -783,15 +776,10 @@ and return it."
            ;; TODO: Assert num-mipmaps is same for all layers.
            (num-mipmaps (length all-layers)))
 
-      #++(format t "data = ~A~%reshaped-layers = ~A~%all-layers = ~A~%"
-                 data reshaped-layers all-layers)
-
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
           (compute-mipmap-levels (width first-image)
                                  (height first-image))
-        #++(format t "expected mipmaps: ~A expected-resolutions: ~A~%"
-                   expected-mipmaps expected-resolutions)
 
         ;; TODO: Fix this call for arrays
         #++(validate-mipmap-images images texture
@@ -819,7 +807,6 @@ and return it."
               :do (with-slots (%width %height %internal-format %pixel-format
                                %pixel-type)
                       image
-                    #++(format t "image-data[~A]: ~A~%" idx image-data)
                     (if immutable-p
                         (gl:tex-sub-image-3d texture-type level 0 0 0
                                              %width %height num-layers
