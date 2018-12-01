@@ -332,12 +332,17 @@ in the GPU memory."
            (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
          (data (get-computed-applied-attribute texture :data))
-         (num-mipmaps (length data)))
+         (num-mipmaps
+           (ecase texture-type
+             ((:texture-1d :texture-2d :texture-3d)
+              (length data))
+             ((:texture-1d-array :texture-2d-array)
+              (length (aref data 0))))))
 
     (when (and use-mipmaps-p
                (= num-mipmaps 1) ;; We didn't supply any but the base image.
                (> max-mipmaps 1)) ;; And we're expecting some to exist.
-      #++(format t "Generating mipmaps!~%")
+      #++(format t "Generating mipmaps for texture: ~A~%" (name texture))
       (gl:generate-mipmap texture-type))))
 
 
@@ -647,10 +652,10 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
              (planar-data (make-array planar-data-size
                                       :element-type '(unsigned-byte 8))))
 
-        (format t "lines-to-plane: Processing ~A images with planar-data-siz: ~A~%"
-                max-height images)
-        (format t "lines-to-plane: planar-data-size = ~A bytes~%"
-                planar-data-size)
+        #++(format t "lines-to-plane: Processing ~A images with planar-data-siz: ~A~%"
+                   max-height images)
+        #++(format t "lines-to-plane: planar-data-size = ~A bytes~%"
+                   planar-data-size)
 
         ;; Recontextualize the 1d images into a planar array specified as
         ;; a linear array.
@@ -674,7 +679,7 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
                            :end2 (+ row-start-1d
                                     (* %width pixel-size)))))
 
-        (format t "lines-to-plane: result = ~A~%" planar-data)
+        #++(format t "lines-to-plane: result = ~A~%" planar-data)
 
         planar-data))))
 
@@ -707,8 +712,8 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
            ;; TODO: Assert num-mipmaps is same for all layers.
            (num-mipmaps (length all-layers)))
 
-      (format t "data = ~A~%reshaped-layers = ~A~%all-layers = ~A~%"
-              data reshaped-layers all-layers)
+      #++(format t "data = ~A~%reshaped-layers = ~A~%all-layers = ~A~%"
+                 data reshaped-layers all-layers)
 
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
@@ -742,7 +747,7 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
               :do (with-slots (%width %height %internal-format %pixel-format
                                %pixel-type)
                       image
-                    (format t "image-data[~A]: ~A~%" idx image-data)
+                    #++(format t "image-data[~A]: ~A~%" idx image-data)
                     (if immutable-p
                         (gl:tex-sub-image-2d texture-type level 0 0
                                              %width num-layers
