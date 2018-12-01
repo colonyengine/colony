@@ -184,3 +184,12 @@ never be changed at runtime.")
           (vectorp thing))
       (copy-seq thing)
       thing))
+
+
+;;; Various math functions.
+
+(defun round-down (x)
+  (ceiling (- x 1/2)))
+
+(defun round-up (x)
+  (floor (+ x 1/2)))

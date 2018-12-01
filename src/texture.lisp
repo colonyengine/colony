@@ -652,11 +652,6 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
              (planar-data (make-array planar-data-size
                                       :element-type '(unsigned-byte 8))))
 
-        #++(format t "lines-to-plane: Processing ~A images with planar-data-siz: ~A~%"
-                   max-height images)
-        #++(format t "lines-to-plane: planar-data-size = ~A bytes~%"
-                   planar-data-size)
-
         ;; Recontextualize the 1d images into a planar array specified as
         ;; a linear array.
         ;;
@@ -678,13 +673,14 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
                            :start2 row-start-1d
                            :end2 (+ row-start-1d
                                     (* %width pixel-size)))))
-
-        #++(format t "lines-to-plane: result = ~A~%" planar-data)
-
         planar-data))))
 
-(defun reshape-1d-array-image-layout (images-array)
-  ;; Change #(#(a0 a1) #(b0 b1) ...) to #(#(a0 b0) #(a1 b1) ...)
+(defun reshape-image-array-layout (images-array)
+  "Reshape and array in the form of:
+ #(#(a0 a1 a2 ...) #(b0 b1 b2 ...) ...)
+to
+ #(#(a0 b0 ...) #(a1 b1 ...) #(a2 b2 ...) ...)
+and return it."
   (apply #'map 'vector (lambda (&rest elems)
                          (coerce elems 'vector))
          (coerce images-array 'list)))
@@ -702,7 +698,7 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
          (max-mipmaps (- texture-max-level texture-base-level))
          (data (get-computed-applied-attribute texture :data))
          (num-layers (length data))
-         (reshaped-layers (reshape-1d-array-image-layout data)))
+         (reshaped-layers (reshape-image-array-layout data)))
 
     ;; Load all of our images for each mipmap level, if needed.
     (let* ((all-layers
@@ -764,9 +760,81 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
         ;; Determine if opengl should generate the mipmaps.
         (potentially-autogenerate-mipmaps texture-type texture)))))
 
-(defmethod load-texture-data ((texture-type (eql :texture-2d-array)) texture context)
-  (error "load-texture-data: :texture-2d-array implement me")
-  nil)
+(defmethod load-texture-data ((texture-type (eql :texture-2d-array))
+                              texture context)
+  (let* ((use-mipmaps-p
+           (get-computed-applied-attribute texture :use-mipmaps))
+         (immutable-p
+           (get-computed-applied-attribute texture :immutable))
+         (texture-max-level
+           (get-computed-applied-attribute texture :texture-max-level))
+         (texture-base-level
+           (get-computed-applied-attribute texture :texture-base-level))
+         (max-mipmaps (- texture-max-level texture-base-level))
+         (data (get-computed-applied-attribute texture :data))
+         (num-layers (length data))
+         (reshaped-layers (reshape-image-array-layout data)))
+
+    ;; Load all of our images for each mipmap level, if needed.
+    (let* ((all-layers
+             (read-mipmap-images context reshaped-layers
+                                 use-mipmaps-p :2d-array))
+           (first-image (aref (aref all-layers 0) 0))
+           ;; TODO: Assert num-mipmaps is same for all layers.
+           (num-mipmaps (length all-layers)))
+
+      #++(format t "data = ~A~%reshaped-layers = ~A~%all-layers = ~A~%"
+                 data reshaped-layers all-layers)
+
+      ;; Figure out the ideal mipmap count from the base resolution.
+      (multiple-value-bind (expected-mipmaps expected-resolutions)
+          (compute-mipmap-levels (width first-image)
+                                 (height first-image))
+        #++(format t "expected mipmaps: ~A expected-resolutions: ~A~%"
+                   expected-mipmaps expected-resolutions)
+
+        ;; TODO: Fix this call for arrays
+        #++(validate-mipmap-images images texture
+                                   expected-mipmaps expected-resolutions)
+
+        (potentially-degrade-texture-min-filter texture)
+
+        ;; Allocate immutable storage if required.
+        (when immutable-p
+          (let ((num-mipmaps-to-generate
+                  (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
+            (%gl:tex-storage-3d texture-type num-mipmaps-to-generate
+                                (internal-format first-image)
+                                (width first-image)
+                                (height first-image)
+                                num-layers)))
+
+        ;; Upload all of the mipmap images into the texture ram.
+        ;; TODO: Make this higher order.
+        (loop :for idx :below (if use-mipmaps-p num-mipmaps 1)
+              :for level = (+ texture-base-level idx)
+              :for image = (aref (aref all-layers idx) 0)
+              ;; Construct the entire 2d array image of these 1d image pieces.
+              :for volume-data = (slices-to-volume (aref all-layers idx))
+              :do (with-slots (%width %height %internal-format %pixel-format
+                               %pixel-type)
+                      image
+                    #++(format t "image-data[~A]: ~A~%" idx image-data)
+                    (if immutable-p
+                        (gl:tex-sub-image-3d texture-type level 0 0 0
+                                             %width %height num-layers
+                                             %pixel-format %pixel-type
+                                             volume-data)
+                        (gl:tex-image-3d texture-type level %internal-format
+                                         %width %height num-layers 0
+                                         %pixel-format %pixel-type
+                                         volume-data))))
+
+        ;; And clean up main memory.
+        (free-mipmap-images all-layers :2d-array)
+
+        ;; Determine if opengl should generate the mipmaps.
+        (potentially-autogenerate-mipmaps texture-type texture)))))
 
 (defmethod load-texture-data ((texture-type (eql :texture-rectangle)) texture context)
   (error "load-texture-data: :texture-rectangle implement me")
@@ -977,12 +1045,6 @@ GPU."
 
 
 ;; Utility functions for texturing, maybe move elsewhere.
-
-(defun round-down (x)
-  (ceiling (- x 1/2)))
-
-(defun round-up (x)
-  (floor (+ x 1/2)))
 
 (defun canonicalize-texture-name (texture-name)
   "If the TEXTURE-NAME is a symbol, we canoniclalize it to the list:
