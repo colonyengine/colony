@@ -22,6 +22,7 @@
   (:inherit-from #:%fl
                  #:active-camera
                  #:context
+		 #:project-data
                  #:delta
                  #:epilogue
                  #:frame-time

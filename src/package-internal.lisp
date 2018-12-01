@@ -29,6 +29,7 @@
   ;; context
   (:export #:active-camera
            #:context
+	   #:project-data
            #:delta
            #:epilogue
            #:frame-time

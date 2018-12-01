@@ -3,6 +3,8 @@
 (defclass context ()
   ((%core-state :reader core-state
                 :initarg :core-state)
+   (%project-data :accessor project-data
+		  :initarg :project-data)
    (%settings :reader settings
               :initarg :settings)
    (%active-camera :accessor active-camera
