@@ -1,0 +1,10 @@
+# Ignore:
+
+# vim swap files
+**/*.swp
+
+# emacs temporary backup files.
+**/#*
+
+# CL fasl files
+**/*.fasl
