@@ -823,17 +823,17 @@ and return it."
         ;; Determine if opengl should generate the mipmaps.
         (potentially-autogenerate-mipmaps texture-type texture)))))
 
-(defmethod load-texture-data ((texture-type (eql :texture-rectangle)) texture context)
-  (error "load-texture-data: :texture-rectangle implement me")
-  ;; Determine if loading :image or :planar
-  nil)
-
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map)) texture context)
   (error "load-texture-data: :texture-cube-map implement me")
   nil)
 
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map-array)) texture context)
   (error "load-texture-data: :texture-cube-map-array implement me")
+  nil)
+
+(defmethod load-texture-data ((texture-type (eql :texture-rectangle)) texture context)
+  (error "load-texture-data: :texture-rectangle implement me")
+  ;; Determine if loading :image or :planar
   nil)
 
 (defmethod load-texture-data ((texture-type (eql :texture-buffer)) texture context)
