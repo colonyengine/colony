@@ -218,7 +218,8 @@ function READ-IMAGE.
 If KIND is :1d or :2d, then DATA must be an array of location descriptors like:
   #((:local \"a/b/c/foo.tga\") (:local \"a/b/c/foo.tga\"))
 
-If KIND is :3d, then Data must be an array of slices of mipmap images:
+If KIND is :1d-array, :2d-array, :3d, then DATA must be an array of
+slices of mipmap images:
   #(#((:local \"a/b/c/slice0-mip0.tga\") (:local \"a/b/c/slice1-mip0.tga\")))
 
 The same vector structure is returned but with the local descriptor lists
@@ -227,18 +228,33 @@ replaced by actual IMAGE instances of the loaded images.
   (flet ((read-image-contextually (loc)
            (read-image context loc)))
     (if use-mipmaps-p
+        ;; Processing contained mipmaps
         (ecase kind
           ((:1d :2d)
            (map 'vector #'read-image-contextually data))
           ((:1d-array :2d-array :3d)
            (map 'vector (lambda (slices)
                           (map 'vector #'read-image-contextually slices))
-                data)))
+                data))
+          (:cube-map
+           (vector (map 'vector
+                        (lambda (face)
+                          (let ((face-signifier (first face))
+                                (mipmaps (second face)))
+                            (list face-signifier
+                                  (map 'vector #'read-image-contextually
+                                       mipmaps))))
+                        (aref data 0)))))
+
+        ;; Processing only the first image location (mipmap 0)
         (ecase kind
           ((:1d :2d)
            (vector (read-image-contextually (aref data 0))))
           ((:1d-array :2d-array :3d)
-           (vector (map 'vector #'read-image-contextually (aref data 0))))))))
+           (vector (map 'vector #'read-image-contextually (aref data 0))))
+          (:cube-map
+           ;; TODO Implement me!
+           nil)))))
 
 (defun free-mipmap-images (images kind)
   "Free all main memory associated with the vector of image objects in IMAGES."
@@ -823,9 +839,86 @@ and return it."
         ;; Determine if opengl should generate the mipmaps.
         (potentially-autogenerate-mipmaps texture-type texture)))))
 
-(defmethod load-texture-data ((texture-type (eql :texture-cube-map)) texture context)
-  (error "load-texture-data: :texture-cube-map implement me")
-  nil)
+(defmethod load-texture-data ((texture-type (eql :texture-cube-map))
+                              texture context)
+
+  ;; TODO: Validate that all mip_0 cube faces are the same size. The width and
+  ;; height must be identical (square) but need not be powers of two.
+
+  (let* ((use-mipmaps-p (get-computed-applied-attribute texture :use-mipmaps))
+         (immutable-p (get-computed-applied-attribute texture :immutable))
+         (texture-max-level
+           (get-computed-applied-attribute texture :texture-max-level))
+         (texture-base-level
+           (get-computed-applied-attribute texture :texture-base-level))
+         (max-mipmaps (- texture-max-level texture-base-level))
+         (data (get-computed-applied-attribute texture :data)))
+
+    ;; load all of the images we may require.
+    (let ((images (read-mipmap-images context data use-mipmaps-p :cube-map)))
+
+      (format t "loading :texture-cube-map images = ~A~%" images)
+      (return-from load-texture-data nil)
+
+      ;; Check to ensure they all fit into texture memory.
+      ;;
+      ;; TODO: Refactor out of each method into validate-mipmap-images and
+      ;; generalize.
+      (loop :for image :across images
+            :for location :across data
+            :do (when (> (max (height image) (width image))
+                         (gl:get-integer :max-texture-size))
+                  (error "Image ~A for texture ~A is to big to be loaded onto this card. Max resolution is ~A in either dimension."
+                         location
+                         (name texture)
+                         (gl:get-integer :max-texture-size))))
+
+      ;; Figure out the ideal mipmap count from the base resolution.
+      (multiple-value-bind (expected-mipmaps expected-resolutions)
+          ;; TODO: This might need work with cube-maps.
+          (compute-mipmap-levels (width (aref images 0))
+                                 (height (aref images 0)))
+
+        ;; TODO: Fix this up for cube-maps
+        #++(validate-mipmap-images images texture
+                                   expected-mipmaps expected-resolutions)
+
+
+        (potentially-degrade-texture-min-filter texture)
+
+        ;; TODO: Continue imlpementing!
+
+        ;; Allocate immutable storage if required.
+        (when immutable-p
+          (let ((num-mipmaps-to-generate
+                  (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
+            (%gl:tex-storage-2d texture-type num-mipmaps-to-generate
+                                (internal-format (aref images 0))
+                                (width (aref images 0))
+                                (height (aref images 0)))))
+
+        ;; Upload all of the mipmap images into the texture ram.
+        ;; TODO: Make this higher order.
+        (loop :for idx :below (if use-mipmaps-p (length images) 1)
+              :for level = (+ texture-base-level idx)
+              :for image = (aref images idx)
+              :do (with-slots (%width %height %internal-format %pixel-format
+                               %pixel-type %data)
+                      image
+                    (if immutable-p
+                        (gl:tex-sub-image-2d texture-type level 0 0
+                                             %width %height
+                                             %pixel-format %pixel-type %data)
+                        (gl:tex-image-2d texture-type level %internal-format
+                                         %width %height 0
+                                         %pixel-format %pixel-type %data))))
+
+        ;; And clean up main memory.
+        (free-mipmap-images images :cube-map)
+
+        ;; Determine if opengl should generate the mipmaps.
+        (potentially-autogenerate-mipmaps texture-type texture)))))
+
 
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map-array)) texture context)
   (error "load-texture-data: :texture-cube-map-array implement me")

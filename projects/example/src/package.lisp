@@ -15,7 +15,8 @@
                 #:unlit-texture-3d
                 #:unlit-texture-1d-array
                 #:unlit-texture-2d-array
-                #:noise-2d/sweep-input))
+                #:noise-2d/sweep-input
+                #:unlit-texture-cube-map))
 
 (defpackage+ #:fl.example.textures
   (:use #:cl #:fl)
@@ -24,7 +25,8 @@
                 #:texture-test/3d-testpat
                 #:texture-test/marble
                 #:texture-test/1d-array-testpat
-                #:texture-test/2d-array-testarray))
+                #:texture-test/2d-array-testarray
+                #:texture-test/testcubemap))
 
 (defpackage+ #:fl.example.materials
   (:use #:cl #:fl)
@@ -34,4 +36,5 @@
                 #:texture-test/marble
                 #:texture-test/1d-array-testpat
                 #:texture-test/2d-sweep-input
-                #:texture-test/2d-array-testarray))
+                #:texture-test/2d-array-testarray
+                #:texture-test/testcubemap))
