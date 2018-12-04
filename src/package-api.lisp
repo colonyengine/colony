@@ -5,6 +5,9 @@
 (defpackage+ #:first-light
   (:nicknames #:fl)
   (:use #:cl)
+  ;; Deplying binaries
+  (:inherit-from #:%fl
+                 #:deploy-binary)
   ;; common
   (:inherit-from #:%fl
                  #:cfg
@@ -22,7 +25,7 @@
   (:inherit-from #:%fl
                  #:active-camera
                  #:context
-		 #:project-data
+                 #:project-data
                  #:delta
                  #:epilogue
                  #:frame-time
@@ -102,7 +105,7 @@
   (:export #:mesh)
   ;; mesh-renderer
   (:export #:mesh-renderer
-	   #:material
+           #:material
            #:draw-mesh)
   ;; transform
   (:export #:transform

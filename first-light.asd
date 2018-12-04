@@ -61,6 +61,7 @@
    (:file "shaders")
    (:file "mesh-parser")
    (:file "engine")
+   (:file "deploy")
    (:file "annotations")
    (:file "components/transform")
    (:file "components/camera")

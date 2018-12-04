@@ -97,7 +97,9 @@
            #:state
            #:update-component)
   ;; annotation API
-  (:export #:define-annotation))
+  (:export #:define-annotation)
+  ;; deploying binaries
+  (:export #:deploy-binary))
 
 (defpackage+ #:fl.assets
   (:use #:cl #:%fl)
