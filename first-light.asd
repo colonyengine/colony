@@ -1,7 +1,8 @@
 (asdf:defsystem #:first-light
   :description "An experimental game engine."
   :author ("Michael Fiano <mail@michaelfiano.com>"
-           "Peter Keller <psilord@cs.wisc.edu>")
+           "Peter Keller <psilord@cs.wisc.edu>"
+           "|3b| in #lispgames and ##hacker-theory on freenode IRC")
   :maintainer ("Michael Fiano <mail@michaelfiano.com>"
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"

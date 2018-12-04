@@ -42,7 +42,10 @@ TODO
 
 ## License
 
-Copyright © 2017-2018 Michael Fiano <mail@michaelfiano.com>, Peter Keller <psilord@cs.wisc.edu>
+Copyright © 2017-2018
+  Michael Fiano <mail@michaelfiano.com>,
+  Peter Keller <psilord@cs.wisc.edu>,
+  |3b| in #lispgames and ##hacker-theory on freenode IRC
 
 Licensed under the MIT License.
 
