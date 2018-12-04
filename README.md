@@ -4,9 +4,9 @@ A component based game engine written in Common Lisp for modern OpenGL (4.3+).
 
 NOTE: This engine is still in construction. It notably is missing
 collision detections, making it not yet ready for game making. The
-developers hang out in #lispgames on freenode, and specifically
-##hacker-theory on freenode. Stop by if you want to help or see how
-to run what we currently have, or just to say hello.
+developers (psilord and mfiano) hang out in #lispgames on freenode,
+and specifically ##hacker-theory on freenode. Stop by if you want to
+help or see how to run what we currently have, or just to say hello.
 
 ## Overview
 
