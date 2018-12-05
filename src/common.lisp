@@ -148,6 +148,35 @@ NOTE: The first entry in TEST-FN-LIST is the test function for HT itself."
   "This variable is a hash table to map sampler types to texture types. It is a constant and will
 never be changed at runtime.")
 
+(au:define-constant +cube-map-face->texture-type+
+    (au:dict #'eq
+             ;; Common sense shortcut name to real layer name.
+             :+x '(:texture-cube-map-positive-x 0)
+             :-x '(:texture-cube-map-negative-x 1)
+             :+y '(:texture-cube-map-positive-y 2)
+             :-y '(:texture-cube-map-negative-y 3)
+             :+z '(:texture-cube-map-positive-z 4)
+             :-z '(:texture-cube-map-negative-z 5)
+             ;; WYSIWYG shortcut name to real layer name
+             :right '(:texture-cube-map-positive-x 0)
+             :left '(:texture-cube-map-negative-x 1)
+             :top '(:texture-cube-map-positive-y 2)
+             :bottom '(:texture-cube-map-negative-y 3)
+             :back '(:texture-cube-map-positive-z 4)
+             :front '(:texture-cube-map-negative-z 5))
+  :test #'equalp
+  :documentation
+  "This variable converts between an easy human (semantic) name for a cube
+ map face to the complicated opengl name.")
+
+(defun canonicalize-cube-map-face-signfier (face-signifier)
+  (first (au:href +cube-map-face->texture-type+ face-signifier)))
+
+(defun sort-cube-map-faces-func (left right &key (test #'<))
+  (let ((l (au:href +cube-map-face->texture-type+ left))
+        (r (au:href +cube-map-face->texture-type+ right)))
+    (funcall test (second l) (second r))))
+
 ;;; Simple queue implementation, from Paul Graham.
 
 (defun make-queue (&rest body)
