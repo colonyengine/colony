@@ -276,7 +276,11 @@ replaced by actual IMAGE instances of the loaded images.
               (free-storage potential-image))
              ((:1d-array :2d-array :3d)
               (loop :for actual-image :across potential-image
-                    :do (free-storage actual-image))))))
+                    :do (free-storage actual-image)))
+             (:cube-map
+              (loop :for face :across potential-image
+                    :do (loop :for actual-image :across (second face)
+                              :do (free-storage actual-image)))))))
 
 (defun validate-mipmap-images (images texture
                                expected-mipmaps expected-resolutions)
@@ -364,7 +368,14 @@ in the GPU memory."
              ((:texture-1d :texture-2d :texture-3d)
               (length data))
              ((:texture-1d-array :texture-2d-array)
-              (length (aref data 0))))))
+              (length (aref data 0)))
+             (:texture-cube-map
+              ;; TODO: This assumes no errors in specification of the number of
+              ;; mipmaps.
+              (let* ((cube (aref data 0))
+                     (face (aref cube 0))
+                     (mipmaps (second face)))
+                (length mipmaps))))))
 
     (when (and use-mipmaps-p
                (= num-mipmaps 1) ;; We didn't supply any but the base image.
@@ -900,9 +911,7 @@ and return it."
         #++(validate-mipmap-images images texture
                                    expected-mipmaps expected-resolutions)
 
-
         (potentially-degrade-texture-min-filter texture)
-
 
         ;; Allocate immutable storage if required.
         (when immutable-p
@@ -913,22 +922,18 @@ and return it."
                                 (width first-image)
                                 (height first-image))))
 
-
+        ;; Insert all cube faces plus mipmaps into the GPU.
         (loop
           :for cube :across images ;; only 1 cube available.
           :do
-             (format t "Processing cube: ~A~%" cube)
              (loop
                :for idx :below (if use-mipmaps-p num-mipmaps 1)
                :for level = (+ texture-base-level idx)
                ;; Now load all six faces, each face at the same mipmap level.
                :do
-                  (format t "idx = ~A level = ~A~%" idx level)
                   (loop
                     :for (face-signifier mipmaps) :across cube
                     :do
-                       (format t "Loading face ~A mipmap image ~A at level ~A~%"
-                               face-signifier idx level)
                        (with-slots (%width %height %internal-format
                                     %pixel-format %pixel-type %data)
                            (aref mipmaps idx)
@@ -943,16 +948,8 @@ and return it."
                                               %pixel-format %pixel-type
                                               %data))))))
 
-        ;; TODO: Continue imlpementing!
-        ;; I need to fix the potentially-autogenerate-mipmaps function.
-
-        (gl:generate-mipmap texture-type)
-
-        ;; TODO: And clean up main memory.
-        #++(free-mipmap-images images :cube-map)
-
-        ;; Determine if opengl should generate the mipmaps.
-        #++(potentially-autogenerate-mipmaps texture-type texture)))))
+        (free-mipmap-images images :cube-map)
+        (potentially-autogenerate-mipmaps texture-type texture)))))
 
 
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map-array)) texture context)
