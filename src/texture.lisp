@@ -216,11 +216,11 @@ core-state context slot value. Return a vector of image structure from the
 function READ-IMAGE.
 
 If KIND is :1d or :2d, then DATA must be an array of location descriptors like:
-  #((:local \"a/b/c/foo.tga\") (:local \"a/b/c/foo.tga\"))
+  #((:project \"a/b/c/foo.tga\") (:local \"a/b/c/foo.tga\"))
 
 If KIND is :1d-array, :2d-array, :3d, then DATA must be an array of
 slices of mipmap images:
-  #(#((:local \"a/b/c/slice0-mip0.tga\") (:local \"a/b/c/slice1-mip0.tga\")))
+  #(#((:project \"a/b/c/slice0-mip0.tga\") (:local \"a/b/c/slice1-mip0.tga\")))
 
 The same vector structure is returned but with the local descriptor lists
 replaced by actual IMAGE instances of the loaded images.
@@ -750,7 +750,7 @@ and return it."
       (multiple-value-bind (expected-mipmaps expected-resolutions)
           (compute-mipmap-levels (width first-image)
                                  (height first-image))
-	(declare (ignore expected-resolutions))
+        (declare (ignore expected-resolutions))
         ;; TODO: Fix this call for arrays
         #++(validate-mipmap-images images texture
                                    expected-mipmaps expected-resolutions)
@@ -819,7 +819,7 @@ and return it."
       (multiple-value-bind (expected-mipmaps expected-resolutions)
           (compute-mipmap-levels (width first-image)
                                  (height first-image))
-	(declare (ignore expected-resolutions))
+        (declare (ignore expected-resolutions))
 
         ;; TODO: Fix this call for arrays
         #++(validate-mipmap-images images texture
