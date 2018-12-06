@@ -77,4 +77,5 @@
 
 
 (defmethod overlay-computed-attributes ((a attributes) &rest ordering)
+  (declare (ignore a ordering))
   nil)
