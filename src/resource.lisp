@@ -128,7 +128,7 @@
    (%table :reader table
            :initform (au:dict #'equalp))))
 
-(defvar *resource-data* (make-instance 'resource-data))
+(defparameter *resource-data* (make-instance 'resource-data))
 
 (defun make-relative-pathname (sub-path)
   (let ((components (au:split-sequence #\. sub-path)))
@@ -196,23 +196,20 @@
       (list :project id)
       id))
 
-  (defmacro define-resources ((&key project) &body body)
-    (unless project
-      (error "Project name must be specified in a `define-resources` form."))
-    `(progn
-       ,@(au:collecting
-           (collect `(setf (project *resource-data*) ,project))
-           (dolist (spec body)
-             (destructuring-bind (id path-spec) spec
-               (collect `(store-resource-path ',id ',path-spec)))))))
+(defmacro define-resources ((&key project) &body body)
+  (unless project
+    (error "Project name must be specified in a `define-resources` form."))
+  `(progn
+     ,@(au:collecting
+         (collect `(setf (project *resource-data*) ,project))
+         (dolist (spec body)
+           (destructuring-bind (id path-spec) spec
+             (collect `(store-resource-path ',id ',path-spec)))))))
 
 (in-package :fl)
 
 (define-resources (:project :first-light)
   (:core "data")
   (:mesh (:core "mesh"))
-  (:shader (:core "shader"))
   (:texture (:core "texture"))
-  (:char-meshes (:core :mesh "character"))
-  (:debug-tex (:core :texture "debug.tga"))
-  (:project "my-project"))
+  (:debug-tex (:core :texture "debug.tga")))
