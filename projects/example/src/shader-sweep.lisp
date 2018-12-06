@@ -34,6 +34,8 @@
             mesh-material-retrieved-p t))
 
     (au:mvlet* ((x y (get-mouse-position context)))
+      (when (null x) (setf x (/ (cfg context :window-width) 2.0)))
+      (when (null y) (setf y (/ (cfg context :window-height) 2.0)))
       (v2:with-components ((c channel0))
         ;; crappy, but good enough.
         (setf cx (coerce (/ x (cfg context :window-width)) 'single-float)
