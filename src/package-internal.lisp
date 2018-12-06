@@ -23,13 +23,15 @@
            #:window
            #:with-cfg
            #:with-shared-storage)
+  ;; resources
+  (:export #:define-resources)
   ;; extensions
   (:export #:extension-file-type
            #:prepare-extension)
   ;; context
   (:export #:active-camera
            #:context
-	   #:project-data
+           #:project-data
            #:delta
            #:epilogue
            #:frame-time

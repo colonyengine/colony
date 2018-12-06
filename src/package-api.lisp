@@ -17,6 +17,9 @@
                  #:start-engine
                  #:stop-engine
                  #:with-shared-storage)
+  ;; resources
+  (:inherit-from #:%fl
+                 #:define-resources)
   ;; extensions
   (:inherit-from #:%fl
                  #:extension-file-type

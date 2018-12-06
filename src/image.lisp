@@ -12,9 +12,7 @@
    (%internal-format :reader internal-format
                      :initarg :internal-format)
    (%data :reader data
-          :initarg :data)
-   (%location :reader location
-              :initarg :location)))
+          :initarg :data)))
 
 (defun make-image (&rest init-args)
   (apply #'make-instance 'image init-args))
@@ -56,5 +54,4 @@
                 :pixel-format pixel-format
                 :pixel-type :unsigned-byte
                 :internal-format (get-internal-format pixel-format)
-                :data (tga:image-data image)
-                :location location)))
+                :data (tga:image-data image))))

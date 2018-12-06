@@ -36,6 +36,7 @@
    (:file "package-api")
    (:file "common")
    (:file "logging")
+   (:file "resource")
    (:file "context")
    (:file "extensions")
    (:file "settings")

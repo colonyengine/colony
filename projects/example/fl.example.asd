@@ -11,6 +11,7 @@
   :serial t
   :components
   ((:file "package")
+   (:file "resources")
    (:file "prologue")
    (:file "epilogue")
    (:file "shader-sweep")))

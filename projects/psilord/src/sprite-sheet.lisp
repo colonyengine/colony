@@ -32,7 +32,7 @@
   (;; Where this will be drawn, gotten from the actor on which this component is placed.
    (transform :default nil)
    ;; The description where things are in the sprite sheet.
-   (spec-path :default nil)
+   (spec-resource-id :default nil)
    ;; The actual specification form from the above file.
    (spec :default nil)
    ;; material describing the specific sprite sheet I want.
@@ -53,7 +53,7 @@
    (animations :default nil))
 
   ;; Shared storage definitions.
-  (;; Key: spec-path location tuple,
+  (;; Key: spec-resource-id,
    ;; Value: buffer-name of created buffer to hold it
    (:ssbo/specification-data equal)
    ))
@@ -73,7 +73,7 @@
                         ;; which shared-storage namespace
                         :ssbo/specification-data
                         ;; the key(s) to look up.
-                        (spec-path sprite-sheet))
+                        (spec-resource-id sprite-sheet))
 
                        ;; If not present insert result of this
                        ;; form at that above key.
@@ -117,7 +117,7 @@
     ;; Initialize the ids, we do this for each sprite-sheet instance we make
     ;; I could put this into a shared storage thing, but meh.
     ;; TODO: I should jam this into the shared storage too, since it is copied
-    ;; for all sprite-sheets that use the same spec-path.
+    ;; for all sprite-sheets that use the same spec-resource-id.
     (loop :for sprite :in (spec sprite-sheet)
           :for i :from 0
           :do (destructuring-bind (&key id x y w h) sprite
@@ -161,8 +161,8 @@ for later use with the shaders."
                    (aref (aref %animvec %current-animation) (1+ %current-cell))))))
 
 (defmethod initialize-component ((sprite-sheet sprite-sheet) (context context))
-  (with-slots (%spec-path %spec %material %transform %vao-id) sprite-sheet
-    (let ((path (find-resource context %spec-path)))
+  (with-slots (%spec-resource-id %spec %material %transform %vao-id) sprite-sheet
+    (let ((path (find-resource context %spec-resource-id)))
       (setf %spec (au:safe-read-file-form path)
             %transform (actor-component-by-type (actor sprite-sheet) 'transform)
             %vao-id (gl:gen-vertex-array))

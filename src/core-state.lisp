@@ -5,6 +5,8 @@
 (defclass core-state ()
   ((%user-package :reader user-package)
    (%data-path :reader data-path)
+   (%resources :reader resources
+               :initform *resource-data*)
    (%settings :reader settings
               :initform (au:dict #'eq))
    (%running-p :accessor running-p
@@ -106,12 +108,12 @@ CORE-STATE."
     (setf (shared-storage context (component-type key)) value)))
 
 (defun find-resource (context location)
-  (destructuring-bind (owner path) location
-    (or (uiop:file-exists-p
-         (case owner
-           (:core (au:resolve-system-path :first-light path))
-           (:local (au:resolve-system-path (user-package (core-state context)) path))))
-        (error "Resource not found: ~s" location))))
+  (destructuring-bind (id &optional sub-path) location
+    (let* ((id (resolve-resource-id id))
+           (resources (table (resources (core-state context))))
+           (project (get-resource-project id))
+           (path (uiop:merge-pathnames* sub-path (au:href resources id))))
+      (au:resolve-system-path project path))))
 
 ;;;; Interim caching code for (often) resources. Uses nested hash tables like
 ;;;; the shared-storage for componnets.
