@@ -750,6 +750,7 @@ and return it."
       (multiple-value-bind (expected-mipmaps expected-resolutions)
           (compute-mipmap-levels (width first-image)
                                  (height first-image))
+	(declare (ignore expected-resolutions))
         ;; TODO: Fix this call for arrays
         #++(validate-mipmap-images images texture
                                    expected-mipmaps expected-resolutions)
@@ -818,6 +819,7 @@ and return it."
       (multiple-value-bind (expected-mipmaps expected-resolutions)
           (compute-mipmap-levels (width first-image)
                                  (height first-image))
+	(declare (ignore expected-resolutions))
 
         ;; TODO: Fix this call for arrays
         #++(validate-mipmap-images images texture
@@ -905,6 +907,7 @@ and return it."
           ;; TODO: This might need work with cube-maps.
           (compute-mipmap-levels (width first-image)
                                  (height first-image))
+        (declare (ignore expected-resolutions))
 
 
         ;; TODO: Fix this up for cube-maps
