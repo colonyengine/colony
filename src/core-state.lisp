@@ -108,7 +108,7 @@ CORE-STATE."
     (setf (shared-storage context (component-type key)) value)))
 
 (defun find-resource (context location)
-  (destructuring-bind (id &optional sub-path) location
+  (destructuring-bind (id &optional sub-path) (au:ensure-list location)
     (let* ((id (resolve-resource-id id))
            (resources (table (resources (core-state context))))
            (project (get-resource-project id))

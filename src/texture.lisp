@@ -208,6 +208,7 @@ NOTE: These are already in the RCACHE."
   (:documentation "Load actual data described in the TEXTURE's texdesc of
 TEXTURE-TYPE into the texture memory."))
 
+
 (defun read-mipmap-images (context data use-mipmaps-p kind)
   "Read the images described in the mipmap location array DATA into main
 memory. If USE-MIPMAPS-P is true, then load all of the mipmaps, otherwise only

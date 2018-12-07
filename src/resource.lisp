@@ -26,7 +26,7 @@
 
 ;;; Details:
 
-;; 1) Resource SPecifications and Identifiers
+;; 1) Resource Specifications and Identifiers
 
 ;; The body of `define-resources` is an arbitrary number of lists; each one being a resource
 ;; specification which describes where to locate a particular resource. A resource specification has
@@ -70,10 +70,10 @@
 ;; the end of the base path to form a new resource path.
 
 ;; In the example above, :shader has a base resource as :core, and a string as "shader". First, the
-;; resource identifier :core is resolved to #p"data/" and then merged with shader to produce
+;; resource identifier :core is resolved to #p"data/" and then merged with "shader" to produce
 ;; #p"data/shader/", as can be seen in the "DSL Expansion" above.
 
-;; The is also a third format for path specifications which is a list of three elements. In this
+;; There is also a third format for path specifications which is a list of three elements. In this
 ;; form, the second and last element behave exactly as in the two-element format. The first element
 ;; is used to disambiguate between :core and :project, the two special resource identifiers of
 ;; first-light. This is because it is completely permitted to use the same keyword resource
@@ -97,8 +97,8 @@
 
 ;; IMPORTANT: A string component in a path specification is treated as a file if anywhere in the
 ;; string is a dot ("." character). Paths to directories cannot contain a dot, unless you mean that
-;; the last component of that path point to a file. Likewise, a path specification for a file must
-;; contain a dot, so ensure that your resource files have file extensions. This is a fair
+;; the last component of that path points to a file. Likewise, a path specification for a file must
+;; contain a dot, so ensure that your resource all have a file extensions. This is a fair
 ;; restriction, as it lets us easily delineate between a file or directory in the DSL's parser,
 ;; which is important when merging Common Lisp pathnames.
 
@@ -110,9 +110,9 @@
 
 ;; 3) Initialization Form
 
-;; The initialization form of the DSL input, is the form directly following the macro name. In the
+;; The initialization form of the DSL input is the form directly following the macro name. In the
 ;; "DSL Input" example above, that would be (:project "project-name"). This is a propertly list of
-;; key/value pairs. Currently, the only possibility key is :project, and it is mandatory. This must
+;; key/value pairs. Currently, the only possible key is :project, and it is mandatory. This must
 ;; match the name of the ASDF system the user's project is defined in. This is used by the resource
 ;; resolver to get the full absolute path to a resource on disk when loading the project in a
 ;; development environment with ASDF.

@@ -14,4 +14,5 @@
    (:file "resources")
    (:file "prologue")
    (:file "epilogue")
+   (:file "sprite-test")
    (:file "shader-sweep")))

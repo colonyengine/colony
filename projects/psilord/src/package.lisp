@@ -8,14 +8,10 @@
 (defpackage+ #:fl.psilord.shaders
   (:use #:fl)
   (:inherit #:shadow.vari)
-  (:export-only #:sprite-shader
-                #:test-shader-0))
+  (:export-only #:test-shader-0))
 
 (defpackage+ #:fl.psilord.materials
-  (:use #:cl #:fl)
-  (:export-only
-   ;; ssbo/ubo names for material "sprite"
-   #:ssbo/specification-data))
+  (:use #:cl #:fl))
 
 (defpackage+ #:fl.psilord.textures
   (:use #:cl #:fl))

@@ -9,5 +9,4 @@
   :serial t
   :components
   ((:file "package")
-   (:file "sprite-sheet")
    (:file "mat-test")))
