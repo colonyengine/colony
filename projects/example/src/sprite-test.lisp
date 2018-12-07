@@ -246,7 +246,7 @@ for later use with the shaders."
            (shot-mover (make-component 'shot-mover context
                                        :velocity 1000))
            (sprite (make-component 'sprite-sheet context
-                                   :spec-resource-id :sprite-test-data
+                                   :spec-resource-id :spritesheet-data
                                    :material 'fl.example.materials::sprite
                                    :animations (make-sprite-sheet-animations
                                                 0 0 #(#(.25
