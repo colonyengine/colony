@@ -25,10 +25,8 @@
     (dolist (texture unrealized-textures)
       (format t "Processing unrealized texture: ~A~%" (%fl::name texture))
       (cond
-        ((eq (first (%fl::name texture))
-             'fl.example.textures::texture-test/marble)
+        ((eq (first (%fl::name texture)) 'texture-test/marble)
          (procedurally-generate-marble context texture))))
-
     nil))
 
 (defun internal-format-size-in-bytes (internal-format)

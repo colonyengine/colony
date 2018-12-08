@@ -76,7 +76,7 @@
                        (shadow:create-buffer
                         (gensym
                          (symbol-name :sprite-sheet-buffer))
-                        'fl.example.materials:ssbo/specification-data)))
+                        'ssbo/specification-data)))
 
     ;; Store a reference to the (possibly shared) buffer.
     (setf (ssbo-buffer sprite-sheet) ssbo/spec-data)
@@ -121,7 +121,7 @@
 
     ;; TODO: I hacked a 9 in here as the binding point. Needs FL support
     ;; to be auto allocated.
-    (shadow:bind-block 'fl.example.materials:ssbo/specification-data 9)))
+    (shadow:bind-block 'ssbo/specification-data 9)))
 
 
 (defun convert-current-sprite (sprite-sheet)
@@ -247,7 +247,7 @@ for later use with the shaders."
                                        :velocity 1000))
            (sprite (make-component 'sprite-sheet context
                                    :spec-resource-id :spritesheet-data
-                                   :material 'fl.example.materials::sprite
+                                   :material 'sprite
                                    :animations (make-sprite-sheet-animations
                                                 0 0 #(#(.25
                                                         "bullet01"
