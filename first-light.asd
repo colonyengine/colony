@@ -15,7 +15,6 @@
   :depends-on (#:closer-mop
                #:defpackage-plus
                #:cl-ppcre
-               #:split-sequence
                #:queues.simple-cqueue
                #:cl-graph
                #:jsown

@@ -179,7 +179,7 @@ values: NIL, :empty If the form is not null, but contains no hyper edges, return
 canonical-form and :vertex If the form is not null, and contains hyper edges, return values: list of
 hyper-edge pairs, :hyperedges"
   (let* ((canonical-form (canonicalize-dependency-form category form))
-         (x (split-sequence:split-sequence '-> canonical-form :test #'eql/package-relaxed))
+         (x (au:split-sequence '-> canonical-form :test #'eql/package-relaxed))
          ;; cut into groups of two with rolling window
          (connections
            (loop :for (k j . nil) :in (maplist #'identity x)
