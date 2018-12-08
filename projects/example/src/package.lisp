@@ -6,6 +6,7 @@
            #:geometric-volumes
            #:graph-test
            #:isometric-view-test
+           #:noise-test
            #:sprite-test
            #:texture-test))
 
