@@ -4,6 +4,7 @@
   (:use #:cl #:fl #:fl.comp)
   (:export #:damaged-helmet
            #:geometric-volumes
+           #:graph-test
            #:isometric-view-test
            #:sprite-test
            #:texture-test)
@@ -16,7 +17,8 @@
            #:texture-test/marble
            #:texture-test/testcubemap)
   ;; materials
-  (:export #:ssbo/specification-data
+  (:export #:graph-test
+           #:ssbo/specification-data
            #:texture-test/2d-sweep-input
            #:texture-test/marble
            #:texture-test/testcubemap))
@@ -25,8 +27,9 @@
   (:use #:fl)
   (:inherit #:shadow.vari)
   (:export-only #:damaged-helmet
-                #:sprite-test
+                #:graph-test
                 #:noise-2d/sweep-input
+                #:sprite-test
                 #:unlit-texture-1d
                 #:unlit-texture-1d-array
                 #:unlit-texture-2d-array
