@@ -242,7 +242,7 @@ The previous state name and the current state name which resulted in the exiting
   (let ((%temp-call-flow (au:dict #'eq)))
     (declare (special %temp-call-flow))
     (flet ((%prepare ()
-             (map-extensions extension-type (data-path core-state))
+             (map-extensions (context core-state) extension-type)
              %temp-call-flow))
       (maphash
        (lambda (key value)

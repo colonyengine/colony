@@ -3,9 +3,7 @@
 (defvar *core-state-debug*)
 
 (defclass core-state ()
-  ((%user-package :reader user-package)
-   (%data-path :reader data-path)
-   (%resources :reader resources
+  ((%resources :reader resources
                :initform *resource-data*)
    (%settings :reader settings
               :initform (au:dict #'eq))

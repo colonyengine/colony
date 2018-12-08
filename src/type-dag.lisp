@@ -233,7 +233,7 @@ hyper-edge pairs, :hyperedges"
   ;; Collect ALL graph-definitions into the appropriate analyzed-graph objects. The graphs aren't
   ;; fully analyzed yet. This is only the parsing phase.
   (symbol-macrolet ((analyzed-graph (au:href (analyzed-graphs core-state) (category parsed-def))))
-    (loop :with defs = (collect-extension-forms extension-type (data-path core-state))
+    (loop :with defs = (collect-extension-forms (context core-state) extension-type)
           :for def :in defs
           :for parsed-def = (parse-graph-definition def)
           :do (unless (nth-value 1 analyzed-graph)

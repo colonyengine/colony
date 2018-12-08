@@ -7,7 +7,7 @@
   (let ((%temp-settings (au:dict #'eq)))
     (declare (special %temp-settings))
     (flet ((%prepare ()
-             (map-extensions extension-type (data-path core-state))
+             (map-extensions (context core-state) extension-type)
              %temp-settings))
       (maphash
        (lambda (key value)

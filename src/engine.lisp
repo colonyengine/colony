@@ -47,18 +47,16 @@ method, but before any engine tear-down procedure occurs when stopping the engin
         (sdl2::check-rc (sdl2::sdl-init flags))))))
 
 (defmethod %initialize-engine :before ((core-state core-state) scene-name)
-  (with-slots (%user-package %data-path %context %settings) core-state
-    (setf %user-package (get-scene-package scene-name)
-          %data-path (get-extension-path %user-package))
-    (prepare-extension :settings core-state)
+  (with-slots (%context %settings) core-state
     (setf *core-state-debug* core-state
           %context (make-instance 'context :core-state core-state :settings %settings)
-          simple-logger:*current-level* (cfg %context :log-level))))
+          simple-logger:*current-level* (cfg %context :log-level))
+    (prepare-extension :settings core-state)))
 
 (defmethod %initialize-engine ((core-state core-state) scene-name)
   (setup-lisp-repl)
   (initialize-host)
-  (prepare-gamepads)
+  (prepare-gamepads core-state)
   (make-display core-state)
   (prepare-extension :graphs core-state)
   (prepare-extension :call-flow core-state)

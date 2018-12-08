@@ -110,9 +110,6 @@
              ,@(%generate-actor-spawn core-state actor-names)
              (values ,core-state ,actor-table)))))))
 
-(defun get-scene-package (scene-name)
-  (au:make-keyword (package-name (symbol-package scene-name))))
-
 (defun get-scene (core-state scene-name)
   (au:href (scenes core-state) scene-name))
 
@@ -128,7 +125,7 @@
   (let ((%fl::%temp-scene (au:dict #'eq)))
     (declare (special %fl::%temp-scene))
     (flet ((%prepare ()
-             (map-extensions extension-type (data-path core-state))
+             (map-extensions (context core-state) extension-type)
              %fl::%temp-scene))
       (setf (slot-value core-state '%scene-tree) (%make-scene-tree core-state))
       (au:do-hash (k v (%prepare))

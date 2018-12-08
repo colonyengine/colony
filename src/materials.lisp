@@ -691,7 +691,7 @@ must be executed after all the shader programs have been compiled."
     (declare (special %temp-materials %temp-material-profiles))
 
     (flet ((%prepare ()
-             (map-extensions extension-type (data-path core-state))
+             (map-extensions (context core-state) extension-type)
              (values %temp-material-profiles %temp-materials)))
 
       (multiple-value-bind (profiles materials) (%prepare)

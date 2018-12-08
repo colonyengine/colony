@@ -1071,7 +1071,7 @@ this description, while accurate is utterly not helpful. TODO: Fix."
         (%temp-texture-profiles (au:dict #'eq)))
     (declare (special %temp-semantic-texture-descriptors %temp-texture-profiles))
     (flet ((%prepare ()
-             (map-extensions extension-type (data-path core-state))
+             (map-extensions (context core-state) extension-type)
              (values %temp-texture-profiles %temp-semantic-texture-descriptors)))
       (multiple-value-bind (profiles texdescs) (%prepare)
         ;; The order doesn't matter. we can type check the texture-descriptors

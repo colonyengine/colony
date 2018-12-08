@@ -2,6 +2,7 @@
 
 (define-resources (:project :fl.example)
   (:project "data")
+  (:ext (:project "ext"))
   (:mesh (:project "mesh"))
   (:texture (:project "texture"))
   ;; texture-test

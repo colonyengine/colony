@@ -61,18 +61,16 @@
               (v2:scale! v (v2:normalize v) (/ (- magnitude deadzone) (- 1 deadzone)))
               (values vx vy)))))))
 
-(defun load-gamepad-database ()
+(defun load-gamepad-database (core-state)
   (sdl2:game-controller-add-mappings-from-file
    (namestring
-    (uiop/pathname:merge-pathnames*
-     (get-extension-path)
-     (make-pathname :defaults *default-pathname-defaults* :name "gamepad-db" :type "txt")))))
+    (find-resource (context core-state) '((:core :gamepad-db))))))
 
 (defun enable-background-gamepad-events ()
   (sdl2-ffi.functions:sdl-set-hint sdl2-ffi:+sdl-hint-joystick-allow-background-events+ "1"))
 
-(defun prepare-gamepads ()
-  (load-gamepad-database)
+(defun prepare-gamepads (core-state)
+  (load-gamepad-database core-state)
   (enable-background-gamepad-events))
 
 ;;; Events

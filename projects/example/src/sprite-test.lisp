@@ -220,7 +220,7 @@ for later use with the shaders."
    (let* ((a (m4:rotation-axis-to-vec3
               (fl.comp:local (transform component)) :y))
           (b  (v3:normalize a))
-          (move-delta (* (velocity component) (frame-time context))))
+          (move-delta (* (velocity component) (float (frame-time context)))))
      (v3:scale b move-delta))))
 
 (define-component shot-emitter ()

@@ -19,7 +19,6 @@
            #:shared-storage
            #:start-engine
            #:stop-engine
-           #:user-package
            #:window
            #:with-cfg
            #:with-shared-storage)

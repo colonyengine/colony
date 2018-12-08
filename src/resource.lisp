@@ -210,6 +210,8 @@
 
 (define-resources (:project :first-light)
   (:core "data")
+  (:ext (:core "ext"))
   (:mesh (:core "mesh"))
   (:texture (:core "texture"))
+  (:gamepad-db (:core "gamepad-db.txt"))
   (:debug-tex (:core :texture "debug.tga")))
