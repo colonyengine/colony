@@ -2,16 +2,13 @@
 
 (defpackage+ #:fl.mfiano
   (:use #:cl #:fl)
-  (:export-only #:noise-test
-                #:noise-test/playground
+  (:export-only #:noise-test/playground
                 #:mesh-test))
 
 (defpackage+ #:fl.mfiano.shaders
   (:use #:fl)
   (:inherit #:shadow.vari)
-  (:export-only #:noise-test
-                #:noise-test/identity
-                #:noise-test/playground
+  (:export-only #:noise-test/playground
                 #:mesh-test))
 
 (defpackage+ #:fl.mfiano.materials

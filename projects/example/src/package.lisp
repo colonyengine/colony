@@ -7,21 +7,7 @@
            #:graph-test
            #:isometric-view-test
            #:sprite-test
-           #:texture-test)
-  ;; textures
-  (:export #:texture-test/1d-array-testpat
-           #:texture-test/1d-gradient
-           #:texture-test/2d-array-testarray
-           #:texture-test/2d-wood
-           #:texture-test/3d-testpat
-           #:texture-test/marble
-           #:texture-test/testcubemap)
-  ;; materials
-  (:export #:graph-test
-           #:ssbo/specification-data
-           #:texture-test/2d-sweep-input
-           #:texture-test/marble
-           #:texture-test/testcubemap))
+           #:texture-test))
 
 (defpackage+ #:fl.example.shaders
   (:use #:fl)
@@ -29,6 +15,7 @@
   (:export-only #:damaged-helmet
                 #:graph-test
                 #:noise-2d/sweep-input
+                #:noise-test
                 #:sprite-test
                 #:unlit-texture-1d
                 #:unlit-texture-1d-array
