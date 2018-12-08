@@ -15,6 +15,9 @@
 (simple-logger:define-message :info :display.stop
   "Display ~dx~d @ ~dHz destroyed.")
 
+(simple-logger:define-message :warn :display.vsync.ignored
+  "Ignoring vsync option due to driver limitation.")
+
 (simple-logger:define-message :trace :input.key.down
   "Key pressed: ~a.")
 

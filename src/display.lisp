@@ -19,6 +19,20 @@
       (sdl2:gl-create-context window)
       window)))
 
+(defun maybe-set-vsync (value)
+  (let ((value
+          (ecase value
+            (:on 1)
+            (:off 0)
+            (:adaptive -1))))
+    (labels ((try (current-value)
+               (handler-case (sdl2:gl-set-swap-interval current-value)
+                 (sdl2::sdl-rc-error ()
+                   (if (= current-value -1)
+                       (try 1)
+                       (simple-logger:emit :display.vsync.ignored))))))
+      (try value))))
+
 (defgeneric make-display (core-state)
   (:method ((core-state core-state))
     (let* ((context (context core-state))
@@ -45,7 +59,7 @@
     (apply #'gl:enable gl-capabilities)
     (apply #'gl:blend-func gl-blend-mode)
     (gl:depth-func gl-depth-mode)
-    (sdl2:gl-set-swap-interval (if vsync 1 0))))
+    (maybe-set-vsync vsync)))
 
 (defmethod clear-screen ((display display))
   (let* ((context (context (core-state display)))
