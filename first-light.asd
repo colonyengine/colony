@@ -12,7 +12,8 @@
   :version "0.1.0"
   :encoding :utf-8
   :long-description #.(uiop:read-file-string (uiop/pathname:subpathname *load-pathname* "README.md"))
-  :depends-on (#:closer-mop
+  :depends-on (#:serapeum
+               #:closer-mop
                #:defpackage-plus
                #:cl-ppcre
                #:queues.simple-cqueue
@@ -21,7 +22,6 @@
                #:cl-opengl
                #:sdl2
                #:cl-tga
-               #:golden-utils
                #:simple-logger
                #:parsley
                #:shadow
@@ -33,6 +33,7 @@
   :components
   ((:file "package-internal")
    (:file "package-api")
+   (:file "util")
    (:file "common")
    (:file "logging")
    (:file "resource")

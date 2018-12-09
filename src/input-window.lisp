@@ -1,6 +1,6 @@
 (in-package :%fl)
 
-(au:define-constant +window-event-names+
+(fu:define-constant +window-event-names+
     #(nil :show :hide nil :move :resize nil :minimize :maximize :restore :mouse-focus-enter
       :mouse-focus-exit :keyboard-focus-enter :keyboard-focus-exit :close nil nil)
   :test #'equalp)

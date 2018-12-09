@@ -42,7 +42,7 @@
     (unless material-copied-p
       (let* ((mat (material mesh-rend))
              (new-mat
-               (copy-material mat (au:unique-name (symbol-name (id mat))))))
+               (copy-material mat (fu:unique-name (symbol-name (id mat))))))
         (setf (material mesh-rend) new-mat))
       (setf material-copied-p t))
 

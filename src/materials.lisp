@@ -4,10 +4,10 @@
 (defclass materials-table ()
   ((%material-table :reader material-table
                     :initarg :material-table
-                    :initform (au:dict #'eq))
+                    :initform (fu:dict #'eq))
    (%profiles :reader profiles
               :initarg :profiles
-              :initform (au:dict #'eq))))
+              :initform (fu:dict #'eq))))
 
 ;;; Internal Materials-table API
 (defun %make-materials-table (&rest init-args)
@@ -20,14 +20,14 @@ The return value is two values, the first is a material instance, and the
 second is T if the material being looked up was actually found, or NIL if it
 wasn't (and the missing material used)."
   (symbol-macrolet ((table (material-table (materials core-state))))
-    (au:if-found (material (au:href table material-name))
+    (fu:if-found (material (fu:href table material-name))
                  material
-                 (au:href table (au:ensure-symbol 'missing-material
+                 (fu:href table (fu:ensure-symbol 'missing-material
                                                   'fl.materials)))))
 
 (defun %add-material (material core-state)
   "Add the MATERIAL by its id into CORE-STATE."
-  (setf (au:href (material-table (materials core-state)) (id material))
+  (setf (fu:href (material-table (materials core-state)) (id material))
         material))
 
 (defun %remove-material (material core-state)
@@ -38,7 +38,7 @@ wasn't (and the missing material used)."
   "Map the function FUNC, which expects a material, across all materials in
 CORE-STATE. Return a list of the return values of the FUNC."
   (let ((results ()))
-    (au:do-hash-values (v (material-table (materials core-state)))
+    (fu:do-hash-values (v (material-table (materials core-state)))
       (push (funcall func v) results))
     (nreverse results)))
 
@@ -191,16 +191,16 @@ CORE-STATE. Return a list of the return values of the FUNC."
           :initarg :name)
    (%uniforms :reader uniforms
               :initarg :uniforms
-              :initform (au:dict #'eq))
+              :initform (fu:dict #'eq))
    (%blocks :reader blocks
             :initarg :blocks
-            :initform (au:dict #'eq))))
+            :initform (fu:dict #'eq))))
 
 (defun %make-material-profile (&rest init-args)
   (apply #'make-instance 'material-profile init-args))
 
 (defun %add-material-profile (profile core-state)
-  (setf (au:href (profiles (materials core-state)) (name profile))
+  (setf (fu:href (profiles (materials core-state)) (name profile))
         profile))
 
 (defclass material ()
@@ -220,13 +220,13 @@ CORE-STATE. Return a list of the return values of the FUNC."
    (%uniforms :reader uniforms
               :initarg :uniforms
               ;; key is a uniform keyword, value is material-uniform-value
-              :initform (au:dict #'eq))
+              :initform (fu:dict #'eq))
    (%blocks :reader blocks
             :initarg :blocks
             ;; Hash tables:
             ;; key1 = <block-alias>,
             ;; value = material-block-value
-            :initform (au:dict #'eq))
+            :initform (fu:dict #'eq))
    (%active-texture-unit :accessor active-texture-unit
                          :initarg :active-texture-unit
                          :initform 0)))
@@ -251,7 +251,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
 (defun %deep-copy-material (current-mat new-mat-name &key (error-p t)
                                                        (error-value nil))
 
-  (when (au:href (material-table (materials (core-state current-mat)))
+  (when (fu:href (material-table (materials (core-state current-mat)))
                  new-mat-name)
     (if error-p
         (error "Cannot copy the material ~A to new name ~A because the new name already exists!"
@@ -260,8 +260,8 @@ CORE-STATE. Return a list of the return values of the FUNC."
 
   (let* ((new-id new-mat-name)
          (new-shader (shader current-mat))
-         (new-uniforms (au:dict #'eq))
-         (new-blocks (au:dict #'eq))
+         (new-uniforms (fu:dict #'eq))
+         (new-blocks (fu:dict #'eq))
          (new-active-texture-unit (active-texture-unit current-mat))
          (new-mat
            ;; TODO: Fix %make-material so I don't have to do this.
@@ -275,7 +275,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
     ;; Now we copy over the uniforms
     (maphash
      (lambda (uniform-name material-uniform-value)
-       (setf (au:href new-uniforms uniform-name)
+       (setf (fu:href new-uniforms uniform-name)
              (%deep-copy-material-uniform-value material-uniform-value
                                                 new-mat)))
      (uniforms current-mat))
@@ -283,7 +283,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
     ;; Now we copy over the blocks.
     (maphash
      (lambda (block-alias-name material-block-value)
-       (setf (au:href new-blocks block-alias-name)
+       (setf (fu:href new-blocks block-alias-name)
              (%deep-copy-material-block-value material-block-value
                                               new-mat)))
      (blocks current-mat))
@@ -322,7 +322,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
 ;; Todo, these modify the semantic-buffer which then gets processed into a
 ;; new computed buffer.
 (defun mat-uniform-ref (mat uniform-var)
-  (au:if-let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
+  (fu:if-let ((material-uniform-value (fu:href (uniforms mat) uniform-var)))
     (semantic-value material-uniform-value)
     (error "Material ~s does not have the referenced uniform ~s. Please add a uniform to the ~
 material, and/or check your material profile settings." (id mat) uniform-var)))
@@ -331,7 +331,7 @@ material, and/or check your material profile settings." (id mat) uniform-var)))
 ;; We can only set the semantic-value, which gets automatically upgraded to
 ;; the computed-value upon setting.
 (defun (setf mat-uniform-ref) (new-val mat uniform-var)
-  (au:if-let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
+  (fu:if-let ((material-uniform-value (fu:href (uniforms mat) uniform-var)))
     (progn
       ;; TODO: Need to do something with the old computed value since it might
       ;; be consuming resources like when it is a sampler on the GPU.
@@ -344,7 +344,7 @@ material, and/or check your material profile settings." (id mat) uniform-var)))
 ;; export PUBLIC API
 ;; This is read only, it is the computed value in the material.
 (defun mat-computed-uniform-ref (mat uniform-var)
-  (let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
+  (let ((material-uniform-value (fu:href (uniforms mat) uniform-var)))
     (computed-value material-uniform-value)))
 
 ;; export PUBLIC API
@@ -405,7 +405,7 @@ and ignores the CONTEXT and MATERIAL arguments."
 (defun parse-material-uniforms (matvar uniforms)
   `(setf ,@(loop :for (var val . options) :in uniforms
                  :append
-                 `((au:href (uniforms ,matvar) ,var)
+                 `((fu:href (uniforms ,matvar) ,var)
                    (%make-material-uniform-value
                     :material ,matvar
                     :semantic-value ,val
@@ -425,7 +425,7 @@ and ignores the CONTEXT and MATERIAL arguments."
                                (block-alias (getf form :block-alias))
                                (binding-buffer (getf form :binding-buffer))
                                (binding-policy (getf form :binding-policy)))
-                           `((au:href (blocks ,matvar) ,block-alias)
+                           `((fu:href (blocks ,matvar) ,block-alias)
                              (%make-material-block-value
                               :material ,matvar
                               :block-name ,block-name
@@ -441,7 +441,7 @@ and ignores the CONTEXT and MATERIAL arguments."
     (let ((concrete-profiles
             (loop :for po-name :in (profile-overlay-names mat)
                   :collect
-                  (let ((inst (au:href (profiles (materials core-state))
+                  (let ((inst (fu:href (profiles (materials core-state))
                                        po-name)))
                     (unless inst
                       (error "Material profile name: ~S doesn't exist."
@@ -450,9 +450,9 @@ and ignores the CONTEXT and MATERIAL arguments."
       ;; Insert the uniforms in the profile, overwriting whatever was
       ;; present for that uniform if it existed in a previous uniform.
       (dolist (concrete-profile concrete-profiles)
-        (au:do-hash
+        (fu:do-hash
             (uniform-name material-value (uniforms concrete-profile))
-          (setf (au:href (uniforms mat) uniform-name)
+          (setf (fu:href (uniforms mat) uniform-name)
                 ;; NOTE: We copy here so there is no shared structure
                 ;; between material-values and profiles.
                 (%deep-copy-material-uniform-value material-value mat)))))))
@@ -483,7 +483,7 @@ available for it so BIND-UNIFORMS cannot yet be called on it."
 that is appropriate for it, such as :texture-2d-array.  Do this for all sampler
 types and texture types."
 
-  (au:if-found (texture-type (au:href +sampler-type->texture-type+
+  (fu:if-found (texture-type (fu:href +sampler-type->texture-type+
                                       sampler-type))
                texture-type
                (error "Unknown sampler-type: ~A~%" sampler-type)))
@@ -578,9 +578,9 @@ or if it a vector of the same. Return NIL otherwise."
 
 (defun annotate-material-uniform (uniform-name material-uniform-value
                                   material shader-program core-state)
-  (au:if-found (uniform-type-info (au:href (shadow:uniforms shader-program) uniform-name))
+  (fu:if-found (uniform-type-info (fu:href (shadow:uniforms shader-program) uniform-name))
 
-               (let ((uniform-type (au:href uniform-type-info :type)))
+               (let ((uniform-type (fu:href uniform-type-info :type)))
                  ;; 1. Find the uniform in the shader-program and get its
                  ;; type-info. Use that to set the binder function.
                  (setf (binder material-uniform-value)
@@ -660,7 +660,7 @@ uniform, those are not supported in materials."
 (defun resolve-material (material-instance core-state)
   "Convert semantic-values to computed-values. Type check the uniforms against
 the shader program in the material."
-  (au:if-found (shader-program (au:href (shaders core-state)
+  (fu:if-found (shader-program (fu:href (shaders core-state)
                                         (shader material-instance)))
                (progn
                  (annotate-material-uniforms material-instance shader-program
@@ -686,8 +686,8 @@ must be executed after all the shader programs have been compiled."
 
 
 (defmethod prepare-extension ((extension-type (eql :materials)) core-state)
-  (let ((%temp-materials (au:dict #'eq))
-        (%temp-material-profiles (au:dict #'eq)))
+  (let ((%temp-materials (fu:dict #'eq))
+        (%temp-material-profiles (fu:dict #'eq)))
     (declare (special %temp-materials %temp-material-profiles))
 
     (flet ((%prepare ()
@@ -700,11 +700,11 @@ must be executed after all the shader programs have been compiled."
         ;; Process all defined profiles.
 
         ;; Process all profiles.
-        (au:do-hash-values (profile profiles)
+        (fu:do-hash-values (profile profiles)
           (%add-material-profile profile core-state))
 
         ;; Process all materials.
-        (au:do-hash-values (gen-material-func materials)
+        (fu:do-hash-values (gen-material-func materials)
           (%add-material (funcall gen-material-func core-state) core-state))))))
 
 (defun parse-material-profile (name uniforms blocks)
@@ -727,20 +727,20 @@ applied in an overlay manner while defining a material."
     (destructuring-bind (&key uniforms blocks) body
       `(let* ((,matprof ,(parse-material-profile name uniforms blocks)))
          (declare (special %temp-material-profiles))
-         (setf (au:href %temp-material-profiles (name ,matprof)) ,matprof)))))
+         (setf (fu:href %temp-material-profiles (name ,matprof)) ,matprof)))))
 
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
-  (au:with-unique-names (func)
+  (fu:with-unique-names (func)
     (destructuring-bind (&key (enabled t) shader profiles uniforms blocks) body
       `(let ((,func ,(parse-material name shader profiles uniforms blocks)))
          (declare (special %temp-materials))
          ,(when enabled
-            `(setf (au:href %temp-materials ',name) ,func))
+            `(setf (fu:href %temp-materials ',name) ,func))
          (export ',name)))))
 
 (defmacro using-material (material (&rest bindings) &body body)
-  (au:with-unique-names (material-ref)
+  (fu:with-unique-names (material-ref)
     `(let ((,material-ref ,material))
        (shadow:with-shader-program (shader ,material-ref)
          (setf ,@(loop :for (k v) :on bindings :by #'cddr

@@ -1,6 +1,6 @@
 (in-package :%fl)
 
-(au:define-constant +key-names+
+(fu:define-constant +key-names+
     #(:unknown nil nil nil :a :b :c :d :e :f :g :h :i :j :k :l :m :n :o :p :q :r :s :t :u :v :w :x :y
       :z :1 :2 :3 :4 :5 :6 :7 :8 :9 :0 :return :escape :backspace :tab :space :minus :equals
       :leftbracket :rightbracket :backslash :nonushash :semicolon :apostrophe :grave :comma :period

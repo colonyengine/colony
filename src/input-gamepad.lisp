@@ -1,11 +1,11 @@
 (in-package :%fl)
 
-(au:define-constant +gamepad-axis-names+
+(fu:define-constant +gamepad-axis-names+
     #((:left-stick :x) (:left-stick :y) (:right-stick :x) (:right-stick :y) (:triggers :x)
       (:triggers :y))
   :test #'equalp)
 
-(au:define-constant +gamepad-button-names+
+(fu:define-constant +gamepad-button-names+
     #(:a :b :x :y :back :guide :start :left-stick-button :right-stick-button :left-shoulder
       :right-shoulder :up :down :left :right)
   :test #'equalp)
@@ -17,26 +17,26 @@
 ;;; Utility functions
 
 (defun get-gamepad-by-instance (core-state gamepad-instance)
-  (au:href (gamepad-instances (input-data core-state)) gamepad-instance))
+  (fu:href (gamepad-instances (input-data core-state)) gamepad-instance))
 
 (defun generate-gamepad-id (core-state)
   (with-slots (%gamepad-instances %detached-gamepads) (input-data core-state)
     (or (pop %detached-gamepads)
-        (au:format-symbol :keyword "GAMEPAD~d" (1+ (hash-table-count %gamepad-instances))))))
+        (fu:format-symbol :keyword "GAMEPAD~d" (1+ (hash-table-count %gamepad-instances))))))
 
 (defun shutdown-gamepads (core-state)
   (let ((instance-table (gamepad-instances (input-data core-state))))
-    (au:do-hash-values (v instance-table)
+    (fu:do-hash-values (v instance-table)
       (sdl2:game-controller-close (gamepad-handle v)))
     (clrhash instance-table)))
 
 (defun normalize-gamepad-analog-value (sub-device axis value)
   (if (eq sub-device :triggers)
-      (au:map-domain 0 32767 0 1 value)
-      (let ((clamped (au:clamp value -32767 32767)))
+      (fu:map-domain 0 32767 0 1 value)
+      (let ((clamped (fu:clamp value -32767 32767)))
         (case axis
-          (:x (au:map-domain -32767 32767 -1 1 clamped))
-          (:y (au:map-domain -32767 32767 1 -1 clamped))))))
+          (:x (fu:map-domain -32767 32767 -1 1 clamped))
+          (:y (fu:map-domain -32767 32767 1 -1 clamped))))))
 
 (defmethod %get-gamepad-analog ((deadzone-type (eql :axial)) analog-state)
   (with-slots (deadzone x y) analog-state
@@ -84,17 +84,17 @@
                                   :instance instance
                                   :name (sdl2:game-controller-name handle)
                                   :handle handle)))
-      (setf (au:href (gamepad-instances (input-data core-state)) instance) gamepad
-            (au:href (gamepad-ids (input-data core-state)) id) gamepad)
+      (setf (fu:href (gamepad-instances (input-data core-state)) instance) gamepad
+            (fu:href (gamepad-ids (input-data core-state)) id) gamepad)
       (input-transition-in core-state (list id :attach)))))
 
 (defun on-gamepad-detach (core-state gamepad-instance)
   (let* ((instance-table (gamepad-instances (input-data core-state)))
          (id-table (gamepad-ids (input-data core-state)))
-         (gamepad (au:href instance-table gamepad-instance))
+         (gamepad (fu:href instance-table gamepad-instance))
          (id (gamepad-id gamepad)))
     (sdl2:game-controller-close (gamepad-handle gamepad))
-    (au:appendf (detached-gamepads (input-data core-state)) (list id))
+    (fu:appendf (detached-gamepads (input-data core-state)) (list id))
     (remhash id id-table)
     (remhash gamepad-instance instance-table)
     (input-transition-out core-state (list id :attach))))
@@ -104,7 +104,7 @@
     (let* ((gamepad (get-gamepad-by-instance core-state gamepad-instance))
            (key (list (gamepad-id gamepad) sub-device))
            (value (normalize-gamepad-analog-value sub-device axis value)))
-      (symbol-macrolet ((state (au:href (states (input-data core-state)) key)))
+      (symbol-macrolet ((state (fu:href (states (input-data core-state)) key)))
         (if (not state)
             (setf state (make-gamepad-analog-state :x 0.0 :y 0.0 :deadzone 0.0))
             (case axis
@@ -128,10 +128,10 @@
 ;;; User protocol
 
 (defun get-gamepad-name (context gamepad-id)
-  (let ((gamepad (au:href (gamepad-ids (input-data (core-state context))) gamepad-id)))
+  (let ((gamepad (fu:href (gamepad-ids (input-data (core-state context))) gamepad-id)))
     (gamepad-name gamepad)))
 
 (defun get-gamepad-analog (context input)
-  (au:if-found (state (au:href (states (input-data (core-state context))) input))
+  (fu:if-found (state (fu:href (states (input-data (core-state context))) input))
                (%get-gamepad-analog :radial-scaled state)
                (values 0.0 0.0)))

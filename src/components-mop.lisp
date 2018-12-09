@@ -45,7 +45,7 @@
    (%annotations :accessor annotations
                  :initarg :annotations
                  ;; key: symbol, value: component-class/annotation-value
-                 :initform (au:dict #'eq))
+                 :initform (fu:dict #'eq))
    (%annotations-dirty-p :accessor annotations-dirty-p
                          :initarg :annotations-dirty-p
                          :initform nil)
@@ -61,7 +61,7 @@
    ;; annotations across inherited components.
    (%annotated-slots :accessor annotated-slots
                      :initarg :annotated-slots
-                     :initform (au:dict #'eq))))
+                     :initform (fu:dict #'eq))))
 
 
 (defmethod c2mop:validate-superclass ((class component-class)
@@ -80,7 +80,7 @@
                               (setter #'identity/annotation))
   (let* ((db (find-class component-metaclass-name))
          (annodb (annotations db))
-         (entry (au:href annodb annotation-name)))
+         (entry (fu:href annodb annotation-name)))
 
     ;; first look it up.
     ;; use AU to fix this.
@@ -90,7 +90,7 @@
         ;; make a new generic one with defaults.
         (setf entry (make-annotation-value
                      annotation-name snid :forward-reference))
-        (setf (au:href annodb annotation-name) entry
+        (setf (fu:href annodb annotation-name) entry
               (annotations-dirty-p db) t)))
 
     ;; then debate what to do based upon state.
@@ -118,7 +118,7 @@
              (num-annotations (hash-table-count annodb))
              (optiarray (make-array num-annotations)))
         ;; now, fill the array with the annotations at their snid spots.
-        (au:maphash-values
+        (fu:maphash-values
          (lambda (anno)
            (setf (aref optiarray (serialnum anno)) anno))
          annodb)
@@ -130,11 +130,11 @@
 ;; Ability to reset the annotations.
 (defun clear-annotations (component-metaclass-name)
   (let ((db (find-class component-metaclass-name)))
-    (setf (annotations db) (au:dict #'eq)
+    (setf (annotations db) (fu:dict #'eq)
           (annotation-serialnum db) 0
           (annotations-dirty-p db) nil
           (annotation-array db) #()
-          (annotated-slots db) (au:dict #'eq))))
+          (annotated-slots db) (fu:dict #'eq))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -384,7 +384,7 @@
                       :initial-contents
                       (mapcar (lambda (annotation)
                                 (serialnum
-                                 (au:href (annotations
+                                 (fu:href (annotations
                                            (find-class '%fl:component))
                                           annotation)))
                               (annotation slotd))))
@@ -421,7 +421,7 @@
 ;; Here we collect all the annotated slot data from a component and put
 ;; it into the COMPONENT meta-class slots.
 (defun track-annotations (component-name)
-  (setf (au:href (annotated-slots (find-class '%fl:component)) component-name)
+  (setf (fu:href (annotated-slots (find-class '%fl:component)) component-name)
         (collect-all-annotated-effective-slot-data component-name)))
 
 
@@ -469,9 +469,9 @@
         (destructuring-bind (slot-name &key default allocation type annotation
                              &allow-other-keys) slot
           (append
-           `(,(au:symbolicate '% slot-name)
+           `(,(fu:symbolicate '% slot-name)
              :accessor ,slot-name
-             :initarg ,(au:make-keyword slot-name)
+             :initarg ,(fu:make-keyword slot-name)
              :initform ,default)
            (when annotation
              `(:annotation ,annotation))
@@ -485,7 +485,7 @@
         :for anno = (getf (cdr slot) :annotation)
         :when anno
           ;; We need the ACTUAL slot name, so the % prefixed one.
-          :collect `(,(au:symbolicate "%" (first slot)) ,anno)))
+          :collect `(,(fu:symbolicate "%" (first slot)) ,anno)))
 
 (defmacro define-component (name super-classes &body body)
   (let* ((slots (first body))

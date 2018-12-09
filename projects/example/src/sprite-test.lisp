@@ -46,7 +46,7 @@
    (sprite :default nil)
    ;; mapping from sprite names to integral locations "ship33" -> 373 (actual
    ;; number may be different)
-   (sprites :default (au:dict #'equalp))
+   (sprites :default (fu:dict #'equalp))
    ;; DB of animations and the cells involved in them.
    (animations :default nil))
 
@@ -117,7 +117,7 @@
           :for i :from 0
           :do (destructuring-bind (&key id x y w h) sprite
                 (when (and id x y w h)
-                  (setf (au:href (sprites sprite-sheet) id) i))))
+                  (setf (fu:href (sprites sprite-sheet) id) i))))
 
     ;; TODO: I hacked a 9 in here as the binding point. Needs FL support
     ;; to be auto allocated.
@@ -129,13 +129,13 @@
 for later use with the shaders."
   (with-slots (%animvec %current-animation %current-cell) (animations sprite-sheet)
     (setf (sprite sprite-sheet)
-          (au:href (sprites sprite-sheet)
+          (fu:href (sprites sprite-sheet)
                    (aref (aref %animvec %current-animation) (1+ %current-cell))))))
 
 (defmethod initialize-component ((sprite-sheet sprite-sheet) (context context))
   (with-slots (%spec-resource-id %spec %material %transform %vao-id) sprite-sheet
     (let ((path (find-resource context %spec-resource-id)))
-      (setf %spec (au:safe-read-file-form path)
+      (setf %spec (fu:safe-read-file-form path)
             %transform (actor-component-by-type (actor sprite-sheet) 'transform)
             %vao-id (gl:gen-vertex-array))
       (make-sprite-sheet-buffer sprite-sheet context)
@@ -167,7 +167,7 @@ for later use with the shaders."
 
 (defmethod render-component ((sprite-sheet sprite-sheet) (context context))
   (with-slots (%transform %material %sprite %vao-id) sprite-sheet
-    (au:when-let ((camera (active-camera context)))
+    (fu:when-let ((camera (active-camera context)))
 
       ;; Bind the appropriate buffer associated with this specific sprite-sheet
       ;; to the shader block.
@@ -193,7 +193,7 @@ for later use with the shaders."
 
 (defmethod update-component ((component simple-movement) (context context))
   (with-accessors ((transform transform)) component
-    (au:mvlet* ((lx ly (get-gamepad-analog context '(:gamepad1 :left-stick)))
+    (fu:mvlet* ((lx ly (get-gamepad-analog context '(:gamepad1 :left-stick)))
                 (rx ry (get-gamepad-analog context '(:gamepad1 :right-stick))))
       (let ((vec (v3:make lx ly 0)))
         (v3:scale! vec (if (> (v3:magnitude vec) 1) (v3:normalize vec) vec) 150.0)
@@ -236,7 +236,7 @@ for later use with the shaders."
     (let* ((parent-model (fl.comp:model (emitter-transform component)))
            (parent-translation (m4:translation-to-vec3 parent-model))
            (parent-rotation (from-scaled-mat4 parent-model))
-           (new-actor (%fl::make-actor context :id (au:unique-name 'shot)))
+           (new-actor (%fl::make-actor context :id (fu:unique-name 'shot)))
            (transform (make-component 'fl.comp:transform context
                                       ;; here I init the local location/rotation
                                       ;; to semantically match the emitter

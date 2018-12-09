@@ -2,9 +2,9 @@
 
 (defclass input-data ()
   ((%gamepad-instances :reader gamepad-instances
-                       :initform (au:dict #'eq))
+                       :initform (fu:dict #'eq))
    (%gamepad-ids :accessor gamepad-ids
-                 :initform (au:dict #'eq))
+                 :initform (fu:dict #'eq))
    (%detached-gamepads :accessor detached-gamepads
                        :initform nil)
    (%entering :accessor entering
@@ -12,7 +12,7 @@
    (%exiting :accessor exiting
              :initform nil)
    (%states :reader states
-            :initform (au:dict #'equal
+            :initform (fu:dict #'equal
                                '(:mouse :motion) (make-mouse-motion-state)
                                '(:mouse :scroll-horizontal) 0
                                '(:mouse :scroll-vertical) 0))))
@@ -22,12 +22,12 @@
 
 (defmacro event-case ((event) &body handlers)
   `(case (sdl2:get-event-type ,event)
-     ,@(au:collecting
+     ,@(fu:collecting
          (dolist (handler handlers)
            (destructuring-bind (type options . body) handler
-             (let ((body (list* `(declare (ignorable ,@(au:plist-values options))) body)))
-               (dolist (type (au:ensure-list type))
-                 (au:when-let ((x (sdl2::expand-handler event type options body)))
+             (let ((body (list* `(declare (ignorable ,@(fu:plist-values options))) body)))
+               (dolist (type (fu:ensure-list type))
+                 (fu:when-let ((x (sdl2::expand-handler event type options body)))
                    (collect x)))))))))
 
 (defun dispatch-event (core-state event)
@@ -82,9 +82,9 @@
      (on-gamepad-button-down core-state gamepad-id (aref +gamepad-button-names+ button)))))
 
 (defun perform-input-state-tasks (core-state)
-  (let ((states (au:href (states (input-data core-state)))))
-    (setf (au:href states '(:mouse :scroll-horizontal)) 0
-          (au:href states '(:mouse :scroll-vertical)) 0)
+  (let ((states (fu:href (states (input-data core-state)))))
+    (setf (fu:href states '(:mouse :scroll-horizontal)) 0
+          (fu:href states '(:mouse :scroll-vertical)) 0)
     (enable-entering core-state)
     (disable-exiting core-state)))
 

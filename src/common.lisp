@@ -22,42 +22,42 @@
                   (defun find-lisp-repl ()
                     (when ,repl-package
                       (load-time-value
-                       (or ,(au:ensure-symbol "*EMACS-CONNECTION*" repl-package)
-                           (,(au:ensure-symbol "DEFAULT-CONNECTION" repl-package))))))
+                       (or ,(fu:ensure-symbol "*EMACS-CONNECTION*" repl-package)
+                           (,(fu:ensure-symbol "DEFAULT-CONNECTION" repl-package))))))
                   (defun setup-lisp-repl ()
                     (if ,(eq repl-package :slynk)
-                        (,(au:ensure-symbol "SEND-PROMPT" "SLYNK-MREPL")
+                        (,(fu:ensure-symbol "SEND-PROMPT" "SLYNK-MREPL")
                          (find (bt:current-thread)
-                               (,(au:ensure-symbol "CHANNELS" repl-package))
-                               :key #',(au:ensure-symbol "CHANNEL-THREAD" repl-package)))
-                        (au:noop)))
+                               (,(fu:ensure-symbol "CHANNELS" repl-package))
+                               :key #',(fu:ensure-symbol "CHANNEL-THREAD" repl-package)))
+                        (fu:noop)))
                   (defun update-lisp-repl ()
                     (if ,repl-package
-                        (au:when-let ((repl (find-lisp-repl)))
+                        (fu:when-let ((repl (find-lisp-repl)))
                           (with-continue-restart "REPL"
-                            (,(au:ensure-symbol "HANDLE-REQUESTS" repl-package) repl t)))
-                        (au:noop)))))))
+                            (,(fu:ensure-symbol "HANDLE-REQUESTS" repl-package) repl t)))
+                        (fu:noop)))))))
   (install-repl-support))
 
 #-(or slynk swank)
 (progn
   (defun setup-lisp-repl ()
-    (au:noop))
+    (fu:noop))
   (defun update-lisp-repl ()
-    (au:noop)))
+    (fu:noop)))
 
 (defgeneric destroy (thing context &key ttl)
   (:documentation "Destroy may take either an ACTOR or a COMPONENT. The keyword argument :TTL
 supplied in real seconds, how long the thing has yet to live."))
 
 (defun type-table (key type-table)
-  (au:href type-table key))
+  (fu:href type-table key))
 
 (defun (setf type-table) (entry type-name-key type-table)
-  (symbol-macrolet ((entry-table (au:href type-table type-name-key)))
+  (symbol-macrolet ((entry-table (fu:href type-table type-name-key)))
     (unless (nth-value 1 entry-table)
-      (setf entry-table (au:dict #'eq)))
-    (setf (au:href entry-table entry) entry)))
+      (setf entry-table (fu:dict #'eq)))
+    (setf (fu:href entry-table entry) entry)))
 
 (defun type-table-drop (component component-type type-table)
   (remhash component (type-table component-type type-table)))
@@ -92,14 +92,14 @@ NOTE: The first entry in TEST-FN-LIST is the test function for HT itself."
              ;; is the last entry, in which case we do nothing.
              (unless lastp
                (setf (gethash key current-ht)
-                     (au:dict (fdefinition test-fn)))))
+                     (fu:dict (fdefinition test-fn)))))
 
            ;; The key is potentially newly minted.
            (setf current-ht (gethash key current-ht)))
   ht)
 
-(au:define-constant +sampler-type->texture-type+
-    (au:dict #'eq
+(fu:define-constant +sampler-type->texture-type+
+    (fu:dict #'eq
              :sampler-1d :texture-1d
              :isampler-1d :texture-1d
              :usampler-1d :texture-1d
@@ -148,8 +148,8 @@ NOTE: The first entry in TEST-FN-LIST is the test function for HT itself."
   "This variable is a hash table to map sampler types to texture types. It is a constant and will
 never be changed at runtime.")
 
-(au:define-constant +cube-map-face->texture-type+
-    (au:dict #'eq
+(fu:define-constant +cube-map-face->texture-type+
+    (fu:dict #'eq
              ;; Common sense shortcut name to real layer name.
              :+x '(:texture-cube-map-positive-x 0)
              :-x '(:texture-cube-map-negative-x 1)
@@ -170,11 +170,11 @@ never be changed at runtime.")
  map face to the complicated opengl name.")
 
 (defun canonicalize-cube-map-face-signfier (face-signifier)
-  (first (au:href +cube-map-face->texture-type+ face-signifier)))
+  (first (fu:href +cube-map-face->texture-type+ face-signifier)))
 
 (defun sort-cube-map-faces-func (left right &key (test #'<))
-  (let ((l (au:href +cube-map-face->texture-type+ left))
-        (r (au:href +cube-map-face->texture-type+ right)))
+  (let ((l (fu:href +cube-map-face->texture-type+ left))
+        (r (fu:href +cube-map-face->texture-type+ right)))
     (funcall test (second l) (second r))))
 
 ;;; Simple queue implementation, from Paul Graham.
