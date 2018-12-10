@@ -49,9 +49,9 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 (defmethod %initialize-engine :before ((core-state core-state) scene-name)
   (with-slots (%context %settings) core-state
     (setf *core-state-debug* core-state
-          %context (make-instance 'context :core-state core-state :settings %settings)
-          simple-logger:*current-level* (cfg %context :log-level))
-    (prepare-extension :settings core-state)))
+          %context (make-instance 'context :core-state core-state :settings %settings))
+    (prepare-extension :settings core-state)
+    (setf simple-logger:*current-level* (cfg %context :log-level))))
 
 (defmethod %initialize-engine ((core-state core-state) scene-name)
   (setup-lisp-repl)
