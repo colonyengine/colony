@@ -2,6 +2,10 @@
 
 ;;; Macros
 
+(defmacro fn-> (function args values)
+  "Declaim the `FTYPE` of function from `ARGS` to `VALUES`."
+  `(declaim (ftype (function ,args ,values) ,function)))
+
 (defmacro define-printer ((object stream &key (type t) identity) &body body)
   "Define a PRINT-OBJECT method for `OBJECT`."
   `(defmethod print-object ((,object ,object) ,stream)
@@ -227,6 +231,14 @@ UIOP/IMAGE:*IMAGE-DUMPED-P* prior to dumping."
               :collect form)))))
 
 ;;; Math
+
+(defun-inline degrees->radians (degrees)
+  "Convert `DEGREES` to radians."
+  (* degrees (/ pi 180)))
+
+(defun-inline radians->degrees (radians)
+  "Convert `RADIANS` to degrees."
+  (* radians (/ 180 pi)))
 
 (defun-inline map-domain (source-min source-max dest-min dest-max value)
   "Map `VALUE` from the domain denoted by `SOURCE-MIN` and `SOURCE-MAX` to the domain denoted by

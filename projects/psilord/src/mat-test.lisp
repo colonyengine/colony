@@ -3,10 +3,10 @@
 (define-component mat-test ()
   ((mesh-rend :default nil)
    (material-copied-p :default nil)
-   (mix-color :default (v4:one))
-   (color-fuzz-range :default (v4:make .2 .2 .2 0))
-   (color-fuzz-delta :default (v4:zero))
-   (current-color :default (v4:zero))))
+   (mix-color :default (flm:vec4 1))
+   (color-fuzz-range :default (flm:vec4 0.2 0.2 0.2))
+   (color-fuzz-delta :default (flm:vec4))
+   (current-color :default (flm:vec4))))
 
 (defmethod initialize-component ((mat-test mat-test) (context context))
 
@@ -47,17 +47,17 @@
       (setf material-copied-p t))
 
     ;; Then make a new fuzz-delta given the fuzz-range
-    (v4:with-components ((d color-fuzz-delta) (r color-fuzz-range))
-      (setf dr (zero-mean-random rr)
-            dg (zero-mean-random rg)
-            db (zero-mean-random rb)
-            da (zero-mean-random ra)))
+    (flm:with-vec4 ((d color-fuzz-delta) (r color-fuzz-range))
+      (setf d.r (zero-mean-random r.r)
+            d.g (zero-mean-random r.g)
+            d.b (zero-mean-random r.b)
+            d.a (zero-mean-random r.a)))
 
     ;; compute the new color, and clamp it.
-    (v4:clamp! current-color
-               (v4:+! current-color mix-color color-fuzz-delta)
-               :min 0.0
-               :max 1.0)
+    (flm:clamp (flm:+ mix-color color-fuzz-delta current-color)
+               0.0
+               1.0
+               current-color)
 
     ;; TODO: Make a better test.
 

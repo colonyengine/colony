@@ -9,7 +9,7 @@
                      (mapcar #'package-name (list-all-packages)))))
       `(progn
          (sb-profile:unprofile)
-         (sb-profile:profile ,@packages "AU" "SHADOW" "GL" "%GL")
+         (sb-profile:profile ,@packages "AU" "SHADOW")
          (fu:while (and (running-p core-state)
                         (<= (total-time (context ,core-state)) ,duration))
            (iterate-main-loop ,core-state))

@@ -1,4 +1,4 @@
-(in-package :fl.assets)
+(in-package :%fl)
 
 (fu:define-constant +attribute-locations+
     '(("POSITION" . 0)
@@ -42,7 +42,7 @@
    (%count :accessor element-count)
    (%type :accessor component-type)
    (%index-buffer :accessor index-buffer)
-   (%draw-func :accessor draw-func)))
+   (%mesh-draw-func :accessor mesh-draw-func)))
 
 (fu:define-printer (gltf-chunk stream :type t)
   (format stream "~s" (chunk-type gltf-chunk)))
@@ -216,24 +216,24 @@
     (let ((accessor (elt (get-property gltf "accessors") accessor-id)))
       (make-gpu-buffer gltf :array-buffer accessor)
       (configure-attribute gltf attr accessor)
-      (with-slots (%vao %mode %count %draw-func) primitive
+      (with-slots (%vao %mode %count %mesh-draw-func) primitive
         (when (string= attr "POSITION")
           (setf %count (get-property gltf "count" accessor)
-                %draw-func (lambda (&key (instance-count 1))
-                             (gl:bind-vertex-array %vao)
-                             (gl:draw-arrays-instanced %mode 0 %count instance-count))))))))
+                %mesh-draw-func (lambda (&key (instance-count 1))
+                                  (gl:bind-vertex-array %vao)
+                                  (gl:draw-arrays-instanced %mode 0 %count instance-count))))))))
 
 (defun make-index-buffer (gltf primitive data)
   (fu:when-let* ((indices (get-property gltf "indices" data))
                  (accessor (elt (get-property gltf "accessors") indices)))
-    (with-slots (%vao %mode %count %type %index-buffer %draw-func) primitive
+    (with-slots (%vao %mode %count %type %index-buffer %mesh-draw-func) primitive
       (setf %count (get-property gltf "count" accessor)
             %type (get-component-type gltf accessor)
             %index-buffer (make-gpu-buffer gltf :element-array-buffer accessor)
-            %draw-func (lambda (&key (instance-count 1))
-                         (gl:bind-vertex-array %vao)
-                         (gl:bind-buffer :element-array-buffer %index-buffer)
-                         (%gl:draw-elements-instanced %mode %count %type 0 instance-count))))))
+            %mesh-draw-func (lambda (&key (instance-count 1))
+                              (gl:bind-vertex-array %vao)
+                              (gl:bind-buffer :element-array-buffer %index-buffer)
+                              (%gl:draw-elements-instanced %mode %count %type 0 instance-count))))))
 
 (defun make-primitive (gltf data)
   (let ((primitive (make-instance 'primitive

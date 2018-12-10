@@ -12,10 +12,11 @@
 
 (defmethod update-component ((component tracking-camera) (context context))
   (with-accessors ((view view) (transform transform)) (slave-camera component)
-    (let* ((eye (m4:translation-to-vec3 (model transform)))
-           (target (m4:translation-to-vec3 (model (target-transform component))))
-           (up (v3:make 0.0 1.0 0.0)))
-      (m4:view! view eye target up))))
+    (let* ((model (model transform))
+           (eye (flm:get-translation model))
+           (target (flm:get-translation (model (target-transform component))))
+           (up (flm:vec3 0 1 0)))
+      (flm:set-view eye target up view))))
 
 (defmethod camera-target-actor ((camera tracking-camera) (actor actor))
   (setf (target-actor camera) actor)

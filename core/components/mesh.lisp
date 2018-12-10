@@ -17,12 +17,9 @@
    ;; raw symbols, no quotes or #' or (function eq) allowed.
    (:cached-mesh-data equal eql)))
 
-(defun load-mesh (context location id)
-  (fl.assets:load-mesh (find-resource context location) id))
-
 (defmethod draw-mesh ((mesh mesh) &key (instance-count 1))
   (dolist (primitive (primitives mesh))
-    (funcall (fl.assets:draw-func primitive) :instance-count instance-count)))
+    (funcall (mesh-draw-func primitive) :instance-count instance-count)))
 
 (defmethod initialize-component ((component mesh) (context context))
   (with-accessors ((location location) (id id) (primitives primitives)) component
@@ -58,7 +55,7 @@
                                        ;; and the key.
                                        ('mesh :cached-mesh-data location id)
                                        ;; Store this value if not in cache.
-                                       (load-mesh context location id)))
+                                       (load-mesh (find-resource context location) id)))
 
       ;; Body of the with-shared-storage
       (setf primitives cached-mesh))))

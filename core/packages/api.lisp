@@ -1,7 +1,5 @@
 (in-package :defpackage+-user-1)
 
-;;; User API
-
 (defpackage+ #:first-light
   (:nicknames #:fl)
   (:use #:cl)
@@ -89,31 +87,3 @@
                  #:render-component
                  #:shared-storage-metadata
                  #:update-component))
-
-;;; Components API
-
-(defpackage+ #:fl.comp
-  (:use #:cl #:%fl)
-  ;; camera
-  (:export #:camera
-           #:tracking-camera
-           #:following-camera
-           #:transform
-           #:view
-           #:projection
-           #:zoom-camera
-           #:find-active-camera
-           #:compute-camera-view)
-  ;; mesh
-  (:export #:mesh)
-  ;; mesh-renderer
-  (:export #:mesh-renderer
-           #:material
-           #:draw-mesh)
-  ;; transform
-  (:export #:transform
-           #:model
-           #:local
-           #:translate
-           #:rotate
-           #:scale))

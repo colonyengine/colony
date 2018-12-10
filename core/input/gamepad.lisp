@@ -40,26 +40,26 @@
 
 (defmethod %get-gamepad-analog ((deadzone-type (eql :axial)) analog-state)
   (with-slots (deadzone x y) analog-state
-    (v2:with-components ((v (v2:make x y)))
-      (v2:stabilize! v v :tolerance deadzone)
-      (values vx vy))))
+    (flm:with-vec2 ((v (flm:vec2 x y)))
+      (flm:stabilize v deadzone v)
+      (values v.x v.y))))
 
 (defmethod %get-gamepad-analog ((deadzone-type (eql :radial)) analog-state)
   (with-slots (deadzone x y) analog-state
-    (v2:with-components ((v (v2:make x y)))
-      (if (< (v2:magnitude v) deadzone)
+    (flm:with-vec2 ((v (flm:vec2 x y)))
+      (if (< (flm:length v) deadzone)
           (values 0.0 0.0)
-          (values vx vy)))))
+          (values v.x v.y)))))
 
 (defmethod %get-gamepad-analog ((deadzone-type (eql :radial-scaled)) analog-state)
   (with-slots (deadzone x y) analog-state
-    (v2:with-components ((v (v2:make x y)))
-      (let ((magnitude (v2:magnitude v)))
-        (if (< magnitude deadzone)
+    (flm:with-vec2 ((v (flm:vec2 x y)))
+      (let ((length (flm:length v)))
+        (if (< length deadzone)
             (values 0.0 0.0)
             (progn
-              (v2:scale! v (v2:normalize v) (/ (- magnitude deadzone) (- 1 deadzone)))
-              (values vx vy)))))))
+              (flm:* (flm:normalize v) (/ (- length deadzone) (- 1 deadzone)) v)
+              (values v.x v.y)))))))
 
 (defun load-gamepad-database (core-state)
   (sdl2:game-controller-add-mappings-from-file

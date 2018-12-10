@@ -4,7 +4,7 @@
   ((slave-camera :default nil)
    (target-actor :default nil)
    (target-transform :default nil)
-   (offset :default (v3:zero))))
+   (offset :default (flm:vec3))))
 
 (defmethod initialize-component ((component following-camera) (context context))
   (with-accessors ((slave slave-camera) (actor actor) (target target-actor)) component
@@ -13,9 +13,9 @@
 
 (defmethod update-component ((component following-camera) (context context))
   (with-accessors ((view view) (transform transform)) (slave-camera component)
-    (let* ((target-position (m4:translation-to-vec3 (model (target-transform component))))
-           (new-camera-position (v3:+! target-position target-position (offset component))))
-      (m4:translation-from-vec3! (model transform) new-camera-position)
+    (let* ((target-position (flm:get-translation (model (target-transform component))))
+           (new-camera-position (flm:+ target-position (offset component) target-position)))
+      (flm:set-translation (model transform) new-camera-position (model transform))
       (compute-camera-view (slave-camera component) context))))
 
 (defmethod camera-target-actor ((camera following-camera) (actor actor))

@@ -197,9 +197,12 @@ NOTE: These are already in the RCACHE."
               :texture-swizzle-a :texture-swizzle-rgba
               :texture-wrap-s :texture-wrap-t :texture-wrap-r)))
       (loop :for putative-parameter :in texture-parameters
-            :do (fu:when-found (value (fu:href applied-attributes
-                                               putative-parameter))
-                  (gl:tex-parameter texture-type putative-parameter value))))))
+            :do (fu:when-found (value (fu:href applied-attributes putative-parameter))
+                  (gl:tex-parameter texture-type
+                                    putative-parameter
+                                    (typecase value
+                                      (flm:vec4 (flm:get-array value))
+                                      (t value))))))))
 
 ;; TODO: These are cut into individual functions for their context. Maybe later
 ;; I'll see about condensing them to be more concise.

@@ -4,15 +4,15 @@
   ((parent :default nil)
    (children :default nil)
    (translation :default (make-transform-state 'transform-state-vector
-                                               :incremental-delta (v3:zero)))
+                                               :incremental-delta (flm:vec3)))
    (rotation :default (make-transform-state 'transform-state-quaternion
-                                            :incremental (v3:zero)
-                                            :incremental-delta (v3:zero)))
+                                            :incremental (flm:vec3)
+                                            :incremental-delta (flm:vec3)))
    (scaling :default (make-transform-state 'transform-state-vector
-                                           :current (v3:one)
-                                           :incremental-delta (v3:zero)))
-   (local :default (m4:id))
-   (model :default (m4:id))))
+                                           :current (flm:vec3 1)
+                                           :incremental-delta (flm:vec3)))
+   (local :default (flm:mat4 1))
+   (model :default (flm:mat4 1))))
 
 (defun add-child (parent child)
   (push child (children parent))
@@ -25,20 +25,20 @@
 (defun translate-node (node delta)
   (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
       (translation node)
-    (v3:copy! p c)
-    (v3:+! c c (v3:scale! idelta i delta))))
+    (flm:copy-into p c)
+    (flm:+ c (flm:* i delta idelta) c)))
 
 (defun rotate-node (node delta)
   (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
       (rotation node)
-    (quat:copy! p c)
-    (quat:rotate! c c (v3:scale! idelta i delta))))
+    (flm:copy-into p c)
+    (flm:rotate c (flm:* i delta idelta) c)))
 
 (defun scale-node (node delta)
   (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
       (scaling node)
-    (v3:copy! p c)
-    (v3:+! c c (v3:scale! idelta i delta))))
+    (flm:copy-into p c)
+    (flm:+ c (flm:* i delta idelta) c)))
 
 (defun transform-node (core-state node)
   (let ((delta (delta (context core-state))))
@@ -51,17 +51,16 @@
     (interpolate-state %scaling alpha)
     (interpolate-state %rotation alpha)
     (interpolate-state %translation alpha)
-    (m4:*! %local
-           (quat:to-mat4! %local (interpolated %rotation))
-           (m4:scale-from-vec3 m4:+id+ (interpolated %scaling)))
-    (m4:translation-from-vec3! %local (interpolated %translation))))
+    (flm:* (flm:mat4 (interpolated %rotation) %local)
+           (flm:set-scale flm:+id-mat4+ (interpolated %scaling))
+           %local)
+    (flm:set-translation %local (interpolated %translation) %local)))
 
 (defun resolve-model (node alpha)
   (with-slots (%parent %local %model) node
     (when %parent
       (resolve-local node alpha)
-      (m4:*! %model (model %parent) %local)
-      %model)))
+      (flm:* (model %parent) %local %model))))
 
 (defun map-nodes (func parent)
   (funcall func parent)
@@ -82,41 +81,41 @@
 (defmethod reinitialize-instance ((instance transform)
                                   &key
                                     actor
-                                    (translation/current (v3:zero))
-                                    (translation/incremental (v3:zero))
-                                    (rotation/current (v3:zero))
-                                    (rotation/incremental (v3:zero))
-                                    (scale/current (v3:make 1.0 1.0 1.0))
-                                    (scale/incremental (v3:zero)))
+                                    (translation/current (flm:vec3))
+                                    (translation/incremental (flm:vec3))
+                                    (rotation/current (flm:vec3))
+                                    (rotation/incremental (flm:vec3))
+                                    (scale/current (flm:vec3 1))
+                                    (scale/incremental (flm:vec3)))
   (with-slots (%translation %rotation %scaling) instance
     (setf (actor instance) actor
           (state instance) :initialize
           (current %translation) translation/current
-          (previous %translation) (v3:copy translation/current)
+          (previous %translation) (flm:copy translation/current)
           (incremental %translation) translation/incremental
 
           (current %rotation)
           ;; TODO: Maybe should make this conversion into a GF or something.
           (etypecase rotation/current
-            (v3:vec
+            (flm:vec3
              ;; euler angles being passed in.
-             (quat:rotate quat:+id+ rotation/current))
-            (quat:quat
+             (flm:rotate flm:+id-quat+ rotation/current))
+            (flm:quat
              ;; quaternion being passed in: use as is.
              rotation/current))
 
-          (previous %rotation) (quat:copy (current %rotation))
+          (previous %rotation) (flm:copy (current %rotation))
           (incremental %rotation) rotation/incremental
 
           (current %scaling) scale/current
-          (previous %scaling) (v3:copy scale/current)
+          (previous %scaling) (flm:copy scale/current)
           (incremental %scaling) scale/incremental)))
 
 ;;; User protocol
 
 (defun %rotate/model-space (rotation vec &optional replace-p)
   (with-accessors ((current current)) rotation
-    (quat:rotate! current (if replace-p quat:+id+ current) vec)))
+    (flm:rotate (if replace-p flm:+id-quat+ current) vec current)))
 
 (defun %rotate/world-space (rotation vec &optional replace-p)
   (declare (ignore rotation vec replace-p))
@@ -129,7 +128,7 @@
 
 (defun %translate/model-space (translation vec &optional replace-p)
   (with-accessors ((current current)) translation
-    (v3:+! current (if replace-p v3:+zero+ current) vec)))
+    (flm:+ (if replace-p flm:+zero-vec3+ current) vec current)))
 
 (defun %translate/world-space (translation vec &optional replace-p)
   (declare (ignore translation vec replace-p))
@@ -142,4 +141,4 @@
 
 (defun scale (transform vec &key replace-p)
   (with-accessors ((current current)) (scaling transform)
-    (v3:+! current (if replace-p v3:+zero+ current) vec)))
+    (flm:+ (if replace-p flm:+zero-vec3+ current) vec current)))

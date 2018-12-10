@@ -182,9 +182,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
    :storage-type (storage-type material-block-value)
    :binding-policy (binding-policy material-block-value)
    :binding-buffer (binding-buffer material-block-value)
-   :bound-once-p (bound-once-p material-block-value)
-   ))
-
+   :bound-once-p (bound-once-p material-block-value)))
 
 (defclass material-profile ()
   ((%name :reader name
@@ -241,23 +239,19 @@ CORE-STATE. Return a list of the return values of the FUNC."
     (resolve-material mat (core-state mat)))
   new-val)
 
-
 (defun %make-material (id shader profiles core-state)
   (make-instance 'material :id id
                            :shader shader
                            :profile-overlay-names profiles
                            :core-state core-state))
 
-(defun %deep-copy-material (current-mat new-mat-name &key (error-p t)
-                                                       (error-value nil))
+(defun %deep-copy-material (current-mat new-mat-name &key (error-p t) (error-value nil))
 
-  (when (fu:href (material-table (materials (core-state current-mat)))
-                 new-mat-name)
+  (when (fu:href (material-table (materials (core-state current-mat))) new-mat-name)
     (if error-p
         (error "Cannot copy the material ~A to new name ~A because the new name already exists!"
                (id current-mat) new-mat-name)
         (return-from %deep-copy-material error-value)))
-
   (let* ((new-id new-mat-name)
          (new-shader (shader current-mat))
          (new-uniforms (fu:dict #'eq))
@@ -523,12 +517,18 @@ or if it a vector of the same. Return NIL otherwise."
            (:bool #'shadow:uniform-int)
            ((:int :int32) #'shadow:uniform-int)
            (:float #'shadow:uniform-float)
-           (:vec2 #'shadow:uniform-vec2)
-           (:vec3 #'shadow:uniform-vec3)
-           (:vec4 #'shadow:uniform-vec4)
-           (:mat2 #'shadow:uniform-mat2)
-           (:mat3 #'shadow:uniform-mat3)
-           (:mat4 #'shadow:uniform-mat4))))
+           (:vec2 (lambda (uniform value)
+                    (shadow:uniform-vec2 uniform (flm:get-array value))))
+           (:vec3 (lambda (uniform value)
+                    (shadow:uniform-vec3 uniform (flm:get-array value))))
+           (:vec4 (lambda (uniform value)
+                    (shadow:uniform-vec4 uniform (flm:get-array value))))
+           (:mat2 (lambda (uniform value)
+                    (shadow:uniform-mat2 uniform (flm:get-array value))))
+           (:mat3 (lambda (uniform value)
+                    (shadow:uniform-mat3 uniform (flm:get-array value))))
+           (:mat4 (lambda (uniform value)
+                    (shadow:uniform-mat4 uniform (flm:get-array value)))))))
 
     ((consp glsl-type)
      (if (sampler-p (car glsl-type))

@@ -2,14 +2,13 @@
   :description "An experimental game engine."
   :author ("Michael Fiano <mail@michaelfiano.com>"
            "Peter Keller <psilord@cs.wisc.edu>"
-           "|3b| in #lispgames and ##hacker-theory on freenode IRC")
+           "Bart Botta <00003b at gmail.com>")
   :maintainer ("Michael Fiano <mail@michaelfiano.com>"
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :homepage "https://github.com/hackertheory/first-light"
   :bug-tracker "https://github.com/hackertheory/first-light/issues"
   :source-control (:git "git@github.com:hackertheory/first-light.git")
-  :version "0.1.0"
   :encoding :utf-8
   :long-description #.(uiop:read-file-string (uiop/pathname:subpathname *load-pathname* "README.md"))
   :depends-on (#:serapeum
@@ -26,14 +25,22 @@
                #:parsley
                #:shadow
                #:umbra
-               #:gamebox-math.vari
-               #:gamebox-frame-manager)
-  :pathname "src"
+               #:gamebox-frame-manager
+               #:first-light.utils
+               #:first-light.math)
+
+  :pathname "core"
   :serial t
   :components
-  ((:file "package-internal")
-   (:file "package-api")
-   (:file "util")
+  ((:module "packages"
+    :components
+    ((:file "internal")
+     (:file "shaders")
+     (:file "materials")
+     (:file "textures")
+     (:file "annotations")
+     (:file "components")
+     (:file "api")))
    (:file "common")
    (:file "logging")
    (:module "input"

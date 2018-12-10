@@ -13,7 +13,7 @@
    (mesh-rend-material :defualt nil)
    (mesh-material-retrieved-p :default nil)
    (mouse-in-window-p :default nil)
-   (channel0 :default (v2:zero))))
+   (channel0 :default (flm:vec2))))
 
 
 (defmethod initialize-component ((self shader-sweep) (context context))
@@ -36,10 +36,10 @@
     (fu:mvlet* ((x y (get-mouse-position context)))
       (when (null x) (setf x (/ (cfg context :window-width) 2.0)))
       (when (null y) (setf y (/ (cfg context :window-height) 2.0)))
-      (v2:with-components ((c channel0))
+      (flm:with-vec2 ((c channel0))
         ;; crappy, but good enough.
-        (setf cx (coerce (/ x (cfg context :window-width)) 'single-float)
-              cy (coerce (/ y (cfg context :window-height)) 'single-float)))
+        (setf c.x (coerce (/ x (cfg context :window-width)) 'single-float)
+              c.y (coerce (/ y (cfg context :window-height)) 'single-float)))
 
       (when (input-enter-p context '(:mouse :left))
         (format t "channel0 is: ~A~%" channel0))
