@@ -756,7 +756,7 @@
   (invert mat (the mat4 (mat4 1))))
 
 (defspecialization (set-view :inline t) ((eye vec3) (target vec3) (up vec3) (out mat4)) mat4
-  ;; based on https://gist.github.com/psilord/609294c5c90cf3a6b7d522cc58d5e72c
+  ;; based on http://pages.cs.wisc.edu/~psilord/view.txt
   (with-mat4 ((o (id out)))
     (with-vec3 ((e eye) (s target) (u up))
       (macrolet ((%normalize (place-x x place-y y place-z z)
