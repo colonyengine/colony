@@ -222,7 +222,7 @@
 (in-package :fl)
 
 (define-resources (:project :first-light)
-  (:core "data")
+  (:core "data/core")
   (:ext (:core "ext"))
   (:mesh (:core "mesh"))
   (:texture (:core "texture"))
