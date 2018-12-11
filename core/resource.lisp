@@ -204,10 +204,13 @@
           (project *resource-data*)))))
 
 (defun resolve-resource-id (id)
-  (if (and (keywordp id)
-           (not (eq id :core)))
-      (list :project id)
-      id))
+  (cond
+    ((eq id :project)
+     id)
+    ((and (keywordp id)
+          (not (eq id :core)))
+     (list :project id))
+    (t id)))
 
 (defmacro define-resources ((&key project) &body body)
   (unless project
