@@ -212,6 +212,25 @@ UIOP/IMAGE:*IMAGE-DUMPED-P* prior to dumping."
     (uiop/filesystem:collect-sub*directories
      (uiop/pathname:ensure-directory-pathname path) t recursive-p #'process-files)))
 
+(defun get-directory-contents (path)
+  (uiop:directory* (uiop:merge-pathnames* uiop:*wild-file* path)))
+
+(defun copy-directory (source target)
+  (labels ((recurse (path target)
+             (if (uiop:directory-pathname-p path)
+                 (let* ((source-sub-dir (first (last (pathname-directory path))))
+                        (new-target (uiop:merge-pathnames*
+                                     (make-pathname :directory `(:relative ,source-sub-dir))
+                                     target)))
+                   (dolist (sub-path (get-directory-contents path))
+                     (recurse sub-path new-target)))
+                 (progn
+                   (ensure-directories-exist target)
+                   (uiop:copy-file path (make-pathname :name (pathname-name path)
+                                                       :type (pathname-type path)
+                                                       :defaults target))))))
+    (recurse source target)))
+
 (defun safe-read-file-form (path &key (package :cl))
   "Read the first form of the file located at `PATH`, with *PACKAGE* bound to `PACKAGE`."
   (with-standard-io-syntax

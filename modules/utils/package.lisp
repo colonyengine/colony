@@ -32,6 +32,7 @@
                  #:split-sequence
                  #:unique-name)
   (:export #:alist-get
+           #:copy-directory
            #:define-printer
            #:defun-inline
            #:degrees->radians
@@ -39,6 +40,7 @@
            #:do-hash-keys
            #:do-hash-values
            #:flatten
+           #:get-directory-contents
            #:fn->
            #:hash->alist
            #:hash-keys
