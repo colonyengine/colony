@@ -166,6 +166,24 @@
     (t
      id)))
 
+(defun make-resource-path (id root path-spec)
+  (flet ((make-path ()
+           (case (length path-spec)
+             (1 (make-relative-pathname root))
+             (2 (build-resource-path/2 id path-spec))
+             (3 (build-resource-path/3 id path-spec))
+             (t (error "A path specifier in `define-resources` must be a string, or a list of 2 or ~
+                        3 elements."))))
+         (validate-core/project-path (core/project path)
+           (fl.util:when-found (key (fl.util:href (table *resource-data*) core/project))
+             (when (and (member id '(:core :project))
+                        (string= (namestring key) (namestring path)))
+               (error "The :core and :project resource path specifications must be unique.")))))
+    (let ((path (make-path)))
+      (validate-core/project-path :core path)
+      (validate-core/project-path :project path)
+      path)))
+
 (defun store-resource-path (id path-spec)
   (unless (keywordp id)
     (error "Identifiers in `define-resources` must be keyword symbols, but found ~s." id))
@@ -174,12 +192,7 @@
       (declare (ignore rest))
       (let ((key (make-resource-key id root)))
         (setf (fl.util:href (table *resource-data*) key)
-              (case (length path-spec)
-                (1 (make-relative-pathname root))
-                (2 (build-resource-path/2 id path-spec))
-                (3 (build-resource-path/3 id path-spec))
-                (t (error "A path specifier in `define-resources` must be a string, or a list ~
-                           of 2 or 3 elements.")))))))
+              (make-resource-path id root path-spec)))))
   (fl.util:noop))
 
 (defun get-resource-project (key)

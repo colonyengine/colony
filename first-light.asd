@@ -27,7 +27,6 @@
                #:first-light.binary-formats
                #:first-light.math
                #:first-light.geometry)
-
   :pathname "core"
   :serial t
   :components
