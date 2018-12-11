@@ -22,9 +22,6 @@
            #:window
            #:with-cfg
            #:with-shared-storage)
-  ;; assets
-  (:export #:load-mesh
-           #:mesh-draw-func)
   ;; resources
   (:export #:define-resources)
   ;; extensions

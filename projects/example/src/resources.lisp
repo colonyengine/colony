@@ -1,6 +1,6 @@
 (in-package :fl.example)
 
-(define-resources (:project :fl.example)
+(define-resources (:project :first-light.example)
   (:project "data")
   (:ext (:project "ext"))
   (:mesh (:project "mesh"))

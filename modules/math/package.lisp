@@ -1,6 +1,6 @@
-(in-package :defpackage+-user-1)
+(in-package :cl-user)
 
-(defpackage+ #:fl.math
+(defpackage #:first-light.math
   (:nicknames #:flm)
   (:use #:cl)
   (:import-from #:specialization-store #:defstore #:defspecialization)

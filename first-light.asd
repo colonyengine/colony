@@ -11,23 +11,22 @@
   :source-control (:git "git@github.com:hackertheory/first-light.git")
   :encoding :utf-8
   :long-description #.(uiop:read-file-string (uiop/pathname:subpathname *load-pathname* "README.md"))
-  :depends-on (#:serapeum
-               #:closer-mop
+  :depends-on (#:closer-mop
                #:defpackage-plus
                #:cl-ppcre
                #:queues.simple-cqueue
                #:cl-graph
-               #:jsown
                #:cl-opengl
                #:sdl2
                #:cl-tga
                #:verbose
-               #:parsley
                #:shadow
                #:umbra
                #:gamebox-frame-manager
-               #:first-light.utils
-               #:first-light.math)
+               #:first-light.util
+               #:first-light.binary-formats
+               #:first-light.math
+               #:first-light.geometry)
 
   :pathname "core"
   :serial t
@@ -70,7 +69,6 @@
    (:file "texture")
    (:file "materials")
    (:file "shaders")
-   (:file "mesh-parser")
    (:file "engine")
    (:file "deploy")
    (:file "annotations")

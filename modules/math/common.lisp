@@ -1,4 +1,4 @@
-(in-package :fl.math)
+(in-package :first-light.math)
 
 ;;; utilities
 

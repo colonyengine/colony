@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :first-light.geometry)
 
 (fl.util:define-constant +attribute-locations+
     '(("POSITION" . 0)
@@ -42,7 +42,7 @@
    (%count :accessor element-count)
    (%type :accessor component-type)
    (%index-buffer :accessor index-buffer)
-   (%mesh-draw-func :accessor mesh-draw-func)))
+   (%draw-func :accessor draw-func)))
 
 (fl.util:define-printer (gltf-chunk stream :type t)
   (format stream "~s" (chunk-type gltf-chunk)))
@@ -59,28 +59,28 @@
     (otherwise :unknown)))
 
 (defun last-chunk-p ()
-  (= (file-length (parsley:buffer-stream))
-     (parsley:buffer-position)))
+  (= (file-length (fl.binfmt:buffer-stream))
+     (fl.binfmt:buffer-position)))
 
 (defun parse-header ()
   (let ((header (make-instance 'gltf-header)))
     (with-slots (%magic %version %length) header
-      (parsley:with-buffer-read (:sequence (parsley:read-bytes 12))
-        (let ((magic (parsley:read-string :bytes 4)))
+      (fl.binfmt:with-buffer-read (:sequence (fl.binfmt:read-bytes 12))
+        (let ((magic (fl.binfmt:read-string :bytes 4)))
           (if (not (string= magic "glTF"))
               (error "Invalid glTF2 file.")
               (setf %magic magic
-                    %version (parsley:read-uint-le 4)
-                    %length (parsley:read-uint-le 4))))))
+                    %version (fl.binfmt:read-uint-le 4)
+                    %length (fl.binfmt:read-uint-le 4))))))
     header))
 
 (defgeneric parse-chunk-data (gltf chunk-type chunk)
   (:method :around (gltf chunk-type chunk)
-    (parsley:with-buffer-read (:sequence (parsley:read-bytes (chunk-length chunk)))
+    (fl.binfmt:with-buffer-read (:sequence (fl.binfmt:read-bytes (chunk-length chunk)))
       (call-next-method))))
 
 (defmethod parse-chunk-data (gltf (chunk-type (eql :json-content)) chunk)
-  (let ((data (parsley:read-string :encoding :utf-8)))
+  (let ((data (fl.binfmt:read-string :encoding :utf-8)))
     (setf (json gltf) (jsown:parse data))
     data))
 
@@ -90,7 +90,7 @@
         :for buffer :in buffers
         :for index :below (length buffers)
         :for size = (get-property gltf "byteLength" buffer)
-        :do (setf (aref data index) (parsley:read-bytes size))
+        :do (setf (aref data index) (fl.binfmt:read-bytes size))
         :finally (setf (buffers gltf) data))
   nil)
 
@@ -100,13 +100,13 @@
 (defun parse-chunk (gltf)
   (let ((chunk (make-instance 'gltf-chunk)))
     (with-slots (%length %type %data) chunk
-      (setf %length (parsley:read-uint-le 4)
-            %type (parsley:read-uint-le 4)
+      (setf %length (fl.binfmt:read-uint-le 4)
+            %type (fl.binfmt:read-uint-le 4)
             %data (parse-chunk-data gltf (chunk-type chunk) chunk)))
     chunk))
 
 (defun parse-chunks (gltf)
-  (loop :with stream = (parsley:buffer-stream)
+  (loop :with stream = (fl.binfmt:buffer-stream)
         :until (= (file-position stream) (file-length stream))
         :for chunk = (parse-chunk gltf)
         :collect chunk))
@@ -118,9 +118,9 @@
             %chunks (parse-chunks gltf)))
     datastream))
 
-(defun load-gltf (path)
+(defun %load-gltf (path)
   (fl.util:with-binary-input (in path)
-    (parsley:with-buffer-read (:stream in)
+    (fl.binfmt:with-buffer-read (:stream in)
       (let ((gltf (make-instance 'gltf)))
         (setf (parse-tree gltf) (parse-datastream gltf))
         gltf))))
@@ -216,24 +216,24 @@
     (let ((accessor (elt (get-property gltf "accessors") accessor-id)))
       (make-gpu-buffer gltf :array-buffer accessor)
       (configure-attribute gltf attr accessor)
-      (with-slots (%vao %mode %count %mesh-draw-func) primitive
+      (with-slots (%vao %mode %count %draw-func) primitive
         (when (string= attr "POSITION")
           (setf %count (get-property gltf "count" accessor)
-                %mesh-draw-func (lambda (&key (instance-count 1))
-                                  (gl:bind-vertex-array %vao)
-                                  (gl:draw-arrays-instanced %mode 0 %count instance-count))))))))
+                %draw-func (lambda (&key (instance-count 1))
+                             (gl:bind-vertex-array %vao)
+                             (gl:draw-arrays-instanced %mode 0 %count instance-count))))))))
 
 (defun make-index-buffer (gltf primitive data)
   (fl.util:when-let* ((indices (get-property gltf "indices" data))
                       (accessor (elt (get-property gltf "accessors") indices)))
-    (with-slots (%vao %mode %count %type %index-buffer %mesh-draw-func) primitive
+    (with-slots (%vao %mode %count %type %index-buffer %draw-func) primitive
       (setf %count (get-property gltf "count" accessor)
             %type (get-component-type gltf accessor)
             %index-buffer (make-gpu-buffer gltf :element-array-buffer accessor)
-            %mesh-draw-func (lambda (&key (instance-count 1))
-                              (gl:bind-vertex-array %vao)
-                              (gl:bind-buffer :element-array-buffer %index-buffer)
-                              (%gl:draw-elements-instanced %mode %count %type 0 instance-count))))))
+            %draw-func (lambda (&key (instance-count 1))
+                         (gl:bind-vertex-array %vao)
+                         (gl:bind-buffer :element-array-buffer %index-buffer)
+                         (%gl:draw-elements-instanced %mode %count %type 0 instance-count))))))
 
 (defun make-primitive (gltf data)
   (let ((primitive (make-instance 'primitive
@@ -244,8 +244,8 @@
     (make-index-buffer gltf primitive data)
     primitive))
 
-(defun load-mesh (path mesh-id)
-  (let ((gltf (load-gltf path)))
+(defun load-gltf (path mesh-id)
+  (let ((gltf (%load-gltf path)))
     (dolist (primitive-data (find-mesh gltf mesh-id))
       (push (make-primitive gltf primitive-data) (primitives gltf)))
     (setf (buffers gltf) nil)

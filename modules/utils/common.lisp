@@ -1,4 +1,4 @@
-(in-package :fl.util)
+(in-package :first-light.util)
 
 ;;; Macros
 

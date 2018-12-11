@@ -19,7 +19,7 @@
 
 (defmethod draw-mesh ((mesh mesh) &key (instance-count 1))
   (dolist (primitive (primitives mesh))
-    (funcall (mesh-draw-func primitive) :instance-count instance-count)))
+    (funcall (fl.geom:draw-func primitive) :instance-count instance-count)))
 
 (defmethod initialize-component ((component mesh) (context context))
   (with-accessors ((location location) (id id) (primitives primitives)) component
@@ -30,5 +30,5 @@
           (context context)
           ((cached-mesh mesh-presentp
                         ('mesh :cached-mesh-data location id)
-                        (load-mesh (apply #'find-resource context location) id)))
+                        (fl.geom:load-gltf (apply #'find-resource context location) id)))
         (setf primitives cached-mesh)))))

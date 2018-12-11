@@ -11,8 +11,8 @@
   :source-control (:git "git@github.com:hackertheory/first-light.git")
   :encoding :utf-8
   :depends-on (#:specialization-store
-               #:first-light.utils)
-  :pathname "modules/math"
+               #:first-light.util)
+  :pathname "math"
   :serial t
   :components
   ((:file "package")
