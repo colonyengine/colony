@@ -1,6 +1,4 @@
 (in-package #:fl.example)
 
 (defmethod epilogue (context)
-  (format t "Running EPILOGUE method!~%")
-
-  )
+  (v:trace :fl.core.engine "Running epilogue method."))

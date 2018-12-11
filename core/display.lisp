@@ -30,29 +30,31 @@
                  (sdl2::sdl-rc-error ()
                    (if (= current-value -1)
                        (try 1)
-                       (simple-logger:emit :display.vsync.ignored))))))
+                       (v:warn :fl.core.display "Ignoring vsync option due to driver limitation."))))))
       (try value))))
 
 (defgeneric make-display (core-state)
   (:method ((core-state core-state))
-    (let* ((context (context core-state))
-           (window (create-window :title (cfg context :title)
-                                  :width (cfg context :window-width)
-                                  :height (cfg context :window-height)
-                                  :major-version (cfg context :gl-version-major)
-                                  :minor-version (cfg context :gl-version-minor)
-                                  :anti-alias-level (cfg context :anti-alias-level)))
-           (hz (nth-value 3 (sdl2:get-current-display-mode 0))))
-      (setf (slot-value core-state '%display)
-            (make-instance 'display
-                           :window window
-                           :vsync-p (when (eq (cfg context :vsync) :on) t)
-                           :core-state core-state
-                           :hz hz
-                           :delta (cfg context :delta)
-                           :period (cfg context :periodic-interval)
-                           :debug-interval (cfg context :debug-interval)))
-      (simple-logger:emit :display.init))))
+    (with-cfg (title window-width window-height) (context core-state)
+      (let* ((context (context core-state))
+             (window (create-window :title (cfg context :title)
+                                    :width (cfg context :window-width)
+                                    :height (cfg context :window-height)
+                                    :major-version (cfg context :gl-version-major)
+                                    :minor-version (cfg context :gl-version-minor)
+                                    :anti-alias-level (cfg context :anti-alias-level)))
+             (hz (nth-value 3 (sdl2:get-current-display-mode 0))))
+        (setf (slot-value core-state '%display)
+              (make-instance 'display
+                             :window window
+                             :vsync-p (when (eq (cfg context :vsync) :on) t)
+                             :core-state core-state
+                             :hz hz
+                             :delta (cfg context :delta)
+                             :period (cfg context :periodic-interval)
+                             :debug-interval (cfg context :debug-interval)))
+        (v:info :fl.core.display "Display ~dx~d @ ~dHz created."
+                window-width window-height hz)))))
 
 (defmethod make-display :after ((core-state core-state))
   (with-cfg (gl-capabilities gl-blend-mode gl-depth-mode vsync) (context core-state)

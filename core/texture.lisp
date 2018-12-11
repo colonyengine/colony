@@ -889,8 +889,7 @@ and return it."
            ;; TODO: This is not safe, need to check all of them.
            (num-mipmaps (length (second (aref first-cube 0)))))
 
-
-      (format t "loading :texture-cube-map images = ~A~%" images)
+      (v:trace :fl.core.texture "Loading :texture-cube-map images = ~a" images)
 
       ;; Check to ensure they all fit into texture memory.
       ;;

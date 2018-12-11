@@ -5,6 +5,9 @@
   (:ext (:project "ext"))
   (:mesh (:project "mesh"))
   (:texture (:project "texture"))
+  (:log (:project "log"))
+  (:log-debug (:project :log "debug.log"))
+  (:log-error (:project :log "error.log"))
   ;; texture-test
   (:texture-test-textures (:project :texture "texture-test"))
   (:1da-test (:project :texture-test-textures "1d-array/test"))

@@ -105,13 +105,13 @@ CORE-STATE."
   (:method (value (context context) (key component))
     (setf (shared-storage context (component-type key)) value)))
 
-(defun find-resource (context location)
-  (destructuring-bind (id &optional sub-path) (fu:ensure-list location)
-    (let* ((id (resolve-resource-id id))
-           (resources (table (resources (core-state context))))
-           (project (get-resource-project id))
-           (path (uiop:merge-pathnames* sub-path (fu:href resources id))))
-      (fu:resolve-system-path project path))))
+(defun find-resource (context resource-id &optional sub-path)
+  (let* ((id (resolve-resource-id resource-id))
+         (resources (table (resources (core-state context))))
+         (project (get-resource-project id)))
+    (fu:when-found (resource (fu:href resources id))
+      (let ((path (uiop:merge-pathnames* sub-path resource)))
+        (fu:resolve-system-path project path)))))
 
 ;;;; Interim caching code for (often) resources. Uses nested hash tables like
 ;;;; the shared-storage for componnets.

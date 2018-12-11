@@ -25,37 +25,10 @@
   (with-accessors ((location location) (id id) (primitives primitives)) component
     (unless location
       (error "A mesh component must have a location set."))
-
-    ;; TODO: Before removing this, document how shared storage work in the wiki.
-    ;; Describe both long and short forms, plus the assumptions they make.
-
-    ;; Long Form: The fully flexible way to use shared storage.
-    #++(multiple-value-bind (cached-mesh presentp)
-           (ss-href context 'mesh :cached-mesh-data location id)
-         (unless presentp
-           ;; Here we choose to use the same lookup key as before, but it is not
-           ;; true that this will always be the case--just most of the time.
-           (setf cached-mesh
-                 (%load-mesh context location id)
-
-                 (ss-href context 'mesh :cached-mesh-data location id)
-                 cached-mesh))
-
-         ;; cached-mesh is now bound with previously found or new cache entry.
-         (setf primitives cached-mesh))
-
-
-    ;; Short Form: Make some assumptions and it is short.
-    ;;
-    ;; Assumes you store the generated value in the same place
-    ;; you tried to find it.
-    (with-shared-storage (context context)
-                         ((cached-mesh mesh-presentp
-                                       ;; this is what type to look it up in,
-                                       ;; and the key.
-                                       ('mesh :cached-mesh-data location id)
-                                       ;; Store this value if not in cache.
-                                       (load-mesh (find-resource context location) id)))
-
-      ;; Body of the with-shared-storage
-      (setf primitives cached-mesh))))
+    (let ((location (fu:ensure-list location)))
+      (with-shared-storage
+          (context context)
+          ((cached-mesh mesh-presentp
+                        ('mesh :cached-mesh-data location id)
+                        (load-mesh (apply #'find-resource context location) id)))
+        (setf primitives cached-mesh)))))

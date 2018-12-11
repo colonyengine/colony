@@ -64,7 +64,7 @@
 (defun load-gamepad-database (core-state)
   (sdl2:game-controller-add-mappings-from-file
    (namestring
-    (find-resource (context core-state) '((:core :gamepad-db))))))
+    (find-resource (context core-state) '(:core :gamepad-db)))))
 
 (defun enable-background-gamepad-events ()
   (sdl2-ffi.functions:sdl-set-hint sdl2-ffi:+sdl-hint-joystick-allow-background-events+ "1"))

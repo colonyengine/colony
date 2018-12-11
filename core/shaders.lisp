@@ -21,15 +21,15 @@
 ;; not have to worry about different threads making recompilation tasks.
 (defun generate-shaders-modified-hook (core-state)
   (lambda (programs-list)
-    (simple-logger:emit :shader.programs.to.recompile programs-list)
+    (v:debug :fl.ext.shader "Shader programs queued for compilation: ~{~s~^, ~}" programs-list)
     (queues:qpush (recompilation-queue core-state) (list :shader-recompilation programs-list))))
 
 (defun recompile-shaders (programs-list)
-  (shadow:translate-shader-programs programs-list)
-  (shadow:build-shader-programs programs-list)
-  (shadow:rebind-blocks programs-list)
   (when programs-list
-    (simple-logger:emit :shader.programs.recompiled programs-list)))
+    (shadow:translate-shader-programs programs-list)
+    (shadow:build-shader-programs programs-list)
+    (shadow:rebind-blocks programs-list)
+    (v:debug :fl.ext.shader "Shader programs compiled: ~{~s~^, ~}" programs-list)))
 
 (defun prepare-shader-programs (core-state)
   (setf (shaders core-state) (shadow:build-shader-dictionary))

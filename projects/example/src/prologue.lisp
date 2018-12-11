@@ -1,10 +1,8 @@
 (in-package #:fl.example)
 
 (defmethod prologue (context)
-  (format t "Running PROLOGUE method!~%")
-
+  (v:trace :fl.core.engine "Running prologue method.")
   (example-0/unrealized-textures context))
-
 
 (defun example-0/unrealized-textures (context)
   ;; Example 0: Unrealized Procedural Textures.
@@ -20,10 +18,9 @@
   ;;   F) Free the main memory texture.
   ;;   G) Remove texture from unrealized list.
   (let ((unrealized-textures (%fl::get-unrealized-textures context)))
-    (format T "Found unrealized textures: ~A~%" unrealized-textures)
-
+    (v:trace :fl.core.texture "Found unrealized textures: ~a" unrealized-textures)
     (dolist (texture unrealized-textures)
-      (format t "Processing unrealized texture: ~A~%" (%fl::name texture))
+      (v:trace :fl.core.texture "Processing unrealized texture: ~a" (%fl::name texture))
       (cond
         ((eq (first (%fl::name texture)) 'texture-test/marble)
          (procedurally-generate-marble context texture))))
@@ -35,7 +32,7 @@
     (:rgb8 3)))
 
 (defun procedurally-generate-marble (context texture)
-  (format t "  Procedurally generating marble texture! This may take a while...~%")
+  (v:trace :fl.core.texture "Generating marble texture...")
 
   ;; TODO: Generate computed texture-descriptor.
   ;; Make a base computed texture descriptor...

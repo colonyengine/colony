@@ -10,7 +10,7 @@
                       (*print-readably* nil))
                   (load x))))
             :test (extension-type-filter type))))
-    (%map extension-type (find-resource context '((:core :ext))))
+    (%map extension-type (find-resource context '(:core :ext)))
     (%map extension-type (find-resource context :ext))))
 
 (defun extension-type-filter (extension-type)
@@ -39,6 +39,6 @@
                         :for (nil options nil) = form
                         :do (push form results))))
               :test (extension-type-filter type))))
-      (%collect type (find-resource context '((:core :ext))))
+      (%collect type (find-resource context '(:core :ext)))
       (%collect type (find-resource context :ext)))
     (nreverse results)))

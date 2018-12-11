@@ -21,7 +21,7 @@
                #:cl-opengl
                #:sdl2
                #:cl-tga
-               #:simple-logger
+               #:verbose
                #:parsley
                #:shadow
                #:umbra
@@ -42,7 +42,6 @@
      (:file "components")
      (:file "api")))
    (:file "common")
-   (:file "logging")
    (:module "input"
     :components
     ((:file "keyboard")
@@ -55,6 +54,7 @@
    (:file "context")
    (:file "extensions")
    (:file "settings")
+   (:file "logging")
    (:file "attributes")
    (:file "component-mop")
    (:file "component")
