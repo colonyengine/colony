@@ -22,42 +22,42 @@
                   (defun find-lisp-repl ()
                     (when ,repl-package
                       (load-time-value
-                       (or ,(fu:ensure-symbol "*EMACS-CONNECTION*" repl-package)
-                           (,(fu:ensure-symbol "DEFAULT-CONNECTION" repl-package))))))
+                       (or ,(fl.util:ensure-symbol "*EMACS-CONNECTION*" repl-package)
+                           (,(fl.util:ensure-symbol "DEFAULT-CONNECTION" repl-package))))))
                   (defun setup-lisp-repl ()
                     (if ,(eq repl-package :slynk)
-                        (,(fu:ensure-symbol "SEND-PROMPT" "SLYNK-MREPL")
+                        (,(fl.util:ensure-symbol "SEND-PROMPT" "SLYNK-MREPL")
                          (find (bt:current-thread)
-                               (,(fu:ensure-symbol "CHANNELS" repl-package))
-                               :key #',(fu:ensure-symbol "CHANNEL-THREAD" repl-package)))
-                        (fu:noop)))
+                               (,(fl.util:ensure-symbol "CHANNELS" repl-package))
+                               :key #',(fl.util:ensure-symbol "CHANNEL-THREAD" repl-package)))
+                        (fl.util:noop)))
                   (defun update-lisp-repl ()
                     (if ,repl-package
-                        (fu:when-let ((repl (find-lisp-repl)))
+                        (fl.util:when-let ((repl (find-lisp-repl)))
                           (with-continue-restart "REPL"
-                            (,(fu:ensure-symbol "HANDLE-REQUESTS" repl-package) repl t)))
-                        (fu:noop)))))))
+                            (,(fl.util:ensure-symbol "HANDLE-REQUESTS" repl-package) repl t)))
+                        (fl.util:noop)))))))
   (install-repl-support))
 
 #-(or slynk swank)
 (progn
   (defun setup-lisp-repl ()
-    (fu:noop))
+    (fl.util:noop))
   (defun update-lisp-repl ()
-    (fu:noop)))
+    (fl.util:noop)))
 
 (defgeneric destroy (thing context &key ttl)
   (:documentation "Destroy may take either an ACTOR or a COMPONENT. The keyword argument :TTL
 supplied in real seconds, how long the thing has yet to live."))
 
 (defun type-table (key type-table)
-  (fu:href type-table key))
+  (fl.util:href type-table key))
 
 (defun (setf type-table) (entry type-name-key type-table)
-  (symbol-macrolet ((entry-table (fu:href type-table type-name-key)))
+  (symbol-macrolet ((entry-table (fl.util:href type-table type-name-key)))
     (unless (nth-value 1 entry-table)
-      (setf entry-table (fu:dict #'eq)))
-    (setf (fu:href entry-table entry) entry)))
+      (setf entry-table (fl.util:dict #'eq)))
+    (setf (fl.util:href entry-table entry) entry)))
 
 (defun type-table-drop (component component-type type-table)
   (remhash component (type-table component-type type-table)))
@@ -92,89 +92,89 @@ NOTE: The first entry in TEST-FN-LIST is the test function for HT itself."
              ;; is the last entry, in which case we do nothing.
              (unless lastp
                (setf (gethash key current-ht)
-                     (fu:dict (fdefinition test-fn)))))
+                     (fl.util:dict (fdefinition test-fn)))))
 
            ;; The key is potentially newly minted.
            (setf current-ht (gethash key current-ht)))
   ht)
 
-(fu:define-constant +sampler-type->texture-type+
-    (fu:dict #'eq
-             :sampler-1d :texture-1d
-             :isampler-1d :texture-1d
-             :usampler-1d :texture-1d
+(fl.util:define-constant +sampler-type->texture-type+
+    (fl.util:dict #'eq
+                  :sampler-1d :texture-1d
+                  :isampler-1d :texture-1d
+                  :usampler-1d :texture-1d
 
-             :sampler-2d :texture-2d
-             :isampler-2d :texture-2d
-             :usampler-2d :texture-2d
+                  :sampler-2d :texture-2d
+                  :isampler-2d :texture-2d
+                  :usampler-2d :texture-2d
 
-             :sampler-3d :texture-3d
-             :isampler-3d :texture-3d
-             :usampler-3d :texture-3d
+                  :sampler-3d :texture-3d
+                  :isampler-3d :texture-3d
+                  :usampler-3d :texture-3d
 
-             :sampler-cube :texture-cube-map
-             :isampler-cube :texture-cube-map
-             :usampler-cube :texture-cube-map
+                  :sampler-cube :texture-cube-map
+                  :isampler-cube :texture-cube-map
+                  :usampler-cube :texture-cube-map
 
-             :sampler-2d-rect :texture-rectangle
-             :isampler-2d-rect :texture-rectangle
-             :usampler-2d-rect :texture-rectangle
+                  :sampler-2d-rect :texture-rectangle
+                  :isampler-2d-rect :texture-rectangle
+                  :usampler-2d-rect :texture-rectangle
 
-             :sampler-1d-array :texture-1d-array
-             :isampler-1d-array :texture-1d-array
-             :usampler-1d-array :texture-1d-array
+                  :sampler-1d-array :texture-1d-array
+                  :isampler-1d-array :texture-1d-array
+                  :usampler-1d-array :texture-1d-array
 
-             :sampler-2d-array :texture-2d-array
-             :isampler-2d-array :texture-2d-array
-             :usampler-2d-array :texture-2d-array
+                  :sampler-2d-array :texture-2d-array
+                  :isampler-2d-array :texture-2d-array
+                  :usampler-2d-array :texture-2d-array
 
-             :sampler-cube-array :texture-cube-map-array
-             :isampler-cube-array :texture-cube-map-array
-             :usampler-cube-array :texture-cube-map-array
+                  :sampler-cube-array :texture-cube-map-array
+                  :isampler-cube-array :texture-cube-map-array
+                  :usampler-cube-array :texture-cube-map-array
 
-             :sampler-buffer :texture-buffer
-             :isampler-buffer :texture-buffer
-             :usampler-buffer :texture-buffer
+                  :sampler-buffer :texture-buffer
+                  :isampler-buffer :texture-buffer
+                  :usampler-buffer :texture-buffer
 
-             :sampler-2d-ms :texture-2d-multisample
-             :isampler-2d-ms :texture-2d-multisample
-             :usampler-2d-ms :texture-2d-multisample
+                  :sampler-2d-ms :texture-2d-multisample
+                  :isampler-2d-ms :texture-2d-multisample
+                  :usampler-2d-ms :texture-2d-multisample
 
-             :sampler-2d-ms-array :texture-2d-multisample-array
-             :isampler-2d-ms-array :texture-2d-multisample-array
-             :usampler-2d-ms-array :texture-2d-multisample-array)
+                  :sampler-2d-ms-array :texture-2d-multisample-array
+                  :isampler-2d-ms-array :texture-2d-multisample-array
+                  :usampler-2d-ms-array :texture-2d-multisample-array)
   :test #'equalp
   :documentation
   "This variable is a hash table to map sampler types to texture types. It is a constant and will
 never be changed at runtime.")
 
-(fu:define-constant +cube-map-face->texture-type+
-    (fu:dict #'eq
-             ;; Common sense shortcut name to real layer name.
-             :+x '(:texture-cube-map-positive-x 0)
-             :-x '(:texture-cube-map-negative-x 1)
-             :+y '(:texture-cube-map-positive-y 2)
-             :-y '(:texture-cube-map-negative-y 3)
-             :+z '(:texture-cube-map-positive-z 4)
-             :-z '(:texture-cube-map-negative-z 5)
-             ;; WYSIWYG shortcut name to real layer name
-             :right '(:texture-cube-map-positive-x 0)
-             :left '(:texture-cube-map-negative-x 1)
-             :top '(:texture-cube-map-positive-y 2)
-             :bottom '(:texture-cube-map-negative-y 3)
-             :back '(:texture-cube-map-positive-z 4)
-             :front '(:texture-cube-map-negative-z 5))
+(fl.util:define-constant +cube-map-face->texture-type+
+    (fl.util:dict #'eq
+                  ;; Common sense shortcut name to real layer name.
+                  :+x '(:texture-cube-map-positive-x 0)
+                  :-x '(:texture-cube-map-negative-x 1)
+                  :+y '(:texture-cube-map-positive-y 2)
+                  :-y '(:texture-cube-map-negative-y 3)
+                  :+z '(:texture-cube-map-positive-z 4)
+                  :-z '(:texture-cube-map-negative-z 5)
+                  ;; WYSIWYG shortcut name to real layer name
+                  :right '(:texture-cube-map-positive-x 0)
+                  :left '(:texture-cube-map-negative-x 1)
+                  :top '(:texture-cube-map-positive-y 2)
+                  :bottom '(:texture-cube-map-negative-y 3)
+                  :back '(:texture-cube-map-positive-z 4)
+                  :front '(:texture-cube-map-negative-z 5))
   :test #'equalp
   :documentation
   "This variable converts between an easy human (semantic) name for a cube
  map face to the complicated opengl name.")
 
 (defun canonicalize-cube-map-face-signfier (face-signifier)
-  (first (fu:href +cube-map-face->texture-type+ face-signifier)))
+  (first (fl.util:href +cube-map-face->texture-type+ face-signifier)))
 
 (defun sort-cube-map-faces-func (left right &key (test #'<))
-  (let ((l (fu:href +cube-map-face->texture-type+ left))
-        (r (fu:href +cube-map-face->texture-type+ right)))
+  (let ((l (fl.util:href +cube-map-face->texture-type+ left))
+        (r (fl.util:href +cube-map-face->texture-type+ right)))
     (funcall test (second l) (second r))))
 
 ;;; Simple queue implementation, from Paul Graham.

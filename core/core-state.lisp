@@ -6,11 +6,11 @@
   ((%resources :reader resources
                :initform *resource-data*)
    (%settings :reader settings
-              :initform (fu:dict #'eq))
+              :initform (fl.util:dict #'eq))
    (%running-p :accessor running-p
                :initarg :running-p)
    (%rcache :reader rcache
-            :initform (fu:dict #'eq))
+            :initform (fl.util:dict #'eq))
    (%display :reader display
              :initform nil)
    (%scene-tree :reader scene-tree)
@@ -27,44 +27,44 @@
    (%tables :reader tables
             :initform (make-instance 'bookkeeping-tables))
    (%call-flows :reader call-flows
-                :initform (fu:dict #'eq))
+                :initform (fl.util:dict #'eq))
    (%analyzed-graphs :reader analyzed-graphs
-                     :initform (fu:dict #'equalp))
+                     :initform (fl.util:dict #'equalp))
    (%scenes :reader scenes
-            :initform (fu:dict #'eq))
+            :initform (fl.util:dict #'eq))
    (%recompilation-queue :reader recompilation-queue
                          :initarg :recompilation-queue
                          :initform (queues:make-queue :simple-cqueue))))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table
-                            :initform (fu:dict #'eq))
+                            :initform (fl.util:dict #'eq))
    (%component-preinit-by-type-view :reader component-preinit-by-type-view
-                                    :initform (fu:dict #'eq))
+                                    :initform (fl.util:dict #'eq))
    (%component-init-by-type-view :reader component-init-by-type-view
-                                 :initform (fu:dict #'eq))
+                                 :initform (fl.util:dict #'eq))
    (%component-active-by-type-view :reader component-active-by-type-view
-                                   :initform (fu:dict #'eq))
+                                   :initform (fl.util:dict #'eq))
    (%component-predestroy-view :reader component-predestroy-view
-                               :initform (fu:dict #'eq))
+                               :initform (fl.util:dict #'eq))
    (%component-destroy-by-type-view :reader component-destroy-by-type-view
-                                    :initform (fu:dict #'eq))
+                                    :initform (fl.util:dict #'eq))
    (%actor-predestroy-view :reader actor-predestroy-view
-                           :initform (fu:dict #'eq))
+                           :initform (fl.util:dict #'eq))
    (%actor-preinit-db :reader actor-preinit-db
-                      :initform (fu:dict #'eq))
+                      :initform (fl.util:dict #'eq))
    (%actor-init-db :reader actor-init-db
-                   :initform (fu:dict #'eq))
+                   :initform (fl.util:dict #'eq))
    (%actor-active-db :reader actor-active-db
-                     :initform (fu:dict #'eq))
+                     :initform (fl.util:dict #'eq))
    (%actor-destroy-db :reader actor-destroy-db
-                      :initform (fu:dict #'eq))))
+                      :initform (fl.util:dict #'eq))))
 
 (defun pending-preinit-tasks-p (core-state)
   "Return T if there are ANY components or actors in the preinit data structures in CORE-STATE."
   (or (plusp (hash-table-count (actor-preinit-db (tables core-state))))
       (block done
-        (fu:do-hash-values (v (component-preinit-by-type-view (tables core-state)))
+        (fl.util:do-hash-values (v (component-preinit-by-type-view (tables core-state)))
           (when (plusp (hash-table-count v))
             (return-from done t))))))
 
@@ -79,13 +79,13 @@ CORE-STATE."
 CORE-STATE."
   (or (plusp (hash-table-count (actor-destroy-db (tables core-state))))
       (block done
-        (fu:do-hash-values (v (component-destroy-by-type-view (tables core-state)))
+        (fl.util:do-hash-values (v (component-destroy-by-type-view (tables core-state)))
           (when (plusp (hash-table-count v))
             (return-from done t))))))
 
 (defun %make-scene-tree (core-state)
   (with-slots (%context) core-state
-    (let* ((actor (make-actor %context :id (fu:unique-name '@universe) :scene t))
+    (let* ((actor (make-actor %context :id (fl.util:unique-name '@universe) :scene t))
            (transform (make-component 'transform %context :actor actor)))
       (attach-component actor transform)
       (spawn-actor actor %context :parent nil)
@@ -95,13 +95,13 @@ CORE-STATE."
 
 (defgeneric shared-storage (context key)
   (:method ((context context) key)
-    (fu:href (shared-storage-table context) key))
+    (fl.util:href (shared-storage-table context) key))
   (:method ((context context) (key component))
     (shared-storage context (component-type key))))
 
 (defgeneric (setf shared-storage) (value context key)
   (:method (value (context context) key)
-    (setf (fu:href (shared-storage-table context) key) value))
+    (setf (fl.util:href (shared-storage-table context) key) value))
   (:method (value (context context) (key component))
     (setf (shared-storage context (component-type key)) value)))
 
@@ -109,9 +109,9 @@ CORE-STATE."
   (let* ((id (resolve-resource-id resource-id))
          (resources (table (resources (core-state context))))
          (project (get-resource-project id)))
-    (fu:when-found (resource (fu:href resources id))
+    (fl.util:when-found (resource (fl.util:href resources id))
       (let ((path (uiop:merge-pathnames* sub-path resource)))
-        (fu:resolve-system-path project path)))))
+        (fl.util:resolve-system-path project path)))))
 
 ;;;; Interim caching code for (often) resources. Uses nested hash tables like
 ;;;; the shared-storage for componnets.
@@ -145,17 +145,17 @@ CORE-STATE."
                             (list* 'eq (rcache-layout entry-type))
                             (list* entry-type keys))
   (multiple-value-bind (value presentp)
-      (apply #'fu:href (rcache core-state) (list* entry-type keys))
+      (apply #'fl.util:href (rcache core-state) (list* entry-type keys))
     (unless presentp
       (setf value (apply #'rcache-construct entry-type core-state keys)
-            (apply #'fu:href (rcache core-state) (list* entry-type keys)) value))
+            (apply #'fl.util:href (rcache core-state) (list* entry-type keys)) value))
     value))
 
 ;; This might call rcache-dispose if needed.
 (defmethod rcache-remove ((entry-type symbol) (core-state core-state) &rest keys)
   (multiple-value-bind (value presentp)
-      (apply #'fu:href (rcache core-state) (list* entry-type keys))
+      (apply #'fl.util:href (rcache core-state) (list* entry-type keys))
     (when presentp
-      (remhash (apply #'fu:href (rcache core-state) (list* entry-type keys))
+      (remhash (apply #'fl.util:href (rcache core-state) (list* entry-type keys))
                (rcache core-state))
       (rcache-dispose entry-type core-state value))))

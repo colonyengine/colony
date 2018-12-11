@@ -10,7 +10,7 @@
    (%active-camera :accessor active-camera
                    :initform nil)
    (%shared-storage-table :reader shared-storage-table
-                          :initform (fu:dict #'eq))
+                          :initform (fl.util:dict #'eq))
    (%state :accessor state
            :initarg :state
            :initform nil)))
@@ -47,7 +47,7 @@
                               (list* 'eq 'eql metadata-ht-test-fns)
                               (list* qualified-component-name namespace keys))
     ;; How, we can just do the lookup
-    (apply #'fu:href
+    (apply #'fl.util:href
            (shared-storage-table context)
            (list* qualified-component-name namespace keys))))
 
@@ -59,7 +59,7 @@
                               (list* 'eq 'eql metadata-ht-test-fns)
                               (list* qualified-component-name namespace keys))
     ;; Now, we can perform the setting.
-    (apply #'(setf fu:href)
+    (apply #'(setf fl.util:href)
            new-value
            (shared-storage-table context)
            (list* qualified-component-name namespace keys))))
@@ -82,7 +82,7 @@ emit the body in the final and most dense lexical scope."
         (let* ((lookup-binding-forms (%lookup-form-to-bindings lookup-form))
                (lookup-args (mapcar #'first lookup-binding-forms)))
           `(let ,lookup-binding-forms
-             (fu:mvlet ((,lexical-var ,presentp-var (ss-href ,context ,@lookup-args)))
+             (fl.util:mvlet ((,lexical-var ,presentp-var (ss-href ,context ,@lookup-args)))
                (unless ,presentp-var
                  (setf ,lexical-var ,cache-value-form
                        (ss-href ,context ,@lookup-args) ,lexical-var))

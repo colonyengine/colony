@@ -2,11 +2,11 @@
 
 ;;; constants
 
-(fu:define-constant +zero-mat3+
+(fl.util:define-constant +zero-mat3+
     (%mat3 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0)
   :test #'equalp)
 
-(fu:define-constant +id-mat3+
+(fl.util:define-constant +id-mat3+
     (%mat3 1f0 0f0 0f0 0f0 1f0 0f0 0f0 0f0 1f0)
   :test #'equalp)
 
@@ -202,15 +202,15 @@
 
 (defspecialization (clamp :inline t) ((in mat3) (min real) (max real) (out mat3)) mat3
   (with-mat3 ((m in) (o out))
-    (psetf o.00 (float (fu:clamp m.00 min max) 1f0)
-           o.01 (float (fu:clamp m.01 min max) 1f0)
-           o.02 (float (fu:clamp m.02 min max) 1f0)
-           o.10 (float (fu:clamp m.10 min max) 1f0)
-           o.11 (float (fu:clamp m.11 min max) 1f0)
-           o.12 (float (fu:clamp m.12 min max) 1f0)
-           o.20 (float (fu:clamp m.20 min max) 1f0)
-           o.21 (float (fu:clamp m.21 min max) 1f0)
-           o.22 (float (fu:clamp m.22 min max) 1f0)))
+    (psetf o.00 (float (fl.util:clamp m.00 min max) 1f0)
+           o.01 (float (fl.util:clamp m.01 min max) 1f0)
+           o.02 (float (fl.util:clamp m.02 min max) 1f0)
+           o.10 (float (fl.util:clamp m.10 min max) 1f0)
+           o.11 (float (fl.util:clamp m.11 min max) 1f0)
+           o.12 (float (fl.util:clamp m.12 min max) 1f0)
+           o.20 (float (fl.util:clamp m.20 min max) 1f0)
+           o.21 (float (fl.util:clamp m.21 min max) 1f0)
+           o.22 (float (fl.util:clamp m.22 min max) 1f0)))
   out)
 
 (defspecialization (clamp :inline t) ((in mat3) (min real) (max real) (out null)) mat3

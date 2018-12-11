@@ -7,10 +7,10 @@
 (defclass attributes ()
   ((%semantic-attributes :reader semantic-attributes
                          :initarg :semantic-attributes
-                         :initform (fu:dict #'eql))
+                         :initform (fl.util:dict #'eql))
    (%computed-attributes :reader computed-attributes
                          :initarg :computed-attributes
-                         :initform (fu:dict #'eql))))
+                         :initform (fl.util:dict #'eql))))
 
 
 (defun make-attributes (&rest initargs)
@@ -18,12 +18,12 @@
 
 ;; Semantic attributes API
 (defmethod semantic-attribute ((a attributes) (attribute-name symbol))
-  (fu:href (semantic-attributes a) attribute-name))
+  (fl.util:href (semantic-attributes a) attribute-name))
 
 (defmethod (setf semantic-attribute) (newobj
                                       (a attributes)
                                       (attribute-name symbol))
-  (setf (fu:href (semantic-attributes a) attribute-name) newobj))
+  (setf (fl.util:href (semantic-attributes a) attribute-name) newobj))
 
 (defmethod clear-semantic-attributes ((a attributes))
   (clrhash (semantic-attributes a)))
@@ -32,7 +32,7 @@
   ;; First make a copy-ish of the hash table in case the func wants
   ;; to modify the hash table.
   ;; TODO: A little slow and memory using, but also safe.
-  (let ((attrs (fu:hash->alist (semantic-attributes a))))
+  (let ((attrs (fl.util:hash->alist (semantic-attributes a))))
     (dolist (attr attrs)
       (destructuring-bind (key value) attr
         (funcall func key value)))))
@@ -40,12 +40,12 @@
 ;; Computed attributes API
 
 (defmethod computed-attribute ((a attributes) (attribute-name symbol))
-  (fu:href (computed-attributes a) attribute-name))
+  (fl.util:href (computed-attributes a) attribute-name))
 
 (defmethod (setf computed-attribute) (newobj
                                       (a attributes)
                                       (attribute-name symbol))
-  (setf (fu:href (computed-attributes a) attribute-name) newobj))
+  (setf (fl.util:href (computed-attributes a) attribute-name) newobj))
 
 (defmethod clear-computed-attributes ((a attributes))
   (clrhash (computed-attributes a)))
@@ -54,7 +54,7 @@
   ;; First make a copy-ish of the hash table in case the func wants
   ;; to modify the hash table.
   ;; TODO: A little slow and memory using, but also safe.
-  (let ((attrs (fu:hash->alist (computed-attributes a))))
+  (let ((attrs (fl.util:hash->alist (computed-attributes a))))
     (dolist (attr attrs)
       (destructuring-bind (key value) attr
         (funcall func key value)))))

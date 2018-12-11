@@ -15,7 +15,7 @@
 (defmethod render-component ((component mesh-renderer) (context context))
   (with-accessors ((transform transform) (mesh mesh) (material material)) component
     (with-accessors ((draw-mesh draw)) mesh
-      (fu:when-let ((camera (active-camera context)))
+      (fl.util:when-let ((camera (active-camera context)))
         (using-material material
             (:model (fl.comp:model transform)
              :view (fl.comp:view camera)

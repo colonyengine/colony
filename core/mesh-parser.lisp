@@ -1,6 +1,6 @@
 (in-package :%fl)
 
-(fu:define-constant +attribute-locations+
+(fl.util:define-constant +attribute-locations+
     '(("POSITION" . 0)
       ("NORMAL" . 1)
       ("TANGENT" . 2)
@@ -44,7 +44,7 @@
    (%index-buffer :accessor index-buffer)
    (%mesh-draw-func :accessor mesh-draw-func)))
 
-(fu:define-printer (gltf-chunk stream :type t)
+(fl.util:define-printer (gltf-chunk stream :type t)
   (format stream "~s" (chunk-type gltf-chunk)))
 
 (defun get-property (gltf key &optional object)
@@ -119,7 +119,7 @@
     datastream))
 
 (defun load-gltf (path)
-  (fu:with-binary-input (in path)
+  (fl.util:with-binary-input (in path)
     (parsley:with-buffer-read (:stream in)
       (let ((gltf (make-instance 'gltf)))
         (setf (parse-tree gltf) (parse-datastream gltf))
@@ -135,7 +135,7 @@
     (5126 :float)))
 
 (defun get-component-count (data-type)
-  (ecase (fu:make-keyword data-type)
+  (ecase (fl.util:make-keyword data-type)
     (:scalar 1)
     (:vec2 2)
     (:vec3 3)
@@ -144,7 +144,7 @@
     (:mat4 16)))
 
 (defun get-attribute-location (name)
-  (fu:alist-get +attribute-locations+ name :test #'string=))
+  (fl.util:alist-get +attribute-locations+ name :test #'string=))
 
 (defun get-attribute-normalization (name component-type)
   (if (and (or (eq component-type :unsigned-byte)
@@ -190,7 +190,7 @@
              (buffer (aref (buffers gltf) index))
              (data (static-vectors:make-static-vector
                     size
-                    :element-type 'fu:octet
+                    :element-type 'fl.util:octet
                     :initial-contents (subseq buffer offset (+ offset size))))
              (pointer (static-vectors:static-vector-pointer data))
              (buffer-id (gl:gen-buffer)))
@@ -224,8 +224,8 @@
                                   (gl:draw-arrays-instanced %mode 0 %count instance-count))))))))
 
 (defun make-index-buffer (gltf primitive data)
-  (fu:when-let* ((indices (get-property gltf "indices" data))
-                 (accessor (elt (get-property gltf "accessors") indices)))
+  (fl.util:when-let* ((indices (get-property gltf "indices" data))
+                      (accessor (elt (get-property gltf "accessors") indices)))
     (with-slots (%vao %mode %count %type %index-buffer %mesh-draw-func) primitive
       (setf %count (get-property gltf "count" accessor)
             %type (get-component-type gltf accessor)

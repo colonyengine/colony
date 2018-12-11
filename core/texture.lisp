@@ -6,24 +6,24 @@
 (defclass textures-table ()
   ((%profiles :reader profiles
               :initarg :profiles
-              :initform (fu:dict #'eq))
+              :initform (fl.util:dict #'eq))
    ;; All texture-descriptors from DEFINE-TEXTURE are stored here.
    (%semantic-texture-descriptors :reader semantic-texture-descriptors
                                   :initarg :semantic-texture-descriptors
-                                  :initform (fu:dict #'eq))
+                                  :initform (fl.util:dict #'eq))
    ;; If a material requires a texture, but it was procedural, we mark a note
    ;; of it in here so the gamedev can find it later and generate them before
    ;; the game starts.
    (%unrealized-procedural-textures :reader unrealized-procedural-textures
                                     :initarg :unrealized-procedural-textures
-                                    :initform (fu:dict #'equal))))
+                                    :initform (fl.util:dict #'equal))))
 
 (defun %make-textures-table (&rest init-args)
   (apply #'make-instance 'textures-table init-args))
 
 ;; TODO: Candidate for public API
 (defun add-texture-profile (profile core-state)
-  (setf (fu:href (profiles (textures core-state)) (name profile))
+  (setf (fl.util:href (profiles (textures core-state)) (name profile))
         profile))
 
 ;; TODO: Candidate for public API
@@ -33,7 +33,7 @@
 
 ;; TODO: Candidate for public API
 (defun add-semantic-texture-descriptor (texdesc core-state)
-  (setf (fu:href (semantic-texture-descriptors (textures core-state))
+  (setf (fl.util:href (semantic-texture-descriptors (textures core-state))
                  (name texdesc))
         texdesc))
 
@@ -41,7 +41,7 @@
 (defun add-unrealized-texture (texture context)
   "Add a TEXTURE, which only has defined an opengl texid, to core-state. This
 book keeps unrealized textures for the user to finalize before the game starts."
-  (setf (fu:href (unrealized-procedural-textures
+  (setf (fl.util:href (unrealized-procedural-textures
                   (textures (core-state context)))
                  (name texture))
         texture))
@@ -59,14 +59,14 @@ or declaring storage of some kind to the GPU."
   "Return a list of textures that are specified in materials, but haven't
 been completed (no opengl parameters set for them, or data loaded into GPU).
 NOTE: These are already in the RCACHE."
-  (fu:hash-values
+  (fl.util:hash-values
    (unrealized-procedural-textures (textures (core-state context)))))
 
 ;; TODO: Candidate for public API.
 (defun get-procedural-texture-descriptors (context)
   "Return a list of all procedural texture descriptors."
   (let ((results ()))
-    (fu:do-hash-values (texdesc (semantic-texture-descriptors
+    (fl.util:do-hash-values (texdesc (semantic-texture-descriptors
                                  (textures (core-state context))))
       (when (eq (texture-type texdesc) :procedural)
         (push texdesc results)))
@@ -75,7 +75,7 @@ NOTE: These are already in the RCACHE."
 
 ;; TODO: Candidate for public API
 (defun find-semantic-texture-descriptor (semantic-texture-name context)
-  (fu:href (semantic-texture-descriptors (textures (core-state context)))
+  (fl.util:href (semantic-texture-descriptors (textures (core-state context)))
            semantic-texture-name))
 
 ;; TODO: Candidate for public API
@@ -84,7 +84,7 @@ NOTE: These are already in the RCACHE."
           :initarg :name)
    (%attributes :reader attributes
                 :initarg :attributes
-                :initform (fu:dict #'eq))))
+                :initform (fl.util:dict #'eq))))
 
 ;; TODO: Candidate for public API
 (defun make-texture-profile (&rest init-args)
@@ -102,11 +102,11 @@ NOTE: These are already in the RCACHE."
    ;; Attribute specified in the define-texture form
    (%attributes :accessor attributes
                 :initarg :attributes
-                :initform (fu:dict #'eq))
+                :initform (fl.util:dict #'eq))
    ;; Up to date attributes once the profiles have been applied.
    (%applied-attributes :accessor applied-attributes
                         :initarg :applied-attributes
-                        :initform (fu:dict #'eq))))
+                        :initform (fl.util:dict #'eq))))
 
 ;; TODO candidate for public API
 (defun make-texture-descriptor (&rest init-args)
@@ -126,11 +126,11 @@ NOTE: These are already in the RCACHE."
 
     ;; Then copy over the attributes, we support SIMPLE values such as: string,
     ;; array, list, vector, and symbol.
-    (fu:do-hash (key value (attributes texdesc))
-      (setf (fu:href (attributes new-texdesc) key) (copy-thing value)))
+    (fl.util:do-hash (key value (attributes texdesc))
+      (setf (fl.util:href (attributes new-texdesc) key) (copy-thing value)))
 
-    (fu:do-hash (key value (applied-attributes texdesc))
-      (setf (fu:href (applied-attributes new-texdesc) key) (copy-thing value)))
+    (fl.util:do-hash (key value (applied-attributes texdesc))
+      (setf (fl.util:href (applied-attributes new-texdesc) key) (copy-thing value)))
 
     new-texdesc))
 
@@ -166,18 +166,18 @@ NOTE: These are already in the RCACHE."
            :initarg :texid)))
 
 (defun get-semantic-applied-attribute (texture attribute-name)
-  (fu:href (applied-attributes (semantic-texdesc texture)) attribute-name))
+  (fl.util:href (applied-attributes (semantic-texdesc texture)) attribute-name))
 
 (defun (setf get-semantic-applied-attribute) (newval texture attribute-name)
-  (setf (fu:href (applied-attributes (semantic-texdesc texture))
+  (setf (fl.util:href (applied-attributes (semantic-texdesc texture))
                  attribute-name)
         newval))
 
 (defun get-computed-applied-attribute (texture attribute-name)
-  (fu:href (applied-attributes (computed-texdesc texture)) attribute-name))
+  (fl.util:href (applied-attributes (computed-texdesc texture)) attribute-name))
 
 (defun (setf get-computed-applied-attribute) (newval texture attribute-name)
-  (setf (fu:href (applied-attributes (computed-texdesc texture))
+  (setf (fl.util:href (applied-attributes (computed-texdesc texture))
                  attribute-name)
         newval))
 
@@ -197,7 +197,7 @@ NOTE: These are already in the RCACHE."
               :texture-swizzle-a :texture-swizzle-rgba
               :texture-wrap-s :texture-wrap-t :texture-wrap-r)))
       (loop :for putative-parameter :in texture-parameters
-            :do (fu:when-found (value (fu:href applied-attributes putative-parameter))
+            :do (fl.util:when-found (value (fl.util:href applied-attributes putative-parameter))
                   (gl:tex-parameter texture-type
                                     putative-parameter
                                     (typecase value
@@ -1035,7 +1035,7 @@ and assign it to the computed texture descriptor slot in TEXTURE."
   (let ((texprof (gensym "TEXTURE-PROFILE")))
     `(let* ((,texprof (make-texture-profile :name ',name)))
        (setf ,@(loop :for (attribute value) :in body-form :appending
-                     `((fu:href (attributes ,texprof) ,attribute) ,value)))
+                     `((fl.util:href (attributes ,texprof) ,attribute) ,value)))
        ,texprof)))
 
 (defmacro define-texture-profile (name &body body)
@@ -1043,7 +1043,7 @@ and assign it to the computed texture descriptor slot in TEXTURE."
   (let ((texprof (gensym "TEXPROF")))
     `(let* ((,texprof ,(parse-texture-profile name body)))
        (declare (special %temp-texture-profiles))
-       (setf (fu:href %temp-texture-profiles (name ,texprof)) ,texprof))))
+       (setf (fl.util:href %temp-texture-profiles (name ,texprof)) ,texprof))))
 
 (defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
   "Construct a semantic TEXTURE-DESCRIPTOR and store in the special variable
@@ -1057,11 +1057,11 @@ this description, while accurate is utterly not helpful. TODO: Fix."
        (declare (special %temp-semantic-texture-descriptors))
        ;; Record the parameters we'll overlay on the profile at use time.
        (setf ,@(loop :for (key value) :in body
-                     :append `((fu:href (attributes ,texdesc) ,key) ,value))
+                     :append `((fl.util:href (attributes ,texdesc) ,key) ,value))
              ;; NOTE: The form is DEFINE-TEXTURE, but we're actually creating
              ;; semantic-texture-descriptors and storing them. Maybe this naming
              ;; skew should be fix, think about it a little.
-             (fu:href %temp-semantic-texture-descriptors (name ,texdesc))
+             (fl.util:href %temp-semantic-texture-descriptors (name ,texdesc))
              ,texdesc)
        (export ',name))))
 
@@ -1069,8 +1069,8 @@ this description, while accurate is utterly not helpful. TODO: Fix."
   "tex")
 
 (defmethod prepare-extension ((extension-type (eql :textures)) core-state)
-  (let ((%temp-semantic-texture-descriptors (fu:dict #'eq))
-        (%temp-texture-profiles (fu:dict #'eq)))
+  (let ((%temp-semantic-texture-descriptors (fl.util:dict #'eq))
+        (%temp-texture-profiles (fl.util:dict #'eq)))
     (declare (special %temp-semantic-texture-descriptors %temp-texture-profiles))
     (flet ((%prepare ()
              (map-extensions (context core-state) extension-type)
@@ -1079,10 +1079,10 @@ this description, while accurate is utterly not helpful. TODO: Fix."
         ;; The order doesn't matter. we can type check the texture-descriptors
         ;; after reading _all_ the available textures extensions.
         ;; Process all defined profiles.
-        (fu:do-hash-values (v profiles)
+        (fl.util:do-hash-values (v profiles)
           (add-texture-profile v core-state))
         ;; Process all texture-descriptors
-        (fu:do-hash-values (v texdescs)
+        (fl.util:do-hash-values (v texdescs)
           (add-semantic-texture-descriptor v core-state))))))
 
 (defun resolve-all-semantic-texture-descriptors (core-state)
@@ -1095,38 +1095,38 @@ Ensure that these aspects of texture profiles and desdcriptors are ok:
 4. All images specified by paths actually exist at that path.
 5. The texture type is valid."
   (symbol-macrolet ((profiles (profiles (textures core-state)))
-                    (default-profile-name (fu:ensure-symbol 'default-profile 'fl.textures)))
+                    (default-profile-name (fl.util:ensure-symbol 'default-profile 'fl.textures)))
     ;; 1. Check for fl.textures:default-profile
-    (unless (fu:href profiles default-profile-name)
+    (unless (fl.util:href profiles default-profile-name)
       (error "Default-profile for texture descriptors is not defined."))
     ;; 2. For each texture-descriptor, apply all the profiles in order.
     ;; 3. Check that the specified profiles are valid.
-    (fu:do-hash-values (v (semantic-texture-descriptors (textures core-state)))
+    (fl.util:do-hash-values (v (semantic-texture-descriptors (textures core-state)))
       (let* ((profile-overlays
                ;; First, gather the specified profile-overlays
                (loop :for profile-overlay-name :in (profile-overlay-names v)
                      :collect
-                     (fu:if-found (concrete-profile (fu:href profiles profile-overlay-name))
-                                  concrete-profile
-                                  (error "Texture profile ~A does not exist."
-                                         profile-overlay-name))))
+                     (fl.util:if-found (concrete-profile (fl.util:href profiles profile-overlay-name))
+                                       concrete-profile
+                                       (error "Texture profile ~A does not exist."
+                                              profile-overlay-name))))
              (profile-overlays
                ;; Then, if we don't see a profile-default in there, we
                ;; put it first automatically.
                (if (member default-profile-name (profile-overlay-names v))
                    profile-overlays
-                   (list* (fu:href profiles default-profile-name) profile-overlays))))
+                   (list* (fl.util:href profiles default-profile-name) profile-overlays))))
         ;; Now, overlay them left to right into the applied-attributes table
         ;; in texdesc.
         (dolist (profile-overlay profile-overlays)
           (maphash
            (lambda (key val)
-             (setf (fu:href (applied-attributes v) key) val))
+             (setf (fl.util:href (applied-attributes v) key) val))
            (attributes profile-overlay)))
         ;; And finally fold in the texdesc attributes last
         (maphash
          (lambda (key val)
-           (setf (fu:href (applied-attributes v) key) val))
+           (setf (fl.util:href (applied-attributes v) key) val))
          (attributes v)))
       (semantic-texture-descriptors (textures core-state)))
 

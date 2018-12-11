@@ -22,27 +22,27 @@
            (lambda (x)
              (or (not (symbolp x))
                  (not (char= (char (symbol-name x) 0) #\@))))
-           (fu:flatten component))))
+           (fl.util:flatten component))))
     (dolist (actor component-actors)
       (unless (find actor actor-names)
         (error "A component references the undefined actor: ~a" actor)))))
 
 (defun %generate-actor-components-table (scene-spec actor-names &optional table)
-  (let ((table (or table (fu:dict #'eq))))
+  (let ((table (or table (fl.util:dict #'eq))))
     (dolist (actor scene-spec)
       (destructuring-bind (actor components . child) actor
         (unless (member 'transform components :key #'car)
           (push '(transform) components))
         (dolist (component (reverse components))
           (%type-check-actor-component actor-names component)
-          (push component (fu:href table actor)))
+          (push component (fl.util:href table actor)))
         (%generate-actor-components-table child actor-names table)))
     table))
 
 (defun %generate-actor-bindings (actor-names table)
   (mapcan
    (lambda (actor)
-     `((,actor (fu:href ,table ',actor))))
+     `((,actor (fl.util:href ,table ',actor))))
    actor-names))
 
 (defun %generate-component-initializers (core-state actor-components)
@@ -61,10 +61,10 @@
 
 (defun %generate-component-thunks (actor-names component-table)
   (loop :for actor :in actor-names
-        :for components = (fu:href component-table actor)
+        :for components = (fl.util:href component-table actor)
         :append
         (loop :for (component . initargs) :in components
-              :for symbol = (fu:unique-name "COMPONENT-")
+              :for symbol = (fl.util:unique-name "COMPONENT-")
               :collect `(let ((,symbol (actor-component-by-type ,actor ',component)))
                           (setf (initializer-thunk ,symbol)
                                 (lambda ()
@@ -83,7 +83,7 @@
     (loop :with root = `(scene-tree ,core-state)
           :with children = (apply #'append (mapcar #'traverse scene-spec))
           :for (parent . child) :in children
-          :collect `(,(fu:ensure-symbol 'add-child 'fl.comp)
+          :collect `(,(fl.util:ensure-symbol 'add-child 'fl.comp)
                      (actor-component-by-type ,(or parent root) 'transform)
                      (actor-component-by-type ,child 'transform)))))
 
@@ -92,16 +92,16 @@
         :collect `(spawn-actor ,actor (context ,core-state))))
 
 (defun parse-scene (scene-name context scene-spec)
-  (fu:with-unique-names (core-state actor-table actor-name)
+  (fl.util:with-unique-names (core-state actor-table actor-name)
     (let* ((actor-names (%generate-actor-names scene-spec))
            (actor-components (%generate-actor-components-table scene-spec actor-names))
            (bindings (%generate-actor-bindings actor-names actor-table)))
       `(lambda (,core-state)
-         (let ((,actor-table (fu:dict #'eq))
+         (let ((,actor-table (fl.util:dict #'eq))
                (,context (context ,core-state)))
            (declare (ignorable context))
            (dolist (,actor-name ',actor-names)
-             (setf (fu:href ,actor-table ,actor-name)
+             (setf (fl.util:href ,actor-table ,actor-name)
                    (make-actor (context ,core-state) :id ,actor-name :scene ,scene-name)))
            (let ,bindings
              ,@(%generate-component-initializers core-state actor-components)
@@ -111,10 +111,10 @@
              (values ,core-state ,actor-table)))))))
 
 (defun get-scene (core-state scene-name)
-  (fu:href (scenes core-state) scene-name))
+  (fl.util:href (scenes core-state) scene-name))
 
 (defun load-scene (core-state name)
-  (fu:if-let ((scene (get-scene core-state name)))
+  (fl.util:if-let ((scene (get-scene core-state name)))
     (funcall (get-scene core-state name) core-state)
     (error "Cannot find the scene name: ~s." name)))
 
@@ -122,19 +122,19 @@
   "scene")
 
 (defmethod prepare-extension ((extension-type (eql :scene)) core-state)
-  (let ((%fl::%temp-scene (fu:dict #'eq)))
+  (let ((%fl::%temp-scene (fl.util:dict #'eq)))
     (declare (special %fl::%temp-scene))
     (flet ((%prepare ()
              (map-extensions (context core-state) extension-type)
              %fl::%temp-scene))
       (setf (slot-value core-state '%scene-tree) (%make-scene-tree core-state))
-      (fu:do-hash (k v (%prepare))
-        (setf (fu:href (scenes core-state) k) v)))))
+      (fl.util:do-hash (k v (%prepare))
+        (setf (fl.util:href (scenes core-state) k) v)))))
 
 (defmacro define-scene (name (&key (enabled t) (context 'context)) &body body)
-  (fu:with-unique-names (scene)
+  (fl.util:with-unique-names (scene)
     `(let ((,scene ,(parse-scene `',name context body)))
        (declare (special %fl::%temp-scene))
        ,(when enabled
-          `(setf (fu:href %fl::%temp-scene ',name) ,scene))
+          `(setf (fl.util:href %fl::%temp-scene ',name) ,scene))
        (export ',name))))

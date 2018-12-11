@@ -2,7 +2,7 @@
 
 ;;; constants
 
-(fu:define-constant +zero-vec2+
+(fl.util:define-constant +zero-vec2+
     (%vec2 0f0 0f0)
   :test #'equalp)
 
@@ -133,8 +133,8 @@
 
 (defspecialization (clamp :inline t) ((in vec2) (min real) (max real) (out vec2)) vec2
   (with-vec2 ((v in) (o out))
-    (psetf o.x (float (fu:clamp v.x min max) 1f0)
-           o.y (float (fu:clamp v.y min max) 1f0)))
+    (psetf o.x (float (fl.util:clamp v.x min max) 1f0)
+           o.y (float (fl.util:clamp v.y min max) 1f0)))
   out)
 
 (defspecialization (clamp :inline t) ((in vec2) (min real) (max real) (out null)) vec2
@@ -289,8 +289,8 @@
 
 (defspecialization (lerp :inline t) ((in1 vec2) (in2 vec2) (factor real) (out vec2)) vec2
   (with-vec2 ((v1 in1) (v2 in2) (o out))
-    (psetf o.x (fu:lerp factor v1.x v2.x)
-           o.y (fu:lerp factor v1.y v2.y)))
+    (psetf o.x (fl.util:lerp factor v1.x v2.x)
+           o.y (fl.util:lerp factor v1.y v2.y)))
   out)
 
 (defspecialization (lerp :inline t) ((in1 vec2) (in2 vec2) (factor real) (out null)) vec2
@@ -299,8 +299,8 @@
 
 (defspecialization (radians :inline t) ((in vec2) (out vec2)) vec2
   (with-vec2 ((v in) (o out))
-    (psetf o.x (float (fu:degrees->radians v.x) 1f0)
-           o.y (float (fu:degrees->radians v.y) 1f0)))
+    (psetf o.x (float (fl.util:degrees->radians v.x) 1f0)
+           o.y (float (fl.util:degrees->radians v.y) 1f0)))
   out)
 
 (defspecialization (radians :inline t) ((in vec2) (out null)) vec2
@@ -309,8 +309,8 @@
 
 (defspecialization (degrees :inline t) ((in vec2) (out vec2)) vec2
   (with-vec2 ((v in) (o out))
-    (psetf o.x (float (fu:radians->degrees v.x) 1f0)
-           o.y (float (fu:radians->degrees v.y) 1f0)))
+    (psetf o.x (float (fl.util:radians->degrees v.x) 1f0)
+           o.y (float (fl.util:radians->degrees v.y) 1f0)))
   out)
 
 (defspecialization (degrees :inline t) ((in vec2) (out null)) vec2

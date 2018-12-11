@@ -1,7 +1,6 @@
 (in-package :defpackage+-user-1)
 
 (defpackage+ #:fl.util
-  (:nicknames #:fu)
   (:use #:cl)
   (:inherit-from #:alexandria
                  #:appendf

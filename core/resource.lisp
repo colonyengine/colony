@@ -126,19 +126,19 @@
 (defclass resource-data ()
   ((%project :accessor project)
    (%table :reader table
-           :initform (fu:dict #'equalp))))
+           :initform (fl.util:dict #'equalp))))
 
 (defparameter *resource-data* (make-instance 'resource-data))
 
 (defun make-relative-pathname (sub-path)
-  (let ((components (fu:split-sequence #\. sub-path)))
+  (let ((components (fl.util:split-sequence #\. sub-path)))
     (destructuring-bind (name &optional type) components
       (if type
           (make-pathname :name name :type type)
           (make-pathname :directory `(:relative ,name))))))
 
 (defun build-resource-path (id key sub-path)
-  (fu:if-let ((base-path (fu:href (table *resource-data*) key)))
+  (fl.util:if-let ((base-path (fl.util:href (table *resource-data*) key)))
     (progn
       (when (pathname-type base-path)
         (error "~s is a file resource and cannot merge the sub-path ~s." key sub-path))
@@ -169,21 +169,21 @@
 (defun store-resource-path (id path-spec)
   (unless (keywordp id)
     (error "Identifiers in `define-resources` must be keyword symbols, but found ~s." id))
-  (let ((path-spec (fu:ensure-list path-spec)))
+  (let ((path-spec (fl.util:ensure-list path-spec)))
     (destructuring-bind (root &rest rest) path-spec
       (declare (ignore rest))
       (let ((key (make-resource-key id root)))
-        (setf (fu:href (table *resource-data*) key)
+        (setf (fl.util:href (table *resource-data*) key)
               (case (length path-spec)
                 (1 (make-relative-pathname root))
                 (2 (build-resource-path/2 id path-spec))
                 (3 (build-resource-path/3 id path-spec))
                 (t (error "A path specifier in `define-resources` must be a string, or a list ~
                            of 2 or 3 elements.")))))))
-  (fu:noop))
+  (fl.util:noop))
 
 (defun get-resource-project (key)
-  (let ((key (fu:ensure-list key)))
+  (let ((key (fl.util:ensure-list key)))
     (destructuring-bind (x &rest rest) key
       (declare (ignore rest))
       (if (eq x :core)
@@ -200,7 +200,7 @@
   (unless project
     (error "Project name must be specified in a `define-resources` form."))
   `(progn
-     ,@(fu:collecting
+     ,@(fl.util:collecting
          (collect `(setf (project *resource-data*) ,project))
          (dolist (spec body)
            (destructuring-bind (id path-spec) spec

@@ -2,7 +2,7 @@
 
 (defun map-extensions (context extension-type)
   (flet ((%map (type path)
-           (fu:map-files
+           (fl.util:map-files
             path
             (lambda (x)
               (with-standard-io-syntax
@@ -30,10 +30,10 @@
   (let ((*package* (find-package :%fl))
         (results))
     (flet ((%collect (type path)
-             (fu:map-files
+             (fl.util:map-files
               path
               (lambda (x)
-                (fu:with-file-input (in x)
+                (fl.util:with-file-input (in x)
                   (loop :for form = (read in nil in)
                         :until (eq form in)
                         :for (nil options nil) = form

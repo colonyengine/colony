@@ -25,7 +25,7 @@
   (with-accessors ((location location) (id id) (primitives primitives)) component
     (unless location
       (error "A mesh component must have a location set."))
-    (let ((location (fu:ensure-list location)))
+    (let ((location (fl.util:ensure-list location)))
       (with-shared-storage
           (context context)
           ((cached-mesh mesh-presentp

@@ -33,7 +33,7 @@
       (setf mesh-rend-material (material mesh-rend)
             mesh-material-retrieved-p t))
 
-    (fu:mvlet* ((x y (get-mouse-position context)))
+    (fl.util:mvlet* ((x y (get-mouse-position context)))
       (when (null x) (setf x (/ (cfg context :window-width) 2.0)))
       (when (null y) (setf y (/ (cfg context :window-height) 2.0)))
       (flm:with-vec2 ((c channel0))

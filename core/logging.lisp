@@ -8,12 +8,12 @@
       (when log-repl-enabled
         (setf (v:repl-level) log-level
               (v:repl-categories) log-repl-categories))
-      (fu:when-let ((log-debug (find-resource context :log-debug)))
+      (fl.util:when-let ((log-debug (find-resource context :log-debug)))
         (ensure-directories-exist log-debug)
         (v:define-pipe ()
           (v:level-filter :level :debug)
           (v:file-faucet :file log-debug)))
-      (fu:when-let ((log-error (find-resource context :log-error)))
+      (fl.util:when-let ((log-error (find-resource context :log-error)))
         (ensure-directories-exist log-error)
         (v:define-pipe ()
           (v:level-filter :level :error)
