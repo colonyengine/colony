@@ -61,11 +61,10 @@
                    :refresh-rate (nth-value 3 (sdl2:get-current-display-mode 0)))))
 
 (defmethod clear-screen ((display display))
-  (let* ((context (context (core-state display)))
-         (elapsed-time (total-time context)))
+  (let* ((context (context (core-state display))))
     (multiple-value-call #'gl:clear-color
       (if (eq (cfg context :log-level) :debug)
-          (values (* 0.25 (abs (sin elapsed-time))) 0 0 1)
+          (values (* 0.25 (abs (sin (total-time context)))) 0 0 1)
           (values 0 0 0 1)))
     (gl:clear :color-buffer :depth-buffer)))
 
