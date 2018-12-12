@@ -3,8 +3,7 @@
 (defclass context ()
   ((%core-state :reader core-state
                 :initarg :core-state)
-   (%project-data :accessor project-data
-                  :initarg :project-data)
+   (%project-data :accessor project-data)
    (%settings :reader settings
               :initarg :settings)
    (%active-camera :accessor active-camera
@@ -12,24 +11,25 @@
    (%shared-storage-table :reader shared-storage-table
                           :initform (fl.util:dict #'eq))
    (%state :accessor state
-           :initarg :state
            :initform nil)))
+
+(defun make-context (core-state)
+  (setf (slot-value core-state '%context)
+        (make-instance 'context
+                       :core-state core-state
+                       :settings (settings core-state))))
 
 (defun total-time (context)
   "Return the total time in seconds that the engine has been running."
-  (let ((display (display (core-state context))))
-    (box.frame:total-time display)))
+  (slot-value (frame-manager (core-state context)) '%total-time))
 
 (defun frame-time (context)
   "Return the amount of time in seconds of the last frame as a REAL."
-  (box.frame:frame-time (display (core-state context))))
+  (slot-value (frame-manager (core-state context)) '%frame-time))
 
 (defun delta (context)
   "Return the physics update delta. This is :delta from the cfg file."
-  (box.frame:delta (display (core-state context))))
-
-(defun debug-p (context)
-  (eq (cfg context :log-level) :debug))
+  (slot-value (frame-manager (core-state context)) '%delta))
 
 ;; These functions can use qualify-component. That'll be magic.
 (defun ss-href (context component-name namespace &rest keys)
@@ -46,7 +46,6 @@
     (ensure-nested-hash-table (shared-storage-table context)
                               (list* 'eq 'eql metadata-ht-test-fns)
                               (list* qualified-component-name namespace keys))
-    ;; How, we can just do the lookup
     (apply #'fl.util:href
            (shared-storage-table context)
            (list* qualified-component-name namespace keys))))
@@ -58,7 +57,6 @@
     (ensure-nested-hash-table (shared-storage-table context)
                               (list* 'eq 'eql metadata-ht-test-fns)
                               (list* qualified-component-name namespace keys))
-    ;; Now, we can perform the setting.
     (apply #'(setf fl.util:href)
            new-value
            (shared-storage-table context)

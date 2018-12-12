@@ -22,7 +22,6 @@
                #:verbose
                #:shadow
                #:umbra
-               #:gamebox-frame-manager
                #:first-light.util
                #:first-light.binary-formats
                #:first-light.math
@@ -57,6 +56,7 @@
    (:file "component-mop")
    (:file "component")
    (:file "core-state")
+   (:file "frame")
    (:file "display")
    (:file "actor")
    (:file "call-flow")

@@ -1,6 +1,6 @@
 (in-package :%fl)
 
-(defclass display (box.frame:frame-manager)
+(defclass display ()
   ((%core-state :reader core-state
                 :initarg :core-state)
    (%window :reader window
@@ -47,12 +47,8 @@
         (setf (slot-value core-state '%display)
               (make-instance 'display
                              :window window
-                             :vsync-p (when (eq (cfg context :vsync) :on) t)
                              :core-state core-state
-                             :hz hz
-                             :delta (cfg context :delta)
-                             :period (cfg context :periodic-interval)
-                             :debug-interval (cfg context :debug-interval)))
+                             :hz hz))
         (v:info :fl.core.display "Display ~dx~d @ ~dHz created."
                 window-width window-height hz)))))
 
@@ -65,10 +61,10 @@
 
 (defmethod clear-screen ((display display))
   (let* ((context (context (core-state display)))
-         (elapsed-time (frame-time context)))
+         (elapsed-time (total-time context)))
     (multiple-value-call #'gl:clear-color
-      (if (debug-p context)
-          (values (* 0.2 (abs (sin elapsed-time))) 0 0 1)
+      (if (eq (cfg context :log-level) :debug)
+          (values (* 0.25 (abs (sin elapsed-time))) 0 0 1)
           (values 0 0 0 1)))
     (gl:clear :color-buffer :depth-buffer)))
 

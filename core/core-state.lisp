@@ -8,9 +8,11 @@
    (%settings :reader settings
               :initform (fl.util:dict #'eq))
    (%running-p :accessor running-p
-               :initarg :running-p)
+               :initform t)
    (%rcache :reader rcache
             :initform (fl.util:dict #'eq))
+   (%frame-manager :accessor frame-manager
+                   :initform nil)
    (%display :reader display
              :initform nil)
    (%scene-tree :reader scene-tree)

@@ -40,26 +40,23 @@ it exists, it is called after the last frame, and after the last invocations of 
 method, but before any engine tear-down procedure occurs when stopping the engine."
   (epilogue (context core-state)))
 
-(defun initialize-host ()
+(defun initialize-host (core-state)
   (let ((flags '(:everything)))
     (unless (apply #'sdl2:was-init flags)
       (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
-        (sdl2::check-rc (sdl2::sdl-init flags))))))
+        (sdl2::check-rc (sdl2::sdl-init flags))))
+    (prepare-gamepads core-state)
+    (make-display core-state)))
 
-(defmethod %initialize-engine :before ((core-state core-state) scene-name)
-  (with-slots (%context %settings) core-state
-    (setf *core-state-debug* core-state
-          %context (make-instance 'context :core-state core-state :settings %settings))
-    (prepare-extension :settings core-state)
-    (enable-logging core-state)))
-
-(defmethod %initialize-engine ((core-state core-state) scene-name)
+(defmethod initialize-engine ((core-state core-state) scene-name)
+  (make-context core-state)
+  (prepare-extension :settings core-state)
   (let ((title (cfg (context core-state) :title)))
     (v:info :fl.core.engine "Starting up ~a..." title)
     (setup-lisp-repl)
-    (initialize-host)
-    (prepare-gamepads core-state)
-    (make-display core-state)
+    (enable-logging core-state)
+    (make-frame-manager core-state)
+    (initialize-host core-state)
     (prepare-extension :graphs core-state)
     (prepare-extension :call-flow core-state)
     (prepare-extension :shader-stages core-state)
@@ -82,15 +79,16 @@ method, but before any engine tear-down procedure occurs when stopping the engin
   (fl.util:while (running-p core-state)
     (iterate-main-loop core-state)))
 
-(defun start-engine (scene-name &key (profile 0))
+(defun start-engine (scene-name &optional profile-duration)
   "Start the engine. First we initialize the engine. Next we run the prologue as the last step,
 before finally starting the main game loop."
   (unwind-protect
-       (let ((core-state (make-instance 'core-state :running-p t)))
-         (%initialize-engine core-state scene-name)
+       (let ((core-state (make-instance 'core-state)))
+         (setf *core-state-debug* core-state)
+         (initialize-engine core-state scene-name)
          (run-prologue core-state)
-         (if (and (numberp profile) (plusp profile))
-             (profile core-state profile)
+         (if profile-duration
+             (profile core-state profile-duration)
              (main-loop core-state)))
     (sdl2::sdl-quit)))
 
