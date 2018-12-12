@@ -132,32 +132,38 @@
 
 ;;; User protocol
 
-(defun %rotate/model-space (rotation vec &optional replace-p)
-  (with-accessors ((current current)) rotation
-    (flm:rotate (if replace-p flm:+id-quat+ current) vec current)))
+(defun %rotate/model-space (rotation vec &optional replace-p instant-p)
+  (with-accessors ((previous previous) (current current)) rotation
+    (flm:rotate (if replace-p flm:+id-quat+ current) vec current)
+    (when instant-p
+      (setf previous current))))
 
-(defun %rotate/world-space (rotation vec &optional replace-p)
-  (declare (ignore rotation vec replace-p))
+(defun %rotate/world-space (rotation vec &optional replace-p instant-p)
+  (declare (ignore rotation vec replace-p instant-p))
   (error "ROTATE not yet implemented for world space."))
 
-(defun rotate (transform vec &key (space :model) replace-p)
+(defun rotate (transform vec &key (space :model) replace-p (instant-p t))
   (ecase space
-    (:model (%rotate/model-space (rotation transform) vec replace-p))
-    (:world (%rotate/world-space (rotation transform) vec replace-p))))
+    (:model (%rotate/model-space (rotation transform) vec replace-p instant-p))
+    (:world (%rotate/world-space (rotation transform) vec replace-p instant-p))))
 
-(defun %translate/model-space (translation vec &optional replace-p)
-  (with-accessors ((current current)) translation
-    (flm:+ (if replace-p flm:+zero-vec3+ current) vec current)))
+(defun %translate/model-space (translation vec &optional replace-p instant-p)
+  (with-accessors ((previous previous) (current current)) translation
+    (flm:+ (if replace-p flm:+zero-vec3+ current) vec current)
+    (when instant-p
+      (setf previous current))))
 
-(defun %translate/world-space (translation vec &optional replace-p)
-  (declare (ignore translation vec replace-p))
+(defun %translate/world-space (translation vec &optional replace-p instant-p)
+  (declare (ignore translation vec replace-p instant-p))
   (error "TRANSLATE not yet implemented for world space."))
 
-(defun translate (transform vec &key (space :model) replace-p)
+(defun translate (transform vec &key (space :model) replace-p (instant-p t))
   (ecase space
-    (:model (%translate/model-space (translation transform) vec replace-p))
-    (:world (%translate/world-space (translation transform) vec replace-p))))
+    (:model (%translate/model-space (translation transform) vec replace-p instant-p))
+    (:world (%translate/world-space (translation transform) vec replace-p instant-p))))
 
-(defun scale (transform vec &key replace-p)
-  (with-accessors ((current current)) (scaling transform)
-    (flm:+ (if replace-p flm:+zero-vec3+ current) vec current)))
+(defun scale (transform vec &key replace-p (instant-p t))
+  (with-accessors ((previous previous) (current current)) (scaling transform)
+    (flm:+ (if replace-p flm:+zero-vec3+ current) vec current)
+    (when instant-p
+      (setf previous current))))
