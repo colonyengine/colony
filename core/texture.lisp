@@ -1042,26 +1042,26 @@ and assign it to the computed texture descriptor slot in TEXTURE."
   "Define a set of attribute defaults that can be applied while defining a texture."
   (let ((texprof (gensym "TEXPROF")))
     `(let* ((,texprof ,(parse-texture-profile name body)))
-       (declare (special %temp-texture-profiles))
-       (setf (fl.util:href %temp-texture-profiles (name ,texprof)) ,texprof))))
+       (declare (special %fl::%temp))
+       (setf (fl.util:href (car %fl::%temp) (name ,texprof)) ,texprof))))
 
 (defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
-  "Construct a semantic TEXTURE-DESCRIPTOR and store in the special variable
-%TEMP-SEMANTIC-TEXTURE-DESCRIPTORS. NOTE: This us a user facing API macro,
-this description, while accurate is utterly not helpful. TODO: Fix."
+  "Construct a semantic TEXTURE-DESCRIPTOR and store in the special variable %FL::%TEMP.
+NOTE: This us a user facing API macro, this description, while accurate is utterly not helpful.
+TODO: Fix."
   (let ((texdesc (gensym "TEXDESC")))
     `(let ((,texdesc (make-texture-descriptor
                       :name ',name
                       :texture-type ',textype
                       :profile-overlay-names ',profile-overlay-names)))
-       (declare (special %temp-semantic-texture-descriptors))
+       (declare (special %fl::%temp))
        ;; Record the parameters we'll overlay on the profile at use time.
        (setf ,@(loop :for (key value) :in body
                      :append `((fl.util:href (attributes ,texdesc) ,key) ,value))
              ;; NOTE: The form is DEFINE-TEXTURE, but we're actually creating
              ;; semantic-texture-descriptors and storing them. Maybe this naming
              ;; skew should be fix, think about it a little.
-             (fl.util:href %temp-semantic-texture-descriptors (name ,texdesc))
+             (fl.util:href (cdr %fl::%temp) (name ,texdesc))
              ,texdesc)
        (export ',name))))
 
@@ -1069,13 +1069,13 @@ this description, while accurate is utterly not helpful. TODO: Fix."
   "tex")
 
 (defmethod prepare-extension ((extension-type (eql :textures)) core-state)
-  (let ((%temp-semantic-texture-descriptors (fl.util:dict #'eq))
-        (%temp-texture-profiles (fl.util:dict #'eq)))
-    (declare (special %temp-semantic-texture-descriptors %temp-texture-profiles))
+  (let ((%temp (cons (fl.util:dict #'eq)
+                     (fl.util:dict #'eq))))
+    (declare (special %temp))
     (flet ((%prepare ()
              (map-extensions (context core-state) extension-type)
-             (values %temp-texture-profiles %temp-semantic-texture-descriptors)))
-      (multiple-value-bind (profiles texdescs) (%prepare)
+             %temp))
+      (destructuring-bind (profiles . texdescs) (%prepare)
         ;; The order doesn't matter. we can type check the texture-descriptors
         ;; after reading _all_ the available textures extensions.
         ;; Process all defined profiles.

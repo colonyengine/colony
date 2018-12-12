@@ -237,17 +237,17 @@ The previous state name and the current state name which resulted in the exiting
   "flow")
 
 (defmethod prepare-extension ((extension-type (eql :call-flow)) core-state)
-  (let ((%temp-call-flow (fl.util:dict #'eq)))
-    (declare (special %temp-call-flow))
+  (let ((%temp (fl.util:dict #'eq)))
+    (declare (special %temp))
     (flet ((%prepare ()
              (map-extensions (context core-state) extension-type)
-             %temp-call-flow))
+             %temp))
       (maphash
        (lambda (key value)
          (setf (fl.util:href (call-flows core-state) key) value))
        (%prepare)))))
 
 (defmacro define-call-flow (name (&key (enabled t)) &body body)
-  `(locally (declare (special %temp-call-flow))
+  `(locally (declare (special %fl::%temp))
      ,(when enabled
-        `(setf (fl.util:href %temp-call-flow ,name) ,(parse-call-flows body)))))
+        `(setf (fl.util:href %fl::%temp ,name) ,(parse-call-flows body)))))

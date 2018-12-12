@@ -686,15 +686,15 @@ must be executed after all the shader programs have been compiled."
 
 
 (defmethod prepare-extension ((extension-type (eql :materials)) core-state)
-  (let ((%temp-materials (fl.util:dict #'eq))
-        (%temp-material-profiles (fl.util:dict #'eq)))
-    (declare (special %temp-materials %temp-material-profiles))
+  (let ((%temp (cons (fl.util:dict #'eq)
+                     (fl.util:dict #'eq))))
+    (declare (special %temp))
 
     (flet ((%prepare ()
              (map-extensions (context core-state) extension-type)
-             (values %temp-material-profiles %temp-materials)))
+             %temp))
 
-      (multiple-value-bind (profiles materials) (%prepare)
+      (destructuring-bind (materials . profiles) (%prepare)
         ;; The order doesn't matter. we can type check the materials wrt
         ;; profiles after reading _all_ the available materials extensions.
         ;; Process all defined profiles.
@@ -726,17 +726,17 @@ applied in an overlay manner while defining a material."
   (let ((matprof (gensym "MATPROF")))
     (destructuring-bind (&key uniforms blocks) body
       `(let* ((,matprof ,(parse-material-profile name uniforms blocks)))
-         (declare (special %temp-material-profiles))
-         (setf (fl.util:href %temp-material-profiles (name ,matprof)) ,matprof)))))
+         (declare (special %fl::%temp))
+         (setf (fl.util:href (cdr %fl::%temp) (name ,matprof)) ,matprof)))))
 
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
   (fl.util:with-unique-names (func)
     (destructuring-bind (&key (enabled t) shader profiles uniforms blocks) body
       `(let ((,func ,(parse-material name shader profiles uniforms blocks)))
-         (declare (special %temp-materials))
+         (declare (special %fl::%temp))
          ,(when enabled
-            `(setf (fl.util:href %temp-materials ',name) ,func))
+            `(setf (fl.util:href (car %fl::%temp) ',name) ,func))
          (export ',name)))))
 
 (defmacro using-material (material (&rest bindings) &body body)
