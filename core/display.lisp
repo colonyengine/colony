@@ -12,6 +12,7 @@
   (:method :before (&key major-version minor-version anti-alias-level)
     (sdl2:gl-set-attrs :context-major-version major-version
                        :context-minor-version minor-version
+                       :context-profile-mask 1
                        :multisamplebuffers (if (zerop anti-alias-level) 0 1)
                        :multisamplesamples anti-alias-level))
   (:method (&key title width height)
