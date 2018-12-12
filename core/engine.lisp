@@ -32,7 +32,8 @@
 user's project. If it exists, it is called after internal engine setup, but before the first
 frame (specifically, before any component protocol methods are called for the first time). The
 result of the prologue function is automatically stored in the STATE slot of the CONTEXT."
-  (setf (state (context core-state)) (prologue (context core-state))))
+  (let ((context (context core-state)))
+    (setf (state context) (prologue context))))
 
 (defun run-epilogue (core-state)
   "The epilogue is a (defmethod epilogue ((context context)) ..) defined in the user's project. If
@@ -54,8 +55,6 @@ method, but before any engine tear-down procedure occurs when stopping the engin
   (sdl2::sdl-quit))
 
 (defmethod initialize-engine ((core-state core-state) scene-name)
-  (make-context core-state)
-  (prepare-extension :settings core-state)
   (let ((title (cfg (context core-state) :title)))
     (v:info :fl.core.engine "Starting up ~a..." title)
     (setup-lisp-repl)
@@ -75,20 +74,20 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (load-scene core-state scene-name)
     (v:info :fl.core.engine "Finished starting ~a" title)))
 
-(defun iterate-main-loop (core-state)
-  (with-continue-restart "First Light"
-    (handle-events core-state)
-    (render core-state)))
-
 (defun main-loop (core-state)
+  (initialize-frame-time core-state)
   (fl.util:while (running-p core-state)
-    (iterate-main-loop core-state)))
+    (with-continue-restart "First Light"
+      (handle-events core-state)
+      (render core-state))))
 
 (defun start-engine (scene-name &optional profile-duration)
   "Start the engine. First we initialize the engine. Next we run the prologue as the last step,
 before finally starting the main game loop."
   (unwind-protect
        (let ((core-state (make-instance 'core-state)))
+         (make-context core-state)
+         (prepare-extension :settings core-state)
          (setf *core-state-debug* core-state)
          (initialize-engine core-state scene-name)
          (run-prologue core-state)

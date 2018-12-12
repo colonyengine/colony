@@ -1,9 +1,8 @@
 (in-package :%fl)
 
 (defclass frame-manager ()
-  ((%start :reader start
-           :initform (local-time:now))
-   (%now :initform (local-time:now))
+  ((%start :reader start)
+   (%now :reader now)
    (%before :initform 0)
    (%total-time :initform 0)
    (%delta :initarg :delta
@@ -60,34 +59,55 @@
               %debug-time now))
       (incf %debug-count))))
 
-(defun frame-update (frame-manager func)
-  (with-slots (%alpha %delta %accumulator %frame-time) frame-manager
+(defun frame-update (core-state)
+  (with-slots (%alpha %delta %accumulator %frame-time) (frame-manager core-state)
     (incf %accumulator %frame-time)
-    (au:while (>= %accumulator %delta)
-      (funcall func)
+    (fl.util:while (>= %accumulator %delta)
+      (execute-flow core-state
+                    :default
+                    'active-phase
+                    'protocol-physics-update
+                    :come-from-state-name
+                    :ef-physics-update)
+      (fl.comp::map-nodes
+       (lambda (x) (fl.comp::transform-node core-state x))
+       (actor-component-by-type (scene-tree core-state) 'fl.comp:transform))
+      (execute-flow core-state
+                    :default
+                    'active-phase
+                    'physics-collisions
+                    :come-from-state-name
+                    :ef-physics-collisions)
       (decf %accumulator %delta))
     (setf %alpha (/ %accumulator %delta))))
 
-(defun frame-periodic-update (frame-manager func)
-  (with-slots (%period-elapsed %period-interval) frame-manager
+(defun frame-periodic-update (core-state)
+  (with-slots (%period-elapsed %period-interval) (frame-manager core-state)
     (let ((now (local-time:now))
           (interval %period-interval))
       (when (and interval
                  (>= (local-time:timestamp-difference now %period-elapsed) interval))
-        (funcall func)
+        (update-lisp-repl)
         (v:trace :fl.core.engine "Periodic update performed (every ~d seconds)" interval)
         (setf %period-elapsed now)))))
 
-(defun tick (frame-manager refresh-rate step-func &key periodic-func)
-  (with-slots (%start %now %before %total-time %frame-time %vsync-p) frame-manager
-    (setf %before %now
-          %now (local-time:now)
-          %frame-time (float (local-time:timestamp-difference %now %before) 1f0)
-          %total-time (float (local-time:timestamp-difference %now %start) 1f0))
-    (when %vsync-p
-      (smooth-delta-time frame-manager refresh-rate))
-    (frame-update frame-manager step-func)
-    (when periodic-func
-      (frame-periodic-update frame-manager periodic-func))
-    (calculate-frame-rate frame-manager)
-    (values)))
+(defun initialize-frame-time (core-state)
+  (with-slots (%start %now) (frame-manager core-state)
+    (let ((time (local-time:now)))
+      (setf %start time
+            %now time))))
+
+(defun tick (core-state)
+  (let ((frame-manager (frame-manager core-state))
+        (refresh-rate (refresh-rate (display core-state))))
+    (with-slots (%start %now %before %total-time %frame-time %vsync-p) frame-manager
+      (setf %before %now
+            %now (local-time:now)
+            %frame-time (float (local-time:timestamp-difference %now %before) 1f0)
+            %total-time (float (local-time:timestamp-difference %now %start) 1f0))
+      (when %vsync-p
+        (smooth-delta-time frame-manager refresh-rate))
+      (frame-update core-state)
+      (frame-periodic-update core-state)
+      (calculate-frame-rate frame-manager)
+      (values))))
