@@ -10,12 +10,14 @@
            #:define-settings
            #:display
            #:find-resource
+           #:frame-manager
            #:id
            #:rcache
            #:rcache-construct
            #:rcache-dispose
            #:rcache-lookup
            #:rcache-remove
+           #:scene-tree
            #:shared-storage
            #:start-engine
            #:stop-engine

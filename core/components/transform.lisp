@@ -1,16 +1,57 @@
 (in-package :fl.comp)
 
+(defclass transform-state ()
+  ((%current :accessor current
+             :initarg :current)
+   (%incremental :accessor incremental
+                 :initarg :incremental)
+   (%incremental-delta :accessor incremental-delta
+                       :initarg :incremental-delta)
+   (%previous :accessor previous
+              :initarg :previous)
+   (%interpolated :accessor interpolated
+                  :initarg :interpolated)))
+
+(defclass transform-state-vector (transform-state)
+  ()
+  (:default-initargs :current (flm:vec3)
+                     :incremental (flm:vec3)
+                     :incremental-delta (flm:vec3)
+                     :previous (flm:vec3)
+                     :interpolated (flm:vec3)))
+
+(defclass transform-state-quaternion (transform-state)
+  ()
+  (:default-initargs :current (flm:quat 1)
+                     :incremental (flm:quat 1)
+                     :incremental-delta (flm:quat 1)
+                     :previous (flm:quat 1)
+                     :interpolated (flm:quat 1)))
+
+(defun make-translation-state ()
+  (make-instance 'transform-state-vector))
+
+(defun make-rotation-state ()
+  (make-instance 'transform-state-quaternion
+                 :incremental (flm:vec3)
+                 :incremental-delta (flm:vec3)))
+
+(defun make-scaling-state ()
+  (make-instance 'transform-state-vector
+                 :current (flm:vec3 1)))
+
+(defun interpolate-vector (state factor)
+  (flm:lerp (previous state) (current state) factor (interpolated state)))
+
+(defun interpolate-quaternion (state factor)
+  (flm:slerp (previous state) (current state) factor (interpolated state)))
+
 (define-component transform ()
   ((parent :default nil)
    (children :default nil)
-   (translation :default (make-transform-state 'transform-state-vector
-                                               :incremental-delta (flm:vec3)))
-   (rotation :default (make-transform-state 'transform-state-quaternion
-                                            :incremental (flm:vec3)
-                                            :incremental-delta (flm:vec3)))
-   (scaling :default (make-transform-state 'transform-state-vector
-                                           :current (flm:vec3 1)
-                                           :incremental-delta (flm:vec3)))
+   (translation :default (make-translation-state))
+   (rotation :default (make-rotation-state))
+   (scaling :default (make-scaling-state))
    (local :default (flm:mat4 1))
    (model :default (flm:mat4 1))))
 
@@ -19,59 +60,46 @@
   (setf (parent child) parent))
 
 (defun remove-child (parent child)
-  (setf (children parent) (remove-if (lambda (c) (eq c child)) (children parent))
+  (setf (children parent) (remove-if (lambda (x) (eq x child)) (children parent))
         (parent child) nil))
-
-(defun translate-node (node delta)
-  (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
-      (translation node)
-    (flm:copy-into p c)
-    (flm:+ c (flm:* i delta idelta) c)))
-
-(defun rotate-node (node delta)
-  (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
-      (rotation node)
-    (flm:copy-into p c)
-    (flm:rotate c (flm:* i delta idelta) c)))
-
-(defun scale-node (node delta)
-  (with-accessors ((c current) (i incremental) (idelta incremental-delta) (p previous))
-      (scaling node)
-    (flm:copy-into p c)
-    (flm:+ c (flm:* i delta idelta) c)))
 
 (defun transform-node (core-state node)
   (let ((delta (delta (context core-state))))
-    (scale-node node delta)
-    (rotate-node node delta)
-    (translate-node node delta)))
+    (with-slots (%previous %current %incremental-delta %incremental) (scaling node)
+      (flm:copy-into %previous %current)
+      (flm:+ %current (flm:* %incremental delta %incremental-delta) %current))
+    (with-slots (%previous %current %incremental-delta %incremental) (rotation node)
+      (flm:copy-into %previous %current)
+      (flm:rotate %current (flm:* %incremental delta %incremental-delta) %current))
+    (with-slots (%previous %current %incremental-delta %incremental) (translation node)
+      (flm:copy-into %previous %current)
+      (flm:+ %current (flm:* %incremental delta %incremental-delta) %current))))
 
 (defun resolve-local (node alpha)
-  (with-slots (%scaling %rotation %translation %local) node
-    (interpolate-state %scaling alpha)
-    (interpolate-state %rotation alpha)
-    (interpolate-state %translation alpha)
+  (with-slots (%local %scaling %rotation %translation) node
+    (interpolate-vector %scaling alpha)
+    (interpolate-quaternion %rotation alpha)
+    (interpolate-vector %translation alpha)
     (flm:* (flm:mat4 (interpolated %rotation) %local)
            (flm:set-scale flm:+id-mat4+ (interpolated %scaling))
            %local)
     (flm:set-translation %local (interpolated %translation) %local)))
 
 (defun resolve-model (node alpha)
-  (with-slots (%parent %local %model) node
-    (when %parent
-      (resolve-local node alpha)
-      (flm:* (model %parent) %local %model))))
+  (au:when-let ((parent (parent node)))
+    (resolve-local node alpha)
+    (flm:* (model parent) (local node) (model node))))
 
 (defun map-nodes (func parent)
   (funcall func parent)
   (dolist (child (children parent))
     (map-nodes func child)))
 
-(defun interpolate-transforms (root-node alpha)
+(defun interpolate-transforms (core-state)
   (map-nodes
    (lambda (node)
-     (resolve-model node alpha))
-   root-node))
+     (resolve-model node (%fl::alpha (%fl:frame-manager core-state))))
+   (actor-component-by-type (%fl:scene-tree core-state) 'transform)))
 
 (defmethod make-component ((component-type (eql 'transform)) context &rest args)
   (let ((instance (make-instance component-type :type component-type :context context)))
@@ -93,20 +121,11 @@
           (current %translation) translation/current
           (previous %translation) (flm:copy translation/current)
           (incremental %translation) translation/incremental
-
-          (current %rotation)
-          ;; TODO: Maybe should make this conversion into a GF or something.
-          (etypecase rotation/current
-            (flm:vec3
-             ;; euler angles being passed in.
-             (flm:rotate flm:+id-quat+ rotation/current))
-            (flm:quat
-             ;; quaternion being passed in: use as is.
-             rotation/current))
-
+          (current %rotation) (etypecase rotation/current
+                                (flm:vec3 (flm:rotate flm:+id-quat+ rotation/current))
+                                (flm:quat rotation/current))
           (previous %rotation) (flm:copy (current %rotation))
           (incremental %rotation) rotation/incremental
-
           (current %scaling) scale/current
           (previous %scaling) (flm:copy scale/current)
           (incremental %scaling) scale/incremental)))
