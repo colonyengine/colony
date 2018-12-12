@@ -48,6 +48,11 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (prepare-gamepads core-state)
     (make-display core-state)))
 
+(defun shutdown-host (core-state)
+  (shutdown-gamepads core-state)
+  (sdl2:destroy-window (window (display core-state)))
+  (sdl2::sdl-quit))
+
 (defmethod initialize-engine ((core-state core-state) scene-name)
   (make-context core-state)
   (prepare-extension :settings core-state)
@@ -99,8 +104,7 @@ cleaning up."
     (v:info :fl.core.engine "Shutting down ~a..." title)
     (run-epilogue core-state)
     (shutdown-shader-programs)
-    (shutdown-gamepads core-state)
-    (quit-display (display core-state))
+    (shutdown-host core-state)
     (setf (running-p core-state) nil)
     (makunbound '*core-state-debug*)
     (v:info :fl.core.engine "Successfully shut down ~a" title)))
