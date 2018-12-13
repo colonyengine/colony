@@ -74,12 +74,15 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (load-scene core-state scene-name)
     (v:info :fl.core.engine "Finished starting ~a" title)))
 
+(defun iterate-main-loop (core-state)
+  (with-continue-restart "First Light"
+    (handle-events core-state)
+    (render core-state)))
+
 (defun main-loop (core-state)
   (initialize-frame-time core-state)
   (fl.util:while (running-p core-state)
-    (with-continue-restart "First Light"
-      (handle-events core-state)
-      (render core-state))))
+    (iterate-main-loop core-state)))
 
 (defun start-engine (scene-name &optional profile-duration)
   "Start the engine. First we initialize the engine. Next we run the prologue as the last step,
