@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 (fl.util:eval-always
   (defmacro profile (core-state duration)

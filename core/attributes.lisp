@@ -1,4 +1,4 @@
-(in-package #:%fl)
+(in-package #:%first-light)
 
 ;; This will be the new home of the attributes type so we can manage DSL
 ;; attributes in a nicer way.

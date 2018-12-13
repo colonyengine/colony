@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 (defun qualify-component (core-state component-type)
   "This function tries to resolve the COMPONENT-TYPE symbol into a potentially

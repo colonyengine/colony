@@ -4,10 +4,10 @@
   (:nicknames #:fl)
   (:use #:cl)
   ;; Deplying binaries
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:deploy-binary)
   ;; common
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:cfg
                  #:define-settings
                  #:id
@@ -15,16 +15,16 @@
                  #:stop-engine
                  #:with-shared-storage)
   ;; resources
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:define-resources
                  #:find-resource
                  #:print-all-resources)
   ;; extensions
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:extension-file-type
                  #:prepare-extension)
   ;; context
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:active-camera
                  #:context
                  #:project-data
@@ -37,12 +37,12 @@
                  #:ss-href
                  #:total-time)
   ;; textures
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:define-texture
                  #:define-texture-profile
                  #:general-data-format-descriptor)
   ;; materials
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:bind-material
                  #:copy-material
                  #:define-material
@@ -53,14 +53,14 @@
                  #:shader
                  #:using-material)
   ;; shaders
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:define-shader)
   ;; scene
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:define-scene)
   ;; actor
   ;; TODO: Finish user API.
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:actor
                  #:actor-component-by-type
                  #:actor-components-by-type
@@ -71,7 +71,7 @@
                  #:spawn-actor)
   ;; components
   ;; TODO: Finish user API.
-  (:inherit-from #:%fl
+  (:inherit-from #:%first-light
                  #:define-component
                  #:destroy-component
                  #:initialize-component

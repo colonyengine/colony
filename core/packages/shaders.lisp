@@ -1,7 +1,8 @@
 (in-package :defpackage+-user-1)
 
-(defpackage+ #:fl.shaders
-  (:use #:%fl)
+(defpackage+ #:first-light.shaders
+  (:nicknames #:fl.shaders)
+  (:use #:%first-light)
   (:inherit #:shadow.vari)
   (:export-only #:unlit-color
                 #:unlit-color-decal

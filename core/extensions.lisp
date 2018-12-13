@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 (defun map-extensions (context extension-type)
   (flet ((%map (type path)

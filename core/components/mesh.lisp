@@ -1,4 +1,4 @@
-(in-package :fl.comp)
+(in-package :first-light.components)
 
 (define-component mesh ()
   ;; Component slot descriptions all in one form, like defclass

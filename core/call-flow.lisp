@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 (defclass flow-state ()
   ((%name :accessor name

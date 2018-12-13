@@ -1,7 +1,8 @@
 (in-package :defpackage+-user-1)
 
-(defpackage+ #:fl.comp
-  (:use #:cl #:%fl)
+(defpackage+ #:first-light.components
+  (:nicknames #:fl.comp)
+  (:use #:cl #:%first-light)
   ;; camera
   (:export #:camera
            #:tracking-camera

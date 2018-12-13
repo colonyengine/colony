@@ -1,19 +1,23 @@
 (in-package :defpackage+-user-1)
 
-(defpackage+ #:fl.mfiano
-  (:use #:cl #:fl)
+(defpackage+ #:first-light.mfiano
+  (:nicknames #:fl.mfiano)
+  (:use #:cl #:first-light)
   (:export-only #:noise-test/playground
                 #:mesh-test))
 
-(defpackage+ #:fl.mfiano.shaders
-  (:use #:fl)
+(defpackage+ #:first-light.mfiano.shaders
+  (:nicknames #:fl.mfiano.shaders)
+  (:use #:first-light)
   (:inherit #:shadow.vari)
   (:export-only #:noise-test/playground
                 #:mesh-test))
 
-(defpackage+ #:fl.mfiano.materials
-  (:use #:cl #:fl.materials)
-  (:import-from #:fl #:define-material))
+(defpackage+ #:first-light.mfiano.materials
+  (:nicknames #:fl.mfiano.materials)
+  (:use #:cl #:first-light.materials)
+  (:import-from #:first-light #:define-material))
 
-(defpackage+ #:fl.mfiano.textures
-  (:use #:cl #:fl))
+(defpackage+ #:first-light.mfiano.textures
+  (:nicknames #:fl.mfiano.textures)
+  (:use #:cl #:first-light))

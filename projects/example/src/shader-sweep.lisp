@@ -1,4 +1,4 @@
-(in-package #:fl.example)
+(in-package #:first-light.example)
 
 ;; This component reads the mouse position and puts it into a uniform in the
 ;; material in the mesh-renderer associated with the actor this component

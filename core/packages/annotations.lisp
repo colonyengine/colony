@@ -1,5 +1,6 @@
 (in-package :defpackage+-user-1)
 
-(defpackage+ #:fl.annotations
-  (:use #:cl #:%fl)
+(defpackage+ #:first-light.annotations
+  (:nicknames #:fl.annotations)
+  (:use #:cl #:%first-light)
   (:export-only #:material))

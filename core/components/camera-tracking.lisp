@@ -1,4 +1,4 @@
-(in-package :fl.comp)
+(in-package :first-light.components)
 
 (define-component tracking-camera ()
   ((slave-camera :default nil)

@@ -1,4 +1,4 @@
-(in-package #:%fl)
+(in-package #:%first-light)
 
 #+sbcl
 (defun deploy-binary (file-name scene-name &key compress-p)

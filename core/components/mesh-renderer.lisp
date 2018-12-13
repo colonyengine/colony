@@ -1,4 +1,4 @@
-(in-package :fl.comp)
+(in-package :first-light.components)
 
 (define-component mesh-renderer ()
   ((mesh :default nil)

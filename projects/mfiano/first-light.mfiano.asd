@@ -1,4 +1,4 @@
-(asdf:defsystem #:fl.mfiano
+(asdf:defsystem #:first-light.mfiano
   :author ("Michael Fiano <michael.fiano@gmail.com>")
   :maintainer ("Michael Fiano <michael.fiano@gmail.com>")
   :license "MIT"

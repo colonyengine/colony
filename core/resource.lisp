@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 ;;; DSL Input
 
@@ -258,7 +258,7 @@
         (let ((v (%lookup-resource k)))
           (format t "~&~vs ~s" column-width k (namestring v)))))))
 
-(in-package :fl)
+(in-package :first-light)
 
 (define-resources (:project :first-light)
   (:core "data/core")

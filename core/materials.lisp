@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 ;; Held in core-state, the material database for all materials everywhere.
 (defclass materials-table ()

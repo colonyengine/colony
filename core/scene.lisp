@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 (defun %type-check-actor (actor actors-list)
   (unless (char= (char (symbol-name actor) 0) #\@)

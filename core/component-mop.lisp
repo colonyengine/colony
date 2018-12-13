@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 ;;;; NOTE: Currently, there are a pile of commented out format forms.
 ;;;; please leave them for a little while so if something goes wrong

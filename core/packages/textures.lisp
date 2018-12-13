@@ -1,7 +1,8 @@
 (in-package :defpackage+-user-1)
 
-(defpackage+ #:fl.textures
-  (:use #:cl #:%fl)
+(defpackage+ #:first-light.textures
+  (:nicknames #:fl.textures)
+  (:use #:cl #:%first-light)
   ;; profiles
   (:export #:clamp-all-edges
            #:default-profile

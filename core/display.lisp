@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 (defclass display ()
   ((%core-state :reader core-state

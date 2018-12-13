@@ -1,4 +1,4 @@
-(in-package :fl.comp)
+(in-package :first-light.components)
 
 (define-component camera ()
   ((activep :default nil)

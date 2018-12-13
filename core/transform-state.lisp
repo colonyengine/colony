@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 (defclass transform-state ()
   ((%current :accessor current

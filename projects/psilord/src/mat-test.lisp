@@ -1,4 +1,4 @@
-(in-package :fl.psilord)
+(in-package :first-light.psilord)
 
 (define-component mat-test ()
   ((mesh-rend :default nil)

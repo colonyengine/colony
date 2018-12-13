@@ -1,7 +1,10 @@
 (in-package :defpackage+-user-1)
 
-(defpackage+ #:fl.example
-  (:use #:cl #:fl #:fl.comp)
+(defpackage+ #:first-light.example
+  (:nicknames #:fl.example)
+  (:use #:cl
+        #:first-light
+        #:first-light.components)
   (:export #:damaged-helmet
            #:geometric-volumes
            #:graph-test
@@ -10,8 +13,9 @@
            #:sprite-test
            #:texture-test))
 
-(defpackage+ #:fl.example.shaders
-  (:use #:fl)
+(defpackage+ #:first-light.example.shaders
+  (:nicknames #:fl.example.shaders)
+  (:use #:first-light)
   (:inherit #:shadow.vari)
   (:export-only #:damaged-helmet
                 #:graph-test

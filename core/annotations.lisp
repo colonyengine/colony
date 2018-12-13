@@ -1,4 +1,4 @@
-(in-package #:fl.annotations)
+(in-package #:first-light.annotations)
 
 ;; `(fl.materials:noise-base fl.materials:perlin-noise :shader fl.shader:?????)
 

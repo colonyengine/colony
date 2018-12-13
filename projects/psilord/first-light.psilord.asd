@@ -10,5 +10,4 @@
   :serial t
   :components
   ((:file "package")
-   (:file "resources")
    (:file "mat-test")))

@@ -1,4 +1,4 @@
-(in-package :fl.example)
+(in-package :first-light.example)
 
 ;;;; This code is all a rough sketch about how to do your shader method and
 ;;;; implement a sprite sheet. This component is very inefficient cause shared

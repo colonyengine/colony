@@ -1,6 +1,7 @@
-(in-package :fl.mfiano)
+(in-package :first-light.mfiano)
 
-(define-resources (:project :fl.example)
+(define-resources (:project :first-light.mfiano)
   (:project "data")
+  (:ext (:project "ext"))
   (:mesh (:project "mesh"))
-  (:texture (:project "texture")))
+  (:texture (:project "textures")))

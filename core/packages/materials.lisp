@@ -1,7 +1,8 @@
 (in-package :defpackage+-user-1)
 
-(defpackage+ #:fl.materials
-  (:use #:cl #:%fl)
+(defpackage+ #:first-light.materials
+  (:nicknames #:fl.materials)
+  (:use #:cl #:%first-light)
   ;; helper functions
   (:export #:total-time/uniform)
   ;; profiles

@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 ;; The textures-table is a data store of everything in the .tex extension.  This
 ;; includes any texture-profiles, and defined textures (as texture-descriptors.

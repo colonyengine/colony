@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 (defmethod extension-file-type ((extension-type (eql :shader-stages)))
   "shd")

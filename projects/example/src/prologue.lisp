@@ -1,4 +1,4 @@
-(in-package #:fl.example)
+(in-package #:first-light.example)
 
 (defmethod prologue (context)
   (v:trace :fl.core.engine "Running prologue method.")

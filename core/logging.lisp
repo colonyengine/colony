@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :%first-light)
 
 (defun enable-logging (core-state)
   (let ((context (context core-state)))
