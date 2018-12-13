@@ -23,6 +23,7 @@
                #:shadow
                #:umbra
                #:first-light.util
+               #:first-light.metadata
                #:first-light.binary-formats
                #:first-light.math
                #:first-light.geometry)

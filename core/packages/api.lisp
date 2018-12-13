@@ -10,14 +10,15 @@
   (:inherit-from #:%fl
                  #:cfg
                  #:define-settings
-                 #:find-resource
                  #:id
                  #:start-engine
                  #:stop-engine
                  #:with-shared-storage)
   ;; resources
   (:inherit-from #:%fl
-                 #:define-resources)
+                 #:define-resources
+                 #:find-resource
+                 #:print-all-resources)
   ;; extensions
   (:inherit-from #:%fl
                  #:extension-file-type

@@ -9,7 +9,6 @@
            #:core-state
            #:define-settings
            #:display
-           #:find-resource
            #:frame-manager
            #:id
            #:rcache
@@ -25,7 +24,9 @@
            #:with-cfg
            #:with-shared-storage)
   ;; resources
-  (:export #:define-resources)
+  (:export #:define-resources
+           #:find-resource
+           #:print-all-resources)
   ;; extensions
   (:export #:extension-file-type
            #:prepare-extension)

@@ -4,7 +4,7 @@
 
 (defclass core-state ()
   ((%resources :reader resources
-               :initform *resource-data*)
+               :initform (fl.data:get 'resources))
    (%settings :reader settings
               :initform (fl.util:dict #'eq))
    (%running-p :accessor running-p
@@ -106,14 +106,6 @@ CORE-STATE."
     (setf (fl.util:href (shared-storage-table context) key) value))
   (:method (value (context context) (key component))
     (setf (shared-storage context (component-type key)) value)))
-
-(defun find-resource (context resource-id &optional sub-path)
-  (let* ((id (resolve-resource-id resource-id))
-         (resources (table (resources (core-state context))))
-         (project (get-resource-project id)))
-    (fl.util:when-found (resource (fl.util:href resources id))
-      (let ((path (uiop:merge-pathnames* sub-path resource)))
-        (fl.util:resolve-system-path project path)))))
 
 ;;;; Interim caching code for (often) resources. Uses nested hash tables like
 ;;;; the shared-storage for componnets.

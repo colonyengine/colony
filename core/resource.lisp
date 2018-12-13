@@ -123,12 +123,10 @@
 
 ;; TODO
 
-(defclass resource-data ()
-  ((%project :accessor project)
-   (%table :reader table
-           :initform (fl.util:dict #'equalp))))
+(fl.data:set 'resources (au:dict #'equalp))
 
-(defparameter *resource-data* (make-instance 'resource-data))
+(defun %lookup-resource (key)
+  (fl.util:href (fl.data:get 'resources) key))
 
 (defun make-relative-pathname (sub-path)
   (let ((components (fl.util:split-sequence #\. sub-path)))
@@ -138,7 +136,7 @@
           (make-pathname :directory `(:relative ,name))))))
 
 (defun build-resource-path (id key sub-path)
-  (fl.util:if-let ((base-path (fl.util:href (table *resource-data*) key)))
+  (fl.util:if-let ((base-path (%lookup-resource key)))
     (progn
       (when (pathname-type base-path)
         (error "~s is a file resource and cannot merge the sub-path ~s." key sub-path))
@@ -175,12 +173,12 @@
              (t (error "A path specifier in `define-resources` must be a string, or a list of 2 or ~
                         3 elements."))))
          (validate-core-path (path)
-           (fl.util:when-found (key (fl.util:href (table *resource-data*) :project))
+           (fl.util:when-found (key (%lookup-resource :project))
              (when (and (eq id :core)
                         (string= (namestring key) (namestring path)))
                (error "The :core and :project resource path specifications must be unique."))))
          (validate-project-path (path)
-           (fl.util:when-found (key (fl.util:href (table *resource-data*) :core))
+           (fl.util:when-found (key (%lookup-resource :core))
              (when (and (eq id :project)
                         (string= (namestring key) (namestring path)))
                (error "The :core and :project resource path specifications must be unique.")))))
@@ -196,7 +194,7 @@
     (destructuring-bind (root &rest rest) path-spec
       (declare (ignore rest))
       (let ((key (make-resource-key id root)))
-        (setf (fl.util:href (table *resource-data*) key)
+        (setf (fl.util:href (fl.data:get 'resources) key)
               (make-resource-path id root path-spec)))))
   (fl.util:noop))
 
@@ -206,7 +204,7 @@
       (declare (ignore rest))
       (if (eq x :core)
           :first-light
-          (project *resource-data*)))))
+          (fl.data:get 'user-project)))))
 
 (defun resolve-resource-id (id)
   (cond
@@ -222,10 +220,43 @@
     (error "Project name must be specified in a `define-resources` form."))
   `(progn
      ,@(fl.util:collecting
-         (collect `(setf (project *resource-data*) ,project))
+         (collect `(fl.data:set 'user-project ,project))
          (dolist (spec body)
            (destructuring-bind (id path-spec) spec
              (collect `(store-resource-path ',id ',path-spec)))))))
+
+;;; Protocol
+
+(defun find-resource (context resource-id &optional sub-path)
+  (let* ((id (resolve-resource-id resource-id))
+         (resources (resources (core-state context)))
+         (project (get-resource-project id)))
+    (fl.util:when-found (resource (fl.util:href resources id))
+      (let ((path (uiop:merge-pathnames* sub-path resource)))
+        (fl.util:resolve-system-path project path)))))
+
+(defun print-all-resources ()
+  (flet ((compare-keys (k1 k2)
+           (let* ((k1 (fl.util:ensure-list k1))
+                  (k2 (fl.util:ensure-list k2))
+                  (i (mismatch k1 k2)))
+             (when i
+               (cond
+                 ((= i (length k1)) t)
+                 ((= i (length k2)) nil)
+                 (t (string< (nth i k1) (nth i k2))))))        ))
+    (let ((keys)
+          (column-width 0))
+      (fl.util:do-hash-keys (k (fl.data:get 'resources))
+        (push k keys)
+        (when (listp k)
+          (let ((key-width (length (symbol-name (cadr k)))))
+            (when (> key-width column-width)
+              (setf column-width (+ key-width 14))))))
+      (format t "~&~va ~a~%~%" column-width "Identifier" "Relative path")
+      (dolist (k (sort keys #'compare-keys))
+        (let ((v (%lookup-resource k)))
+          (format t "~&~vs ~s" column-width k (namestring v)))))))
 
 (in-package :fl)
 
