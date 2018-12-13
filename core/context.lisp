@@ -6,6 +6,8 @@
    (%project-data :accessor project-data)
    (%settings :reader settings
               :initarg :settings)
+   (%input-data :reader input-data
+                :initarg :input-data)
    (%active-camera :accessor active-camera
                    :initform nil)
    (%shared-storage-table :reader shared-storage-table
@@ -17,6 +19,7 @@
   (setf (slot-value core-state '%context)
         (make-instance 'context
                        :core-state core-state
+                       :input-data (input-data core-state)
                        :settings (settings core-state))))
 
 (defun total-time (context)

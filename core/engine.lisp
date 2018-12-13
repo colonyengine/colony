@@ -42,15 +42,16 @@ method, but before any engine tear-down procedure occurs when stopping the engin
   (epilogue (context core-state)))
 
 (defun initialize-host (core-state)
-  (let ((flags '(:everything)))
+  (let ((flags '(:everything))
+        (gamepad-db (find-resource (context core-state) '(:core :gamepad-db))))
     (unless (apply #'sdl2:was-init flags)
       (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
         (sdl2::check-rc (sdl2::sdl-init flags))))
-    (prepare-gamepads core-state)
+    (fl.input:prepare-gamepads gamepad-db)
     (make-display core-state)))
 
 (defun shutdown-host (core-state)
-  (shutdown-gamepads core-state)
+  (fl.input:shutdown-gamepads (input-data core-state))
   (sdl2:destroy-window (window (display core-state)))
   (sdl2::sdl-quit))
 
@@ -76,8 +77,11 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 
 (defun iterate-main-loop (core-state)
   (with-continue-restart "First Light"
-    (handle-events core-state)
-    (render core-state)))
+    (fl.input:handle-events (input-data core-state))
+    (render core-state)
+    ;; TODO: Remove this later when possible.
+    (when (fl.input:input-enter-p (input-data core-state) '(:key :escape))
+      (stop-engine core-state))))
 
 (defun main-loop (core-state)
   (initialize-frame-time core-state)

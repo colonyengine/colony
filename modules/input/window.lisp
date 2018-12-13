@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :first-light.input)
 
 (fl.util:define-constant +window-event-names+
     #(nil :show :hide nil :move :resize nil :minimize :maximize :restore :mouse-focus-enter

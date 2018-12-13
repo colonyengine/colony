@@ -26,7 +26,8 @@
                #:first-light.metadata
                #:first-light.binary-formats
                #:first-light.math
-               #:first-light.geometry)
+               #:first-light.geometry
+               #:first-light.input)
   :pathname "core"
   :serial t
   :components
@@ -40,14 +41,6 @@
      (:file "components")
      (:file "api")))
    (:file "common")
-   (:module "input"
-    :components
-    ((:file "keyboard")
-     (:file "mouse")
-     (:file "gamepad")
-     (:file "window")
-     (:file "states")
-     (:file "input")))
    (:file "resource")
    (:file "context")
    (:file "extensions")

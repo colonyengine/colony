@@ -33,7 +33,7 @@
       (setf mesh-rend-material (material mesh-rend)
             mesh-material-retrieved-p t))
 
-    (fl.util:mvlet* ((x y (get-mouse-position context)))
+    (fl.util:mvlet* ((x y (fl.input:get-mouse-position context)))
       (when (null x) (setf x (/ (cfg context :window-width) 2.0)))
       (when (null y) (setf y (/ (cfg context :window-height) 2.0)))
       (flm:with-vec2 ((c channel0))
@@ -41,7 +41,7 @@
         (setf c.x (coerce (/ x (cfg context :window-width)) 'single-float)
               c.y (coerce (/ y (cfg context :window-height)) 'single-float)))
 
-      (when (input-enter-p context '(:mouse :left))
+      (when (fl.input:input-enter-p context '(:mouse :left))
         (format t "channel0 is: ~A~%" channel0))
 
       ;; get a reference to the material itself (TODO: use MOP stuff to get

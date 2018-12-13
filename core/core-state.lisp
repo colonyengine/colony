@@ -19,7 +19,7 @@
    (%cameras :accessor cameras
              :initform nil)
    (%input-data :reader input-data
-                :initform (make-input-data))
+                :initform (fl.input:make-input-data))
    (%shaders :accessor shaders)
    (%materials :accessor materials
                :initform (%make-materials-table))

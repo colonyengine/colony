@@ -191,8 +191,10 @@ for later use with the shaders."
 
 (defmethod update-component ((component simple-movement) (context context))
   (with-accessors ((transform transform)) component
-    (fl.util:mvlet* ((lx ly (get-gamepad-analog context '(:gamepad1 :left-stick)))
-                     (rx ry (get-gamepad-analog context '(:gamepad1 :right-stick))))
+    (fl.util:mvlet* ((lx ly (fl.input:get-gamepad-analog (input-data context)
+                                                         '(:gamepad1 :left-stick)))
+                     (rx ry (fl.input:get-gamepad-analog (input-data context)
+                                                         '(:gamepad1 :right-stick))))
       (let ((vec (flm:vec3 lx ly 0)))
         (flm:* (if (> (flm:length vec) 1) (flm:normalize vec) vec) 150.0 vec)
         (fl.comp:translate transform (flm:+ (flm:vec3 -400 0 0) vec) :replace-p t))
@@ -228,8 +230,8 @@ for later use with the shaders."
         (actor-component-by-type (actor component) 'transform)))
 
 (defmethod update-component ((component shot-emitter) (context context))
-  (when (or (input-enter-p context '(:gamepad1 :a))
-            (input-enter-p context '(:mouse :left)))
+  (when (or (fl.input:input-enter-p (input-data context) '(:gamepad1 :a))
+            (fl.input:input-enter-p (input-data context) '(:mouse :left)))
     (let* ((parent-model (fl.comp:model (emitter-transform component)))
            (parent-translation (flm:get-translation parent-model))
            (parent-rotation (from-scaled-mat4 parent-model))

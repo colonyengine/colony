@@ -31,6 +31,7 @@
                  #:delta
                  #:epilogue
                  #:frame-time
+                 #:input-data
                  #:prologue
                  #:settings
                  #:ss-href
@@ -54,15 +55,6 @@
   ;; shaders
   (:inherit-from #:%fl
                  #:define-shader)
-  ;; input
-  (:inherit-from #:%fl
-                 #:get-gamepad-analog
-                 #:get-gamepad-name
-                 #:get-mouse-position
-                 #:get-mouse-scroll
-                 #:input-enabled-p
-                 #:input-enter-p
-                 #:input-exit-p)
   ;; scene
   (:inherit-from #:%fl
                  #:define-scene)

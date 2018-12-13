@@ -37,6 +37,7 @@
            #:delta
            #:epilogue
            #:frame-time
+           #:input-data
            #:prologue
            #:settings
            #:shared-storage-table
@@ -59,14 +60,6 @@
            #:using-material)
   ;; shaders
   (:export #:define-shader)
-  ;; input
-  (:export #:get-gamepad-analog
-           #:get-gamepad-name
-           #:get-mouse-position
-           #:get-mouse-scroll
-           #:input-enabled-p
-           #:input-enter-p
-           #:input-exit-p)
   ;; transform-state
   (:export #:make-transform-state
            #:transform-state-scalar

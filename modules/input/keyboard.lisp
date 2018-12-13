@@ -1,4 +1,4 @@
-(in-package :%fl)
+(in-package :first-light.input)
 
 (fl.util:define-constant +key-names+
     #(:unknown nil nil nil :a :b :c :d :e :f :g :h :i :j :k :l :m :n :o :p :q :r :s :t :u :v :w :x :y
@@ -30,15 +30,12 @@
 
 ;;; Events
 
-(defun on-key-up (core-state key)
-  (input-transition-out core-state (list :key key))
-  (input-transition-out core-state '(:key :any))
-  (input-transition-out core-state '(:button :any)))
+(defun on-key-up (input-data key)
+  (input-transition-out input-data (list :key key))
+  (input-transition-out input-data '(:key :any))
+  (input-transition-out input-data '(:button :any)))
 
-(defun on-key-down (core-state key)
-  (input-transition-in core-state (list :key key))
-  (input-transition-in core-state '(:key :any))
-  (input-transition-in core-state '(:button :any))
-  ;; TODO: Remove this later when possible.
-  (when (eq key :escape)
-    (stop-engine core-state)))
+(defun on-key-down (input-data key)
+  (input-transition-in input-data (list :key key))
+  (input-transition-in input-data '(:key :any))
+  (input-transition-in input-data '(:button :any)))
