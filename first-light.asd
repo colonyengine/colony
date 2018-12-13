@@ -63,7 +63,6 @@
    (:file "call-flow")
    (:file "type-dag")
    (:file "scene")
-   (:file "viewport")
    (:file "image")
    (:file "texture")
    (:file "materials")
