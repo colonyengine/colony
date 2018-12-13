@@ -456,7 +456,7 @@ and ignores the CONTEXT and MATERIAL arguments."
   "Return a function which creates a partially complete material instance.
 It is partially complete because it does not yet have the shader binder function
 available for it so BIND-UNIFORMS cannot yet be called on it."
-  (let ((matvar (gensym "MATERIAL-")))
+  (fl.util:with-unique-names (matvar)
     `(lambda (core-state)
        ;; NOTE: This thunk happens after all materials are read and the
        ;; profiles have been loaded into core-state.
@@ -708,7 +708,7 @@ must be executed after all the shader programs have been compiled."
           (%add-material (funcall gen-material-func core-state) core-state))))))
 
 (defun parse-material-profile (name uniforms blocks)
-  (let ((matprof (gensym "MATERIAL-PROFILE")))
+  (fl.util:with-unique-names (matprof)
     `(let* ((,matprof (%make-material-profile :name ',name)))
        ,(parse-material-uniforms matprof uniforms)
 
@@ -723,7 +723,7 @@ must be executed after all the shader programs have been compiled."
 (defmacro define-material-profile (name &body (body))
   "Define a set of uniform and block shader attribute defaults that can be
 applied in an overlay manner while defining a material."
-  (let ((matprof (gensym "MATPROF")))
+  (fl.util:with-unique-names (matprof)
     (destructuring-bind (&key uniforms blocks) body
       `(let* ((,matprof ,(parse-material-profile name uniforms blocks)))
          (declare (special %fl::%temp))

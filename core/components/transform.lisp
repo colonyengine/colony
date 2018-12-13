@@ -86,7 +86,7 @@
     (flm:set-translation %local (interpolated %translation) %local)))
 
 (defun resolve-model (node alpha)
-  (au:when-let ((parent (parent node)))
+  (fl.util:when-let ((parent (parent node)))
     (resolve-local node alpha)
     (flm:* (model parent) (local node) (model node))))
 

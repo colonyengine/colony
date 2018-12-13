@@ -1115,7 +1115,7 @@ and assign it to the computed texture descriptor slot in TEXTURE."
       texture)))
 
 (defun parse-texture-profile (name body-form)
-  (let ((texprof (gensym "TEXTURE-PROFILE")))
+  (fl.util:with-unique-names (texprof)
     `(let* ((,texprof (make-texture-profile :name ',name)))
        (setf ,@(loop :for (attribute value) :in body-form :appending
                      `((fl.util:href (attributes ,texprof) ,attribute) ,value)))
@@ -1123,7 +1123,7 @@ and assign it to the computed texture descriptor slot in TEXTURE."
 
 (defmacro define-texture-profile (name &body body)
   "Define a set of attribute defaults that can be applied while defining a texture."
-  (let ((texprof (gensym "TEXPROF")))
+  (fl.util:with-unique-names (texprof)
     `(let* ((,texprof ,(parse-texture-profile name body)))
        (declare (special %fl::%temp))
        (setf (fl.util:href (car %fl::%temp) (name ,texprof)) ,texprof))))
@@ -1132,7 +1132,7 @@ and assign it to the computed texture descriptor slot in TEXTURE."
   "Construct a semantic TEXTURE-DESCRIPTOR and store in the special variable %FL::%TEMP.
 NOTE: This us a user facing API macro, this description, while accurate is utterly not helpful.
 TODO: Fix."
-  (let ((texdesc (gensym "TEXDESC")))
+  (fl.util:with-unique-names (texdesc)
     `(let ((,texdesc (make-texture-descriptor
                       :name ',name
                       :texture-type ',textype

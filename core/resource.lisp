@@ -123,7 +123,7 @@
 
 ;; TODO
 
-(fl.data:set 'resources (au:dict #'equalp))
+(fl.data:set 'resources (fl.util:dict #'equalp))
 
 (defun %lookup-resource (key)
   (fl.util:href (fl.data:get 'resources) key))

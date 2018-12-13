@@ -73,10 +73,8 @@
 
                        ;; If not present insert result of this
                        ;; form at that above key into shared storage.
-                       (shadow:create-buffer
-                        (gensym
-                         (symbol-name :sprite-sheet-buffer))
-                        'ssbo/specification-data)))
+                       (shadow:create-buffer (fl.util:unique-name :sprite-sheet-buffer)
+                                             'ssbo/specification-data)))
 
     ;; Store a reference to the (possibly shared) buffer.
     (setf (ssbo-buffer sprite-sheet) ssbo/spec-data)

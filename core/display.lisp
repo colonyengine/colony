@@ -49,7 +49,7 @@
 (defmethod initialize-instance :after ((instance display) &key &allow-other-keys)
   (let ((core-state (core-state instance)))
     (setf (slot-value core-state '%display) instance)
-    (apply #'gl:enable '(:depth-test :blend :multisample :cull-face))
+    (gl:enable :depth-test :blend :multisample :cull-face)
     (gl:blend-func :src-alpha :one-minus-src-alpha)
     (maybe-set-vsync (cfg (context core-state) :vsync))))
 
@@ -61,7 +61,7 @@
                    :refresh-rate (nth-value 3 (sdl2:get-current-display-mode 0)))))
 
 (defmethod clear-screen ((display display))
-  (let* ((context (context (core-state display))))
+  (let ((context (context (core-state display))))
     (multiple-value-call #'gl:clear-color
       (if (eq (cfg context :log-level) :debug)
           (values (* 0.25 (abs (sin (total-time context)))) 0 0 1)
