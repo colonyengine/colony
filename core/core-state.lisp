@@ -5,8 +5,7 @@
 (defclass core-state ()
   ((%resources :reader resources
                :initform (fl.data:get 'resources))
-   (%settings :reader settings
-              :initform (fl.util:dict #'eq))
+   (%options :accessor options)
    (%running-p :accessor running-p
                :initform t)
    (%rcache :reader rcache

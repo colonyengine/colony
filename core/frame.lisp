@@ -32,10 +32,10 @@
   (let ((context (context core-state)))
     (setf (frame-manager core-state)
           (make-instance 'frame-manager
-                         :vsync-p (when (eq (cfg context :vsync) :on) t)
-                         :delta (cfg context :delta)
-                         :period (cfg context :periodic-interval)
-                         :debug-interval (cfg context :debug-interval)))))
+                         :vsync-p (when (eq (option context :vsync) :on) t)
+                         :delta (option context :delta)
+                         :period (option context :periodic-interval)
+                         :debug-interval (option context :debug-interval)))))
 
 (defun smooth-delta-time (frame-manager refresh-rate)
   (with-slots (%delta-buffer %frame-time) frame-manager

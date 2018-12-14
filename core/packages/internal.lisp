@@ -5,12 +5,12 @@
   (:use #:cl)
   ;; common
   (:export #:cameras
-           #:cfg
            #:core-state
-           #:define-settings
+           #:define-options
            #:display
            #:frame-manager
            #:id
+           #:option
            #:rcache
            #:rcache-construct
            #:rcache-dispose
@@ -21,7 +21,6 @@
            #:start-engine
            #:stop-engine
            #:window
-           #:with-cfg
            #:with-shared-storage)
   ;; resources
   (:export #:define-resources
@@ -39,7 +38,6 @@
            #:frame-time
            #:input-data
            #:prologue
-           #:settings
            #:shared-storage-table
            #:ss-href
            #:total-time)

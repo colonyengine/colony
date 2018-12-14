@@ -29,8 +29,8 @@
 (defgeneric create-window (core-state)
   (:method :before ((core-state core-state))
     (let* ((context (context core-state))
-           (opengl-version (cfg context :opengl-version))
-           (anti-alias-level (cfg context :anti-alias-level)))
+           (opengl-version (option context :opengl-version))
+           (anti-alias-level (option context :anti-alias-level)))
       (fl.util:mvlet ((major-version minor-version (parse-opengl-version opengl-version)))
         (sdl2:gl-set-attrs :context-major-version major-version
                            :context-minor-version minor-version
@@ -39,9 +39,9 @@
                            :multisamplesamples anti-alias-level))))
   (:method ((core-state core-state))
     (let* ((context (context core-state))
-           (window (sdl2:create-window :title (cfg context :title)
-                                       :w (cfg context :window-width)
-                                       :h (cfg context :window-height)
+           (window (sdl2:create-window :title (option context :title)
+                                       :w (option context :window-width)
+                                       :h (option context :window-height)
                                        :flags '(:opengl))))
       (sdl2:gl-create-context window)
       window)))
@@ -51,7 +51,7 @@
     (setf (slot-value core-state '%display) instance)
     (gl:enable :depth-test :blend :multisample :cull-face)
     (gl:blend-func :src-alpha :one-minus-src-alpha)
-    (maybe-set-vsync (cfg (context core-state) :vsync))))
+    (maybe-set-vsync (option (context core-state) :vsync))))
 
 (defun make-display (core-state)
   (let ((window (create-window core-state)))
@@ -61,10 +61,10 @@
                    :refresh-rate (nth-value 3 (sdl2:get-current-display-mode 0)))))
 
 (defmethod clear-screen ((display display))
-  (let ((context (context (core-state display))))
+  (let ((core-state (core-state display)))
     (multiple-value-call #'gl:clear-color
-      (if (eq (cfg context :log-level) :debug)
-          (values (* 0.25 (abs (sin (total-time context)))) 0 0 1)
+      (if (eq (option core-state :log-level) :debug)
+          (values (* 0.25 (abs (sin (total-time core-state)))) 0 0 1)
           (values 0 0 0 1)))
     (gl:clear :color-buffer :depth-buffer)))
 

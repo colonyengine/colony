@@ -8,9 +8,9 @@
                  #:deploy-binary)
   ;; common
   (:inherit-from #:%first-light
-                 #:cfg
-                 #:define-settings
+                 #:define-options
                  #:id
+                 #:option
                  #:start-engine
                  #:stop-engine
                  #:with-shared-storage)
@@ -33,7 +33,6 @@
                  #:frame-time
                  #:input-data
                  #:prologue
-                 #:settings
                  #:ss-href
                  #:total-time)
   ;; textures

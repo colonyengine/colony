@@ -56,7 +56,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
   (sdl2::sdl-quit))
 
 (defmethod initialize-engine ((core-state core-state) scene-name)
-  (let ((title (cfg (context core-state) :title)))
+  (let ((title (option (context core-state) :title)))
     (v:info :fl.core.engine "Starting up ~a..." title)
     (setup-lisp-repl)
     (enable-logging core-state)
@@ -93,8 +93,8 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 before finally starting the main game loop."
   (unwind-protect
        (let ((core-state (make-instance 'core-state)))
+         (load-options core-state)
          (make-context core-state)
-         (prepare-extension :settings core-state)
          (setf *core-state-debug* core-state)
          (initialize-engine core-state scene-name)
          (run-prologue core-state)
@@ -106,7 +106,7 @@ before finally starting the main game loop."
 (defun stop-engine (core-state)
   "Stop the engine, making sure to call any user-defined epilogue function first, and finally
 cleaning up."
-  (let ((title (cfg (context core-state) :title)))
+  (let ((title (option core-state :title)))
     (v:info :fl.core.engine "Shutting down ~a..." title)
     (run-epilogue core-state)
     (shutdown-shader-programs)

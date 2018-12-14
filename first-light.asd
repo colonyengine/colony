@@ -44,7 +44,7 @@
    (:file "resource")
    (:file "context")
    (:file "extensions")
-   (:file "settings")
+   (:file "options")
    (:file "logging")
    (:file "attributes")
    (:file "component-mop")

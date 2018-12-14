@@ -25,6 +25,7 @@
                  #:dict
                  #:eval-always
                  #:href
+                 #:merge-tables
                  #:mvlet
                  #:mvlet*
                  #:octet

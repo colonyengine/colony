@@ -34,12 +34,12 @@
             mesh-material-retrieved-p t))
 
     (fl.util:mvlet* ((x y (fl.input:get-mouse-position (input-data context))))
-      (when (null x) (setf x (/ (cfg context :window-width) 2.0)))
-      (when (null y) (setf y (/ (cfg context :window-height) 2.0)))
+      (when (null x) (setf x (/ (option context :window-width) 2.0)))
+      (when (null y) (setf y (/ (option context :window-height) 2.0)))
       (flm:with-vec2 ((c channel0))
         ;; crappy, but good enough.
-        (setf c.x (coerce (/ x (cfg context :window-width)) 'single-float)
-              c.y (coerce (/ y (cfg context :window-height)) 'single-float)))
+        (setf c.x (coerce (/ x (option context :window-width)) 'single-float)
+              c.y (coerce (/ y (option context :window-height)) 'single-float)))
 
       (when (fl.input:input-enter-p (input-data context) '(:mouse :left))
         (format t "channel0 is: ~A~%" channel0))
