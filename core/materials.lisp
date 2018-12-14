@@ -436,7 +436,7 @@ and ignores the CONTEXT and MATERIAL arguments."
             (loop :for po-name :in (profile-overlay-names mat)
                   :collect
                   (let ((inst (fl.util:href (profiles (materials core-state))
-                                       po-name)))
+                                            po-name)))
                     (unless inst
                       (error "Material profile name: ~S doesn't exist."
                              po-name))

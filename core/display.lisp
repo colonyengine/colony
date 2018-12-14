@@ -64,7 +64,7 @@
   (let ((core-state (core-state display)))
     (multiple-value-call #'gl:clear-color
       (if (eq (option core-state :log-level) :debug)
-          (values (* 0.25 (abs (sin (total-time core-state)))) 0 0 1)
+          (values (* 0.25 (abs (sin (total-time (context core-state))))) 0 0 1)
           (values 0 0 0 1)))
     (gl:clear :color-buffer :depth-buffer)))
 
