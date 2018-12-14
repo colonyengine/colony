@@ -16,13 +16,12 @@
    (channel0 :default (flm:vec2))))
 
 
-(defmethod initialize-component ((self shader-sweep) (context context))
+(defmethod initialize-component ((self shader-sweep))
   ;; Find the mesh-renderer on my actor.
-  (setf (mesh-rend self)
-        (actor-component-by-type (actor self) 'mesh-renderer)))
+  (setf (mesh-rend self) (actor-component-by-type (actor self) 'mesh-renderer)))
 
 
-(defmethod update-component ((self shader-sweep) (context context))
+(defmethod update-component ((self shader-sweep))
   (with-accessors ((mesh-rend mesh-rend) (material-copied-p material-copied-p)
                    (mesh-rend-material mesh-rend-material)
                    (mesh-material-retrieved-p mesh-material-retrieved-p)
@@ -33,7 +32,8 @@
       (setf mesh-rend-material (material mesh-rend)
             mesh-material-retrieved-p t))
 
-    (fl.util:mvlet* ((x y (fl.input:get-mouse-position (input-data context))))
+    (fl.util:mvlet* ((context (context self))
+                     (x y (fl.input:get-mouse-position (input-data context))))
       (when (null x) (setf x (/ (option context :window-width) 2.0)))
       (when (null y) (setf y (/ (option context :window-height) 2.0)))
       (flm:with-vec2 ((c channel0))

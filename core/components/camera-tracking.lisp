@@ -5,12 +5,12 @@
    (target-actor :default nil)
    (target-transform :default nil)))
 
-(defmethod initialize-component ((component tracking-camera) (context context))
+(defmethod initialize-component ((component tracking-camera))
   (with-accessors ((slave slave-camera) (actor actor) (target target-actor)) component
     (setf slave (actor-component-by-type actor 'camera))
     (camera-target-actor component target)))
 
-(defmethod update-component ((component tracking-camera) (context context))
+(defmethod update-component ((component tracking-camera))
   (with-accessors ((view view) (transform transform)) (slave-camera component)
     (let* ((model (model transform))
            (eye (flm:get-translation model))

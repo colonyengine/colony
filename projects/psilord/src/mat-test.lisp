@@ -8,7 +8,7 @@
    (color-fuzz-delta :default (flm:vec4))
    (current-color :default (flm:vec4))))
 
-(defmethod initialize-component ((mat-test mat-test) (context context))
+(defmethod initialize-component ((mat-test mat-test))
 
   ;; TODO: NOTE! We cannot copy the material here, because we don't know if
   ;; the initialize-component has been run for the mesh-renderer which
@@ -30,7 +30,7 @@
       (* (if (zerop (random 2)) 1 -1)
          (random magnitude))))
 
-(defmethod update-component ((mat-test mat-test) (context context))
+(defmethod update-component ((mat-test mat-test))
   (with-accessors ((mesh-rend mesh-rend) (material-copied-p material-copied-p)
                    (mix-color mix-color) (color-fuzz-range color-fuzz-range)
                    (color-fuzz-delta color-fuzz-delta)

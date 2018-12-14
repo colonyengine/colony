@@ -11,17 +11,18 @@
    (zoom :default 1)
    (transform :default nil)))
 
-(defmethod initialize-component ((component camera) (context context))
-  (with-accessors ((mode mode) (actor actor) (transform transform)) component
-    (make-projection mode component context)
-    (setf transform (actor-component-by-type actor 'transform))
-    (push component (cameras (core-state context)))))
+(defmethod initialize-component ((component camera))
+  (with-slots (%mode %transform) component
+    (make-projection %mode component (context component))
+    (setf %transform (actor-component-by-type (actor component) 'transform))
+    (push component (cameras (core-state (context component))))))
 
-(defmethod destroy-component ((component camera) (context context))
-  (fl.util:deletef (cameras (core-state context)) component)
-  (setf (active-camera context) nil))
+(defmethod destroy-component ((component camera))
+  (let ((context (context component)))
+    (fl.util:deletef (cameras (core-state context)) component)
+    (setf (active-camera context) nil)))
 
-(defmethod make-projection ((mode (eql :perspective)) camera (context context))
+(defmethod make-projection ((mode (eql :perspective)) camera context)
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far) (fovy fovy)) camera
     (flm:set-projection/perspective (/ fovy zoom)
                                     (/ (option context :window-width)
@@ -30,14 +31,14 @@
                                     far
                                     proj)))
 
-(defmethod make-projection ((mode (eql :orthographic)) camera (context context))
+(defmethod make-projection ((mode (eql :orthographic)) camera context)
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far)) camera
     (let ((w (/ (option context :window-width) (zoom camera) 2))
           (h (/ (option context :window-height) (zoom camera) 2)))
       (flm:set-projection/orthographic (- w) w (- h) h near far proj))))
 
 (defgeneric compute-camera-view (camera context)
-  (:method ((camera camera) (context context))
+  (:method ((camera camera) context)
     (with-accessors ((view view) (transform transform)) camera
       (let* ((model (model transform))
              (eye (flm:get-translation model))

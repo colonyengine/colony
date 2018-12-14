@@ -130,13 +130,13 @@ for later use with the shaders."
           (fl.util:href (sprites sprite-sheet)
                         (aref (aref %animvec %current-animation) (1+ %current-cell))))))
 
-(defmethod initialize-component ((sprite-sheet sprite-sheet) (context context))
-  (with-slots (%spec-resource-id %spec %material %transform %vao-id) sprite-sheet
-    (let ((path (find-resource context %spec-resource-id)))
+(defmethod initialize-component ((sprite-sheet sprite-sheet))
+  (with-slots (%core-state %spec-resource-id %spec %material %transform %vao-id) sprite-sheet
+    (let ((path (find-resource (context %core-state) %spec-resource-id)))
       (setf %spec (fl.util:safe-read-file-form path)
             %transform (actor-component-by-type (actor sprite-sheet) 'transform)
             %vao-id (gl:gen-vertex-array))
-      (make-sprite-sheet-buffer sprite-sheet context)
+      (make-sprite-sheet-buffer sprite-sheet (context %core-state))
       (convert-current-sprite sprite-sheet))))
 
 (defun maybe-update-current-animation-cell (sprite-sheet frame-time)
@@ -160,64 +160,68 @@ for later use with the shaders."
       ;; fixup the current cell to show.
       (convert-current-sprite sprite-sheet))))
 
-(defmethod update-component ((sprite-sheet sprite-sheet) (context context))
-  (maybe-update-current-animation-cell sprite-sheet (frame-time context)))
+(defmethod update-component ((sprite-sheet sprite-sheet))
+  (let ((context (context sprite-sheet)))
+    (maybe-update-current-animation-cell sprite-sheet (frame-time context))))
 
-(defmethod render-component ((sprite-sheet sprite-sheet) (context context))
-  (with-slots (%transform %material %sprite %vao-id) sprite-sheet
-    (fl.util:when-let ((camera (active-camera context)))
+(defmethod render-component ((sprite-sheet sprite-sheet))
+  (with-slots (%core-state %transform %material %sprite %vao-id) sprite-sheet
+    (let ((context (context %core-state)))
+      (fl.util:when-let ((camera (active-camera context)))
 
-      ;; Bind the appropriate buffer associated with this specific sprite-sheet
-      ;; to the shader block.
-      (let ((ssbo/spec-data
-              (ss-href context 'sprite-sheet :ssbo/specification-data
-                       (spec-resource-id sprite-sheet))))
-        (shadow:bind-buffer (shadow:buffer-name ssbo/spec-data) 9))
+        ;; Bind the appropriate buffer associated with this specific sprite-sheet
+        ;; to the shader block.
+        (let ((ssbo/spec-data
+                (ss-href context 'sprite-sheet :ssbo/specification-data
+                         (spec-resource-id sprite-sheet))))
+          (shadow:bind-buffer (shadow:buffer-name ssbo/spec-data) 9))
 
-      (using-material %material
-          (:model (fl.comp:model %transform)
-           :view (fl.comp:view camera)
-           :proj (fl.comp:projection camera)
-           :tex.sprite %sprite)
-        (gl:bind-vertex-array %vao-id)
-        (gl:draw-arrays :points 0 1)))))
+        (using-material %material
+            (:model (fl.comp:model %transform)
+             :view (fl.comp:view camera)
+             :proj (fl.comp:projection camera)
+             :tex.sprite %sprite)
+          (gl:bind-vertex-array %vao-id)
+          (gl:draw-arrays :points 0 1))))))
 
 (define-component simple-movement ()
   ((transform :default nil)))
 
-(defmethod initialize-component ((component simple-movement) (context context))
+(defmethod initialize-component ((component simple-movement))
   (with-accessors ((actor actor) (transform transform)) component
     (setf transform (actor-component-by-type actor 'transform))))
 
-(defmethod update-component ((component simple-movement) (context context))
-  (with-accessors ((transform transform)) component
-    (fl.util:mvlet* ((lx ly (fl.input:get-gamepad-analog (input-data context)
+(defmethod update-component ((component simple-movement))
+  (with-slots (%transform) component
+    (fl.util:mvlet* ((context (context component))
+                     (lx ly (fl.input:get-gamepad-analog (input-data context)
                                                          '(:gamepad1 :left-stick)))
                      (rx ry (fl.input:get-gamepad-analog (input-data context)
                                                          '(:gamepad1 :right-stick))))
       (let ((vec (flm:vec3 lx ly 0)))
         (flm:* (if (> (flm:length vec) 1) (flm:normalize vec) vec) 150.0 vec)
-        (fl.comp:translate transform (flm:+ (flm:vec3 -400 0 0) vec) :replace-p t))
+        (fl.comp:translate %transform (flm:+ (flm:vec3 -400 0 0) vec) :replace-p t))
       (unless (= rx ry 0.0)
         (let* ((angle (atan (- rx) ry))
                ;; keep angle from 0 to 2pi for easier debugging of other things.
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
                           angle)))
-          (fl.comp:rotate transform (flm:vec3 0 0 angle) :replace-p t))))))
+          (fl.comp:rotate %transform (flm:vec3 0 0 angle) :replace-p t))))))
 
 (define-component shot-mover ()
   ((transform :default nil)
    (velocity :default 0)))
 
-(defmethod initialize-component ((component shot-mover) (context context))
+(defmethod initialize-component ((component shot-mover))
   (setf (transform component) (actor-component-by-type (actor component) 'transform)))
 
-(defmethod update-component ((component shot-mover) (context context))
+(defmethod update-component ((component shot-mover))
   (fl.comp:translate
    (transform component)
    ;; fly along the forward axis for this shot
-   (let* ((a (flm:vec3 (flm:get-column (fl.comp:local (transform component)) 1)))
+   (let* ((context (context component))
+          (a (flm:vec3 (flm:get-column (fl.comp:local (transform component)) 1)))
           (b (flm:normalize a))
           (move-delta (* (velocity component) (float (frame-time context)))))
      (flm:* b move-delta))))
@@ -225,38 +229,39 @@ for later use with the shaders."
 (define-component shot-emitter ()
   ((emitter-transform :default nil)))
 
-(defmethod initialize-component ((component shot-emitter) (context context))
+(defmethod initialize-component ((component shot-emitter))
   (setf (emitter-transform component)
         (actor-component-by-type (actor component) 'transform)))
 
-(defmethod update-component ((component shot-emitter) (context context))
-  (when (or (fl.input:input-enter-p (input-data context) '(:gamepad1 :a))
-            (fl.input:input-enter-p (input-data context) '(:mouse :left)))
-    (let* ((parent-model (fl.comp:model (emitter-transform component)))
-           (parent-translation (flm:get-translation parent-model))
-           (parent-rotation (from-scaled-mat4 parent-model))
-           (new-actor (%fl::make-actor context :id (fl.util:unique-name 'shot)))
-           (transform (make-component 'fl.comp:transform context
-                                      ;; here I init the local location/rotation
-                                      ;; to semantically match the emitter
-                                      ;; actor.
-                                      :translation/current parent-translation
-                                      :rotation/current parent-rotation))
-           (shot-mover (make-component 'shot-mover context
-                                       :velocity 1000))
-           (sprite (make-component 'sprite-sheet context
-                                   :spec-resource-id :spritesheet-data
-                                   :material 'sprite
-                                   :animations (make-sprite-sheet-animations
-                                                0 0 #(#(.25
-                                                        "bullet01"
-                                                        "bullet02"))))))
-      (attach-multiple-components new-actor transform shot-mover sprite)
-      ;; The shot is free in the universe.
-      (spawn-actor new-actor context)
-      ;; This is the method for destroying actors and components. Add to public
-      ;; API. Don't use :ttl in the make-actor call yet.
-      (%fl::destroy new-actor context :ttl 1))))
+(defmethod update-component ((component shot-emitter))
+  (let ((context (context component)))
+    (when (or (fl.input:input-enter-p (input-data context) '(:gamepad1 :a))
+              (fl.input:input-enter-p (input-data context) '(:mouse :left)))
+      (let* ((parent-model (fl.comp:model (emitter-transform component)))
+             (parent-translation (flm:get-translation parent-model))
+             (parent-rotation (from-scaled-mat4 parent-model))
+             (new-actor (%fl::make-actor context :id (fl.util:unique-name 'shot)))
+             (transform (make-component 'fl.comp:transform context
+                                        ;; here I init the local location/rotation
+                                        ;; to semantically match the emitter
+                                        ;; actor.
+                                        :translation/current parent-translation
+                                        :rotation/current parent-rotation))
+             (shot-mover (make-component 'shot-mover context
+                                         :velocity 1000))
+             (sprite (make-component 'sprite-sheet context
+                                     :spec-resource-id :spritesheet-data
+                                     :material 'sprite
+                                     :animations (make-sprite-sheet-animations
+                                                  0 0 #(#(.25
+                                                          "bullet01"
+                                                          "bullet02"))))))
+        (attach-multiple-components new-actor transform shot-mover sprite)
+        ;; The shot is free in the universe.
+        (spawn-actor new-actor context)
+        ;; This is the method for destroying actors and components. Add to public
+        ;; API. Don't use :ttl in the make-actor call yet.
+        (%fl::destroy new-actor context :ttl 1)))))
 
 ;; TODO: This should go into gamebox-math. It is an alternate form of
 ;; QUAT:FROM-MAT4 that can handle non-orthonormal rotation matricies.

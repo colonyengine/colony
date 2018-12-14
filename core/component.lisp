@@ -99,17 +99,17 @@ DEFINE-COMPONENT form."
   (:method ((component-name symbol) &optional namespace)
     (declare (ignore namespace))))
 
-(defgeneric initialize-component (component context)
-  (:method ((component component) (context context))))
+(defgeneric initialize-component (component)
+  (:method ((component component))))
 
-(defgeneric physics-update-component (component context)
-  (:method ((component component) (context context))))
+(defgeneric physics-update-component (component)
+  (:method ((component component))))
 
-(defgeneric update-component (component context)
-  (:method ((component component) (context context))))
+(defgeneric update-component (component)
+  (:method ((component component))))
 
-(defgeneric render-component (component context)
-  (:method ((component component) (context context))))
+(defgeneric render-component (component)
+  (:method ((component component))))
 
-(defgeneric destroy-component (component context)
-  (:method ((component component) (context context))))
+(defgeneric destroy-component (component)
+  (:method ((component component))))
