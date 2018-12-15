@@ -59,7 +59,17 @@
    (:file "image")
    (:module "textures"
     :components
-    ((:file "texture")))
+    ((:file "texture")
+     (:file "common")
+     (:file "1d")
+     (:file "2d")
+     (:file "3d")
+     (:file "1d-array")
+     (:file "2d-array")
+     (:file "cube-map")
+     (:file "cube-map-array")
+     (:file "rectangle")
+     (:file "buffer")))
    (:file "materials")
    (:file "shaders")
    (:file "engine")
