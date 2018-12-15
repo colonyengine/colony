@@ -1,6 +1,5 @@
 (in-package :%first-light)
 
-
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map))
                               texture context)
 
