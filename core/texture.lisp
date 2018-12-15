@@ -241,24 +241,29 @@ replaced by actual IMAGE instances of the loaded images.
                           (map 'vector #'read-image-contextually slices))
                 data))
           (:cube-map
-           (vector
-            ;; canonicalize the face name.
-            (map 'vector (lambda (face)
-                           (list (canonicalize-cube-map-face-signfier
-                                  (first face))
-                                 (second face)))
-                 ;; sort the faces for loading in the right order.
-                 (stable-sort
-                  ;; convert vector of path-locations to image instances.
-                  (map 'vector
-                       (lambda (face)
-                         (let ((face-signifier (first face))
-                               (mipmaps (second face)))
-                           (list face-signifier
-                                 (map 'vector #'read-image-contextually
-                                      mipmaps))))
-                       (aref data 0))
-                  #'sort-cube-map-faces-func :key #'first)))))
+           ;; Only a single cibe to load.
+           (let ((cube-data (aref data 0)))
+             (unless (equal '(:layout :six) (first cube-data))
+               (error "read-mipmap-images: :texture-cub-map, invalid :layout ~S, it must be :six at this time." (first cube-data)))
+
+             (vector
+              ;; canonicalize the face name.
+              (map 'vector (lambda (face)
+                             (list (canonicalize-cube-map-face-signfier
+                                    (first face))
+                                   (second face)))
+                   ;; sort the faces for loading in the right order.
+                   (stable-sort
+                    ;; convert vector of path-locations to image instances.
+                    (map 'vector
+                         (lambda (face)
+                           (let ((face-signifier (first face))
+                                 (mipmaps (second face)))
+                             (list face-signifier
+                                   (map 'vector #'read-image-contextually
+                                        mipmaps))))
+                         (second cube-data))
+                    #'sort-cube-map-faces-func :key #'first))))))
 
         ;; Processing only the first image location (mipmap 0)
         (ecase kind
@@ -376,7 +381,7 @@ in the GPU memory."
              (:texture-cube-map
               ;; TODO: This assumes no errors in specification of the number of
               ;; mipmaps.
-              (let* ((cube (aref data 0))
+              (let* ((cube (second (aref data 0)))
                      (face (aref cube 0))
                      (mipmaps (second face)))
                 (length mipmaps))))))
