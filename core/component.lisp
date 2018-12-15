@@ -39,7 +39,7 @@ DEFINE-COMPONENT form."
                     (return-from qualify-component symbol)))))))
         component-type)))
 
-(defmethod make-component (component-type context &rest initargs)
+(defmethod make-component (context component-type &rest initargs)
   (let ((qualified-type (qualify-component (core-state context) component-type)))
     (apply #'make-instance qualified-type :type qualified-type :context context initargs)))
 
@@ -54,44 +54,49 @@ DEFINE-COMPONENT form."
         :until (eq name 'component)
         :collect name))
 
-(defun component/preinit->init (core-state component)
+(defun component/preinit->init (component)
   (fl.util:when-let ((thunk (initializer-thunk component)))
     (funcall thunk)
     (setf (initializer-thunk component) nil))
-  (let ((component-type (canonicalize-component-type (component-type component) core-state)))
+  (let* ((core-state (core-state (context component)))
+         (component-type (canonicalize-component-type (component-type component) core-state)))
     (with-slots (%tables) core-state
       (type-table-drop component component-type (component-preinit-by-type-view %tables))
       (setf (type-table component-type (component-init-by-type-view %tables)) component))))
 
-(defun component/init->active (core-state component)
-  (let ((component-type (canonicalize-component-type (component-type component) core-state)))
+(defun component/init->active (component)
+  (let* ((core-state (core-state (context component)))
+         (component-type (canonicalize-component-type (component-type component) core-state)))
     (with-slots (%tables) core-state
       (type-table-drop component component-type (component-init-by-type-view %tables))
       (setf (state component) :active
             (type-table component-type (component-active-by-type-view %tables)) component))))
 
-(defmethod destroy ((thing component) (context context) &key (ttl 0))
-  (let ((core-state (core-state context)))
+(defmethod destroy ((thing component) &key (ttl 0))
+  (let ((core-state (core-state (context thing))))
     (setf (ttl thing) (if (minusp ttl) 0 ttl)
           (fl.util:href (component-predestroy-view (tables core-state)) thing) thing)))
 
-(defun component/init-or-active->destroy (core-state component)
-  (let ((component-type (canonicalize-component-type (component-type component) core-state)))
-    (with-slots (%tables) core-state
-      (setf (state component) :destroy
-            (type-table component-type (component-destroy-by-type-view %tables)) component)
-      (remhash component (component-predestroy-view %tables))
-      (unless (type-table-drop component component-type (component-active-by-type-view %tables))
-        (type-table-drop component component-type (component-preinit-by-type-view %tables))))))
+(defun component/init-or-active->destroy (component)
+  (let* ((core-state (core-state (context component)))
+         (component-type (canonicalize-component-type (component-type component) core-state)))
+    (unless (plusp (ttl component))
+      (with-slots (%tables) core-state
+        (setf (state component) :destroy
+              (type-table component-type (component-destroy-by-type-view %tables)) component)
+        (remhash component (component-predestroy-view %tables))
+        (unless (type-table-drop component component-type (component-active-by-type-view %tables))
+          (type-table-drop component component-type (component-preinit-by-type-view %tables)))))))
 
-(defun component/destroy->released (core-state component)
-  (let ((component-type (canonicalize-component-type (component-type component) core-state)))
+(defun component/destroy->released (component)
+  (let* ((core-state (core-state (context component)))
+         (component-type (canonicalize-component-type (component-type component) core-state)))
     (type-table-drop component component-type (component-destroy-by-type-view (tables core-state)))
     (detach-component (actor component) component)))
 
-(defun component/countdown-to-destruction (core-state component)
+(defun component/countdown-to-destruction (component)
   (when (plusp (ttl component))
-    (decf (ttl component) (frame-time (context core-state)))))
+    (decf (ttl component) (frame-time (context component)))))
 
 ;;; User protocol
 

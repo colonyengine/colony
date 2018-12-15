@@ -35,7 +35,7 @@
   (defun update-lisp-repl ()
     (fl.util:noop)))
 
-(defgeneric destroy (thing context &key ttl)
+(defgeneric destroy (thing &key ttl)
   (:documentation "Destroy may take either an ACTOR or a COMPONENT. The keyword argument :TTL
 supplied in real seconds, how long the thing has yet to live."))
 

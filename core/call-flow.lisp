@@ -215,8 +215,11 @@ The previous state name and the current state name which resulted in the exiting
             ;; Step 6: Run the transition function to determine the next
             ;; flow-state. Currently, a transition can only go into the SAME
             ;; flow.
-            (setf flow-state
-                  (fl.util:href flow (funcall (transition flow-state) core-state)))))
+            (flet ((act-on-transition (transition)
+                     (etypecase transition
+                       (function (funcall transition core-state))
+                       (symbol transition))))
+              (setf flow-state (fl.util:href flow (act-on-transition (transition flow-state)))))))
 
 (defun get-call-flow (call-flow-name core-state)
   (fl.util:href (call-flows core-state) call-flow-name))

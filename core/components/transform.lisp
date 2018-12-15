@@ -101,7 +101,7 @@
      (resolve-model node (%fl::alpha (%fl:frame-manager core-state))))
    (actor-component-by-type (%fl:scene-tree core-state) 'transform)))
 
-(defmethod make-component ((component-type (eql 'transform)) context &rest args)
+(defmethod make-component (context (component-type (eql 'transform)) &rest args)
   (let ((instance (make-instance component-type :type component-type :context context)))
     (apply #'reinitialize-instance instance args)
     instance))

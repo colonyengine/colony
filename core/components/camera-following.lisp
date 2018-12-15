@@ -16,7 +16,7 @@
     (let* ((target-position (flm:get-translation (model (target-transform component))))
            (new-camera-position (flm:+ target-position (offset component) target-position)))
       (flm:set-translation (model transform) new-camera-position (model transform))
-      (compute-camera-view (slave-camera component) (context component)))))
+      (compute-camera-view (slave-camera component)))))
 
 (defmethod camera-target-actor ((camera following-camera) (actor actor))
   (setf (target-actor camera) actor)

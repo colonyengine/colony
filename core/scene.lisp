@@ -49,7 +49,7 @@
   (flet ((generate-component-forms (components)
            (let ((component-forms))
              (dolist (c components)
-               (push `(make-component ',(first c) (context ,core-state)) component-forms))
+               (push `(make-component (context ,core-state) ',(first c)) component-forms))
              component-forms)))
     (let ((result))
       (maphash
@@ -87,9 +87,9 @@
                      (actor-component-by-type ,(or parent root) 'transform)
                      (actor-component-by-type ,child 'transform)))))
 
-(defun %generate-actor-spawn (core-state actor-names)
+(defun %generate-actor-spawn (actor-names)
   (loop :for actor :in actor-names
-        :collect `(spawn-actor ,actor (context ,core-state))))
+        :collect `(spawn-actor ,actor)))
 
 (defun parse-scene (scene-name context scene-spec)
   (fl.util:with-unique-names (core-state actor-table actor-name)
@@ -107,7 +107,7 @@
              ,@(%generate-component-initializers core-state actor-components)
              ,@(%generate-component-thunks actor-names actor-components)
              ,@(%generate-relationships core-state scene-spec)
-             ,@(%generate-actor-spawn core-state actor-names)
+             ,@(%generate-actor-spawn actor-names)
              (values ,core-state ,actor-table)))))))
 
 (defun get-scene (core-state scene-name)

@@ -37,14 +37,15 @@
           (h (/ (option context :window-height) zoom 2)))
       (flm:set-projection/orthographic (- w) w (- h) h near far proj))))
 
-(defgeneric compute-camera-view (camera context)
-  (:method ((camera camera) context)
-    (with-accessors ((view view) (transform transform)) camera
-      (let* ((model (model transform))
-             (eye (flm:get-translation model))
-             (target (flm:+ eye (flm:negate (flm:vec3 (flm:get-column model 2)))))
-             (up (flm:vec3 (flm:get-column model 1))))
-        (flm:set-view eye target up view)))))
+(defgeneric compute-camera-view (camera)
+  (:method ((camera camera))
+    (with-accessors ((activep activep) (view view) (transform transform)) camera
+      (when activep
+        (let* ((model (model transform))
+               (eye (flm:get-translation model))
+               (target (flm:+ eye (flm:negate (flm:vec3 (flm:get-column model 2)))))
+               (up (flm:vec3 (flm:get-column model 1))))
+          (flm:set-view eye target up view))))))
 
 (defun find-active-camera (core-state)
   (dolist (camera (cameras core-state))

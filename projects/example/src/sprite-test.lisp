@@ -55,14 +55,14 @@
    ;; Value: buffer-name of created buffer to hold it
    (:ssbo/specification-data equal)))
 
-(defun make-sprite-sheet-buffer (sprite-sheet context)
+(defun make-sprite-sheet-buffer (sprite-sheet)
   ;; 1. I know the block-alias I need is:
   ;; since I wrote it in the material definition.
   ;; The material itself performed the creation of the above alias.
 
   ;; 2. create a buffer which must be unique for all buffers of the same spec.
   (with-shared-storage
-      (context context)
+      (context (context sprite-sheet))
       ((ssbo/spec-data ssbo-presentp
                        ;; Which type storage to look at
                        ('sprite-sheet
@@ -131,12 +131,13 @@ for later use with the shaders."
                         (aref (aref %animvec %current-animation) (1+ %current-cell))))))
 
 (defmethod initialize-component ((sprite-sheet sprite-sheet))
-  (with-slots (%core-state %spec-resource-id %spec %material %transform %vao-id) sprite-sheet
-    (let ((path (find-resource (context %core-state) %spec-resource-id)))
+  (with-slots (%spec-resource-id %spec %material %transform %vao-id) sprite-sheet
+    (let* ((context (context sprite-sheet))
+           (path (find-resource context %spec-resource-id)))
       (setf %spec (fl.util:safe-read-file-form path)
             %transform (actor-component-by-type (actor sprite-sheet) 'transform)
             %vao-id (gl:gen-vertex-array))
-      (make-sprite-sheet-buffer sprite-sheet (context %core-state))
+      (make-sprite-sheet-buffer sprite-sheet)
       (convert-current-sprite sprite-sheet))))
 
 (defun maybe-update-current-animation-cell (sprite-sheet frame-time)
@@ -165,10 +166,9 @@ for later use with the shaders."
     (maybe-update-current-animation-cell sprite-sheet (frame-time context))))
 
 (defmethod render-component ((sprite-sheet sprite-sheet))
-  (with-slots (%core-state %transform %material %sprite %vao-id) sprite-sheet
-    (let ((context (context %core-state)))
+  (with-slots (%transform %material %sprite %vao-id) sprite-sheet
+    (let ((context (context sprite-sheet)))
       (fl.util:when-let ((camera (active-camera context)))
-
         ;; Bind the appropriate buffer associated with this specific sprite-sheet
         ;; to the shader block.
         (let ((ssbo/spec-data
@@ -241,15 +241,16 @@ for later use with the shaders."
              (parent-translation (flm:get-translation parent-model))
              (parent-rotation (from-scaled-mat4 parent-model))
              (new-actor (%fl::make-actor context :id (fl.util:unique-name 'shot)))
-             (transform (make-component 'fl.comp:transform context
+             (transform (make-component context
+                                        'fl.comp:transform
                                         ;; here I init the local location/rotation
                                         ;; to semantically match the emitter
                                         ;; actor.
                                         :translation/current parent-translation
                                         :rotation/current parent-rotation))
-             (shot-mover (make-component 'shot-mover context
-                                         :velocity 1000))
-             (sprite (make-component 'sprite-sheet context
+             (shot-mover (make-component context 'shot-mover :velocity 1000))
+             (sprite (make-component context
+                                     'sprite-sheet
                                      :spec-resource-id :spritesheet-data
                                      :material 'sprite
                                      :animations (make-sprite-sheet-animations
@@ -258,10 +259,10 @@ for later use with the shaders."
                                                           "bullet02"))))))
         (attach-multiple-components new-actor transform shot-mover sprite)
         ;; The shot is free in the universe.
-        (spawn-actor new-actor context)
+        (spawn-actor new-actor)
         ;; This is the method for destroying actors and components. Add to public
         ;; API. Don't use :ttl in the make-actor call yet.
-        (%fl::destroy new-actor context :ttl 1)))))
+        (%fl::destroy new-actor :ttl 1)))))
 
 ;; TODO: This should go into gamebox-math. It is an alternate form of
 ;; QUAT:FROM-MAT4 that can handle non-orthonormal rotation matricies.

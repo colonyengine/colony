@@ -85,25 +85,25 @@ CORE-STATE."
             (return-from done t))))))
 
 (defun %make-scene-tree (core-state)
-  (with-slots (%context) core-state
-    (let* ((actor (make-actor %context :id (fl.util:unique-name '@universe) :scene t))
-           (transform (make-component 'transform %context :actor actor)))
-      (attach-component actor transform)
-      (spawn-actor actor %context :parent nil)
-      (execute-flow core-state :default 'initialize-phase 'entry/initialize-phase
-                    :come-from-state-name 'ef-make-scene-tree)
-      actor)))
+  (let* ((context (context core-state))
+         (actor (make-actor context :id (fl.util:unique-name '@universe) :scene t))
+         (transform (make-component context 'transform :actor actor)))
+    (attach-component actor transform)
+    (spawn-actor actor :parent nil)
+    (execute-flow core-state :default 'initialize-phase 'entry/initialize-phase
+                  :come-from-state-name 'ef-make-scene-tree)
+    actor))
 
 (defgeneric shared-storage (context key)
-  (:method ((context context) key)
+  (:method (context key)
     (fl.util:href (shared-storage-table context) key))
-  (:method ((context context) (key component))
+  (:method (context (key component))
     (shared-storage context (component-type key))))
 
 (defgeneric (setf shared-storage) (value context key)
-  (:method (value (context context) key)
+  (:method (value context key)
     (setf (fl.util:href (shared-storage-table context) key) value))
-  (:method (value (context context) (key component))
+  (:method (value context (key component))
     (setf (shared-storage context (component-type key)) value)))
 
 ;;;; Interim caching code for (often) resources. Uses nested hash tables like
@@ -115,19 +115,19 @@ CORE-STATE."
     '(eql)))
 
 (defgeneric rcache-lookup (entry-type core-state &rest keys)
-  (:method ((entry-type symbol) (context context) &rest keys)
+  (:method ((entry-type symbol) context &rest keys)
     (apply #'rcache-lookup entry-type (core-state context) keys)))
 
 (defgeneric rcache-construct (entry-type core-state &rest keys)
-  (:method ((entry-type symbol) (context context) &rest keys)
+  (:method ((entry-type symbol) context &rest keys)
     (apply #'rcache-construct entry-type (core-state context) keys)))
 
 (defgeneric rcache-remove (entry-type core-state &rest keys)
-  (:method ((entry-type symbol) (context context) &rest keys)
+  (:method ((entry-type symbol) context &rest keys)
     (apply #'rcache-remove entry-type (core-state context) keys)))
 
 (defgeneric rcache-dispose (entry-type core-state removed-value)
-  (:method ((entry-type symbol) (context context) removed-value)
+  (:method ((entry-type symbol) context removed-value)
     (rcache-dispose entry-type (core-state context) removed-value)))
 
 ;; This might call rcache-construct if needed.
