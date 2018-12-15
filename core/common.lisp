@@ -1,16 +1,5 @@
 (in-package :%first-light)
 
-(defclass thread-safe-queue ()
-  ((%queue-lock :accessor queue-lock
-                :initarg :shader-lock
-                :initform (bt:make-lock))
-   (%queue :accessor queue
-           :initarg :queue
-           :initform (make-queue))))
-
-(defun make-thread-safe-queue ()
-  (make-instance 'thread-safe-queue))
-
 (defmacro with-continue-restart (report &body body)
   `(restart-case (progn ,@body)
      (continue () :report ,report)))
@@ -177,31 +166,6 @@ never be changed at runtime.")
         (r (fl.util:href +cube-map-face->texture-type+ right)))
     (funcall test (second l) (second r))))
 
-;;; Simple queue implementation, from Paul Graham.
-
-(defun make-queue (&rest body)
-  (if (null body)
-      (cons nil nil)
-      (cons body (last body))))
-
-(defun empty-queue-p (q)
-  (if (null (car q))
-      t
-      nil))
-
-(defun enqueue (obj q)
-  (if (null (car q))
-      (setf (cdr q) (setf (car q) (list obj)))
-      (setf (cdr (cdr q)) (list obj)
-            (cdr q) (cdr (cdr q))))
-  (car q))
-
-(defun dequeue (q)
-  (pop (car q)))
-
-;;; End Simple queue implementation, from Paul Graham
-
-
 ;; TODO: This function is not entirely correct in that it won't copy
 ;; structures or CLOS instances, and it won't do recursive copies in a
 ;; meaningful manner. This need fixing. I would guess this is actually hard
@@ -214,4 +178,11 @@ never be changed at runtime.")
       (copy-seq thing)
       thing))
 
+;;; Recompilation queue
 
+(defun recompile-queued-items (core-state)
+  (loop :with queue = (recompilation-queue core-state)
+        :for ((kind data) found-p) = (multiple-value-list (queues:qpop queue))
+        :while found-p
+        :do (ecase kind
+              (:shader-recompilation (recompile-shaders data)))))
