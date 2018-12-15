@@ -31,6 +31,10 @@
            #:atan
            #:trace
            #:conjugate)
+  ;; util
+  (:export #:round-down
+           #:round-up)
+  ;; vec/mat/quat
   (:export #:vec2
            #:vec3
            #:vec4

@@ -215,10 +215,3 @@ never be changed at runtime.")
       thing))
 
 
-;;; Various math functions.
-
-(defun round-down (x)
-  (ceiling (- x 1/2)))
-
-(defun round-up (x)
-  (floor (+ x 1/2)))

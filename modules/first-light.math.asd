@@ -17,6 +17,7 @@
   :components
   ((:file "package")
    (:file "common")
+   (:file "util")
    (:file "vec2")
    (:file "vec3")
    (:file "vec4")
