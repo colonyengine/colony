@@ -20,7 +20,6 @@
   ;; Find the mesh-renderer on my actor.
   (setf (mesh-rend self) (actor-component-by-type (actor self) 'mesh-renderer)))
 
-
 (defmethod update-component ((self shader-sweep))
   (with-accessors ((mesh-rend mesh-rend) (material-copied-p material-copied-p)
                    (mesh-rend-material mesh-rend-material)
