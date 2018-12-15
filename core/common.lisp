@@ -166,16 +166,12 @@ never be changed at runtime.")
         (r (fl.util:href +cube-map-face->texture-type+ right)))
     (funcall test (second l) (second r))))
 
-;; TODO: This function is not entirely correct in that it won't copy
-;; structures or CLOS instances, and it won't do recursive copies in a
-;; meaningful manner. This need fixing. I would guess this is actually hard
-;; to do generally. WHen it becomes a problem we'll deal with it then.
+;; TODO: This function is not entirely correct in that it won't copy structures or CLOS instances.
+;; This need fixing. I would guess this is actually hard to do generally. WHen it becomes a problem
+;; we'll deal with it then.
 (defun copy-thing (thing)
-  (if (or (stringp thing)
-          (arrayp thing)
-          (listp thing)
-          (vectorp thing))
-      (copy-seq thing)
+  (if (typep thing 'sequence)
+      (map-into (copy-seq thing) #'copy-thing thing)
       thing))
 
 ;;; Recompilation queue
