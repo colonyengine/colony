@@ -57,7 +57,9 @@
    (:file "type-dag")
    (:file "scene")
    (:file "image")
-   (:file "texture")
+   (:module "textures"
+    :components
+    ((:file "texture")))
    (:file "materials")
    (:file "shaders")
    (:file "engine")
