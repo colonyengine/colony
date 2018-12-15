@@ -103,7 +103,7 @@
 
 (defmethod make-component ((component-type (eql 'transform)) context &rest args)
   (let ((instance (make-instance component-type :type component-type :context context)))
-    (apply #'reinitialize-instance instance :type component-type :context context args)
+    (apply #'reinitialize-instance instance args)
     instance))
 
 (defmethod reinitialize-instance ((instance transform)

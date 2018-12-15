@@ -147,11 +147,9 @@ The previous state name and the current state name which resulted in the exiting
                (funcall (reset flow-state))))
             ;; Step 3: Run Selector Function
             (multiple-value-bind (the-policy the-selections)
-                (cond
-                  ((selector flow-state)
-                   (funcall (selector flow-state) core-state))
-                  (t
-                   (values :identity-policy nil)))
+                (if (selector flow-state)
+                    (funcall (selector flow-state) core-state)
+                    (values :identity-policy nil))
               (setf selections the-selections
                     policy the-policy))
             ;; Step 4: Iterate the action across everything in the selections.
@@ -167,15 +165,11 @@ The previous state name and the current state name which resulted in the exiting
             ;; a single type-table instance
             ;; (more semantics for :type-policy could be added at a later date).
             (labels ((act-on-item (item)
-                       (cond
-                         ((hash-table-p item)
-                          (when (action flow-state)
-                            (fl.util:do-hash-values (v item)
-                              (funcall (action flow-state) core-state v))))
-                         ((atom item)
-                          (when (action flow-state)
-                            (funcall (action flow-state) core-state item)))))
-
+                       (fl.util:when-let ((action (action flow-state)))
+                         (etypecase item
+                           (hash-table (fl.util:do-hash-values (v item)
+                                         (funcall action v)))
+                           (atom (funcall action item)))))
                      (act-on-type-table (type-key type-table)
                        ;; Get the hash of components for the type-key
                        (fl.util:when-found (component-table (type-table type-key type-table))
@@ -186,7 +180,7 @@ The previous state name and the current state name which resulted in the exiting
                 ;; the code path that it is supposed to take with that
                 ;; policy.
                 ((:identity-policy)
-                 (if (consp selections)
+                 (if (listp selections)
                      (dolist (item selections)
                        (act-on-item item))
                      (act-on-item selections)))

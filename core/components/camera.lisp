@@ -33,8 +33,8 @@
 
 (defmethod make-projection ((mode (eql :orthographic)) camera context)
   (with-accessors ((zoom zoom) (proj projection) (near clip-near) (far clip-far)) camera
-    (let ((w (/ (option context :window-width) (zoom camera) 2))
-          (h (/ (option context :window-height) (zoom camera) 2)))
+    (let ((w (/ (option context :window-width) zoom 2))
+          (h (/ (option context :window-height) zoom 2)))
       (flm:set-projection/orthographic (- w) w (- h) h near far proj))))
 
 (defgeneric compute-camera-view (camera context)
