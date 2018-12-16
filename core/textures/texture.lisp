@@ -230,18 +230,10 @@ The same vector structure is returned but with the local descriptor lists
 replaced by actual IMAGE instances of the loaded images.
 "
   (flet ((read-image-contextually (loc)
-           (read-image context loc)))
-    (if use-mipmaps-p
-        ;; Processing contained mipmaps
-        (ecase kind
-          ((:1d :2d)
-           (map 'vector #'read-image-contextually data))
-          ((:1d-array :2d-array :3d)
-           (map 'vector (lambda (slices)
-                          (map 'vector #'read-image-contextually slices))
-                data))
-          (:cube-map
-           ;; Only a single cibe to load.
+           (read-image context loc))
+         (process-cube-map-images (choice-func)
+           ;; Process only one cube map right now... when this works, edit it
+           ;; to process many cube maps.
            (let ((cube-data (aref data 0)))
              (unless (equal '(:layout :six) (first cube-data))
                (error "read-mipmap-images: :texture-cub-map, invalid :layout ~S, it must be :six at this time." (first cube-data)))
@@ -260,10 +252,25 @@ replaced by actual IMAGE instances of the loaded images.
                            (let ((face-signifier (first face))
                                  (mipmaps (second face)))
                              (list face-signifier
-                                   (map 'vector #'read-image-contextually
-                                        mipmaps))))
+                                   (funcall choice-func mipmaps))))
                          (second cube-data))
                     #'sort-cube-map-faces-func :key #'first))))))
+
+    (if use-mipmaps-p
+        ;; Processing contained mipmaps
+        (ecase kind
+          ((:1d :2d)
+           (map 'vector #'read-image-contextually data))
+          ((:1d-array :2d-array :3d)
+           (map 'vector (lambda (slices)
+                          (map 'vector #'read-image-contextually slices))
+                data))
+          (:cube-map
+           (process-cube-map-images
+            ;; Convert all mipmaps into images.
+            (lambda (mipmaps)
+              (map 'vector #'read-image-contextually mipmaps)))))
+
 
         ;; Processing only the first image location (mipmap 0)
         (ecase kind
@@ -272,9 +279,11 @@ replaced by actual IMAGE instances of the loaded images.
           ((:1d-array :2d-array :3d)
            (vector (map 'vector #'read-image-contextually (aref data 0))))
           (:cube-map
-           ;; TODO Implement me!
-           (error "read-image-contextually: :cube-map use-mipmaps-p nil NIY")
-           nil)))))
+           ;; TODO: Test this path.
+           (process-cube-map-images
+            (lambda (mipmaps)
+              ;; Convert only the first image, even if there are more.S
+              (vector (read-image-contextually (aref mipmaps 0))))))))))
 
 (defun free-mipmap-images (images kind)
   "Free all main memory associated with the vector of image objects in IMAGES."
