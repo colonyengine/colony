@@ -231,7 +231,7 @@ replaced by actual IMAGE instances of the loaded images.
 "
   (flet ((read-image-contextually (loc)
            (read-image context loc))
-         (process-cube-map-images (choice-func)
+         (process-cube-map-mipmaps (choice-func)
            ;; Process only one cube map right now... when this works, edit it
            ;; to process many cube maps.
            (let ((cube-data (aref data 0)))
@@ -266,7 +266,7 @@ replaced by actual IMAGE instances of the loaded images.
                           (map 'vector #'read-image-contextually slices))
                 data))
           (:cube-map
-           (process-cube-map-images
+           (process-cube-map-mipmaps
             ;; Convert all mipmaps into images.
             (lambda (mipmaps)
               (map 'vector #'read-image-contextually mipmaps)))))
@@ -280,7 +280,7 @@ replaced by actual IMAGE instances of the loaded images.
            (vector (map 'vector #'read-image-contextually (aref data 0))))
           (:cube-map
            ;; TODO: Test this path.
-           (process-cube-map-images
+           (process-cube-map-mipmaps
             (lambda (mipmaps)
               ;; Convert only the first image, even if there are more.S
               (vector (read-image-contextually (aref mipmaps 0))))))))))
