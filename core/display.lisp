@@ -49,6 +49,7 @@
 (defmethod initialize-instance :after ((instance display) &key &allow-other-keys)
   (let ((core-state (core-state instance)))
     (setf (slot-value core-state '%display) instance)
+    (gl:enable :texture-cube-map-seamless)
     (gl:enable :depth-test :blend :multisample :cull-face)
     (gl:blend-func :src-alpha :one-minus-src-alpha)
     (maybe-set-vsync (option (context core-state) :vsync))))
