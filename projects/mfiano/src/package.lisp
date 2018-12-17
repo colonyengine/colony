@@ -9,7 +9,7 @@
 (defpackage+ #:first-light.mfiano.shaders
   (:nicknames #:fl.mfiano.shaders)
   (:use #:first-light)
-  (:inherit #:shadow.vari)
+  (:inherit #:fl.shaderlib.vari)
   (:export-only #:noise-test/playground
                 #:mesh-test))
 

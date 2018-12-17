@@ -10,9 +10,9 @@
   "prog")
 
 (defmethod prepare-extension ((extension-type (eql :shader-programs)) core-state)
-  (shadow:reset-program-state)
+  (fl.shaderlib:reset-program-state)
   (map-extensions (context core-state) extension-type)
-  (shadow:enable-dependency-tracking))
+  (fl.shaderlib:enable-dependency-tracking))
 
 ;; NOTE: The returned function is called by the result of doing a C-c, which might be on a different
 ;; thread due to slynk, or anything else that forced recompilation of shader programs that happened
@@ -26,21 +26,21 @@
 
 (defun recompile-shaders (programs-list)
   (when programs-list
-    (shadow:translate-shader-programs programs-list)
-    (shadow:build-shader-programs programs-list)
-    (shadow:rebind-blocks programs-list)
+    (fl.shaderlib:translate-shader-programs programs-list)
+    (fl.shaderlib:build-shader-programs programs-list)
+    (fl.shaderlib:rebind-blocks programs-list)
     (v:debug :fl.ext.shader "Shader programs compiled: ~{~s~^, ~}" programs-list)))
 
 (defun prepare-shader-programs (core-state)
-  (setf (shaders core-state) (shadow:build-shader-dictionary))
-  (shadow:set-modify-hook (generate-shaders-modified-hook core-state)))
+  (setf (shaders core-state) (fl.shaderlib:build-shader-dictionary))
+  (fl.shaderlib:set-modify-hook (generate-shaders-modified-hook core-state)))
 
 (defun shutdown-shader-programs ()
-  (shadow:set-modify-hook (constantly nil))
-  (shadow:disable-dependency-tracking))
+  (fl.shaderlib:set-modify-hook (constantly nil))
+  (fl.shaderlib:disable-dependency-tracking))
 
 (defmacro define-shader (name (&key (version 430) (primitive :triangles)) &body body)
   `(progn
-     (shadow:define-shader ,name (:version ,version :primitive ,primitive)
+     (fl.shaderlib:define-shader ,name (:version ,version :primitive ,primitive)
        ,@body)
      (export ',name)))

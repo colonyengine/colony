@@ -3,7 +3,7 @@
 (defpackage+ #:first-light.shaders
   (:nicknames #:fl.shaders)
   (:use #:%first-light)
-  (:inherit #:shadow.vari)
+  (:inherit #:fl.shaderlib.vari)
   (:export-only #:unlit-color
                 #:unlit-color-decal
                 #:unlit-texture

@@ -10,7 +10,7 @@
 (defpackage+ #:first-light.psilord.shaders
   (:nicknames #:fl.psilord.shaders)
   (:use #:first-light)
-  (:inherit #:shadow.vari)
+  (:inherit #:fl.shaderlib.vari)
   (:export-only #:test-shader-0))
 
 (defpackage+ #:first-light.psilord.materials

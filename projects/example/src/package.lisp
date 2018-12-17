@@ -16,7 +16,7 @@
 (defpackage+ #:first-light.example.shaders
   (:nicknames #:fl.example.shaders)
   (:use #:first-light)
-  (:inherit #:shadow.vari)
+  (:inherit #:fl.shaderlib.vari)
   (:export-only #:damaged-helmet
                 #:graph-test
                 #:noise-2d/sweep-input

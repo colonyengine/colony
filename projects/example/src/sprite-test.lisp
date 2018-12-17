@@ -73,8 +73,8 @@
 
                        ;; If not present insert result of this
                        ;; form at that above key into shared storage.
-                       (shadow:create-buffer (fl.util:unique-name :sprite-sheet-buffer)
-                                             'ssbo/specification-data)))
+                       (fl.shaderlib:create-buffer (fl.util:unique-name :sprite-sheet-buffer)
+                                                   'ssbo/specification-data)))
 
     ;; Store a reference to the (possibly shared) buffer.
     (setf (ssbo-buffer sprite-sheet) ssbo/spec-data)
@@ -98,14 +98,14 @@
                           (aref ws i) w
                           (aref hs i) h)))
             :finally
-               (shadow:write-buffer-path
-                (shadow:buffer-name ssbo/spec-data) :x xs)
-               (shadow:write-buffer-path
-                (shadow:buffer-name ssbo/spec-data) :y ys)
-               (shadow:write-buffer-path
-                (shadow:buffer-name ssbo/spec-data) :w ws)
-               (shadow:write-buffer-path
-                (shadow:buffer-name ssbo/spec-data) :h hs)))
+               (fl.shaderlib:write-buffer-path
+                (fl.shaderlib:buffer-name ssbo/spec-data) :x xs)
+               (fl.shaderlib:write-buffer-path
+                (fl.shaderlib:buffer-name ssbo/spec-data) :y ys)
+               (fl.shaderlib:write-buffer-path
+                (fl.shaderlib:buffer-name ssbo/spec-data) :w ws)
+               (fl.shaderlib:write-buffer-path
+                (fl.shaderlib:buffer-name ssbo/spec-data) :h hs)))
 
     ;; Initialize the ids, we do this for each sprite-sheet instance we make
     ;; I could put this into a shared storage thing, but meh.
@@ -119,7 +119,7 @@
 
     ;; TODO: I hacked a 9 in here as the binding point. Needs FL support
     ;; to be auto allocated.
-    (shadow:bind-block 'ssbo/specification-data 9)))
+    (fl.shaderlib:bind-block 'ssbo/specification-data 9)))
 
 
 (defun convert-current-sprite (sprite-sheet)
@@ -174,7 +174,7 @@ for later use with the shaders."
         (let ((ssbo/spec-data
                 (ss-href context 'sprite-sheet :ssbo/specification-data
                          (spec-resource-id sprite-sheet))))
-          (shadow:bind-buffer (shadow:buffer-name ssbo/spec-data) 9))
+          (fl.shaderlib:bind-buffer (fl.shaderlib:buffer-name ssbo/spec-data) 9))
 
         (using-material %material
             (:model (fl.comp:model %transform)

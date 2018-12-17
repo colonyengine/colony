@@ -20,14 +20,14 @@
                #:sdl2
                #:cl-tga
                #:verbose
-               #:shadow
                #:umbra
                #:first-light.util
                #:first-light.metadata
                #:first-light.binary-formats
                #:first-light.math
                #:first-light.geometry
-               #:first-light.input)
+               #:first-light.input
+               #:first-light.shaderlib)
   :pathname "core"
   :serial t
   :components
