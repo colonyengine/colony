@@ -26,4 +26,5 @@
                 #:unlit-texture-1d-array
                 #:unlit-texture-2d-array
                 #:unlit-texture-3d
-                #:unlit-texture-cube-map))
+                #:unlit-texture-cube-map
+		#:unlit-texture-cube-map-array))

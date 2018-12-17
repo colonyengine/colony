@@ -5,4 +5,5 @@
   :window-width 1920
   :window-height 1080
   :vsync :off
-  :log-level :debug)
+  :log-level :debug
+  :log-repl-categories nil #++'(:fl.core.texture))

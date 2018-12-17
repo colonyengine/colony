@@ -231,30 +231,28 @@ replaced by actual IMAGE instances of the loaded images.
 "
   (flet ((read-image-contextually (loc)
            (read-image context loc))
-         (process-cube-map-mipmaps (choice-func)
-           ;; Process only one cube map right now... when this works, edit it
-           ;; to process many cube maps.
-           (let ((cube-data (aref data 0)))
-             (unless (equal '(:layout :six) (first cube-data))
-               (error "read-mipmap-images: :texture-cub-map, invalid :layout ~S, it must be :six at this time." (first cube-data)))
+         (process-cube-map-mipmaps (cube-data choice-func)
+           ;; Process only one cube map right now... when this works, edit it to
+           ;; process many cube maps.
+           (unless (equal '(:layout :six) (first cube-data))
+             (error "read-mipmap-images: :texture-cub-map, invalid :layout ~S, it must be :six at this time." (first cube-data)))
 
-             (vector
-              ;; canonicalize the face name.
-              (map 'vector (lambda (face)
-                             (list (canonicalize-cube-map-face-signfier
-                                    (first face))
-                                   (second face)))
-                   ;; sort the faces for loading in the right order.
-                   (stable-sort
-                    ;; convert vector of path-locations to image instances.
-                    (map 'vector
-                         (lambda (face)
-                           (let ((face-signifier (first face))
-                                 (mipmaps (second face)))
-                             (list face-signifier
-                                   (funcall choice-func mipmaps))))
-                         (second cube-data))
-                    #'sort-cube-map-faces-func :key #'first))))))
+           ;; canonicalize the face name.
+           (map 'vector (lambda (face)
+                          (list (canonicalize-cube-map-face-signfier
+                                 (first face))
+                                (second face)))
+                ;; sort the faces for loading in the right order.
+                (stable-sort
+                 ;; convert vector of path-locations to image instances.
+                 (map 'vector
+                      (lambda (face)
+                        (let ((face-signifier (first face))
+                              (mipmaps (second face)))
+                          (list face-signifier
+                                (funcall choice-func mipmaps))))
+                      (second cube-data))
+                 #'sort-cube-map-faces-func :key #'first))))
 
     (if use-mipmaps-p
         ;; Processing contained mipmaps
@@ -265,11 +263,13 @@ replaced by actual IMAGE instances of the loaded images.
            (map 'vector (lambda (slices)
                           (map 'vector #'read-image-contextually slices))
                 data))
-          (:cube-map
-           (process-cube-map-mipmaps
-            ;; Convert all mipmaps into images.
-            (lambda (mipmaps)
-              (map 'vector #'read-image-contextually mipmaps)))))
+          ((:cube-map :cube-map-array)
+           (map 'vector
+                (lambda (cube-data)
+                  (process-cube-map-mipmaps
+                   cube-data
+                   (lambda (mipmaps) (map 'vector #'read-image-contextually mipmaps))))
+                data)))
 
 
         ;; Processing only the first image location (mipmap 0)
@@ -278,12 +278,15 @@ replaced by actual IMAGE instances of the loaded images.
            (vector (read-image-contextually (aref data 0))))
           ((:1d-array :2d-array :3d)
            (vector (map 'vector #'read-image-contextually (aref data 0))))
-          (:cube-map
+          ((:cube-map :cube-map-array)
            ;; TODO: Test this path.
-           (process-cube-map-mipmaps
-            (lambda (mipmaps)
-              ;; Convert only the first image, even if there are more.S
-              (vector (read-image-contextually (aref mipmaps 0))))))))))
+           (map 'vector
+                (lambda (cube-data)
+                  (process-cube-map-mipmaps
+                   cube-data
+                   (lambda (mipmaps) (map 'vector #'read-image-contextually
+                                          (vector (aref mipmaps 0))))))
+                data))))))
 
 (defun free-mipmap-images (images kind)
   "Free all main memory associated with the vector of image objects in IMAGES."
@@ -295,7 +298,7 @@ replaced by actual IMAGE instances of the loaded images.
              ((:1d-array :2d-array :3d)
               (loop :for actual-image :across potential-image
                     :do (free-storage actual-image)))
-             (:cube-map
+             ((:cube-map :cube-map-array)
               (loop :for face :across potential-image
                     :do (loop :for actual-image :across (second face)
                               :do (free-storage actual-image)))))))
@@ -387,7 +390,7 @@ in the GPU memory."
               (length data))
              ((:texture-1d-array :texture-2d-array)
               (length (aref data 0)))
-             (:texture-cube-map
+             ((:texture-cube-map :texture-cube-map-array)
               ;; TODO: This assumes no errors in specification of the number of
               ;; mipmaps.
               (let* ((cube (second (aref data 0)))
@@ -398,7 +401,6 @@ in the GPU memory."
     (when (and use-mipmaps-p
                (= num-mipmaps 1) ;; We didn't supply any but the base image.
                (> max-mipmaps 1)) ;; And we're expecting some to exist.
-      #++(format t "Generating mipmaps for texture: ~A~%" (name texture))
       (gl:generate-mipmap texture-type))))
 
 

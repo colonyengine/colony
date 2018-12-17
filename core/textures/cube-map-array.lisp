@@ -16,24 +16,13 @@
            (first-cube (aref images 0))
            (first-image (aref (second (aref first-cube 0)) 0))
            ;; TODO: This is not safe, need to check all of them.
+           ;; TODO: WEe assume all cube maps have the same mipmap number,
+           ;; I don't know if this is a reuirements or not.
            (num-mipmaps (length (second (aref first-cube 0)))))
 
-      (v:trace :fl.core.texture "Loading :texture-cube-map-array images = ~a"
+      (v:debug :fl.core.texture
+               "Loading :texture-cube-map-array images = ~a"
                images)
-
-      ;; Check to ensure they all fit into texture memory.
-      ;;
-      ;; TODO: Refactor out of each method into validate-mipmap-images and
-      ;; generalize.
-      (loop :for (placement mipmaps) :across first-cube
-            :for image = (aref mipmaps 0)
-            :do (when (> (max (height image) (width image))
-                         (gl:get-integer :max-texture-size))
-                  ;; TODO: print out the location of the failing image.
-                  (error "An Image for texture ~A is to big to be loaded onto this card. Max resolution is ~A in either dimension."
-                         (name texture)
-                         (gl:get-integer :max-texture-size))))
-
 
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
@@ -53,14 +42,25 @@
         (when immutable-p
           (let ((num-mipmaps-to-generate
                   (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
-            (%gl:tex-storage-2d texture-type num-mipmaps-to-generate
+            (v:debug :fl.core.texture "tex-storage-3d: texture-type = ~A, num-mipmaps-to-generate = ~A, internal-format = ~A, width = ~A, height = ~A, depth = ~A~%"
+                     texture-type num-mipmaps-to-generate
+                     (internal-format first-image)
+                     (width first-image)
+                     (height first-image)
+                     (* (length data) 6))
+            (%gl:tex-storage-3d texture-type num-mipmaps-to-generate
                                 (internal-format first-image)
                                 (width first-image)
-                                (height first-image))))
+                                (height first-image)
+                                ;; For this target, we need number of
+                                ;; layer-face, not number of layer like in
+                                ;; cube-maps!
+                                (* (length data) 6))))
 
         ;; Insert all cubes plus mipmaps into the GPU.
         (loop
           :for cube :across images
+          :for cube-idx :below (length images)
           :do
              (loop
                :for idx :below (if use-mipmaps-p num-mipmaps 1)
@@ -69,18 +69,30 @@
                :do
                   (loop
                     :for (face-signifier mipmaps) :across cube
+                    ;; NOTE: face-idx works cause I sorted the faces
+                    ;; earlier.
+                    :for face-idx :by 1
                     :do
+                       (v:debug :fl.core.texture
+                                "inserting cube ~A face ~A[~A]~%"
+                                cube-idx face-signifier idx)
+
                        (with-slots (%width %height %internal-format
                                     %pixel-format %pixel-type %data)
                            (aref mipmaps idx)
                          (if immutable-p
-                             (gl:tex-sub-image-2d face-signifier level 0 0
-                                                  %width %height
+                             (gl:tex-sub-image-3d texture-type level
+                                                  0 0
+                                                  (+ (* cube-idx 6) face-idx)
+                                                  %width %height 1
                                                   %pixel-format
                                                   %pixel-type %data)
-                             (gl:tex-image-2d face-signifier level
+
+                             (gl:tex-image-3d texture-type level
                                               %internal-format
-                                              %width %height 0
+                                              %width %height
+                                              (+ (* cube-idx 6) face-idx)
+                                              0
                                               %pixel-format %pixel-type
                                               %data))))))
 

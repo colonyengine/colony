@@ -14,6 +14,7 @@
   (:2da-test (:project :texture-test-textures "2d-array/test"))
   (:3d-test (:project :texture-test-textures "3d/test"))
   (:cubemap-test (:project :texture-test-textures "cube-map/test"))
+  (:cubemaparray-test (:project :texture-test-textures "cube-map-array"))
   ;; sprite-test
   (:spritesheet (:project :texture "sprite-test/sprites.tga"))
   (:spritesheet-data (:project "sprites.sexp"))
