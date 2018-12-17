@@ -2,16 +2,7 @@
 
 (defpackage+ #:first-light.mfiano
   (:nicknames #:fl.mfiano)
-  (:use #:cl #:first-light)
-  (:export-only #:noise-test/playground
-                #:mesh-test))
-
-(defpackage+ #:first-light.mfiano.shaders
-  (:nicknames #:fl.mfiano.shaders)
-  (:use #:first-light)
-  (:inherit #:fl.shaderlib.vari)
-  (:export-only #:noise-test/playground
-                #:mesh-test))
+  (:use #:cl #:first-light))
 
 (defpackage+ #:first-light.mfiano.materials
   (:nicknames #:fl.mfiano.materials)

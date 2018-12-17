@@ -20,21 +20,19 @@
                #:sdl2
                #:cl-tga
                #:verbose
-               #:umbra
                #:first-light.util
                #:first-light.metadata
                #:first-light.binary-formats
                #:first-light.math
                #:first-light.geometry
                #:first-light.input
-               #:first-light.shaderlib)
+               #:first-light.shader)
   :pathname "core"
   :serial t
   :components
   ((:module "packages"
     :components
     ((:file "internal")
-     (:file "shaders")
      (:file "materials")
      (:file "textures")
      (:file "annotations")

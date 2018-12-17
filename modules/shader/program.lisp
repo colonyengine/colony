@@ -1,6 +1,4 @@
-(in-package :fl.shaderlib)
-
-(defvar *active-shader-program*)
+(in-package :first-light.shader)
 
 (defclass program ()
   ((%id :reader id
@@ -24,15 +22,15 @@
    (%blocks :reader blocks
             :initform (fl.util:dict #'equal))))
 
-(defun find-program (program-name)
+(cl:defun find-program (program-name)
   (let ((programs (fl.data:get 'programs)))
     (fl.util:href programs program-name)))
 
-(defun view-source (program-name stage)
+(cl:defun view-source (program-name stage)
   (fl.util:when-let ((program (find-program program-name)))
     (format t "~a" (fl.util:href (source program) stage))))
 
-(defun compile-stages (program)
+(cl:defun compile-stages (program)
   (let ((shaders))
     (maphash
      (lambda (k v)
@@ -46,7 +44,7 @@
      (source program))
     shaders))
 
-(defun link-program (shaders)
+(cl:defun link-program (shaders)
   (let ((program (gl:create-program)))
     (if (zerop program)
         (progn
@@ -64,11 +62,7 @@
             (gl:delete-shader shader))))
     program))
 
-(defun build-shader-program (name)
-  "Compile the shader stages of NAME, linking them into a program. NAME refers to a previously
-defined shader program using MAKE-SHADER-PROGRAM.
-
-See MAKE-SHADER-PROGRAM"
+(cl:defun build-shader-program (name)
   (let* ((program (find-program name))
          (shaders (compile-stages program))
          (id (link-program shaders)))
@@ -77,22 +71,19 @@ See MAKE-SHADER-PROGRAM"
     (store-uniform-locations program)
     id))
 
-(defun build-shader-dictionary ()
-  "Compile all shader programs defined with MAKE-SHADER-PROGRAM.
-
-See MAKE-SHADER-PROGRAM"
+(cl:defun build-shader-dictionary ()
   (let ((programs (fl.data:get 'programs)))
     (fl.util:maphash-keys #'build-shader-program programs)
     programs))
 
-(defun store-stage-program-dependencies (program)
+(cl:defun store-stage-program-dependencies (program)
   (let ((stage-fn->programs (fl.data:get 'stage-fn->programs)))
     (dolist (stage-spec (stage-specs program))
       (destructuring-bind (stage-type func-spec) stage-spec
         (declare (ignore stage-type))
         (pushnew (name program) (fl.util:href stage-fn->programs func-spec))))))
 
-(defun translate-program (program)
+(cl:defun translate-program (program)
   (with-slots (%name %version %primitive %stage-specs) program
     (let ((stages (translate-stages %version %primitive %stage-specs)))
       (dolist (stage stages)
@@ -100,7 +91,7 @@ See MAKE-SHADER-PROGRAM"
         (store-blocks program stage))
       (setf (slot-value program '%translated-stages) stages))))
 
-(defun %make-shader-program (name version primitive stage-specs)
+(cl:defun %make-shader-program (name version primitive stage-specs)
   (let ((programs (fl.data:get 'programs))
         (program (make-instance 'program
                                 :name name
@@ -114,33 +105,29 @@ See MAKE-SHADER-PROGRAM"
     (store-stage-program-dependencies program)
     program))
 
-(defmacro define-shader (name (&key (version :330) (primitive :triangles)) &body body)
-  "Create a new shader program using the stage-specs defined in BODY.
+(cl:defmacro define-shader (name (&key (version :430) (primitive :triangles)) &body body)
+  (fl.util:with-unique-names (definitions)
+    `(let ((,definitions (fl.data:get 'shader-definitions)))
+       (setf (fl.util:href ,definitions ',name)
+             (lambda ()
+               (%make-shader-program ',name ,version ,primitive ',body)))
+       (export ',name))))
 
-VERSION: The default version shader stages use, and can be overridden on a per-function basis.
-
-PRIMITIVE: The drawing primitive to use for the vertex stage."
-  `(%make-shader-program ',name ,version ,primitive ',body))
-
-(defun translate-shader-programs (program-list)
-  "Re-translate a collection of shader programs."
+(cl:defun translate-shader-programs (program-list)
   (dolist (program-name program-list)
     (let ((program (find-program program-name)))
       (translate-program program))))
 
-(defun build-shader-programs (program-list)
-  "Recompile a collection of shader programs."
+(cl:defun build-shader-programs (program-list)
   (dolist (program-name program-list)
     (build-shader-program program-name)))
 
-(defun set-modify-hook (function)
-  "Specify a function to be called when shader programs need to be updated."
+(cl:defun set-modify-hook (function)
   (fl.data:set 'modify-hook function))
 
-(defmacro with-shader-program (name &body body)
-  "Run a body of code which uses (as in glUseProgram) the program identified by NAME."
-  `(let ((*active-shader-program* (find-program ,name)))
-     (gl:use-program (id *active-shader-program*))
-     ,@body
+(cl:defmacro with-shader (name &body body)
+  `(unwind-protect
+        (progn
+          (gl:use-program (id (find-program ,name)))
+          ,@body)
      (gl:use-program 0)))
-

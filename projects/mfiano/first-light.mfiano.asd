@@ -9,4 +9,8 @@
   :serial t
   :components
   ((:file "package")
-   (:file "resources")))
+   (:file "resources")
+   (:module "shaders"
+    :components
+    ((:file "mesh-test")
+     (:file "noise-test-playground")))))

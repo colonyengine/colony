@@ -181,4 +181,4 @@ never be changed at runtime.")
         :for ((kind data) found-p) = (multiple-value-list (queues:qpop queue))
         :while found-p
         :do (ecase kind
-              (:shader-recompilation (recompile-shaders data)))))
+              (:shader-recompilation (fl.shader:recompile-shaders data)))))

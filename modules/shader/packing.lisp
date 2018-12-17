@@ -1,12 +1,12 @@
-(in-package :fl.shaderlib)
+(in-package :first-light.shader)
 
-(defun pack-container (type)
+(cl:defun pack-container (type)
   (etypecase type
     (varjo:v-vector :vec)
     (varjo:v-matrix :mat)
     (varjo:v-array :array)))
 
-(defun pack-type (type)
+(cl:defun pack-type (type)
   (etypecase type
     (varjo:v-bool '(:bool))
     (varjo:v-int '(:int 32))
@@ -22,14 +22,14 @@
                   (pack-type element-type)
                   (varjo:v-dimensions type)))))))
 
-(defun pack-struct (struct)
+(cl:defun pack-struct (struct)
   (loop :with name = (varjo:type->type-spec struct)
         :for (slot-name slot-type) :in (varjo.internals:v-slots struct)
         :for type = (pack-type slot-type)
         :collect (list slot-name type) :into members
         :finally (return `(,name (:struct () ,@members)))))
 
-(defun pack-block (layout)
+(cl:defun pack-block (layout)
   (loop :with uniform = (uniform layout)
         :with name = (varjo:name uniform)
         :with layout-type = (layout-type layout)
@@ -38,13 +38,13 @@
         :collect (list slot-name packed-type) :into members
         :finally (return `(,name (:block (:packing ,layout-type) ,@members)))))
 
-(defun pack-layout (layout)
+(cl:defun pack-layout (layout)
   (let ((structs (collect-layout-structs layout)))
     (glsl-packing:pack-structs
      `(,@(mapcar #'pack-struct structs)
        ,(pack-block layout)))))
 
-(defun unpack-type (layout-type type)
+(cl:defun unpack-type (layout-type type)
   (destructuring-bind ((spec &optional x y z) &key &allow-other-keys) type
     (labels ((get-container (x)
                (unpack-type layout-type (list x)))

@@ -1,9 +1,9 @@
-(in-package :fl.shaderlib)
+(in-package :first-light.shader)
 
-(defun stage-type (stage)
+(cl:defun stage-type (stage)
   (varjo:stage-kind stage))
 
-(defun stage-type->shader-type (stage-type)
+(cl:defun stage-type->shader-type (stage-type)
   (ecase stage-type
     (:vertex :vertex-shader)
     (:tessellation-control :tess-control-shader)
@@ -12,7 +12,7 @@
     (:fragment :fragment-shader)
     (:compute :compute-shader)))
 
-(defun make-stage (version primitive stage-spec)
+(cl:defun make-stage (version primitive stage-spec)
   (destructuring-bind (stage-type func-spec) stage-spec
     (fl.util:if-let ((func (find-gpu-function func-spec)))
       (varjo:make-stage
@@ -27,7 +27,7 @@
       (error "No function found for stage ~S with signature ~S"
              stage-type func-spec))))
 
-(defun translate-stages (version primitive stage-specs)
+(cl:defun translate-stages (version primitive stage-specs)
   (varjo:with-constant-inject-hook #'lisp-constant->glsl-constant
     (varjo:with-stemcell-infer-hook #'lisp-symbol->glsl-type
       (varjo:rolling-translate

@@ -1,0 +1,55 @@
+(in-package :first-light.shader)
+
+(defstruct sprite-index
+  (image :sampler-2d :accessor image)
+  (sprite :int32 :accessor sprite))
+
+(defstruct sprite-sheet-data
+  (x (:float 2048) :accessor x)
+  (y (:float 2048) :accessor y)
+  (w (:float 2048) :accessor w)
+  (h (:float 2048) :accessor h))
+
+(defun sprite/vert ()
+  (values))
+
+(defun sprite/geom (&uniform
+                    (model :mat4)
+                    (view :mat4)
+                    (proj :mat4)
+                    (tex sprite-index)
+                    (sprite-sheet sprite-sheet-data :ssbo :std-430))
+  (declare (output-primitive :kind :triangle-strip :max-vertices 6))
+  (let* ((mvp (* proj view model))
+         (extents (vec4 (aref (x sprite-sheet) (sprite tex))
+                        (aref (y sprite-sheet) (sprite tex))
+                        (aref (w sprite-sheet) (sprite tex))
+                        (aref (h sprite-sheet) (sprite tex))))
+         (size (.xyxy (texture-size (image tex) 0)))
+         (offsets (* size (vec4 (* 0.5 (.zw extents)) (* -0.5 (.zw extents))))))
+    (setf (.zw extents) (+ (.xy extents) (.zw extents)))
+    (emit ()
+          (* mvp (vec4 (.xy offsets) 0 1))
+          (.xw extents))
+    (emit ()
+          (* mvp (vec4 (.zy offsets) 0 1))
+          (.zw extents))
+    (emit ()
+          (* mvp (vec4 (.xw offsets) 0 1))
+          (.xy extents))
+    (emit ()
+          (* mvp (vec4 (.zw offsets) 0 1))
+          (.zy extents))
+    (end-primitive))
+  (values))
+
+(defun sprite/frag ((uv :vec2)
+                    &uniform
+                    (tex sprite-index))
+  (let ((color (texture (image tex) uv)))
+    color))
+
+(define-shader sprite-test (:version 430 :primitive :points)
+  (:vertex (sprite/vert))
+  (:geometry (sprite/geom))
+  (:fragment (sprite/frag :vec2)))

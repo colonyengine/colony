@@ -58,17 +58,6 @@
            #:using-material)
   ;; shaders
   (:export #:define-shader)
-  ;; transform-state
-  (:export #:make-transform-state
-           #:transform-state-scalar
-           #:transform-state-vector
-           #:transform-state-quaternion
-           #:current
-           #:incremental
-           #:incremental-delta
-           #:previous
-           #:interpolated
-           #:interpolate-state)
   ;; scene
   (:export #:define-scene)
   ;; actor

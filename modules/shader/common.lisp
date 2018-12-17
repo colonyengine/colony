@@ -1,11 +1,11 @@
-(in-package :fl.shaderlib)
+(in-package :first-light.shader)
 
-(defun ensure-keyword (x)
+(cl:defun ensure-keyword (x)
   (etypecase x
     ((or number string symbol)
      (fl.util:make-keyword (format nil "~a" x)))))
 
-(defun parts->string (parts &optional (filter #'identity))
+(cl:defun parts->string (parts &optional (filter #'identity))
   (with-output-to-string (s)
     (flet ((convert (parts)
              (mapcar
@@ -26,10 +26,10 @@
   (:method ((type varjo.internals:shader-variable))
     (varjo:qualifiers (varjo.internals:v-type-of type))))
 
-(defun has-qualifier-p (type qualifier)
+(cl:defun has-qualifier-p (type qualifier)
   (member qualifier (get-qualifiers type) :test #'varjo.internals:qualifier=))
 
-(defun lisp-symbol->glsl-type (symbol)
+(cl:defun lisp-symbol->glsl-type (symbol)
   (when (and (boundp symbol)
              (not (constantp symbol)))
     (etypecase (symbol-value symbol)
@@ -44,7 +44,7 @@
       ((simple-array single-float (9)) :mat3)
       ((simple-array single-float (16)) :mat4))))
 
-(defun lisp-constant->glsl-constant (constant)
+(cl:defun lisp-constant->glsl-constant (constant)
   (when (constantp constant)
     (let ((value (symbol-value constant)))
       (typecase value

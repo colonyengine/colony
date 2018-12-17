@@ -1,4 +1,4 @@
-(in-package :fl.shaderlib)
+(in-package :first-light.shader)
 
 (defclass shader-buffer ()
   ((%id :reader id
@@ -10,29 +10,29 @@
    (%layout :reader layout
             :initarg :layout)))
 
-(defun %make-buffer (name target layout)
+(cl:defun %make-buffer (name target layout)
   (make-instance 'shader-buffer :name name :target target :layout layout))
 
-(defun buffer-type->target (buffer-type)
+(cl:defun buffer-type->target (buffer-type)
   (ecase buffer-type
     (:ubo :uniform-buffer)
     (:ssbo :shader-storage-buffer)))
 
-(defun buffer-type->block-type (type)
+(cl:defun buffer-type->block-type (type)
   (ecase type
     (:ubo :uniform)
     (:ssbo :buffer)))
 
-(defun block-type->buffer-type (block-type)
+(cl:defun block-type->buffer-type (block-type)
   (ecase block-type
     (:uniform :ubo)
     (:buffer :ssbo)))
 
-(defun find-buffer (buffer-name)
+(cl:defun find-buffer (buffer-name)
   (let ((buffer-table (fl.data:get 'buffers)))
     (fl.util:href buffer-table buffer-name)))
 
-(defun create-buffer (buffer-name block-alias)
+(cl:defun create-buffer (buffer-name block-alias)
   "Create a buffer of the given TYPE and NAME, using the block BLOCK-ID of PROGRAM-NAME."
   (fl.util:if-let ((block (find-block block-alias)))
     (let* ((buffer-table (fl.data:get 'buffers))
@@ -45,7 +45,7 @@
         (setf (fl.util:href buffer-table buffer-name) buffer)))
     (error "Cannot find the block with alias ~s when attempting to create a buffer." block-alias)))
 
-(defun bind-buffer (buffer-name binding-point)
+(cl:defun bind-buffer (buffer-name binding-point)
   "Bind a buffer with name BUFFER-NAME to BINDING-POINT."
   (fl.util:if-let ((buffer (find-buffer buffer-name)))
     (with-slots (%target %id) buffer
@@ -53,11 +53,11 @@
       (%gl:bind-buffer %target 0))
     (error "Cannot find buffer ~s." buffer-name)))
 
-(defun unbind-buffer (buffer-name)
+(cl:defun unbind-buffer (buffer-name)
   "Unbind a buffer with name BUFFER-NAME."
   (bind-buffer buffer-name 0))
 
-(defun delete-buffer (buffer-name)
+(cl:defun delete-buffer (buffer-name)
   "Delete the buffer having a name of BUFFER-NAME."
   (let ((buffer-table (fl.data:get 'buffers))
         (buffer (find-buffer buffer-name)))
@@ -65,7 +65,7 @@
     (gl:delete-buffers (list (id buffer)))
     (remhash buffer-name buffer-table)))
 
-(defun %write-buffer-member (target member value)
+(cl:defun %write-buffer-member (target member value)
   (with-slots (%element-type %offset %element-stride %byte-stride) member
     (let ((count (length value)))
       (static-vectors:with-static-vector (sv (* count %element-stride) :element-type %element-type)
@@ -80,7 +80,7 @@
                value)
           (%gl:buffer-sub-data target %offset (* count %byte-stride) ptr))))))
 
-(defun %write-buffer-member-matrix (target member value)
+(cl:defun %write-buffer-member-matrix (target member value)
   (with-slots (%element-type %offset %element-stride %byte-stride %dimensions) member
     (let ((count (length value)))
       (destructuring-bind (columns . rows) %dimensions
@@ -98,7 +98,7 @@
                  value)
             (%gl:buffer-sub-data target %offset (* count %byte-stride) ptr)))))))
 
-(defun write-buffer-path (buffer-name path value)
+(cl:defun write-buffer-path (buffer-name path value)
   "Write VALUE to the buffer with the name BUFFER-NAME, starting at the given PATH.
 
 PATH: A \"dot-separated\" keyword symbol, where each part denotes a member in the buffer's block

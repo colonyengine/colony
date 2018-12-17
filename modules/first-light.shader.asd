@@ -1,4 +1,4 @@
-(asdf:defsystem #:first-light.shaderlib
+(asdf:defsystem #:first-light.shader
   :description "A system for defining shader programs and associated buffers."
   :author ("Michael Fiano <mail@michaelfiano.com>"
            "Peter Keller <psilord@cs.wisc.edu>"
@@ -14,13 +14,14 @@
                #:glsl-packing
                #:varjo
                #:cl-opengl
+               #:verbose
                #:first-light.util
                #:first-light.metadata)
-  :pathname "shaderlib"
+  :pathname "shader"
   :serial t
   :components
   ((:file "package")
-   (:file "shaderlib")
+   (:file "shader")
    (:file "common")
    (:file "functions")
    (:file "stages")
@@ -31,4 +32,27 @@
    (:file "layout")
    (:file "blocks")
    (:file "buffers")
-   (:file "vari")))
+   (:file "vari")
+   (:module "shaders"
+    :components
+    ((:file "common")
+     (:file "color-grading")
+     (:file "color-space")
+     (:file "graph")
+     (:file "hashing-bbs")
+     (:file "hashing-fast32")
+     (:file "hashing-fast32-2")
+     (:file "hashing-sgpp")
+     (:file "math")
+     (:file "noise-cellular")
+     (:file "noise-hermite")
+     (:file "noise-misc")
+     (:file "noise-perlin")
+     (:file "noise-polkadot")
+     (:file "noise-simplex")
+     (:file "noise-value")
+     (:file "shaping-iq")
+     (:file "shaping-levin")
+     (:file "shaping-misc")
+     (:file "shaping-penner")
+     (:file "texture")))))

@@ -1,4 +1,4 @@
-(in-package :fl.shaderlib)
+(in-package :first-light.shader)
 
 (defclass shader-block ()
   ((%id :reader id
@@ -17,14 +17,14 @@
 (fl.util:define-printer (shader-block stream :type nil)
   (format stream "BLOCK ~s" (id shader-block)))
 
-(defun get-block-type (struct)
+(cl:defun get-block-type (struct)
   (cond
     ((has-qualifier-p struct :ubo)
      (values :uniform :ubo))
     ((has-qualifier-p struct :ssbo)
      (values :buffer :ssbo))))
 
-(defun make-block (program layout)
+(cl:defun make-block (program layout)
   (let* ((uniform (uniform layout))
          (id (ensure-keyword (varjo:name uniform)))
          (name (varjo.internals:safe-glsl-name-string id))
@@ -38,7 +38,7 @@
                            :layout layout
                            :program program)))))
 
-(defun create-block-alias (block-type block-id program-name block-alias)
+(cl:defun create-block-alias (block-type block-id program-name block-alias)
   (let* ((program-name (name (find-program program-name)))
          (aliases (fl.data:get 'block-aliases))
          (block (%find-block program-name block-type block-id)))
@@ -46,26 +46,26 @@
         (error "The block alias ~s is already in use." block-alias)
         (setf (fl.util:href aliases block-alias) block))))
 
-(defun delete-block-alias (block-alias &key unbind-block)
+(cl:defun delete-block-alias (block-alias &key unbind-block)
   (when unbind-block
     (unbind-block block-alias))
   (remhash block-alias (fl.data:get 'block-aliases)))
 
-(defun store-blocks (program stage)
+(cl:defun store-blocks (program stage)
   (dolist (layout (collect-layouts stage))
     (make-block program layout)))
 
-(defun %find-block (program-name block-type block-id)
+(cl:defun %find-block (program-name block-type block-id)
   (if (keywordp block-id)
       (fl.util:when-let ((program (find-program program-name)))
         (fl.util:href (blocks program) (cons block-type block-id)))
       (error "Block ID must be a keyword symbol: ~a" block-id)))
 
-(defun find-block (block-alias)
+(cl:defun find-block (block-alias)
   (let ((aliases (fl.data:get 'block-aliases)))
     (fl.util:href aliases block-alias)))
 
-(defun block-binding-valid-p (block binding-point)
+(cl:defun block-binding-valid-p (block binding-point)
   (let ((bindings (fl.data:get 'block-bindings)))
     (every
      (lambda (x)
@@ -84,7 +84,7 @@
          (index (gl:get-program-resource-index program-id :shader-storage-block (name block))))
     (%gl:shader-storage-block-binding program-id index binding-point)))
 
-(defun bind-block (block-alias binding-point)
+(cl:defun bind-block (block-alias binding-point)
   "Bind a block referenced by BLOCK-ALIAS to a binding point."
   (let* ((bindings (fl.data:get 'block-bindings))
          (block (find-block block-alias)))
@@ -94,11 +94,11 @@
     (%bind-block (block-type block) block binding-point)
     (setf (slot-value block '%binding-point) binding-point)))
 
-(defun unbind-block (block-alias)
+(cl:defun unbind-block (block-alias)
   "Unbind a block with the alias BLOCK-ALIAS."
   (bind-block block-alias 0))
 
-(defun rebind-blocks (programs)
+(cl:defun rebind-blocks (programs)
   "Rebind all blocks that are members of PROGRAMS."
   (flet ((rebind (block-type)
            (let* ((bindings (fl.data:get 'block-bindings))

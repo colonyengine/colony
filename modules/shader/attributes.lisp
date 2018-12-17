@@ -1,6 +1,6 @@
-(in-package :fl.shaderlib)
+(in-package :first-light.shader)
 
-(defun store-attributes (program)
+(cl:defun store-attributes (program)
   (dolist (stage (translated-stages program))
     (when (eq (stage-type stage) :vertex)
       (loop :for attr :in (varjo:input-variables stage)
@@ -11,7 +11,7 @@
                                     :name (varjo:glsl-name attr)
                                     :type (varjo:type->type-spec type)))))))
 
-(defun store-attribute-locations (program)
+(cl:defun store-attribute-locations (program)
   (let ((id (id program)))
     (gl:use-program id)
     (fl.util:do-hash-values (v (attributes program))

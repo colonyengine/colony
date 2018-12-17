@@ -10,4 +10,8 @@
   :serial t
   :components
   ((:file "package")
-   (:file "mat-test")))
+   (:file "resources")
+   (:file "mat-test")
+   (:module "shaders"
+    :components
+    ((:file "test-shader-0")))))

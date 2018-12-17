@@ -1,4 +1,4 @@
-(in-package :fl.shaderlib)
+(in-package :first-light.shader)
 
 (defclass layout ()
   ((%type :reader layout-type
@@ -22,16 +22,16 @@
    (%offset :reader offset
             :initarg :offset)))
 
-(defun layout-struct-p (struct)
+(cl:defun layout-struct-p (struct)
   (or (has-qualifier-p struct :ubo)
       (has-qualifier-p struct :ssbo)))
 
-(defun get-layout-type (struct)
+(cl:defun get-layout-type (struct)
   (if (has-qualifier-p struct :std-430)
       :std430
       :std140))
 
-(defun collect-layout-structs (layout)
+(cl:defun collect-layout-structs (layout)
   (let ((structs))
     (labels ((process (type)
                (typecase type
@@ -52,7 +52,7 @@
              :when (typep slot-type 'varjo:v-user-struct)
                :collect slot-type)))))
 
-(defun make-layout-member (layout data)
+(cl:defun make-layout-member (layout data)
   (dolist (part (getf data :members))
     (destructuring-bind (&key type name offset size stride &allow-other-keys) part
       (fl.util:when-let ((unpacked-type (unpack-type (layout-type layout) type))
@@ -64,7 +64,7 @@
                      :byte-stride (or stride size)
                      unpacked-type))))))
 
-(defun make-layout (uniform)
+(cl:defun make-layout (uniform)
   (loop :with type = (get-layout-type (varjo:v-type-of uniform))
         :with layout = (make-instance 'layout :type type :uniform uniform)
         :for ((root) . (data)) :in (pack-layout layout)
@@ -73,7 +73,7 @@
               (setf (size layout) (getf data :size))
         :finally (return layout)))
 
-(defun collect-layouts (stage)
+(cl:defun collect-layouts (stage)
   (loop :for uniform :in (varjo:uniform-variables stage)
         :for struct = (varjo:v-type-of uniform)
         :when (layout-struct-p struct)

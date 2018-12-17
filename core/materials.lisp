@@ -293,8 +293,9 @@ CORE-STATE. Return a list of the return values of the FUNC."
      (lambda (uniform-name material-uniform-value)
        (when (functionp (semantic-value material-uniform-value))
          (execute-composition/semantic->computed material-uniform-value))
-       (let ((cv (computed-value material-uniform-value)))
-         (funcall (binder material-uniform-value) uniform-name cv)))
+       (let ((shader (shader (material material-uniform-value)))
+             (cv (computed-value material-uniform-value)))
+         (funcall (binder material-uniform-value) shader uniform-name cv)))
      (uniforms mat))))
 
 (defun bind-material-buffers (mat)
@@ -508,27 +509,27 @@ or if it a vector of the same. Return NIL otherwise."
      (if (sampler-p glsl-type)
          (let ((unit (active-texture-unit material)))
            (incf (active-texture-unit material))
-           (lambda (uniform-name texture)
+           (lambda (shader uniform-name texture)
              (gl:active-texture unit)
              (gl:bind-texture (sampler-type->texture-type glsl-type)
                               (texid texture))
-             (fl.shaderlib:uniform-int uniform-name unit)))
+             (fl.shader:uniform-int shader uniform-name unit)))
          (ecase glsl-type
-           (:bool #'fl.shaderlib:uniform-int)
-           ((:int :int32) #'fl.shaderlib:uniform-int)
-           (:float #'fl.shaderlib:uniform-float)
-           (:vec2 (lambda (uniform value)
-                    (fl.shaderlib:uniform-vec2 uniform (flm:get-array value))))
-           (:vec3 (lambda (uniform value)
-                    (fl.shaderlib:uniform-vec3 uniform (flm:get-array value))))
-           (:vec4 (lambda (uniform value)
-                    (fl.shaderlib:uniform-vec4 uniform (flm:get-array value))))
-           (:mat2 (lambda (uniform value)
-                    (fl.shaderlib:uniform-mat2 uniform (flm:get-array value))))
-           (:mat3 (lambda (uniform value)
-                    (fl.shaderlib:uniform-mat3 uniform (flm:get-array value))))
-           (:mat4 (lambda (uniform value)
-                    (fl.shaderlib:uniform-mat4 uniform (flm:get-array value)))))))
+           (:bool #'fl.shader:uniform-int)
+           ((:int :int32) #'fl.shader:uniform-int)
+           (:float #'fl.shader:uniform-float)
+           (:vec2 (lambda (shader uniform value)
+                    (fl.shader:uniform-vec2 shader uniform (flm:get-array value))))
+           (:vec3 (lambda (shader uniform value)
+                    (fl.shader:uniform-vec3 shader uniform (flm:get-array value))))
+           (:vec4 (lambda (shader uniform value)
+                    (fl.shader:uniform-vec4 shader uniform (flm:get-array value))))
+           (:mat2 (lambda (shader uniform value)
+                    (fl.shader:uniform-mat2 shader uniform (flm:get-array value))))
+           (:mat3 (lambda (shader uniform value)
+                    (fl.shader:uniform-mat3 shader uniform (flm:get-array value))))
+           (:mat4 (lambda (shader uniform value)
+                    (fl.shader:uniform-mat4 shader uniform (flm:get-array value)))))))
 
     ((consp glsl-type)
      (if (sampler-p (car glsl-type))
@@ -537,7 +538,7 @@ or if it a vector of the same. Return NIL otherwise."
                         :collect (prog1 (active-texture-unit material)
                                    (incf (active-texture-unit material)))))
                 (units (coerce units 'vector)))
-           (lambda (uniform-name texture-array)
+           (lambda (shader uniform-name texture-array)
              ;; Bind all of the textures to their active units first
              (loop :for texture :across texture-array
                    :for unit :across units
@@ -545,18 +546,18 @@ or if it a vector of the same. Return NIL otherwise."
                        (gl:bind-texture
                         (sampler-type->texture-type (car glsl-type))
                         (texid texture)))
-             (fl.shaderlib:uniform-int-array uniform-name units)))
+             (fl.shader:uniform-int-array shader uniform-name units)))
 
          (ecase (car glsl-type)
-           (:bool #'fl.shaderlib:uniform-int-array)
-           ((:int :int32) #'fl.shaderlib:uniform-int-array)
-           (:float #'fl.shaderlib:uniform-float-array)
-           (:vec2 #'fl.shaderlib:uniform-vec2-array)
-           (:vec3 #'fl.shaderlib:uniform-vec3-array)
-           (:vec4 #'fl.shaderlib:uniform-vec4-array)
-           (:mat2 #'fl.shaderlib:uniform-mat2-array)
-           (:mat3 #'fl.shaderlib:uniform-mat3-array)
-           (:mat4 #'fl.shaderlib:uniform-mat4-array))))
+           (:bool #'fl.shader:uniform-int-array)
+           ((:int :int32) #'fl.shader:uniform-int-array)
+           (:float #'fl.shader:uniform-float-array)
+           (:vec2 #'fl.shader:uniform-vec2-array)
+           (:vec3 #'fl.shader:uniform-vec3-array)
+           (:vec4 #'fl.shader:uniform-vec4-array)
+           (:mat2 #'fl.shader:uniform-mat2-array)
+           (:mat3 #'fl.shader:uniform-mat3-array)
+           (:mat4 #'fl.shader:uniform-mat4-array))))
     (t
      (error "Cannot determine binder function for glsl-type: ~S~%"
             glsl-type))))
@@ -578,7 +579,7 @@ or if it a vector of the same. Return NIL otherwise."
 
 (defun annotate-material-uniform (uniform-name material-uniform-value
                                   material shader-program core-state)
-  (fl.util:if-found (uniform-type-info (fl.util:href (fl.shaderlib:uniforms shader-program) uniform-name))
+  (fl.util:if-found (uniform-type-info (fl.util:href (fl.shader:uniforms shader-program) uniform-name))
 
                     (let ((uniform-type (fl.util:href uniform-type-info :type)))
                       ;; 1. Find the uniform in the shader-program and get its
@@ -640,8 +641,8 @@ uniform, those are not supported in materials."
 
 
   ;; 2. Create the block-name-alias, but only once.
-  (unless (fl.shaderlib:find-block block-alias-name)
-    (fl.shaderlib::create-block-alias (storage-type material-block-value)
+  (unless (fl.shader:find-block block-alias-name)
+    (fl.shader::create-block-alias (storage-type material-block-value)
                                       (block-name material-block-value)
                                       (shader material)
                                       block-alias-name))
@@ -742,7 +743,7 @@ applied in an overlay manner while defining a material."
 (defmacro using-material (material (&rest bindings) &body body)
   (fl.util:with-unique-names (material-ref)
     `(let ((,material-ref ,material))
-       (fl.shaderlib:with-shader-program (shader ,material-ref)
+       (fl.shader:with-shader (shader ,material-ref)
          (setf ,@(loop :for (k v) :on bindings :by #'cddr
                        :collect `(mat-uniform-ref ,material-ref ,k)
                        :collect v))

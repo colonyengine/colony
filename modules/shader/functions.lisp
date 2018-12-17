@@ -1,20 +1,20 @@
-(in-package :fl.shaderlib)
+(in-package :first-light.shader)
 
-(defun find-gpu-function (func-spec)
+(cl:defun find-gpu-function (func-spec)
   (destructuring-bind (name . types) func-spec
     (find types (varjo.internals::get-external-function-by-name name nil)
           :key (lambda (x) (mapcar #'second (varjo.internals:in-args x)))
           :test #'equal)))
 
-(defun get-function-spec (function)
+(cl:defun get-function-spec (function)
   (cons (varjo:name function) (mapcar #'second (varjo.internals:in-args function))))
 
-(defun ensure-function-dependency-tables (spec fn-deps dep-fns)
+(cl:defun ensure-function-dependency-tables (spec fn-deps dep-fns)
   (unless (fl.util:href dep-fns spec)
     (setf (fl.util:href dep-fns spec) (fl.util:dict #'equal)))
   (setf (fl.util:href fn-deps spec) (fl.util:dict #'equal)))
 
-(defun store-function-dependencies (spec dependencies)
+(cl:defun store-function-dependencies (spec dependencies)
   (symbol-macrolet ((fn-deps (fl.data:get 'fn->deps))
                     (dep-fns (fl.data:get 'dep->fns)))
     (when (fl.util:href fn-deps spec)
@@ -32,7 +32,7 @@
         (setf (fl.util:href fn-deps spec dep-spec) dep-spec
               (fl.util:href dep-fns dep-spec spec) spec)))))
 
-(defun compute-outdated-programs (spec)
+(cl:defun compute-outdated-programs (spec)
   (let* ((programs)
          (dep->fns (fl.data:get 'dep->fns))
          (spec-fns (fl.util:href dep->fns spec)))
@@ -44,7 +44,7 @@
      (fl.data:get 'stage-fn->programs))
     programs))
 
-(defmacro define-gpu-function (name args &body body)
+(cl:defmacro defun (name args &body body)
   "Define a GPU function."
   (fl.util:with-unique-names (split-details deps fn spec)
     (let ((split-args (varjo.utils:split-arguments args '(&uniform &context))))
@@ -59,4 +59,5 @@
                         (,deps (varjo:used-external-functions (first ,split-details))))
                    (store-function-dependencies ,spec ,deps)
                    (funcall (fl.data:get 'modify-hook) (compute-outdated-programs ,spec))))
-               ,fn)))))))
+               ,fn))
+           (export ',name))))))

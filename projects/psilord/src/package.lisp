@@ -4,14 +4,7 @@
   (:nicknames #:fl.psilord)
   (:use #:cl
         #:first-light
-        #:first-light.components)
-  (:export-only #:material-test))
-
-(defpackage+ #:first-light.psilord.shaders
-  (:nicknames #:fl.psilord.shaders)
-  (:use #:first-light)
-  (:inherit #:fl.shaderlib.vari)
-  (:export-only #:test-shader-0))
+        #:first-light.components))
 
 (defpackage+ #:first-light.psilord.materials
   (:nicknames #:fl.psilord.materials)
