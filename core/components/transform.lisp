@@ -151,8 +151,7 @@
   (with-accessors ((previous previous) (current current)) translation
     (flm:+ (if replace-p flm:+zero-vec3+ current) vec current)
     (when instant-p
-      (flm:copy-into previous current)
-      (setf previous current))))
+      (flm:copy-into previous current))))
 
 (defun %translate/world-space (translation vec &optional replace-p instant-p)
   (declare (ignore translation vec replace-p instant-p))
