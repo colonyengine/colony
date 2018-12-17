@@ -136,7 +136,7 @@
   (with-accessors ((previous previous) (current current)) rotation
     (flm:rotate (if replace-p flm:+id-quat+ current) vec current)
     (when instant-p
-      (setf previous current))))
+      (flm:copy-into previous current))))
 
 (defun %rotate/world-space (rotation vec &optional replace-p instant-p)
   (declare (ignore rotation vec replace-p instant-p))
@@ -151,6 +151,7 @@
   (with-accessors ((previous previous) (current current)) translation
     (flm:+ (if replace-p flm:+zero-vec3+ current) vec current)
     (when instant-p
+      (flm:copy-into previous current)
       (setf previous current))))
 
 (defun %translate/world-space (translation vec &optional replace-p instant-p)
@@ -166,4 +167,4 @@
   (with-accessors ((previous previous) (current current)) (scaling transform)
     (flm:+ (if replace-p flm:+zero-vec3+ current) vec current)
     (when instant-p
-      (setf previous current))))
+      (flm:copy-into previous current))))
