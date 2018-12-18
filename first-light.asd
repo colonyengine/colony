@@ -71,7 +71,8 @@
    (:module "materials"
     :components
     ((:file "parser")
-     (:file "profiles")))
+     (:file "profiles")
+     (:file "definitions")))
    (:file "shaders")
    (:file "engine")
    (:file "deploy")

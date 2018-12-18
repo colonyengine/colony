@@ -6,10 +6,6 @@
         #:first-light
         #:first-light.components))
 
-(defpackage+ #:first-light.psilord.materials
-  (:nicknames #:fl.psilord.materials)
-  (:use #:cl #:first-light))
-
 (defpackage+ #:first-light.psilord.textures
   (:nicknames #:fl.psilord.textures)
   (:use #:cl #:first-light))

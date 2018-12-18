@@ -23,4 +23,5 @@
      (:file "graph-test")
      (:file "noise-test")
      (:file "sprite-test")
-     (:file "texture-test")))))
+     (:file "texture-test")))
+   (:file "materials")))

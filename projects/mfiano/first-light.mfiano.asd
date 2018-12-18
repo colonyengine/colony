@@ -13,4 +13,5 @@
    (:module "shaders"
     :components
     ((:file "mesh-test")
-     (:file "noise-test-playground")))))
+     (:file "noise-test-playground")))
+   (:file "materials")))

@@ -14,4 +14,5 @@
    (:file "mat-test")
    (:module "shaders"
     :components
-    ((:file "test-shader-0")))))
+    ((:file "test-shader-0")))
+   (:file "materials")))
