@@ -15,7 +15,6 @@
                  #:delta
                  #:deploy-binary
                  #:define-component
-                 #:define-graph
                  #:define-material
                  #:define-material-profile
                  #:define-options

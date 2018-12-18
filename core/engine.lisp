@@ -63,7 +63,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (make-frame-manager core-state)
     (initialize-host core-state)
     (initialize-shaders core-state)
-    (load-graphs core-state)
+    (prepare-extension :graphs core-state)
     (prepare-extension :call-flow core-state)
     (load-texture-descriptors core-state)
     (load-materials core-state)

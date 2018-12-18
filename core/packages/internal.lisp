@@ -17,7 +17,6 @@
    #:core-state
    #:define-annotation
    #:define-component
-   #:define-graph
    #:define-material
    #:define-material-profile
    #:define-options
