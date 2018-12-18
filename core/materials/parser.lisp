@@ -687,48 +687,36 @@ must be executed after all the shader programs have been compiled."
 
 
 (defmethod prepare-extension ((extension-type (eql :materials)) core-state)
-  (let ((%temp (cons (fl.util:dict #'eq)
-                     (fl.util:dict #'eq))))
+  (let ((%temp (fl.util:dict #'eq)))
     (declare (special %temp))
-
     (flet ((%prepare ()
              (map-extensions (context core-state) extension-type)
              %temp))
-
-      (destructuring-bind (materials . profiles) (%prepare)
-        ;; The order doesn't matter. we can type check the materials wrt
-        ;; profiles after reading _all_ the available materials extensions.
-        ;; Process all defined profiles.
-
-        ;; Process all profiles.
-        (fl.util:do-hash-values (profile profiles)
-          (%add-material-profile profile core-state))
-
-        ;; Process all materials.
-        (fl.util:do-hash-values (gen-material-func materials)
-          (%add-material (funcall gen-material-func core-state) core-state))))))
+      (fl.util:do-hash-values (gen-material-func (%prepare))
+        (%add-material (funcall gen-material-func core-state) core-state)))))
 
 (defun parse-material-profile (name uniforms blocks)
   (fl.util:with-unique-names (matprof)
     `(let* ((,matprof (%make-material-profile :name ',name)))
        ,(parse-material-uniforms matprof uniforms)
-
        ;; TODO: We prevent processing of blocks in material-profiles
        ;; until we discoverifit is a good idea or not.
        ;; ,(parse-material-blocks matprof blocks)
        (when ',blocks
-         (error "Interface blocks are not supported in material profiles: ~A"
+         (error "Interface blocks are not supported in material profiles: ~a"
                 ',blocks))
        ,matprof)))
 
 (defmacro define-material-profile (name &body (body))
   "Define a set of uniform and block shader attribute defaults that can be
 applied in an overlay manner while defining a material."
-  (fl.util:with-unique-names (matprof)
+  (fl.util:with-unique-names (profiles profile)
     (destructuring-bind (&key uniforms blocks) body
-      `(let* ((,matprof ,(parse-material-profile name uniforms blocks)))
-         (declare (special %fl::%temp))
-         (setf (fl.util:href (cdr %fl::%temp) (name ,matprof)) ,matprof)))))
+      `(symbol-macrolet ((,profiles (fl.data:get 'material-profiles)))
+         (let ((,profile ,(parse-material-profile name uniforms blocks)))
+           (unless ,profiles
+             (fl.data:set 'material-profiles (fl.util:dict #'eq)))
+           (setf (fl.util:href ,profiles (name ,profile)) ,profile))))))
 
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
@@ -737,7 +725,7 @@ applied in an overlay manner while defining a material."
       `(let ((,func ,(parse-material name shader profiles uniforms blocks)))
          (declare (special %fl::%temp))
          ,(when enabled
-            `(setf (fl.util:href (car %fl::%temp) ',name) ,func))
+            `(setf (fl.util:href %fl::%temp ',name) ,func))
          (export ',name)))))
 
 (defmacro using-material (material (&rest bindings) &body body)
@@ -749,3 +737,16 @@ applied in an overlay manner while defining a material."
                        :collect v))
          (bind-material ,material-ref)
          ,@body))))
+
+(defun load-materials (core-state)
+  (fl.util:do-hash-values (profile (fl.data:get 'material-profiles))
+    (%add-material-profile profile core-state)))
+
+;;;
+
+(in-package :fl.materials)
+
+(defun total-time (context material)
+  (declare (ignore material))
+  (fl:total-time context))
+

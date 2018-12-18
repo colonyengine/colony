@@ -66,6 +66,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (prepare-extension :graphs core-state)
     (prepare-extension :call-flow core-state)
     (prepare-extension :textures core-state)
+    (load-materials core-state)
     (prepare-extension :materials core-state)
     (prepare-extension :scene core-state)
     (resolve-all-semantic-texture-descriptors core-state)
