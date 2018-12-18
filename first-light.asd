@@ -53,6 +53,7 @@
    (:file "actor")
    (:file "call-flow")
    (:file "type-dag")
+   (:file "graphs")
    (:file "scene")
    (:file "image")
    (:module "textures"
