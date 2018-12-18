@@ -230,21 +230,14 @@ The previous state name and the current state name which resulted in the exiting
 (defun get-flow-state (flow-state-name flow)
   (fl.util:href flow flow-state-name))
 
-(defmethod extension-file-type ((extension-type (eql :call-flow)))
-  "flow")
+(defmacro define-call-flow (name () &body body)
+  (fl.util:with-unique-names (definition call-flow)
+    `(symbol-macrolet ((,definition (fl.data:get 'call-flows)))
+       (let ((,call-flow ,(parse-call-flows body)))
+         (unless ,definition
+           (fl.data:set 'call-flows (fl.util:dict #'eq)))
+         (setf (fl.util:href ,definition ',name) ,call-flow)))))
 
-(defmethod prepare-extension ((extension-type (eql :call-flow)) core-state)
-  (let ((%temp (fl.util:dict #'eq)))
-    (declare (special %temp))
-    (flet ((%prepare ()
-             (map-extensions (context core-state) extension-type)
-             %temp))
-      (maphash
-       (lambda (key value)
-         (setf (fl.util:href (call-flows core-state) key) value))
-       (%prepare)))))
-
-(defmacro define-call-flow (name (&key (enabled t)) &body body)
-  `(locally (declare (special %fl::%temp))
-     ,(when enabled
-        `(setf (fl.util:href %fl::%temp ,name) ,(parse-call-flows body)))))
+(defun load-call-flows (core-state)
+  (fl.util:do-hash (k v (fl.data:get 'call-flows))
+    (setf (fl.util:href (call-flows core-state) k) v)))
