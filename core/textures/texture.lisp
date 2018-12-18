@@ -467,10 +467,12 @@ and assign it to the computed texture descriptor slot in TEXTURE."
 
 (defmacro define-texture-profile (name &body body)
   "Define a set of attribute defaults that can be applied while defining a texture."
-  (fl.util:with-unique-names (texprof)
-    `(let* ((,texprof ,(parse-texture-profile name body)))
-       (declare (special %fl::%temp))
-       (setf (fl.util:href (car %fl::%temp) (name ,texprof)) ,texprof))))
+  (fl.util:with-unique-names (profiles profile)
+    `(symbol-macrolet ((,profiles (fl.data:get 'texture-profiles)))
+       (let ((,profile ,(parse-texture-profile name body)))
+         (unless ,profiles
+           (fl.data:set 'texture-profiles (fl.util:dict #'eq)))
+         (setf (fl.util:href ,profiles (name ,profile)) ,profile)))))
 
 (defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
   "Construct a semantic TEXTURE-DESCRIPTOR and store in the special variable %FL::%TEMP.
@@ -488,7 +490,7 @@ TODO: Fix."
              ;; NOTE: The form is DEFINE-TEXTURE, but we're actually creating
              ;; semantic-texture-descriptors and storing them. Maybe this naming
              ;; skew should be fix, think about it a little.
-             (fl.util:href (cdr %fl::%temp) (name ,texdesc))
+             (fl.util:href %fl::%temp (name ,texdesc))
              ,texdesc)
        (export ',name))))
 
@@ -496,21 +498,13 @@ TODO: Fix."
   "tex")
 
 (defmethod prepare-extension ((extension-type (eql :textures)) core-state)
-  (let ((%temp (cons (fl.util:dict #'eq)
-                     (fl.util:dict #'eq))))
+  (let ((%temp (fl.util:dict #'eq)))
     (declare (special %temp))
     (flet ((%prepare ()
              (map-extensions (context core-state) extension-type)
              %temp))
-      (destructuring-bind (profiles . texdescs) (%prepare)
-        ;; The order doesn't matter. we can type check the texture-descriptors
-        ;; after reading _all_ the available textures extensions.
-        ;; Process all defined profiles.
-        (fl.util:do-hash-values (v profiles)
-          (add-texture-profile v core-state))
-        ;; Process all texture-descriptors
-        (fl.util:do-hash-values (v texdescs)
-          (add-semantic-texture-descriptor v core-state))))))
+      (fl.util:do-hash-values (v (%prepare))
+        (add-semantic-texture-descriptor v core-state)))))
 
 (defun resolve-all-semantic-texture-descriptors (core-state)
   "This is called after all the DEFINE-TEXTURE and DEFINE-TEXTURE-PROFILE forms
@@ -611,3 +605,7 @@ semantic name of it which was specified with a DEFINE-TEXTURE."
   (if (consp texture-name)
       (first texture-name)
       texture-name))
+
+(defun load-texture-descriptors (core-state)
+  (fl.util:do-hash-values (profile (fl.data:get 'texture-profiles))
+    (add-texture-profile profile core-state)))

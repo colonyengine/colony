@@ -63,13 +63,13 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (make-frame-manager core-state)
     (initialize-host core-state)
     (initialize-shaders core-state)
-    (load-materials core-state)
     (prepare-extension :graphs core-state)
     (prepare-extension :call-flow core-state)
-    (prepare-extension :textures core-state)
+    (load-texture-descriptors core-state) ;; only profiles for now
+    (prepare-extension :textures core-state) ;; only descriptors now
+    (load-materials core-state)
     (prepare-extension :scene core-state)
     (resolve-all-semantic-texture-descriptors core-state)
-    (resolve-all-materials core-state)
     (load-scene core-state scene-name)
     (v:info :fl.core.engine "Finished starting ~a" title)))
 
