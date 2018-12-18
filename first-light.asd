@@ -68,7 +68,8 @@
      (:file "cube-map-array")
      (:file "rectangle")
      (:file "buffer")
-     (:file "profiles")))
+     (:file "profiles")
+     (:file "definitions")))
    (:module "materials"
     :components
     ((:file "parser")

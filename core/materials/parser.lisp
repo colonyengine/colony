@@ -666,7 +666,8 @@ applied in an overlay manner while defining a material."
   (fl.util:do-hash-values (profile (fl.data:get 'material-profiles))
     (%add-material-profile profile core-state))
   (fl.util:do-hash-values (material-func (fl.data:get 'materials))
-    (%add-material (funcall material-func core-state) core-state)))
+    (%add-material (funcall material-func core-state) core-state))
+  (resolve-all-materials core-state))
 
 ;;; Helper functions
 

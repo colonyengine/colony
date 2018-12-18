@@ -3,15 +3,13 @@
   :maintainer ("Michael Fiano <michael.fiano@gmail.com>")
   :license "MIT"
   :version "0.1.0"
-  :depends-on (#:first-light
-               #:defpackage-plus)
+  :depends-on (#:first-light)
   :pathname "src"
   :serial t
   :components
   ((:file "package")
-   (:file "resources")
    (:module "shaders"
     :components
     ((:file "mesh-test")
      (:file "noise-test-playground")))
-   (:file "materials")))
+   (:file "project")))

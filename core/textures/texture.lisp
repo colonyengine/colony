@@ -475,36 +475,20 @@ and assign it to the computed texture descriptor slot in TEXTURE."
          (setf (fl.util:href ,profiles (name ,profile)) ,profile)))))
 
 (defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
-  "Construct a semantic TEXTURE-DESCRIPTOR and store in the special variable %FL::%TEMP.
-NOTE: This us a user facing API macro, this description, while accurate is utterly not helpful.
-TODO: Fix."
-  (fl.util:with-unique-names (texdesc)
-    `(let ((,texdesc (make-texture-descriptor
-                      :name ',name
-                      :texture-type ',textype
-                      :profile-overlay-names ',profile-overlay-names)))
-       (declare (special %fl::%temp))
-       ;; Record the parameters we'll overlay on the profile at use time.
-       (setf ,@(loop :for (key value) :in body
-                     :append `((fl.util:href (attributes ,texdesc) ,key) ,value))
-             ;; NOTE: The form is DEFINE-TEXTURE, but we're actually creating
-             ;; semantic-texture-descriptors and storing them. Maybe this naming
-             ;; skew should be fix, think about it a little.
-             (fl.util:href %fl::%temp (name ,texdesc))
-             ,texdesc)
-       (export ',name))))
-
-(defmethod extension-file-type ((extension-type (eql :textures)))
-  "tex")
-
-(defmethod prepare-extension ((extension-type (eql :textures)) core-state)
-  (let ((%temp (fl.util:dict #'eq)))
-    (declare (special %temp))
-    (flet ((%prepare ()
-             (map-extensions (context core-state) extension-type)
-             %temp))
-      (fl.util:do-hash-values (v (%prepare))
-        (add-semantic-texture-descriptor v core-state)))))
+  "Construct a semantic TEXTURE-DESCRIPTOR. "
+  (fl.util:with-unique-names (definition desc)
+    `(symbol-macrolet ((,definition (fl.data:get 'textures)))
+       (let ((,desc (make-texture-descriptor
+                     :name ',name
+                     :texture-type ',textype
+                     :profile-overlay-names ',profile-overlay-names)))
+         ;; Record the parameters we'll overlay on the profile at use time.
+         (setf ,@(loop :for (key value) :in body
+                       :append `((fl.util:href (attributes ,desc) ,key) ,value)))
+         (unless ,definition
+           (fl.data:set 'textures (fl.util:dict #'eq)))
+         (setf (fl.util:href ,definition ',name) ,desc)
+         (export ',name)))))
 
 (defun resolve-all-semantic-texture-descriptors (core-state)
   "This is called after all the DEFINE-TEXTURE and DEFINE-TEXTURE-PROFILE forms
@@ -608,4 +592,7 @@ semantic name of it which was specified with a DEFINE-TEXTURE."
 
 (defun load-texture-descriptors (core-state)
   (fl.util:do-hash-values (profile (fl.data:get 'texture-profiles))
-    (add-texture-profile profile core-state)))
+    (add-texture-profile profile core-state))
+  (fl.util:do-hash-values (desc (fl.data:get 'textures))
+    (add-semantic-texture-descriptor desc core-state))
+  (resolve-all-semantic-texture-descriptors core-state))

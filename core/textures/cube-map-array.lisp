@@ -62,39 +62,32 @@
           :for cube :across images
           :for cube-idx :below (length images)
           :do
-             (loop
-               :for idx :below (if use-mipmaps-p num-mipmaps 1)
-               :for level = (+ texture-base-level idx)
-               ;; Now load all six faces, each face at the same mipmap level.
-               :do
-                  (loop
-                    :for (face-signifier mipmaps) :across cube
-                    ;; NOTE: face-idx works cause I sorted the faces
-                    ;; earlier.
-                    :for face-idx :by 1
-                    :do
-                       (v:debug :fl.core.texture
-                                "inserting cube ~A face ~A[~A]~%"
-                                cube-idx face-signifier idx)
+             (loop :for idx :below (if use-mipmaps-p num-mipmaps 1)
+                   :for level = (+ texture-base-level idx)
+                   ;; Now load all six faces, each face at the same mipmap level.
+                   :do (loop :for (face-signifier mipmaps) :across cube
+                             ;; NOTE: face-idx works cause I sorted the faces
+                             ;; earlier.
+                             :for face-idx :by 1
+                             :do (v:debug :fl.core.texture "inserting cube ~A face ~A[~A]~%"
+                                          cube-idx face-signifier idx)
+                                 (with-slots (%width %height %internal-format
+                                              %pixel-format %pixel-type %data)
+                                     (aref mipmaps idx)
+                                   (if immutable-p
+                                       (gl:tex-sub-image-3d texture-type level
+                                                            0 0
+                                                            (+ (* cube-idx 6) face-idx)
+                                                            %width %height 1
+                                                            %pixel-format
+                                                            %pixel-type %data)
 
-                       (with-slots (%width %height %internal-format
-                                    %pixel-format %pixel-type %data)
-                           (aref mipmaps idx)
-                         (if immutable-p
-                             (gl:tex-sub-image-3d texture-type level
-                                                  0 0
-                                                  (+ (* cube-idx 6) face-idx)
-                                                  %width %height 1
-                                                  %pixel-format
-                                                  %pixel-type %data)
-
-                             (gl:tex-image-3d texture-type level
-                                              %internal-format
-                                              %width %height
-                                              (+ (* cube-idx 6) face-idx)
-                                              0
-                                              %pixel-format %pixel-type
-                                              %data))))))
-
+                                       (gl:tex-image-3d texture-type level
+                                                        %internal-format
+                                                        %width %height
+                                                        (+ (* cube-idx 6) face-idx)
+                                                        0
+                                                        %pixel-format %pixel-type
+                                                        %data))))))
         (free-mipmap-images images :cube-map-array)
         (potentially-autogenerate-mipmaps texture-type texture)))))

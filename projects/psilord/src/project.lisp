@@ -1,5 +1,20 @@
 (in-package :first-light.psilord)
 
+(define-options ()
+  :title "psilord's Playground"
+  :window-width 1920
+  :window-height 1080
+  :vsync :off
+  :log-level :debug)
+
+(define-resources (:project :first-light.psilord)
+  (:project "data")
+  (:ext (:project "ext"))
+  (:texture (:project "textures")))
+
+(define-texture alignment (:texture-2d)
+  (:data #((:texture "alignment.tga"))))
+
 (defparameter +color/red+ (flm:vec4 1 0 0 1))
 (defparameter +color/green+ (flm:vec4 0 1 0 1))
 (defparameter +color/blue+ (flm:vec4 0 0 1 1))

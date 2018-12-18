@@ -1,11 +1,7 @@
-(in-package :defpackage+-user-1)
+(in-package :cl-user)
 
-(defpackage+ #:first-light.psilord
+(defpackage #:first-light.psilord
   (:nicknames #:fl.psilord)
   (:use #:cl
         #:first-light
         #:first-light.components))
-
-(defpackage+ #:first-light.psilord.textures
-  (:nicknames #:fl.psilord.textures)
-  (:use #:cl #:first-light))

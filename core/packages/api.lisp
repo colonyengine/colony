@@ -11,6 +11,7 @@
                  #:attach-component
                  #:attach-multiple-components
                  #:context
+                 #:copy-material
                  #:delta
                  #:deploy-binary
                  #:define-component
@@ -27,6 +28,7 @@
                  #:find-resource
                  #:frame-time
                  #:general-data-format-descriptor
+                 #:id
                  #:initialize-component
                  #:input-data
                  #:make-actor

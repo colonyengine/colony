@@ -33,6 +33,7 @@
    #:frame-manager
    #:frame-time
    #:general-data-format-descriptor
+   #:id
    #:initialize-component
    #:input-data
    #:lookup-material
