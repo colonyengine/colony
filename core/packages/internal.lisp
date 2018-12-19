@@ -17,6 +17,7 @@
    #:core-state
    #:define-annotation
    #:define-component
+   #:define-graph
    #:define-material
    #:define-material-profile
    #:define-options
@@ -28,7 +29,6 @@
    #:deploy-binary
    #:destroy-component
    #:detach-component
-   #:extension-file-type
    #:find-resource
    #:frame-manager
    #:frame-time
@@ -41,7 +41,6 @@
    #:make-component
    #:mat-uniform-ref
    #:option
-   #:prepare-extension
    #:print-all-resources
    #:project-data
    #:render-component

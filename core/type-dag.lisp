@@ -210,43 +210,17 @@ hyper-edge pairs, :hyperedges"
                            :canonical-form lifted-dependency-form
                            :kind kind))))))
 
-(defun parse-graph-definition (form)
-  (assert (is-syntax-form-p '(define-graph) form))
-  (destructuring-bind (name (&key (enabled t) category depends-on roots) . subforms) (rest form)
-    (let ((subform-db (fl.util:dict #'eq)))
-      (make-graphdef name
-                     :original-form form
-                     :enabled enabled
-                     :category category
-                     :depends-on depends-on
-                     :roots roots
-                     :subforms
-                     (loop :for i :in subforms
-                           :for subform = (parse-subform category i)
-                           :do (setf (fl.util:href subform-db (name subform)) subform)
-                           :finally (return subform-db))))))
-
-(defmethod extension-file-type ((extension-type (eql :graphs)))
-  "gph")
-
-(defmethod prepare-extension ((extension-type (eql :graphs)) core-state)
-  ;; Collect ALL graph-definitions into the appropriate analyzed-graph objects. The graphs aren't
-  ;; fully analyzed yet. This is only the parsing phase.
-  (symbol-macrolet ((analyzed-graph (fl.util:href (analyzed-graphs core-state) (category parsed-def))))
-    (loop :with defs = (collect-extension-forms (context core-state) extension-type)
-          :for def :in defs
-          :for parsed-def = (parse-graph-definition def)
-          :do (unless (nth-value 1 analyzed-graph)
-                (setf (fl.util:href (analyzed-graphs core-state) (category parsed-def))
-                      (make-analyzed-graph :category (category parsed-def))))
-              (when (enabled parsed-def)
-                (setf (fl.util:href (graphdefs analyzed-graph) (name parsed-def)) parsed-def))))
-  ;; TODO: perform the analysis for each graph category type. Note: a category may be a consp form
-  ;; in addition to a symbol. A) Ensure if subdag, all are subdag. B) Ensure if subgraph, all are
-  ;; subgraph.
-  ;; TODO: convert each category to appropriate cl-graph version
-  (dolist (graph (fl.util:hash-values (analyzed-graphs core-state)))
-    (analyze-graph graph)))
+(defun parse-graph-definition (name category depends-on roots subforms)
+  (let ((subform-db (fl.util:dict #'eq)))
+    (make-graphdef name
+                   :category category
+                   :depends-on depends-on
+                   :roots roots
+                   :subforms
+                   (loop :for i :in subforms
+                         :for subform = (parse-subform category i)
+                         :do (setf (fl.util:href subform-db (name subform)) subform)
+                         :finally (return subform-db)))))
 
 (defun add-cross-product-edges (clg source-list target-list)
   (fl.util:map-product
@@ -480,7 +454,19 @@ return the unknown-type-id symbol."
     ;; The canonicalized component-type
     putative-component-type))
 
-;; NOTE: This is unused! It is strictly here to get indentation right in the *.gph files.
-(defmacro define-graph (name (&key (enabled t) category depends-on roots) &body body)
-  (declare (ignore name enabled category depends-on roots))
-  body)
+(defmacro define-graph (name (&key category depends-on roots) &body body)
+  (fl.util:with-unique-names (graphs analyzed-graph graph)
+    `(symbol-macrolet ((,graphs (fl.data:get 'graphs))
+                       (,analyzed-graph (fl.util:href ,graphs ',category)))
+       (let ((,graph (parse-graph-definition ',name ',category ',depends-on ',roots ',body)))
+         (unless ,graphs
+           (fl.data:set 'graphs (fl.util:dict #'eq)))
+         (unless ,analyzed-graph
+           (setf (fl.util:href ,graphs ',category) (make-analyzed-graph :category ',category)))
+         (setf (fl.util:href (graphdefs ,analyzed-graph) ',name) ,graph)))))
+
+(defun load-graphs (core-state)
+  (with-slots (%analyzed-graphs) core-state
+    (setf %analyzed-graphs (fl.data:get 'graphs))
+    (dolist (graph (fl.util:hash-values %analyzed-graphs))
+      (analyze-graph graph))))

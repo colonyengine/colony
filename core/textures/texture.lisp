@@ -1,8 +1,5 @@
 (in-package :%first-light)
 
-;; The textures-table is a data store of everything in the .tex extension.  This
-;; includes any texture-profiles, and defined textures (as texture-descriptors.
-;; It is kept in a slot in core-state.
 (defclass textures-table ()
   ((%profiles :reader profiles
               :initarg :profiles
@@ -491,9 +488,7 @@ and assign it to the computed texture descriptor slot in TEXTURE."
          (export ',name)))))
 
 (defun resolve-all-semantic-texture-descriptors (core-state)
-  "This is called after all the DEFINE-TEXTURE and DEFINE-TEXTURE-PROFILE forms
-are loaded in the extensions.
-Ensure that these aspects of texture profiles and desdcriptors are ok:
+  " Ensure that these aspects of texture profiles and desdcriptors are ok:
 1. The FL.TEXTURES:DEFAULT-PROFILE exists.
 2. Each texture-descriptor has an updated applied-profile set of attributes.
 3. All currently known about texture descriptors have valid profile references.

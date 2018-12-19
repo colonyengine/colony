@@ -15,6 +15,7 @@
                  #:delta
                  #:deploy-binary
                  #:define-component
+                 #:define-graph
                  #:define-material
                  #:define-material-profile
                  #:define-options
@@ -24,7 +25,6 @@
                  #:define-texture-profile
                  #:detach-component
                  #:destroy-component
-                 #:extension-file-type
                  #:find-resource
                  #:frame-time
                  #:general-data-format-descriptor
@@ -35,7 +35,6 @@
                  #:make-component
                  #:mat-uniform-ref
                  #:option
-                 #:prepare-extension
                  #:print-all-resources
                  #:project-data
                  #:render-component

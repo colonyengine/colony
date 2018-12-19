@@ -41,7 +41,6 @@
    (:file "common")
    (:file "resource")
    (:file "context")
-   (:file "extensions")
    (:file "options")
    (:file "logging")
    (:file "attributes")
@@ -53,6 +52,7 @@
    (:file "actor")
    (:file "call-flow")
    (:file "type-dag")
+   (:file "graphs")
    (:file "scene")
    (:file "image")
    (:module "textures"
