@@ -67,7 +67,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (load-call-flows core-state)
     (load-texture-descriptors core-state)
     (load-materials core-state)
-    (prepare-extension :scene core-state)
+    (load-scene-definitions core-state)
     (load-scene core-state scene-name)
     (v:info :fl.core.engine "Finished starting ~a" title)))
 

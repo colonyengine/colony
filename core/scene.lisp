@@ -110,31 +110,32 @@
              ,@(%generate-actor-spawn actor-names)
              (values ,core-state ,actor-table)))))))
 
+(defmacro define-scene (name (&key (context 'context)) &body body)
+  (fl.util:with-unique-names (definition code scene)
+    `(symbol-macrolet ((,definition (fl.data:get 'scenes))
+                       (,code (fl.data:get 'scene-code)))
+       (let ((,scene ,(parse-scene `',name context body)))
+         (unless ,definition
+           (fl.data:set 'scenes (fl.util:dict #'eq)))
+         (unless ,code
+           (fl.data:set 'scene-code (fl.util:dict #'eq)))
+         (setf (fl.util:href ,definition ',name) ,scene
+               (fl.util:href ,code ',name) (parse-scene ',name ',context ',body))
+         (export ',name)))))
+
 (defun get-scene (core-state scene-name)
   (fl.util:href (scenes core-state) scene-name))
+
+(defun get-scene-code (scene-name)
+  (let ((table (fl.data:get 'scene-code)))
+    (fl.util:href table scene-name)))
 
 (defun load-scene (core-state name)
   (fl.util:if-let ((scene (get-scene core-state name)))
     (funcall (get-scene core-state name) core-state)
     (error "Cannot find the scene name: ~s." name)))
 
-(defmethod extension-file-type ((extension-type (eql :scene)))
-  "scene")
-
-(defmethod prepare-extension ((extension-type (eql :scene)) core-state)
-  (let ((%temp (fl.util:dict #'eq)))
-    (declare (special %temp))
-    (flet ((%prepare ()
-             (map-extensions (context core-state) extension-type)
-             %temp))
-      (setf (slot-value core-state '%scene-tree) (%make-scene-tree core-state))
-      (fl.util:do-hash (k v (%prepare))
-        (setf (fl.util:href (scenes core-state) k) v)))))
-
-(defmacro define-scene (name (&key (enabled t) (context 'context)) &body body)
-  (fl.util:with-unique-names (scene)
-    `(let ((,scene ,(parse-scene `',name context body)))
-       (declare (special %fl::%temp))
-       ,(when enabled
-          `(setf (fl.util:href %fl::%temp ',name) ,scene))
-       (export ',name))))
+(defun load-scene-definitions (core-state)
+  (setf (slot-value core-state '%scene-tree) (%make-scene-tree core-state))
+  (fl.util:do-hash (k v (fl.data:get 'scenes))
+    (setf (fl.util:href (scenes core-state) k) v)))
