@@ -1,5 +1,12 @@
 (in-package :first-light.example)
 
+(define-options ()
+  :title "First-Light Examples"
+  :window-width 1920
+  :window-height 1080
+  :vsync :off
+  :log-level :debug)
+
 (define-resources (:project :first-light.example)
   (:project "data/project")
   (:ext (:project "ext"))
@@ -20,3 +27,13 @@
   (:spritesheet-data (:project "sprites.sexp"))
   ;; damaged helmet
   (:damaged-helmet-textures (:project :texture "damaged-helmet")))
+
+;;; TODO: Possibly make prologue and epilogue DSLs.
+
+(defun prologue (context)
+  (declare (ignore context))
+  (v:trace :fl.core.engine "Running prologue method."))
+
+(defun epilogue (context)
+  (declare (ignore context))
+  (v:trace :fl.core.engine "Running epilogue method."))

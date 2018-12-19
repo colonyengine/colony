@@ -11,18 +11,52 @@
   :serial t
   :components
   ((:file "package")
-   (:file "example")
-   (:file "resources")
-   (:file "prologue")
-   (:file "epilogue")
-   (:file "sprite-test")
-   (:file "shader-sweep")
-   (:module "shaders"
+   (:file "common")
+   (:module "components"
     :components
-    ((:file "damaged-helmet")
-     (:file "graph-test")
-     (:file "noise-test")
-     (:file "sprite-test")
-     (:file "texture-test")))
-   (:file "textures")
-   (:file "materials")))
+    ((:file "shader-sweep")))
+
+   (:module "examples"
+    :components
+
+    ((:module "damaged-helmet"
+      :components
+      ((:file "shaders")
+       (:file "textures")
+       (:file "materials")
+       (:file "scene")))
+
+     (:module "geometric-volumes"
+      :components
+      ((:file "scene")))
+
+     (:module "graph-test"
+      :components
+      ((:file "shaders")
+       (:file "materials")
+       (:file "scene")))
+
+     (:module "isometric-view-test"
+      :components
+      ((:file "scene")))
+
+     (:module "noise-test"
+      :components
+      ((:file "shaders")
+       (:file "materials")
+       (:file "scene")))
+
+     (:module "sprite-test"
+      :components
+      ((:file "shaders")
+       (:file "textures")
+       (:file "materials")
+       (:file "scene")
+       (:file "example")))
+
+     (:module "texture-test"
+      :components
+      ((:file "shaders")
+       (:file "textures")
+       (:file "materials")
+       (:file "scene")))))))

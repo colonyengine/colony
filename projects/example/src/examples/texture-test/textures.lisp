@@ -1,38 +1,10 @@
 (in-package :first-light.example)
 
-;;; Textures for the sprite test example
-
-(define-texture sprites (:texture-2d)
-  (:data #(:spritesheet)))
-
-;;; Textures for the damaged helmet example
-
-(define-texture damaged-helmet/metallic-roughness (:texture-2d)
-  (:data #((:damaged-helmet-textures "metal-roughness.tga"))))
-
-(define-texture damaged-helmet/color (:texture-2d)
-  (:data #((:damaged-helmet-textures "albedo.tga"))))
-
-(define-texture damaged-helmet/normal (:texture-2d)
-  (:data #((:damaged-helmet-textures "normal.tga"))))
-
-(define-texture damaged-helmet/ambient-occlusion (:texture-2d)
-  (:data #((:damaged-helmet-textures "ao.tga"))))
-
-(define-texture damaged-helmet/emissive (:texture-2d)
-  (:data #((:damaged-helmet-textures "emissive.tga"))))
-
-;;; Textures for the texture-test example
-
-;; Textures for the texture-test-1d examples
 (define-texture texture-test/1d-gradient (:texture-1d fl.textures:clamp-all-edges)
   (:data #((:texture-test-textures "texture-gradient-1d.tga"))))
 
-;; Textures for the texture-test-2d examples
 (define-texture texture-test/2d-wood (:texture-2d fl.textures:clamp-all-edges)
   (:data #((:texture-test-textures "wood.tga"))))
-
-;; Textures for the texture-test-3d examples
 
 (define-texture texture-test/3d-testpat (:texture-3d fl.textures:clamp-all-edges)
   ;; TODO: Currently, these are the only valid origin and slices values. They
@@ -61,10 +33,7 @@
            ;; Mipmap Level 3
            #((:3d-test "slice_0-mip_3.tga")))))
 
-;; Textures for the texture-1d-array examples
-
-(define-texture texture-test/1d-array-testpat (:texture-1d-array
-                                               fl.textures:clamp-all-edges)
+(define-texture texture-test/1d-array-testpat (:texture-1d-array fl.textures:clamp-all-edges)
   ;; If there are multiple images in each list, they are mipmaps.
   ;; Since this is a test, each mip_0 image is 8 width x 1 height
   (:data #(;; Image 0. First image in array contains its mipmaps.
@@ -88,7 +57,6 @@
              (:1da-test "whiteline-mip_2.tga")
              (:1da-test "whiteline-mip_3.tga")))))
 
-;; Textures for the texture-2d-array examples
 (define-texture texture-test/2d-array-testarray (:texture-2d-array fl.textures:clamp-all-edges)
   ;; Since this is a test, each mip_0 image is 1024x1024 and has 11 mipmaps.
   (:data #(;; Layer 0. First image in array contains its mipmaps.
@@ -140,7 +108,6 @@
              (:2da-test "wiggles-mip_9.tga")
              (:2da-test "wiggles-mip_10.tga")))))
 
-;; Textures for the texture-cube-map examples
 (define-texture texture-test/testcubemap (:texture-cube-map)
   (:data
    ;; First and only allowable index is entire group of faces. Each array for
@@ -155,8 +122,6 @@
         (:-y #((:cubemap-test "bottom-mip_0.tga")))
         (:+z #((:cubemap-test "back-mip_0.tga")))
         (:-z #((:cubemap-test "front-mip_0.tga"))))))))
-
-;; Textures for the texture-cube-map-array examples
 
 (define-texture texture-test/testcubemaparray (:texture-cube-map-array)
   (:data
@@ -180,19 +145,6 @@
 
      ;; and so on....
      )))
-
-;; Textures for the teture-rectange examples
-
-;; Texture for procedural examples
-
-(define-texture texture-test/marble (:procedural fl.textures:clamp-all-edges)
-  (:immutable nil)
-  ;; Arbitrary attributes defined for this texture.
-  (:width 256)
-  (:height 256)
-  (:internal-format :rgba8)
-  (:pixel-format :rgba)
-  (:pixel-type :unsigned-byte))
 
 ;; TODO: Convert the stuff after this line up into the above sections.
 
