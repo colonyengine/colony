@@ -50,9 +50,8 @@
    (:file "frame")
    (:file "display")
    (:file "actor")
-   (:file "call-flow")
-   (:file "type-dag")
-   (:file "graphs")
+   (:file "flow")
+   (:file "graph")
    (:file "scene")
    (:file "image")
    (:module "textures"
@@ -67,14 +66,8 @@
      (:file "cube-map")
      (:file "cube-map-array")
      (:file "rectangle")
-     (:file "buffer")
-     (:file "profiles")
-     (:file "definitions")))
-   (:module "materials"
-    :components
-    ((:file "parser")
-     (:file "profiles")
-     (:file "definitions")))
+     (:file "buffer")))
+   (:file "materials")
    (:file "shaders")
    (:file "engine")
    (:file "deploy")
@@ -87,5 +80,11 @@
      (:file "camera-tracking")
      (:file "mesh")
      (:file "mesh-renderer")))
-   (:file "flows")
-   ))
+   (:module "definitions"
+    :components
+    ((:file "graphs")
+     (:file "flows")
+     (:file "texture-profiles")
+     (:file "textures")
+     (:file "material-profiles")
+     (:file "materials")))))
