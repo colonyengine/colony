@@ -239,7 +239,7 @@ for later use with the shaders."
               (fl.input:input-enter-p (input-data context) '(:mouse :left)))
       (let* ((parent-model (fl.comp:model (emitter-transform component)))
              (parent-translation (flm:get-translation parent-model))
-             (parent-rotation (from-scaled-mat4 parent-model))
+             (parent-rotation (flm:quat parent-model))
              (new-actor (%fl::make-actor context :id (fl.util:unique-name 'shot)))
              (transform (make-component context
                                         'fl.comp:transform
@@ -263,65 +263,3 @@ for later use with the shaders."
         ;; This is the method for destroying actors and components. Add to public
         ;; API. Don't use :ttl in the make-actor call yet.
         (%fl::destroy new-actor :ttl 1)))))
-
-;; TODO: This should go into gamebox-math. It is an alternate form of
-;; QUAT:FROM-MAT4 that can handle non-orthonormal rotation matricies.
-;; Both should exist, and the user can use what they desire.
-
-(defun from-scaled-mat4! (out matrix)
-  "Convert scaled MATRIX to a quaternion, storing the result in the existing quaternion, OUT."
-  (flm:with-quat ((q out))
-    (flm:with-mat4 ((m matrix))
-      ;; Normalize the basis vectors, but don't allocate vector memory,
-      ;; and don't alter the original input matrix.
-      (let* ((x-rot-denom (sqrt (+ (* m.00 m.00) (* m.10 m.10) (* m.20 m.20))))
-             (y-rot-denom (sqrt (+ (* m.01 m.01) (* m.11 m.11) (* m.21 m.21))))
-             (z-rot-denom (sqrt (+ (* m.02 m.02) (* m.12 m.12) (* m.22 m.22))))
-             ;; normalize x-rotation basis vector
-             (nm00 (/ m.00 x-rot-denom))
-             (nm10 (/ m.10 x-rot-denom))
-             (nm20 (/ m.20 x-rot-denom))
-             ;; normalize y-rotation basis vector
-             (nm01 (/ m.01 y-rot-denom))
-             (nm11 (/ m.11 y-rot-denom))
-             (nm21 (/ m.21 y-rot-denom))
-             ;; normalize z-rotation basis vector
-             (nm02 (/ m.02 z-rot-denom))
-             (nm12 (/ m.12 z-rot-denom))
-             (nm22 (/ m.22 z-rot-denom)))
-        ;; Use the newly normalized values.
-        (let ((trace (+ nm00 nm11 nm22 m.33))
-              (col1 (1+ (- nm00 nm11 nm22)))
-              (col2 (1+ (- nm11 nm00 nm22)))
-              (col3 (1+ (- nm22 nm00 nm11)))
-              (s 0.0f0))
-          (cond
-            ((plusp trace)
-             (setf s (/ 0.5f0 (sqrt trace))
-                   q.w (/ 0.25f0 s)
-                   q.x (* (- nm21 nm12) s)
-                   q.y (* (- nm02 nm20) s)
-                   q.z (* (- nm10 nm01) s)))
-            ((and (>= col1 col2) (>= col1 col3))
-             (setf s (/ 0.5f0 (sqrt col1))
-                   q.w (* (- nm21 nm12) s)
-                   q.x (/ 0.25f0 s)
-                   q.y (* (+ nm10 nm01) s)
-                   q.z (* (+ nm02 nm20) s)))
-            ((and (>= col2 col1) (>= col2 col3))
-             (setf s (/ 0.5f0 (sqrt col2))
-                   q.w (* (- nm02 nm20) s)
-                   q.x (* (+ nm01 nm10) s)
-                   q.y (/ 0.25f0 s)
-                   q.z (* (+ nm12 nm21) s)))
-            (t
-             (setf s (/ 0.5f0 (sqrt col3))
-                   q.w (* (- nm10 nm01) s)
-                   q.x (* (+ nm02 nm20) s)
-                   q.y (* (+ nm12 nm21) s)
-                   q.z (/ 0.25f0 s)))))))
-    out))
-
-(defun from-scaled-mat4 (matrix)
-  "Convert scaled MATRIX to a quaternion, storing the result in a freshly allocated quaternion."
-  (from-scaled-mat4! flm:+id-quat+ matrix))
