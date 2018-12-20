@@ -35,7 +35,7 @@
             :initform (fl.util:dict #'eq))
    (%recompilation-queue :reader recompilation-queue
                          :initarg :recompilation-queue
-                         :initform (queues:make-queue :simple-cqueue))))
+                         :initform (fl.dst:make-queue :simple-cqueue))))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table

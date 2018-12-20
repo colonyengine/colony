@@ -6,5 +6,4 @@
 
 (defun generate-shader-modify-hook (core-state)
   (lambda (programs)
-    (queues:qpush (recompilation-queue core-state)
-                  (list :shader-recompilation programs))))
+    (fl.dst:qpush (recompilation-queue core-state) (list :shader-recompilation programs))))

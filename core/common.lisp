@@ -178,7 +178,7 @@ never be changed at runtime.")
 
 (defun recompile-queued-items (core-state)
   (loop :with queue = (recompilation-queue core-state)
-        :for ((kind data) found-p) = (multiple-value-list (queues:qpop queue))
+        :for ((kind data) found-p) = (multiple-value-list (fl.dst:qpop queue))
         :while found-p
         :do (ecase kind
               (:shader-recompilation (fl.shader:recompile-shaders data)))))

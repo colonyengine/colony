@@ -14,7 +14,6 @@
   :depends-on (#:closer-mop
                #:defpackage-plus
                #:cl-ppcre
-               #:queues.simple-cqueue
                #:cl-graph
                #:cl-opengl
                #:sdl2
@@ -22,6 +21,7 @@
                #:verbose
                #:first-light.util
                #:first-light.metadata
+               #:first-light.data-structures
                #:first-light.binary-formats
                #:first-light.math
                #:first-light.geometry
