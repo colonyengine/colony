@@ -454,19 +454,23 @@ return the unknown-type-id symbol."
     ;; The canonicalized component-type
     putative-component-type))
 
-(defmacro define-graph (name (&key category depends-on roots) &body body)
-  (fl.util:with-unique-names (graphs analyzed-graph graph)
-    `(symbol-macrolet ((,graphs (fl.data:get 'graphs))
-                       (,analyzed-graph (fl.util:href ,graphs ',category)))
-       (let ((,graph (parse-graph-definition ',name ',category ',depends-on ',roots ',body)))
-         (unless ,graphs
-           (fl.data:set 'graphs (fl.util:dict #'eq)))
-         (unless ,analyzed-graph
-           (setf (fl.util:href ,graphs ',category) (make-analyzed-graph :category ',category)))
-         (setf (fl.util:href (graphdefs ,analyzed-graph) ',name) ,graph)))))
+(defmacro define-graph (&whole form name (&key category depends-on roots) &body body)
+  (declare (ignore category depends-on roots body))
+  (fl.util:with-unique-names (definitions)
+    `(symbol-macrolet ((,definitions (fl.data:get 'graphs)))
+       (unless ,definitions
+         (fl.data:set 'graphs (fl.util:dict #'eq)))
+       (setf (fl.util:href ,definitions ',name) ',(cdr form)))))
 
 (defun load-graphs (core-state)
   (with-slots (%analyzed-graphs) core-state
-    (setf %analyzed-graphs (fl.data:get 'graphs))
-    (dolist (graph (fl.util:hash-values %analyzed-graphs))
+    (setf %analyzed-graphs (fl.util:dict #'eq))
+    (fl.util:do-hash-values (graph-code (fl.data:get 'graphs))
+      (destructuring-bind (name (&key category depends-on roots) . body) graph-code
+        (symbol-macrolet ((graph (fl.util:href %analyzed-graphs category)))
+          (unless graph
+            (setf graph (make-analyzed-graph :category category)))
+          (setf (fl.util:href (graphdefs graph) name)
+                (parse-graph-definition name category depends-on roots body)))))
+    (fl.util:do-hash-values (graph %analyzed-graphs)
       (analyze-graph graph))))
