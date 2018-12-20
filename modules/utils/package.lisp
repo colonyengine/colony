@@ -6,6 +6,7 @@
   (:inherit-from #:alexandria
                  #:appendf
                  #:clamp
+                 #:copy-hash-table
                  #:define-constant
                  #:deletef
                  #:ensure-list
