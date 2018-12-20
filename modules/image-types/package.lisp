@@ -3,7 +3,8 @@
 (defpackage #:first-light.image-types
   (:nicknames #:fl.image)
   (:use #:cl)
-  (:export #:data
+  (:export #:channels
+           #:data
            #:free-storage
            #:get-pixel-size
            #:height

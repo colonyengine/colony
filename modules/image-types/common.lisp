@@ -1,17 +1,20 @@
 (in-package :first-light.image-types)
 
 (defclass image ()
-  ((%type :reader image-type
+  ((%path :reader path
+          :initarg :path)
+   (%type :reader image-type
           :initarg :type)
    (%width :reader width
            :initarg :width)
    (%height :reader height
             :initarg :height)
+   (%channels :reader channels
+              :initarg :channels)
    (%depth :reader depth
            :initarg :depth)
    (%origin :reader origin
-            :initarg :origin
-            :initform :top-left)
+            :initarg :origin)
    (%pixel-format :reader pixel-format
                   :initarg :pixel-format)
    (%pixel-type :reader pixel-type
@@ -20,9 +23,7 @@
    (%internal-format :reader internal-format
                      :initarg :internal-format)
    (%data :reader data
-          :initarg :data)
-   (%metadata :reader metadata
-              :initform (fl.util:dict #'eq))))
+          :initarg :data)))
 
 (defun make-image (&rest init-args)
   (apply #'make-instance 'image init-args))
@@ -42,11 +43,7 @@
     (setf %data nil)))
 
 (defmethod get-pixel-size ((image image))
-  "Return the size of the pixel element in this image in bytes."
-  (ecase (pixel-format image)
-    (:red 1)
-    ((:rgb :bgr) 3)
-    ((:rgba :bgra) 4)))
+  (/ (* (depth image) (channels image)) 8))
 
 (defun get-internal-format (pixel-format)
   (ecase pixel-format
