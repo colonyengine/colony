@@ -6,16 +6,15 @@
       (fl.binfmt:read-bytes 8)
       (let ((origin-x (fl.binfmt:read-int-be 2))
             (origin-y (fl.binfmt:read-int-be 2)))
-        (list path
-              (cond
-                ((and (zerop origin-x) (plusp origin-y))
-                 :top-left)
-                ((and (zerop origin-x) (zerop origin-y))
-                 :bottom-left)
-                ((and (plusp origin-x) (plusp origin-y))
-                 :top-right)
-                ((and (plusp origin-x) (zerop origin-y))
-                 :bottom-right)))))))
+        (cond
+          ((and (zerop origin-x) (plusp origin-y))
+           :top-left)
+          ((and (zerop origin-x) (zerop origin-y))
+           :bottom-left)
+          ((and (plusp origin-x) (plusp origin-y))
+           :top-right)
+          ((and (plusp origin-x) (zerop origin-y))
+           :bottom-right))))))
 
 (defmethod read-image-type ((type (eql :targa)) path)
   (flet ((get-pixel-format (channels)
