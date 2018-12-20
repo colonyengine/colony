@@ -227,7 +227,8 @@ The same vector structure is returned but with the local descriptor lists
 replaced by actual IMAGE instances of the loaded images.
 "
   (flet ((read-image-contextually (loc)
-           (read-image context loc))
+           (let ((path (apply #'find-resource context (fl.util:ensure-list loc))))
+             (fl.image:read-image path)))
          (process-cube-map-mipmaps (cube-data choice-func)
            ;; Process only one cube map right now... when this works, edit it to
            ;; process many cube maps.
@@ -291,14 +292,14 @@ replaced by actual IMAGE instances of the loaded images.
         :do
            (ecase kind
              ((:1d :2d)
-              (free-storage potential-image))
+              (fl.image:free-storage potential-image))
              ((:1d-array :2d-array :3d)
               (loop :for actual-image :across potential-image
-                    :do (free-storage actual-image)))
+                    :do (fl.image:free-storage actual-image)))
              ((:cube-map :cube-map-array)
               (loop :for face :across potential-image
                     :do (loop :for actual-image :across (second face)
-                              :do (free-storage actual-image)))))))
+                              :do (fl.image:free-storage actual-image)))))))
 
 (defun validate-mipmap-images (images texture
                                expected-mipmaps expected-resolutions)

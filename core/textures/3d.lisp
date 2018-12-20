@@ -41,8 +41,8 @@
 
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
-          (compute-mipmap-levels (width first-image)
-                                 (height first-image)
+          (compute-mipmap-levels (fl.image:width first-image)
+                                 (fl.image:height first-image)
                                  depth)
         #++(format t "expected mipmaps: ~A expected-resolutions: ~A~%"
                    expected-mipmaps expected-resolutions)
@@ -57,9 +57,9 @@
           (let ((num-mipmaps-to-generate
                   (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
             (%gl:tex-storage-3d texture-type num-mipmaps-to-generate
-                                (internal-format first-image)
-                                (width first-image)
-                                (height first-image)
+                                (fl.image:internal-format first-image)
+                                (fl.image:width first-image)
+                                (fl.image:height first-image)
                                 depth)))
 
         ;; Load all volumetric mipmaps into the gpu.
@@ -68,8 +68,11 @@
               :for volume = (slices-to-volume (aref all-slices idx))
               :for (mipmap-width mipmap-height mipmap-depth)
                 :in expected-resolutions
-              :do (with-slots (%width %height %internal-format %pixel-format
-                               %pixel-type %data)
+              :do (with-accessors ((width fl.image:width)
+                                   (height fl.image:height)
+                                   (internal-format fl.image:internal-format)
+                                   (pixel-format fl.image:pixel-format)
+                                   (pixel-type fl.image:pixel-type))
                       (aref (aref all-slices idx) 0)
                     #++(format t "Uploading tp GPU 3d mipmap image at level ~A with resolution (w:~A h:~A d:~A)~%"
                                level mipmap-width mipmap-height mipmap-depth)
@@ -88,12 +91,12 @@
                                              mipmap-width
                                              mipmap-height
                                              mipmap-depth
-                                             %pixel-format %pixel-type volume)
-                        (gl:tex-image-3d texture-type level %internal-format
+                                             pixel-format pixel-type volume)
+                        (gl:tex-image-3d texture-type level internal-format
                                          mipmap-width
                                          mipmap-height
                                          mipmap-depth 0
-                                         %pixel-format %pixel-type volume))))
+                                         pixel-format pixel-type volume))))
 
         (free-mipmap-images all-slices :3d)
 

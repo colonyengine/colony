@@ -29,10 +29,10 @@ assemble them into a single linear array suitable for a 3d texture for
 opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
   (let* ((first-slice (aref images 0))
          (max-depth (length images))
-         (pixel-size (get-pixel-size first-slice)))
+         (pixel-size (fl.image:get-pixel-size first-slice)))
 
-    (with-slots (%width %height) first-slice ;; all slices the same.
-      (let* ((volume-data-size (* %width %height max-depth pixel-size))
+    (with-accessors ((width fl.image:width) (height fl.image:height)) first-slice
+      (let* ((volume-data-size (* width height max-depth pixel-size))
              (volume-data (make-array volume-data-size
                                       :element-type '(unsigned-byte 8))))
 
@@ -48,20 +48,20 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
               #++(format t "Processing slice image index ~A: Image ~A~%"
                          d image)
               ;; x and y in terms of images.
-                 (loop :for w :below %width :do
-                   (loop :for h :below %height :do
+                 (loop :for w :below width :do
+                   (loop :for h :below height :do
                      (let* ((pixel-start-2d
-                              (+ (* h (* %width pixel-size))
+                              (+ (* h (* width pixel-size))
                                  (* w pixel-size)))
                             (pixel-start-3d
-                              (+ (* d (* %width %height pixel-size))
-                                 (* h (* %width pixel-size))
+                              (+ (* d (* width height pixel-size))
+                                 (* h (* width pixel-size))
                                  (* w pixel-size))))
 
                        ;; TODO: Crappily copy over the individual pixel data
                        ;; from the 2d image to the 3d image. I should poke this
                        ;; more to see if I can copy way more data at once.
-                       (replace volume-data (data image)
+                       (replace volume-data (fl.image:data image)
                                 :start1 pixel-start-3d
                                 :end1 (+ pixel-start-3d pixel-size)
                                 :start2 pixel-start-2d
@@ -78,10 +78,10 @@ assemble them into a single linear array suitable for a 2d texture for
 opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
   (let* ((first-slice (aref images 0))
          (max-height (length images))
-         (pixel-size (get-pixel-size first-slice)))
+         (pixel-size (fl.image:get-pixel-size first-slice)))
 
-    (with-slots (%width) first-slice ;; all slices the same.
-      (let* ((planar-data-size (* %width max-height pixel-size))
+    (with-accessors ((width fl.image:width)) first-slice ;; all slices the same.
+      (let* ((planar-data-size (* width max-height pixel-size))
              (planar-data (make-array planar-data-size
                                       :element-type '(unsigned-byte 8))))
 
@@ -93,19 +93,19 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
               :for image = (aref images h) :do
                 (let* ((row-start-2d
                          ;; always start at start of a 2d row.
-                         (+ (* h (* %width pixel-size))
+                         (+ (* h (* width pixel-size))
                             (* 0 pixel-size)))
                        ;; Always starting at start of 1d row.
                        (row-start-1d 0))
 
                   ;; Copy the whole 1d line into the 2d image.
-                  (replace planar-data (data image)
+                  (replace planar-data (fl.image:data image)
                            :start1 row-start-2d
                            :end1 (+ row-start-2d
-                                    (* %width pixel-size))
+                                    (* width pixel-size))
                            :start2 row-start-1d
                            :end2 (+ row-start-1d
-                                    (* %width pixel-size)))))
+                                    (* width pixel-size)))))
         planar-data))))
 
 

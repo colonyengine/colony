@@ -6,7 +6,7 @@
   :window-height 1080
   :vsync :off
   :log-level :debug
-  :log-repl-categories '(:fl.example))
+  :log-repl-categories '(:fl))
 
 (define-resources (:project :first-light.example)
   (:project "data/project")

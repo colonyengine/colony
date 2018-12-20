@@ -17,13 +17,13 @@
                #:cl-graph
                #:cl-opengl
                #:sdl2
-               #:cl-tga
                #:verbose
                #:first-light.util
                #:first-light.metadata
                #:first-light.data-structures
                #:first-light.binary-formats
                #:first-light.math
+               #:first-light.image-types
                #:first-light.geometry
                #:first-light.input
                #:first-light.shader)
@@ -53,7 +53,6 @@
    (:file "flow")
    (:file "graph")
    (:file "scene")
-   (:file "image")
    (:module "textures"
     :components
     ((:file "texture")

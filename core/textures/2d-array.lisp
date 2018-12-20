@@ -26,8 +26,8 @@
 
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
-          (compute-mipmap-levels (width first-image)
-                                 (height first-image))
+          (compute-mipmap-levels (fl.image:width first-image)
+                                 (fl.image:height first-image))
         (declare (ignore expected-resolutions))
 
         ;; TODO: Fix this call for arrays
@@ -41,9 +41,9 @@
           (let ((num-mipmaps-to-generate
                   (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
             (%gl:tex-storage-3d texture-type num-mipmaps-to-generate
-                                (internal-format first-image)
-                                (width first-image)
-                                (height first-image)
+                                (fl.image:internal-format first-image)
+                                (fl.image:width first-image)
+                                (fl.image:height first-image)
                                 num-layers)))
 
         ;; Upload all of the mipmap images into the texture ram.
@@ -53,17 +53,20 @@
               :for image = (aref (aref all-layers idx) 0)
               ;; Construct the entire 2d array image of these 1d image pieces.
               :for volume-data = (slices-to-volume (aref all-layers idx))
-              :do (with-slots (%width %height %internal-format %pixel-format
-                               %pixel-type)
+              :do (with-accessors ((width fl.image:width)
+                                   (height fl.image:height)
+                                   (internal-format fl.image:internal-format)
+                                   (pixel-format fl.image:pixel-format)
+                                   (pixel-type fl.image:pixel-type))
                       image
                     (if immutable-p
                         (gl:tex-sub-image-3d texture-type level 0 0 0
-                                             %width %height num-layers
-                                             %pixel-format %pixel-type
+                                             width height num-layers
+                                             pixel-format pixel-type
                                              volume-data)
-                        (gl:tex-image-3d texture-type level %internal-format
-                                         %width %height num-layers 0
-                                         %pixel-format %pixel-type
+                        (gl:tex-image-3d texture-type level internal-format
+                                         width height num-layers 0
+                                         pixel-format pixel-type
                                          volume-data))))
 
         ;; And clean up main memory.
