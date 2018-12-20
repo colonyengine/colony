@@ -55,4 +55,7 @@
     ((:rgba :bgra) :rgba8)))
 
 (defun read-image (path)
-  (read-image-type (get-image-type path) path))
+  (let ((image (read-image-type (get-image-type path) path)))
+    (unless (eq (origin image) :top-left)
+      (v:warn :fl.image "Image origin is not :TOP-LEFT for file: ~s" path))
+    image))
