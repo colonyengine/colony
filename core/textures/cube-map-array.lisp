@@ -19,7 +19,7 @@
            ;; I don't know if this is a reuirements or not.
            (num-mipmaps (length (second (aref first-cube 0)))))
 
-      (v:debug :fl.core.texture
+      (v:trace :fl.core.texture
                "Loading :texture-cube-map-array images = ~a"
                images)
 
@@ -41,7 +41,7 @@
         (when immutable-p
           (let ((num-mipmaps-to-generate
                   (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
-            (v:debug :fl.core.texture "tex-storage-3d: texture-type = ~A, num-mipmaps-to-generate = ~A, internal-format = ~A, width = ~A, height = ~A, depth = ~A~%"
+            (v:trace :fl.core.texture "tex-storage-3d: texture-type = ~A, num-mipmaps-to-generate = ~A, internal-format = ~A, width = ~A, height = ~A, depth = ~A~%"
                      texture-type num-mipmaps-to-generate
                      (fl.image:internal-format first-image)
                      (fl.image:width first-image)
@@ -68,7 +68,7 @@
                              ;; NOTE: face-idx works cause I sorted the faces
                              ;; earlier.
                              :for face-idx :by 1
-                             :do (v:debug :fl.core.texture "inserting cube ~A face ~A[~A]~%"
+                             :do (v:trace :fl.core.texture "inserting cube ~A face ~A[~A]~%"
                                           cube-idx face-signifier idx)
                                  (with-accessors ((width fl.image:width)
                                                   (height fl.image:height)
