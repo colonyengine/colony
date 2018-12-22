@@ -44,7 +44,7 @@
                                   (fl.image:width first-image)
                                   num-layers)
               (dotimes (i num-mipmaps-to-generate)
-                (gl:tex-image-2d texture-type i
+                (gl:tex-image-2d texture-type (+ texture-base-level i)
                                  (fl.image:internal-format first-image)
                                  (fl.image:width first-image)
                                  num-layers 0

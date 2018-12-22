@@ -62,7 +62,7 @@
                                   (fl.image:height first-image)
                                   depth)
               (dotimes (i num-mipmaps-to-generate)
-                (gl:tex-image-3d texture-type i
+                (gl:tex-image-3d texture-type (texture-base-legel i)
                                  (fl.image:internal-format first-image)
                                  (fl.image:width first-image)
                                  (fl.image:height first-image)
