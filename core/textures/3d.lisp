@@ -62,12 +62,12 @@
                                   (fl.image:height first-image)
                                   depth)
               (loop :for i :below num-mipmaps-to-generate
-                    :for (mipmap-width mipmap-height) :in expected-resolutions
+                    :for (mipmap-width mipmap-height mipmap-depth)
+                      :in expected-resolutions
                     :do (gl:tex-image-3d texture-type (+ texture-base-level i)
                                          (fl.image:internal-format first-image)
-                                         mipmap-width
-                                         mipmap-height
-                                         (length (aref all-slices i)) 0
+                                         mipmap-width mipmap-height mipmap-depth
+                                         0
                                          (fl.image:pixel-format first-image)
                                          (fl.image:pixel-type first-image)
                                          (cffi:null-pointer)))))
