@@ -21,11 +21,15 @@ Return a values of:
     (values num-levels (nreverse resolutions))))
 
 (defun reshape-image-array-layout (images-array)
-  "Reshape and array in the form of:
+  "Reshape an array in the form of:
  #(#(a0 a1 a2 ...) #(b0 b1 b2 ...) ...)
 to
  #(#(a0 b0 ...) #(a1 b1 ...) #(a2 b2 ...) ...)
 and return it."
-  (apply #'map 'vector (lambda (&rest elems)
-                         (coerce elems 'vector))
-         (coerce images-array 'list)))
+  (let* ((w (length images-array))
+         (h (length (aref images-array 0)))
+         (reshaped (map-into (make-array h) (lambda () (make-array w)))))
+    (dotimes (i w)
+      (dotimes (j h)
+        (setf (aref (aref reshaped j) i) (aref (aref images-array i) j))))
+    reshaped))
