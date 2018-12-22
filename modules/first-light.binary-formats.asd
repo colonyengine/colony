@@ -2,7 +2,8 @@
   :description "Tools for loading and parsing binary file formats."
   :author ("Michael Fiano <mail@michaelfiano.com>"
            "Peter Keller <psilord@cs.wisc.edu>"
-           "Bart Botta <00003b at gmail.com>")
+           "Bart Botta <00003b at gmail.com>"
+           "Elijah Malaby <djeis>")
   :maintainer ("Michael Fiano <mail@michaelfiano.com>"
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
