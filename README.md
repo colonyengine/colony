@@ -43,10 +43,14 @@ TODO
 ## License
 
 Copyright © 2017-2018
-  Michael Fiano <mail@michaelfiano.com>,
-  Peter Keller <psilord@cs.wisc.edu>,
-  |3b| in #lispgames and ##hacker-theory on freenode IRC
-  Elijah Malaby <djeis>
+
+* Michael Fiano <mail@michaelfiano.com>
+
+* Peter Keller <psilord@cs.wisc.edu>
+
+* Bart Botta <00003b@gmail.com>
+
+* Elijah Malaby <djeis>
 
 Licensed under the MIT License.
 
