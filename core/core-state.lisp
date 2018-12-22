@@ -86,11 +86,13 @@ CORE-STATE."
 
 (defun %make-scene-tree (core-state)
   (let* ((context (context core-state))
-         (actor (make-actor context :id (fl.util:unique-name '@universe) :scene t))
+         (actor (make-actor context :id (fl.util:unique-name '@universe)))
          (transform (make-component context 'transform :actor actor)))
     (attach-component actor transform)
     (spawn-actor actor :parent nil)
-    (execute-flow core-state :default 'initialize-phase 'entry/initialize-phase
+    (execute-flow core-state :default
+                  'initialize-phase
+                  'entry/initialize-phase
                   :come-from-state-name 'ef-make-scene-tree)
     actor))
 

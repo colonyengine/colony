@@ -10,8 +10,6 @@
                 :initform (fl.util:dict #'eq))
    (%components-by-type :reader components-by-type
                         :initform (fl.util:dict #'eq))
-   (%scene :accessor scene
-           :initarg :scene)
    (%ttl :accessor ttl
          :initarg :ttl
          :initform 0)

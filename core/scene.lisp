@@ -39,12 +39,6 @@
         (%generate-actor-components-table child actor-names table)))
     table))
 
-(defun %generate-actor-bindings (actor-names table)
-  (mapcan
-   (lambda (actor)
-     `((,actor (fl.util:href ,table ',actor))))
-   actor-names))
-
 (defun %generate-component-initializers (core-state actor-components)
   (flet ((generate-component-forms (components)
            (let ((component-forms))
@@ -70,20 +64,17 @@
                                 (lambda ()
                                   (reinitialize-instance ,symbol :actor ,actor ,@initargs)))))))
 
-(defun %generate-relationships (core-state scene-spec)
+(defun %parse-scene-actor-relationships (core-state scene-spec)
   (labels ((traverse (tree &optional parent)
              (destructuring-bind (child components . sub-tree) tree
                (declare (ignore components))
                (let ((result (list (cons parent child))))
                  (if sub-tree
-                     (append
-                      result
-                      (apply #'append (mapcar (lambda (x) (traverse x child)) sub-tree)))
+                     (append result (mapcan (lambda (x) (traverse x child)) sub-tree))
                      result)))))
     (loop :with root = `(scene-tree ,core-state)
-          :with children = (apply #'append (mapcar #'traverse scene-spec))
-          :for (parent . child) :in children
-          :collect `(,(fl.util:ensure-symbol 'add-child 'fl.comp)
+          :for (parent . child) :in (mapcan #'traverse scene-spec)
+          :collect `(fl.comp::add-child
                      (actor-component-by-type ,(or parent root) 'transform)
                      (actor-component-by-type ,child 'transform)))))
 
@@ -91,36 +82,41 @@
   (loop :for actor :in actor-names
         :collect `(spawn-actor ,actor)))
 
-(defun parse-scene (scene-name context scene-spec)
+(defun collect-scene-actor-bindings (actor-names actor-table)
+  (mapcan
+   (lambda (x)
+     `((,x (fl.util:href ,actor-table ',x))))
+   actor-names))
+
+(defun parse-scene (context scene-spec)
   (fl.util:with-unique-names (core-state actor-table actor-name)
     (let* ((actor-names (%generate-actor-names scene-spec))
-           (actor-components (%generate-actor-components-table scene-spec actor-names))
-           (bindings (%generate-actor-bindings actor-names actor-table)))
+           (actor-components (%generate-actor-components-table scene-spec actor-names)))
       `(lambda (,core-state)
          (let ((,actor-table (fl.util:dict #'eq))
                (,context (context ,core-state)))
            (declare (ignorable context))
            (dolist (,actor-name ',actor-names)
              (setf (fl.util:href ,actor-table ,actor-name)
-                   (make-actor (context ,core-state) :id ,actor-name :scene ,scene-name)))
-           (let ,bindings
+                   (make-actor (context ,core-state) :id ,actor-name)))
+           (let ,(collect-scene-actor-bindings actor-names actor-table)
              ,@(%generate-component-initializers core-state actor-components)
              ,@(%generate-component-thunks actor-names actor-components)
-             ,@(%generate-relationships core-state scene-spec)
+             ,@(%parse-scene-actor-relationships core-state scene-spec)
              ,@(%generate-actor-spawn actor-names)
-             (values ,core-state ,actor-table)))))))
+             (fl.util:noop)))))))
 
 (defmacro define-scene (name (&key (context 'context)) &body body)
   (fl.util:with-unique-names (definition code scene)
     `(symbol-macrolet ((,definition (fl.data:get 'scenes))
                        (,code (fl.data:get 'scene-code)))
-       (let ((,scene ,(parse-scene `',name context body)))
+       (let ((,scene ,(parse-scene context body)))
          (unless ,definition
            (fl.data:set 'scenes (fl.util:dict #'eq)))
          (unless ,code
            (fl.data:set 'scene-code (fl.util:dict #'eq)))
          (setf (fl.util:href ,definition ',name) ,scene
-               (fl.util:href ,code ',name) (parse-scene ',name ',context ',body))
+               (fl.util:href ,code ',name) (parse-scene ',context ',body))
          (export ',name)))))
 
 (defun get-scene (core-state scene-name)
