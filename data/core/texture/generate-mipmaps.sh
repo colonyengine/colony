@@ -1,6 +1,6 @@
 #! /bin/bash
 
-XARGS="-compress Zip -define tiff
+XARGS="-compress Zip"
 RESIZE="-resize 50%"
 
 
