@@ -28,7 +28,6 @@
       (multiple-value-bind (expected-mipmaps expected-resolutions)
           (compute-mipmap-levels (fl.image:width first-image)
                                  (fl.image:height first-image))
-        (declare (ignore expected-resolutions))
 
         ;; TODO: Fix this call for arrays
         #++(validate-mipmap-images images texture
@@ -45,15 +44,16 @@
                                   (fl.image:width first-image)
                                   (fl.image:height first-image)
                                   num-layers)
-              (dotimes (i num-mipmaps-to-generate)
-                (gl:tex-image-3d texture-type (+ texture-base-level i)
-                                 (fl.image:internal-format first-image)
-                                 (fl.image:width first-image)
-                                 (fl.image:height first-image)
-                                 num-layers 0
-                                 (fl.image:pixel-format first-image)
-                                 (fl.image:pixel-type first-image)
-                                 (cffi:null-pointer)))))
+              (loop :for i :below num-mipmaps-to-generate
+                    :for (mipmap-width mipmap-height) :in expected-resolutions
+                    :do (gl:tex-image-3d texture-type (+ texture-base-level i)
+                                         (fl.image:internal-format first-image)
+                                         mipmap-width
+                                         mipmap-height
+                                         num-layers 0
+                                         (fl.image:pixel-format first-image)
+                                         (fl.image:pixel-type first-image)
+                                         (cffi:null-pointer)))))
 
         ;; Upload all of the mipmap images into the texture ram.
         ;; TODO: Make this higher order.

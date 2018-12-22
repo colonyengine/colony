@@ -61,15 +61,16 @@
                                   (fl.image:width first-image)
                                   (fl.image:height first-image)
                                   depth)
-              (dotimes (i num-mipmaps-to-generate)
-                (gl:tex-image-3d texture-type (texture-base-legel i)
-                                 (fl.image:internal-format first-image)
-                                 (fl.image:width first-image)
-                                 (fl.image:height first-image)
-                                 (length (aref all-slices i)) 0
-                                 (fl.image:pixel-format first-image)
-                                 (fl.image:pixel-type first-image)
-                                 (cffi:null-pointer)))))
+              (loop :for i :below num-mipmaps-to-generate
+                    :for (mipmap-width mipmap-height) :in expected-resolutions
+                    :do (gl:tex-image-3d texture-type (+ texture-base-level i)
+                                         (fl.image:internal-format first-image)
+                                         mipmap-width
+                                         mipmap-height
+                                         (length (aref all-slices i)) 0
+                                         (fl.image:pixel-format first-image)
+                                         (fl.image:pixel-type first-image)
+                                         (cffi:null-pointer)))))
 
         ;; Load all volumetric mipmaps into the gpu.
         (loop :for idx :below (if use-mipmaps-p num-mipmaps 1)
