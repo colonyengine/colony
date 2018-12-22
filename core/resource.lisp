@@ -8,7 +8,7 @@
 ;;   (:shader (:core "shader"))
 ;;   (:texture (:core "texture"))
 ;;   (:char-meshes (:core :mesh "character"))
-;;   (:debug-tex (:core :texture "debug.tga"))
+;;   (:debug-tex (:core :texture "debug.tiff"))
 ;;   (:project (:core "my-project")))
 
 ;;; DSL Expansion
@@ -21,7 +21,7 @@
 ;; (:core :shader) -> #p"data/shader/"
 ;; (:core :texture) -> #p"data/texture/"
 ;; (:core :char-meshes) -> #p"data/mesh/character/"
-;; (:core :debug-tex) -> #p"data/texture/debug.tga"
+;; (:core :debug-tex) -> #p"data/texture/debug.tiff"
 ;; :project -> #p"data/my-project/"
 
 ;;; Details:
@@ -81,7 +81,7 @@
 
 ;; In the "DSL Input" example above, :debug-tex defines a resource that makes use of the
 ;; three-element path specification format. Here, we can see that :debug-tex refers to the
-;; "debug.tga" file located by the :texture identifier in first-light's core resource definitions,
+;; "debug.tiff" file located by the :texture identifier in first-light's core resource definitions,
 ;; and not by resolving a user-defined :texture identifier.
 
 ;; NOTE: In all three forms of path specifications, there is a string component with consistent

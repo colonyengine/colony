@@ -20,9 +20,9 @@ M8="mip_8"
 M9="mip_9"
 M10="mip_10"
 
-SUFFIX="tga"
+SUFFIX="tiff"
 
-XARGS="-compress None -define tga:image-origin=BottomLeft"
+XARGS="-compress Zip -format tiff"
 RESIZE="-resize 50%"
 
 

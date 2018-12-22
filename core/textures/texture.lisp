@@ -217,11 +217,11 @@ core-state context slot value. Return a vector of image structure from the
 function READ-IMAGE.
 
 If KIND is :1d or :2d, then DATA must be an array of location descriptors like:
-  #((:project \"a/b/c/foo.tga\") (:local \"a/b/c/foo.tga\"))
+  #((:project \"a/b/c/foo.tiff\") (:local \"a/b/c/foo.tiff\"))
 
 If KIND is :1d-array, :2d-array, :3d, then DATA must be an array of
 slices of mipmap images:
-  #(#((:project \"a/b/c/slice0-mip0.tga\") (:local \"a/b/c/slice1-mip0.tga\")))
+  #(#((:project \"a/b/c/slice0-mip0.tiff\") (:local \"a/b/c/slice1-mip0.tiff\")))
 
 The same vector structure is returned but with the local descriptor lists
 replaced by actual IMAGE instances of the loaded images.
