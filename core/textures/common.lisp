@@ -43,29 +43,30 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the volumentric data."
         ;; a linear array.
         ;;
         ;; NOTE: Assuming row major ordering for all arrays.
-        (loop :for d :below max-depth
-              :for image = (aref images d) :do
-              #++(format t "Processing slice image index ~A: Image ~A~%"
-                         d image)
-              ;; x and y in terms of images.
-                 (loop :for w :below width :do
-                   (loop :for h :below height :do
-                     (let* ((pixel-start-2d
-                              (+ (* h (* width pixel-size))
-                                 (* w pixel-size)))
-                            (pixel-start-3d
-                              (+ (* d (* width height pixel-size))
-                                 (* h (* width pixel-size))
-                                 (* w pixel-size))))
+        ;; TODO: This no longer works with pointers to image data. Rewrite using glTexSubImage* API
+        #++(loop :for d :below max-depth
+                 :for image = (aref images d) :do
+                 #++(format t "Processing slice image index ~A: Image ~A~%"
+                            d image)
+                 ;; x and y in terms of images.
+                    (loop :for w :below width :do
+                      (loop :for h :below height :do
+                        (let* ((pixel-start-2d
+                                 (+ (* h (* width pixel-size))
+                                    (* w pixel-size)))
+                               (pixel-start-3d
+                                 (+ (* d (* width height pixel-size))
+                                    (* h (* width pixel-size))
+                                    (* w pixel-size))))
 
-                       ;; TODO: Crappily copy over the individual pixel data
-                       ;; from the 2d image to the 3d image. I should poke this
-                       ;; more to see if I can copy way more data at once.
-                       (replace volume-data (fl.image:data image)
-                                :start1 pixel-start-3d
-                                :end1 (+ pixel-start-3d pixel-size)
-                                :start2 pixel-start-2d
-                                :end2 (+ pixel-start-2d pixel-size))))))
+                          ;; TODO: Crappily copy over the individual pixel data
+                          ;; from the 2d image to the 3d image. I should poke this
+                          ;; more to see if I can copy way more data at once.
+                          (replace volume-data (fl.image:data image)
+                                   :start1 pixel-start-3d
+                                   :end1 (+ pixel-start-3d pixel-size)
+                                   :start2 pixel-start-2d
+                                   :end2 (+ pixel-start-2d pixel-size))))))
 
         #++(format t "Finished constructing volume data.~%")
         volume-data))))
@@ -89,23 +90,24 @@ opengl. Return a linear array of UNSIGNED-BYTEs that hold the planar data."
         ;; a linear array.
         ;;
         ;; NOTE: Assuming row major ordering for all arrays.
-        (loop :for h :below max-height
-              :for image = (aref images h) :do
-                (let* ((row-start-2d
-                         ;; always start at start of a 2d row.
-                         (+ (* h (* width pixel-size))
-                            (* 0 pixel-size)))
-                       ;; Always starting at start of 1d row.
-                       (row-start-1d 0))
+        ;; TODO: This no longer works with pointers to image data. Rewrite using glTexSubImage* API
+        #++(loop :for h :below max-height
+                 :for image = (aref images h) :do
+                   (let* ((row-start-2d
+                            ;; always start at start of a 2d row.
+                            (+ (* h (* width pixel-size))
+                               (* 0 pixel-size)))
+                          ;; Always starting at start of 1d row.
+                          (row-start-1d 0))
 
-                  ;; Copy the whole 1d line into the 2d image.
-                  (replace planar-data (fl.image:data image)
-                           :start1 row-start-2d
-                           :end1 (+ row-start-2d
-                                    (* width pixel-size))
-                           :start2 row-start-1d
-                           :end2 (+ row-start-1d
-                                    (* width pixel-size)))))
+                     ;; Copy the whole 1d line into the 2d image.
+                     (replace planar-data (fl.image:data image)
+                              :start1 row-start-2d
+                              :end1 (+ row-start-2d
+                                       (* width pixel-size))
+                              :start2 row-start-1d
+                              :end2 (+ row-start-1d
+                                       (* width pixel-size)))))
         planar-data))))
 
 

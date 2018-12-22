@@ -5,16 +5,14 @@
           :initarg :path)
    (%type :reader image-type
           :initarg :type)
+   (%surface :reader surface
+             :initarg :surface)
    (%width :reader width
            :initarg :width)
    (%height :reader height
             :initarg :height)
    (%channels :reader channels
               :initarg :channels)
-   (%depth :reader depth
-           :initarg :depth)
-   (%origin :reader origin
-            :initarg :origin)
    (%pixel-format :reader pixel-format
                   :initarg :pixel-format)
    (%pixel-type :reader pixel-type
@@ -31,19 +29,17 @@
 (defun get-image-extension-keyword (path)
   (fl.util:make-keyword (string-upcase (pathname-type path))))
 
-(defun get-image-type (path)
+(defun get-loader-type (path)
   (let ((extension (get-image-extension-keyword path)))
     (ecase extension
-      (:tga :targa)
-      (:png :png)
-      ((:jpg :jpeg) :jpeg))))
-
-(defmethod free-storage ((image image))
-  (with-slots (%data) image
-    (setf %data nil)))
+      ((:tga :bmp :pbm :pgm :ppm :xpm :xcf :pcx :gif :jpg :jpeg :tif :tiff :lbm :iff :png)
+       :sdl2-image))))
 
 (defmethod get-pixel-size ((image image))
-  (/ (* (depth image) (channels image)) 8))
+  (ecase (pixel-format image)
+    (:red 1)
+    ((:rgb :bgr) 3)
+    ((:rgba :bgra) 4)))
 
 (defun get-internal-format (pixel-format)
   (ecase pixel-format
@@ -51,8 +47,10 @@
     ((:rgb :bgr) :rgb8)
     ((:rgba :bgra) :rgba8)))
 
+(defgeneric %read-image (loader path))
+
 (defun read-image (path)
-  (let ((image (read-image-type (get-image-type path) path)))
-    (unless (eq (origin image) :top-left)
-      (v:warn :fl.image "Image origin is not :TOP-LEFT for file: ~s" path))
-    image))
+  (%read-image (get-loader-type path) path))
+
+(defun free-storage (image)
+  (%free-storage (get-loader-type (path image)) image))

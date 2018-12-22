@@ -14,13 +14,13 @@
   (:texture (:project "textures")))
 
 (define-texture tank/diffuse (:texture-2d)
-  (:data #((:texture "tank-diffuse.tga"))))
+  (:data #((:texture "tank-diffuse.tiff"))))
 
 (define-texture tank/specular (:texture-2d)
-  (:data #((:texture "tank-specular.tga"))))
+  (:data #((:texture "tank-specular.tiff"))))
 
 (define-texture tank/normal (:texture-2d)
-  (:data #((:texture "tank-normal.tga"))))
+  (:data #((:texture "tank-normal.tiff"))))
 
 (define-material noise-test/playground
   (:profiles (fl.materials:u-mvpt)

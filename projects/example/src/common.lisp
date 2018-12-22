@@ -24,7 +24,7 @@
   (:cubemap-test (:project :texture-test-textures "cube-map/test"))
   (:cubemaparray-test (:project :texture-test-textures "cube-map-array"))
   ;; sprite-test
-  (:spritesheet (:project :texture "sprite-test/sprites.tga"))
+  (:spritesheet (:project :texture "sprite-test/sprites.tiff"))
   (:spritesheet-data (:project "sprites.sexp"))
   ;; damaged helmet
   (:damaged-helmet-textures (:project :texture "damaged-helmet")))

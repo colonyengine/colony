@@ -266,4 +266,4 @@
   (:mesh (:core "mesh"))
   (:texture (:core "texture"))
   (:gamepad-db (:core "gamepad-db.txt"))
-  (:debug-tex (:core :texture "debug.tga")))
+  (:debug-tex (:core :texture "debug.tiff")))

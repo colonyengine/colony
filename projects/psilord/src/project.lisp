@@ -13,7 +13,7 @@
   (:texture (:project "textures")))
 
 (define-texture alignment (:texture-2d)
-  (:data #((:texture "alignment.tga"))))
+  (:data #((:texture "alignment.tiff"))))
 
 (defparameter +color/red+ (flm:vec4 1 0 0 1))
 (defparameter +color/green+ (flm:vec4 0 1 0 1))

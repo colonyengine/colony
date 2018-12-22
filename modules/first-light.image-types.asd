@@ -10,15 +10,12 @@
   :bug-tracker "https://github.com/hackertheory/first-light/issues"
   :source-control (:git "git@github.com:hackertheory/first-light.git")
   :encoding :utf-8
-  :depends-on (#:cl-tga
-               #:pngload
-               #:verbose
+  :depends-on (#:sdl2
+               #:sdl2-image
                #:first-light.util)
   :pathname "image-types"
   :serial t
   :components
   ((:file "package")
    (:file "common")
-   (:file "type-targa")
-   (:file "type-png")
-   (:file "type-jpeg")))
+   (:file "loader-sdl2-image")))
