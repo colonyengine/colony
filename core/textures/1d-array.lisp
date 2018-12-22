@@ -35,14 +35,23 @@
 
         (potentially-degrade-texture-min-filter texture)
 
-        ;; Allocate immutable storage if required.
-        (when immutable-p
-          (let ((num-mipmaps-to-generate
-                  (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
-            (%gl:tex-storage-2d texture-type num-mipmaps-to-generate
-                                (fl.image:internal-format first-image)
-                                (fl.image:width first-image)
-                                num-layers)))
+        ;; Allocate storage.
+        (let ((num-mipmaps-to-generate
+                (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
+          (if immutable-p
+              (%gl:tex-storage-2d texture-type num-mipmaps-to-generate
+                                  (fl.image:internal-format first-image)
+                                  (fl.image:width first-image)
+                                  num-layers)
+              (dotimes (i num-mipmaps-to-generate)
+                (gl:tex-image-2d texture-type i
+                                 (fl.image:internal-format first-image)
+                                 (fl.image:width first-image)
+                                 num-layers 0
+                                 (fl.image:pixel-format first-image)
+                                 (fl.image:pixel-type first-image)
+                                 (cffi:null-pointer)))))
+
 
         ;; Upload all of the mipmap images into the texture ram.
         ;; TODO: Make this higher order.
@@ -50,22 +59,18 @@
               :for level = (+ texture-base-level idx)
               :for image = (aref (aref all-layers idx) 0)
               ;; Construct the entire 2d array image of these 1d image pieces.
-              :for image-data = (lines-to-plane (aref all-layers idx))
               :do (with-accessors ((width fl.image:width)
                                    (height fl.image:height)
                                    (internal-format fl.image:internal-format)
                                    (pixel-format fl.image:pixel-format)
                                    (pixel-type fl.image:pixel-type))
                       image
-                    (if immutable-p
-                        (gl:tex-sub-image-2d texture-type level 0 0
-                                             width num-layers
-                                             pixel-format pixel-type
-                                             image-data)
-                        (gl:tex-image-2d texture-type level internal-format
-                                         width num-layers 0
-                                         pixel-format pixel-type
-                                         image-data))))
+                    (dotimes (l num-layers)
+                      (gl:tex-sub-image-2d texture-type level 0 l
+                                           width 1
+                                           pixel-format pixel-type
+                                           (fl.image:data
+                                            (aref (aref all-layers idx) l))))))
 
         ;; And clean up main memory.
         (free-mipmap-images all-layers :1d-array)

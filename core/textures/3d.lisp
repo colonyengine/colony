@@ -53,19 +53,27 @@
         (potentially-degrade-texture-min-filter texture)
 
         ;; Allocate immutable storage if required.
-        (when immutable-p
-          (let ((num-mipmaps-to-generate
-                  (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
-            (%gl:tex-storage-3d texture-type num-mipmaps-to-generate
-                                (fl.image:internal-format first-image)
-                                (fl.image:width first-image)
-                                (fl.image:height first-image)
-                                depth)))
+        (let ((num-mipmaps-to-generate
+                (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
+          (if immutable-p
+              (%gl:tex-storage-3d texture-type num-mipmaps-to-generate
+                                  (fl.image:internal-format first-image)
+                                  (fl.image:width first-image)
+                                  (fl.image:height first-image)
+                                  depth)
+              (dotimes (i num-mipmaps-to-generate)
+                (gl:tex-image-3d texture-type i
+                                 (fl.image:internal-format first-image)
+                                 (fl.image:width first-image)
+                                 (fl.image:height first-image)
+                                 (length (aref all-slices i)) 0
+                                 (fl.image:pixel-format first-image)
+                                 (fl.image:pixel-type first-image)
+                                 (cffi:null-pointer)))))
 
         ;; Load all volumetric mipmaps into the gpu.
         (loop :for idx :below (if use-mipmaps-p num-mipmaps 1)
               :for level = (+ texture-base-level idx)
-              :for volume = (slices-to-volume (aref all-slices idx))
               :for (mipmap-width mipmap-height mipmap-depth)
                 :in expected-resolutions
               :do (with-accessors ((width fl.image:width)
@@ -84,19 +92,12 @@
                       (error "load-texture-data[:texture-3d]: Cannot load texture-3d mipmap because one of its size (width=~A, height=~A, depth=~A) is larger than the maximum opengl 3d texture size: ~A"
                              mipmap-width mipmap-height mipmap-depth
                              max-texture-3d-size))
-
-
-                    (if immutable-p
-                        (gl:tex-sub-image-3d texture-type level 0 0 0
-                                             mipmap-width
-                                             mipmap-height
-                                             mipmap-depth
-                                             pixel-format pixel-type volume)
-                        (gl:tex-image-3d texture-type level internal-format
-                                         mipmap-width
-                                         mipmap-height
-                                         mipmap-depth 0
-                                         pixel-format pixel-type volume))))
+                    (dotimes (z (length (aref all-slices idx)))
+                      (gl:tex-sub-image-3d texture-type level 0 0 z
+                                           width height 1
+                                           pixel-format pixel-type
+                                           (fl.image:data
+                                            (aref (aref all-slices idx) z))))))
 
         (free-mipmap-images all-slices :3d)
 
