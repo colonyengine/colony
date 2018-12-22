@@ -47,7 +47,8 @@
                     :for mipmap-resolution :in expected-resolutions
                     :do (gl:tex-image-2d texture-type (+ texture-base-level i)
                                          (fl.image:internal-format first-image)
-                                         ;; (width height) in mipmap-resolution
+                                         ;; (width height depth) in
+                                         ;; mipmap-resolution
                                          (first mipmap-resolution)
                                          num-layers 0
                                          (fl.image:pixel-format first-image)
