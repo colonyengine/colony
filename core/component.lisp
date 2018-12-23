@@ -107,6 +107,12 @@ DEFINE-COMPONENT form."
 (defgeneric on-component-initialize (component)
   (:method ((component component))))
 
+(defgeneric on-component-attach (component)
+  (:method ((component component))))
+
+(defgeneric on-component-detach (component)
+  (:method ((component component))))
+
 (defgeneric on-component-physics-update (component)
   (:method ((component component))))
 

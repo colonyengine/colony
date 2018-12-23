@@ -32,8 +32,11 @@
                  #:make-actor
                  #:make-component
                  #:mat-uniform-ref
+                 #:on-component-attach
                  #:on-component-destroy
+                 #:on-component-detach
                  #:on-component-initialize
+                 #:on-component-physics-update
                  #:on-component-render
                  #:on-component-update
                  #:option
