@@ -11,13 +11,13 @@
    (zoom :default 1)
    (transform :default nil)))
 
-(defmethod initialize-component ((component camera))
+(defmethod on-component-initialize ((component camera))
   (with-slots (%mode %transform) component
     (make-projection %mode component (context component))
     (setf %transform (actor-component-by-type (actor component) 'transform))
     (push component (cameras (core-state (context component))))))
 
-(defmethod destroy-component ((component camera))
+(defmethod on-component-destroy ((component camera))
   (let ((context (context component)))
     (fl.util:deletef (cameras (core-state context)) component)
     (setf (active-camera context) nil)))

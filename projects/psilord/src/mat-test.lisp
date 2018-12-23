@@ -8,17 +8,15 @@
    (color-fuzz-delta :default (flm:vec4))
    (current-color :default (flm:vec4))))
 
-(defmethod initialize-component ((mat-test mat-test))
+(defmethod on-component-initialize ((mat-test mat-test))
 
-  ;; TODO: NOTE! We cannot copy the material here, because we don't know if
-  ;; the initialize-component has been run for the mesh-renderer which
-  ;; converted the material symbol to the actual material object. And,
-  ;; setting up the component dependencies is the wrong solution for this.
-  ;; So we do this in UPDATE-COMPONENT once.
+  ;; TODO: NOTE! We cannot copy the material here, because we don't know if the
+  ;; on-component-initialize has been run for the mesh-renderer which converted the material symbol
+  ;; to the actual material object. And, setting up the component dependencies is the wrong solution
+  ;; for this. So we do this in ON-COMPONENT-UPDATE once.
   ;;
-  ;; We probably need the slot annotators indicating their FL role so we can
-  ;; convert the material from a symbol to a true material BEFORE any
-  ;; use component protocol is executed on them.
+  ;; We probably need the slot annotators indicating their FL role so we can convert the material
+  ;; from a symbol to a true material BEFORE any use component protocol is executed on them.
 
   ;; Find the mesh-renderer on my actor.
   (setf (mesh-rend mat-test)
@@ -30,7 +28,7 @@
       (* (if (zerop (random 2)) 1 -1)
          (random magnitude))))
 
-(defmethod update-component ((mat-test mat-test))
+(defmethod on-component-update ((mat-test mat-test))
   (with-accessors ((mesh-rend mesh-rend) (material-copied-p material-copied-p)
                    (mix-color mix-color) (color-fuzz-range color-fuzz-range)
                    (color-fuzz-delta color-fuzz-delta)

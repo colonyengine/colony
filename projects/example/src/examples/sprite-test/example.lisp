@@ -129,7 +129,7 @@ for later use with the shaders."
           (fl.util:href (sprites sprite-sheet)
                         (aref (aref %animvec %current-animation) (1+ %current-cell))))))
 
-(defmethod fl:initialize-component ((sprite-sheet sprite-sheet))
+(defmethod fl:on-component-initialize ((sprite-sheet sprite-sheet))
   (with-slots (%spec-resource-id %spec %material %transform %vao-id) sprite-sheet
     (let* ((context (fl:context sprite-sheet))
            (path (fl:find-resource context %spec-resource-id)))
@@ -160,11 +160,11 @@ for later use with the shaders."
       ;; fixup the current cell to show.
       (convert-current-sprite sprite-sheet))))
 
-(defmethod fl:update-component ((sprite-sheet sprite-sheet))
+(defmethod fl:on-component-update ((sprite-sheet sprite-sheet))
   (let ((context (fl:context sprite-sheet)))
     (maybe-update-current-animation-cell sprite-sheet (fl:frame-time context))))
 
-(defmethod fl:render-component ((sprite-sheet sprite-sheet))
+(defmethod fl:on-component-render ((sprite-sheet sprite-sheet))
   (with-slots (%transform %material %sprite %vao-id) sprite-sheet
     (let ((context (fl:context sprite-sheet)))
       (fl.util:when-let ((camera (fl:active-camera context)))
@@ -185,11 +185,11 @@ for later use with the shaders."
 (fl:define-component simple-movement ()
   ((transform :default nil)))
 
-(defmethod fl:initialize-component ((component simple-movement))
+(defmethod fl:on-component-initialize ((component simple-movement))
   (with-accessors ((actor fl:actor) (transform transform)) component
     (setf transform (fl:actor-component-by-type actor 'transform))))
 
-(defmethod fl:update-component ((component simple-movement))
+(defmethod fl:on-component-update ((component simple-movement))
   (with-slots (%transform) component
     (fl.util:mvlet* ((context (fl:context component))
                      (lx ly (fl.input:get-gamepad-analog (fl:input-data context)
@@ -211,11 +211,11 @@ for later use with the shaders."
   ((transform :default nil)
    (velocity :default 0)))
 
-(defmethod fl:initialize-component ((component shot-mover))
+(defmethod fl:on-component-initialize ((component shot-mover))
   (setf (transform component)
         (fl:actor-component-by-type (fl:actor component) 'fl.comp:transform)))
 
-(defmethod fl:update-component ((component shot-mover))
+(defmethod fl:on-component-update ((component shot-mover))
   (fl.comp:translate
    (transform component)
    ;; fly along the forward axis for this shot
@@ -228,11 +228,11 @@ for later use with the shaders."
 (fl:define-component shot-emitter ()
   ((emitter-transform :default nil)))
 
-(defmethod fl:initialize-component ((component shot-emitter))
+(defmethod fl:on-component-initialize ((component shot-emitter))
   (setf (emitter-transform component)
         (fl:actor-component-by-type (fl:actor component) 'fl.comp:transform)))
 
-(defmethod fl:update-component ((component shot-emitter))
+(defmethod fl:on-component-update ((component shot-emitter))
   (let ((context (fl:context component)))
     (when (or (fl.input:input-enter-p (fl:input-data context) '(:gamepad1 :a))
               (fl.input:input-enter-p (fl:input-data context) '(:mouse :left)))

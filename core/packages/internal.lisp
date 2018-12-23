@@ -27,23 +27,24 @@
    #:define-texture-profile
    #:delta
    #:deploy-binary
-   #:destroy-component
    #:detach-component
    #:find-resource
    #:frame-manager
    #:frame-time
    #:general-data-format-descriptor
    #:id
-   #:initialize-component
    #:input-data
    #:lookup-material
    #:make-actor
    #:make-component
    #:mat-uniform-ref
+   #:on-component-destroy
+   #:on-component-initialize
+   #:on-component-render
+   #:on-component-update
    #:option
    #:print-all-resources
    #:project-data
-   #:render-component
    #:scene-tree
    #:shader
    #:spawn-actor
@@ -52,6 +53,5 @@
    #:state
    #:stop-engine
    #:total-time
-   #:update-component
    #:using-material
    #:with-shared-storage))

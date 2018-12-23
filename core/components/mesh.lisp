@@ -21,7 +21,7 @@
   (dolist (primitive (primitives mesh))
     (funcall (fl.geom:draw-func primitive) :instance-count instance-count)))
 
-(defmethod initialize-component ((component mesh))
+(defmethod on-component-initialize ((component mesh))
   (with-accessors ((location location) (id id) (primitives primitives)) component
     (unless location
       (error "A mesh component must have a location set."))

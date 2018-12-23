@@ -24,25 +24,25 @@
                  #:define-texture
                  #:define-texture-profile
                  #:detach-component
-                 #:destroy-component
                  #:find-resource
                  #:frame-time
                  #:general-data-format-descriptor
                  #:id
-                 #:initialize-component
                  #:input-data
                  #:make-actor
                  #:make-component
                  #:mat-uniform-ref
+                 #:on-component-destroy
+                 #:on-component-initialize
+                 #:on-component-render
+                 #:on-component-update
                  #:option
                  #:print-all-resources
                  #:project-data
-                 #:render-component
                  #:spawn-actor
                  #:ss-href
                  #:start-engine
                  #:stop-engine
                  #:total-time
-                 #:update-component
                  #:using-material
                  #:with-shared-storage))

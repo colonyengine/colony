@@ -54,7 +54,7 @@
                         (lambda (core-state)
                           (values :type-policy
                                   (component-init-by-type-view (tables core-state)))))
-                    (action #'initialize-component)
+                    (action #'on-component-initialize)
                     (transition realize-components))
         ;; 4
         (flow-state realize-components :reset ()
@@ -117,7 +117,7 @@
                         (lambda (core-state)
                           (values :type-policy
                                   (component-active-by-type-view (tables core-state)))))
-                    (action #'physics-update-component)
+                    (action #'on-component-physics-update)
                     (transition nil))
 
         ;; TODO: PHYSICS-COLLISIONS is not yet implemented, there may be
@@ -153,7 +153,7 @@
                         (lambda (core-state)
                           (values :type-policy
                                   (component-active-by-type-view (tables core-state)))))
-                    (action #'update-component)
+                    (action #'on-component-update)
                     (transition protocol-render-component))
 
         (flow-state protocol-render-component :reset ()
@@ -161,7 +161,7 @@
                         (lambda (core-state)
                           (values :type-policy
                                   (component-active-by-type-view (tables core-state)))))
-                    (action #'render-component)
+                    (action #'on-component-render)
                     (transition exit/active-phase))
 
         (flow-state exit/active-phase :reset ()
@@ -198,7 +198,7 @@
         ;;
         ;; 5. If destroy is empty, go to 11.
         ;;
-        ;; 6. run DESTROY-COMPONENT by-type in destroy.
+        ;; 6. run ON-COMPONENT-DESTROY by-type in destroy.
         ;;
         ;; 7. disconnect all destroyed actors from the scene heirarchy.
         ;;
@@ -286,7 +286,7 @@
                         (lambda (core-state)
                           (values :type-policy
                                   (component-destroy-by-type-view (tables core-state)))))
-                    (action #'destroy-component)
+                    (action #'on-component-destroy)
                     (transition disconnect-destroyed-actors))
 
         ;; 7

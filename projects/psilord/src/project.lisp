@@ -33,17 +33,14 @@
    :uniforms
    ((:tex.sampler1 'fl.textures:debug-texture)
     (:mix-color
-     ;; The uniform value is a function that returns a custom semantic value.
-     ;; It will be called on EACH binding of this material, so every
-     ;; RENDER-COMPONENT call usually.
+     ;; The uniform value is a function that returns a custom semantic value. It will be called on
+     ;; EACH binding of this material, so every ON-COMPONENT-RENDER call usually.
      (lambda (context material)
        (declare (ignore context material))
        (aref #(:red :green :blue :white) (random 4)))
-
-     ;; And then we define a function specific to this uniform to convert the
-     ;; custom semantic value to something that is acceptable as a type for this
-     ;; uniform. The semantic-transformer is ALWAYS run first in the composition
-     ;; sequence for the material.
+     ;; And then we define a function specific to this uniform to convert the custom semantic value
+     ;; to something that is acceptable as a type for this uniform. The semantic-transformer is
+     ;; ALWAYS run first in the composition sequence for the material.
      :transformer
      (lambda (sv context material)
        (declare (ignore context material))
