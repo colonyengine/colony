@@ -98,6 +98,26 @@ DEFINE-COMPONENT form."
   (when (plusp (ttl component))
     (decf (ttl component) (frame-time (context component)))))
 
+(defun enqueue-attach-event (component actor)
+  (fl.dst:qpush (attach/detach-event-queue component) (list :attached actor)))
+
+(defun enqueue-detach-event (component actor)
+  (fl.dst:qpush (attach/detach-event-queue component) (list :detached actor)))
+
+(defun dequeue-attach/detach-event (component)
+  ;; NOTE: Returns NIL, which is not in our domain, when empty.
+  (fl.dst:qpop (attach/detach-event-queue component)))
+
+(defun component/invoke-attach/detach-events (component)
+  (loop :for event = (fl.dst:qpop (attach/detach-event-queue component))
+        :while event
+        :do (destructuring-bind (event-kind actor) event
+              (ecase event-kind
+                (:attached
+                 (on-component-attach component actor))
+                (:detached
+                 (on-component-detach component actor))))))
+
 ;;; User protocol
 
 (defgeneric shared-storage-metadata (component-name &optional namespace)
@@ -107,11 +127,11 @@ DEFINE-COMPONENT form."
 (defgeneric on-component-initialize (component)
   (:method ((component component))))
 
-(defgeneric on-component-attach (component)
-  (:method ((component component))))
+(defgeneric on-component-attach (component actor)
+  (:method ((component component) (actor actor))))
 
-(defgeneric on-component-detach (component)
-  (:method ((component component))))
+(defgeneric on-component-detach (component actor)
+  (:method ((component component) (actor actor))))
 
 (defgeneric on-component-physics-update (component)
   (:method ((component component))))

@@ -23,12 +23,18 @@
   (apply #'make-instance 'actor :context context args))
 
 (defun attach-component (actor component)
-  (unless (actor component)
-    (setf (actor component) actor))
+  ;; First, we detach from the current actor (if applicable)
+  (detach-component actor component)
+
+  ;; Then, we attach to the new component.
+  (enqueue-attach-event component actor)
+  (setf (actor component) actor)
   (setf (fl.util:href (components actor) component) component)
   (let* ((core-state (core-state (context actor)))
-         (qualified-type (qualify-component core-state (component-type component))))
-    (push component (fl.util:href (components-by-type actor) qualified-type))))
+         (qualified-type
+           (qualify-component core-state (component-type component))))
+    (push component
+          (fl.util:href (components-by-type actor) qualified-type))))
 
 (defun attach-multiple-components (actor &rest components)
   (dolist (component components)
@@ -45,7 +51,9 @@
   (when (remhash component (components actor))
     (symbol-macrolet ((typed-components (fl.util:href (components-by-type actor)
                                                       (component-type component))))
-      (setf typed-components (remove-if (lambda (c) (eq c component)) typed-components)))))
+      (enqueue-detach-event component actor)
+      (setf typed-components
+            (remove-if (lambda (c) (eq c component)) typed-components)))))
 
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."

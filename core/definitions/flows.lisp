@@ -146,6 +146,15 @@
                             (values :identity-policy
                                     camera))))
                     (action #'fl.comp:compute-camera-view)
+                    (transition protocol-attach/detach-components))
+
+        (flow-state protocol-attach/detach-components :reset ()
+                    (selector
+                        (lambda (core-state)
+                          (values :type-policy
+                                  (component-active-by-type-view
+                                   (tables core-state)))))
+                    (action #'component/invoke-attach/detach-events)
                     (transition protocol-update-component))
 
         (flow-state protocol-update-component :reset ()
@@ -198,6 +207,8 @@
         ;;
         ;; 5. If destroy is empty, go to 11.
         ;;
+        ;; 5.5 run ON-ATTACH-COMPONENT & ON-DETACH-COMPONENT by-type.
+        ;;
         ;; 6. run ON-COMPONENT-DESTROY by-type in destroy.
         ;;
         ;; 7. disconnect all destroyed actors from the scene heirarchy.
@@ -244,11 +255,14 @@
                     (selector
                         (lambda (core-state)
                           (values :identity-policy
-                                  ;; NOTE: We get the keys here because the action will be adding
-                                  ;; values to this hash table as we iterate over the keys. We need
-                                  ;; to copy the list of keys in order to satisfy the traversal
-                                  ;; rules of hash tables.
-                                  (fl.util:hash-keys (actor-destroy-db (tables core-state))))))
+                                  ;; NOTE: We get the keys here because the
+                                  ;; action will be adding values to this hash
+                                  ;; table as we iterate over the keys. We need
+                                  ;; to copy the list of keys in order to
+                                  ;; satisfy the traversal rules of hash tables.
+                                  (fl.util:hash-keys
+                                   (actor-destroy-db (tables core-state))))))
+
                     ;; NOTE: See selector for this flow-state.
                     (action #'actor/destroy-descendants)
                     (transition decrement-component-destroy-timer))
@@ -277,8 +291,18 @@
                     (transition
                      (lambda (core-state)
                        (if (pending-destroy-tasks-p core-state)
-                           protocol-destroy-component
+                           protocol-attach/detach-components
                            exit/destroy-phase))))
+
+        ;; 5.5
+        (flow-state protocol-attach/detach-components :reset ()
+                    (selector
+                        (lambda (core-state)
+                          (values :type-policy
+                                  (component-destroy-by-type-view
+                                   (tables core-state)))))
+                    (action #'component/invoke-attach/detach-events)
+                    (transition protocol-destroy-component))
 
         ;; 6
         (flow-state protocol-destroy-component :reset ()
@@ -353,7 +377,10 @@
                     (action nil)
                     (transition perform-recompilations))
 
-        ;; If we have anything to recompile in the queue, do it now.
+        ;; NOTE: If we have anything to recompile in the queue, do all of it
+        ;; now.  This causes the frame we're just about the render to see the
+        ;; updated changes as an atomic change. This is the earliest we can see
+        ;; these atomic changes.
         (flow-state perform-recompilations :reset ()
                     (selector
                         (lambda (core-state)

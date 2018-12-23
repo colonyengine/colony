@@ -451,7 +451,10 @@
          :initform 0)
    (%initializer-thunk :accessor initializer-thunk
                        :initarg :initializer-thunk
-                       :initform nil))
+                       :initform nil)
+   (%attach/detach-event-queue :accessor attach/detach-event-queue
+                               :initarg :attach/detach-event-queue
+                               :initform (fl.dst:make-queue :simple-queue)))
   (:metaclass component-class))
 (c2mop:ensure-finalized (find-class '%fl:component))
 (clear-annotations '%fl:component)
