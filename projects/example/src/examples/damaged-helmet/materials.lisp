@@ -1,6 +1,6 @@
 (in-package :first-light.example)
 
-(define-material damaged-helmet
+(fl:define-material damaged-helmet
   (:shader fl.shader:damaged-helmet
    :profiles (fl.materials:u-mvp)
    :uniforms

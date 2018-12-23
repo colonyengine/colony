@@ -1,6 +1,6 @@
 (in-package :first-light.example)
 
-(define-material sprite
+(fl:define-material sprite
   (:profiles (fl.materials:u-mvp)
    :shader fl.shader:sprite-test
    :uniforms

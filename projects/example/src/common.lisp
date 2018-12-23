@@ -1,6 +1,6 @@
 (in-package :first-light.example)
 
-(define-options ()
+(fl:define-options ()
   :title "First-Light Examples"
   :window-width 1920
   :window-height 1080
@@ -8,7 +8,7 @@
   :log-level :debug
   :log-repl-categories '(:fl))
 
-(define-resources (:project :first-light.example)
+(fl:define-resources (:project :first-light.example)
   (:project "data/project")
   (:ext (:project "ext"))
   (:mesh (:project "mesh"))
@@ -43,7 +43,7 @@
 
 (in-package :%first-light)
 
-(define-graph :fl.example
+(fl:define-graph :fl.example
     (:category component-dependency
      :depends-on ((:core (all-unknown-types core-types)))
      :roots (all-ordered-types))
@@ -51,7 +51,7 @@
           ((splice core-types)
            -> (splice all-unknown-types))))
 
-(define-graph :fl
+(fl:define-graph :fl
     (:category component-package-order
      :depends-on ((:core-component-order (core-packages)))
      :roots (start-search))

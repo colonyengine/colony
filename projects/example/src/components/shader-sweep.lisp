@@ -8,7 +8,7 @@
 ;; realtime.
 
 
-(define-component shader-sweep ()
+(fl:define-component shader-sweep ()
   ((mesh-rend :default nil)
    (mesh-rend-material :defualt nil)
    (mesh-material-retrieved-p :default nil)
@@ -16,11 +16,11 @@
    (channel0 :default (flm:vec2))))
 
 
-(defmethod initialize-component ((self shader-sweep))
+(defmethod fl:initialize-component ((self shader-sweep))
   ;; Find the mesh-renderer on my actor.
-  (setf (mesh-rend self) (actor-component-by-type (actor self) 'mesh-renderer)))
+  (setf (mesh-rend self) (fl:actor-component-by-type (fl:actor self) 'mesh-renderer)))
 
-(defmethod update-component ((self shader-sweep))
+(defmethod fl:update-component ((self shader-sweep))
   (with-accessors ((mesh-rend mesh-rend) (material-copied-p material-copied-p)
                    (mesh-rend-material mesh-rend-material)
                    (mesh-material-retrieved-p mesh-material-retrieved-p)
@@ -28,21 +28,17 @@
       self
 
     (unless mesh-material-retrieved-p
-      (setf mesh-rend-material (material mesh-rend)
+      (setf mesh-rend-material (fl.comp:material mesh-rend)
             mesh-material-retrieved-p t))
 
-    (fl.util:mvlet* ((context (context self))
-                     (x y (fl.input:get-mouse-position (input-data context))))
-      (when (null x) (setf x (/ (option context :window-width) 2.0)))
-      (when (null y) (setf y (/ (option context :window-height) 2.0)))
+    (fl.util:mvlet* ((context (fl:context self))
+                     (x y (fl.input:get-mouse-position (fl:input-data context))))
+      (when (null x) (setf x (/ (fl:option context :window-width) 2.0)))
+      (when (null y) (setf y (/ (fl:option context :window-height) 2.0)))
       (flm:with-vec2 ((c channel0))
         ;; crappy, but good enough.
-        (setf c.x (coerce (/ x (option context :window-width)) 'single-float)
-              c.y (coerce (/ y (option context :window-height)) 'single-float)))
-
-      (when (fl.input:input-enter-p (input-data context) '(:mouse :left))
-        (format t "channel0 is: ~A~%" channel0))
-
+        (setf c.x (float (/ x (fl:option context :window-width)) 1f0)
+              c.y (float (/ y (fl:option context :window-height)) 1f0)))
       ;; get a reference to the material itself (TODO: use MOP stuff to get
       ;; this right so I don't always have to get it here)
-      (setf (mat-uniform-ref mesh-rend-material :tex.channel0) channel0))))
+      (setf (fl:mat-uniform-ref mesh-rend-material :tex.channel0) channel0))))
