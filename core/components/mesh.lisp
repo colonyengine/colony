@@ -11,11 +11,11 @@
   ;; sequence of hash table test functions that will be consulted when
   ;; making nested hash tables.
   (;; Have we loaded this mesh before.
-   ;; Key Path: location[a case sensitive string], id[an integer]
+   ;; Key Path: location[a cons], id[an integer]
    ;; Value: loaded mesh data
    ;; NOTE the tests must only be EQ EQL EQUAL and EQUALP and must be the
    ;; raw symbols, no quotes or #' or (function eq) allowed.
-   (:cached-mesh-data equal eql)))
+   (:cached-mesh-data equalp eql)))
 
 (defmethod draw-mesh ((mesh mesh) &key (instance-count 1))
   (dolist (primitive (primitives mesh))
