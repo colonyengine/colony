@@ -55,11 +55,12 @@
 
 (defun actor-component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
-Returns T as a secondary value if there exists more than one component of that type."
+Returns the rest of the components as a secondary value if there are more than one of the same type."
   (let* ((core-state (core-state (context actor)))
          (qualified-type (qualify-component core-state component-type))
          (components (actor-components-by-type actor qualified-type)))
-    (values (first components) (> (length components) 1))))
+    (values (first components)
+            (rest components))))
 
 (defun spawn-actor (actor &key (parent :universe))
   "Take the ACTOR and place into the initializing db's and view's in the CORE-STATE. The actor is
