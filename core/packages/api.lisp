@@ -42,6 +42,7 @@
                  #:option
                  #:print-all-resources
                  #:project-data
+                 #:shared-storage
                  #:spawn-actor
                  #:ss-href
                  #:start-engine

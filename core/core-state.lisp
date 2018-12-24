@@ -108,9 +108,9 @@ CORE-STATE."
   (:method (value context (key component))
     (setf (shared-storage context (component-type key)) value)))
 
-;;;; Interim caching code for (often) resources. Uses nested hash tables like
-;;;; the shared-storage for componnets.
-;;;; TODO: change this when the real cache code shows up.
+;;; Interim caching code for (often) resources. Uses nested hash tables like the shared-storage for
+;;; components.
+;;; TODO: change this when the real cache code shows up.
 
 (defgeneric rcache-layout (entry-type)
   (:method ((entry-type symbol))

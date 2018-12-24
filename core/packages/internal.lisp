@@ -50,6 +50,7 @@
    #:project-data
    #:scene-tree
    #:shader
+   #:shared-storage
    #:spawn-actor
    #:ss-href
    #:start-engine
