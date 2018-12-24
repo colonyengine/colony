@@ -3,7 +3,8 @@
 (fl:define-scene sprite-test ()
   (@camera
    ((fl.comp:transform :translation/current (flm:vec3 0 0 1))
-    (fl.comp:camera :activep t :mode :orthographic)))
+    (fl.comp:camera :active-p t
+                    :mode :orthographic)))
   (@ship
    ((fl.comp:transform :rotation/current (flm:vec3 0 0 (/ pi -2))
                        :scale/current (flm:vec3 0.5))

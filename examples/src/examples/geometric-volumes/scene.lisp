@@ -3,7 +3,8 @@
 (fl:define-scene geometric-volumes ()
   (@camera
    ((fl.comp:transform :translation/current (flm:vec3 0 0 50))
-    (fl.comp:camera :activep t :mode :perspective)))
+    (fl.comp:camera :active-p t
+                    :mode :perspective)))
   (@plane
    ((fl.comp:transform :rotation/incremental (flm:vec3 1)
                        :scale/current (flm:vec3 6))

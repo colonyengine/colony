@@ -3,7 +3,9 @@
 (fl:define-scene texture-test ()
   (@camera
    ((fl.comp:transform :translation/current (flm:vec3 0 0 6))
-    (fl.comp:camera :activep t :mode :perspective :fovy (* 90 (/ pi 180)))))
+    (fl.comp:camera :active-p t
+                    :mode :perspective
+                    :fovy (* 90 (/ pi 180)))))
 
   (@plane/1d-texture
    ((fl.comp:transform :translation/current (flm:vec3 -4 3 0)

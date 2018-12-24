@@ -3,7 +3,8 @@
 (fl:define-scene graph-test (:context context)
   (@camera
    ((fl.comp:transform :translation/current (flm:vec3 0 0 1))
-    (fl.comp:camera :activep t :mode :orthographic)))
+    (fl.comp:camera :active-p t
+                    :mode :orthographic)))
   (@graph
    ((fl.comp:transform :scale/current (flm:vec3 (/ (fl:option context :window-width) 2)
                                                 (/ (fl:option context :window-height) 2)

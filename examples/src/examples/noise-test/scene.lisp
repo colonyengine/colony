@@ -3,7 +3,8 @@
 (fl:define-scene noise-test ()
   (@camera
    ((fl.comp:transform :translation/current (flm:vec3 0 0 1))
-    (fl.comp:camera :activep t :mode :orthographic)))
+    (fl.comp:camera :active-p t
+                    :mode :orthographic)))
   (@perlin-3d
    ((fl.comp:transform :translation/current (flm:vec3 -540 202.5 0)
                        :scale/current (flm:vec3 90 90 0))

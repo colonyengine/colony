@@ -13,7 +13,9 @@
       ;; translate down y axis, rotate to look at origin again.
       ((fl.comp:transform :translation/current (flm:vec3 0 -5 0)
                           :rotation/current (flm:vec3 (+ (/ pi 2.0)) 0 0))
-       (fl.comp:camera :activep t :mode :orthographic :zoom 100))))))
+       (fl.comp:camera :active-p t
+                       :mode :orthographic
+                       :zoom 100))))))
   (@plane1
    ((fl.comp:transform :translation/current (flm:vec3)
                        :rotation/incremental (flm:vec3 (/ pi 2) (/ pi 2) (/ pi 2))

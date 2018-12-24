@@ -120,7 +120,6 @@
     ;; to be auto allocated.
     (fl.shader:bind-block 'ssbo/specification-data 9)))
 
-
 (defun convert-current-sprite (sprite-sheet)
   "Convert the current-animation and current-cell into an integer and store it in the sprite sheet
 for later use with the shaders."
@@ -129,15 +128,16 @@ for later use with the shaders."
           (fl.util:href (sprites sprite-sheet)
                         (aref (aref %animvec %current-animation) (1+ %current-cell))))))
 
-(defmethod fl:on-component-initialize ((sprite-sheet sprite-sheet))
-  (with-slots (%spec-resource-id %spec %material %transform %vao-id) sprite-sheet
-    (let* ((context (fl:context sprite-sheet))
-           (path (fl:find-resource context %spec-resource-id)))
-      (setf %spec (fl.util:safe-read-file-form path)
-            %transform (fl:actor-component-by-type (fl:actor sprite-sheet) 'fl.comp:transform)
-            %vao-id (gl:gen-vertex-array))
-      (make-sprite-sheet-buffer sprite-sheet)
-      (convert-current-sprite sprite-sheet))))
+(defmethod fl:on-component-initialize ((self sprite-sheet))
+  (with-accessors ((context fl:context) (actor fl:actor) (spec-resource-id spec-resource-id)
+                   (spec spec) (material material) (transform transform) (vao-id vao-id))
+      self
+    (let ((path (fl:find-resource context spec-resource-id)))
+      (setf spec (fl.util:safe-read-file-form path)
+            transform (fl:actor-component-by-type actor 'fl.comp:transform)
+            vao-id (gl:gen-vertex-array))
+      (make-sprite-sheet-buffer self)
+      (convert-current-sprite self))))
 
 (defun maybe-update-current-animation-cell (sprite-sheet frame-time)
   (with-slots (%elapsed-time %cell-time %current-animation %current-cell %animvec)
@@ -160,83 +160,80 @@ for later use with the shaders."
       ;; fixup the current cell to show.
       (convert-current-sprite sprite-sheet))))
 
-(defmethod fl:on-component-update ((sprite-sheet sprite-sheet))
-  (let ((context (fl:context sprite-sheet)))
-    (maybe-update-current-animation-cell sprite-sheet (fl:frame-time context))))
+(defmethod fl:on-component-update ((self sprite-sheet))
+  (let ((context (fl:context self)))
+    (maybe-update-current-animation-cell self (fl:frame-time context))))
 
-(defmethod fl:on-component-render ((sprite-sheet sprite-sheet))
-  (with-slots (%transform %material %sprite %vao-id) sprite-sheet
-    (let ((context (fl:context sprite-sheet)))
-      (fl.util:when-let ((camera (fl:active-camera context)))
-        ;; Bind the appropriate buffer associated with this specific sprite-sheet
-        ;; to the shader block.
-        (let ((ssbo/spec-data
-                (fl:ss-href context 'sprite-sheet :ssbo/specification-data
-                            (spec-resource-id sprite-sheet))))
-          (fl.shader:bind-buffer (fl.shader:buffer-name ssbo/spec-data) 9))
-        (fl:using-material %material
-            (:model (fl.comp:model %transform)
-             :view (fl.comp:view camera)
-             :proj (fl.comp:projection camera)
-             :tex.sprite %sprite)
-          (gl:bind-vertex-array %vao-id)
-          (gl:draw-arrays :points 0 1))))))
+(defmethod fl:on-component-render ((self sprite-sheet))
+  (with-accessors ((context fl:context) (spec-resource-id spec-resource-id) (transform transform)
+                   (material material) (sprite sprite) (vao-id vao-id))
+      self
+    (fl.util:when-let ((camera (fl:active-camera context)))
+      ;; Bind the appropriate buffer associated with this specific sprite-sheet
+      ;; to the shader block.
+      (let ((ssbo/spec-data
+              (fl:ss-href context 'sprite-sheet :ssbo/specification-data spec-resource-id)))
+        (fl.shader:bind-buffer (fl.shader:buffer-name ssbo/spec-data) 9))
+      (fl:using-material material
+          (:model (fl.comp:model transform)
+           :view (fl.comp:view camera)
+           :proj (fl.comp:projection camera)
+           :tex.sprite sprite)
+        (gl:bind-vertex-array vao-id)
+        (gl:draw-arrays :points 0 1)))))
 
 (fl:define-component simple-movement ()
   ((transform :default nil)))
 
-(defmethod fl:on-component-initialize ((component simple-movement))
-  (with-accessors ((actor fl:actor) (transform transform)) component
+(defmethod fl:on-component-initialize ((self simple-movement))
+  (with-accessors ((actor fl:actor) (transform transform)) self
     (setf transform (fl:actor-component-by-type actor 'transform))))
 
-(defmethod fl:on-component-update ((component simple-movement))
-  (with-slots (%transform) component
-    (fl.util:mvlet* ((context (fl:context component))
-                     (lx ly (fl.input:get-gamepad-analog (fl:input-data context)
+(defmethod fl:on-component-update ((self simple-movement))
+  (with-accessors ((context fl:context) (transform transform)) self
+    (fl.util:mvlet* ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
                                                          '(:gamepad1 :left-stick)))
                      (rx ry (fl.input:get-gamepad-analog (fl:input-data context)
                                                          '(:gamepad1 :right-stick))))
       (let ((vec (flm:vec3 lx ly 0)))
         (flm:* (if (> (flm:length vec) 1) (flm:normalize vec) vec) 150.0 vec)
-        (fl.comp:translate %transform (flm:+ (flm:vec3 -400 0 0) vec) :replace-p t))
+        (fl.comp:translate transform (flm:+ (flm:vec3 -400 0 0) vec) :replace-p t))
       (unless (= rx ry 0.0)
         (let* ((angle (atan (- rx) ry))
                ;; keep angle from 0 to 2pi for easier debugging of other things.
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
                           angle)))
-          (fl.comp:rotate %transform (flm:vec3 0 0 angle) :replace-p t))))))
+          (fl.comp:rotate transform (flm:vec3 0 0 angle) :replace-p t))))))
 
 (fl:define-component shot-mover ()
   ((transform :default nil)
    (velocity :default 0)))
 
-(defmethod fl:on-component-initialize ((component shot-mover))
-  (setf (transform component)
-        (fl:actor-component-by-type (fl:actor component) 'fl.comp:transform)))
+(defmethod fl:on-component-initialize ((self shot-mover))
+  (with-accessors ((actor fl:actor) (transform transform)) self
+    (setf transform (fl:actor-component-by-type actor 'fl.comp:transform))))
 
-(defmethod fl:on-component-update ((component shot-mover))
-  (fl.comp:translate
-   (transform component)
-   ;; fly along the forward axis for this shot
-   (let* ((context (fl:context component))
-          (a (flm:vec3 (flm:get-column (fl.comp:local (transform component)) 1)))
-          (b (flm:normalize a))
-          (move-delta (* (velocity component) (float (fl:frame-time context)))))
-     (flm:* b move-delta))))
+(defmethod fl:on-component-update ((self shot-mover))
+  (with-accessors ((context fl:context) (transform transform) (velocity velocity)) self
+    (fl.comp:translate
+     transform
+     (let ((a (flm:normalize (flm:vec3 (flm:get-column (fl.comp:local transform) 1))))
+           (move-delta (* velocity (float (fl:frame-time context)))))
+       (flm:* a move-delta)))))
 
 (fl:define-component shot-emitter ()
   ((emitter-transform :default nil)))
 
-(defmethod fl:on-component-initialize ((component shot-emitter))
-  (setf (emitter-transform component)
-        (fl:actor-component-by-type (fl:actor component) 'fl.comp:transform)))
+(defmethod fl:on-component-initialize ((self shot-emitter))
+  (with-accessors ((actor fl:actor) (emitter-transform emitter-transform)) self
+    (setf emitter-transform (fl:actor-component-by-type actor 'fl.comp:transform))))
 
-(defmethod fl:on-component-update ((component shot-emitter))
-  (let ((context (fl:context component)))
+(defmethod fl:on-component-update ((self shot-emitter))
+  (with-accessors ((context fl:context) (emitter-transform emitter-transform)) self
     (when (or (fl.input:input-enter-p (fl:input-data context) '(:gamepad1 :a))
               (fl.input:input-enter-p (fl:input-data context) '(:mouse :left)))
-      (let* ((parent-model (fl.comp:model (emitter-transform component)))
+      (let* ((parent-model (fl.comp:model emitter-transform))
              (parent-translation (flm:get-translation parent-model))
              (parent-rotation (flm:quat parent-model))
              (new-actor (fl:make-actor context :id (fl.util:unique-name 'shot)))
