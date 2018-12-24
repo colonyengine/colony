@@ -60,6 +60,7 @@
            #:safe-read-file-form
            #:safe-read-file-forms
            #:string-starts-with-p
+           #:unless-found
            #:when-found
            #:while
            #:with-binary-input

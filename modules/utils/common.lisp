@@ -28,16 +28,24 @@ was successful, such as with GETHASH."
        (when ,found
          ,@body))))
 
+(defmacro unless-found ((var lookup) &body body)
+  "If `LOOKUP` is not successful, perform `BODY` with `VAR` bound to the result.
+`LOOKUP` is an expression that returns two values, with the second value indicating if the lookup
+was successful, such as with GETHASH."
+  (with-unique-names (found)
+    `(multiple-value-bind (,var ,found) ,lookup
+       (unless ,found
+         ,@body))))
+
 (defmacro if-found ((var lookup) then else)
   "Depending if `LOOKUP` is successful or not, perform `THEN` or `ELSE` with `VAR` bound to the
 result. `LOOKUP` is an expression that returns two values, with the second value indicating if the
 lookup was successful, such as with GETHASH."
-  (with-unique-names (found result)
-    `(multiple-value-bind (,result ,found) ,lookup
-       (let ((,var ,result))
-         (if ,found
-             ,then
-             ,else)))))
+  (with-unique-names (found)
+    `(multiple-value-bind (,var ,found) ,lookup
+       (if ,found
+           ,then
+           ,else))))
 
 (defmacro while (predicate &body body)
   "Loop until `PREDICATE` returns NIL."
