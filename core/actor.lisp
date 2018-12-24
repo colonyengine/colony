@@ -52,6 +52,7 @@
     (symbol-macrolet ((typed-components (fl.util:href (components-by-type actor)
                                                       (component-type component))))
       (enqueue-detach-event component actor)
+      (setf (actor component) nil)
       (setf typed-components
             (remove-if (lambda (c) (eq c component)) typed-components)))))
 
