@@ -128,10 +128,10 @@ DEFINE-COMPONENT form."
   (:method ((component component))))
 
 (defgeneric on-component-attach (component actor)
-  (:method ((component component) (actor actor))))
+  (:method ((component component) actor)))
 
 (defgeneric on-component-detach (component actor)
-  (:method ((component component) (actor actor))))
+  (:method ((component component) actor)))
 
 (defgeneric on-component-physics-update (component)
   (:method ((component component))))
