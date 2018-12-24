@@ -4,6 +4,19 @@
   (:nicknames #:fl)
   (:use #:cl)
   (:inherit-from #:%first-light
+
+                 ;; If you're the type that wants to explore the user interface
+                 ;; to the first-light game engine without reading documentation
+                 ;; (that may or may not exist), try doing something like this:
+                 ;;
+                 ;; For SLY users:
+                 ;;
+                 ;; M-x sly-describe-symbol<ret>fl:on-component-initialize<ret>
+                 ;;
+                 ;; For SLIME users:
+                 ;;
+                 ;; M-x slime-describe-symbol<ret>fl:on-component-initialize<ret>
+
                  #:active-camera
                  #:actor
                  #:actor-component-by-type
