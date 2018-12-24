@@ -6,19 +6,20 @@
    (target-transform :default nil)
    (offset :default (flm:vec3))))
 
-(defmethod on-component-initialize ((component following-camera))
-  (with-accessors ((slave slave-camera) (actor actor) (target target-actor)) component
+(defmethod on-component-initialize ((self following-camera))
+  (with-accessors ((slave slave-camera) (actor actor) (target target-actor)) self
     (setf slave (actor-component-by-type actor 'camera))
-    (camera-target-actor component target)))
+    (camera-target-actor self target)))
 
-(defmethod on-component-update ((component following-camera))
-  (with-accessors ((view view) (transform transform)) (slave-camera component)
-    (let* ((target-position (flm:get-translation (model (target-transform component))))
-           (new-camera-position (flm:+ target-position (offset component) target-position)))
+(defmethod on-component-update ((self following-camera))
+  (with-accessors ((view view) (transform transform)) (slave-camera self)
+    (let* ((target-position (flm:get-translation (model (target-transform self))))
+           (new-camera-position (flm:+ target-position (offset self) target-position)))
       (flm:set-translation (model transform) new-camera-position (model transform))
-      (compute-camera-view (slave-camera component)))))
+      (compute-camera-view (slave-camera self)))))
 
-(defmethod camera-target-actor ((camera following-camera) (actor actor))
-  (setf (target-actor camera) actor)
-  (when actor
-    (setf (target-transform camera) (actor-component-by-type actor 'transform))))
+(defmethod camera-target-actor ((camera following-camera) actor)
+  (with-accessors ((target-actor target-actor) (target-transform target-transform)) camera
+    (setf target-actor actor)
+    (when actor
+      (setf target-transform (actor-component-by-type actor 'transform)))))

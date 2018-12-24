@@ -21,13 +21,13 @@
   (dolist (primitive (primitives mesh))
     (funcall (fl.geom:draw-func primitive) :instance-count instance-count)))
 
-(defmethod on-component-initialize ((component mesh))
-  (with-accessors ((location location) (id id) (primitives primitives)) component
+(defmethod on-component-initialize ((self mesh))
+  (with-accessors ((context context) (location location) (id id) (primitives primitives)) self
     (unless location
       (error "A mesh component must have a location set."))
     (let ((location (fl.util:ensure-list location)))
       (with-shared-storage
-          (context (context component))
+          (context context)
           ((cached-mesh mesh-presentp
                         ('mesh :cached-mesh-data location id)
                         (fl.geom:load-gltf (apply #'find-resource context location) id)))

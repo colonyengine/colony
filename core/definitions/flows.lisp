@@ -139,12 +139,13 @@
                         ;; TODO: Move this code into a real function inside of
                         ;; the engine.
                         (lambda (core-state)
-                          (symbol-macrolet ((camera (active-camera (context core-state))))
-                            (unless (and camera (fl.comp::activep camera))
-                              (let ((new-camera (fl.comp:find-active-camera core-state)))
-                                (setf camera new-camera)))
-                            (values :identity-policy
-                                    camera))))
+                          (let ((context (context core-state)))
+                            (symbol-macrolet ((camera (active-camera context)))
+                              (unless (and camera (fl.comp::active-p camera))
+                                (let ((new-camera (fl.comp:find-active-camera context)))
+                                  (setf camera new-camera)))
+                              (values :identity-policy
+                                      camera)))))
                     (action #'fl.comp:compute-camera-view)
                     (transition protocol-attach/detach-components))
 

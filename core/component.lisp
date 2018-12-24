@@ -125,22 +125,22 @@ DEFINE-COMPONENT form."
     (declare (ignore namespace))))
 
 (defgeneric on-component-initialize (component)
-  (:method ((component component))))
+  (:method ((self component))))
 
 (defgeneric on-component-attach (component actor)
-  (:method ((component component) actor)))
+  (:method ((self component) actor)))
 
 (defgeneric on-component-detach (component actor)
-  (:method ((component component) actor)))
+  (:method ((self component) actor)))
 
 (defgeneric on-component-physics-update (component)
-  (:method ((component component))))
+  (:method ((self component))))
 
 (defgeneric on-component-update (component)
-  (:method ((component component))))
+  (:method ((self component))))
 
 (defgeneric on-component-render (component)
-  (:method ((component component))))
+  (:method ((self component))))
 
 (defgeneric on-component-destroy (component)
-  (:method ((component component))))
+  (:method ((self component))))
