@@ -27,6 +27,7 @@
    #:define-texture-profile
    #:delta
    #:deploy-binary
+   #:destroy
    #:detach-component
    #:find-resource
    #:frame-manager

@@ -23,6 +23,7 @@
                  #:define-scene
                  #:define-texture
                  #:define-texture-profile
+                 #:destroy
                  #:detach-component
                  #:find-resource
                  #:frame-time
