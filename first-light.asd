@@ -44,6 +44,7 @@
    (:file "context")
    (:file "options")
    (:file "logging")
+   (:file "shared-storage")
    (:file "attributes")
    (:file "component-mop")
    (:file "component")
