@@ -1,9 +1,8 @@
 (in-package #:%first-light)
 
-;; This will be the new home of the attributes type so we can manage DSL
-;; attributes in a nicer way.
+;;; This will be the new home of the attributes type so we can manage DSL attributes in a nicer way.
+;;; Semantic-attributes are usually written by a human and read from a DSL.
 
-;; Semantic-attributes are usually written by a human and read from a DSL.
 (defclass attributes ()
   ((%semantic-attributes :reader semantic-attributes
                          :initarg :semantic-attributes
@@ -12,70 +11,52 @@
                          :initarg :computed-attributes
                          :initform (fl.util:dict #'eql))))
 
+(defun make-attributes (&rest args)
+  (apply #'make-instance 'attributes args))
 
-(defun make-attributes (&rest initargs)
-  (apply #'make-instance 'attributes initargs))
+;;; Semantic attributes API
 
-;; Semantic attributes API
-(defmethod semantic-attribute ((a attributes) (attribute-name symbol))
-  (fl.util:href (semantic-attributes a) attribute-name))
+(defmethod semantic-attribute ((attrs attributes) (name symbol))
+  (fl.util:href (semantic-attributes attrs) name))
 
-(defmethod (setf semantic-attribute) (newobj
-                                      (a attributes)
-                                      (attribute-name symbol))
-  (setf (fl.util:href (semantic-attributes a) attribute-name) newobj))
+(defmethod (setf semantic-attribute) (value (attrs attributes) (name symbol))
+  (setf (fl.util:href (semantic-attributes attrs) name) value))
 
-(defmethod clear-semantic-attributes ((a attributes))
-  (clrhash (semantic-attributes a)))
+(defmethod clear-semantic-attributes ((attrs attributes))
+  (clrhash (semantic-attributes attrs)))
 
-(defmethod do-semantic-attributes ((a attributes) func)
-  ;; First make a copy-ish of the hash table in case the func wants
-  ;; to modify the hash table.
-  ;; TODO: A little slow and memory using, but also safe.
-  (let ((attrs (fl.util:hash->alist (semantic-attributes a))))
-    (dolist (attr attrs)
-      (destructuring-bind (key value) attr
-        (funcall func key value)))))
+(defmethod do-semantic-attributes ((attrs attributes) func)
+  ;; First make a copy-ish of the hash table in case the func wants to modify the hash table.
+  (fl.util:do-hash (k v (fl.util:copy-hash-table (semantic-attributes attrs)))
+    (funcall func k v)))
 
-;; Computed attributes API
+;;; Computed attributes API
 
-(defmethod computed-attribute ((a attributes) (attribute-name symbol))
-  (fl.util:href (computed-attributes a) attribute-name))
+(defmethod computed-attribute ((attrs attributes) (name symbol))
+  (fl.util:href (computed-attributes attrs) name))
 
-(defmethod (setf computed-attribute) (newobj
-                                      (a attributes)
-                                      (attribute-name symbol))
-  (setf (fl.util:href (computed-attributes a) attribute-name) newobj))
+(defmethod (setf computed-attribute) (value (attrs attributes) (name symbol))
+  (setf (fl.util:href (computed-attributes attrs) name) value))
 
-(defmethod clear-computed-attributes ((a attributes))
-  (clrhash (computed-attributes a)))
+(defmethod clear-computed-attributes ((attrs attributes))
+  (clrhash (computed-attributes attrs)))
 
-(defmethod do-computed-attributes ((a attributes) func)
-  ;; First make a copy-ish of the hash table in case the func wants
-  ;; to modify the hash table.
-  ;; TODO: A little slow and memory using, but also safe.
-  (let ((attrs (fl.util:hash->alist (computed-attributes a))))
-    (dolist (attr attrs)
-      (destructuring-bind (key value) attr
-        (funcall func key value)))))
+(defmethod do-computed-attributes ((attrs attributes) func)
+  ;; First make a copy-ish of the hash table in case the func wants to modify the hash table.
+  (fl.util:do-hash (k v (fl.util:copy-hash-table (computed-attributes attrs)))
+    (funcall func k v)))
 
+;;; Attribute computation and merging API
 
-;; Attribute computation and merging API
-
-(defmethod compute-attributes ((a attributes) &key (copier-func #'identity))
-  ;; Convert the semantic attributes to computed attributes using the
-  ;; copier.
-  ;;
-  ;; NOTE: This will always clear the computed-attributes before doing
-  ;; the computation.
+(defmethod compute-attributes ((attrs attributes) &key (copier-func #'identity))
+  ;; Convert the semantic attributes to computed attributes using the copier.
+  ;; NOTE: This will always clear the computed-attributes before doing the computation.
   ;; NOTE: For now, this uses the same copier func for all attributes.
-
-  (clear-computed-attributes a)
-  (do-semantic-attributes a
+  (clear-computed-attributes attrs)
+  (do-semantic-attributes attrs
     (lambda (key value)
-      (setf (computed-attribute a key) (funcall copier-func value)))))
+      (setf (computed-attribute attrs key) (funcall copier-func value)))))
 
-
-(defmethod overlay-computed-attributes ((a attributes) &rest ordering)
-  (declare (ignore a ordering))
+(defmethod overlay-computed-attributes ((attrs attributes) &rest ordering)
+  (declare (ignore attrs ordering))
   nil)
