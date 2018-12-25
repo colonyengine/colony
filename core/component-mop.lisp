@@ -236,7 +236,7 @@
     (dolist (dslotd dslotds)
       (when (annotated-slot-p dslotd)
         (push (annotation dslotd) annotations)))
-    (alexandria:flatten (nreverse annotations))))
+    (fl.util:flatten (nreverse annotations))))
 
 ;; Lifted from sb-pcl::compute-effective-slot-definition-initargs
 ;; We add knowledge of the :annotation slot and how it works across
@@ -304,7 +304,7 @@
                        (t `(and ,type ,slotd-type)))))))
 
     #++(format t "F4: raw :annotation is ~A~%"
-               (alexandria:flatten (nreverse annotation)))
+               (fl.util:flatten (nreverse annotation)))
     #++(finish-output)
 
     `(:name ,name
@@ -331,7 +331,7 @@
       ;; optionally in this output.
       ,@(when annotation
           (list :annotation (remove-duplicates
-                             (alexandria:flatten (nreverse annotation))
+                             (fl.util:flatten (nreverse annotation))
                              :from-end t))))))
 
 
