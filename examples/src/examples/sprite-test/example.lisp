@@ -242,8 +242,8 @@ for later use with the shaders."
                                            ;; here I init the local location/rotation
                                            ;; to semantically match the emitter
                                            ;; actor.
-                                           :translation/current parent-translation
-                                           :rotation/current parent-rotation))
+                                           :translate parent-translation
+                                           :rotate parent-rotation))
              (shot-mover (fl:make-component context 'shot-mover :velocity 1000))
              (sprite (fl:make-component context
                                         'sprite-sheet

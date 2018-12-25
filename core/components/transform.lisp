@@ -112,28 +112,26 @@
 (defmethod reinitialize-instance ((instance transform)
                                   &key
                                     actor
-                                    (translation/current (flm:vec3))
-                                    (translation/incremental (flm:vec3))
-                                    (rotation/current (flm:vec3))
-                                    (rotation/incremental (flm:vec3))
-                                    (scale/current (flm:vec3 1))
-                                    (scale/incremental (flm:vec3)))
+                                    (translate (flm:vec3))
+                                    (translate/inc (flm:vec3))
+                                    (rotate (flm:vec3))
+                                    (rotate/inc (flm:vec3))
+                                    (scale (flm:vec3 1))
+                                    (scale/inc (flm:vec3)))
   (with-slots (%translation %rotation %scaling) instance
     (setf (actor instance) actor
           (state instance) :initialize
-          (current %translation) translation/current
-          (previous %translation) (flm:copy translation/current)
-          (incremental %translation) translation/incremental
-          (current %rotation) (etypecase rotation/current
-                                (flm:vec3
-                                 (flm:rotate :local flm:+id-quat+
-                                             rotation/current))
-                                (flm:quat rotation/current))
+          (current %translation) translate
+          (previous %translation) (flm:copy translate)
+          (incremental %translation) translate/inc
+          (current %rotation) (etypecase rotate
+                                (flm:vec3 (flm:rotate :local flm:+id-quat+ rotate))
+                                (flm:quat rotate))
           (previous %rotation) (flm:copy (current %rotation))
-          (incremental %rotation) rotation/incremental
-          (current %scaling) scale/current
-          (previous %scaling) (flm:copy scale/current)
-          (incremental %scaling) scale/incremental)))
+          (incremental %rotation) rotate/inc
+          (current %scaling) scale
+          (previous %scaling) (flm:copy scale)
+          (incremental %scaling) scale/inc)))
 
 ;;; User protocol
 

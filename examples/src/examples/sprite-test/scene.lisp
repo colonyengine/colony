@@ -2,12 +2,12 @@
 
 (fl:define-scene sprite-test ()
   (@camera
-   ((fl.comp:transform :translation/current (flm:vec3 0 0 1))
+   ((fl.comp:transform :translate (flm:vec3 0 0 1))
     (fl.comp:camera :active-p t
                     :mode :orthographic)))
   (@ship
-   ((fl.comp:transform :rotation/current (flm:vec3 0 0 (/ pi -2))
-                       :scale/current (flm:vec3 0.5))
+   ((fl.comp:transform :rotate (flm:vec3 0 0 (/ pi -2))
+                       :scale (flm:vec3 0.5))
     (simple-movement)
     (shot-emitter))
    (@ship-body
@@ -15,7 +15,7 @@
                    :material 'sprite
                    :animations (make-sprite-sheet-animations 0 0 #(#(1 "ship29")))))
     (@exhaust
-     ((fl.comp:transform :translation/current (flm:vec3 0 -140 0))
+     ((fl.comp:transform :translate (flm:vec3 0 -140 0))
       (sprite-sheet :spec-resource-id :spritesheet-data
                     :material 'sprite
                     :animations (make-sprite-sheet-animations
