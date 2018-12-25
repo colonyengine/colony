@@ -45,12 +45,11 @@ DEFINE-COMPONENT form."
     (error "Could not qualify the component type ~s." component-type)))
 
 (defun %get-computed-component-precedence-list (component-type)
-  ;; NOTE: We may very well be asking for classes that have not been finalized
-  ;; because we haven't yet (or might not ever) call make-instance on them.
-  ;; Hence we will compute right now the class precedence for it.
+  ;; NOTE: We may very well be asking for classes that have not been finalized because we haven't
+  ;; yet (or might not ever) call make-instance on them. Hence we will compute right now the class
+  ;; precedence for it.
   ;; TODO: Fix this when FIND-CLASS returns NIL too.
-  (loop :for class :in (c2mop:compute-class-precedence-list
-                        (find-class component-type nil))
+  (loop :for class :in (c2mop:compute-class-precedence-list (find-class component-type nil))
         :for name = (class-name class)
         :until (eq name 'component)
         :collect name))
@@ -110,14 +109,13 @@ DEFINE-COMPONENT form."
   (fl.dst:qpop (attach/detach-event-queue component)))
 
 (defun component/invoke-attach/detach-events (component)
-  (loop :for event = (fl.dst:qpop (attach/detach-event-queue component))
-        :while event
-        :do (destructuring-bind (event-kind actor) event
-              (ecase event-kind
-                (:attached
-                 (on-component-attach component actor))
-                (:detached
-                 (on-component-detach component actor))))))
+  (loop :for (event-kind actor) = (fl.dst:qpop (attach/detach-event-queue component))
+        :while event-kind
+        :do (ecase event-kind
+              (:attached
+               (on-component-attach component actor))
+              (:detached
+               (on-component-detach component actor)))))
 
 ;;; User protocol
 
