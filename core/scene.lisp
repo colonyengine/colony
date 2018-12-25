@@ -74,7 +74,7 @@
                      result)))))
     (loop :with root = `(scene-tree ,core-state)
           :for (parent . child) :in (mapcan #'traverse scene-spec)
-          :collect `(fl.comp::add-child
+          :collect `(fl.comp:transform-add-child
                      (actor-component-by-type ,(or parent root) 'transform)
                      (actor-component-by-type ,child 'transform)))))
 

@@ -55,11 +55,11 @@
    (local :default (flm:mat4 1))
    (model :default (flm:mat4 1))))
 
-(defun add-child (parent child)
+(defun transform-add-child (parent child)
   (push child (children parent))
   (setf (parent child) parent))
 
-(defun remove-child (parent child)
+(defun transform-remove-child (parent child)
   (setf (children parent) (remove-if (lambda (x) (eq x child)) (children parent))
         (parent child) nil))
 

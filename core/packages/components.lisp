@@ -21,6 +21,8 @@
            #:draw-mesh)
   ;; transform
   (:export #:transform
+           #:transform-add-child
+           #:transform-remove-child
            #:model
            #:local
            #:translate
