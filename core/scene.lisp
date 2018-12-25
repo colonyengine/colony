@@ -31,8 +31,8 @@
   (let ((table (or table (fl.util:dict #'eq))))
     (dolist (actor scene-spec)
       (destructuring-bind (actor components . child) actor
-        (unless (member 'transform components :key #'car)
-          (push '(transform) components))
+        (unless (member 'fl.comp:transform components :key #'car)
+          (push '(fl.comp:transform) components))
         (dolist (component (reverse components))
           (%type-check-actor-component actor-names component)
           (push component (fl.util:href table actor)))
