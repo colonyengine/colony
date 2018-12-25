@@ -40,8 +40,9 @@ DEFINE-COMPONENT form."
         component-type)))
 
 (defmethod make-component (context component-type &rest initargs)
-  (let ((qualified-type (qualify-component (core-state context) component-type)))
-    (apply #'make-instance qualified-type :type qualified-type :context context initargs)))
+  (fl.util:if-let ((qualified-type (qualify-component (core-state context) component-type)))
+    (apply #'make-instance qualified-type :type qualified-type :context context initargs)
+    (error "Could not qualify the component type ~s." component-type)))
 
 (defun %get-computed-component-precedence-list (component-type)
   ;; NOTE: We may very well be asking for classes that have not been finalized
