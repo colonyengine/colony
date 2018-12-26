@@ -231,9 +231,9 @@ The previous state name and the current state name which resulted in the exiting
   (fl.util:href flow flow-state-name))
 
 (defmacro define-call-flow (name () &body body)
-  (fl.util:with-unique-names (definition call-flow)
-    `(symbol-macrolet ((,definition (fl.data:get 'call-flows)))
-       (let ((,call-flow ,(parse-call-flows body)))
+  (fl.util:with-unique-names (call-flow)
+    (let ((definition '(fl.data:get 'call-flows)))
+      `(let ((,call-flow ,(parse-call-flows body)))
          (unless ,definition
            (fl.data:set 'call-flows (fl.util:dict #'eq)))
          (setf (fl.util:href ,definition ',name) ,call-flow)))))

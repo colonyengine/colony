@@ -631,22 +631,22 @@ must be executed after all the shader programs have been compiled."
        ,matprof)))
 
 (defmacro define-material-profile (name &body (body))
-  "Define a set of uniform and block shader attribute defaults that can be
-applied in an overlay manner while defining a material."
-  (fl.util:with-unique-names (profiles profile)
-    (destructuring-bind (&key uniforms blocks) body
-      `(symbol-macrolet ((,profiles (fl.data:get 'material-profiles)))
-         (let ((,profile ,(parse-material-profile name uniforms blocks)))
-           (unless ,profiles
+  "Define a set of uniform and block shader attribute defaults that can be applied in an overlay
+manner while defining a material."
+  (fl.util:with-unique-names (profile)
+    (let ((definition '(fl.data:get 'material-profiles)))
+      (destructuring-bind (&key uniforms blocks) body
+        `(let ((,profile ,(parse-material-profile name uniforms blocks)))
+           (unless ,definition
              (fl.data:set 'material-profiles (fl.util:dict #'eq)))
-           (setf (fl.util:href ,profiles (name ,profile)) ,profile))))))
+           (setf (fl.util:href ,definition (name ,profile)) ,profile))))))
 
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
-  (fl.util:with-unique-names (definition func)
-    (destructuring-bind (&key shader profiles uniforms blocks) body
-      `(symbol-macrolet ((,definition (fl.data:get 'materials)))
-         (let ((,func ,(parse-material name shader profiles uniforms blocks)))
+  (fl.util:with-unique-names (func)
+    (let ((definition '(fl.data:get 'materials)))
+      (destructuring-bind (&key shader profiles uniforms blocks) body
+        `(let ((,func ,(parse-material name shader profiles uniforms blocks)))
            (unless ,definition
              (fl.data:set 'materials (fl.util:dict #'eq)))
            (setf (fl.util:href ,definition ',name) ,func)

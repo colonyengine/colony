@@ -106,8 +106,8 @@
     program))
 
 (cl:defmacro define-shader (name (&key (version :430) (primitive :triangles)) &body body)
-  (fl.util:with-unique-names (definitions)
-    `(let ((,definitions (fl.data:get 'shader-definitions)))
+  (let ((definitions '(fl.data:get 'shader-definitions)))
+    `(progn
        (setf (fl.util:href ,definitions ',name)
              (lambda ()
                (%make-shader-program ',name ,version ,primitive ',body)))

@@ -465,18 +465,18 @@ and assign it to the computed texture descriptor slot in TEXTURE."
 
 (defmacro define-texture-profile (name &body body)
   "Define a set of attribute defaults that can be applied while defining a texture."
-  (fl.util:with-unique-names (profiles profile)
-    `(symbol-macrolet ((,profiles (fl.data:get 'texture-profiles)))
-       (let ((,profile ,(parse-texture-profile name body)))
-         (unless ,profiles
+  (fl.util:with-unique-names (profile)
+    (let ((definition '(fl.data:get 'texture-profiles)))
+      `(let ((,profile ,(parse-texture-profile name body)))
+         (unless ,definition
            (fl.data:set 'texture-profiles (fl.util:dict #'eq)))
-         (setf (fl.util:href ,profiles (name ,profile)) ,profile)))))
+         (setf (fl.util:href ,definition (name ,profile)) ,profile)))))
 
 (defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
   "Construct a semantic TEXTURE-DESCRIPTOR. "
-  (fl.util:with-unique-names (definition desc)
-    `(symbol-macrolet ((,definition (fl.data:get 'textures)))
-       (let ((,desc (make-texture-descriptor
+  (fl.util:with-unique-names (desc)
+    (let ((definition '(fl.data:get 'textures)))
+      `(let ((,desc (make-texture-descriptor
                      :name ',name
                      :texture-type ',textype
                      :profile-overlay-names ',profile-overlay-names)))
