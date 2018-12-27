@@ -70,7 +70,10 @@
       (flm:+ %current (flm:* %incremental delta %incremental-delta) %current))
     (with-slots (%previous %current %incremental-delta %incremental) (rotation node)
       (flm:copy-into %previous %current)
-      (flm:rotate %current (flm:* %incremental delta %incremental-delta) %current))
+      (flm:rotate :local %current
+                  (flm:* %incremental delta %incremental-delta) %current))
+
+
     (with-slots (%previous %current %incremental-delta %incremental) (translation node)
       (flm:copy-into %previous %current)
       (flm:+ %current (flm:* %incremental delta %incremental-delta) %current))))
@@ -122,7 +125,9 @@
           (previous %translation) (flm:copy translation/current)
           (incremental %translation) translation/incremental
           (current %rotation) (etypecase rotation/current
-                                (flm:vec3 (flm:rotate flm:+id-quat+ rotation/current))
+                                (flm:vec3
+                                 (flm:rotate :local flm:+id-quat+
+                                             rotation/current))
                                 (flm:quat rotation/current))
           (previous %rotation) (flm:copy (current %rotation))
           (incremental %rotation) rotation/incremental
@@ -134,7 +139,7 @@
 
 (defun %rotate/model-space (rotation vec &optional replace-p instant-p)
   (with-accessors ((previous previous) (current current)) rotation
-    (flm:rotate (if replace-p flm:+id-quat+ current) vec current)
+    (flm:rotate :local (if replace-p flm:+id-quat+ current) vec current)
     (when instant-p
       (flm:copy-into previous current))))
 

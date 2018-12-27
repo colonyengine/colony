@@ -313,7 +313,25 @@
   (declare (ignore out))
   (inverse in (the quat (quat 1))))
 
-(defspecialization (rotate :inline t) ((in quat) (angle vec3) (out quat)) quat
+(defspecialization (rotate :inline t) ((kind (eql :local)) (in quat) (angle vec3) (out quat)) quat
+  (declare (ignore kind))
+  (with-quat ((o out) (q (copy in)))
+    (with-vec3 ((v (* angle 0.5f0))
+                (c (vec3 (cl:cos v.x) (cl:cos v.y) (cl:cos v.z)))
+                (s (vec3 (cl:sin v.x) (cl:sin v.y) (cl:sin v.z))))
+      (psetf o.w (cl:- (cl:* c.x c.y c.z) (cl:* s.x s.y s.z))
+             o.x (cl:+ (cl:* s.x c.y c.z) (cl:* c.x s.y s.z))
+             o.y (cl:- (cl:* c.x s.y c.z) (cl:* s.x c.y s.z))
+             o.z (cl:+ (cl:* s.x s.y c.z) (cl:* c.x c.y s.z)))
+      (* q out out)))
+  out)
+
+(defspecialization (rotate :inline t) ((kind (eql :local)) (in quat) (angle vec3) (out null)) quat
+  (declare (ignore out))
+  (rotate kind in angle (the quat (quat 1))))
+
+(defspecialization (rotate :inline t) ((kind (eql :world)) (in quat) (angle vec3) (out quat)) quat
+  (declare (ignore kind))
   (with-quat ((o out) (q (copy in)))
     (with-vec3 ((v (* angle 0.5f0))
                 (c (vec3 (cl:cos v.x) (cl:cos v.y) (cl:cos v.z)))
@@ -325,9 +343,9 @@
       (* out q out)))
   out)
 
-(defspecialization (rotate :inline t) ((in quat) (angle vec3) (out null)) quat
+(defspecialization (rotate :inline t) ((kind (eql :world)) (in quat) (angle vec3) (out null)) quat
   (declare (ignore out))
-  (rotate in angle (the quat (quat 1))))
+  (rotate kind in angle (the quat (quat 1))))
 
 (defspecialization (slerp :inline t) ((in1 quat) (in2 quat) (factor real) (out quat)) quat
   (with-quat ((q1 in1) (q2 in2) (o out))

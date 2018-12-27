@@ -540,7 +540,8 @@
   (declare (ignore out))
   (translate mat vec (the mat4 (mat4 1))))
 
-(defspecialization (rotate :inline t) ((in mat4) (angle vec3) (out mat4)) mat4
+(defspecialization (rotate :inline t) ((kind (eql :local)) (in mat4) (angle vec3) (out mat4)) mat4
+  (declare (ignore kind))
   (macrolet ((rotate-angle (angle s c &body body)
                `(when (cl:> (cl:abs ,angle) 1e-7)
                   (let ((,s (cl:sin ,angle))
@@ -563,9 +564,9 @@
                              m.20 (cl:- s) m.21 0f0 m.22 c)))))
   out)
 
-(defspecialization (rotate :inline t) ((in mat4) (angle vec3) (out null)) mat4
+(defspecialization (rotate :inline t) ((kind (eql :local)) (in mat4) (angle vec3) (out null)) mat4
   (declare (ignore out))
-  (rotate in angle (the mat4 (mat4 1))))
+  (rotate kind in angle (the mat4 (mat4 1))))
 
 (defspecialization (get-scale :inline t) ((mat mat4) (out vec3)) vec3
   (with-mat4 ((m mat))

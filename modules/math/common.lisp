@@ -333,7 +333,7 @@
 (defstore get-translation (mat &optional out))
 (defstore set-translation (mat vec &optional out))
 (defstore translate (mat vec &optional out))
-(defstore rotate (in angle &optional out))
+(defstore rotate (kind in angle &optional out))
 (defstore get-scale (mat &optional out))
 (defstore set-scale (mat vec &optional out))
 (defstore scale (mat vec &optional out))

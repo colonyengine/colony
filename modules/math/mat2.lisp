@@ -291,7 +291,8 @@
   (declare (ignore out))
   (set-column mat index vec (the mat2 (mat2))))
 
-(defspecialization (rotate :inline t) ((in mat2) (angle real) (out mat2)) mat2
+(defspecialization (rotate :inline t) ((kind (eql :local)) (in mat2) (angle real) (out mat2)) mat2
+  (declare (ignore kind))
   (with-mat2 ((m (mat2 1)))
     (copy-into out in)
     (when (cl:> (cl:abs angle) 1e-7)
@@ -303,9 +304,9 @@
         (* out m out))))
   out)
 
-(defspecialization (rotate :inline t) ((in mat2) (angle real) (out null)) mat2
+(defspecialization (rotate :inline t) ((kind (eql :local)) (in mat2) (angle real) (out null)) mat2
   (declare (ignore out))
-  (rotate in angle (the mat2 (mat2 1))))
+  (rotate kind in angle (the mat2 (mat2 1))))
 
 (defspecialization (get-scale :inline t) ((mat mat2) (out vec2)) vec2
   (with-mat2 ((m mat))
