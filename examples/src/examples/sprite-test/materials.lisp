@@ -2,7 +2,7 @@
 
 (fl:define-material sprite
   (:profiles (fl.materials:u-mvp)
-   :shader fl.shader:sprite-test
+   :shader fl.gpu.user:sprite-test
    :uniforms
    ((:tex.image 'sprites)
     (:tex.sprite 0))

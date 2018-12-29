@@ -1,7 +1,7 @@
 (in-package :first-light.example)
 
 (fl:define-material damaged-helmet
-  (:shader fl.shader:damaged-helmet
+  (:shader fl.gpu.user:damaged-helmet
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:metallic-roughness-values (flm:vec2 1))

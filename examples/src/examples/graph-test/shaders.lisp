@@ -1,12 +1,12 @@
-(in-package :first-light.shader)
+(in-package :first-light.gpu.user)
 
-(defun graph-test/frag ((uv :vec2)
-                        &uniform
-                        (time :float))
+(define-function graph-test/frag ((uv :vec2)
+                                  &uniform
+                                  (time :float))
   (let* ((dim (vec2 (1+ (sin time)) (+ 2 (sin time))))
          (uv (+ (* uv (- (.y dim) (.x dim)))
                 (vec2 (.x dim) -0.5))))
-    (graph
+    (fl.gpu.graph:graph
      (lambda ((x :float))
        (* (sin (* x x x)) (sin x)))
      (* 4 uv)
@@ -15,5 +15,5 @@
      10)))
 
 (define-shader graph-test (:version 430)
-  (:vertex (unlit/vert-only-uv1 :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (fl.gpu.texture:unlit/vert-only-uv1 :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
   (:fragment (graph-test/frag :vec2)))

@@ -1,6 +1,6 @@
 (in-package #:first-light.annotations)
 
-;; `(fl.materials:noise-base fl.materials:perlin-noise :shader fl.shader:?????)
+;; `(fl.materials:noise-base fl.materials:perlin-noise :shader fl.gpu:?????)
 
 
 ;; I designed the system such that the direction the annotation goes is the

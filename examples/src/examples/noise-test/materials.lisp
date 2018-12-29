@@ -2,4 +2,4 @@
 
 (fl:define-material noise-test
   (:profiles (fl.materials:u-mvpt)
-   :shader fl.shader:noise-test))
+   :shader fl.gpu.user:noise-test))

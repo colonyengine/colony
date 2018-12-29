@@ -2,7 +2,7 @@
 
 (defun initialize-shaders (core-state)
   (let ((modify-hook (generate-shader-modify-hook core-state)))
-    (setf (shaders core-state) (fl.shader:load-shaders modify-hook))))
+    (setf (shaders core-state) (fl.gpu:load-shaders modify-hook))))
 
 (defun generate-shader-modify-hook (core-state)
   (lambda (programs)

@@ -1,24 +1,24 @@
-(in-package :first-light.shader)
+(in-package :first-light.gpu.user)
 
-(defstruct sprite-index
+(define-struct sprite-index
   (image :sampler-2d :accessor image)
   (sprite :int32 :accessor sprite))
 
-(defstruct sprite-sheet-data
+(define-struct sprite-sheet-data
   (x (:float 2048) :accessor x)
   (y (:float 2048) :accessor y)
   (w (:float 2048) :accessor w)
   (h (:float 2048) :accessor h))
 
-(defun sprite/vert ()
+(define-function sprite/vert ()
   (values))
 
-(defun sprite/geom (&uniform
-                    (model :mat4)
-                    (view :mat4)
-                    (proj :mat4)
-                    (tex sprite-index)
-                    (sprite-sheet sprite-sheet-data :ssbo :std-430))
+(define-function sprite/geom (&uniform
+                              (model :mat4)
+                              (view :mat4)
+                              (proj :mat4)
+                              (tex sprite-index)
+                              (sprite-sheet sprite-sheet-data :ssbo :std-430))
   (declare (output-primitive :kind :triangle-strip :max-vertices 6))
   (let* ((mvp (* proj view model))
          (extents (vec4 (aref (x sprite-sheet) (sprite tex))
@@ -43,9 +43,9 @@
     (end-primitive))
   (values))
 
-(defun sprite/frag ((uv :vec2)
-                    &uniform
-                    (tex sprite-index))
+(define-function sprite/frag ((uv :vec2)
+                              &uniform
+                              (tex sprite-index))
   (let ((color (texture (image tex) uv)))
     color))
 

@@ -27,7 +27,7 @@
                #:first-light.image-types
                #:first-light.geometry
                #:first-light.input
-               #:first-light.shader)
+               #:first-light.gpu)
   :pathname "core"
   :serial t
   :components

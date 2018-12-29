@@ -105,7 +105,7 @@ cleaning up."
   (let ((title (option core-state :title)))
     (v:info :fl.core.engine "Shutting down ~a..." title)
     (run-epilogue core-state)
-    (fl.shader:unload-shaders)
+    (fl.gpu:unload-shaders)
     (shutdown-host core-state)
     (setf (running-p core-state) nil)
     (makunbound '*core-state-debug*)

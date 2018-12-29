@@ -73,8 +73,8 @@
 
                        ;; If not present insert result of this
                        ;; form at that above key into shared storage.
-                       (fl.shader:create-buffer (fl.util:unique-name :sprite-sheet-buffer)
-                                                'ssbo/specification-data)))
+                       (fl.gpu:create-buffer (fl.util:unique-name :sprite-sheet-buffer)
+                                             'ssbo/specification-data)))
 
     ;; Store a reference to the (possibly shared) buffer.
     (setf (ssbo-buffer sprite-sheet) ssbo/spec-data)
@@ -97,14 +97,14 @@
                           (aref ys i) y
                           (aref ws i) w
                           (aref hs i) h)))
-            :finally (fl.shader:write-buffer-path
-                      (fl.shader:buffer-name ssbo/spec-data) :x xs)
-                     (fl.shader:write-buffer-path
-                      (fl.shader:buffer-name ssbo/spec-data) :y ys)
-                     (fl.shader:write-buffer-path
-                      (fl.shader:buffer-name ssbo/spec-data) :w ws)
-                     (fl.shader:write-buffer-path
-                      (fl.shader:buffer-name ssbo/spec-data) :h hs)))
+            :finally (fl.gpu:write-buffer-path
+                      (fl.gpu:buffer-name ssbo/spec-data) :x xs)
+                     (fl.gpu:write-buffer-path
+                      (fl.gpu:buffer-name ssbo/spec-data) :y ys)
+                     (fl.gpu:write-buffer-path
+                      (fl.gpu:buffer-name ssbo/spec-data) :w ws)
+                     (fl.gpu:write-buffer-path
+                      (fl.gpu:buffer-name ssbo/spec-data) :h hs)))
 
     ;; Initialize the ids, we do this for each sprite-sheet instance we make
     ;; I could put this into a shared storage thing, but meh.
@@ -118,7 +118,7 @@
 
     ;; TODO: I hacked a 9 in here as the binding point. Needs FL support
     ;; to be auto allocated.
-    (fl.shader:bind-block 'ssbo/specification-data 9)))
+    (fl.gpu:bind-block 'ssbo/specification-data 9)))
 
 (defun convert-current-sprite (sprite-sheet)
   "Convert the current-animation and current-cell into an integer and store it in the sprite sheet
@@ -173,7 +173,7 @@ for later use with the shaders."
       ;; to the shader block.
       (let ((ssbo/spec-data
               (fl:ss-href context 'sprite-sheet :ssbo/specification-data spec-resource-id)))
-        (fl.shader:bind-buffer (fl.shader:buffer-name ssbo/spec-data) 9))
+        (fl.gpu:bind-buffer (fl.gpu:buffer-name ssbo/spec-data) 9))
       (fl:using-material material
           (:model (fl.comp:model transform)
            :view (fl.comp:view camera)

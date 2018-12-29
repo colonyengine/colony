@@ -2,4 +2,4 @@
 
 (fl:define-material graph-test
   (:profiles (fl.materials:u-mvpt)
-   :shader fl.shader:graph-test))
+   :shader fl.gpu.user:graph-test))
