@@ -85,7 +85,7 @@
 (define-function pbr/specular-reflection ((pbr-inputs pbr-info))
   (+ (reflectance-0 pbr-inputs)
      (* (- (reflectance-90 pbr-inputs) (reflectance-0 pbr-inputs))
-        (pow (fl.gpu.math:saturate (- 1.0 (v-dot-h pbr-inputs))) 5.0))))
+        (pow (saturate (- 1.0 (v-dot-h pbr-inputs))) 5.0))))
 
 ;; This calculates the specular geometric attenuation (aka G()), where rougher
 ;; material will reflect less light back to the viewer.  This implementation is
@@ -150,7 +150,7 @@
          (perceptual-roughness (* (.g mr-sample) perceptual-roughness))
          (metallic (* (.b mr-sample) metallic))
          (perceptual-roughness (clamp perceptual-roughness min-roughness 1.0))
-         (metallic (fl.gpu.math:saturate metallic))
+         (metallic (saturate metallic))
          ;; roughness is authored as perceptual roughness, as is convention
          ;; convert to material roughness by squaring the perceptual roughness.
          (alpha-roughness (* perceptual-roughness perceptual-roughness))
@@ -187,9 +187,9 @@
          (reflection (- (normalize (reflect v n))))
          (n-dot-l (clamp (dot n l) 0.001 1.0))
          (n-dot-v (+ (abs(dot n v)) 0.001))
-         (n-dot-h (fl.gpu.math:saturate (dot n h)))
-         (l-dot-h (fl.gpu.math:saturate (dot l h)))
-         (v-dot-h (fl.gpu.math:saturate (dot v h)))
+         (n-dot-h (saturate (dot n h)))
+         (l-dot-h (saturate (dot l h)))
+         (v-dot-h (saturate (dot v h)))
          ;; package it up.
          (pbr-inputs (make-pbr-info n-dot-l n-dot-v n-dot-h l-dot-h v-dot-h
                                     perceptual-roughness metallic

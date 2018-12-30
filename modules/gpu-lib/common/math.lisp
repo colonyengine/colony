@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.math)
+(in-package :first-light.gpu.lib)
 
 ;;; Constants
 
