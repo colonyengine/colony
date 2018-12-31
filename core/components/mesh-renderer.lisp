@@ -19,4 +19,4 @@
             (:model (fl.comp:model transform)
              :view (fl.comp:view camera)
              :proj (fl.comp:projection camera))
-          (draw-mesh mesh))))))
+          (draw-mesh mesh :instance-count (instances material)))))))

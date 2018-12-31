@@ -186,6 +186,9 @@ list of the return values of the FUNC."
    ;; This is the name of the shader as its symbol.
    (%shader :reader shader ;; :writer defined below.
             :initarg :shader)
+   (%instances :reader instances
+               :initarg :instances
+               :initform 1)
    (%profile-overlay-names :reader profile-overlay-names
                            :initarg :profile-overlay-names
                            :initform nil)
@@ -213,9 +216,15 @@ list of the return values of the FUNC."
     (resolve-material mat (core-state mat)))
   new-val)
 
-(defun %make-material (id shader profiles core-state)
+(defmethod (setf instances) (value (mat material))
+  (with-slots (%instances) mat
+    (setf %instances value)))
+
+(defun %make-material (id shader instances profiles core-state)
   (make-instance 'material :id id
                            :shader shader
+                           :instances (or instances 1)
+                           :attributes attributes
                            :profile-overlay-names profiles
                            :core-state core-state))
 
@@ -228,6 +237,7 @@ list of the return values of the FUNC."
         (return-from %deep-copy-material error-value)))
   (let* ((new-id new-mat-name)
          (new-shader (shader current-mat))
+         (new-instances (instances current-mat))
          (new-uniforms (fl.util:dict #'eq))
          (new-blocks (fl.util:dict #'eq))
          (new-active-texture-unit (active-texture-unit current-mat))
@@ -236,6 +246,7 @@ list of the return values of the FUNC."
            (make-instance 'material
                           :id new-id
                           :shader new-shader
+                          :instances new-instances
                           :core-state (core-state current-mat)
                           :uniforms new-uniforms
                           :blocks new-blocks
@@ -411,20 +422,15 @@ and ignores the CONTEXT and MATERIAL arguments."
                 (%deep-copy-material-uniform-value material-value mat)))))))
 
 
-(defun parse-material (name shader profiles uniforms blocks)
+(defun parse-material (name shader instances profiles uniforms blocks)
   "Return a function which creates a partially complete material instance.
 It is partially complete because it does not yet have the shader binder function
 available for it so BIND-UNIFORMS cannot yet be called on it."
   (fl.util:with-unique-names (matvar)
     `(lambda (core-state)
-       ;; NOTE: This thunk happens after all materials are read and the
-       ;; profiles have been loaded into core-state.
-
-       (let ((,matvar (%make-material ',name ',shader ',profiles core-state)))
-
+       (let ((,matvar (%make-material ',name ',shader ,instances ',profiles core-state)))
          ;; First, insert in order the profile overlays for this material.
          (apply-material-profile-overlays ,matvar core-state)
-
          ;; Then, overlay whatever uniforms and blocks the user specified over
          ;; over the profile supplied information, if any. This must come last.
          ,(parse-material-uniforms matvar uniforms)
@@ -645,8 +651,8 @@ manner while defining a material."
   ;; TODO: better parsing and type checking of material forms...
   (fl.util:with-unique-names (func)
     (let ((definition '(fl.data:get 'materials)))
-      (destructuring-bind (&key shader profiles uniforms blocks) body
-        `(let ((,func ,(parse-material name shader profiles uniforms blocks)))
+      (destructuring-bind (&key shader profiles instances uniforms blocks) body
+        `(let ((,func ,(parse-material name shader instances profiles uniforms blocks)))
            (unless ,definition
              (fl.data:set 'materials (fl.util:dict #'eq)))
            (setf (fl.util:href ,definition ',name) ,func)

@@ -16,6 +16,7 @@
          (let* ((base-mat (lookup-material base-mat-sym context))
                 (copy-mat (copy-material base-mat new-mat-sym))
                 (shader (getf initargs :shader))
+                (instances (getf initargs :instances))
                 (uniforms (getf initargs :uniforms))
                 (blocks (getf initargs :blocks)))
 
@@ -25,6 +26,9 @@
            ;; First, change to the new shader
            (when shader
              (setf (shader copy-mat) shader))
+
+           (when instances
+             (setf (instances copy-mat) instances))
 
            ;; Then process the initargs for the new shader.
            (when uniforms

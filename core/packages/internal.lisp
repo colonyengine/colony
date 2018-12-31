@@ -35,6 +35,7 @@
    #:general-data-format-descriptor
    #:id
    #:input-data
+   #:instances
    #:lookup-material
    #:make-actor
    #:make-component

@@ -30,6 +30,7 @@
                  #:general-data-format-descriptor
                  #:id
                  #:input-data
+                 #:instances
                  #:make-actor
                  #:make-component
                  #:mat-uniform-ref
