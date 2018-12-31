@@ -86,18 +86,13 @@
 ;; based on [1] Equation 4, and we adopt their modifications to alphaRoughness
 ;; as input as originally proposed in [2].
 (define-function pbr/geometric-occlusion ((pbr-inputs pbr-info))
-  (with-accessors ((n-dot-l n-dot-l) (n-dot-v n-dot-v) (r alpha-roughness)) pbr-inputs
-    (let* ((attenuation-l (/ (* 2.0 n-dot-l)
-                             (+ n-dot-l
-                                (sqrt (+ (* r r)
-                                         (* (- 1.0 (* r r))
-                                            (* n-dot-l n-dot-l)))))))
-           (attenuation-v (/ (* 2.0 n-dot-v)
-                             (+ n-dot-v
-                                (sqrt (+ (* r r)
-                                         (* (- 1.0 (* r r))
-                                            (* n-dot-v n-dot-v))))))))
-      (* attenuation-l attenuation-v))))
+  (with-slots (n-dot-l n-dot-v alpha-roughness) pbr-inputs
+    (let ((r (* alpha-roughness alpha-roughness)))
+      (flet ((attenuation ((n :float))
+               (/ (* n 2)
+                  (+ n-dot-l (sqrt (+ r (* (- 1 r) (* n n))))))))
+        (* (attenuation n-dot-l)
+           (attenuation n-dot-v))))))
 
 ;; The following equation(s) model the distribution of microfacet normals across
 ;; the area being drawn (aka D()) Implementation from "Average Irregularity
@@ -162,7 +157,7 @@
          ;; the grazing reflectance to 100% for typical fresnel effect.
          ;; For very low reflectance range on highly diffuse objects (below 4%)
          ;; incrementally reduce grazing reflectance to 0%.
-         (reflectance-90 (clamp (* reflectance 25.0) 0.0 1.0))
+         (reflectance-90 (saturate (* reflectance 25.0)))
          (specular-environment-r0 (.rgb specular-color))
          (specular-environment-r90 (* (vec3 1.0) reflectance-90))
          ;; normal at surface point
