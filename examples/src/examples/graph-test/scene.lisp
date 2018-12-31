@@ -4,7 +4,7 @@
   (@camera
    ((fl.comp:transform :translate (flm:vec3 0 0.01 1))
     (fl.comp:camera :active-p t
-                    :mode :perspective)))
+                    :mode :orthographic)))
   (@graph
    ((fl.comp:transform :scale (flm:vec3 (/ (fl:option context :window-width) 2)
                                         (/ (fl:option context :window-height) 2)
@@ -12,7 +12,7 @@
     (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
     (fl.comp:mesh-renderer :material 'graph-test))))
 
-(fl:define-scene 3d-graph-test/1 (:context context)
+(fl:define-scene 3d-graph-test/1 ()
   (@camera
    ((fl.comp:transform :translate (flm:vec3 0 70 100))
     (fl.comp:camera :active-p t
@@ -28,7 +28,7 @@
                                        :uniforms ((:size 0.5)))))))
 
 
-(fl:define-scene 3d-graph-test/2 (:context context)
+(fl:define-scene 3d-graph-test/2 ()
   (@camera
    ((fl.comp:transform :translate (flm:vec3 0 50 100))
     (fl.comp:camera :active-p t
