@@ -96,22 +96,16 @@
          (tex-color (texture (sampler1 tex) (/ (+ uv1 noise-uv) 2.0))))
     (* tex-color mix-color)))
 
-(define-function unlit-texture-cube-map/vert ((pos :vec3)
-                                              (normal :vec3)
-                                              (tangent :vec4)
-                                              (color :vec4)
-                                              (uv1 :vec2)
-                                              (uv2 :vec2)
-                                              (joints :vec4)
-                                              (weights :vec4)
+(define-function unlit-texture-cube-map/vert ((mesh-attrs mesh-attrs)
                                               &uniform
                                               (model :mat4)
                                               (view :mat4)
                                               (proj :mat4))
   ;; TODO is to only apply rotation, not translation.
-  (values (* proj view model (vec4 pos 1))
-          color
-          pos))
+  (with-slots (mesh/pos mesh/color) mesh-attrs
+    (values (* proj view model (vec4 mesh/pos 1))
+            mesh/color
+            mesh/pos)))
 
 (define-function unlit-texture-cube-map/frag ((color :vec4)
                                               (tex-cube-map-coord :vec3) ;; pos from the vert shader
@@ -134,29 +128,29 @@
     (* tex-color mix-color)))
 
 (define-shader unlit-texture-1d ()
-  (:vertex (fl.gpu.texture:unlit/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (fl.gpu.texture:unlit/vert mesh-attrs))
   (:fragment (unlit-texture-1d/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-3d ()
-  (:vertex (fl.gpu.texture:unlit/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (fl.gpu.texture:unlit/vert mesh-attrs))
   (:fragment (unlit-texture-3d/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-1d-array ()
-  (:vertex (fl.gpu.texture:unlit/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (fl.gpu.texture:unlit/vert mesh-attrs))
   (:fragment (unlit-texture-1d-array/frag :vec4 :vec2)))
 
 (define-shader noise-2d/sweep-input ()
-  (:vertex (fl.gpu.texture:unlit/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (fl.gpu.texture:unlit/vert mesh-attrs))
   (:fragment (noise-2d/sweep-input/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-2d-array ()
-  (:vertex (fl.gpu.texture:unlit/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (fl.gpu.texture:unlit/vert mesh-attrs))
   (:fragment (unlit-texture-2d-array/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-cube-map ()
-  (:vertex (unlit-texture-cube-map/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (unlit-texture-cube-map/vert mesh-attrs))
   (:fragment (unlit-texture-cube-map/frag :vec4 :vec3)))
 
 (define-shader unlit-texture-cube-map-array ()
-  (:vertex (unlit-texture-cube-map/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (unlit-texture-cube-map/vert mesh-attrs))
   (:fragment (unlit-texture-cube-map-array/frag :vec4 :vec3)))

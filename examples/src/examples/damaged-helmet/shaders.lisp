@@ -33,27 +33,21 @@
 ;;
 ;; USE_IBL HAS_NORMALS HAS_UV
 
-(define-function vert/damaged-helmet ((pos :vec3)
-                                      (normal :vec3)
-                                      (tangent :vec3)
-                                      (color :vec4)
-                                      (uv1 :vec2)
-                                      (uv2 :vec2)
-                                      (joints :vec4)
-                                      (weights :vec4)
+(define-function vert/damaged-helmet ((mesh-attrs mesh-attrs)
                                       &uniform
                                       (model :mat4)
                                       (normmat :mat4)
                                       (view :mat4)
                                       (proj :mat4))
-  (let* ((pvm (* proj view model))
-         (homo-world-pos (* model (vec4 pos 1.0)))
-         (world-pos (/ (.xyz homo-world-pos) (.w homo-world-pos)))
-         (vert-normal (normalize (.xyz (* model (vec4 (.xyz normal) 0.0))))))
-    (values (* pvm (vec4 pos 1.0))
-            vert-normal
-            uv1
-            world-pos)))
+  (with-slots (mesh/pos mesh/normal mesh/uv1) mesh-attrs
+    (let* ((pvm (* proj view model))
+           (homo-world-pos (* model (vec4 mesh/pos 1.0)))
+           (world-pos (/ (.xyz homo-world-pos) (.w homo-world-pos)))
+           (vert-normal (normalize (.xyz (* model (vec4 (.xyz mesh/normal) 0.0))))))
+      (values (* pvm (vec4 mesh/pos 1.0))
+              vert-normal
+              mesh/uv1
+              world-pos))))
 
 (define-function pbr/get-normal ((world-pos :vec3)
                                  (vert-normal :vec3)
@@ -218,5 +212,5 @@
     (vec4 (pow color (vec3 (/ 2.2))) (.a base-color))))
 
 (define-shader damaged-helmet ()
-  (:vertex (vert/damaged-helmet :vec3 :vec3 :vec3 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (vert/damaged-helmet mesh-attrs))
   (:fragment (frag/damaged-helmet :vec3 :vec2 :vec3)))

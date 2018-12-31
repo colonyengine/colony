@@ -4,36 +4,24 @@
   (sampler1 :sampler-2d :accessor sampler1)
   (sampler2 :sampler-2d :accessor sampler2))
 
-(define-function unlit/vert ((pos :vec3)
-                             (normal :vec3)
-                             (tangent :vec4)
-                             (color :vec4)
-                             (uv1 :vec2)
-                             (uv2 :vec2)
-                             (joints :vec4)
-                             (weights :vec4)
+(define-function unlit/vert ((mesh-attrs mesh-attrs)
                              &uniform
                              (model :mat4)
                              (view :mat4)
                              (proj :mat4))
-  (values (* proj view model (vec4 pos 1))
-          color
-          uv1))
+  (with-slots (mesh/pos mesh/color mesh/uv1) mesh-attrs
+    (values (* proj view model (vec4 mesh/pos 1))
+            mesh/color
+            mesh/uv1)))
 
-(define-function unlit/vert-only-uv1 ((pos :vec3)
-                                      (normal :vec3)
-                                      (tangent :vec4)
-                                      (color :vec4)
-                                      (uv1 :vec2)
-                                      (uv2 :vec2)
-                                      (joints :vec4)
-                                      (weights :vec4)
+(define-function unlit/vert-only-uv1 ((mesh-attrs mesh-attrs)
                                       &uniform
                                       (model :mat4)
                                       (view :mat4)
                                       (proj :mat4))
-  (values (* proj view model (vec4 pos 1))
-          uv1))
+  (with-slots (mesh/pos mesh/uv1) mesh-attrs
+    (values (* proj view model (vec4 mesh/pos 1))
+            mesh/uv1)))
 
 (define-function unlit-color/frag ((color :vec4)
                                    (uv1 :vec2))
@@ -81,17 +69,17 @@
     (funcall frag-filter color)))
 
 (define-shader unlit-color ()
-  (:vertex (unlit/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (unlit/vert mesh-attrs))
   (:fragment (unlit-color/frag :vec4 :vec2)))
 
 (define-shader unlit-color-decal ()
-  (:vertex (unlit/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (unlit/vert mesh-attrs))
   (:fragment (unlit-color-decal/frag :vec4 :vec2)))
 
 (define-shader unlit-texture ()
-  (:vertex (unlit/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (unlit/vert mesh-attrs))
   (:fragment (unlit-texture/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-decal ()
-  (:vertex (unlit/vert :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (unlit/vert mesh-attrs))
   (:fragment (unlit-texture-decal/frag :vec4 :vec2)))

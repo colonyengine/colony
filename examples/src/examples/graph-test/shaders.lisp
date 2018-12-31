@@ -15,5 +15,5 @@
      10)))
 
 (define-shader graph-test (:version 430)
-  (:vertex (fl.gpu.texture:unlit/vert-only-uv1 :vec3 :vec3 :vec4 :vec4 :vec2 :vec2 :vec4 :vec4))
+  (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (graph-test/frag :vec2)))
