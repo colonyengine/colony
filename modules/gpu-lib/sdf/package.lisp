@@ -2,4 +2,5 @@
 
 (defpackage+ #:first-light.gpu.sdf
   (:nicknames #:fl.gpu.sdf)
-  (:use #:fl.gpu.lib))
+  (:use #:fl.gpu.lib
+        #:fl.gpu.swizzle))
