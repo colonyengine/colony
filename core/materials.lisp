@@ -222,10 +222,14 @@ list of the return values of the FUNC."
   (with-slots (%instances) mat
     (setf %instances value)))
 
-(defun %make-material (id shader instances profiles core-state)
+(defmethod (setf attributes) (value (mat material))
+  (with-slots (%attributes) mat
+    (setf %attributes value)))
+
+(defun %make-material (id shader instances attributes profiles core-state)
   (make-instance 'material :id id
                            :shader shader
-                           :instances (or instances 1)
+                           :instances instances
                            :attributes attributes
                            :profile-overlay-names profiles
                            :core-state core-state))
@@ -240,6 +244,7 @@ list of the return values of the FUNC."
   (let* ((new-id new-mat-name)
          (new-shader (shader current-mat))
          (new-instances (instances current-mat))
+         (new-attributes (attributes current-mat))
          (new-uniforms (fl.util:dict #'eq))
          (new-blocks (fl.util:dict #'eq))
          (new-active-texture-unit (active-texture-unit current-mat))
@@ -249,6 +254,7 @@ list of the return values of the FUNC."
                           :id new-id
                           :shader new-shader
                           :instances new-instances
+                          :attributes new-attributes
                           :core-state (core-state current-mat)
                           :uniforms new-uniforms
                           :blocks new-blocks
@@ -424,13 +430,14 @@ and ignores the CONTEXT and MATERIAL arguments."
                 (%deep-copy-material-uniform-value material-value mat)))))))
 
 
-(defun parse-material (name shader instances profiles uniforms blocks)
+(defun parse-material (name shader instances attributes profiles uniforms blocks)
   "Return a function which creates a partially complete material instance.
 It is partially complete because it does not yet have the shader binder function
 available for it so BIND-UNIFORMS cannot yet be called on it."
   (fl.util:with-unique-names (matvar)
     `(lambda (core-state)
-       (let ((,matvar (%make-material ',name ',shader ,instances ',profiles core-state)))
+       (let ((,matvar (%make-material ',name ',shader ,instances ',attributes
+                                      ',profiles core-state)))
          ;; First, insert in order the profile overlays for this material.
          (apply-material-profile-overlays ,matvar core-state)
          ;; Then, overlay whatever uniforms and blocks the user specified over
@@ -653,12 +660,25 @@ manner while defining a material."
   ;; TODO: better parsing and type checking of material forms...
   (fl.util:with-unique-names (func)
     (let ((definition '(fl.data:get 'materials)))
-      (destructuring-bind (&key shader profiles instances uniforms blocks) body
-        `(let ((,func ,(parse-material name shader instances profiles uniforms blocks)))
+      (destructuring-bind (&key shader profiles instances attributes uniforms blocks) body
+        `(let ((,func ,(parse-material name shader instances attributes profiles uniforms blocks)))
            (unless ,definition
              (fl.data:set 'materials (fl.util:dict #'eq)))
            (setf (fl.util:href ,definition ',name) ,func)
            (export ',name))))))
+
+;; TODO: Make this constant time
+(defmacro with-depth-function (material &body body)
+  `(destructuring-bind (&key depth) (attributes ,material)
+     (if depth
+         (let ((old-depth (gl:get-enum :depth-func)))
+           (unwind-protect
+                (progn
+                  (gl:depth-func depth)
+                  ,@body)
+             (gl:depth-func old-depth)))
+         (progn ,@body))))
+
 
 (defmacro using-material (material (&rest bindings) &body body)
   (fl.util:with-unique-names (material-ref)
@@ -668,7 +688,8 @@ manner while defining a material."
                        :collect `(mat-uniform-ref ,material-ref ,k)
                        :collect v))
          (bind-material ,material-ref)
-         ,@body))))
+         (with-depth-function ,material-ref
+           ,@body)))))
 
 (defun load-materials (core-state)
   (fl.util:do-hash-values (profile (fl.data:get 'material-profiles))
