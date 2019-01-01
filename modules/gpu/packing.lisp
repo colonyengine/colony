@@ -45,7 +45,7 @@
        ,(pack-block layout)))))
 
 (defun unpack-type (layout-type type)
-  (destructuring-bind ((spec &optional x y z) &key &allow-other-keys) type
+  (destructuring-bind ((spec x &optional y z) &key &allow-other-keys) type
     (labels ((get-container (x)
                (unpack-type layout-type (list x)))
              (get-stride (count)
@@ -53,13 +53,15 @@
                  (:std140 4)
                  (:std430 (if (= count 3) 4 count))))
              (get-result (&rest args)
-               (destructuring-bind (&optional (count 1) rows) (getf args :dimensions)
-                 (list :dimensions (cons count rows)
+               (destructuring-bind (&optional (element-count 1) rows) (getf args :dimensions)
+                 (list :dimensions (cons element-count rows)
                        :element-type (getf args :element-type)
-                       :element-stride (get-stride count)))))
+                       :element-stride (get-stride element-count)
+                       :count (or (getf args :count) 1)
+                       :type (getf args :type)))))
       (ecase spec
-        ((:bool :uint) (get-result :element-type '(unsigned-byte 32)))
-        (:int (get-result :element-type '(signed-byte 32)))
-        (:float (get-result :element-type 'single-float))
-        ((:vec :mat) (apply #'get-result :dimensions (list y z) (get-container x)))
-        (:array (get-container x))))))
+        ((:bool :uint) (get-result :type :scalar :element-type '(unsigned-byte 32)))
+        (:int (get-result :type :scalar :element-type '(signed-byte 32)))
+        (:float (get-result :type :scalar :element-type 'single-float))
+        ((:vec :mat) (apply #'get-result :type spec :dimensions (list y z) (get-container x)))
+        (:array (apply #'get-result :count y (get-container x)))))))

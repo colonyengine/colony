@@ -20,7 +20,11 @@
                 :initarg :dimensions
                 :initform nil)
    (%offset :reader offset
-            :initarg :offset)))
+            :initarg :offset)
+   (%count :reader element-count
+           :initarg :count)
+   (%type :reader object-type
+          :initarg :type)))
 
 (defun layout-struct-p (struct)
   (or (has-qualifier-p struct :ubo)

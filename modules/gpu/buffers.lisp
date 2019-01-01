@@ -68,7 +68,8 @@
 (defun %write-buffer-member (target member value)
   (with-slots (%element-type %offset %element-stride %byte-stride) member
     (let ((count (length value)))
-      (static-vectors:with-static-vector (sv (* count %element-stride) :element-type %element-type)
+      (static-vectors:with-static-vector (sv (* count %element-stride)
+                                             :element-type %element-type)
         (let ((ptr (static-vectors:static-vector-pointer sv))
               (i 0))
           (map nil
@@ -118,3 +119,45 @@ writing interface."
           (%write-buffer-member-matrix %target member value)
           (%write-buffer-member %target member value))
       (gl:bind-buffer %target 0))))
+
+(defun %read-buffer-member/scalar (member data count)
+  (with-slots (%element-stride) member
+    (if (= count 1)
+        (aref data 0)
+        (subseq data 0 (* count %element-stride)))))
+
+(defun %read-buffer-member/vector (member data count)
+  (with-slots (%dimensions %element-stride) member
+    (let* ((size (car %dimensions))
+           (func (fl.util:format-symbol :flm "VEC~a" size)))
+      (flet ((make-vec (data index size)
+               (let ((args (loop :for i :below size
+                                 :collect (aref data (+ index i)))))
+                 (apply func args))))
+        (if (= count 1)
+            (make-vec data 0 size)
+            (loop :repeat count
+                  :for i :by %element-stride
+                  :collect (make-vec data i size)))))))
+
+(defun %read-buffer-member/matrix (member data count)
+  (declare (ignore member data count))
+  (error "Reading matrix paths is not yet supported."))
+
+(defun %read-buffer-member (target member &optional count)
+  (with-slots (%type %count %element-type %offset %byte-stride) member
+    (let* ((count (or count %count))
+           (data (make-array (* count %byte-stride) :element-type %element-type)))
+      (cffi:with-pointer-to-vector-data (ptr data)
+        (%gl:get-buffer-sub-data target %offset (* count %byte-stride) ptr))
+      (ecase %type
+        (:scalar (%read-buffer-member/scalar member data count))
+        (:vec (%read-buffer-member/vector member data count))
+        (:mat (%read-buffer-member/matrix member data count))))))
+
+(defun read-buffer-path (buffer-name path &optional count)
+  (with-slots (%id %target %layout) (find-buffer buffer-name)
+    (let ((member (fl.util:href (members %layout) path)))
+      (gl:bind-buffer %target %id)
+      (unwind-protect (%read-buffer-member %target member count)
+        (gl:bind-buffer %target 0)))))
