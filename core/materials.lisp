@@ -187,8 +187,10 @@ list of the return values of the FUNC."
    (%shader :reader shader ;; :writer defined below.
             :initarg :shader)
    (%instances :reader instances
-               :initarg :instances
-               :initform 1)
+               :initarg :instances)
+   (%attributes :reader attributes
+                :initarg :attributes
+                :initform nil)
    (%profile-overlay-names :reader profile-overlay-names
                            :initarg :profile-overlay-names
                            :initform nil)
