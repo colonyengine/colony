@@ -39,8 +39,10 @@
                             (t :vec2))
   (- p t))
 
-(define-function pie ((p :vec2)
-                      (angle :float))
+;;; Distance functions
+
+(define-function dist/pie ((p :vec2)
+                           (angle :float))
   (let* ((angle (/ (radians angle) 2))
          (n (vec2 (cos angle) (sin angle))))
     (+ (* (.x (abs p)) (.x n))
