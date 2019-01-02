@@ -22,6 +22,7 @@
            #:bind-buffer
            #:unbind-buffer
            #:delete-buffer
+           #:read-buffer-path
            #:write-buffer-path
            #:uniforms
            #:uniform-int
