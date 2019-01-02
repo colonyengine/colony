@@ -45,7 +45,7 @@
        ,(pack-block layout)))))
 
 (defun unpack-type (layout-type type)
-  (destructuring-bind ((spec x &optional y z) &key &allow-other-keys) type
+  (destructuring-bind ((spec x &optional (y 1) (z 1)) &key &allow-other-keys) type
     (labels ((get-container (x)
                (unpack-type layout-type (list x)))
              (get-stride (count)
@@ -53,12 +53,14 @@
                  (:std140 4)
                  (:std430 (if (= count 3) 4 count))))
              (get-result (&rest args)
-               (destructuring-bind (&optional (element-count 1) rows) (getf args :dimensions)
-                 (list :dimensions (cons element-count rows)
-                       :element-type (getf args :element-type)
-                       :element-stride (get-stride element-count)
-                       :count (or (getf args :count) 1)
-                       :type (getf args :type)))))
+               (destructuring-bind (&key (dimensions '(1 1)) element-type count type
+                                    &allow-other-keys)
+                   args
+                 (list :dimensions dimensions
+                       :element-type element-type
+                       :element-stride (get-stride (car dimensions))
+                       :count (or count 1)
+                       :type type))))
       (ecase spec
         ((:bool :uint) (get-result :type :scalar :element-type '(unsigned-byte 32)))
         (:int (get-result :type :scalar :element-type '(signed-byte 32)))

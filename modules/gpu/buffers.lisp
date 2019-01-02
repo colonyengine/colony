@@ -33,7 +33,6 @@
     (fl.util:href buffer-table buffer-name)))
 
 (defun create-buffer (buffer-name block-alias)
-  "Create a buffer of the given TYPE and NAME, using the block BLOCK-ID of PROGRAM-NAME."
   (fl.util:if-let ((block (find-block block-alias)))
     (let* ((buffer-table (fl.data:get 'buffers))
            (type (block-type->buffer-type (block-type block)))
@@ -46,7 +45,6 @@
     (error "Cannot find the block with alias ~s when attempting to create a buffer." block-alias)))
 
 (defun bind-buffer (buffer-name binding-point)
-  "Bind a buffer with name BUFFER-NAME to BINDING-POINT."
   (fl.util:if-let ((buffer (find-buffer buffer-name)))
     (with-slots (%target %id) buffer
       (%gl:bind-buffer-base %target binding-point %id)
@@ -54,11 +52,9 @@
     (error "Cannot find buffer ~s." buffer-name)))
 
 (defun unbind-buffer (buffer-name)
-  "Unbind a buffer with name BUFFER-NAME."
   (bind-buffer buffer-name 0))
 
 (defun delete-buffer (buffer-name)
-  "Delete the buffer having a name of BUFFER-NAME."
   (let ((buffer-table (fl.data:get 'buffers))
         (buffer (find-buffer buffer-name)))
     (unbind-buffer buffer-name)
@@ -69,14 +65,17 @@
   (with-slots (%element-type %offset %element-stride %byte-stride) member
     (let ((count (length value)))
       (static-vectors:with-static-vector (sv (* count %element-stride)
-                                             :element-type %element-type)
+                                             :element-type %element-type
+                                             :initial-element (coerce 0 %element-type))
         (let ((ptr (static-vectors:static-vector-pointer sv))
               (i 0))
           (map nil
                (lambda (x)
-                 (if (typep x 'sequence)
-                     (replace sv x :start1 i)
-                     (setf (aref sv i) x))
+                 (typecase x
+                   (sequence (replace sv x :start1 i))
+                   ((or flm:vec2 flm:vec3 flm:vec4)
+                    (replace sv (flm:get-array x) :start1 i))
+                   (t (setf (aref sv i) x)))
                  (incf i %element-stride))
                value)
           (%gl:buffer-sub-data target %offset (* count %byte-stride) ptr))))))
@@ -84,9 +83,10 @@
 (defun %write-buffer-member-matrix (target member value)
   (with-slots (%element-type %offset %element-stride %byte-stride %dimensions) member
     (let ((count (length value)))
-      (destructuring-bind (columns . rows) %dimensions
+      (destructuring-bind (columns rows) %dimensions
         (static-vectors:with-static-vector (sv (* count columns %element-stride)
-                                               :element-type %element-type)
+                                               :element-type %element-type
+                                               :initial-element (coerce 0 %element-type))
           (let ((ptr (static-vectors:static-vector-pointer sv))
                 (i 0))
             (map nil
@@ -100,22 +100,11 @@
             (%gl:buffer-sub-data target %offset (* count %byte-stride) ptr)))))))
 
 (defun write-buffer-path (buffer-name path value)
-  "Write VALUE to the buffer with the name BUFFER-NAME, starting at the given PATH.
-
-PATH: A \"dot-separated\" keyword symbol, where each part denotes a member in the buffer's block
-layout.
-
-VALUE: A value to write, such as a scalar or matrix depending on the type of the member PATH refers
-to. To write to an array, use a sequence of values.
-
-Note: Writing to arrays which contain other aggregate types (other arrays or structures) is not
-possible. This is a design decision to allow this library to have a simple \"path-based\" buffer
-writing interface."
-  (with-slots (%id %target %layout) (find-buffer buffer-name)
+  (with-slots (%type %id %target %layout) (find-buffer buffer-name)
     (let ((member (fl.util:href (members %layout) path)))
       (check-type value sequence)
       (gl:bind-buffer %target %id)
-      (if (cdr (dimensions member))
+      (if (eq (object-type member) :mat)
           (%write-buffer-member-matrix %target member value)
           (%write-buffer-member %target member value))
       (gl:bind-buffer %target 0))))
@@ -130,24 +119,46 @@ writing interface."
   (with-slots (%dimensions %element-stride) member
     (let* ((size (car %dimensions))
            (func (fl.util:format-symbol :flm "VEC~a" size)))
-      (flet ((make-vec (data index size)
+      (flet ((make-vector (data index size)
                (let ((args (loop :for i :below size
                                  :collect (aref data (+ index i)))))
                  (apply func args))))
         (if (= count 1)
-            (make-vec data 0 size)
+            (make-vector data 0 size)
             (loop :repeat count
                   :for i :by %element-stride
-                  :collect (make-vec data i size)))))))
+                  :collect (make-vector data i size)))))))
 
 (defun %read-buffer-member/matrix (member data count)
-  (declare (ignore member data count))
-  (error "Reading matrix paths is not yet supported."))
+  (with-slots (%dimensions %element-stride) member
+    (destructuring-bind (columns rows) %dimensions
+      (let ((func (fl.util:format-symbol :flm "MAT~d" columns)))
+        (flet ((make-matrix (data index)
+                 (let ((args (loop :repeat columns
+                                   :for i :from index :by %element-stride
+                                   :append (loop :for j :below rows
+                                                 :collect (aref data (+ i j)))
+                                   :do (incf index %element-stride))))
+                   (apply func args))))
+          (if (or (= columns rows 2)
+                  (= columns rows 3)
+                  (= columns rows 4))
+              (if (= count 1)
+                  (make-matrix data 0)
+                  (loop :for i :below count
+                        :for index = (* columns %element-stride i)
+                        :collect (make-matrix data index)))
+              (error "Only 2x2, 3x3, and 4x4")))))))
 
 (defun %read-buffer-member (target member &optional count)
-  (with-slots (%type %count %element-type %offset %byte-stride) member
+  (with-slots (%type %dimensions %count %element-stride %element-type %offset %byte-stride) member
     (let* ((count (or count %count))
-           (data (make-array (* count %byte-stride) :element-type %element-type)))
+           (element-count (reduce #'* %dimensions))
+           (stride (if (and (eq %type :vec)
+                            (= element-count 3))
+                       4
+                       %element-stride))
+           (data (make-array (* stride (cadr %dimensions) count) :element-type %element-type)))
       (cffi:with-pointer-to-vector-data (ptr data)
         (%gl:get-buffer-sub-data target %offset (* count %byte-stride) ptr))
       (ecase %type
