@@ -94,7 +94,11 @@
                    (loop :repeat columns
                          :for j :from i :by %element-stride
                          :for k :by rows
-                         :do (replace sv x :start1 j :start2 k :end2 (+ k rows)))
+                         :for matrix = (etypecase x
+                                         (sequence x)
+                                         ((or flm:mat2 flm:mat3 flm:mat4)
+                                          (flm:get-array x)))
+                         :do (replace sv matrix :start1 j :start2 k :end2 (+ k rows)))
                    (incf i (* columns %element-stride)))
                  value)
             (%gl:buffer-sub-data target %offset (* count %byte-stride) ptr)))))))
