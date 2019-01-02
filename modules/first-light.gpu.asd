@@ -17,7 +17,8 @@
                #:cl-opengl
                #:verbose
                #:first-light.util
-               #:first-light.metadata)
+               #:first-light.metadata
+               #:first-light.math)
   :pathname "gpu"
   :serial t
   :components
