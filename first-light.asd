@@ -24,6 +24,7 @@
                #:first-light.data-structures
                #:first-light.binary-formats
                #:first-light.math
+               #:first-light.host
                #:first-light.image-types
                #:first-light.geometry
                #:first-light.input
