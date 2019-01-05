@@ -11,9 +11,9 @@
   :bug-tracker "https://github.com/hackertheory/first-light/issues"
   :source-control (:git "git@github.com:hackertheory/first-light.git")
   :encoding :utf-8
-  :depends-on (#:fl.util
-               #:cl-sdl2
-               #:cl-opengl)
+  :depends-on (#:sdl2
+               #:cl-opengl
+               #:first-light.util)
   :pathname "host"
   :serial t
   :components
