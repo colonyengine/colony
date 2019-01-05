@@ -660,7 +660,7 @@ manner while defining a material."
   ;; TODO: better parsing and type checking of material forms...
   (fl.util:with-unique-names (func)
     (let ((definition '(fl.data:get 'materials)))
-      (destructuring-bind (&key shader profiles instances attributes uniforms blocks) body
+      (destructuring-bind (&key shader profiles (instances 1) attributes uniforms blocks) body
         `(let ((,func ,(parse-material name shader instances attributes profiles uniforms blocks)))
            (unless ,definition
              (fl.data:set 'materials (fl.util:dict #'eq)))
