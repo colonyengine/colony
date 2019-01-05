@@ -553,13 +553,13 @@ GPU."
   '(equalp))
 
 ;; TODO: candidate for public API.
-(defmethod rcache-construct ((entry-type (eql :texture)) (core-state core-state) &rest keys)
+(defmethod rcache-construct (context (entry-type (eql :texture)) &rest keys)
   (destructuring-bind (texture-location) keys
     ;;(format t "Creating texture instance whose name is: ~A~%" texture-location)
-    (load-texture (context core-state) texture-location)))
+    (load-texture context texture-location)))
 
 ;; TODO: candidate for public API.
-(defmethod rcache-dispose ((entry-type (eql :texture)) (core-state core-state) texture)
+(defmethod rcache-dispose (context (entry-type (eql :texture)) texture)
   (gl:delete-texture (texid texture)))
 
 

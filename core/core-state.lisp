@@ -116,41 +116,43 @@ CORE-STATE."
   (:method ((entry-type symbol))
     '(eql)))
 
-(defgeneric rcache-lookup (entry-type core-state &rest keys)
+(defgeneric rcache-lookup (context entry-type &rest keys)
   (:method ((entry-type symbol) context &rest keys)
-    (apply #'rcache-lookup entry-type (core-state context) keys)))
+    (apply #'rcache-lookup entry-type context keys)))
 
-(defgeneric rcache-construct (entry-type core-state &rest keys)
+(defgeneric rcache-construct (context entry-type &rest keys)
   (:method ((entry-type symbol) context &rest keys)
-    (apply #'rcache-construct entry-type (core-state context) keys)))
+    (apply #'rcache-construct entry-type context keys)))
 
-(defgeneric rcache-remove (entry-type core-state &rest keys)
+(defgeneric rcache-remove (context entry-type &rest keys)
   (:method ((entry-type symbol) context &rest keys)
-    (apply #'rcache-remove entry-type (core-state context) keys)))
+    (apply #'rcache-remove entry-type context keys)))
 
-(defgeneric rcache-dispose (entry-type core-state removed-value)
+(defgeneric rcache-dispose (context entry-type removed-value)
   (:method ((entry-type symbol) context removed-value)
-    (rcache-dispose entry-type (core-state context) removed-value)))
+    (rcache-dispose entry-type context removed-value)))
 
 ;; This might call rcache-construct if needed.
-(defmethod rcache-lookup ((entry-type symbol) (core-state core-state)
+(defmethod rcache-lookup (context (entry-type symbol)
                           &rest keys)
-  (ensure-nested-hash-table (rcache core-state)
-                            ;; NOTE: 'eq is for the rcache table itself.
-                            (list* 'eq (rcache-layout entry-type))
-                            (list* entry-type keys))
-  (multiple-value-bind (value presentp)
-      (apply #'fl.util:href (rcache core-state) (list* entry-type keys))
-    (unless presentp
-      (setf value (apply #'rcache-construct entry-type core-state keys)
-            (apply #'fl.util:href (rcache core-state) (list* entry-type keys)) value))
-    value))
+  (let ((core-state (core-state context)))
+    (ensure-nested-hash-table (rcache core-state)
+                              ;; NOTE: 'eq is for the rcache table itself.
+                              (list* 'eq (rcache-layout entry-type))
+                              (list* entry-type keys))
+    (multiple-value-bind (value presentp)
+        (apply #'fl.util:href (rcache core-state) (list* entry-type keys))
+      (unless presentp
+        (setf value (apply #'rcache-construct context entry-type keys)
+              (apply #'fl.util:href (rcache core-state) (list* entry-type keys)) value))
+      value)))
 
 ;; This might call rcache-dispose if needed.
-(defmethod rcache-remove ((entry-type symbol) (core-state core-state) &rest keys)
-  (multiple-value-bind (value presentp)
-      (apply #'fl.util:href (rcache core-state) (list* entry-type keys))
-    (when presentp
-      (remhash (apply #'fl.util:href (rcache core-state) (list* entry-type keys))
-               (rcache core-state))
-      (rcache-dispose entry-type core-state value))))
+(defmethod rcache-remove (context (entry-type symbol) &rest keys)
+  (let ((core-state (core-state context)))
+    (multiple-value-bind (value presentp)
+        (apply #'fl.util:href (rcache core-state) (list* entry-type keys))
+      (when presentp
+        (remhash (apply #'fl.util:href (rcache core-state) (list* entry-type keys))
+                 (rcache core-state))
+        (rcache-dispose context entry-type value)))))

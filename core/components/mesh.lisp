@@ -28,7 +28,7 @@
     (let ((location (fl.util:ensure-list location)))
       (with-shared-storage
           (context context)
-          ((cached-mesh mesh-presentp
+          ((cached-mesh mesh-present-p
                         ('mesh :cached-mesh-data location id)
                         (fl.geom:load-gltf (apply #'find-resource context location) id)))
         (setf primitives cached-mesh)))))

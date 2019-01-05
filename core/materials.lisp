@@ -345,7 +345,7 @@ material."
 
 ;; Default conversion functions for each uniform type.
 
-(defun gen-sampler/sem->com (core-state)
+(defun gen-sampler/sem->com ()
   "Generates a function that: Returns a function that takes three arguments: SEMANTIC-VALUE,
 CONTEXT, and MAT. SEMANTIC-VALUE must be a symbol naming a DEFINE-TEXTURE form, or a vector of such
 names. CONTEXT, the context object, and MAT the material that contains this semantic value are
@@ -354,18 +354,17 @@ TEXTURE objects and load all the images from the texture into the GPU. It will o
 TEXTURE name no matter how many times this is called to perform a conversion. The result is a
 TEXTURE object, or a vector of them corresponding in order to the input."
   (lambda (semantic-value context mat)
-    (declare (ignore context mat))
+    (declare (ignore mat))
     (etypecase semantic-value
       ((or cons symbol)
-       (rcache-lookup :texture core-state (canonicalize-texture-name semantic-value)))
+       (rcache-lookup context :texture (canonicalize-texture-name semantic-value)))
       (vector
        (map 'vector
             (lambda (sv)
-              (rcache-lookup :texture core-state (canonicalize-texture-name sv)))
+              (rcache-lookup context :texture (canonicalize-texture-name sv)))
             semantic-value)))))
 
-(defun gen-default-copy/sem->com (core-state)
-  (declare (ignore core-state))
+(defun gen-default-copy/sem->com ()
   (lambda (semantic-value context mat)
     (declare (ignore context mat))
     (copy-thing semantic-value)))
@@ -547,7 +546,7 @@ or if it a vector of the same. Return NIL otherwise."
           :do (setf value (funcall transformer value context mat))
           :finally (setf (computed-value material-uniform-value) value))))
 
-(defun annotate-material-uniform (uniform-name uniform-value material shader-program core-state)
+(defun annotate-material-uniform (uniform-name uniform-value material shader-program)
   (fl.util:if-found (type-info (fl.util:href (fl.gpu:uniforms shader-program) uniform-name))
                     (let ((uniform-type (fl.util:href type-info :type)))
                       ;; 1. Find the uniform in the shader-program and get its
@@ -567,9 +566,9 @@ or if it a vector of the same. Return NIL otherwise."
                       ;; the right thing in any (I believe) situation.
                       (setf (semantic->computed uniform-value) nil)
                       (push (if (sampler-p uniform-type)
-                                (gen-sampler/sem->com core-state)
+                                (gen-sampler/sem->com)
                                 (if (force-copy uniform-value)
-                                    (gen-default-copy/sem->com core-state)
+                                    (gen-default-copy/sem->com)
                                     #'identity/for-material-custom-functions))
                             (semantic->computed uniform-value))
 
@@ -586,10 +585,10 @@ or if it a vector of the same. Return NIL otherwise."
                             uniform, those are not supported in materials."
                            (id material) uniform-name (shader material))))
 
-(defun annotate-material-uniforms (material shader-program core-state)
+(defun annotate-material-uniforms (material shader-program)
   (maphash
    (lambda (uniform-name uniform-value)
-     (annotate-material-uniform uniform-name uniform-value material shader-program core-state))
+     (annotate-material-uniform uniform-name uniform-value material shader-program))
    (uniforms material)))
 
 
@@ -619,7 +618,7 @@ or if it a vector of the same. Return NIL otherwise."
 the shader program in the material."
   (fl.util:if-found (shader-program (fl.util:href (shaders core-state) (shader material-instance)))
                     (progn
-                      (annotate-material-uniforms material-instance shader-program core-state)
+                      (annotate-material-uniforms material-instance shader-program)
                       (annotate-material-blocks material-instance shader-program core-state))
                     (error "Material ~s uses an undefined shader: ~s."
                            (id material-instance) (shader material-instance))))
