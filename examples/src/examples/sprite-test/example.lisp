@@ -179,7 +179,8 @@ for later use with the shaders."
 
 (defmethod fl:on-component-initialize ((self simple-movement))
   (with-accessors ((actor fl:actor) (transform transform)) self
-    (setf transform (fl:actor-component-by-type actor 'transform))))
+    (setf transform (fl:actor-component-by-type actor 'transform))
+    (fl.comp:translate transform (flm:vec3 -400 0 0) :replace-p t :instant-p t)))
 
 (defmethod fl:on-component-update ((self simple-movement))
   (with-accessors ((context fl:context) (transform transform)) self
@@ -194,8 +195,6 @@ for later use with the shaders."
                            (flm:+ (flm:vec3 -400 0 0) vec)
                            :replace-p t
                            :instant-p instant-p))
-      (when (zerop (fl:frame-count context))
-        (print "hi"))
       (unless (= rx ry 0.0)
         (let* ((angle (atan (- rx) ry))
                ;; keep angle from 0 to 2pi for easier debugging of other things.
