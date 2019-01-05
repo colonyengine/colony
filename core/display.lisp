@@ -70,7 +70,7 @@
     (gl:clear :color-buffer :depth-buffer)))
 
 (defun render (core-state)
-  (with-slots (%display %running-p) core-state
+  (with-slots (%frame-manager %display %running-p) core-state
     (when %running-p
       (clear-screen %display)
       (execute-flow core-state
@@ -78,4 +78,5 @@
                     'perform-one-frame
                     'entry/perform-one-frame
                     :come-from-state-name :ef)
-      (sdl2:gl-swap-window (window %display)))))
+      (sdl2:gl-swap-window (window %display))
+      (incf (%frame-count %frame-manager)))))

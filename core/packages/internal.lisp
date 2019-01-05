@@ -30,6 +30,7 @@
    #:destroy
    #:detach-component
    #:find-resource
+   #:frame-count
    #:frame-manager
    #:frame-time
    #:general-data-format-descriptor

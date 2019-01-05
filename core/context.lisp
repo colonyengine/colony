@@ -30,6 +30,10 @@
   "Return the amount of time in seconds of the last frame as a REAL."
   (slot-value (frame-manager (core-state context)) '%frame-time))
 
+(defun frame-count (context)
+  "Return the number of frames since the engine has started."
+  (slot-value (frame-manager (core-state context)) '%frame-count))
+
 (defun delta (context)
   "Return the physics update delta. This is :delta from the cfg file."
   (slot-value (frame-manager (core-state context)) '%delta))

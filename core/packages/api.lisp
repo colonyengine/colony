@@ -26,6 +26,7 @@
                  #:destroy
                  #:detach-component
                  #:find-resource
+                 #:frame-count
                  #:frame-time
                  #:general-data-format-descriptor
                  #:id
