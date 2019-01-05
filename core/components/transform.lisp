@@ -145,7 +145,7 @@
   (declare (ignore rotation vec replace-p instant-p))
   (error "ROTATE not yet implemented for world space."))
 
-(defun rotate (transform vec &key (space :model) replace-p (instant-p t))
+(defun rotate (transform vec &key (space :model) replace-p instant-p)
   (ecase space
     (:model (%rotate/model-space (rotation transform) vec replace-p instant-p))
     (:world (%rotate/world-space (rotation transform) vec replace-p instant-p))))
@@ -160,12 +160,12 @@
   (declare (ignore translation vec replace-p instant-p))
   (error "TRANSLATE not yet implemented for world space."))
 
-(defun translate (transform vec &key (space :model) replace-p (instant-p t))
+(defun translate (transform vec &key (space :model) replace-p instant-p)
   (ecase space
     (:model (%translate/model-space (translation transform) vec replace-p instant-p))
     (:world (%translate/world-space (translation transform) vec replace-p instant-p))))
 
-(defun scale (transform vec &key replace-p (instant-p t))
+(defun scale (transform vec &key replace-p instant-p)
   (with-accessors ((previous previous) (current current)) (scaling transform)
     (flm:+ (if replace-p flm:+zero-vec3+ current) vec current)
     (when instant-p

@@ -186,17 +186,26 @@ for later use with the shaders."
     (fl.util:mvlet* ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
                                                          '(:gamepad1 :left-stick)))
                      (rx ry (fl.input:get-gamepad-analog (fl:input-data context)
-                                                         '(:gamepad1 :right-stick))))
+                                                         '(:gamepad1 :right-stick)))
+                     (instant-p (zerop (fl:frame-count context))))
       (let ((vec (flm:vec3 lx ly 0)))
         (flm:* (if (> (flm:length vec) 1) (flm:normalize vec) vec) 150.0 vec)
-        (fl.comp:translate transform (flm:+ (flm:vec3 -400 0 0) vec) :replace-p t))
+        (fl.comp:translate transform
+                           (flm:+ (flm:vec3 -400 0 0) vec)
+                           :replace-p t
+                           :instant-p instant-p))
+      (when (zerop (fl:frame-count context))
+        (print "hi"))
       (unless (= rx ry 0.0)
         (let* ((angle (atan (- rx) ry))
                ;; keep angle from 0 to 2pi for easier debugging of other things.
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
                           angle)))
-          (fl.comp:rotate transform (flm:vec3 0 0 angle) :replace-p t))))))
+          (fl.comp:rotate transform
+                          (flm:vec3 0 0 angle)
+                          :replace-p t
+                          :instant-p instant-p))))))
 
 (fl:define-component shot-mover ()
   ((transform :default nil)
