@@ -5,10 +5,8 @@
   (sprite :int32 :accessor sprite))
 
 (define-struct sprite-sheet-data
-  (x (:float 2048) :accessor x)
-  (y (:float 2048) :accessor y)
-  (w (:float 2048) :accessor w)
-  (h (:float 2048) :accessor h))
+  (pos (:vec2 2048) :accessor pos)
+  (size (:vec2 2048) :accessor size))
 
 (define-function sprite/vert ()
   (values))
@@ -21,10 +19,8 @@
                               (sprite-sheet sprite-sheet-data :ssbo :std-430))
   (declare (output-primitive :kind :triangle-strip :max-vertices 6))
   (let* ((mvp (* proj view model))
-         (extents (vec4 (aref (x sprite-sheet) (sprite tex))
-                        (aref (y sprite-sheet) (sprite tex))
-                        (aref (w sprite-sheet) (sprite tex))
-                        (aref (h sprite-sheet) (sprite tex))))
+         (extents (vec4 (aref (pos sprite-sheet) (sprite tex))
+                        (aref (size sprite-sheet) (sprite tex))))
          (size (.xyxy (texture-size (image tex) 0)))
          (offsets (* size (vec4 (* 0.5 (.zw extents)) (* -0.5 (.zw extents))))))
     (setf (.zw extents) (+ (.xy extents) (.zw extents)))

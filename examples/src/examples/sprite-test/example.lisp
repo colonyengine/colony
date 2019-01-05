@@ -85,26 +85,18 @@
       ;; 3. only a single instance should fill the GPU buffer appropriately the
       ;; first time it is created.
       (loop :with length = (length (spec sprite-sheet))
-            :with xs = (make-array length :element-type 'single-float)
-            :with ys = (make-array length :element-type 'single-float)
-            :with ws = (make-array length :element-type 'single-float)
-            :with hs = (make-array length :element-type 'single-float)
+            :with pos = (make-array length)
+            :with size = (make-array length)
             :for sprite :in (spec sprite-sheet)
             :for i :from 0
             :do (destructuring-bind (&key id x y w h) sprite
                   (when (and id x y w h)
-                    (setf (aref xs i) x
-                          (aref ys i) y
-                          (aref ws i) w
-                          (aref hs i) h)))
+                    (setf (aref pos i) (flm:vec2 x y)
+                          (aref size i) (flm:vec2 w h))))
             :finally (fl.gpu:write-buffer-path
-                      (fl.gpu:buffer-name ssbo/spec-data) :x xs)
+                      (fl.gpu:buffer-name ssbo/spec-data) :pos pos)
                      (fl.gpu:write-buffer-path
-                      (fl.gpu:buffer-name ssbo/spec-data) :y ys)
-                     (fl.gpu:write-buffer-path
-                      (fl.gpu:buffer-name ssbo/spec-data) :w ws)
-                     (fl.gpu:write-buffer-path
-                      (fl.gpu:buffer-name ssbo/spec-data) :h hs)))
+                      (fl.gpu:buffer-name ssbo/spec-data) :size size)))
 
     ;; Initialize the ids, we do this for each sprite-sheet instance we make
     ;; I could put this into a shared storage thing, but meh.
