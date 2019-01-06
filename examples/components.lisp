@@ -1,12 +1,4 @@
-(in-package #:first-light.example)
-
-;; This component reads the mouse position and puts it into a uniform in the
-;; material in the mesh-renderer associated with the actor this component
-;; is on. The material for that mesh-renderer knows to use extra uniforms to
-;; pass that information to the shader so as you move the mouse around the
-;; shader uses the position as noise input to manipulate the texture in
-;; realtime.
-
+(in-package :first-light.example)
 
 (fl:define-component shader-sweep ()
   ((mesh-rend :default nil)
@@ -15,9 +7,7 @@
    (mouse-in-window-p :default nil)
    (channel0 :default (flm:vec2))))
 
-
 (defmethod fl:on-component-initialize ((self shader-sweep))
-  ;; Find the mesh-renderer on my actor.
   (setf (mesh-rend self) (fl:actor-component-by-type (fl:actor self) 'mesh-renderer)))
 
 (defmethod fl:on-component-update ((self shader-sweep))

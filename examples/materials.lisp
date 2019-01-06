@@ -1,5 +1,63 @@
 (in-package :first-light.example)
 
+;;; damaged-helmet
+
+(fl:define-material damaged-helmet
+  (:shader fl.gpu.user:damaged-helmet
+   :profiles (fl.materials:u-mvp)
+   :uniforms
+   ((:metallic-roughness-values (flm:vec2 1))
+    (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)
+    (:base-color-sampler 'damaged-helmet/color)
+    (:base-color-factor (flm:vec4 1))
+    (:normal-sampler 'damaged-helmet/normal)
+    (:normal-scale 1.0)
+    ;; NOTE: This vector points TOWARDS the light.
+    (:light-direction (flm:vec3 0 1 1))
+    (:light-color (flm:vec3 1))
+    (:occlusion-sampler 'damaged-helmet/ambient-occlusion)
+    (:occlusion-strength 1.0)
+    (:emissive-sampler 'damaged-helmet/emissive)
+    (:emissive-factor 0.3))))
+
+;;; graph-test
+
+(fl:define-material graph-test
+  (:profiles (fl.materials:u-mvpt)
+   :shader fl.gpu.user:graph-test))
+
+(fl:define-material 3d-graph-test
+  (:profiles (fl.materials:u-mvpt)
+   :shader fl.gpu.user:3d-graph-test/1
+   :instances 1000
+   :attributes (:depth :always)
+   :uniforms
+   ((:size 1)
+    (:min 0)
+    (:by 1))))
+
+;;; noise-test
+
+(fl:define-material noise-test
+  (:profiles (fl.materials:u-mvpt)
+   :shader fl.gpu.user:noise-test))
+
+;;; sprite-test
+
+(fl:define-material sprite
+  (:profiles (fl.materials:u-mvp)
+   :shader fl.gpu.user:sprite-test
+   :uniforms
+   ((:tex.image 'sprites)
+    (:tex.sprite 0))
+   :blocks
+   ((:block-name :sprite-sheet
+     :storage-type :buffer
+     :block-alias 'ssbo/specification-data
+     :binding-policy :manual))))
+
+;;; texture-test
+
 (fl:define-material texture-test/1d-gradient
   (:shader fl.gpu.user:unlit-texture-1d
    :profiles (fl.materials:u-mvp)

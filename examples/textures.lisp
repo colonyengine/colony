@@ -1,5 +1,29 @@
 (in-package :first-light.example)
 
+;;; damaged-helmet
+
+(fl:define-texture damaged-helmet/metallic-roughness (:texture-2d)
+  (:data #((:damaged-helmet-textures "metal-roughness.tiff"))))
+
+(fl:define-texture damaged-helmet/color (:texture-2d)
+  (:data #((:damaged-helmet-textures "albedo.tiff"))))
+
+(fl:define-texture damaged-helmet/normal (:texture-2d)
+  (:data #((:damaged-helmet-textures "normal.tiff"))))
+
+(fl:define-texture damaged-helmet/ambient-occlusion (:texture-2d)
+  (:data #((:damaged-helmet-textures "ao.tiff"))))
+
+(fl:define-texture damaged-helmet/emissive (:texture-2d)
+  (:data #((:damaged-helmet-textures "emissive.tiff"))))
+
+;;; sprite-test
+
+(fl:define-texture sprites (:texture-2d)
+  (:data #(:spritesheet)))
+
+;;; texture-test
+
 (fl:define-texture texture-test/1d-gradient (:texture-1d fl.textures:clamp-all-edges)
   (:data #((:texture-test-textures "texture-gradient-1d.tiff"))))
 
