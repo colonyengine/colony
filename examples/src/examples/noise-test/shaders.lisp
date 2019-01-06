@@ -113,74 +113,74 @@
   (let ((noise (vec3 (fl.gpu.noise:cubist (vec3 (* 10 uv) time) (vec2 0 1.0)))))
     (vec4 noise 1)))
 
-(define-shader noise-test (:version 430)
+(define-shader noise-test ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/frag :vec2)))
 
-(define-shader noise-test/perlin-3d (:version 430)
+(define-shader noise-test/perlin-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/perlin-3d/frag :vec2)))
 
-(define-shader noise-test/perlin-surflet-3d (:version 430)
+(define-shader noise-test/perlin-surflet-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/perlin-surflet-3d/frag :vec2)))
 
-(define-shader noise-test/perlin-improved-3d (:version 430)
+(define-shader noise-test/perlin-improved-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/perlin-improved-3d/frag :vec2)))
 
-(define-shader noise-test/perlin-4d (:version 430)
+(define-shader noise-test/perlin-4d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/perlin-4d/frag :vec2)))
 
-(define-shader noise-test/cellular-3d (:version 430)
+(define-shader noise-test/cellular-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/cellular-3d/frag :vec2)))
 
-(define-shader noise-test/cellular-fast-3d (:version 430)
+(define-shader noise-test/cellular-fast-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/cellular-fast-3d/frag :vec2)))
 
-(define-shader noise-test/hermite-3d (:version 430)
+(define-shader noise-test/hermite-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/hermite-3d/frag :vec2)))
 
-(define-shader noise-test/simplex-perlin-3d (:version 430)
+(define-shader noise-test/simplex-perlin-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/simplex-perlin-3d/frag :vec2)))
 
-(define-shader noise-test/simplex-cellular-3d (:version 430)
+(define-shader noise-test/simplex-cellular-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/simplex-cellular-3d/frag :vec2)))
 
-(define-shader noise-test/simplex-polkadot-3d (:version 430)
+(define-shader noise-test/simplex-polkadot-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/simplex-polkadot-3d/frag :vec2)))
 
-(define-shader noise-test/value-3d (:version 430)
+(define-shader noise-test/value-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/value-3d/frag :vec2)))
 
-(define-shader noise-test/value-4d (:version 430)
+(define-shader noise-test/value-4d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/value-4d/frag :vec2)))
 
-(define-shader noise-test/value-hermite-3d (:version 430)
+(define-shader noise-test/value-hermite-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/value-hermite-3d/frag :vec2)))
 
-(define-shader noise-test/value-perlin-3d (:version 430)
+(define-shader noise-test/value-perlin-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/value-perlin-3d/frag :vec2)))
 
-(define-shader noise-test/polkadot-3d (:version 430)
+(define-shader noise-test/polkadot-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/polkadot-3d/frag :vec2)))
 
-(define-shader noise-test/polkadot-box-3d (:version 430)
+(define-shader noise-test/polkadot-box-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/polkadot-box-3d/frag :vec2)))
 
-(define-shader noise-test/cubist-3d (:version 430)
+(define-shader noise-test/cubist-3d ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise-test/cubist-3d/frag :vec2)))

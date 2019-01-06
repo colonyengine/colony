@@ -45,7 +45,7 @@
   (let ((color (texture (image tex) uv)))
     color))
 
-(define-shader sprite-test (:version 430 :primitive :points)
+(define-shader sprite-test (:primitive :points)
   (:vertex (sprite/vert))
   (:geometry (sprite/geom))
   (:fragment (sprite/frag :vec2)))

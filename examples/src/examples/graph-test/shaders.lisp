@@ -14,7 +14,7 @@
      (vec4 1 1 1 0.02)
      10)))
 
-(define-shader graph-test (:version 430)
+(define-shader graph-test ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (graph-test/frag :vec2)))
 
@@ -108,10 +108,10 @@
           (fl.gpu.sdf:dist/circle (- (* uv 2 scale) (vec2 scale))
                                   scale)))))
 
-(define-shader 3d-graph-test/1 (:version 430)
+(define-shader 3d-graph-test/1 ()
   (:vertex (3d-graph-test/vert1 mesh-attrs))
   (:fragment (3d-graph-test/frag :vec2 :vec4)))
 
-(define-shader 3d-graph-test/2 (:version 430)
+(define-shader 3d-graph-test/2 ()
   (:vertex (3d-graph-test/vert2 mesh-attrs))
   (:fragment (3d-graph-test/frag :vec2 :vec4)))
