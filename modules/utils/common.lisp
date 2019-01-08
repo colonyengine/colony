@@ -104,6 +104,16 @@ Alexandria's version in that this also works for vectors or hybrid sequences."
             :collect value)
       (error "~a is not a property list." plist)))
 
+
+(defun plist->hash (plist &rest args)
+  "Convert `PLIST` to a hash table."
+  (if (plist-p plist)
+      (let ((table (apply #'make-hash-table args)))
+        (loop :for (key value) :on plist :by #'cddr
+              :do (setf (gethash key table) value))
+        table)
+      (error "~a is not a property list." plist)))
+
 ;;; Hash tables
 
 (defmacro do-hash ((key value table &optional result) &body body)

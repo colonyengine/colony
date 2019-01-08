@@ -13,12 +13,18 @@
            #:zoom-camera
            #:find-active-camera
            #:compute-camera-view)
+  ;; action
+  (:export #:action
+           #:action-list
+           #:sprite-animate)
   ;; mesh
   (:export #:mesh)
-  ;; mesh-renderer
-  (:export #:mesh-renderer
+  ;; render
+  (:export #:render
            #:material
            #:draw-mesh)
+  ;; sprite
+  (:export #:sprite)
   ;; transform
   (:export #:transform
            #:transform-add-child

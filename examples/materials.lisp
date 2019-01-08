@@ -46,14 +46,13 @@
 
 (fl:define-material sprite
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.user:sprite-test
+   :shader fl.gpu.sprite:sprite
    :uniforms
-   ((:tex.image 'sprites)
-    (:tex.sprite 0))
+   ((:sprite.sampler 'sprites))
    :blocks
-   ((:block-name :sprite-sheet
+   ((:block-name :spritesheet
      :storage-type :buffer
-     :block-alias 'ssbo/specification-data
+     :block-alias :spritesheet
      :binding-policy :manual))))
 
 ;;; texture-test

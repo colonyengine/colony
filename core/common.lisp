@@ -75,16 +75,15 @@ NOTE: The first entry in TEST-FN-LIST is the test function for HT itself."
         :for i :below keylen
         :for lastp = (= i (1- keylen))
         :with current-ht = ht
-        :do
-           (unless (nth-value 1 (gethash key current-ht))
-             ;; If the key doesn't exist, we make a new hash table and store it at the key UNLESS it
-             ;; is the last entry, in which case we do nothing.
-             (unless lastp
-               (setf (gethash key current-ht)
-                     (fl.util:dict (fdefinition test-fn)))))
+        :do (unless (nth-value 1 (gethash key current-ht))
+              ;; If the key doesn't exist, we make a new hash table and store it at the key UNLESS it
+              ;; is the last entry, in which case we do nothing.
+              (unless lastp
+                (setf (gethash key current-ht)
+                      (fl.util:dict (fdefinition test-fn)))))
 
-           ;; The key is potentially newly minted.
-           (setf current-ht (gethash key current-ht)))
+            ;; The key is potentially newly minted.
+            (setf current-ht (gethash key current-ht)))
   ht)
 
 (fl.util:define-constant +sampler-type->texture-type+
