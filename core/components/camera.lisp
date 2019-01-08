@@ -11,16 +11,18 @@
    (zoom :default 1)
    (transform :default nil)))
 
-(defmethod on-component-initialize ((self camera))
-  (with-accessors ((context context) (actor actor) (mode mode) (transform transform)) self
-    (make-projection self mode)
-    (setf transform (actor-component-by-type actor 'transform))
-    (push self (cameras (core-state context)))))
-
-(defmethod on-component-destroy ((self camera))
-  (with-accessors ((context context)) self
-    (fl.util:deletef (cameras (core-state context)) self)
-    (setf (active-camera context) nil)))
+(defun correct-camera-transform (camera)
+  (with-accessors ((actor actor) (mode mode) (transform transform)) camera
+    (when (flm:zero-p (current (translation transform)))
+      (let ((translation (ecase mode
+                           (:orthographic (flm:vec3 0 0 1))
+                           (:perspective (flm:vec3 0 0 50)))))
+        (translate transform translation)
+        (v:warn :fl.comp.camera
+                "Camera ~a was attached to an actor without a translation ~
+                 transform.~%~
+                 Using a sane default value for ~(~a~): ~s."
+                (id actor) mode (flm:get-array translation))))))
 
 (defmethod make-projection (camera (mode (eql :perspective)))
   (with-accessors ((context context) (zoom zoom) (proj projection) (near clip-near) (far clip-far)
@@ -59,3 +61,17 @@
     (with-accessors ((zoom zoom) (mode mode)) camera
       (setf zoom (fl.util:clamp (+ zoom (/ direction 2)) 1 10))
       (make-projection mode camera))))
+
+;;; Component event hooks
+
+(defmethod on-component-initialize ((self camera))
+  (with-accessors ((context context) (actor actor) (mode mode) (transform transform)) self
+    (setf transform (actor-component-by-type actor 'transform))
+    (correct-camera-transform self)
+    (make-projection self mode)
+    (push self (cameras (core-state context)))))
+
+(defmethod on-component-destroy ((self camera))
+  (with-accessors ((context context)) self
+    (fl.util:deletef (cameras (core-state context)) self)
+    (setf (active-camera context) nil)))

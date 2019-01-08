@@ -4,8 +4,7 @@
 
 (fl:define-scene damaged-helmet ()
   (@camera
-   ((fl.comp:transform :translate (flm:vec3 0 0 50))
-    (fl.comp:camera :active-p t
+   ((fl.comp:camera :active-p t
                     :mode :perspective
                     :zoom 10)))
   (@damaged-helmet
@@ -19,8 +18,7 @@
 
 (fl:define-scene geometric-volumes ()
   (@camera
-   ((fl.comp:transform :translate (flm:vec3 0 0 50))
-    (fl.comp:camera :active-p t
+   ((fl.comp:camera :active-p t
                     :mode :perspective)))
   (@plane
    ((fl.comp:transform :rotate/inc (flm:vec3 1)
@@ -56,8 +54,7 @@
 
 (fl:define-scene graph-test (:context context)
   (@camera
-   ((fl.comp:transform :translate (flm:vec3 0 0.01 1))
-    (fl.comp:camera :active-p t
+   ((fl.comp:camera :active-p t
                     :mode :orthographic)))
   (@graph
    ((fl.comp:transform :scale (flm:vec3 (/ (fl:option context :window-width) 2)
@@ -101,19 +98,17 @@
 (fl:define-scene isometric-view-test ()
   ;; The camera is specified in this specific coordinate hiearchy because we
   ;; need the rotations to compose in a very specific order.
-  (@isocam-frame
-   ((fl.comp:transform :rotate/inc (flm:vec3)))
-   (@isocam-45
-    ((fl.comp:transform :rotate (flm:vec3 0 0 (- (/ pi 4.0)))))
-    (@isocam-35.264
-     ((fl.comp:transform :rotate (flm:vec3 (- (atan (/ (sqrt 2.0)))) 0 0)))
-     (@camera
-      ;; translate down y axis, rotate to look at origin again.
-      ((fl.comp:transform :translate (flm:vec3 0 -5 0)
-                          :rotate (flm:vec3 (+ (/ pi 2.0)) 0 0))
-       (fl.comp:camera :active-p t
-                       :mode :orthographic
-                       :zoom 100))))))
+  (@isocam-45
+   ((fl.comp:transform :rotate (flm:vec3 0 0 (- (/ pi 4.0)))))
+   (@isocam-35.264
+    ((fl.comp:transform :rotate (flm:vec3 (- (atan (/ (sqrt 2.0)))) 0 0)))
+    (@camera
+     ;; translate down y axis, rotate to look at origin again.
+     ((fl.comp:transform :translate (flm:vec3 0 -5 0)
+                         :rotate (flm:vec3 (+ (/ pi 2.0)) 0 0))
+      (fl.comp:camera :active-p t
+                      :mode :orthographic
+                      :zoom 100)))))
   (@plane1
    ((fl.comp:transform :translate (flm:vec3)
                        :rotate/inc (flm:vec3 (/ pi 2) (/ pi 2) (/ pi 2))
@@ -131,8 +126,7 @@
 
 (fl:define-scene noise-test ()
   (@camera
-   ((fl.comp:transform :translate (flm:vec3 0 0 1))
-    (fl.comp:camera :active-p t
+   ((fl.comp:camera :active-p t
                     :mode :orthographic)))
   (@perlin-3d
    ((fl.comp:transform :translate (flm:vec3 -540 202.5 0)
@@ -258,8 +252,7 @@
 
 (fl:define-scene sprite-test ()
   (@camera
-   ((fl.comp:transform :translate (flm:vec3 0 0 1))
-    (fl.comp:camera :active-p t
+   ((fl.comp:camera :active-p t
                     :mode :orthographic)))
   (@ship
    ((fl.comp:transform :rotate (flm:vec3 0 0 (/ pi -2))
@@ -285,8 +278,7 @@
 
 (fl:define-scene sprite-test/2 ()
   (@camera
-   ((fl.comp:transform :translate (flm:vec3 0 0 1))
-    (fl.comp:camera :active-p t
+   ((fl.comp:camera :active-p t
                     :mode :orthographic)))
   (@planet
    ((fl.comp:transform :scale (flm:vec3 2))
