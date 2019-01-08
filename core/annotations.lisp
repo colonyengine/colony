@@ -36,7 +36,10 @@
                (error "Material override: :uniforms entries must have a length of 2 ~A~%" uniforms))
 
              (loop :for (uniform-name value) :in uniforms
-                   :do (setf (mat-uniform-ref copy-mat uniform-name) value)))
+                   :do (setf (mat-uniform-ref copy-mat uniform-name)
+                             (if (symbolp value)
+                                 (lookup-material value context)
+                                 value))))
 
            ;; and return the newly minted material with all the overrides.
            copy-mat)))
