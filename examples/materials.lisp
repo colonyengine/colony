@@ -42,20 +42,6 @@
   (:profiles (fl.materials:u-mvpt)
    :shader fl.gpu.user:noise-test))
 
-;;; sprite-test
-
-(fl:define-material sprite
-  (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.sprite:sprite
-   :uniforms
-   ((:sprite.sampler 'sprites)
-    (:opacity 1.0))
-   :blocks
-   ((:block-name :spritesheet
-     :storage-type :buffer
-     :block-alias :spritesheet
-     :binding-policy :manual))))
-
 ;;; texture-test
 
 (fl:define-material texture-test/1d-gradient

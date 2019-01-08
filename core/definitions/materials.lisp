@@ -31,8 +31,18 @@
     (:max-intensity (flm:vec4 1))
     (:tex.sampler1 'fl.textures:debug-texture))))
 
-;; NOTE: If there is a problem looking up a material, this is what a material
-;; will become to indicate there is a problem.
+(fl:define-material sprite
+  (:profiles (u-mvp)
+   :shader fl.gpu.sprite:sprite
+   :uniforms
+   ((:sprite.sampler 'fl.textures:debug-texture)
+    (:opacity 1.0))
+   :blocks
+   ((:block-name :spritesheet
+     :storage-type :buffer
+     :block-alias :spritesheet
+     :binding-policy :manual))))
+
 (fl:define-material missing-material
   (:shader fl.gpu.texture:unlit-texture
    :profiles (u-mvp)

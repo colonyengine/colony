@@ -292,7 +292,10 @@
    ((fl.comp:transform :scale (flm:vec3 2))
     (fl.comp:sprite :spec :spritesheet-data
                     :name "planet04")
-    (fl.comp:render :material 'sprite
+    (fl.comp:render :material '(fl.materials:sprite
+                                (fl.util:unique-name '#:sprite)
+                                :uniforms
+                                ((:sprite.sampler sprites)))
                     :mode :sprite)
     (fl.comp:action-list)
     (fl.comp:action :name 'fl.comp::fade-out
