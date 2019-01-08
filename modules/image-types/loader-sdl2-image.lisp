@@ -38,5 +38,6 @@
 
 (defmethod %free-storage ((loader (eql :sdl2-image)) image)
   (with-slots (%surface %data) image
+    (sdl2:free-surface %surface)
     (setf %surface nil
           %data nil)))
