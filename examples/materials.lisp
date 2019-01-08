@@ -48,7 +48,8 @@
   (:profiles (fl.materials:u-mvp)
    :shader fl.gpu.sprite:sprite
    :uniforms
-   ((:sprite.sampler 'sprites))
+   ((:sprite.sampler 'sprites)
+    (:opacity 1.0))
    :blocks
    ((:block-name :spritesheet
      :storage-type :buffer

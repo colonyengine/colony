@@ -283,6 +283,26 @@
                       :duration 0.5
                       :cycle-p t))))))
 
+(fl:define-scene sprite-test/2 ()
+  (@camera
+   ((fl.comp:transform :translate (flm:vec3 0 0 1))
+    (fl.comp:camera :active-p t
+                    :mode :orthographic)))
+  (@planet
+   ((fl.comp:transform :scale (flm:vec3 2))
+    (fl.comp:sprite :spec :spritesheet-data
+                    :name "planet04")
+    (fl.comp:render :material 'sprite
+                    :mode :sprite)
+    (fl.comp:action-list)
+    (fl.comp:action :name 'fl.comp::fade-out
+                    :duration 2
+                    :cycle-p t)
+    (fl.comp:action :name 'fl.comp::rotate
+                    :duration 3
+                    :shape 'flm:bounce-in
+                    :cycle-p t))))
+
 ;;; texture-test
 
 (fl:define-scene texture-test ()

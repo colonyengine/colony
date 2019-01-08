@@ -5,7 +5,8 @@
 
 (defmethod on-component-update ((self action-list))
   (with-accessors ((actions actions)) self
-    (loop :for (name . action) :in (fl.dst:dlist-elements actions)
+    (loop :for (nil . action) :in (fl.dst:dlist-elements actions)
+          :for name = (name action)
           :do (on-action-update action name)
           :when (finished-p action)
             :do (on-action-finish action name)

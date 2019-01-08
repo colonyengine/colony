@@ -41,11 +41,12 @@
 
 (define-function sprite/f ((uv :vec2)
                            &uniform
+                           (opacity :float)
                            (sprite sprite-data))
   (let ((color (texture (sampler sprite) uv)))
     (if (zerop (.a color))
         (discard)
-        color)))
+        (vec4 (.rgb color) opacity))))
 
 (define-shader sprite (:primitive :points)
   (:vertex (sprite/v))
