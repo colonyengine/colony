@@ -78,16 +78,13 @@
                                         :frames 2))
              (render (fl:make-component context
                                         'render
-                                        :material 'sprite
-                                        :mode :sprite))
-             (action-list (fl:make-component context 'fl.comp:action-list))
-             (animation (fl:make-component context
-                                           'action
-                                           :name 'fl.comp::sprite-animate
-                                           :duration 0.25
-                                           :cycle-p t)))
+                                        :material `(fl.materials:sprite
+                                                    ,(fl.util:unique-name '#:sprite)
+                                                    :uniforms
+                                                    ((:sprite.sampler sprites)))
+                                        :mode :sprite)))
         (fl:attach-multiple-components
-         new-actor transform shot-mover sprite render action-list animation)
+         new-actor transform shot-mover sprite render)
         ;; The shot is free in the universe.
         (fl:spawn-actor new-actor)
         ;; This is the method for destroying actors and components. Add to public

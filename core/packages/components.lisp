@@ -24,7 +24,8 @@
            #:material
            #:draw-mesh)
   ;; sprite
-  (:export #:sprite)
+  (:export #:sprite
+           #:update-sprite-index)
   ;; transform
   (:export #:transform
            #:transform-add-child

@@ -1,14 +1,15 @@
 (in-package :first-light.components)
 
-(define-component action-list ()
-  ((actions :default (fl.dst:make-dlist :test #'eq))))
+(define-component actions ()
+  ((manager :default nil)
+   (default-actions :default nil)))
 
-(defmethod on-component-update ((self action-list))
-  (with-accessors ((actions actions)) self
-    (loop :for (nil . action) :in (fl.dst:dlist-elements actions)
-          :for name = (name action)
-          :do (on-action-update action name)
-          :when (finished-p action)
-            :do (on-action-finish action name)
-          :when (blocking-p action)
-            :do (return))))
+;;; Component event hooks
+
+(defmethod on-component-initialize ((self actions))
+  (with-accessors ((actor actor) (manager manager) (default-actions default-actions)) self
+    (setf manager (fl.actions:make-action-manager (actor-component-by-type actor 'render)
+                                                  default-actions))))
+
+(defmethod on-component-update ((self actions))
+  (fl.actions:process-actions (manager self)))

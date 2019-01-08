@@ -20,4 +20,5 @@
            #:insert-dlist-node
            #:make-dlist
            #:remove-dlist-node
-           #:remove-dlist-nodes))
+           #:remove-dlist-nodes
+           #:update-dlist-node-key))

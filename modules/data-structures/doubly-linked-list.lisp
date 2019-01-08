@@ -93,6 +93,9 @@ in reverse, from end to start."
     (remove-dlist-node dlist key))
   dlist)
 
+(defun update-dlist-node-key (node new-key)
+  (setf (dlist-node-key node) new-key))
+
 (defun dlist-elements (dlist)
   "Get an association list of node keys and values of DLIST."
   (loop :for node = (dlist-head dlist) :then (dlist-node-next node)

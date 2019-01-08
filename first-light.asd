@@ -40,6 +40,7 @@
      (:file "textures")
      (:file "annotations")
      (:file "components")
+     (:file "actions")
      (:file "api")))
    (:file "common")
    (:file "resource")
@@ -75,17 +76,22 @@
    (:file "engine")
    (:file "deploy")
    (:file "annotations")
+   (:file "action-manager")
    (:module "components"
     :components
     ((:file "transform")
      (:file "action-list")
-     (:file "action")
      (:file "camera")
      (:file "camera-following")
      (:file "camera-tracking")
      (:file "mesh")
      (:file "render")
      (:file "sprite")))
+   (:module "actions"
+    :components
+    ((:file "fade")
+     (:file "rotate")
+     (:file "sprite-animate")))
    (:module "definitions"
     :components
     ((:file "graphs")

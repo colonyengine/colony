@@ -262,19 +262,24 @@
    (@ship-body
     ((fl.comp:sprite :spec :spritesheet-data
                      :name "ship29")
-     (fl.comp:render :material 'sprite
+     (fl.comp:render :material `(fl.materials:sprite
+                                 ,(fl.util:unique-name '#:sprite)
+                                 :uniforms
+                                 ((:sprite.sampler sprites)))
                      :mode :sprite))
     (@exhaust
      ((fl.comp:transform :translate (flm:vec3 0 -140 0))
       (fl.comp:sprite :spec :spritesheet-data
                       :name "exhaust03-01"
                       :frames 8)
-      (fl.comp:render :material 'sprite
+      (fl.comp:render :material `(fl.materials:sprite
+                                  ,(fl.util:unique-name '#:sprite)
+                                  :uniforms
+                                  ((:sprite.sampler sprites)))
                       :mode :sprite)
-      (fl.comp:action-list)
-      (fl.comp:action :name 'fl.comp:sprite-animate
-                      :duration 0.5
-                      :cycle-p t))))))
+      (fl.comp::actions :default-actions '((:type fl.actions:sprite-animate
+                                            :duration 0.5
+                                            :repeat-p t))))))))
 
 (fl:define-scene sprite-test/2 ()
   (@camera
@@ -284,19 +289,17 @@
    ((fl.comp:transform :scale (flm:vec3 2))
     (fl.comp:sprite :spec :spritesheet-data
                     :name "planet04")
-    (fl.comp:render :material '(fl.materials:sprite
-                                (fl.util:unique-name '#:sprite)
+    (fl.comp:render :material `(fl.materials:sprite
+                                ,(fl.util:unique-name '#:sprite)
                                 :uniforms
                                 ((:sprite.sampler sprites)))
                     :mode :sprite)
-    (fl.comp:action-list)
-    (fl.comp:action :name 'fl.comp::fade-out
-                    :duration 2
-                    :cycle-p t)
-    (fl.comp:action :name 'fl.comp::rotate
-                    :duration 3
-                    :shape 'flm:bounce-in
-                    :cycle-p t))))
+    (fl.comp::actions :default-actions '((:type fl.actions:fade-out
+                                          :duration 2
+                                          :repeat-p t)
+                                         (:type fl.actions:rotate
+                                          :duration 3
+                                          :repeat-p t))))))
 
 ;;; texture-test
 

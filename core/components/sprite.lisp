@@ -50,6 +50,11 @@
     (fl.gpu:bind-buffer (fl.gpu:buffer-name %buffer) 1)
     (write-spritesheet-buffer spritesheet)))
 
+(defun update-sprite-index (sprite step)
+  (with-slots (%index %initial-index %frames) sprite
+    (let ((max (1- (+ %initial-index %frames))))
+      (setf %index (floor (fl.util:map-domain 0 1 %initial-index max step))))))
+
 (defun draw-sprite (sprite &optional count)
   (with-slots (%index %spritesheet) sprite
     (with-slots (%geometry) %spritesheet
