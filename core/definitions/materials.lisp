@@ -37,4 +37,4 @@
   (:shader fl.gpu.texture:unlit-texture
    :profiles (u-mvp)
    :uniforms
-   ((:tex.sampler1 'fl.textures:missing-texture))))
+   ((:tex.sampler1 'fl.textures:debug-texture))))

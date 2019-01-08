@@ -28,6 +28,3 @@
            ((:core :texture) "debug-8.tiff")
            ((:core :texture) "debug-9.tiff")
            ((:core :texture) "debug-10.tiff"))))
-
-(define-texture missing-texture (:texture-2d clamp-all-edges)
-  (:data #(((:core :texture) "missing.tiff"))))

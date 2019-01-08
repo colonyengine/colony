@@ -10,7 +10,6 @@
            #:framebuffer)
   ;; textures
   (:export #:debug-texture
-           #:missing-texture
            ;; TODO: Exploratory framebuffer support
            #:framebuffer-color
            #:framebuffer-depth
