@@ -288,17 +288,16 @@
   (@planet
    ((fl.comp:transform :scale (flm:vec3 2))
     (fl.comp:sprite :spec :spritesheet-data
-                    :name "planet04")
+                    :name "planet04"
+                    :frames 7)
     (fl.comp:render :material `(fl.materials:sprite
                                 ,(fl.util:unique-name '#:sprite)
                                 :uniforms
                                 ((:sprite.sampler sprites)))
                     :mode :sprite)
-    (fl.comp::actions :default-actions '((:type fl.actions:fade-out
-                                          :duration 2
-                                          :repeat-p t)
-                                         (:type fl.actions:rotate
-                                          :duration 3
+    (fl.comp::actions :default-actions '((:type fl.actions:rotate
+                                          :duration 4
+                                          :shape flm:bounce-in
                                           :repeat-p t))))))
 
 ;;; texture-test
