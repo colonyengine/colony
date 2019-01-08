@@ -142,8 +142,7 @@
                           (let ((context (context core-state)))
                             (symbol-macrolet ((camera (active-camera context)))
                               (unless (and camera (fl.comp::active-p camera))
-                                (let ((new-camera (fl.comp:find-active-camera context)))
-                                  (setf camera new-camera)))
+                                (setf camera (fl.comp:find-active-camera context)))
                               (values :identity-policy
                                       camera)))))
                     (action #'fl.comp:compute-camera-view)
