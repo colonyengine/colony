@@ -78,11 +78,14 @@
    (:module "components"
     :components
     ((:file "transform")
+     (:file "action-list")
+     (:file "action")
      (:file "camera")
      (:file "camera-following")
      (:file "camera-tracking")
      (:file "mesh")
-     (:file "mesh-renderer")))
+     (:file "render")
+     (:file "sprite")))
    (:module "definitions"
     :components
     ((:file "graphs")

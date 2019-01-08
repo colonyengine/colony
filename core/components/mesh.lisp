@@ -17,9 +17,9 @@
    ;; raw symbols, no quotes or #' or (function eq) allowed.
    (:cached-mesh-data equalp eql)))
 
-(defmethod draw-mesh ((mesh mesh) &key (instance-count 1))
+(defun draw-mesh (mesh &optional count)
   (dolist (primitive (primitives mesh))
-    (funcall (fl.geom:draw-func primitive) :instance-count instance-count)))
+    (funcall (fl.geom:draw-func primitive) :instance-count count)))
 
 (defmethod on-component-initialize ((self mesh))
   (with-accessors ((context context) (location location) (id id) (primitives primitives)) self

@@ -213,11 +213,14 @@
   (execution-order all-unknown-types
                    ((unknown-types))) ;; (unknown-types) is special token
 
-  (execution-order meshes
-                   (fl.comp:mesh -> fl.comp:mesh-renderer))
+  (execution-order actions
+                   (fl.comp:action -> fl.comp:action-list))
+
+  (execution-order drawable
+                   (fl.comp:mesh -> fl.comp:sprite -> fl.comp:render))
 
   (execution-order core
-                   (fl.comp:transform -> (splice meshes))))
+                   (fl.comp:transform -> (splice actions) -> (splice drawable))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project graphs (that use the above)

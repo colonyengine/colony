@@ -55,6 +55,7 @@
            #:noop
            #:plist-p
            #:plist-values
+           #:plist->hash
            #:radians->degrees
            #:resolve-system-path
            #:safe-read-file-form

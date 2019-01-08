@@ -15,7 +15,6 @@
    (:file "shaders-damaged-helmet")
    (:file "shaders-graph-test")
    (:file "shaders-noise-test")
-   (:file "shaders-sprite-test")
    (:file "shaders-texture-test")
    (:file "materials")
    (:file "scenes")

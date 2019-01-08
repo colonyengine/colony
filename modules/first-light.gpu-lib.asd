@@ -64,4 +64,8 @@
    (:module "texture"
     :components
     ((:file "package")
-     (:file "texture")))))
+     (:file "texture")))
+   (:module "sprite"
+    :components
+    ((:file "package")
+     (:file "sprite")))))
