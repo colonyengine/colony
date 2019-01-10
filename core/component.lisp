@@ -45,14 +45,12 @@ DEFINE-COMPONENT form."
     (error "Could not qualify the component type ~s." component-type)))
 
 (defun %get-computed-component-precedence-list (component-type)
-  ;; NOTE: We may very well be asking for classes that have not been finalized because we haven't
-  ;; yet (or might not ever) call make-instance on them. Hence we will compute right now the class
-  ;; precedence for it.
-  ;; TODO: Fix this when FIND-CLASS returns NIL too.
-  (loop :for class :in (c2mop:compute-class-precedence-list (find-class component-type nil))
-        :for name = (class-name class)
-        :until (eq name 'component)
-        :collect name))
+  (fl.util:when-let ((class (find-class component-type nil)))
+    (loop :for class :in (c2mop:compute-class-precedence-list class)
+          :for name = (class-name class)
+          :until (eq name 'component)
+          :when (subtypep name 'component)
+            :collect name)))
 
 (defun component/preinit->init (component)
   (fl.util:when-let ((thunk (initializer-thunk component)))
