@@ -53,12 +53,10 @@ supplied in real seconds, how long the thing has yet to live."))
 
 (defun eql/package-relaxed (obj1 obj2)
   (cond
-    ((eql obj1 obj2) t) ; It succeeded? Oh good. Return quickly.
-    ((and (symbolp obj1) (symbolp obj2)) ; Otherwise do a slower check.
+    ((eql obj1 obj2) t)
+    ((and (symbolp obj1) (symbolp obj2))
      (string= (symbol-name obj1)
-              (symbol-name obj2)))
-    (t ; Hrm, sorry. It didn't EQL match,
-     nil)))
+              (symbol-name obj2)))))
 
 (defun ensure-nested-hash-table (ht test-fn-list key-list)
   "Walk down the nested hash table HT ensuring that we have the correct number of hash tables
