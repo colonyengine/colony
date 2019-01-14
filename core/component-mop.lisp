@@ -335,6 +335,22 @@
                              :from-end t))))))
 
 
+(defun compute-component-initargs (component-type)
+  (let* ((class-args (fl.util:mappend #'c2mop:slot-definition-initargs
+                                      (c2mop:class-slots (find-class component-type))))
+         (instance-lambda-list (c2mop:method-lambda-list
+                                (first
+                                 (c2mop:compute-applicable-methods-using-classes
+                                  #'reinitialize-instance
+                                  (list (find-class component-type))))))
+         (instance-args (mapcar
+                         (lambda (x)
+                           (fl.util:make-keyword
+                            (car (fl.util:ensure-list x))))
+                         (rest (member '&key instance-lambda-list)))))
+    (union class-args instance-args)))
+
+
 ;; Ok, this processes a LIST of dslotds that can all be different types and are
 ;; melded together into a single effective slot.
 (defmethod c2mop:compute-effective-slot-definition ((class component-class)
