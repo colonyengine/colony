@@ -16,6 +16,7 @@
                  #:lerp
                  #:make-keyword
                  #:map-product
+                 #:mappend
                  #:once-only
                  #:symbolicate
                  #:when-let
