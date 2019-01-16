@@ -12,6 +12,7 @@
    #:attach-multiple-components
    #:cameras
    #:component
+   #:compute-component-initargs
    #:context
    #:copy-material
    #:core-state
@@ -34,6 +35,7 @@
    #:frame-manager
    #:frame-time
    #:general-data-format-descriptor
+   #:get-computed-component-precedence-list
    #:id
    #:input-data
    #:instances

@@ -44,7 +44,7 @@ DEFINE-COMPONENT form."
     (apply #'make-instance qualified-type :type qualified-type :context context initargs)
     (error "Could not qualify the component type ~s." component-type)))
 
-(defun %get-computed-component-precedence-list (component-type)
+(defun get-computed-component-precedence-list (component-type)
   (fl.util:when-let ((class (find-class component-type nil)))
     (loop :for class :in (c2mop:compute-class-precedence-list class)
           :for name = (class-name class)
