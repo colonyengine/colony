@@ -112,6 +112,9 @@
                        (fl.comp::interpolate-transforms core-state)))
                     (transition make-active-camera-view))
 
+        ;; NOTE: This flow-state is invoked deep inside of TICK in the
+        ;; flow-state physics loop. Its purpose is to be called every time the
+        ;; physics has been actually computed.
         (flow-state protocol-physics-update :reset ()
                     (selector
                         (lambda (core-state)
@@ -125,6 +128,9 @@
         ;; collisions and then inform the recipients of those
         ;; collisions as desired in the boundary regions components
         ;; (yet to be written).
+	;;
+	;; NOTE: This flow-state is invoked deep inside of TICK, hence no
+	;; transitions in and out.
         (flow-state physics-collisions :reset ()
                     (selector nil)
                     (action nil)
