@@ -178,4 +178,10 @@ never be changed at runtime.")
         :for ((kind data) found-p) = (multiple-value-list (fl.dst:qpop queue))
         :while found-p
         :do (ecase kind
-              (:shader-recompilation (fl.gpu:recompile-shaders data)))))
+              ;; NOTE: Look at function GENERATE-SHADER-MODIFY-HOOK for how we
+              ;; put data into the recompilation queue that this case in the
+              ;; ecase handles.
+              (:shader-recompilation (fl.gpu:recompile-shaders data))
+              ;; NOTE: You will need a similar one for putting prefab
+              ;; recompilation tasks into the recompilation queue too.
+              (:prefab-recompilation 'put-your-function-here))))
