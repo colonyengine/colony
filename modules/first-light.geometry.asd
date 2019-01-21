@@ -13,6 +13,7 @@
   :encoding :utf-8
   :depends-on (#:jsown
                #:cl-opengl
+               #:defpackage-plus
                #:first-light.util
                #:first-light.binary-formats)
   :pathname "geometry"

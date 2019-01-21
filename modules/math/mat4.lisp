@@ -2,11 +2,11 @@
 
 ;;; constants
 
-(fl.util:define-constant +zero-mat4+
+(u:define-constant +zero-mat4+
     (%mat4 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0 0f0)
   :test #'equalp)
 
-(fl.util:define-constant +id-mat4+
+(u:define-constant +id-mat4+
     (%mat4 1f0 0f0 0f0 0f0 0f0 1f0 0f0 0f0 0f0 0f0 1f0 0f0 0f0 0f0 0f0 1f0)
   :test #'equalp)
 
@@ -257,22 +257,22 @@
 
 (defspecialization (clamp :inline t) ((in mat4) (min real) (max real) (out mat4)) mat4
   (with-mat4 ((m in) (o out))
-    (psetf o.00 (float (fl.util:clamp m.00 min max) 1f0)
-           o.01 (float (fl.util:clamp m.01 min max) 1f0)
-           o.02 (float (fl.util:clamp m.02 min max) 1f0)
-           o.03 (float (fl.util:clamp m.03 min max) 1f0)
-           o.10 (float (fl.util:clamp m.10 min max) 1f0)
-           o.11 (float (fl.util:clamp m.11 min max) 1f0)
-           o.12 (float (fl.util:clamp m.12 min max) 1f0)
-           o.13 (float (fl.util:clamp m.13 min max) 1f0)
-           o.20 (float (fl.util:clamp m.20 min max) 1f0)
-           o.21 (float (fl.util:clamp m.21 min max) 1f0)
-           o.22 (float (fl.util:clamp m.22 min max) 1f0)
-           o.23 (float (fl.util:clamp m.23 min max) 1f0)
-           o.30 (float (fl.util:clamp m.30 min max) 1f0)
-           o.31 (float (fl.util:clamp m.31 min max) 1f0)
-           o.32 (float (fl.util:clamp m.32 min max) 1f0)
-           o.33 (float (fl.util:clamp m.33 min max) 1f0)))
+    (psetf o.00 (float (u:clamp m.00 min max) 1f0)
+           o.01 (float (u:clamp m.01 min max) 1f0)
+           o.02 (float (u:clamp m.02 min max) 1f0)
+           o.03 (float (u:clamp m.03 min max) 1f0)
+           o.10 (float (u:clamp m.10 min max) 1f0)
+           o.11 (float (u:clamp m.11 min max) 1f0)
+           o.12 (float (u:clamp m.12 min max) 1f0)
+           o.13 (float (u:clamp m.13 min max) 1f0)
+           o.20 (float (u:clamp m.20 min max) 1f0)
+           o.21 (float (u:clamp m.21 min max) 1f0)
+           o.22 (float (u:clamp m.22 min max) 1f0)
+           o.23 (float (u:clamp m.23 min max) 1f0)
+           o.30 (float (u:clamp m.30 min max) 1f0)
+           o.31 (float (u:clamp m.31 min max) 1f0)
+           o.32 (float (u:clamp m.32 min max) 1f0)
+           o.33 (float (u:clamp m.33 min max) 1f0)))
   out)
 
 (defspecialization (clamp :inline t) ((in mat4) (min real) (max real) (out null)) mat4
@@ -761,7 +761,7 @@
   (with-mat4 ((o (id out)))
     (with-vec3 ((e eye) (s target) (u up))
       (macrolet ((%normalize (place-x x place-y y place-z z)
-                   (fl.util:once-only (x y z)
+                   (u:once-only (x y z)
                      `(let ((denom (cl:sqrt (cl:+ (cl:* ,x ,x) (cl:* ,y ,y) (cl:* ,z ,z)))))
                         (psetf ,place-x (cl:/ ,x denom)
                                ,place-y (cl:/ ,y denom)

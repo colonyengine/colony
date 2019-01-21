@@ -2,6 +2,7 @@
 
 (defpackage+ #:first-light.materials
   (:nicknames #:fl.materials)
+  (:local-nicknames (#:m #:fl.math))
   (:use #:cl)
   ;; helper functions
   (:export #:total-time/uniform)

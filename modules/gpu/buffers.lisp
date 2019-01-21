@@ -30,10 +30,10 @@
 
 (defun find-buffer (buffer-name)
   (let ((buffer-table (fl.data:get 'buffers)))
-    (fl.util:href buffer-table buffer-name)))
+    (u:href buffer-table buffer-name)))
 
 (defun create-buffer (buffer-name block-alias)
-  (fl.util:if-let ((block (find-block block-alias)))
+  (u:if-let ((block (find-block block-alias)))
     (let* ((buffer-table (fl.data:get 'buffers))
            (type (block-type->buffer-type (block-type block)))
            (target (buffer-type->target type))
@@ -41,11 +41,11 @@
       (with-slots (%id %layout) buffer
         (%gl:bind-buffer target %id)
         (%gl:buffer-data target (size %layout) (cffi:null-pointer) :static-draw)
-        (setf (fl.util:href buffer-table buffer-name) buffer)))
+        (setf (u:href buffer-table buffer-name) buffer)))
     (error "Cannot find the block with alias ~s when attempting to create a buffer." block-alias)))
 
 (defun bind-buffer (buffer-name binding-point)
-  (fl.util:if-let ((buffer (find-buffer buffer-name)))
+  (u:if-let ((buffer (find-buffer buffer-name)))
     (with-slots (%target %id) buffer
       (%gl:bind-buffer-base %target binding-point %id)
       (%gl:bind-buffer %target 0))
@@ -73,8 +73,8 @@
                (lambda (x)
                  (typecase x
                    (sequence (replace sv x :start1 i))
-                   ((or flm:vec2 flm:vec3 flm:vec4)
-                    (replace sv (flm:get-array x) :start1 i))
+                   ((or m:vec2 m:vec3 m:vec4)
+                    (replace sv (m:get-array x) :start1 i))
                    (t (setf (aref sv i) x)))
                  (incf i %element-stride))
                value)
@@ -96,8 +96,8 @@
                          :for k :by rows
                          :for matrix = (etypecase x
                                          (sequence x)
-                                         ((or flm:mat2 flm:mat3 flm:mat4)
-                                          (flm:get-array x)))
+                                         ((or m:mat2 m:mat3 m:mat4)
+                                          (m:get-array x)))
                          :do (replace sv matrix :start1 j :start2 k :end2 (+ k rows)))
                    (incf i (* columns %element-stride)))
                  value)
@@ -105,7 +105,7 @@
 
 (defun write-buffer-path (buffer-name path value)
   (with-slots (%type %id %target %layout) (find-buffer buffer-name)
-    (let ((member (fl.util:href (members %layout) path)))
+    (let ((member (u:href (members %layout) path)))
       (check-type value sequence)
       (gl:bind-buffer %target %id)
       (if (eq (object-type member) :mat)
@@ -122,7 +122,7 @@
 (defun %read-buffer-member/vector (member data count)
   (with-slots (%dimensions %element-stride) member
     (let* ((size (car %dimensions))
-           (func (fl.util:format-symbol :flm "VEC~a" size)))
+           (func (u:format-symbol :m "VEC~a" size)))
       (flet ((make-vector (data index size)
                (let ((args (loop :for i :below size
                                  :collect (aref data (+ index i)))))
@@ -136,7 +136,7 @@
 (defun %read-buffer-member/matrix (member data count)
   (with-slots (%dimensions %element-stride) member
     (destructuring-bind (columns rows) %dimensions
-      (let ((func (fl.util:format-symbol :flm "MAT~d" columns)))
+      (let ((func (u:format-symbol :m "MAT~d" columns)))
         (flet ((make-matrix (data index)
                  (let ((args (loop :repeat columns
                                    :for i :from index :by %element-stride
@@ -172,7 +172,7 @@
 
 (defun read-buffer-path (buffer-name path &optional count)
   (with-slots (%id %target %layout) (find-buffer buffer-name)
-    (let ((member (fl.util:href (members %layout) path)))
+    (let ((member (u:href (members %layout) path)))
       (gl:bind-buffer %target %id)
       (unwind-protect (%read-buffer-member %target member count)
         (gl:bind-buffer %target 0)))))

@@ -2,7 +2,7 @@
 
 ;;; constants
 
-(fl.util:define-constant +zero-vec3+
+(u:define-constant +zero-vec3+
     (%vec3 0f0 0f0 0f0)
   :test #'equalp)
 
@@ -181,9 +181,9 @@
 
 (defspecialization (clamp :inline t) ((in vec3) (min real) (max real) (out vec3)) vec3
   (with-vec3 ((v in) (o out))
-    (psetf o.x (float (fl.util:clamp v.x min max) 1f0)
-           o.y (float (fl.util:clamp v.y min max) 1f0)
-           o.z (float (fl.util:clamp v.z min max) 1f0)))
+    (psetf o.x (float (u:clamp v.x min max) 1f0)
+           o.y (float (u:clamp v.y min max) 1f0)
+           o.z (float (u:clamp v.z min max) 1f0)))
   out)
 
 (defspecialization (clamp :inline t) ((in vec3) (min real) (max real) (out null)) vec3
@@ -362,9 +362,9 @@
 
 (defspecialization (lerp :inline t) ((in1 vec3) (in2 vec3) (factor real) (out vec3)) vec3
   (with-vec3 ((v1 in1) (v2 in2) (o out))
-    (psetf o.x (fl.util:lerp factor v1.x v2.x)
-           o.y (fl.util:lerp factor v1.y v2.y)
-           o.z (fl.util:lerp factor v1.z v2.z)))
+    (psetf o.x (u:lerp factor v1.x v2.x)
+           o.y (u:lerp factor v1.y v2.y)
+           o.z (u:lerp factor v1.z v2.z)))
   out)
 
 (defspecialization (lerp :inline t) ((in1 vec3) (in2 vec3) (factor real) (out null)) vec3
@@ -373,9 +373,9 @@
 
 (defspecialization (radians :inline t) ((in vec3) (out vec3)) vec3
   (with-vec3 ((v in) (o out))
-    (psetf o.x (float (fl.util:degrees->radians v.x) 1f0)
-           o.y (float (fl.util:degrees->radians v.y) 1f0)
-           o.z (float (fl.util:degrees->radians v.z) 1f0)))
+    (psetf o.x (float (u:degrees->radians v.x) 1f0)
+           o.y (float (u:degrees->radians v.y) 1f0)
+           o.z (float (u:degrees->radians v.z) 1f0)))
   out)
 
 (defspecialization (radians :inline t) ((in vec3) (out null)) vec3
@@ -384,9 +384,9 @@
 
 (defspecialization (degrees :inline t) ((in vec3) (out vec3)) vec3
   (with-vec3 ((v in) (o out))
-    (psetf o.x (float (fl.util:radians->degrees v.x) 1f0)
-           o.y (float (fl.util:radians->degrees v.y) 1f0)
-           o.z (float (fl.util:radians->degrees v.z) 1f0)))
+    (psetf o.x (float (u:radians->degrees v.x) 1f0)
+           o.y (float (u:radians->degrees v.y) 1f0)
+           o.z (float (u:radians->degrees v.z) 1f0)))
   out)
 
 (defspecialization (degrees :inline t) ((in vec3) (out null)) vec3

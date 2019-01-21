@@ -10,35 +10,35 @@
   (cons (varjo:name function) (mapcar #'second (varjo.internals:in-args function))))
 
 (defun ensure-function-dependency-tables (spec fn-deps dep-fns)
-  (unless (fl.util:href dep-fns spec)
-    (setf (fl.util:href dep-fns spec) (fl.util:dict #'equal)))
-  (setf (fl.util:href fn-deps spec) (fl.util:dict #'equal)))
+  (unless (u:href dep-fns spec)
+    (setf (u:href dep-fns spec) (u:dict #'equal)))
+  (setf (u:href fn-deps spec) (u:dict #'equal)))
 
 (defun store-function-dependencies (spec dependencies)
   (symbol-macrolet ((fn-deps (fl.data:get 'fn->deps))
                     (dep-fns (fl.data:get 'dep->fns)))
-    (when (fl.util:href fn-deps spec)
-      (fl.util:do-hash-keys (k (fl.util:href fn-deps spec))
-        (fl.util:when-found (dep-key (fl.util:href dep-fns k))
+    (when (u:href fn-deps spec)
+      (u:do-hash-keys (k (u:href fn-deps spec))
+        (u:when-found (dep-key (u:href dep-fns k))
           (remhash spec dep-key))))
     (ensure-function-dependency-tables spec fn-deps dep-fns)
     (dolist (dep dependencies)
       (let ((dep-spec (get-function-spec dep)))
-        (unless (fl.util:href dep-fns dep-spec)
-          (setf (fl.util:href dep-fns dep-spec) (fl.util:dict #'equal)))
-        (fl.util:do-hash-keys (k (fl.util:href dep-fns spec))
-          (setf (fl.util:href fn-deps k dep-spec) dep-spec
-                (fl.util:href dep-fns dep-spec k) k))
-        (setf (fl.util:href fn-deps spec dep-spec) dep-spec
-              (fl.util:href dep-fns dep-spec spec) spec)))))
+        (unless (u:href dep-fns dep-spec)
+          (setf (u:href dep-fns dep-spec) (u:dict #'equal)))
+        (u:do-hash-keys (k (u:href dep-fns spec))
+          (setf (u:href fn-deps k dep-spec) dep-spec
+                (u:href dep-fns dep-spec k) k))
+        (setf (u:href fn-deps spec dep-spec) dep-spec
+              (u:href dep-fns dep-spec spec) spec)))))
 
 (defun compute-outdated-programs (spec)
   (let* ((programs)
          (dep->fns (fl.data:get 'dep->fns))
-         (spec-fns (fl.util:href dep->fns spec)))
+         (spec-fns (u:href dep->fns spec)))
     (maphash
      (lambda (k v)
-       (when (or (fl.util:href spec-fns k)
+       (when (or (u:href spec-fns k)
                  (equal k spec))
          (setf programs (union v programs :test #'equal))))
      (fl.data:get 'stage-fn->programs))
@@ -46,7 +46,7 @@
 
 (defmacro define-function (name args &body body)
   "Define a GPU function."
-  (fl.util:with-unique-names (split-details deps fn spec)
+  (u:with-unique-names (split-details deps fn spec)
     (let ((split-args (varjo.utils:split-arguments args '(&uniform &context))))
       (destructuring-bind (in-args uniforms context) split-args
         `(varjo:with-constant-inject-hook #'lisp-constant->glsl-constant

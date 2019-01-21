@@ -2,11 +2,11 @@
 
 ;;; constants
 
-(fl.util:define-constant +zero-mat2+
+(u:define-constant +zero-mat2+
     (%mat2 0f0 0f0 0f0 0f0)
   :test #'equalp)
 
-(fl.util:define-constant +id-mat2+
+(u:define-constant +id-mat2+
     (%mat2 1f0 0f0 0f0 1f0)
   :test #'equalp)
 
@@ -157,10 +157,10 @@
 
 (defspecialization (clamp :inline t) ((in mat2) (min real) (max real) (out mat2)) mat2
   (with-mat2 ((m in) (o out))
-    (psetf o.00 (float (fl.util:clamp m.00 min max) 1f0)
-           o.01 (float (fl.util:clamp m.01 min max) 1f0)
-           o.10 (float (fl.util:clamp m.10 min max) 1f0)
-           o.11 (float (fl.util:clamp m.11 min max) 1f0)))
+    (psetf o.00 (float (u:clamp m.00 min max) 1f0)
+           o.01 (float (u:clamp m.01 min max) 1f0)
+           o.10 (float (u:clamp m.10 min max) 1f0)
+           o.11 (float (u:clamp m.11 min max) 1f0)))
   out)
 
 (defspecialization (clamp :inline t) ((in mat2) (min real) (max real) (out null)) mat2

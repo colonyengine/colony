@@ -1,7 +1,8 @@
-(in-package :cl-user)
+(in-package :defpackage+-user-1)
 
-(defpackage #:first-light.metadata
+(defpackage+ #:first-light.metadata
   (:nicknames #:fl.data)
+  (:local-nicknames (#:u #:fl.util))
   (:use #:cl)
   (:shadow #:cl
            #:get

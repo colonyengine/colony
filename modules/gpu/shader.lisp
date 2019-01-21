@@ -1,12 +1,12 @@
 (in-package :first-light.gpu)
 
 (defun reset-program-state ()
-  (fl.data:set 'programs (fl.util:dict #'eq))
-  (fl.data:set 'block-bindings (fl.util:dict #'eq
-                                             :uniform (fl.util:dict #'eq)
-                                             :buffer (fl.util:dict #'eq)))
-  (fl.data:set 'block-aliases (fl.util:dict #'equalp))
-  (fl.data:set 'buffers (fl.util:dict #'eq)))
+  (fl.data:set 'programs (u:dict #'eq))
+  (fl.data:set 'block-bindings (u:dict #'eq
+                                       :uniform (u:dict #'eq)
+                                       :buffer (u:dict #'eq)))
+  (fl.data:set 'block-aliases (u:dict #'equalp))
+  (fl.data:set 'buffers (u:dict #'eq)))
 
 (defun enable-dependency-tracking ()
   (fl.data:set 'track-dependencies-p t))
@@ -16,12 +16,12 @@
 
 (defun store-source (program stage)
   (let ((source (varjo:glsl-code stage)))
-    (setf (fl.util:href (source program) (stage-type stage))
+    (setf (u:href (source program) (stage-type stage))
           (subseq source (1+ (position #\newline source)) (- (length source) 2)))))
 
 (defun load-shaders (modify-hook)
   (reset-program-state)
-  (fl.util:do-hash-values (shader-factory (fl.data:get 'shader-definitions))
+  (u:do-hash-values (shader-factory (fl.data:get 'shader-definitions))
     (funcall shader-factory))
   (enable-dependency-tracking)
   (set-modify-hook modify-hook)
@@ -45,9 +45,9 @@
   `(varjo:define-vari-macro ,name ,lambda-list ,@body))
 
 (fl.data:set 'track-dependencies-p nil)
-(fl.data:set 'fn->deps (fl.util:dict #'equal))
-(fl.data:set 'dep->fns (fl.util:dict #'equal))
-(fl.data:set 'stage-fn->programs (fl.util:dict #'equal))
+(fl.data:set 'fn->deps (u:dict #'equal))
+(fl.data:set 'dep->fns (u:dict #'equal))
+(fl.data:set 'stage-fn->programs (u:dict #'equal))
 (fl.data:set 'modify-hook (constantly nil))
-(fl.data:set 'shader-definitions (fl.util:dict #'eq))
+(fl.data:set 'shader-definitions (u:dict #'eq))
 (reset-program-state)

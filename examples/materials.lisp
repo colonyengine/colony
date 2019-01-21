@@ -6,15 +6,15 @@
   (:shader fl.gpu.user:damaged-helmet
    :profiles (fl.materials:u-mvp)
    :uniforms
-   ((:metallic-roughness-values (flm:vec2 1))
+   ((:metallic-roughness-values (m:vec2 1))
     (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)
     (:base-color-sampler 'damaged-helmet/color)
-    (:base-color-factor (flm:vec4 1))
+    (:base-color-factor (m:vec4 1))
     (:normal-sampler 'damaged-helmet/normal)
     (:normal-scale 1.0)
     ;; NOTE: This vector points TOWARDS the light.
-    (:light-direction (flm:vec3 0 1 1))
-    (:light-color (flm:vec3 1))
+    (:light-direction (m:vec3 0 1 1))
+    (:light-color (m:vec3 1))
     (:occlusion-sampler 'damaged-helmet/ambient-occlusion)
     (:occlusion-strength 1.0)
     (:emissive-sampler 'damaged-helmet/emissive)
@@ -49,21 +49,21 @@
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 'texture-test/1d-gradient)
-    (:mix-color (flm:vec4 1)))))
+    (:mix-color (m:vec4 1)))))
 
 (fl:define-material texture-test/2d-wood
   (:shader fl.gpu.texture:unlit-texture
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 'texture-test/2d-wood)
-    (:mix-color (flm:vec4 1)))))
+    (:mix-color (m:vec4 1)))))
 
 (fl:define-material texture-test/3d-testpat
   (:shader fl.gpu.user:unlit-texture-3d
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 'texture-test/3d-testpat)
-    (:mix-color (flm:vec4 1))
+    (:mix-color (m:vec4 1))
     (:uv-z (lambda (context material)
              (declare (ignore material))
              ;; make sin in the range of 0 to 1 for texture coord.
@@ -74,7 +74,7 @@
    :profiles (fl.materials:u-mvpt)
    :uniforms
    ((:tex.sampler1 'texture-test/1d-array-testpat)
-    (:mix-color (flm:vec4 1))
+    (:mix-color (m:vec4 1))
     (:num-layers 4))))
 
 (fl:define-material texture-test/2d-array-testarray
@@ -82,7 +82,7 @@
    :profiles (fl.materials:u-mvpt)
    :uniforms
    ((:tex.sampler1 'texture-test/2d-array-testarray)
-    (:mix-color (flm:vec4 1))
+    (:mix-color (m:vec4 1))
     (:uv-z (lambda (context material)
              (declare (ignore material))
              ;; make sin in the range of 0 to 1 for texture coord.
@@ -95,22 +95,22 @@
    :uniforms
    ;; any old 2d texture here will do since we overwrite it with noise.
    ((:tex.sampler1 'texture-test/2d-wood)
-    (:tex.channel0 (flm:vec2))
-    (:mix-color (flm:vec4 1)))))
+    (:tex.channel0 (m:vec2))
+    (:mix-color (m:vec4 1)))))
 
 (fl:define-material texture-test/testcubemap
   (:shader fl.gpu.user:unlit-texture-cube-map
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 'texture-test/testcubemap)
-    (:mix-color (flm:vec4 1)))))
+    (:mix-color (m:vec4 1)))))
 
 (fl:define-material texture-test/testcubemaparray
   (:shader fl.gpu.user:unlit-texture-cube-map-array
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 'texture-test/testcubemaparray)
-    (:mix-color (flm:vec4 1))
+    (:mix-color (m:vec4 1))
     (:cube-layer (lambda (context material)
                    (declare (ignore material))
                    ;; make sin in the range of 0 to 1 for texture coord.

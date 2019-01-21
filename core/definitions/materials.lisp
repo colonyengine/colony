@@ -13,22 +13,22 @@
    :profiles (u-mvp)
    :uniforms
    ((:tex.sampler1 'fl.textures:debug-texture)
-    (:mix-color (flm:vec4 1)))))
+    (:mix-color (m:vec4 1)))))
 
 (fl:define-material unlit-texture-decal
   (:shader fl.gpu.texture:unlit-texture-decal
    :profiles (u-mvp)
    :uniforms
-   ((:min-intensity (flm:vec4))
-    (:max-intensity (flm:vec4 1))
+   ((:min-intensity (m:vec4))
+    (:max-intensity (m:vec4 1))
     (:tex.sampler1 'fl.textures:debug-texture))))
 
 (fl:define-material unlit-texture-decal-bright
   (:shader fl.gpu.texture:unlit-texture-decal
    :profiles (u-mvp)
    :uniforms
-   ((:min-intensity (flm:vec4 0.1))
-    (:max-intensity (flm:vec4 1))
+   ((:min-intensity (m:vec4 0.1))
+    (:max-intensity (m:vec4 1))
     (:tex.sampler1 'fl.textures:debug-texture))))
 
 (fl:define-material sprite

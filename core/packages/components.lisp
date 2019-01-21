@@ -2,6 +2,8 @@
 
 (defpackage+ #:first-light.components
   (:nicknames #:fl.comp)
+  (:local-nicknames (#:u #:fl.util)
+                    (#:m #:fl.math))
   (:use #:cl #:%first-light)
   ;; camera
   (:export #:camera

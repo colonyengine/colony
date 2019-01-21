@@ -12,6 +12,7 @@
   :source-control (:git "git@github.com:hackertheory/first-light.git")
   :encoding :utf-8
   :depends-on (#:static-vectors
+               #:defpackage-plus
                #:glsl-packing
                #:varjo
                #:cl-opengl

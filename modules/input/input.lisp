@@ -2,9 +2,9 @@
 
 (defclass input-data ()
   ((%gamepad-instances :reader gamepad-instances
-                       :initform (fl.util:dict #'eq))
+                       :initform (u:dict #'eq))
    (%gamepad-ids :accessor gamepad-ids
-                 :initform (fl.util:dict #'eq))
+                 :initform (u:dict #'eq))
    (%detached-gamepads :accessor detached-gamepads
                        :initform nil)
    (%entering :accessor entering
@@ -12,22 +12,22 @@
    (%exiting :accessor exiting
              :initform nil)
    (%states :reader states
-            :initform (fl.util:dict #'equal
-                                    '(:mouse :motion) (make-mouse-motion-state)
-                                    '(:mouse :scroll-horizontal) 0
-                                    '(:mouse :scroll-vertical) 0))))
+            :initform (u:dict #'equal
+                              '(:mouse :motion) (make-mouse-motion-state)
+                              '(:mouse :scroll-horizontal) 0
+                              '(:mouse :scroll-vertical) 0))))
 
 (defun make-input-data ()
   (make-instance 'input-data))
 
 (defmacro event-case ((event) &body handlers)
   `(case (sdl2:get-event-type ,event)
-     ,@(fl.util:collecting
+     ,@(u:collecting
          (dolist (handler handlers)
            (destructuring-bind (type options . body) handler
-             (let ((body (list* `(declare (ignorable ,@(fl.util:plist-values options))) body)))
-               (dolist (type (fl.util:ensure-list type))
-                 (fl.util:when-let ((x (sdl2::expand-handler event type options body)))
+             (let ((body (list* `(declare (ignorable ,@(u:plist-values options))) body)))
+               (dolist (type (u:ensure-list type))
+                 (u:when-let ((x (sdl2::expand-handler event type options body)))
                    (collect x)))))))))
 
 (defun dispatch-event (input-data event)
@@ -82,9 +82,9 @@
      (on-gamepad-button-down input-data gamepad-id (aref +gamepad-button-names+ button)))))
 
 (defun perform-input-state-tasks (input-data)
-  (let ((states (fl.util:href (states input-data))))
-    (setf (fl.util:href states '(:mouse :scroll-horizontal)) 0
-          (fl.util:href states '(:mouse :scroll-vertical)) 0)
+  (let ((states (u:href (states input-data))))
+    (setf (u:href states '(:mouse :scroll-horizontal)) 0
+          (u:href states '(:mouse :scroll-vertical)) 0)
     (enable-entering input-data)
     (disable-exiting input-data)))
 

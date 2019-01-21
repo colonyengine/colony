@@ -1,17 +1,17 @@
 (in-package :%first-light)
 
-(fl.util:eval-always
+(u:eval-always
   (defmacro profile (core-state duration)
     "Profile the scene `SCENE-NAME` for the given `DURATION` in seconds, all packages that begin with
   'FL.', along with some key third-party library packages."
     (let ((packages (remove-if-not
-                     (lambda (x) (fl.util:string-starts-with-p x "FL."))
+                     (lambda (x) (u:string-starts-with-p x "FL."))
                      (mapcar #'package-name (list-all-packages)))))
       `(progn
          (sb-profile:unprofile)
          (sb-profile:profile ,@packages)
-         (fl.util:while (and (running-p core-state)
-                             (<= (total-time (context ,core-state)) ,duration))
+         (u:while (and (running-p core-state)
+                       (<= (total-time (context ,core-state)) ,duration))
            (iterate-main-loop ,core-state))
          (when (running-p core-state)
            (stop-engine ,core-state))
@@ -21,11 +21,11 @@
 
 (defgeneric prologue (context)
   (:method (context)
-    (fl.util:noop)))
+    (u:noop)))
 
 (defgeneric epilogue (context)
   (:method (context)
-    (fl.util:noop)))
+    (u:noop)))
 
 (defun run-prologue (core-state)
   "The prologue is a (defmethod prologue ((context context)) ...) method optionally defined in the
@@ -81,7 +81,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
 
 (defun main-loop (core-state)
   (initialize-frame-time core-state)
-  (fl.util:while (running-p core-state)
+  (u:while (running-p core-state)
     (iterate-main-loop core-state)))
 
 (defun start-engine (scene-name &optional profile-duration)

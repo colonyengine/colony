@@ -1,7 +1,8 @@
-(in-package :cl-user)
+(in-package :defpackage+-user-1)
 
-(defpackage #:first-light.image-types
+(defpackage+ #:first-light.image-types
   (:nicknames #:fl.image)
+  (:local-nicknames (#:u #:fl.util))
   (:use #:cl)
   (:export #:channels
            #:data

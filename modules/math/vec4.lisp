@@ -2,7 +2,7 @@
 
 ;;; constants
 
-(fl.util:define-constant +zero-vec4+
+(u:define-constant +zero-vec4+
     (%vec4 0f0 0f0 0f0 0f0)
   :test #'equalp)
 
@@ -276,10 +276,10 @@
 
 (defspecialization (clamp :inline t) ((in vec4) (min real) (max real) (out vec4)) vec4
   (with-vec4 ((v in) (o out))
-    (psetf o.x (float (fl.util:clamp v.x min max) 1f0)
-           o.y (float (fl.util:clamp v.y min max) 1f0)
-           o.z (float (fl.util:clamp v.z min max) 1f0)
-           o.w (float (fl.util:clamp v.w min max) 1f0)))
+    (psetf o.x (float (u:clamp v.x min max) 1f0)
+           o.y (float (u:clamp v.y min max) 1f0)
+           o.z (float (u:clamp v.z min max) 1f0)
+           o.w (float (u:clamp v.w min max) 1f0)))
   out)
 
 (defspecialization (clamp :inline t) ((in vec4) (min real) (max real) (out null)) vec4
@@ -460,10 +460,10 @@
 
 (defspecialization (lerp :inline t) ((in1 vec4) (in2 vec4) (factor real) (out vec4)) vec4
   (with-vec4 ((v1 in1) (v2 in2) (o out))
-    (psetf o.x (fl.util:lerp factor v1.x v2.x)
-           o.y (fl.util:lerp factor v1.y v2.y)
-           o.z (fl.util:lerp factor v1.z v2.z)
-           o.w (fl.util:lerp factor v1.w v2.w)))
+    (psetf o.x (u:lerp factor v1.x v2.x)
+           o.y (u:lerp factor v1.y v2.y)
+           o.z (u:lerp factor v1.z v2.z)
+           o.w (u:lerp factor v1.w v2.w)))
   out)
 
 (defspecialization (lerp :inline t) ((in1 vec4) (in2 vec4) (factor real) (out null)) vec4
@@ -472,10 +472,10 @@
 
 (defspecialization (radians :inline t) ((in vec4) (out vec4)) vec4
   (with-vec4 ((v in) (o out))
-    (psetf o.x (float (fl.util:degrees->radians v.x) 1f0)
-           o.y (float (fl.util:degrees->radians v.y) 1f0)
-           o.z (float (fl.util:degrees->radians v.z) 1f0)
-           o.w (float (fl.util:degrees->radians v.w) 1f0)))
+    (psetf o.x (float (u:degrees->radians v.x) 1f0)
+           o.y (float (u:degrees->radians v.y) 1f0)
+           o.z (float (u:degrees->radians v.z) 1f0)
+           o.w (float (u:degrees->radians v.w) 1f0)))
   out)
 
 (defspecialization (radians :inline t) ((in vec4) (out null)) vec4
@@ -484,10 +484,10 @@
 
 (defspecialization (degrees :inline t) ((in vec4) (out vec4)) vec4
   (with-vec4 ((v in) (o out))
-    (psetf o.x (float (fl.util:radians->degrees v.x) 1f0)
-           o.y (float (fl.util:radians->degrees v.y) 1f0)
-           o.z (float (fl.util:radians->degrees v.z) 1f0)
-           o.w (float (fl.util:radians->degrees v.w) 1f0)))
+    (psetf o.x (float (u:radians->degrees v.x) 1f0)
+           o.y (float (u:radians->degrees v.y) 1f0)
+           o.z (float (u:radians->degrees v.z) 1f0)
+           o.w (float (u:radians->degrees v.w) 1f0)))
   out)
 
 (defspecialization (degrees :inline t) ((in vec4) (out null)) vec4

@@ -1,7 +1,9 @@
-(in-package :cl-user)
+(in-package :defpackage+-user-1)
 
-(defpackage #:first-light.gpu
+(defpackage+ #:first-light.gpu
   (:nicknames #:fl.gpu)
+  (:local-nicknames (#:u #:fl.util)
+                    (#:m #:fl.math))
   (:use #:cl)
   (:export #:define-function
            #:define-struct

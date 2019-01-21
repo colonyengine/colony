@@ -25,7 +25,7 @@
 
 (defmethod on-component-render ((self render))
   (with-accessors ((context context) (transform transform) (draw-method draw-method) (material material)) self
-    (fl.util:when-let ((camera (active-camera context)))
+    (u:when-let ((camera (active-camera context)))
       (using-material material
           (:model (fl.comp:model transform)
            :view (fl.comp:view camera)

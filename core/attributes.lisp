@@ -6,10 +6,10 @@
 (defclass attributes ()
   ((%semantic-attributes :reader semantic-attributes
                          :initarg :semantic-attributes
-                         :initform (fl.util:dict #'eql))
+                         :initform (u:dict #'eql))
    (%computed-attributes :reader computed-attributes
                          :initarg :computed-attributes
-                         :initform (fl.util:dict #'eql))))
+                         :initform (u:dict #'eql))))
 
 (defun make-attributes (&rest args)
   (apply #'make-instance 'attributes args))
@@ -17,33 +17,33 @@
 ;;; Semantic attributes API
 
 (defmethod semantic-attribute ((attrs attributes) (name symbol))
-  (fl.util:href (semantic-attributes attrs) name))
+  (u:href (semantic-attributes attrs) name))
 
 (defmethod (setf semantic-attribute) (value (attrs attributes) (name symbol))
-  (setf (fl.util:href (semantic-attributes attrs) name) value))
+  (setf (u:href (semantic-attributes attrs) name) value))
 
 (defmethod clear-semantic-attributes ((attrs attributes))
   (clrhash (semantic-attributes attrs)))
 
 (defmethod do-semantic-attributes ((attrs attributes) func)
   ;; First make a copy-ish of the hash table in case the func wants to modify the hash table.
-  (fl.util:do-hash (k v (fl.util:copy-hash-table (semantic-attributes attrs)))
+  (u:do-hash (k v (u:copy-hash-table (semantic-attributes attrs)))
     (funcall func k v)))
 
 ;;; Computed attributes API
 
 (defmethod computed-attribute ((attrs attributes) (name symbol))
-  (fl.util:href (computed-attributes attrs) name))
+  (u:href (computed-attributes attrs) name))
 
 (defmethod (setf computed-attribute) (value (attrs attributes) (name symbol))
-  (setf (fl.util:href (computed-attributes attrs) name) value))
+  (setf (u:href (computed-attributes attrs) name) value))
 
 (defmethod clear-computed-attributes ((attrs attributes))
   (clrhash (computed-attributes attrs)))
 
 (defmethod do-computed-attributes ((attrs attributes) func)
   ;; First make a copy-ish of the hash table in case the func wants to modify the hash table.
-  (fl.util:do-hash (k v (fl.util:copy-hash-table (computed-attributes attrs)))
+  (u:do-hash (k v (u:copy-hash-table (computed-attributes attrs)))
     (funcall func k v)))
 
 ;;; Attribute computation and merging API

@@ -9,7 +9,7 @@
                   :initarg :refresh-rate)))
 
 (defun parse-opengl-version (version)
-  (values-list (mapcar #'parse-integer (fl.util:split-sequence #\. version))))
+  (values-list (mapcar #'parse-integer (u:split-sequence #\. version))))
 
 (defun maybe-set-vsync (value)
   (let ((value
@@ -31,7 +31,7 @@
     (let* ((context (context core-state))
            (opengl-version (option context :opengl-version))
            (anti-alias-level (option context :anti-alias-level)))
-      (fl.util:mvlet ((major-version minor-version (parse-opengl-version opengl-version)))
+      (u:mvlet ((major-version minor-version (parse-opengl-version opengl-version)))
         (sdl2:gl-set-attrs :context-major-version major-version
                            :context-minor-version minor-version
                            :context-profile-mask 1

@@ -63,20 +63,20 @@ DLIST."
   "Insert a new node constructed from KEY and VALUE into DLIST. The node is placed before the node
 having a key of TARGET-KEY. If FROM-END is non-nil, then DLIST is searched in reverse, from end to
 start."
-  (fl.util:when-let ((node (find-dlist-node dlist target-key :from-end from-end)))
+  (u:when-let ((node (find-dlist-node dlist target-key :from-end from-end)))
     (%insert-dlist-node dlist (dlist-node-previous node) node key value)))
 
 (defmethod insert-dlist-node ((where (eql :after)) dlist key value &key from-end target-key)
   "Insert a new node constructed from KEY and VALUE into DLIST. The node is placed after the node
 having a key of TARGET-KEY. If FROM-END is non-nil, then DLIST is searched in reverse, from end to
 start."
-  (fl.util:when-let ((node (find-dlist-node dlist target-key :from-end from-end)))
+  (u:when-let ((node (find-dlist-node dlist target-key :from-end from-end)))
     (%insert-dlist-node dlist node (dlist-node-next node) key value)))
 
 (defun remove-dlist-node (dlist key &key from-end)
   "Remove the first node found having KEY from DLIST. If FROM-END is non-nil, then DLIST is searched
 in reverse, from end to start."
-  (fl.util:when-let ((node (find-dlist-node dlist key :from-end from-end)))
+  (u:when-let ((node (find-dlist-node dlist key :from-end from-end)))
     (let ((before (dlist-node-previous node))
           (after (dlist-node-next node)))
       (if before

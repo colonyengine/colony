@@ -5,7 +5,7 @@
    (material :defualt nil)
    (material-retrieved-p :default nil)
    (mouse-in-window-p :default nil)
-   (channel0 :default (flm:vec2))))
+   (channel0 :default (m:vec2))))
 
 (defmethod fl:on-component-initialize ((self shader-sweep))
   (setf (renderer self) (fl:actor-component-by-type (fl:actor self) 'render)))
@@ -19,11 +19,11 @@
     (unless material-retrieved-p
       (setf material (fl.comp:material renderer)
             material-retrieved-p t))
-    (fl.util:mvlet* ((context (fl:context self))
-                     (x y (fl.input:get-mouse-position (fl:input-data context))))
+    (u:mvlet* ((context (fl:context self))
+               (x y (fl.input:get-mouse-position (fl:input-data context))))
       (when (null x) (setf x (/ (fl:option context :window-width) 2.0)))
       (when (null y) (setf y (/ (fl:option context :window-height) 2.0)))
-      (flm:with-vec2 ((c channel0))
+      (m:with-vec2 ((c channel0))
         ;; crappy, but good enough.
         (setf c.x (float (/ x (fl:option context :window-width)) 1f0)
               c.y (float (/ y (fl:option context :window-height)) 1f0)))

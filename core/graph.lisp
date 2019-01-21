@@ -14,7 +14,7 @@
                 :initform nil)
    (%graphdefs :accessor graphdefs
                :initarg :graphdefs
-               :initform  (fl.util:dict #'eq))))
+               :initform  (u:dict #'eq))))
 
 (defun make-analyzed-graph (&rest init-args)
   (apply #'make-instance 'analyzed-graph init-args))
@@ -56,7 +56,7 @@
    ;; appropriate graphdef instance.
    (%subforms :accessor subforms
               :initarg :subforms
-              :initform (fl.util:dict #'eq))))
+              :initform (u:dict #'eq))))
 
 (defun make-graphdef-depends-on (name &rest init-args)
   (apply #'make-instance 'graphdef-depends-on :name name init-args))
@@ -103,7 +103,7 @@
                      :initarg :unknown-type-id)
    (%referenced-types :accessor referenced-types
                       :initarg :referenced-types
-                      :initform (fl.util:dict #'eq))))
+                      :initform (u:dict #'eq))))
 
 (defmethod make-graph-annotation ((category (eql 'component-dependency)) &rest init-args)
   (apply #'make-instance 'graph-annotation/component-dependency init-args))
@@ -112,7 +112,7 @@
 (defclass graph-annotation/component-package-order ()
   ((%pattern-matched-packages :accessor pattern-matched-packages
                               :initarg :pattern-matched-packages
-                              :initform (fl.util:dict #'eq))))
+                              :initform (u:dict #'eq))))
 
 (defmethod make-graph-annotation ((category (eql 'component-package-order)) &rest init-args)
   (apply #'make-instance 'graph-annotation/component-package-order
@@ -182,7 +182,7 @@ no hyper edges, return values: canonical-form and :vertex If the form is not
 null, and contains hyper edges, return values: list of hyper-edge
 pairs, :hyperedges"
   (let* ((canonical-form (canonicalize-dependency-form category form))
-         (x (fl.util:split-sequence '-> canonical-form :test #'eql/package-relaxed))
+         (x (u:split-sequence '-> canonical-form :test #'eql/package-relaxed))
          ;; cut into groups of two with rolling window
          (connections
            (loop :for (k j . nil) :in (maplist #'identity x)
@@ -214,7 +214,7 @@ pairs, :hyperedges"
                            :kind kind))))))
 
 (defun parse-graph-definition (name category depends-on roots subforms)
-  (let ((subform-db (fl.util:dict #'eq)))
+  (let ((subform-db (u:dict #'eq)))
     (make-graphdef name
                    :category category
                    :depends-on depends-on
@@ -222,11 +222,11 @@ pairs, :hyperedges"
                    :subforms
                    (loop :for i :in subforms
                          :for subform = (parse-subform category i)
-                         :do (setf (fl.util:href subform-db (name subform)) subform)
+                         :do (setf (u:href subform-db (name subform)) subform)
                          :finally (return subform-db)))))
 
 (defun add-cross-product-edges (clg source-list target-list)
-  (fl.util:map-product
+  (u:map-product
    (lambda (v1 v2)
      (cl-graph:add-edge-between-vertexes clg v1 v2 :edge-type :directed))
    source-list
@@ -275,11 +275,11 @@ the cl-graph, the roots as elements, the leaves as elements."
 (defun analyze-graphdef-depends-on (graph)
   "Transmute the :depends-on form in each graphdef object in the GRAPH into real
 graphdef references holding real references to the named subforms."
-  (loop :for gdef :in (fl.util:hash-values (graphdefs graph))
+  (loop :for gdef :in (u:hash-values (graphdefs graph))
         :for whole-depends-on-form = (depends-on gdef)
-        :do (setf (depends-on gdef) (fl.util:dict #'eq))
+        :do (setf (depends-on gdef) (u:dict #'eq))
             (loop :for (gdef-name subform-names) :in whole-depends-on-form
-                  :for gdef-reference = (fl.util:href (graphdefs graph) gdef-name)
+                  :for gdef-reference = (u:href (graphdefs graph) gdef-name)
                   :for analyzed-depends-on = (make-graphdef-depends-on
                                               gdef-name
                                               :graphdef gdef-reference
@@ -291,18 +291,18 @@ graphdef references holding real references to the named subforms."
                           ;; get all subform names in gdef
                           (maphash
                            (lambda (subform-name subform-instance)
-                             (setf (fl.util:href (subforms analyzed-depends-on) subform-name)
+                             (setf (u:href (subforms analyzed-depends-on) subform-name)
                                    subform-instance))
                            (subforms gdef-reference))
                           ;; find the listed subform-names (which if it is NIL,
                           ;; do nothing) in the gdef and assign them.
                           (dolist (subform-name subform-names)
-                            (setf (fl.util:href (subforms analyzed-depends-on) subform-name)
-                                  (fl.util:href (subforms gdef-reference) subform-name))))
+                            (setf (u:href (subforms analyzed-depends-on) subform-name)
+                                  (u:href (subforms gdef-reference) subform-name))))
                       ;; store the semantic analysis of the depends-on form,
                       ;; transmuted into its new graphdef-depends-on form, back
                       ;; into the initiating gdef.
-                      (setf (fl.util:href (depends-on gdef) (name analyzed-depends-on))
+                      (setf (u:href (depends-on gdef) (name analyzed-depends-on))
                             analyzed-depends-on))))
 
 (defun lookup-splice (splice-form gdef)
@@ -310,11 +310,11 @@ graphdef references holding real references to the named subforms."
 depends-on in that GDEF."
   (let ((splice-name (second splice-form)))
     ;; Check if the splice is natively in the current gdef.
-    (fl.util:when-let ((splice (fl.util:href (subforms gdef) splice-name)))
+    (u:when-let ((splice (u:href (subforms gdef) splice-name)))
       (return-from lookup-splice (values splice gdef)))
     ;; If it isn't, then check which depends-on in the current gdef
-    (dolist (dep-inst (fl.util:hash-values (depends-on gdef)))
-      (fl.util:when-found (subform (fl.util:href (subforms dep-inst) splice-name))
+    (dolist (dep-inst (u:hash-values (depends-on gdef)))
+      (u:when-found (subform (u:href (subforms dep-inst) splice-name))
         (return-from lookup-splice (values subform (graphdef dep-inst)))))
     ;; Otheriwse, you're out of luck. Prolly should put an error here.
     (values nil nil)))
@@ -335,7 +335,7 @@ depends-on in that GDEF."
     ;; We do an iterative algorithm where we continuously refine the graph we're
     ;; making by expanding slices in additional passes until there are no
     ;; splices left. First, add the initial depforms from the roots.
-    (loop :for gdef :in (fl.util:hash-values (graphdefs graph))
+    (loop :for gdef :in (u:hash-values (graphdefs graph))
           :when (roots gdef)
             :do (dolist (root (roots gdef))
                   ;; For the initial seeding, we don't care about the
@@ -346,7 +346,7 @@ depends-on in that GDEF."
                    gdef
                    ;; ...in which all splices must be looked up in, either
                    ;; directly or through a graphdef-depends-on object.
-                   (depforms (fl.util:href (subforms gdef) root)))))
+                   (depforms (u:href (subforms gdef) root)))))
     ;; Then, iterate the graph. Each iteration will substitute the current
     ;; splice forms for the actual graphs indicated by those splice names. This
     ;; may introduce more splices the next iteration will get. Stop when there
@@ -407,7 +407,7 @@ depends-on in that GDEF."
             (lambda (vert) (cl-graph:in-cycle-p clg vert))))
          (annotation (make-graph-annotation
                       (category graph)
-                      :unknown-type-id (fl.util:unique-name "UNKNOWN-TYPE-ID-"))))
+                      :unknown-type-id (u:unique-name "UNKNOWN-TYPE-ID-"))))
     ;; compute/store toposort, can only do if no cycles.
     (unless contains-cycles-p
       (let ((tsort (mapcar #'cl-graph:element (cl-graph:topological-sort clg))))
@@ -418,7 +418,7 @@ depends-on in that GDEF."
      (lambda (v)
        (let ((elem-v (cl-graph:element v)))
          (when (is-syntax-form-p '(component-type) elem-v)
-           (setf (fl.util:href (referenced-types annotation) (second elem-v)) t)))))
+           (setf (u:href (referenced-types annotation) (second elem-v)) t)))))
     (setf (annotation graph) annotation)))
 
 (defmethod generate-graph-annotation ((category (eql 'component-package-order)) graph)
@@ -447,20 +447,20 @@ depends-on in that GDEF."
               (putative-package-name-regex (concatenate 'string "^" putative-package-name "$")))
          ;; Kind of a terrible Big-O...
          (dolist (pkg-name all-packages)
-           (fl.util:when-let* ((matched-pkg-name (ppcre:scan-to-strings
+           (u:when-let* ((matched-pkg-name (ppcre:scan-to-strings
                                                   putative-package-name-regex pkg-name))
                                (found-pkg (find-package matched-pkg-name)))
-             (pushnew found-pkg (fl.util:href (pattern-matched-packages annotation) second)))))))
+             (pushnew found-pkg (u:href (pattern-matched-packages annotation) second)))))))
     (setf (annotation graph) annotation)))
 
 (defun canonicalize-component-type (component-type core-state)
   "If the COMPONENT-TYPE is reference in the component-dependency graph, then
 return it, otherwise return the unknown-type-id symbol."
   (let* ((putative-component-type component-type)
-         (component-dependency-graph (fl.util:href (analyzed-graphs core-state) 'component-dependency))
+         (component-dependency-graph (u:href (analyzed-graphs core-state) 'component-dependency))
          (annotation (annotation component-dependency-graph)))
     (assert annotation)
-    (unless (fl.util:href (referenced-types annotation) putative-component-type)
+    (unless (u:href (referenced-types annotation) putative-component-type)
       ;; Nope, so we use the unknown type
       (setf putative-component-type (unknown-type-id annotation)))
     ;; The canonicalized component-type
@@ -468,21 +468,21 @@ return it, otherwise return the unknown-type-id symbol."
 
 (defmacro define-graph (&whole form name (&key category depends-on roots) &body body)
   (declare (ignore category depends-on roots body))
-  (fl.util:with-unique-names (definitions)
+  (u:with-unique-names (definitions)
     `(symbol-macrolet ((,definitions (fl.data:get 'graphs)))
        (unless ,definitions
-         (fl.data:set 'graphs (fl.util:dict #'eq)))
-       (setf (fl.util:href ,definitions ',name) ',(cdr form)))))
+         (fl.data:set 'graphs (u:dict #'eq)))
+       (setf (u:href ,definitions ',name) ',(cdr form)))))
 
 (defun load-graphs (core-state)
   (with-slots (%analyzed-graphs) core-state
-    (setf %analyzed-graphs (fl.util:dict #'eq))
-    (fl.util:do-hash-values (graph-code (fl.data:get 'graphs))
+    (setf %analyzed-graphs (u:dict #'eq))
+    (u:do-hash-values (graph-code (fl.data:get 'graphs))
       (destructuring-bind (name (&key category depends-on roots) . body) graph-code
-        (symbol-macrolet ((graph (fl.util:href %analyzed-graphs category)))
+        (symbol-macrolet ((graph (u:href %analyzed-graphs category)))
           (unless graph
             (setf graph (make-analyzed-graph :category category)))
-          (setf (fl.util:href (graphdefs graph) name)
+          (setf (u:href (graphdefs graph) name)
                 (parse-graph-definition name category depends-on roots body)))))
-    (fl.util:do-hash-values (graph %analyzed-graphs)
+    (u:do-hash-values (graph %analyzed-graphs)
       (analyze-graph graph))))

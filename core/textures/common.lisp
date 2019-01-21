@@ -14,9 +14,9 @@ Return a values of:
           :with new-height = height
           :with new-depth = depth
           :for level :below (1- num-levels)
-          :do (setf new-width (max (flm:round-down (/ new-width 2)) 1)
-                    new-height (max (flm:round-down (/ new-height 2)) 1)
-                    new-depth (max (flm:round-down (/ new-depth 2)) 1))
+          :do (setf new-width (max (m:round-down (/ new-width 2)) 1)
+                    new-height (max (m:round-down (/ new-height 2)) 1)
+                    new-depth (max (m:round-down (/ new-depth 2)) 1))
               (push (list new-width new-height new-depth) resolutions))
     (values num-levels (nreverse resolutions))))
 

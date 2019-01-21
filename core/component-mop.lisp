@@ -34,7 +34,6 @@
                  :getter getter
                  :setter setter))
 
-
 ;; The meta-class for the component class.
 (defclass component-class (standard-class)
   (;; Each created annotation gets a serialnumber gotten from here.
@@ -45,7 +44,7 @@
    (%annotations :accessor annotations
                  :initarg :annotations
                  ;; key: symbol, value: component-class/annotation-value
-                 :initform (fl.util:dict #'eq))
+                 :initform (u:dict #'eq))
    (%annotations-dirty-p :accessor annotations-dirty-p
                          :initarg :annotations-dirty-p
                          :initform nil)
@@ -61,8 +60,7 @@
    ;; annotations across inherited components.
    (%annotated-slots :accessor annotated-slots
                      :initarg :annotated-slots
-                     :initform (fl.util:dict #'eq))))
-
+                     :initform (u:dict #'eq))))
 
 (defmethod c2mop:validate-superclass ((class component-class)
                                       (super standard-class))
@@ -72,7 +70,6 @@
 ;; Annotation DB API
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 ;; called at the end of define-annotation.
 ;; it'll also give back the appropriate annotation entry.
 (defun register-annotation (component-metaclass-name annotation-name state
@@ -80,7 +77,7 @@
                               (setter #'identity/annotation))
   (let* ((db (find-class component-metaclass-name))
          (annodb (annotations db))
-         (entry (fl.util:href annodb annotation-name)))
+         (entry (u:href annodb annotation-name)))
 
     ;; first look it up.
     ;; use AU to fix this.
@@ -90,7 +87,7 @@
         ;; make a new generic one with defaults.
         (setf entry (make-annotation-value
                      annotation-name snid :forward-reference))
-        (setf (fl.util:href annodb annotation-name) entry
+        (setf (u:href annodb annotation-name) entry
               (annotations-dirty-p db) t)))
 
     ;; then debate what to do based upon state.
@@ -118,7 +115,7 @@
              (num-annotations (hash-table-count annodb))
              (optiarray (make-array num-annotations)))
         ;; now, fill the array with the annotations at their snid spots.
-        (fl.util:maphash-values
+        (u:maphash-values
          (lambda (anno)
            (setf (aref optiarray (serialnum anno)) anno))
          annodb)
@@ -130,12 +127,11 @@
 ;; Ability to reset the annotations.
 (defun clear-annotations (component-metaclass-name)
   (let ((db (find-class component-metaclass-name)))
-    (setf (annotations db) (fl.util:dict #'eq)
+    (setf (annotations db) (u:dict #'eq)
           (annotation-serialnum db) 0
           (annotations-dirty-p db) nil
           (annotation-array db) #()
-          (annotated-slots db) (fl.util:dict #'eq))))
-
+          (annotated-slots db) (u:dict #'eq))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Define a set of slot definition classes that understand the concept
@@ -159,7 +155,6 @@
 (defmethod annotation-indexes (non-annotatable-slot)
   nil)
 
-
 ;; NOTE:
 ;;
 ;; First we define the direct and effective slot class we desire for the
@@ -167,7 +162,6 @@
 ;;
 ;; Then the point of having two classes, annotated, and not annotated, is to
 ;; make slot-value-using-class ONLY execute on _actually_ annotated slots.
-
 
 ;; component-class has its own definition of standard-direct slots
 (defclass component-direct-slot-definition
@@ -179,7 +173,6 @@
     (component-direct-slot-definition annotatable-slot)
   ())
 
-
 ;; component-class has its own definition of standard-effective slots
 (defclass component-effective-slot-definition
     (c2mop:standard-effective-slot-definition)
@@ -189,7 +182,6 @@
 (defclass component-annotated-effective-slot-definition
     (component-effective-slot-definition annotatable-slot)
   ())
-
 
 ;; Is any direct/effective slot instance (of any type) annotated?
 (defgeneric annotated-slot-p (slot))
@@ -205,13 +197,10 @@
     ((slot component-annotated-effective-slot-definition))
   t)
 
-
-
 ;; The entry point of the finalization of the component classes.
 (defmethod c2mop:compute-slots ((class component-class))
   #++(format t "C: compute-slots[component-class] invoked: ~A~%" class)
   (call-next-method))
-
 
 ;; We override this in order that direct slots can have :annotation added to
 ;; the slot initializer arguments.
@@ -225,7 +214,6 @@
     (t
      (find-class 'component-direct-slot-definition))))
 
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; return NIL if no annotations, otherwise, get the union of them from
@@ -236,7 +224,7 @@
     (dolist (dslotd dslotds)
       (when (annotated-slot-p dslotd)
         (push (annotation dslotd) annotations)))
-    (fl.util:flatten (nreverse annotations))))
+    (u:flatten (nreverse annotations))))
 
 ;; Lifted from sb-pcl::compute-effective-slot-definition-initargs
 ;; We add knowledge of the :annotation slot and how it works across
@@ -262,7 +250,6 @@
          (annotation nil))
 
     #++(format t "F2: Attempting to frobnicate: ~A~%" direct-slotds)
-
 
     (dolist (slotd direct-slotds)
       (when slotd
@@ -297,14 +284,13 @@
         (setq initargs
               (append (c2mop:slot-definition-initargs slotd) initargs))
 
-
         (let ((slotd-type (c2mop:slot-definition-type slotd)))
           (setq type (cond
                        ((eq type t) slotd-type)
                        (t `(and ,type ,slotd-type)))))))
 
     #++(format t "F4: raw :annotation is ~A~%"
-               (fl.util:flatten (nreverse annotation)))
+               (u:flatten (nreverse annotation)))
     #++(finish-output)
 
     `(:name ,name
@@ -331,13 +317,12 @@
       ;; optionally in this output.
       ,@(when annotation
           (list :annotation (remove-duplicates
-                             (fl.util:flatten (nreverse annotation))
+                             (u:flatten (nreverse annotation))
                              :from-end t))))))
 
-
 (defun compute-component-initargs (component-type)
-  (let* ((class-args (fl.util:mappend #'c2mop:slot-definition-initargs
-                                      (c2mop:class-slots (find-class component-type))))
+  (let* ((class-args (u:mappend #'c2mop:slot-definition-initargs
+                                (c2mop:class-slots (find-class component-type))))
          (instance-lambda-list (c2mop:method-lambda-list
                                 (first
                                  (c2mop:compute-applicable-methods-using-classes
@@ -345,11 +330,10 @@
                                   (list (find-class component-type))))))
          (instance-args (mapcar
                          (lambda (x)
-                           (fl.util:make-keyword
-                            (car (fl.util:ensure-list x))))
+                           (u:make-keyword
+                            (car (u:ensure-list x))))
                          (rest (member '&key instance-lambda-list)))))
     (union class-args instance-args)))
-
 
 ;; Ok, this processes a LIST of dslotds that can all be different types and are
 ;; melded together into a single effective slot.
@@ -400,13 +384,12 @@
                       :initial-contents
                       (mapcar (lambda (annotation)
                                 (serialnum
-                                 (fl.util:href (annotations
-                                                (find-class '%fl:component))
-                                               annotation)))
+                                 (u:href (annotations
+                                          (find-class '%fl:component))
+                                         annotation)))
                               (annotation slotd))))
 
     slotd))
-
 
 (defmethod c2mop:effective-slot-definition-class ((class component-class)
                                                   &rest initargs)
@@ -437,14 +420,10 @@
 ;; Here we collect all the annotated slot data from a component and put
 ;; it into the COMPONENT meta-class slots.
 (defun track-annotations (component-name)
-  (setf (fl.util:href (annotated-slots (find-class '%fl:component)) component-name)
+  (setf (u:href (annotated-slots (find-class '%fl:component)) component-name)
         (collect-all-annotated-effective-slot-data component-name)))
 
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
 
 ;; The base component class, manually defined, notice the two end forms that
 ;; come after it. Maybe better to wrap into a define-component-base-type macro
@@ -475,9 +454,6 @@
 (c2mop:ensure-finalized (find-class '%fl:component))
 (clear-annotations '%fl:component)
 
-
-
-
 ;; ;;;;;;;;;;;;;;;;;;;;
 ;; Stuff used to make DEFINE-COMPONENT work.
 ;; ;;;;;;;;;;;;;;;;;;;;
@@ -488,9 +464,9 @@
         (destructuring-bind (slot-name &key default allocation type annotation
                              &allow-other-keys) slot
           (append
-           `(,(fl.util:symbolicate '% slot-name)
+           `(,(u:symbolicate '% slot-name)
              :accessor ,slot-name
-             :initarg ,(fl.util:make-keyword slot-name)
+             :initarg ,(u:make-keyword slot-name)
              :initform ,default)
            (when annotation
              `(:annotation ,annotation))
@@ -504,7 +480,7 @@
         :for anno = (getf (cdr slot) :annotation)
         :when anno
           ;; We need the ACTUAL slot name, so the % prefixed one.
-          :collect `(,(fl.util:symbolicate "%" (first slot)) ,anno)))
+          :collect `(,(u:symbolicate "%" (first slot)) ,anno)))
 
 (defmacro define-component (name super-classes &body body)
   (let* ((slots (first body))
@@ -566,8 +542,6 @@
                                         composing-value instance))
                          :finally (return composing-value))))))
 
-
-
        ;; writer for annotated slots at this class inheritance level.
        (defmethod (setf c2mop:slot-value-using-class)
            (new-value
@@ -592,7 +566,6 @@
                                             composing-value instance))
                              :finally (return composing-value))))))
 
-
        ;; A method to locate the metadata in the shared storage form in this
        ;; class.
        (defmethod ,(intern (symbol-name 'shared-storage-metadata) :%fl)
@@ -605,8 +578,6 @@
                ss-meta)))
 
        #++(format t "******* DONE GENERATING COMPONENT: ~A~%" ',name))))
-
-
 
 (defmacro define-annotation (name &key (getter
                                         '(lambda (val component)

@@ -9,7 +9,7 @@
   #++(:depth-stencil-texture-mode :depth-component) ;; note: ogl 4.3 or greater
 
   (:texture-base-level 0)
-  (:texture-border-color (flm:vec4))
+  (:texture-border-color (m:vec4))
   (:texture-compare-func :lequal)
   (:texture-compare-mode :none)
   (:texture-lod-bias 0.0)

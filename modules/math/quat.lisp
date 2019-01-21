@@ -2,11 +2,11 @@
 
 ;;; constants
 
-(fl.util:define-constant +zero-quat+
+(u:define-constant +zero-quat+
     (%quat 0f0 0f0 0f0 0f0)
   :test #'equalp)
 
-(fl.util:define-constant +id-quat+
+(u:define-constant +id-quat+
     (%quat 1f0 0f0 0f0 0f0)
   :test #'equalp)
 
@@ -355,11 +355,11 @@
         (negate q2 q2)
         (setf dot (cl:- dot)))
       (if (cl:> (cl:abs dot) 0.9995f0)
-          (psetf o.w (fl.util:lerp factor q1.w q2.w)
-                 o.x (fl.util:lerp factor q1.x q2.x)
-                 o.y (fl.util:lerp factor q1.y q2.y)
-                 o.z (fl.util:lerp factor q1.z q2.z))
-          (let* ((angle (cl:acos (fl.util:clamp dot 0 1)))
+          (psetf o.w (u:lerp factor q1.w q2.w)
+                 o.x (u:lerp factor q1.x q2.x)
+                 o.y (u:lerp factor q1.y q2.y)
+                 o.z (u:lerp factor q1.z q2.z))
+          (let* ((angle (cl:acos (u:clamp dot 0 1)))
                  (sin-angle (cl:sin angle))
                  (scale1 (cl:/ (cl:sin (cl:* angle (cl:- 1 factor))) sin-angle))
                  (scale2 (cl:/ (cl:sin (cl:* factor angle)) sin-angle)))

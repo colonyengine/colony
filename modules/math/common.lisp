@@ -2,9 +2,9 @@
 
 ;;; utilities
 
-(fl.util:eval-always
+(u:eval-always
   (defun %make-accessor-symbol (prefix &rest args)
-    (fl.util:format-symbol (symbol-package prefix) "~@:(~{~a~}~)" (cons prefix args))))
+    (u:format-symbol (symbol-package prefix) "~@:(~{~a~}~)" (cons prefix args))))
 
 ;;; vec2
 
@@ -16,7 +16,7 @@
    :type (simple-array single-float (2))))
 
 (defmacro with-vec2 (((prefix vec) &rest rest) &body body)
-  (fl.util:with-unique-names (sym)
+  (u:with-unique-names (sym)
     `(let ((,sym ,vec))
        (declare (ignorable ,sym))
        (symbol-macrolet ((,prefix ,sym)
@@ -30,7 +30,7 @@
               `(with-vec2 ,rest ,@body)
               `(progn ,@body))))))
 
-(fl.util:define-printer (vec2 stream)
+(u:define-printer (vec2 stream)
   (with-vec2 ((v vec2))
     (format stream "~f ~f" v.x v.y)))
 
@@ -44,7 +44,7 @@
    :type (simple-array single-float (3))))
 
 (defmacro with-vec3 (((prefix vec) &rest rest) &body body)
-  (fl.util:with-unique-names (sym)
+  (u:with-unique-names (sym)
     `(let ((,sym ,vec))
        (declare (ignorable ,sym))
        (symbol-macrolet ((,prefix ,sym)
@@ -61,7 +61,7 @@
               `(with-vec3 ,rest ,@body)
               `(progn ,@body))))))
 
-(fl.util:define-printer (vec3 stream)
+(u:define-printer (vec3 stream)
   (with-vec3 ((v vec3))
     (format stream "~f ~f ~f" v.x v.y v.z)))
 
@@ -75,7 +75,7 @@
    :type (simple-array single-float (4))))
 
 (defmacro with-vec4 (((prefix vec) &rest rest) &body body)
-  (fl.util:with-unique-names (sym)
+  (u:with-unique-names (sym)
     `(let ((,sym ,vec))
        (declare (ignorable ,sym))
        (symbol-macrolet ((,prefix ,sym)
@@ -95,7 +95,7 @@
               `(with-vec4 ,rest ,@body)
               `(progn ,@body))))))
 
-(fl.util:define-printer (vec4 stream)
+(u:define-printer (vec4 stream)
   (with-vec4 ((v vec4))
     (format stream "~f ~f ~f ~f" v.x v.y v.z v.w)))
 
@@ -109,7 +109,7 @@
    :type (simple-array single-float (4))))
 
 (defmacro with-mat2 (((prefix matrix) &rest rest) &body body)
-  (fl.util:with-unique-names (sym)
+  (u:with-unique-names (sym)
     `(let ((,sym ,matrix))
        (declare (ignorable ,sym))
        (symbol-macrolet ((,prefix ,sym)
@@ -121,7 +121,7 @@
               `(with-mat2 ,rest ,@body)
               `(progn ,@body))))))
 
-(fl.util:define-printer (mat2 stream)
+(u:define-printer (mat2 stream)
   (with-mat2 ((m mat2))
     (format stream "~%  ~f ~f~%  ~f ~f"
             m.00 m.01
@@ -137,7 +137,7 @@
    :type (simple-array single-float (9))))
 
 (defmacro with-mat3 (((prefix matrix) &rest rest) &body body)
-  (fl.util:with-unique-names (sym)
+  (u:with-unique-names (sym)
     `(let ((,sym ,matrix))
        (declare (ignorable ,sym))
        (symbol-macrolet ((,prefix ,sym)
@@ -154,7 +154,7 @@
               `(with-mat3 ,rest ,@body)
               `(progn ,@body))))))
 
-(fl.util:define-printer (mat3 stream)
+(u:define-printer (mat3 stream)
   (with-mat3 ((m mat3))
     (format stream "~%  ~f ~f ~f~%  ~f ~f ~f~%  ~f ~f ~f"
             m.00 m.01 m.02
@@ -171,7 +171,7 @@
    :type (simple-array single-float (16))))
 
 (defmacro with-mat4 (((prefix matrix) &rest rest) &body body)
-  (fl.util:with-unique-names (sym)
+  (u:with-unique-names (sym)
     `(let ((,sym ,matrix))
        (declare (ignorable ,sym))
        (symbol-macrolet ((,prefix ,sym)
@@ -195,7 +195,7 @@
               `(with-mat4 ,rest ,@body)
               `(progn ,@body))))))
 
-(fl.util:define-printer (mat4 stream)
+(u:define-printer (mat4 stream)
   (with-mat4 ((m mat4))
     (format stream "~%  ~f ~f ~f ~f~%  ~f ~f ~f ~f~%  ~f ~f ~f ~f~%  ~f ~f ~f ~f"
             m.00 m.01 m.02 m.03
@@ -213,7 +213,7 @@
    :type (simple-array single-float (4))))
 
 (defmacro with-quat (((prefix quat) &rest rest) &body body)
-  (fl.util:with-unique-names (sym)
+  (u:with-unique-names (sym)
     `(let ((,sym ,quat))
        (declare (ignorable ,sym))
        (symbol-macrolet ((,prefix ,sym)
@@ -225,37 +225,37 @@
               `(with-quat ,rest ,@body)
               `(progn ,@body))))))
 
-(fl.util:define-printer (quat stream)
+(u:define-printer (quat stream)
   (with-quat ((q quat))
     (format stream "~f ~f ~f ~f" q.w q.x q.y q.z)))
 
 ;;; constructors
 
-(fl.util:fn-> %vec2 (&rest single-float) vec2)
+(u:fn-> %vec2 (&rest single-float) vec2)
 (defun %vec2 (&rest args)
   (%%vec2 (make-array 2 :element-type 'single-float :initial-contents args)))
 
-(fl.util:fn-> %vec3 (&rest single-float) vec3)
+(u:fn-> %vec3 (&rest single-float) vec3)
 (defun %vec3 (&rest args)
   (%%vec3 (make-array 3 :element-type 'single-float :initial-contents args)))
 
-(fl.util:fn-> %vec4 (&rest single-float) vec4)
+(u:fn-> %vec4 (&rest single-float) vec4)
 (defun %vec4 (&rest args)
   (%%vec4 (make-array 4 :element-type 'single-float :initial-contents args)))
 
-(fl.util:fn-> %mat2 (&rest single-float) mat2)
+(u:fn-> %mat2 (&rest single-float) mat2)
 (defun %mat2 (&rest args)
   (%%mat2 (make-array 4 :element-type 'single-float :initial-contents args)))
 
-(fl.util:fn-> %mat3 (&rest single-float) mat3)
+(u:fn-> %mat3 (&rest single-float) mat3)
 (defun %mat3 (&rest args)
   (%%mat3 (make-array 9 :element-type 'single-float :initial-contents args)))
 
-(fl.util:fn-> %mat4 (&rest single-float) mat4)
+(u:fn-> %mat4 (&rest single-float) mat4)
 (defun %mat4 (&rest args)
   (%%mat4 (make-array 16 :element-type 'single-float :initial-contents args)))
 
-(fl.util:fn-> %quat (&rest single-float) quat)
+(u:fn-> %quat (&rest single-float) quat)
 (defun %quat (&rest args)
   (%%quat (make-array 4 :element-type 'single-float :initial-contents args)))
 

@@ -2,6 +2,7 @@
 
 (defpackage+ #:first-light.data-structures
   (:nicknames #:fl.dst)
+  (:local-nicknames (#:u #:fl.util))
   (:use #:cl)
   ;; queues
   (:inherit-from #:queues

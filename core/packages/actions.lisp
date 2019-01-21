@@ -1,7 +1,9 @@
-(in-package :cl-user)
+(in-package :defpackage+-user-1)
 
 (defpackage #:first-light.actions
   (:nicknames #:fl.actions)
+  (:local-nicknames (#:u #:fl.util)
+                    (#:m #:fl.math))
   (:use #:cl #:%first-light)
   ;; protocol
   (:export #:insert-action

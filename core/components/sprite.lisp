@@ -16,13 +16,13 @@
               :initarg :geometry)
    (%buffer :reader buffer)
    (%sprites :reader sprites
-             :initform (fl.util:dict #'equalp))))
+             :initform (u:dict #'equalp))))
 
 (defun make-spritesheet (context sprite)
   (with-slots (%name %spec) sprite
     (let* ((spec (find-resource context %spec))
            (spritesheet (make-instance 'spritesheet
-                                       :spec (fl.util:safe-read-file-form spec)
+                                       :spec (u:safe-read-file-form spec)
                                        :geometry (gl:gen-vertex-array))))
       (make-spritesheet-buffer spritesheet)
       spritesheet)))
@@ -37,23 +37,23 @@
           :for i :from 0
           :do (destructuring-bind (&key id x y w h) sprite
                 (when (and id x y w h)
-                  (setf (aref pos i) (flm:vec2 x y)
-                        (aref size i) (flm:vec2 w h)
-                        (fl.util:href %sprites id) i)))
+                  (setf (aref pos i) (m:vec2 x y)
+                        (aref size i) (m:vec2 w h)
+                        (u:href %sprites id) i)))
           :finally (fl.gpu:write-buffer-path buffer-name :pos pos)
                    (fl.gpu:write-buffer-path buffer-name :size size))))
 
 (defun make-spritesheet-buffer (spritesheet)
   (with-slots (%spec %buffer) spritesheet
     (fl.gpu:bind-block :spritesheet 1)
-    (setf %buffer (fl.gpu:create-buffer (fl.util:unique-name :spritesheet) :spritesheet))
+    (setf %buffer (fl.gpu:create-buffer (u:unique-name :spritesheet) :spritesheet))
     (fl.gpu:bind-buffer (fl.gpu:buffer-name %buffer) 1)
     (write-spritesheet-buffer spritesheet)))
 
 (defun update-sprite-index (sprite step)
   (with-slots (%index %initial-index %frames) sprite
     (let ((max (1- (+ %initial-index %frames))))
-      (setf %index (floor (fl.util:map-domain 0 1 %initial-index max step))))))
+      (setf %index (floor (u:map-domain 0 1 %initial-index max step))))))
 
 (defun draw-sprite (sprite &optional count)
   (with-slots (%index %spritesheet) sprite
@@ -71,12 +71,12 @@
       (error "A sprite component must have a name."))
     (unless spec
       (error "A sprite component must have a spritesheet spec specified."))
-    (let ((spec (fl.util:ensure-list spec)))
+    (let ((spec (u:ensure-list spec)))
       (with-shared-storage
           (context context)
           ((cached-spritesheet spritesheet-present-p
                                ('sprite :cached-spritesheet-data spec)
                                (make-spritesheet context self)))
         (setf spritesheet cached-spritesheet
-              index (fl.util:href (sprites spritesheet) name)
+              index (u:href (sprites spritesheet) name)
               initial-index index)))))

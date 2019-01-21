@@ -32,14 +32,14 @@
               :initform nil)
    (%shape :reader shape
            :initarg :shape
-           :initform 'flm:linear)
+           :initform 'm:linear)
    (%attrs :reader attrs
            :initarg :attrs
            :initform nil)))
 
 (defmethod initialize-instance :after ((instance action) &key &allow-other-keys)
   (with-slots (%attrs) instance
-    (setf %attrs (fl.util:plist->hash %attrs :test #'eq))))
+    (setf %attrs (u:plist->hash %attrs :test #'eq))))
 
 (defun insert-action (action where &key target)
   (with-accessors ((manager manager) (type action-type)) action
@@ -59,7 +59,7 @@
 
 (defun action-step (action)
   (with-accessors ((shape shape) (elapsed elapsed) (duration duration)) action
-    (funcall shape (fl.util:clamp (/ elapsed duration) 0f0 1f0))))
+    (funcall shape (u:clamp (/ elapsed duration) 0f0 1f0))))
 
 (defun insert-default-actions (manager action-specs)
   (dolist (spec action-specs)

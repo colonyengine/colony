@@ -266,8 +266,7 @@
                                   ;; table as we iterate over the keys. We need
                                   ;; to copy the list of keys in order to
                                   ;; satisfy the traversal rules of hash tables.
-                                  (fl.util:hash-keys
-                                   (actor-destroy-db (tables core-state))))))
+                                  (u:hash-keys (actor-destroy-db (tables core-state))))))
 
                     ;; NOTE: See selector for this flow-state.
                     (action #'actor/destroy-descendants)
