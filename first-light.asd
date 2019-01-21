@@ -41,6 +41,7 @@
      (:file "annotations")
      (:file "components")
      (:file "actions")
+     (:file "prefab")
      (:file "api")))
    (:file "common")
    (:file "resource")
@@ -87,6 +88,9 @@
      (:file "mesh")
      (:file "render")
      (:file "sprite")))
+   (:module "prefab"
+    :components
+    ((:file "prefab")))
    (:module "actions"
     :components
     ((:file "fade")
