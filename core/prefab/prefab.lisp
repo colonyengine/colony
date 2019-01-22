@@ -64,7 +64,7 @@
        (setf (u:href %paths (path x)) x))
      %root)))
 
-(defun make-node (name data &key prefab parent replace-p)
+(defun make-node (name data &key prefab parent)
   (let* ((prefab (or prefab (prefab parent)))
          (path (make-node-path parent name))
          (node (make-instance 'node
@@ -73,11 +73,8 @@
                               :path path
                               :data data
                               :parent parent)))
-    (when (and (not replace-p)
-               (u:href (paths prefab) path))
-      (error "Node path ~s already exists.~%Prefab: ~s.~%Library: ~s."
-             path (name prefab) (library prefab)))
-    (setf (u:href (paths prefab) path) node)))
+    (setf (u:href (paths prefab) path) node)
+    node))
 
 (defun find-library (name)
   (u:if-found (library (u:href (fl.data:get 'prefabs) name))
@@ -127,7 +124,7 @@
         (push nil (u:href table 'fl.comp:transform)))
       table)))
 
-(defun parse-children (parent data &key replace-p)
+(defun parse-children (parent data)
   (labels ((check (name parent)
              (unless (stringp name)
                (error "Node name must be a string, but ~s is of type: ~s.~%Prefab path: ~s."
@@ -141,16 +138,16 @@
                      (to (library (prefab parent))))
                  (destructuring-bind (mode source &key (from to) as) id
                    (check as parent)
-                   (add-child mode parent body :replace-p replace-p :from from :to to :source source :target as))))))
+                   (add-child mode parent body :from from :to to :source source :target as))))))
     (dolist (x data)
       (let ((child (parse-child parent x)))
         (setf (u:href (children parent) (name child)) child)))))
 
-(defun parse-node (node &key replace-p)
+(defun parse-node (node)
   (with-slots (%path %data %components) node
     (u:mvlet ((components children (split-components/children %data)))
       (setf %components (parse-components node components))
-      (parse-children node children :replace-p replace-p))))
+      (parse-children node children))))
 
 (defun make-prefab (name library data)
   (unless (stringp name)
@@ -172,7 +169,8 @@
         (setf (u:href (target->source %prefab) target-key) %path)
         (unless targets
           (setf targets (u:dict #'equalp)))
-        (setf (u:href targets target-key) target)))))
+        (setf (u:href targets target-key) target))
+      (remove-broken-links %prefab))))
 
 (defun update-links (prefab)
   (with-slots (%source->targets) prefab
@@ -181,35 +179,35 @@
       (let ((source-node (find-node source (library prefab))))
         (u:do-hash-values (target targets)
           (setf (slot-value target '%data) (data source-node))
-          (parse-node target :replace-p t)
+          (parse-node target)
           (update-prefab-paths (prefab target)))))))
 
 (defgeneric add-child (mode parent data &key &allow-other-keys))
 
-(defmethod add-child ((mode (eql :new)) parent data &key replace-p target)
+(defmethod add-child ((mode (eql :new)) parent data &key target)
   (let* ((path-parts (explode-path target))
          (name (first path-parts))
-         (new-data (rest (reduce #'list
-                                 (butlast path-parts)
-                                 :initial-value (cons (car (last path-parts)) data)
-                                 :from-end t)))
-         (child (make-node name new-data :parent parent :replace-p replace-p)))
-    (parse-node child :replace-p replace-p)
+         (new-data (rest
+                    (reduce #'list
+                            (butlast path-parts)
+                            :initial-value (cons (car (last path-parts)) data)
+                            :from-end t)))
+         (child (make-node name new-data :parent parent)))
+    (parse-node child)
     child))
 
-(defmethod add-child ((mode (eql :copy)) parent data &key replace-p from source target)
+(defmethod add-child ((mode (eql :copy)) parent data &key from source target)
   (unless (stringp source)
     (error "~s requires a string path, but ~s is of type: ~s.~%Prefab: ~s."
            mode source (type-of source) (name (prefab parent))))
   (let ((source-data (data (find-node source from))))
-    (add-child :new parent source-data :replace-p replace-p :target target)))
+    (add-child :new parent (append data source-data) :target target)))
 
-(defmethod add-child ((mode (eql :link)) parent data &key replace-p from to source target)
-  (let* ((source-node (find-node source from))
-         (child (add-child :new parent (data source-node) :replace-p replace-p :target target))
+(defmethod add-child ((mode (eql :link)) parent data &rest args &key from to source target)
+  (let* ((child (apply #'add-child :copy parent data args))
+         (source-node (find-node source from))
          (target-node (find-node (make-node-path parent target) to)))
     (make-link source-node target-node)
-    (remove-broken-links (prefab source-node))
     child))
 
 (defun remove-broken-links (prefab)
@@ -255,10 +253,10 @@
            (update-links ,prefab))
          (export ',library)))))
 
-(define-prefab "foo" (test)
+(define-prefab "foo" (test2)
   ("bar"
    ("baz"
-    ("qux"))))
+    ("quuuuux"))))
 
 (define-prefab "table" (test)
   (fl.comp:mesh :location '(:mesh "table.glb"))
@@ -266,5 +264,7 @@
   ("glass/a/b"
    (fl.comp:mesh :location '(:mesh "cube.glb"))
    (fl.comp:render :material 'glass)
-   ((:link "/foo/bar" :as "place/mat2")
-    (fl.comp:transform :scale (fl.math:vec3 1)))))
+   ((:link "/foo/bar" :from test2 :as "place/mat2")
+    (fl.comp:transform :scale (fl.math:vec3 1))
+    ("qq"
+     ("ww")))))
