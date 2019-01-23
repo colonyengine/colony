@@ -173,6 +173,15 @@ Alexandria's version in that this also works for vectors or hybrid sequences."
       (push (cons key value) result))
     result))
 
+(defun hash->plist (table)
+  "Convert the keys and values of the hash table `TABLE` to a property list which has keys being
+keyword symbols."
+  (let (result)
+    (do-hash (key value table)
+      (setf result (list* (make-keyword key) value result)))
+    result))
+
+
 ;;; Filesystem
 
 (defmacro with-file-input ((stream path) &body body)

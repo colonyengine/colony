@@ -48,6 +48,7 @@
            #:get-directory-contents
            #:fn->
            #:hash->alist
+           #:hash->plist
            #:hash-keys
            #:hash-values
            #:if-found
