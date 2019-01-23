@@ -7,6 +7,7 @@
                  #:appendf
                  #:clamp
                  #:copy-hash-table
+                 #:curry
                  #:define-constant
                  #:deletef
                  #:ensure-list
@@ -18,6 +19,7 @@
                  #:map-product
                  #:mappend
                  #:once-only
+                 #:rcurry
                  #:symbolicate
                  #:when-let
                  #:when-let*
