@@ -69,13 +69,12 @@
 (defun make-node (name data &key prefab parent)
   (let* ((prefab (or prefab (prefab parent)))
          (path (make-node-path parent name))
-         (node (or (%find-node path (library prefab))
-                   (make-instance 'node
-                                  :prefab prefab
-                                  :name name
-                                  :path path
-                                  :data data
-                                  :parent parent))))
+         (node (make-instance 'node
+                              :prefab prefab
+                              :name name
+                              :path path
+                              :data data
+                              :parent parent)))
     (setf (u:href (paths prefab) path) node)
     node))
 
@@ -119,24 +118,23 @@
       (error "Cannot have multiple transform components per node.~%Prefab path: ~s."
              %path))))
 
-(defun ensure-component-policies-valid (path type policies)
-  (when (every (u:rcurry #'find policies) '(prefer-new prefer-old))
-    (error "Component policies must not have both PREFER-NEW and PREFER-OLD.~%~
-            Component type: ~s~%Prefab path: ~s."
-           type path)))
+(defun ensure-component-policy-valid (path type policy)
+  (let ((policies '(new-type old-type new-args old-args)))
+    (unless (member policy policies)
+      (error "Component policy must be one of ~{~a~^, ~}.~%Component type: ~s.~%Prefab path: ~s."
+             policies type path))))
 
 (defun parse-component-spec (node component-spec)
   (with-slots (%path %components) node
-    (destructuring-bind (type (&key (id 0) (policies '(new-type))) . args) component-spec
+    (destructuring-bind (type (&key (id 0) (policy 'new-type)) . args) component-spec
       (ensure-component-valid node type args)
-      (ensure-component-policies-valid %path type policies)
+      (ensure-component-policy-valid %path type policy)
       (unless (integerp id)
         (error "Component type ~s must have an integer ID, but ~s is of type: ~s.~%Prefab path: ~s."
                type id (type-of id) %path))
       (unless (u:href %components type)
         (setf (u:href %components type) (u:dict #'eql)))
-      (dolist (policy policies)
-        (resolve-component-conflicts policy node type id args)))))
+      (resolve-component-conflicts policy node type id args))))
 
 (defgeneric resolve-component-conflicts (policy node type id args))
 
@@ -362,6 +360,6 @@
    (fl.comp:mesh () :location '(:mesh "cube.glb"))
    (fl.comp:render () :material 'glass)
    (("place/mat" (:link ("/foo/bar" :from test2)))
-    (fl.comp:camera (:policies (new-args)) :zoom 10)
+    (fl.comp:camera (:policy new-args) :zoom 10)
     ("test1"
      ("test2")))))
