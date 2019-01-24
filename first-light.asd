@@ -90,7 +90,8 @@
      (:file "sprite")))
    (:module "prefab"
     :components
-    ((:file "prefab")))
+    ((:file "checks")
+     (:file "prefab")))
    (:module "actions"
     :components
     ((:file "fade")

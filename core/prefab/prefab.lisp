@@ -5,13 +5,15 @@
           :initarg :name)
    (%library :reader library
              :initarg :library)
-   (%paths :reader paths
-           :initform (u:dict #'equalp))
+   (%data :reader data
+          :initarg :data)
+   (%parse-tree :reader parse-tree
+                :initform (u:dict #'equalp))
    (%root :reader root)
-   (%source->targets :reader source->targets
-                     :initform (u:dict #'equalp))
-   (%target->source :reader target->source
-                    :initform (u:dict #'equalp))))
+   (%links :reader links
+           :initform (u:dict #'eq
+                             :source->targets (u:dict #'equalp)
+                             :target->source (u:dict #'equalp)))))
 
 (u:define-printer (prefab stream :type t)
   (format stream "~a" (name prefab)))
@@ -21,14 +23,15 @@
           :initarg :name)
    (%prefab :reader prefab
             :initarg :prefab)
-   (%data :reader data
-          :initarg :data)
-   (%source-data :reader source-data
-                 :initform nil)
    (%path :reader path
           :initarg :path)
+   (%options :reader options
+             :initarg :options
+             :initform nil)
    (%components :reader components
-                :initform (u:dict #'eq))
+                :initform nil)
+   (%components-table :reader components-table
+                      :initform (u:dict #'eq))
    (%parent :reader parent
             :initarg :parent
             :initform nil)
@@ -48,36 +51,13 @@
               (subseq data index)))))
 
 (defun explode-path (path)
-  (fl.util:split-sequence #\/ path :remove-empty-subseqs t))
+  (u:string-split path #\/))
 
 (defun make-node-path (parent name)
-  (concatenate 'string (when parent (path parent)) "/" name))
+  (u:string-merge parent "/" name))
 
-(defun map-nodes (func node)
-  (funcall func node)
-  (u:do-hash-values (child (children node))
-    (map-nodes func child)))
-
-(defun update-prefab-paths (prefab)
-  (with-slots (%paths %root) prefab
-    (clrhash %paths)
-    (map-nodes
-     (lambda (x)
-       (setf (u:href %paths (path x)) x))
-     %root)))
-
-(defun make-node (name data &key prefab parent)
-  (let* ((prefab (or prefab (prefab parent)))
-         (path (make-node-path parent name))
-         (node (or (%find-node path (library prefab))
-                   (make-instance 'node
-                                  :prefab prefab
-                                  :name name
-                                  :path path
-                                  :data data
-                                  :parent parent))))
-    (setf (u:href (paths prefab) path) node)
-    node))
+(defun make-node-path-from-parts (path-parts)
+  (format nil "/~{~a~^/~}" path-parts))
 
 (defun find-library (name)
   (u:if-found (library (u:href (fl.data:get 'prefabs) name))
@@ -96,243 +76,253 @@
   (let* ((prefab-name (first (explode-path path)))
          (prefab (%find-prefab prefab-name library)))
     (when prefab
-      (u:href (paths prefab) path))))
+      (u:href (parse-tree prefab) path))))
 
 (defun find-node (path library)
   (or (%find-node path library)
       (error "Prefab node ~s not found in library ~s." path library)))
 
-(defun ensure-component-valid (node type args)
-  (with-slots (%path %components) node
-    (unless (get-computed-component-precedence-list type)
-      (error "Component type does not exist: ~s.~%Prefab path: ~s."
-             type %path))
-    (when (oddp (length args))
-      (error "Component type has an odd number of arguments: ~s.~%Prefab path: ~s."
-             type %path))
-    (loop :with valid-args = (compute-component-initargs type)
-          :for (key value) :on args :by #'cddr
-          :unless (member key valid-args)
-            :do (error "Invalid argument: ~s.~%Component type: ~s.~%Prefab path: ~s."
-                       key type %path))
-    (when (u:href %components 'fl.comp:transform)
-      (error "Cannot have multiple transform components per node.~%Prefab path: ~s."
-             %path))))
+(defun map-nodes (func node)
+  (funcall func node)
+  (u:do-hash-values (child (children node))
+    (map-nodes func child)))
 
-(defun ensure-component-policies-valid (path type policies)
-  (when (every (u:rcurry #'find policies) '(prefer-new prefer-old))
-    (error "Component policies must not have both PREFER-NEW and PREFER-OLD.~%~
-            Component type: ~s~%Prefab path: ~s."
-           type path)))
+(defun parse-copy/link (library path copy-p link-p form)
+  (flet ((check-source (source)
+           (ensure-copy/link-source-valid path source)
+           (ensure-copy/link-source-absolute path source)
+           (ensure-copy/link-source-no-trailing-slash path source))
+         (make-path-options (source from)
+           (values path
+                   (list :mode (cond (copy-p 'copy) (link-p 'link))
+                         :source source
+                         :from from))))
+    (typecase form
+      (string
+       (check-source form)
+       (make-path-options form library))
+      (list
+       (destructuring-bind (source &key (from library)) form
+         (check-source source)
+         (ensure-copy/link-source-string path source)
+         (ensure-copy/link-library path from)
+         (make-path-options source from))))))
 
-(defun parse-component-spec (node component-spec)
-  (with-slots (%path %components) node
-    (destructuring-bind (type (&key (id 0) (policies '(new-type))) . args) component-spec
-      (ensure-component-valid node type args)
-      (ensure-component-policies-valid %path type policies)
-      (unless (integerp id)
-        (error "Component type ~s must have an integer ID, but ~s is of type: ~s.~%Prefab path: ~s."
-               type id (type-of id) %path))
-      (unless (u:href %components type)
-        (setf (u:href %components type) (u:dict #'eql)))
-      (dolist (policy policies)
-        (resolve-component-conflicts policy node type id args)))))
+(defun parse-path-spec (parent library path-spec)
+  (labels ((check-path (path)
+             (ensure-path-string path)
+             (ensure-path-length parent path)
+             (ensure-path-valid path)
+             (ensure-path-relative path)
+             (ensure-path-no-trailing-slash path))
+           (direct-path (path)
+             (check-path path)
+             (values (make-node-path parent path)
+                     (list :mode 'direct))))
+    (typecase path-spec
+      (string
+       (direct-path path-spec))
+      (list
+       (destructuring-bind (target options) path-spec
+         (check-path target)
+         (let ((path (make-node-path parent target)))
+           (ensure-path-options-plist path options)
+           (ensure-path-options-valid path options)
+           (destructuring-bind (&key (copy nil copy-p) (link nil link-p)) options
+             (ensure-path-options-keys path options)
+             (u:if-let ((copy/link-form (or copy link)))
+               (parse-copy/link library path copy-p link-p copy/link-form)
+               (direct-path target)))))))))
 
-(defgeneric resolve-component-conflicts (policy node type id args))
+(defun make-node (prefab path)
+  (symbol-macrolet ((node (u:href (parse-tree prefab) path)))
+    (unless node
+      (let ((name (first (last (explode-path path)))))
+        (setf node (make-instance 'node
+                                  :name name
+                                  :prefab prefab
+                                  :path path
+                                  :options '(:mode direct)))))
+    node))
 
-(defmethod resolve-component-conflicts ((policy (eql 'new-type)) node type id args)
-  (setf (u:href (components node) type id) args))
+(defun make-paths (prefab path data &optional options)
+  (u:mvlet ((components children (split-components/children data))
+            (node (make-node prefab path)))
+    (declare (ignore components))
+    (when options
+      (setf (slot-value node '%options) options))
+    (dolist (child children)
+      (destructuring-bind (path-spec . body) child
+        (u:mvlet ((path options (parse-path-spec path (library prefab) path-spec)))
+          (make-paths prefab path body options))))))
 
-(defmethod resolve-component-conflicts ((policy (eql 'old-type)) node type id args)
-  (u:unless-found (component (u:href (components node) type id))
-    (setf (u:href (components node) type id) args)))
+(defun add-components (prefab path data)
+  (u:mvlet ((components children (split-components/children data)))
+    (let ((node (make-node prefab path)))
+      (with-slots (%components) node
+        (u:appendf %components components)
+        (dolist (child children)
+          (destructuring-bind (path-spec . body) child
+            (let ((path (parse-path-spec path (library prefab) path-spec)))
+              (add-components prefab path body))))))))
 
-(defmethod resolve-component-conflicts ((policy (eql 'new-args)) node type id args)
-  (let* ((old-args (u:plist->hash (u:href (components node) type id)))
-         (new-args (u:hash->plist (u:merge-tables old-args (u:plist->hash args)))))
-    (setf (u:href (components node) type id) new-args)))
+(defun make-parse-tree (prefab data)
+  (with-slots (%library %name %root) prefab
+    (let ((path (make-node-path nil %name)))
+      (make-paths prefab path data)
+      (add-components prefab path data)
+      (setf %root (find-node path %library)))))
 
-(defmethod resolve-component-conflicts ((policy (eql 'old-args)) node type id args)
-  (let* ((old-args (u:plist->hash (u:href (components node) type id)))
-         (new-args (u:hash->plist (u:merge-tables (u:plist->hash args) old-args))))
-    (setf (u:href (components node) type id) new-args)))
+(defun expand-parse-tree-path (prefab path-parts)
+  (u:when-let* ((path-parts (butlast path-parts))
+                (path (format nil "/~{~a~^/~}" path-parts)))
+    (make-node prefab path)
+    (expand-parse-tree-path prefab path-parts)))
 
-(defun parse-components (node data)
-  (with-slots (%components) node
-    (setf %components (u:dict #'eq))
-    (dolist (component-spec data)
-      (parse-component-spec node component-spec))
-    (unless (u:href %components 'fl.comp:transform)
-      (setf (u:href %components 'fl.comp:transform) (u:dict #'eql 0 nil)))))
+(defun expand-parse-tree (prefab)
+  (u:do-hash-keys (path (parse-tree prefab))
+    (expand-parse-tree-path prefab (explode-path path))))
 
-(defun parse-copy/link (node target copy-p link-p form)
-  (with-slots (%prefab %path) node
-    (destructuring-bind (source &key (from (library %prefab))) form
-      (unless (stringp source)
-        (error "The source of a :LINK or :COPY must be a string.~%Prefab path: ~s."
-               %path))
-      (unless (char= (elt source 0) #\/)
-        (error "The source of :LINK or :COPY must be an absolute path.~%Prefab path: ~s."
-               %path))
-      (unless (symbolp from)
-        (error ":FROM must be a symbol, but ~s is of type: ~s.~%Prefab path: ~s."
-               from (type-of from) %path))
-      (list (cond (copy-p 'copy) (link-p 'link))
-            target
-            :source source
-            :from from
-            :to (library %prefab)))))
+(defun verify-components (prefab)
+  (u:do-hash (path node (parse-tree prefab))
+    (dolist (component (components node))
+      (ensure-component-list component path)
+      (ensure-component-form component path)
+      (destructuring-bind (type options . args) component
+        (ensure-component-type-symbol type path)
+        (ensure-component-type-exists type path)
+        (ensure-component-options-plist type options path)
+        (ensure-component-options-valid type options path)
+        (ensure-component-id type options path)
+        (ensure-component-policy type options path)
+        (ensure-component-args-plist type args path)
+        (ensure-component-args-valid type args path)))))
 
-(defun parse-path-spec (node path-spec)
-  (with-slots (%prefab %path) node
-    (flet ((new-node (target)
-             (list 'new target :to (library %prefab))))
-      (typecase path-spec
-        (string
-         (new-node path-spec))
-        (list
-         (destructuring-bind (target (&key (copy nil copy-p) (link nil link-p))) path-spec
-           (when (and copy-p link-p)
-             (error "Only one of :COPY or :LINK can be specified for a path.~%Prefab path: ~s."
-                    %path))
-           (u:if-let ((copy/link-form (or copy link)))
-             (parse-copy/link node target copy-p link-p copy/link-form)
-             (new-node target))))
-        (t (error "A path must be a string or a list of a string and options.~%Prefab path: ~s"
-                  %path))))))
+(defun insert-missing-transforms (prefab)
+  (u:do-hash (path node (parse-tree prefab))
+    (with-slots (%components) node
+      (unless (find 'fl.comp:transform %components :key #'car)
+        (push '(fl.comp:transform (:policy old-type)) %components))
+      (ensure-path-single-transform %components path))))
 
-(defun parse-children (parent data)
-  (labels ((check (name parent)
-             (unless (stringp name)
-               (error "Node name must be a string, but ~s is of type: ~s.~%Prefab path: ~s."
-                      name (type-of name) (path parent)))
-             (when (char= (elt name 0) #\/)
-               (error "Target path ~s must be relative, not absolute.~%Prefab path: ~s."
-                      name (path parent))))
-           (parse-child (parent data)
-             (destructuring-bind (path-spec . body) data
-               (let ((child-options (parse-path-spec parent path-spec)))
-                 (destructuring-bind (mode target &rest args &key &allow-other-keys) child-options
-                   (check target parent)
-                   (apply #'add-child mode target parent body args))))))
-    (dolist (x data)
-      (let ((child (parse-child parent x)))
-        (setf (u:href (children parent) (name child)) child)))))
+(defun collect-source-components (node)
+  (let ((components))
+    (u:do-hash (type table (components-table node))
+      (u:do-hash-values (data table)
+        (destructuring-bind (&key id args &allow-other-keys) data
+          (push (list* type `(:id ,id) args) components))))
+    components))
 
-(defun parse-node (node)
-  (with-slots (%data %source-data) node
-    (u:mvlet ((components children (split-components/children %data))
-              (source-components source-children (split-components/children %source-data)))
-      (parse-components node (append source-components components))
-      (parse-children node (append source-children children)))))
+(defun insert-source-components (source target)
+  (with-slots (%components) target
+    (setf %components (append (collect-source-components source) %components))))
 
-(defun make-prefab (name library data)
-  (unless (stringp name)
-    (error "Prefab name must be a string, but ~s is of type ~s."
-           name (type-of name)))
-  (when (find #\/ name)
-    (error "Prefab name must not contain a \"/\" character.~%Prefab: ~s." name))
-  (let ((prefab (or (%find-prefab name library)
-                    (make-instance 'prefab :name name :library library))))
-    (with-slots (%paths %root) prefab
-      (clrhash %paths)
-      (setf %root (make-node name data :prefab prefab)))
-    prefab))
+(defun copy-source-nodes (prefab)
+  (u:do-hash (path node (parse-tree prefab))
+    (destructuring-bind (&key source from &allow-other-keys) (options node)
+      (when source
+        (map-nodes
+         (lambda (x)
+           (if (string= source (path x))
+               (insert-source-components x node)
+               (let* ((sub-path (subseq (path x) (1+ (length source))))
+                      (new-path (make-node-path path sub-path))
+                      (new-node (make-node prefab new-path)))
+                 (insert-source-components x new-node))))
+         (find-node source from))))))
+
+(defun make-relationships (prefab)
+  (flet ((get-parent (path)
+           (u:when-let ((path-parts (butlast (explode-path path))))
+             (make-node-path-from-parts path-parts))))
+    (with-slots (%library) prefab
+      (u:do-hash (path node (parse-tree prefab))
+        (u:when-let ((parent-path (get-parent path)))
+          (setf (slot-value node '%parent) (find-node parent-path %library)
+                (u:href (children (parent node)) path) (find-node path %library)))))))
+
+(defun get-source-prefab (node)
+  (destructuring-bind (&key source from &allow-other-keys) (options node)
+    (let ((name (first (explode-path source))))
+      (find-prefab name from))))
+
+(defun make-links (prefab)
+  (u:do-hash (path node (parse-tree prefab))
+    (destructuring-bind (&key mode source &allow-other-keys) (options node)
+      (when (eq mode 'link)
+        (let* ((source-prefab (get-source-prefab node))
+               (target (cons (library prefab) path))
+               (links (u:href (links source-prefab))))
+          (symbol-macrolet ((targets (u:href links :source->targets source)))
+            (setf (u:href links :target->source target) source)
+            (unless targets
+              (setf targets (u:dict #'equalp)))
+            (setf (u:href targets target) node)))))))
 
 (defun remove-broken-links (prefab)
-  (with-slots (%library %source->targets %target->source) prefab
-    (u:do-hash (target source %target->source)
-      (destructuring-bind (target-library . target-path) target
-        (unless (%find-node target-path target-library)
-          (remhash target %target->source)
-          (v:warn :fl.core.prefab
-                  "Removed the link from ~s to ~s because the target no longer exists."
-                  source target-path)
-          (remhash target (u:href %source->targets source))
-          (unless (u:href %source->targets source)
-            (remhash source %source->targets)))))
-    (u:do-hash-keys (source %source->targets)
-      (unless (%find-node source %library)
-        (remhash source %source->targets)
-        (v:warn :fl.core.prefab
-                "Remove all links from ~s because the source no longer exists."
-                source)
-        (u:do-hash (k v %target->source)
+  (let ((source->targets (u:href (links prefab) :source->targets))
+        (target->source (u:href (links prefab) :target->source)))
+    (u:do-hash (target source target->source)
+      (destructuring-bind (library . path) target
+        (unless (%find-node path library)
+          (remhash target target->source)
+          (remhash target (u:href source->targets source))
+          (unless (u:href source->targets source)
+            (remhash source source->targets)))))
+    (u:do-hash-keys (source source->targets)
+      (unless (%find-node source (library prefab))
+        (remhash source source->targets)
+        (u:do-hash (k v target->source)
           (when (string= v source)
-            (remhash k %target->source)))))))
+            (remhash k target->source)))))))
+
+(defun reinitialize-prefab (prefab)
+  (clrhash (parse-tree prefab))
+  (parse-prefab prefab)
+  prefab)
+
+(defun update-links-recursively (prefab)
+  (u:do-hash-keys (target (u:href (links prefab) :target->source))
+    (destructuring-bind (library . path) target
+      (let* ((name (first (explode-path path)))
+             (target-prefab (find-prefab name library)))
+        (reinitialize-prefab target-prefab)
+        (update-links-recursively target-prefab)))))
 
 (defun update-links (prefab)
-  (with-slots (%source->targets) prefab
-    (remove-broken-links prefab)
-    (u:do-hash (source targets %source->targets)
-      (let ((source-node (find-node source (library prefab))))
-        (u:do-hash-values (target targets)
-          (setf (slot-value target '%source-data) (data source-node))
-          (parse-node target)
-          (update-prefab-paths (prefab target)))))))
+  (make-links prefab)
+  (remove-broken-links prefab)
+  (update-links-recursively prefab))
 
-(defun make-link (source target)
-  (let* ((target-key (cons (library (prefab target)) (path target))))
-    (with-slots (%prefab %path) source
-      (symbol-macrolet ((targets (u:href (source->targets %prefab) %path)))
-        (setf (u:href (target->source %prefab) target-key) %path)
-        (unless targets
-          (setf targets (u:dict #'equalp)))
-        (setf (u:href targets target-key) target))
-      (remove-broken-links %prefab))))
+(defgeneric merge-component (policy node type id args)
+  (:method ((policy null) node type id args)
+    (ensure-component-not-duplicate node type id)
+    (merge-component 'new-type node type id args)))
 
-(defgeneric add-child (mode target parent data &key &allow-other-keys))
+(defmethod merge-component ((policy (eql 'new-type)) node type id args)
+  (setf (u:href (components-table node) type id) (list :id id :policy policy :args args)))
 
-(defmethod add-child ((mode (eql 'new)) target parent data &key)
-  (let* ((path-parts (explode-path target))
-         (name (first path-parts))
-         (new-data (rest
-                    (reduce #'list
-                            (butlast path-parts)
-                            :initial-value (cons (car (last path-parts)) data)
-                            :from-end t)))
-         (child (make-node name new-data :parent parent)))
-    (parse-node child)
-    child))
+(defmethod merge-component ((policy (eql 'old-type)) node type id args)
+  (u:unless-found (components (u:href (components-table node) type id))
+    (setf (u:href (components-table node) type id) (list :id id :policy policy :args args))))
 
-(defmethod add-child ((mode (eql 'copy)) target parent data &key from to source)
-  (unless (stringp source)
-    (error "~s requires a string path, but ~s is of type: ~s.~%Prefab: ~s."
-           mode source (type-of source) (name (prefab parent))))
-  (let* ((source-data (data (find-node source from)))
-         (child (add-child 'new target parent data))
-         (target-node (find-node (make-node-path parent target) to)))
-    (setf (slot-value target-node '%source-data) source-data)
-    (parse-node target-node)
-    child))
+(defmethod merge-component ((policy (eql 'new-args)) node type id args)
+  (let* ((old-args (u:plist->hash (getf (u:href (components-table node) type id) :args)))
+         (new-args (u:hash->plist (u:merge-tables old-args (u:plist->hash args)))))
+    (setf (u:href (components-table node) type id) (list :id id :policy policy :args new-args))))
 
-(defmethod add-child ((mode (eql 'link)) target parent data &rest args &key from to source)
-  (let* ((child (apply #'add-child 'copy target parent data args))
-         (source-node (find-node source from))
-         (target-node (find-node (make-node-path parent target) to)))
-    (make-link source-node target-node)
-    child))
+(defmethod merge-component ((policy (eql 'old-args)) node type id args)
+  (let* ((old-args (u:plist->hash (getf (u:href (components-table node) type id) :args)))
+         (new-args (u:hash->plist (u:merge-tables (u:plist->hash args) old-args))))
+    (setf (u:href (components-table node) type id) (list :id id :policy policy :args new-args))))
 
-(defmacro define-prefab (name (&optional library) &body body)
-  (let* ((libraries '(fl.data:get 'prefabs))
-         (prefabs `(u:href ,libraries ',library)))
-    (unless library
-      (error "Prefab ~s must have a library." name))
-    (unless (and (symbolp library)
-                 (not (keywordp library)))
-      (error "Prefab library must be a non-keyword symbol, but ~s is of type ~s.~% Prefab: ~s."
-             library (type-of library) name))
-    (u:with-unique-names (prefab)
-      `(progn
-         (unless ,libraries
-           (fl.data:set 'prefabs (u:dict #'eq)))
-         (unless ,prefabs
-           (setf ,prefabs (u:dict #'equalp)))
-         (let ((,prefab (make-prefab ',name ',library ',body)))
-           (setf (u:href ,prefabs ',name) ,prefab)
-           (parse-node (root ,prefab))
-           (update-links ,prefab))
-         (export ',library)))))
+(defun make-component-table (prefab)
+  (u:do-hash-values (node (parse-tree prefab))
+    (dolist (component (components node))
+      (destructuring-bind (type (&key (id 0) policy) . args) component
+        (unless (u:href (components-table node) type)
+          (setf (u:href (components-table node) type) (u:dict #'eql)))
+        (merge-component policy node type id args)))))
 
 (defun print-prefab (name library)
   (flet ((print-line (level value)
@@ -343,25 +333,63 @@
      (lambda (x)
        (let ((level (* 3 (1- (length (explode-path (path x)))))))
          (print-line level (name x))
-         (u:do-hash (type table (components x))
-           (u:do-hash-values (args table)
-             (print-line level `(,type ,@args))))
+         (u:do-hash (type table (components-table x))
+           (u:do-hash-values (data table)
+             (print-line level `(,type ,@(getf data :args)))))
          (format t "~%")))
      (root (find-prefab name library)))))
 
-(define-prefab "foo" (test2)
-  ("bar"
-   (fl.comp:camera () :active-p t :zoom 5)
-   ("baz"
-    ("qux"))))
+(defun parse-prefab (prefab)
+  (let ((success-p))
+    (with-slots (%name %library %data) prefab
+      (unwind-protect
+           (progn
+             (make-parse-tree prefab %data)
+             (expand-parse-tree prefab)
+             (verify-components prefab)
+             (insert-missing-transforms prefab)
+             (copy-source-nodes prefab)
+             (make-component-table prefab)
+             (make-relationships prefab)
+             (update-links prefab)
+             (setf success-p t))
+        (unless success-p
+          (remhash %name (u:href (fl.data:get 'prefabs) %library)))))))
 
-(define-prefab "table" (test)
-  (fl.comp:mesh () :location '(:mesh "table.glb"))
-  (fl.comp:render () :material 'table)
-  ("glass/a/b"
-   (fl.comp:mesh () :location '(:mesh "cube.glb"))
-   (fl.comp:render () :material 'glass)
-   (("place/mat" (:link ("/foo/bar" :from test2)))
-    (fl.comp:camera (:policies (new-args)) :zoom 10)
-    ("test1"
-     ("test2")))))
+(defun make-prefab (name library data)
+  (let ((prefab (or (%find-prefab name library)
+                    (make-instance 'prefab
+                                   :name name
+                                   :library library))))
+    (with-slots (%data %parse-tree) prefab
+      (setf %data data)
+      (clrhash %parse-tree))
+    prefab))
+
+(defmacro define-prefab (name (&optional library) &body body)
+  (let* ((libraries '(fl.data:get 'prefabs))
+         (prefabs `(u:href ,libraries ',library)))
+    (u:with-unique-names (prefab)
+      `(progn
+         (ensure-prefab-name-string ',name)
+         (ensure-prefab-name-valid ',name)
+         (ensure-prefab-library-set ',name ',library)
+         (ensure-prefab-library-symbol ',name ',library)
+         (unless ,libraries
+           (fl.data:set 'prefabs (u:dict #'eq)))
+         (unless ,prefabs
+           (setf ,prefabs (u:dict #'equalp)))
+         (let ((,prefab (make-prefab ',name ',library ',body)))
+           (setf (u:href ,prefabs ',name) ,prefab)
+           (parse-prefab ,prefab))
+         (export ',library)))))
+
+(define-prefab "foo" (test)
+  ("a"
+   ("b"
+    ("c"))))
+
+(define-prefab "foo2" (test)
+  ("d"
+   (("e" (:link "/foo/a"))
+    ("f"))))

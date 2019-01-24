@@ -58,13 +58,19 @@
            #:maphash-values
            #:noop
            #:plist-p
+           #:plist-keys
            #:plist-values
            #:plist->hash
            #:radians->degrees
            #:resolve-system-path
            #:safe-read-file-form
            #:safe-read-file-forms
+           #:string-ends-with-p
+           #:string-explode
+           #:string-merge
+           #:string-split
            #:string-starts-with-p
+           #:string-trim-whitespace
            #:unless-found
            #:when-found
            #:while
