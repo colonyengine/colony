@@ -13,7 +13,7 @@
   :encoding :utf-8
   :depends-on (#:sdl2
                #:defpackage-plus
-               #:first-light.util)
+               #:golden-utils)
   :pathname "input"
   :serial t
   :components

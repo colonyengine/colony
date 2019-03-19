@@ -9,7 +9,7 @@
    (%running-p :accessor running-p
                :initform t)
    (%rcache :reader rcache
-            :initform (u:dict #'eq))
+            :initform (au:dict #'eq))
    (%frame-manager :accessor frame-manager
                    :initform nil)
    (%display :reader display
@@ -28,44 +28,44 @@
    (%tables :reader tables
             :initform (make-instance 'bookkeeping-tables))
    (%call-flows :reader call-flows
-                :initform (u:dict #'eq))
+                :initform (au:dict #'eq))
    (%analyzed-graphs :reader analyzed-graphs
-                     :initform (u:dict #'equalp))
+                     :initform (au:dict #'equalp))
    (%scenes :reader scenes
-            :initform (u:dict #'eq))
+            :initform (au:dict #'eq))
    (%recompilation-queue :reader recompilation-queue
                          :initarg :recompilation-queue
                          :initform (fl.dst:make-queue :simple-cqueue))))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table
-                            :initform (u:dict #'eq))
+                            :initform (au:dict #'eq))
    (%component-preinit-by-type-view :reader component-preinit-by-type-view
-                                    :initform (u:dict #'eq))
+                                    :initform (au:dict #'eq))
    (%component-init-by-type-view :reader component-init-by-type-view
-                                 :initform (u:dict #'eq))
+                                 :initform (au:dict #'eq))
    (%component-active-by-type-view :reader component-active-by-type-view
-                                   :initform (u:dict #'eq))
+                                   :initform (au:dict #'eq))
    (%component-predestroy-view :reader component-predestroy-view
-                               :initform (u:dict #'eq))
+                               :initform (au:dict #'eq))
    (%component-destroy-by-type-view :reader component-destroy-by-type-view
-                                    :initform (u:dict #'eq))
+                                    :initform (au:dict #'eq))
    (%actor-predestroy-view :reader actor-predestroy-view
-                           :initform (u:dict #'eq))
+                           :initform (au:dict #'eq))
    (%actor-preinit-db :reader actor-preinit-db
-                      :initform (u:dict #'eq))
+                      :initform (au:dict #'eq))
    (%actor-init-db :reader actor-init-db
-                   :initform (u:dict #'eq))
+                   :initform (au:dict #'eq))
    (%actor-active-db :reader actor-active-db
-                     :initform (u:dict #'eq))
+                     :initform (au:dict #'eq))
    (%actor-destroy-db :reader actor-destroy-db
-                      :initform (u:dict #'eq))))
+                      :initform (au:dict #'eq))))
 
 (defun pending-preinit-tasks-p (core-state)
   "Return T if there are ANY components or actors in the preinit data structures in CORE-STATE."
   (or (plusp (hash-table-count (actor-preinit-db (tables core-state))))
       (block done
-        (u:do-hash-values (v (component-preinit-by-type-view (tables core-state)))
+        (au:do-hash-values (v (component-preinit-by-type-view (tables core-state)))
           (when (plusp (hash-table-count v))
             (return-from done t))))))
 
@@ -80,13 +80,13 @@ CORE-STATE."
 CORE-STATE."
   (or (plusp (hash-table-count (actor-destroy-db (tables core-state))))
       (block done
-        (u:do-hash-values (v (component-destroy-by-type-view (tables core-state)))
+        (au:do-hash-values (v (component-destroy-by-type-view (tables core-state)))
           (when (plusp (hash-table-count v))
             (return-from done t))))))
 
 (defun %make-scene-tree (core-state)
   (let* ((context (context core-state))
-         (actor (make-actor context :id (u:unique-name '@universe)))
+         (actor (make-actor context :id (au:unique-name '@universe)))
          (transform (make-component context 'transform :actor actor)))
     (attach-component actor transform)
     (spawn-actor actor :parent nil)
@@ -98,13 +98,13 @@ CORE-STATE."
 
 (defgeneric shared-storage (context key)
   (:method (context key)
-    (u:href (shared-storage-table context) key))
+    (au:href (shared-storage-table context) key))
   (:method (context (key component))
     (shared-storage context (component-type key))))
 
 (defgeneric (setf shared-storage) (value context key)
   (:method (value context key)
-    (setf (u:href (shared-storage-table context) key) value))
+    (setf (au:href (shared-storage-table context) key) value))
   (:method (value context (key component))
     (setf (shared-storage context (component-type key)) value)))
 
@@ -141,18 +141,18 @@ CORE-STATE."
                               (list* 'eq (rcache-layout entry-type))
                               (list* entry-type keys))
     (multiple-value-bind (value presentp)
-        (apply #'u:href (rcache core-state) (list* entry-type keys))
+        (apply #'au:href (rcache core-state) (list* entry-type keys))
       (unless presentp
         (setf value (apply #'rcache-construct context entry-type keys)
-              (apply #'u:href (rcache core-state) (list* entry-type keys)) value))
+              (apply #'au:href (rcache core-state) (list* entry-type keys)) value))
       value)))
 
 ;; This might call rcache-dispose if needed.
 (defmethod rcache-remove (context (entry-type symbol) &rest keys)
   (let ((core-state (core-state context)))
     (multiple-value-bind (value presentp)
-        (apply #'u:href (rcache core-state) (list* entry-type keys))
+        (apply #'au:href (rcache core-state) (list* entry-type keys))
       (when presentp
-        (remhash (apply #'u:href (rcache core-state) (list* entry-type keys))
+        (remhash (apply #'au:href (rcache core-state) (list* entry-type keys))
                  (rcache core-state))
         (rcache-dispose context entry-type value)))))

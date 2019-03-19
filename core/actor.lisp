@@ -7,16 +7,16 @@
            :initarg :state
            :initform :initialize)
    (%components :reader components
-                :initform (u:dict #'eq))
+                :initform (au:dict #'eq))
    (%components-by-type :reader components-by-type
-                        :initform (u:dict #'eq))
+                        :initform (au:dict #'eq))
    (%ttl :accessor ttl
          :initarg :ttl
          :initform 0)
    (%context :reader context
              :initarg :context)))
 
-(u:define-printer (actor stream :type t)
+(au:define-printer (actor stream :type t)
   (format stream "~a" (id actor)))
 
 (defun make-actor (context &rest args)
@@ -29,10 +29,10 @@
   ;; Then, we attach to the new component.
   (enqueue-attach-event component actor)
   (setf (actor component) actor
-        (u:href (components actor) component) component)
+        (au:href (components actor) component) component)
   (let* ((core-state (core-state (context actor)))
          (qualified-type (qualify-component core-state (component-type component))))
-    (push component (u:href (components-by-type actor) qualified-type))))
+    (push component (au:href (components-by-type actor) qualified-type))))
 
 (defun attach-multiple-components (actor &rest components)
   (dolist (component components)
@@ -47,8 +47,8 @@
 (defun detach-component (actor component)
   "If COMPONENT is contained in the ACTOR. Remove it. Otherwise, do nothing."
   (when (remhash component (components actor))
-    (symbol-macrolet ((typed-components (u:href (components-by-type actor)
-                                                (component-type component))))
+    (symbol-macrolet ((typed-components (au:href (components-by-type actor)
+                                                 (component-type component))))
       (enqueue-detach-event component actor)
       (setf (actor component) nil)
       (setf typed-components
@@ -58,7 +58,7 @@
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
   (let* ((core-state (core-state (context actor)))
          (qualified-type (qualify-component core-state component-type)))
-    (u:href (components-by-type actor) qualified-type)))
+    (au:href (components-by-type actor) qualified-type)))
 
 (defun actor-component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
@@ -93,11 +93,11 @@ actor."
        (fl.comp:transform-add-child (actor-component-by-type parent 'fl.comp:transform)
                                     (actor-component-by-type actor 'fl.comp:transform)))
       ((null parent)
-       (u:noop))
+       (au:noop))
       (t
        (error "Cannot parent actor ~s to unknown parent ~s" actor parent)))
-    (setf (u:href (actor-preinit-db (tables core-state)) actor) actor)
-    (u:do-hash-values (v (components actor))
+    (setf (au:href (actor-preinit-db (tables core-state)) actor) actor)
+    (au:do-hash-values (v (components actor))
       (setf (type-table (canonicalize-component-type (component-type v) core-state)
                         (component-preinit-by-type-view (tables core-state)))
             v))))
@@ -105,29 +105,29 @@ actor."
 (defun actor/preinit->init (actor)
   (let ((core-state (core-state (context actor))))
     (remhash actor (actor-preinit-db (tables core-state)))
-    (setf (u:href (actor-init-db (tables core-state)) actor) actor)))
+    (setf (au:href (actor-init-db (tables core-state)) actor) actor)))
 
 (defun actor/init->active (actor)
   (let ((core-state (core-state (context actor))))
     (remhash actor (actor-init-db (tables core-state)))
     (setf (state actor) :active
-          (u:href (actor-active-db (tables core-state)) actor) actor)))
+          (au:href (actor-active-db (tables core-state)) actor) actor)))
 
 (defmethod destroy ((thing actor) &key (ttl 0))
   (let ((core-state (core-state (context thing))))
     (setf (ttl thing) (if (minusp ttl) 0 ttl)
-          (u:href (actor-predestroy-view (tables core-state)) thing) thing)))
+          (au:href (actor-predestroy-view (tables core-state)) thing) thing)))
 
 (defun actor/init-or-active->destroy (actor)
   (let* ((core-state (core-state (context actor)))
          (tables (tables core-state)))
     (unless (plusp (ttl actor))
-      (setf (u:href (actor-destroy-db tables) actor) actor
+      (setf (au:href (actor-destroy-db tables) actor) actor
             (state actor) :destroy)
       (remhash actor (actor-predestroy-view tables))
       (unless (remhash actor (actor-active-db tables))
         (remhash actor (actor-preinit-db tables)))
-      (u:do-hash-values (v (components actor))
+      (au:do-hash-values (v (components actor))
         (setf (ttl v) 0)
         (component/init-or-active->destroy v)))))
 

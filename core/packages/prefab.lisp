@@ -2,6 +2,6 @@
 
 (defpackage+ #:first-light.prefab
   (:nicknames #:fl.prefab)
-  (:local-nicknames (#:u #:fl.util))
+  (:local-nicknames (#:m #:game-math))
   (:use #:cl #:%first-light)
   (:export #:define-prefab))

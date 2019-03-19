@@ -19,8 +19,8 @@
     (unless material-retrieved-p
       (setf material (fl.comp:material renderer)
             material-retrieved-p t))
-    (u:mvlet* ((context (fl:context self))
-               (x y (fl.input:get-mouse-position (fl:input-data context))))
+    (au:mvlet* ((context (fl:context self))
+                (x y (fl.input:get-mouse-position (fl:input-data context))))
       (when (null x) (setf x (/ (fl:option context :window-width) 2.0)))
       (when (null y) (setf y (/ (fl:option context :window-height) 2.0)))
       (m:with-vec2 ((c channel0))

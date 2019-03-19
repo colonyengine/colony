@@ -2,6 +2,5 @@
 
 (defpackage+ #:first-light.example
   (:nicknames #:fl.example)
-  (:local-nicknames (#:u #:fl.util)
-                    (#:m #:fl.math))
+  (:local-nicknames (#:m #:game-math))
   (:use #:cl))

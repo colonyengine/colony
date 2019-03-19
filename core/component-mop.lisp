@@ -44,7 +44,7 @@
    (%annotations :accessor annotations
                  :initarg :annotations
                  ;; key: symbol, value: component-class/annotation-value
-                 :initform (u:dict #'eq))
+                 :initform (au:dict #'eq))
    (%annotations-dirty-p :accessor annotations-dirty-p
                          :initarg :annotations-dirty-p
                          :initform nil)
@@ -60,7 +60,7 @@
    ;; annotations across inherited components.
    (%annotated-slots :accessor annotated-slots
                      :initarg :annotated-slots
-                     :initform (u:dict #'eq))))
+                     :initform (au:dict #'eq))))
 
 (defmethod c2mop:validate-superclass ((class component-class)
                                       (super standard-class))
@@ -77,7 +77,7 @@
                               (setter #'identity/annotation))
   (let* ((db (find-class component-metaclass-name))
          (annodb (annotations db))
-         (entry (u:href annodb annotation-name)))
+         (entry (au:href annodb annotation-name)))
 
     ;; first look it up.
     ;; use AU to fix this.
@@ -87,7 +87,7 @@
         ;; make a new generic one with defaults.
         (setf entry (make-annotation-value
                      annotation-name snid :forward-reference))
-        (setf (u:href annodb annotation-name) entry
+        (setf (au:href annodb annotation-name) entry
               (annotations-dirty-p db) t)))
 
     ;; then debate what to do based upon state.
@@ -115,7 +115,7 @@
              (num-annotations (hash-table-count annodb))
              (optiarray (make-array num-annotations)))
         ;; now, fill the array with the annotations at their snid spots.
-        (u:maphash-values
+        (au:maphash-values
          (lambda (anno)
            (setf (aref optiarray (serialnum anno)) anno))
          annodb)
@@ -127,11 +127,11 @@
 ;; Ability to reset the annotations.
 (defun clear-annotations (component-metaclass-name)
   (let ((db (find-class component-metaclass-name)))
-    (setf (annotations db) (u:dict #'eq)
+    (setf (annotations db) (au:dict #'eq)
           (annotation-serialnum db) 0
           (annotations-dirty-p db) nil
           (annotation-array db) #()
-          (annotated-slots db) (u:dict #'eq))))
+          (annotated-slots db) (au:dict #'eq))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Define a set of slot definition classes that understand the concept
@@ -224,7 +224,7 @@
     (dolist (dslotd dslotds)
       (when (annotated-slot-p dslotd)
         (push (annotation dslotd) annotations)))
-    (u:flatten (nreverse annotations))))
+    (au:flatten (nreverse annotations))))
 
 ;; Lifted from sb-pcl::compute-effective-slot-definition-initargs
 ;; We add knowledge of the :annotation slot and how it works across
@@ -290,7 +290,7 @@
                        (t `(and ,type ,slotd-type)))))))
 
     #++(format t "F4: raw :annotation is ~A~%"
-               (u:flatten (nreverse annotation)))
+               (au:flatten (nreverse annotation)))
     #++(finish-output)
 
     `(:name ,name
@@ -317,12 +317,12 @@
       ;; optionally in this output.
       ,@(when annotation
           (list :annotation (remove-duplicates
-                             (u:flatten (nreverse annotation))
+                             (au:flatten (nreverse annotation))
                              :from-end t))))))
 
 (defun compute-component-initargs (component-type)
-  (let* ((class-args (u:mappend #'c2mop:slot-definition-initargs
-                                (c2mop:class-slots (find-class component-type))))
+  (let* ((class-args (au:mappend #'c2mop:slot-definition-initargs
+                                 (c2mop:class-slots (find-class component-type))))
          (instance-lambda-list (c2mop:method-lambda-list
                                 (first
                                  (c2mop:compute-applicable-methods-using-classes
@@ -330,8 +330,8 @@
                                   (list (find-class component-type))))))
          (instance-args (mapcar
                          (lambda (x)
-                           (u:make-keyword
-                            (car (u:ensure-list x))))
+                           (au:make-keyword
+                            (car (au:ensure-list x))))
                          (rest (member '&key instance-lambda-list)))))
     (union class-args instance-args)))
 
@@ -384,7 +384,7 @@
                       :initial-contents
                       (mapcar (lambda (annotation)
                                 (serialnum
-                                 (u:href (annotations
+                                 (au:href (annotations
                                           (find-class '%fl:component))
                                          annotation)))
                               (annotation slotd))))
@@ -420,7 +420,7 @@
 ;; Here we collect all the annotated slot data from a component and put
 ;; it into the COMPONENT meta-class slots.
 (defun track-annotations (component-name)
-  (setf (u:href (annotated-slots (find-class '%fl:component)) component-name)
+  (setf (au:href (annotated-slots (find-class '%fl:component)) component-name)
         (collect-all-annotated-effective-slot-data component-name)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -464,9 +464,9 @@
         (destructuring-bind (slot-name &key default allocation type annotation
                              &allow-other-keys) slot
           (append
-           `(,(u:symbolicate '% slot-name)
+           `(,(au:symbolicate '% slot-name)
              :accessor ,slot-name
-             :initarg ,(u:make-keyword slot-name)
+             :initarg ,(au:make-keyword slot-name)
              :initform ,default)
            (when annotation
              `(:annotation ,annotation))
@@ -480,7 +480,7 @@
         :for anno = (getf (cdr slot) :annotation)
         :when anno
           ;; We need the ACTUAL slot name, so the % prefixed one.
-          :collect `(,(u:symbolicate "%" (first slot)) ,anno)))
+          :collect `(,(au:symbolicate "%" (first slot)) ,anno)))
 
 (defmacro define-component (name super-classes &body body)
   (let* ((slots (first body))

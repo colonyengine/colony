@@ -2,7 +2,6 @@
 
 (defpackage+ #:first-light.image-types
   (:nicknames #:fl.image)
-  (:local-nicknames (#:u #:fl.util))
   (:use #:cl)
   (:export #:channels
            #:data

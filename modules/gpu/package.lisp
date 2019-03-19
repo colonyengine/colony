@@ -2,8 +2,7 @@
 
 (defpackage+ #:first-light.gpu
   (:nicknames #:fl.gpu)
-  (:local-nicknames (#:u #:fl.util)
-                    (#:m #:fl.math))
+  (:local-nicknames (#:m #:game-math))
   (:use #:cl)
   (:export #:define-function
            #:define-struct

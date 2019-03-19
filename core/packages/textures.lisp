@@ -2,7 +2,7 @@
 
 (defpackage+ #:first-light.textures
   (:nicknames #:fl.textures)
-  (:local-nicknames (#:m #:fl.math))
+  (:local-nicknames (#:m #:game-math))
   (:use #:cl #:%first-light)
   ;; profiles
   (:export #:clamp-all-edges

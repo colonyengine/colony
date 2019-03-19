@@ -19,11 +19,11 @@
                #:cl-opengl
                #:sdl2
                #:verbose
-               #:first-light.util
+               #:golden-utils
+               #:game-math
                #:first-light.metadata
                #:first-light.data-structures
                #:first-light.binary-formats
-               #:first-light.math
                #:first-light.host
                #:first-light.image-types
                #:first-light.geometry

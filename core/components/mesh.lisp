@@ -14,7 +14,7 @@
   (with-accessors ((context context) (location location) (id id) (primitives primitives)) self
     (unless location
       (error "A mesh component must have a location set."))
-    (let ((location (u:ensure-list location)))
+    (let ((location (au:ensure-list location)))
       (with-shared-storage
           (context context)
           ((cached-mesh mesh-present-p

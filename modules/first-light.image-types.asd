@@ -14,7 +14,7 @@
   :depends-on (#:sdl2
                #:sdl2-image
                #:defpackage-plus
-               #:first-light.util)
+               #:golden-utils)
   :pathname "image-types"
   :serial t
   :components

@@ -10,11 +10,11 @@
 
 (defmethod fl:on-component-update ((self simple-movement))
   (with-accessors ((context fl:context) (transform transform)) self
-    (u:mvlet* ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
-                                                   '(:gamepad1 :left-stick)))
-               (rx ry (fl.input:get-gamepad-analog (fl:input-data context)
-                                                   '(:gamepad1 :right-stick)))
-               (instant-p (zerop (fl:frame-count context))))
+    (au:mvlet* ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
+                                                    '(:gamepad1 :left-stick)))
+                (rx ry (fl.input:get-gamepad-analog (fl:input-data context)
+                                                    '(:gamepad1 :right-stick)))
+                (instant-p (zerop (fl:frame-count context))))
       (let ((vec (m:vec3 lx ly 0)))
         (m:* (if (> (m:length vec) 1) (m:normalize vec) vec) 150.0 vec)
         (fl.comp:translate transform
@@ -62,7 +62,7 @@
       (let* ((parent-model (fl.comp:model emitter-transform))
              (parent-translation (m:get-translation parent-model))
              (parent-rotation (m:quat parent-model))
-             (new-actor (fl:make-actor context :id (u:unique-name 'shot)))
+             (new-actor (fl:make-actor context :id (au:unique-name 'shot)))
              (transform (fl:make-component context
                                            'fl.comp:transform
                                            ;; here I init the local location/rotation
@@ -79,7 +79,7 @@
              (render (fl:make-component context
                                         'render
                                         :material `(fl.materials:sprite
-                                                    ,(u:unique-name '#:sprite)
+                                                    ,(au:unique-name '#:sprite)
                                                     :uniforms
                                                     ((:sprite.sampler sprites)))
                                         :mode :sprite)))

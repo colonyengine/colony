@@ -26,11 +26,11 @@
     (error "Cannot have an empty child path.~%Path: ~s." parent)))
 
 (defun ensure-path-relative (path)
-  (when (u:string-starts-with-p path "/")
+  (when (au:string-starts-with-p path "/")
     (error "Path must be a relative path: ~s." path)))
 
 (defun ensure-path-no-trailing-slash (path)
-  (when (u:string-ends-with-p path "/")
+  (when (au:string-ends-with-p path "/")
     (error "Path must not have a trailing \"/\" character.~%Path: ~s." path)))
 
 (defun ensure-path-valid (path)
@@ -40,13 +40,13 @@
           :do (error "A path cannot contain adjacent \"/\" characters.~%Path: ~s." path)))
 
 (defun ensure-path-options-plist (path options)
-  (unless (u:plist-p options)
+  (unless (au:plist-p options)
     (error "Path options must be a property list of keyword keys and values.~%Path: ~s."
            path)))
 
 (defun ensure-path-options-valid (path options)
   (let ((valid-options '(:copy :link)))
-    (dolist (x (u:plist-keys options))
+    (dolist (x (au:plist-keys options))
       (unless (member x valid-options)
         (error "Invalid path option: ~s.~%Valid options: ~{~s~^, ~}Path: ~s."
                x valid-options path)))))
@@ -65,11 +65,11 @@
     (error "The source of a :LINK or :COPY must be a string.~%Path: ~s." path)))
 
 (defun ensure-copy/link-source-absolute (path source)
-  (unless (u:string-starts-with-p source "/")
+  (unless (au:string-starts-with-p source "/")
     (error "The source of a :LINK or :COPY must be an absolute path.~%Path: ~s." path)))
 
 (defun ensure-copy/link-source-no-trailing-slash (path source)
-  (when (u:string-ends-with-p source "/")
+  (when (au:string-ends-with-p source "/")
     (error "The source of a :LINK or :COPY must not have a trailing \"/\" character.~%Path: ~s."
            path)))
 
@@ -97,7 +97,7 @@
 
 (defun ensure-component-not-duplicate (node type id)
   (with-slots (%path %components-table) node
-    (when (u:href %components-table type id)
+    (when (au:href %components-table type id)
       (error "Duplicate component type: ~s with the same ID: ~s, and no policy set.~%~
               Valid policies: NEW-TYPE, OLD-TYPE, NEW-ARGS, OLD-ARGS.~%Path: ~s."
              type id %path))))
@@ -112,31 +112,31 @@
     (error "Component type ~s does not exist.~%Path: ~s." type path)))
 
 (defun ensure-component-options-plist (type options path)
-  (unless (u:plist-p options)
+  (unless (au:plist-p options)
     (error "Component options for type ~s must be a property list of keyword keys and values.~%~
             Path: ~s." type path)))
 
 (defun ensure-component-options-valid (type options path)
   (let ((valid-options '(:id :policy)))
-    (dolist (x (u:plist-keys options))
+    (dolist (x (au:plist-keys options))
       (unless (member x valid-options)
         (error "Component type ~s has an invalid option: ~s.~%Valid options: ~{~s~^, ~}.~%Path: ~s."
                type x valid-options path)))))
 
 (defun ensure-component-id (type options path)
-  (u:when-let ((id (getf options :id)))
+  (au:when-let ((id (getf options :id)))
     (unless (integerp id)
       (error "Component type ~s must have an integer ID.~%Path: ~s." type path))))
 
 (defun ensure-component-policy (type options path)
-  (u:when-let ((policy (getf options :policy))
-               (valid-policies '(new-type old-type new-args old-args)))
+  (au:when-let ((policy (getf options :policy))
+                (valid-policies '(new-type old-type new-args old-args)))
     (unless (member policy valid-policies)
       (error "Component type ~s has an invalid policy: ~s.~%Valid policies: ~{~s~^, ~}.~%Path: ~s."
              type policy valid-policies path))))
 
 (defun ensure-component-args-plist (type args path)
-  (unless (u:plist-p args)
+  (unless (au:plist-p args)
     (error "Component arguments for type ~s must be an even number of keyword keys and values.~%~
             Path: ~s." type path)))
 

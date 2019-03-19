@@ -39,7 +39,7 @@
 
 (defmethod initialize-instance :after ((instance action) &key &allow-other-keys)
   (with-slots (%attrs) instance
-    (setf %attrs (u:plist->hash %attrs :test #'eq))))
+    (setf %attrs (au:plist->hash %attrs :test #'eq))))
 
 (defun insert-action (action where &key target)
   (with-accessors ((manager manager) (type action-type)) action
@@ -59,7 +59,7 @@
 
 (defun action-step (action)
   (with-accessors ((shape shape) (elapsed elapsed) (duration duration)) action
-    (funcall shape (u:clamp (/ elapsed duration) 0f0 1f0))))
+    (funcall shape (au:clamp (/ elapsed duration) 0f0 1f0))))
 
 (defun insert-default-actions (manager action-specs)
   (dolist (spec action-specs)

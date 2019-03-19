@@ -17,9 +17,9 @@
                #:varjo
                #:cl-opengl
                #:verbose
-               #:first-light.util
-               #:first-light.metadata
-               #:first-light.math)
+               #:golden-utils
+               #:game-math
+               #:first-light.metadata)
   :pathname "gpu"
   :serial t
   :components

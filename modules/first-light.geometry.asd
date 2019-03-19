@@ -14,7 +14,7 @@
   :depends-on (#:jsown
                #:cl-opengl
                #:defpackage-plus
-               #:first-light.util
+               #:golden-utils
                #:first-light.binary-formats)
   :pathname "geometry"
   :serial t

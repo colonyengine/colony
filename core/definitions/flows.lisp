@@ -128,9 +128,9 @@
         ;; collisions and then inform the recipients of those
         ;; collisions as desired in the boundary regions components
         ;; (yet to be written).
-	;;
-	;; NOTE: This flow-state is invoked deep inside of TICK, hence no
-	;; transitions in and out.
+        ;;
+        ;; NOTE: This flow-state is invoked deep inside of TICK, hence no
+        ;; transitions in and out.
         (flow-state physics-collisions :reset ()
                     (selector nil)
                     (action nil)
@@ -266,7 +266,7 @@
                                   ;; table as we iterate over the keys. We need
                                   ;; to copy the list of keys in order to
                                   ;; satisfy the traversal rules of hash tables.
-                                  (u:hash-keys (actor-destroy-db (tables core-state))))))
+                                  (au:hash-keys (actor-destroy-db (tables core-state))))))
 
                     ;; NOTE: See selector for this flow-state.
                     (action #'actor/destroy-descendants)

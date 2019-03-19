@@ -31,7 +31,6 @@
 
 (defpackage+ #:first-light.gpu.swizzle
   (:nicknames #:fl.gpu.swizzle)
-  (:local-nicknames (#:u #:fl.util))
   (:use #:cl #:vari))
 
 (defpackage+ #:first-light.gpu.user

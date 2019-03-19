@@ -1,9 +1,9 @@
 (in-package :first-light.metadata)
 
-(defvar *store* (u:dict #'eq))
+(defvar *store* (au:dict #'eq))
 
 (defun get (key)
-  (u:href *store* key))
+  (au:href *store* key))
 
 (defun set (key value)
-  (setf (u:href *store* key) value))
+  (setf (au:href *store* key) value))

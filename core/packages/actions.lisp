@@ -2,8 +2,7 @@
 
 (defpackage #:first-light.actions
   (:nicknames #:fl.actions)
-  (:local-nicknames (#:u #:fl.util)
-                    (#:m #:fl.math))
+  (:local-nicknames (#:m #:game-math))
   (:use #:cl #:%first-light)
   ;; protocol
   (:export #:insert-action

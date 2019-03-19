@@ -2,8 +2,7 @@
 
 (defpackage+ #:%first-light
   (:nicknames #:%fl)
-  (:local-nicknames (#:u #:fl.util)
-                    (#:m #:fl.math))
+  (:local-nicknames (#:m #:game-math))
   (:use #:cl)
   (:export
    #:active-camera

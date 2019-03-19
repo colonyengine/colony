@@ -8,14 +8,14 @@
    (%data :reader data
           :initarg :data)
    (%parse-tree :reader parse-tree
-                :initform (u:dict #'equalp))
+                :initform (au:dict #'equalp))
    (%root :reader root)
    (%links :reader links
-           :initform (u:dict #'eq
-                             :source->targets (u:dict #'equalp)
-                             :target->source (u:dict #'equalp)))))
+           :initform (au:dict #'eq
+                              :source->targets (au:dict #'equalp)
+                              :target->source (au:dict #'equalp)))))
 
-(u:define-printer (prefab stream :type t)
+(au:define-printer (prefab stream :type t)
   (format stream "~a" (name prefab)))
 
 (defclass node ()
@@ -31,14 +31,14 @@
    (%components :reader components
                 :initform nil)
    (%components-table :reader components-table
-                      :initform (u:dict #'eq))
+                      :initform (au:dict #'eq))
    (%parent :reader parent
             :initarg :parent
             :initform nil)
    (%children :reader children
-              :initform (u:dict #'equalp))))
+              :initform (au:dict #'equalp))))
 
-(u:define-printer (node stream :type t)
+(au:define-printer (node stream :type t)
   (format stream "~a" (path node)))
 
 (defun split-components/children (data)
@@ -51,22 +51,22 @@
               (subseq data index)))))
 
 (defun explode-path (path)
-  (u:string-split path #\/))
+  (au:string-split path #\/))
 
 (defun make-node-path (parent name)
-  (u:string-merge parent "/" name))
+  (au:string-merge parent "/" name))
 
 (defun make-node-path-from-parts (path-parts)
   (format nil "/~{~a~^/~}" path-parts))
 
 (defun find-library (name)
-  (u:if-found (library (u:href (fl.data:get 'prefabs) name))
-              library
-              (error "Prefab library ~s does not exist." name)))
+  (au:if-found (library (au:href (fl.data:get 'prefabs) name))
+               library
+               (error "Prefab library ~s does not exist." name)))
 
 (defun %find-prefab (name library)
   (let ((library (find-library library)))
-    (u:href library name)))
+    (au:href library name)))
 
 (defun find-prefab (name library)
   (or (%find-prefab name library)
@@ -76,7 +76,7 @@
   (let* ((prefab-name (first (explode-path path)))
          (prefab (%find-prefab prefab-name library)))
     (when prefab
-      (u:href (parse-tree prefab) path))))
+      (au:href (parse-tree prefab) path))))
 
 (defun find-node (path library)
   (or (%find-node path library)
@@ -84,7 +84,7 @@
 
 (defun map-nodes (func node)
   (funcall func node)
-  (u:do-hash-values (child (children node))
+  (au:do-hash-values (child (children node))
     (map-nodes func child)))
 
 (defun parse-copy/link (library path copy-p link-p form)
@@ -130,12 +130,12 @@
            (ensure-path-options-valid path options)
            (destructuring-bind (&key (copy nil copy-p) (link nil link-p)) options
              (ensure-path-options-keys path options)
-             (u:if-let ((copy/link-form (or copy link)))
+             (au:if-let ((copy/link-form (or copy link)))
                (parse-copy/link library path copy-p link-p copy/link-form)
                (direct-path target)))))))))
 
 (defun make-node (prefab path)
-  (symbol-macrolet ((node (u:href (parse-tree prefab) path)))
+  (symbol-macrolet ((node (au:href (parse-tree prefab) path)))
     (unless node
       (let ((name (first (last (explode-path path)))))
         (setf node (make-instance 'node
@@ -146,21 +146,21 @@
     node))
 
 (defun make-paths (prefab path data &optional options)
-  (u:mvlet ((components children (split-components/children data))
+  (au:mvlet ((components children (split-components/children data))
             (node (make-node prefab path)))
     (declare (ignore components))
     (when options
       (setf (slot-value node '%options) options))
     (dolist (child children)
       (destructuring-bind (path-spec . body) child
-        (u:mvlet ((path options (parse-path-spec path (library prefab) path-spec)))
+        (au:mvlet ((path options (parse-path-spec path (library prefab) path-spec)))
           (make-paths prefab path body options))))))
 
 (defun add-components (prefab path data)
-  (u:mvlet ((components children (split-components/children data)))
+  (au:mvlet ((components children (split-components/children data)))
     (let ((node (make-node prefab path)))
       (with-slots (%components) node
-        (u:appendf %components components)
+        (au:appendf %components components)
         (dolist (child children)
           (destructuring-bind (path-spec . body) child
             (let ((path (parse-path-spec path (library prefab) path-spec)))
@@ -174,17 +174,17 @@
       (setf %root (find-node path %library)))))
 
 (defun expand-parse-tree-path (prefab path-parts)
-  (u:when-let* ((path-parts (butlast path-parts))
+  (au:when-let* ((path-parts (butlast path-parts))
                 (path (format nil "/~{~a~^/~}" path-parts)))
     (make-node prefab path)
     (expand-parse-tree-path prefab path-parts)))
 
 (defun expand-parse-tree (prefab)
-  (u:do-hash-keys (path (parse-tree prefab))
+  (au:do-hash-keys (path (parse-tree prefab))
     (expand-parse-tree-path prefab (explode-path path))))
 
 (defun verify-components (prefab)
-  (u:do-hash (path node (parse-tree prefab))
+  (au:do-hash (path node (parse-tree prefab))
     (dolist (component (components node))
       (ensure-component-list component path)
       (ensure-component-form component path)
@@ -199,7 +199,7 @@
         (ensure-component-args-valid type args path)))))
 
 (defun insert-missing-transforms (prefab)
-  (u:do-hash (path node (parse-tree prefab))
+  (au:do-hash (path node (parse-tree prefab))
     (with-slots (%components) node
       (unless (find 'fl.comp:transform %components :key #'car)
         (push '(fl.comp:transform (:policy old-type)) %components))
@@ -207,8 +207,8 @@
 
 (defun collect-source-components (node)
   (let ((components))
-    (u:do-hash (type table (components-table node))
-      (u:do-hash-values (data table)
+    (au:do-hash (type table (components-table node))
+      (au:do-hash-values (data table)
         (destructuring-bind (&key id args &allow-other-keys) data
           (push (list* type `(:id ,id) args) components))))
     components))
@@ -218,7 +218,7 @@
     (setf %components (append (collect-source-components source) %components))))
 
 (defun copy-source-nodes (prefab)
-  (u:do-hash (path node (parse-tree prefab))
+  (au:do-hash (path node (parse-tree prefab))
     (destructuring-bind (&key source from &allow-other-keys) (options node)
       (when source
         (map-nodes
@@ -233,13 +233,13 @@
 
 (defun make-relationships (prefab)
   (flet ((get-parent (path)
-           (u:when-let ((path-parts (butlast (explode-path path))))
+           (au:when-let ((path-parts (butlast (explode-path path))))
              (make-node-path-from-parts path-parts))))
     (with-slots (%library) prefab
-      (u:do-hash (path node (parse-tree prefab))
-        (u:when-let ((parent-path (get-parent path)))
+      (au:do-hash (path node (parse-tree prefab))
+        (au:when-let ((parent-path (get-parent path)))
           (setf (slot-value node '%parent) (find-node parent-path %library)
-                (u:href (children (parent node)) path) (find-node path %library)))))))
+                (au:href (children (parent node)) path) (find-node path %library)))))))
 
 (defun get-source-prefab (node)
   (destructuring-bind (&key source from &allow-other-keys) (options node)
@@ -247,32 +247,32 @@
       (find-prefab name from))))
 
 (defun make-links (prefab)
-  (u:do-hash (path node (parse-tree prefab))
+  (au:do-hash (path node (parse-tree prefab))
     (destructuring-bind (&key mode source &allow-other-keys) (options node)
       (when (eq mode 'link)
         (let* ((source-prefab (get-source-prefab node))
                (target (cons (library prefab) path))
-               (links (u:href (links source-prefab))))
-          (symbol-macrolet ((targets (u:href links :source->targets source)))
-            (setf (u:href links :target->source target) source)
+               (links (au:href (links source-prefab))))
+          (symbol-macrolet ((targets (au:href links :source->targets source)))
+            (setf (au:href links :target->source target) source)
             (unless targets
-              (setf targets (u:dict #'equalp)))
-            (setf (u:href targets target) node)))))))
+              (setf targets (au:dict #'equalp)))
+            (setf (au:href targets target) node)))))))
 
 (defun remove-broken-links (prefab)
-  (let ((source->targets (u:href (links prefab) :source->targets))
-        (target->source (u:href (links prefab) :target->source)))
-    (u:do-hash (target source target->source)
+  (let ((source->targets (au:href (links prefab) :source->targets))
+        (target->source (au:href (links prefab) :target->source)))
+    (au:do-hash (target source target->source)
       (destructuring-bind (library . path) target
         (unless (%find-node path library)
           (remhash target target->source)
-          (remhash target (u:href source->targets source))
-          (unless (u:href source->targets source)
+          (remhash target (au:href source->targets source))
+          (unless (au:href source->targets source)
             (remhash source source->targets)))))
-    (u:do-hash-keys (source source->targets)
+    (au:do-hash-keys (source source->targets)
       (unless (%find-node source (library prefab))
         (remhash source source->targets)
-        (u:do-hash (k v target->source)
+        (au:do-hash (k v target->source)
           (when (string= v source)
             (remhash k target->source)))))))
 
@@ -282,7 +282,7 @@
   prefab)
 
 (defun update-links-recursively (prefab)
-  (u:do-hash-keys (target (u:href (links prefab) :target->source))
+  (au:do-hash-keys (target (au:href (links prefab) :target->source))
     (destructuring-bind (library . path) target
       (let* ((name (first (explode-path path)))
              (target-prefab (find-prefab name library)))
@@ -300,28 +300,28 @@
     (merge-component 'new-type node type id args)))
 
 (defmethod merge-component ((policy (eql 'new-type)) node type id args)
-  (setf (u:href (components-table node) type id) (list :id id :policy policy :args args)))
+  (setf (au:href (components-table node) type id) (list :id id :policy policy :args args)))
 
 (defmethod merge-component ((policy (eql 'old-type)) node type id args)
-  (u:unless-found (components (u:href (components-table node) type id))
-    (setf (u:href (components-table node) type id) (list :id id :policy policy :args args))))
+  (au:unless-found (components (au:href (components-table node) type id))
+    (setf (au:href (components-table node) type id) (list :id id :policy policy :args args))))
 
 (defmethod merge-component ((policy (eql 'new-args)) node type id args)
-  (let* ((old-args (u:plist->hash (getf (u:href (components-table node) type id) :args)))
-         (new-args (u:hash->plist (u:merge-tables old-args (u:plist->hash args)))))
-    (setf (u:href (components-table node) type id) (list :id id :policy policy :args new-args))))
+  (let* ((old-args (au:plist->hash (getf (au:href (components-table node) type id) :args)))
+         (new-args (au:hash->plist (au:merge-tables old-args (au:plist->hash args)))))
+    (setf (au:href (components-table node) type id) (list :id id :policy policy :args new-args))))
 
 (defmethod merge-component ((policy (eql 'old-args)) node type id args)
-  (let* ((old-args (u:plist->hash (getf (u:href (components-table node) type id) :args)))
-         (new-args (u:hash->plist (u:merge-tables (u:plist->hash args) old-args))))
-    (setf (u:href (components-table node) type id) (list :id id :policy policy :args new-args))))
+  (let* ((old-args (au:plist->hash (getf (au:href (components-table node) type id) :args)))
+         (new-args (au:hash->plist (au:merge-tables (au:plist->hash args) old-args))))
+    (setf (au:href (components-table node) type id) (list :id id :policy policy :args new-args))))
 
 (defun make-component-table (prefab)
-  (u:do-hash-values (node (parse-tree prefab))
+  (au:do-hash-values (node (parse-tree prefab))
     (dolist (component (components node))
       (destructuring-bind (type (&key (id 0) policy) . args) component
-        (unless (u:href (components-table node) type)
-          (setf (u:href (components-table node) type) (u:dict #'eql)))
+        (unless (au:href (components-table node) type)
+          (setf (au:href (components-table node) type) (au:dict #'eql)))
         (merge-component policy node type id args)))))
 
 (defun print-prefab (name library)
@@ -333,8 +333,8 @@
      (lambda (x)
        (let ((level (* 3 (1- (length (explode-path (path x)))))))
          (print-line level (name x))
-         (u:do-hash (type table (components-table x))
-           (u:do-hash-values (data table)
+         (au:do-hash (type table (components-table x))
+           (au:do-hash-values (data table)
              (print-line level `(,type ,@(getf data :args)))))
          (format t "~%")))
      (root (find-prefab name library)))))
@@ -354,7 +354,7 @@
              (update-links prefab)
              (setf success-p t))
         (unless success-p
-          (remhash %name (u:href (fl.data:get 'prefabs) %library)))))))
+          (remhash %name (au:href (fl.data:get 'prefabs) %library)))))))
 
 (defun make-prefab (name library data)
   (let ((prefab (or (%find-prefab name library)
@@ -368,19 +368,19 @@
 
 (defmacro define-prefab (name (&optional library) &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
-         (prefabs `(u:href ,libraries ',library)))
-    (u:with-unique-names (prefab)
+         (prefabs `(au:href ,libraries ',library)))
+    (au:with-unique-names (prefab)
       `(progn
          (ensure-prefab-name-string ',name)
          (ensure-prefab-name-valid ',name)
          (ensure-prefab-library-set ',name ',library)
          (ensure-prefab-library-symbol ',name ',library)
          (unless ,libraries
-           (fl.data:set 'prefabs (u:dict #'eq)))
+           (fl.data:set 'prefabs (au:dict #'eq)))
          (unless ,prefabs
-           (setf ,prefabs (u:dict #'equalp)))
+           (setf ,prefabs (au:dict #'equalp)))
          (let ((,prefab (make-prefab ',name ',library ',body)))
-           (setf (u:href ,prefabs ',name) ,prefab)
+           (setf (au:href ,prefabs ',name) ,prefab)
            (parse-prefab ,prefab))
          (export ',library)))))
 

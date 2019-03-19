@@ -11,7 +11,7 @@
    (%active-camera :accessor active-camera
                    :initform nil)
    (%shared-storage-table :reader shared-storage-table
-                          :initform (u:dict #'eq))
+                          :initform (au:dict #'eq))
    (%state :accessor state
            :initform nil)))
 

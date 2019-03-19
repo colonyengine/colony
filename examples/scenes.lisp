@@ -263,7 +263,7 @@
     ((fl.comp:sprite :spec :spritesheet-data
                      :name "ship29")
      (fl.comp:render :material `(fl.materials:sprite
-                                 ,(u:unique-name '#:sprite)
+                                 ,(au:unique-name '#:sprite)
                                  :uniforms
                                  ((:sprite.sampler sprites)))
                      :mode :sprite))
@@ -273,7 +273,7 @@
                       :name "exhaust03-01"
                       :frames 8)
       (fl.comp:render :material `(fl.materials:sprite
-                                  ,(u:unique-name '#:sprite)
+                                  ,(au:unique-name '#:sprite)
                                   :uniforms
                                   ((:sprite.sampler sprites)))
                       :mode :sprite)
@@ -290,7 +290,7 @@
     (fl.comp:sprite :spec :spritesheet-data
                     :name "planet04")
     (fl.comp:render :material `(fl.materials:sprite
-                                ,(u:unique-name '#:sprite)
+                                ,(au:unique-name '#:sprite)
                                 :uniforms
                                 ((:sprite.sampler sprites)))
                     :mode :sprite)

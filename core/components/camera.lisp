@@ -59,7 +59,7 @@
   (let* ((context (context (core-state display)))
          (camera (find-active-camera context)))
     (with-accessors ((zoom zoom) (mode mode)) camera
-      (setf zoom (u:clamp (+ zoom (/ direction 2)) 1 10))
+      (setf zoom (au:clamp (+ zoom (/ direction 2)) 1 10))
       (make-projection mode camera))))
 
 ;;; Component event hooks
@@ -73,5 +73,5 @@
 
 (defmethod on-component-destroy ((self camera))
   (with-accessors ((context context)) self
-    (u:deletef (cameras (core-state context)) self)
+    (au:deletef (cameras (core-state context)) self)
     (setf (active-camera context) nil)))

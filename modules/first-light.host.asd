@@ -13,7 +13,7 @@
   :encoding :utf-8
   :depends-on (#:sdl2
                #:cl-opengl
-               #:first-light.util)
+               #:golden-utils)
   :pathname "host"
   :serial t
   :components

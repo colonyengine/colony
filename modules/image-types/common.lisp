@@ -27,7 +27,7 @@
   (apply #'make-instance 'image init-args))
 
 (defun get-image-extension-keyword (path)
-  (u:make-keyword (string-upcase (pathname-type path))))
+  (au:make-keyword (string-upcase (pathname-type path))))
 
 (defun get-loader-type (path)
   (let ((extension (get-image-extension-keyword path)))

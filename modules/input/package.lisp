@@ -2,8 +2,7 @@
 
 (defpackage+ #:first-light.input
   (:nicknames #:fl.input)
-  (:local-nicknames (#:u #:fl.util)
-                    (#:m #:fl.math))
+  (:local-nicknames (#:m #:game-math))
   (:use #:cl)
   (:export #:get-gamepad-analog
            #:get-gamepad-name

@@ -89,7 +89,7 @@
     (m:set-translation %local (interpolated %translation) %local)))
 
 (defun resolve-model (node alpha)
-  (u:when-let ((parent (parent node)))
+  (au:when-let ((parent (parent node)))
     (resolve-local node alpha)
     (m:* (model parent) (local node) (model node))))
 

@@ -13,7 +13,7 @@
   :encoding :utf-8
   :depends-on (#:queues.simple-cqueue
                #:defpackage-plus
-               #:first-light.util)
+               #:golden-utils)
   :pathname "data-structures"
   :serial t
   :components
