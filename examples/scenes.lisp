@@ -255,9 +255,9 @@
                                     ,(au:unique-name '#:sprite)
                                     :uniforms ((:sprite.sampler sprites)))
                         :mode :sprite)
-     (fl.comp::actions () :default-actions '((:type fl.actions:sprite-animate
-                                              :duration 0.5
-                                              :repeat-p t)))))))
+     (fl.comp:actions () :default-actions '((:type fl.actions:sprite-animate
+                                             :duration 0.5
+                                             :repeat-p t)))))))
 
 (fl:define-prefab "sprite-test-2" (:library examples)
   ("camera"
@@ -271,10 +271,10 @@
                                   ,(au:unique-name '#:sprite)
                                   :uniforms ((:sprite.sampler sprites)))
                       :mode :sprite)
-   (fl.comp::actions () :default-actions '((:type fl.actions:rotate
-                                            :duration 4
-                                            :shape m:bounce-in
-                                            :repeat-p t)))))
+   (fl.comp:actions () :default-actions '((:type fl.actions:rotate
+                                           :duration 4
+                                           :shape m:bounce-in
+                                           :repeat-p t)))))
 
 (fl:define-prefab "texture-test" (:library examples)
   ("camera"

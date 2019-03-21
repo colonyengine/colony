@@ -15,7 +15,8 @@
            #:find-active-camera
            #:compute-camera-view)
   ;; action
-  (:export #:action
+  (:export #:actions
+           #:action
            #:action-list
            #:sprite-animate)
   ;; mesh

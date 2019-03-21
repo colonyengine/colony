@@ -11,41 +11,35 @@
 (fl:define-material unlit-texture
   (:shader fl.gpu.texture:unlit-texture
    :profiles (u-mvp)
-   :uniforms
-   ((:tex.sampler1 'fl.textures:debug-texture)
-    (:mix-color (m:vec4 1)))))
+   :uniforms ((:tex.sampler1 'fl.textures:debug-texture)
+              (:mix-color (m:vec4 1)))))
 
 (fl:define-material unlit-texture-decal
   (:shader fl.gpu.texture:unlit-texture-decal
    :profiles (u-mvp)
-   :uniforms
-   ((:min-intensity (m:vec4))
-    (:max-intensity (m:vec4 1))
-    (:tex.sampler1 'fl.textures:debug-texture))))
+   :uniforms ((:min-intensity (m:vec4))
+              (:max-intensity (m:vec4 1))
+              (:tex.sampler1 'fl.textures:debug-texture))))
 
 (fl:define-material unlit-texture-decal-bright
   (:shader fl.gpu.texture:unlit-texture-decal
    :profiles (u-mvp)
-   :uniforms
-   ((:min-intensity (m:vec4 0.1))
-    (:max-intensity (m:vec4 1))
-    (:tex.sampler1 'fl.textures:debug-texture))))
+   :uniforms ((:min-intensity (m:vec4 0.1))
+              (:max-intensity (m:vec4 1))
+              (:tex.sampler1 'fl.textures:debug-texture))))
 
 (fl:define-material sprite
   (:profiles (u-mvp)
    :shader fl.gpu.sprite:sprite
-   :uniforms
-   ((:sprite.sampler 'fl.textures:debug-texture)
-    (:opacity 1.0)
-    (:alpha-cutoff 0.1))
-   :blocks
-   ((:block-name :spritesheet
-     :storage-type :buffer
-     :block-alias :spritesheet
-     :binding-policy :manual))))
+   :uniforms ((:sprite.sampler 'fl.textures:debug-texture)
+              (:opacity 1.0)
+              (:alpha-cutoff 0.1))
+   :blocks ((:block-name :spritesheet
+             :storage-type :buffer
+             :block-alias :spritesheet
+             :binding-policy :manual))))
 
 (fl:define-material missing-material
   (:shader fl.gpu.texture:unlit-texture
    :profiles (u-mvp)
-   :uniforms
-   ((:tex.sampler1 'fl.textures:debug-texture))))
+   :uniforms ((:tex.sampler1 'fl.textures:debug-texture))))
