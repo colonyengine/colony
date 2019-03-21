@@ -378,7 +378,7 @@
     (au:do-hash (type table (au:href (components-table (prefab-node actor))))
       (au:do-hash-values (data table)
         (let* ((args (loop :for (k v) :on (getf data :args) :by #'cddr
-                           :append (list k (funcall v))))
+                           :append (list k (funcall v context))))
                (component (apply #'make-component context type args)))
           (attach-component actor component))))))
 
@@ -405,14 +405,23 @@
       (au:do-hash-values (actor actors)
         (spawn-actor actor)))))
 
-(defmacro thunk-prefab-spec (prefab-spec)
+(defun load-prefabs (core-state prefabs)
+  (%fl:make-scene-tree core-state)
+  (dolist (spec prefabs)
+    (destructuring-bind (name library) spec
+      (let ((prefab (find-prefab name library)))
+        (funcall (func prefab) core-state)))))
+
+(defmacro thunk-prefab-spec (context prefab-spec)
   (labels ((thunk-component-args (data)
              (destructuring-bind (type options . args) data
                `(list ',type
                       ',options
                       ,@(loop :for (key value) :on args :by #'cddr
                               :collect key
-                              :collect `(lambda () ,value)))))
+                              :collect `(lambda (,context)
+                                          (declare (ignorable ,context))
+                                          ,value)))))
            (traverse-children (data)
              (au:mvlet ((name components children (split-prefab-spec data)))
                `(list ',name
@@ -420,7 +429,7 @@
                       ,@(mapcar #'traverse-children children)))))
     `(list ,@(mapcar #'traverse-children prefab-spec))))
 
-(defmacro define-prefab (name (&optional library) &body body)
+(defmacro define-prefab (name (&key library (context 'context)) &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
          (prefabs `(au:href ,libraries ',library)))
     (au:with-unique-names (prefab data)
@@ -433,7 +442,7 @@
            (fl.data:set 'prefabs (au:dict #'eq)))
          (unless ,prefabs
            (setf ,prefabs (au:dict #'equalp)))
-         (let* ((,data (thunk-prefab-spec ,body))
+         (let* ((,data (thunk-prefab-spec ,context ,body))
                 (,prefab (make-prefab ',name ',library ,data)))
            (setf (au:href ,prefabs ',name) ,prefab)
            (parse-prefab ,prefab)

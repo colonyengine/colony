@@ -1,11 +1,11 @@
 (in-package #:%first-light)
 
 #+sbcl
-(defun deploy-binary (file-name scene-name &key compress-p)
+(defun deploy-binary (file-name prefabs &key compress-p)
   (v:stop v:*global-controller*)
   (setf uiop/image:*image-dumped-p* t)
   (sb-ext:save-lisp-and-die file-name
-                            :toplevel (lambda () (fl:start-engine scene-name))
+                            :toplevel (lambda () (fl:start-engine prefabs))
                             :executable t
                             :compression (when compress-p 9)))
 

@@ -58,7 +58,6 @@
    (:file "actor")
    (:file "flow")
    (:file "graph")
-   (:file "scene")
    (:module "textures"
     :components
     ((:file "texture")

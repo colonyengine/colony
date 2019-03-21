@@ -2,8 +2,6 @@
 
 (au:eval-always
   (defmacro profile (core-state duration)
-    "Profile the scene `SCENE-NAME` for the given `DURATION` in seconds, all packages that begin with
-  'FL.', along with some key third-party library packages."
     (let ((packages (remove-if-not
                      (lambda (x) (au:string-starts-with-p x "FL."))
                      (mapcar #'package-name (list-all-packages)))))
@@ -55,7 +53,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
   (sdl2:destroy-window (window (display core-state)))
   (sdl2::sdl-quit))
 
-(defmethod initialize-engine ((core-state core-state) scene-name)
+(defun initialize-engine (core-state prefabs)
   (let ((title (option (context core-state) :title)))
     (v:info :fl.core.engine "Starting up ~a..." title)
     (setup-lisp-repl)
@@ -67,8 +65,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (load-call-flows core-state)
     (load-texture-descriptors core-state)
     (load-materials core-state)
-    (load-scene-definitions core-state)
-    (load-scene core-state scene-name)
+    (fl.prefab:load-prefabs core-state prefabs)
     (v:info :fl.core.engine "Finished starting ~a" title)))
 
 (defun iterate-main-loop (core-state)
@@ -84,7 +81,7 @@ method, but before any engine tear-down procedure occurs when stopping the engin
   (au:while (running-p core-state)
     (iterate-main-loop core-state)))
 
-(defun start-engine (scene-name &optional profile-duration)
+(defun start-engine (prefabs &optional profile-duration)
   "Start the engine. First we initialize the engine. Next we run the prologue as the last step,
 before finally starting the main game loop."
   (unwind-protect
@@ -92,7 +89,7 @@ before finally starting the main game loop."
          (load-options core-state)
          (make-context core-state)
          (setf *core-state-debug* core-state)
-         (initialize-engine core-state scene-name)
+         (initialize-engine core-state prefabs)
          (run-prologue core-state)
          (if profile-duration
              (profile core-state profile-duration)

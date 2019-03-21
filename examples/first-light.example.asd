@@ -1,5 +1,5 @@
 (asdf:defsystem #:first-light.example
-  :description "Example scene for first-light."
+  :description "Examples for first-light."
   :author ("Michael Fiano <michael.fiano@gmail.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
   :maintainer ("Michael Fiano <michael.fiano@gmail.com>"
@@ -17,6 +17,6 @@
    (:file "shaders-noise-test")
    (:file "shaders-texture-test")
    (:file "materials")
-   (:file "scenes")
    (:file "components")
-   (:file "sprite-test")))
+   (:file "sprite-test")
+   (:file "scenes")))

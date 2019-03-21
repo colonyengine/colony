@@ -4,4 +4,7 @@
   (:nicknames #:fl.prefab)
   (:local-nicknames (#:m #:game-math))
   (:use #:cl #:%first-light)
-  (:export #:define-prefab))
+  (:export #:define-prefab
+           #:find-prefab
+           #:print-prefab
+           #:load-prefabs))

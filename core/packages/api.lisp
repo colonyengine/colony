@@ -20,7 +20,6 @@
                  #:define-material-profile
                  #:define-options
                  #:define-resources
-                 #:define-scene
                  #:define-texture
                  #:define-texture-profile
                  #:destroy

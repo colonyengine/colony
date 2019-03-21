@@ -24,7 +24,6 @@
    #:define-material-profile
    #:define-options
    #:define-resources
-   #:define-scene
    #:define-texture
    #:define-texture-profile
    #:delta
@@ -43,6 +42,7 @@
    #:lookup-material
    #:make-actor
    #:make-component
+   #:make-scene-tree
    #:mat-uniform-ref
    #:on-component-attach
    #:on-component-destroy

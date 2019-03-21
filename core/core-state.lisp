@@ -31,8 +31,6 @@
                 :initform (au:dict #'eq))
    (%analyzed-graphs :reader analyzed-graphs
                      :initform (au:dict #'equalp))
-   (%scenes :reader scenes
-            :initform (au:dict #'eq))
    (%recompilation-queue :reader recompilation-queue
                          :initarg :recompilation-queue
                          :initform (fl.dst:make-queue :simple-cqueue))))
@@ -84,7 +82,7 @@ CORE-STATE."
           (when (plusp (hash-table-count v))
             (return-from done t))))))
 
-(defun %make-scene-tree (core-state)
+(defun make-scene-tree (core-state)
   (let* ((context (context core-state))
          (actor (make-actor context :id (au:unique-name '@universe)))
          (transform (make-component context 'transform :actor actor)))
@@ -94,7 +92,7 @@ CORE-STATE."
                   'initialize-phase
                   'entry/initialize-phase
                   :come-from-state-name 'ef-make-scene-tree)
-    actor))
+    (setf (slot-value core-state '%scene-tree) actor)))
 
 (defgeneric shared-storage (context key)
   (:method (context key)
