@@ -52,6 +52,7 @@
    #:on-component-render
    #:on-component-update
    #:option
+   #:prefab-node
    #:print-all-resources
    #:project-data
    #:scene-tree

@@ -52,4 +52,6 @@
                  #:stop-engine
                  #:total-time
                  #:using-material
-                 #:with-shared-storage))
+                 #:with-shared-storage)
+  (:inherit-from #:fl.prefab
+                 #:define-prefab))

@@ -364,24 +364,66 @@
       (clrhash %parse-tree))
     prefab))
 
-(au:eval-always
-  (defun thunk-component-args (prefab-spec)
-    (flet ((split-body (body)
-             (au:partition #'symbolp body :key #'first))
-           (thunk-args (args)
-             (loop :for (key val) :on args :by #'cddr
-                   :collect key :collect `(lambda () ,val))))
-      (multiple-value-bind (components children) (split-body (rest prefab-spec))
-        `(,(first prefab-spec)
-          ,@(loop :for (name options . args) :in components
-                  :collect `(,name ,options ,@(thunk-args args)))
-          ,@(mapcar #'thunk-component-args children))))))
+(defun make-prefab-actors (context prefab)
+  (let ((prefab-actors (au:dict #'equalp)))
+    (au:do-hash (path node (parse-tree prefab))
+      (setf (au:href prefab-actors path)
+            (make-actor context
+                        :id (au:unique-name path)
+                        :prefab-node node)))
+    prefab-actors))
+
+(defun make-prefab-actor-components (context actors)
+  (au:do-hash-values (actor actors)
+    (au:do-hash (type table (au:href (components-table (prefab-node actor))))
+      (au:do-hash-values (data table)
+        (let* ((args (loop :for (k v) :on (getf data :args) :by #'cddr
+                           :append (list k (funcall v))))
+               (component (apply #'make-component context type args)))
+          (attach-component actor component))))))
+
+(defun make-prefab-actor-relationships (context prefab actors &optional parent)
+  (let ((parent (or parent (scene-tree (core-state context))))
+        (root (au:href actors (path (root prefab)))))
+    (au:do-hash-values (actor actors)
+      (let ((node (prefab-node actor)))
+        (au:do-hash-values (child (children node))
+          (fl.comp:transform-add-child
+           (actor-component-by-type actor 'fl.comp:transform)
+           (actor-component-by-type (au:href actors (path child))
+                                    'fl.comp:transform)))))
+    (fl.comp:transform-add-child
+     (actor-component-by-type parent 'fl.comp:transform)
+     (actor-component-by-type root 'fl.comp:transform))))
+
+(defun make-prefab-factory (prefab)
+  (lambda (core-state)
+    (let* ((context (context core-state))
+           (actors (make-prefab-actors context prefab)))
+      (make-prefab-actor-components context actors)
+      (make-prefab-actor-relationships context prefab actors)
+      (au:do-hash-values (actor actors)
+        (spawn-actor actor)))))
+
+(defmacro thunk-prefab-spec (prefab-spec)
+  (labels ((thunk-component-args (data)
+             (destructuring-bind (type options . args) data
+               `(list ',type
+                      ',options
+                      ,@(loop :for (key value) :on args :by #'cddr
+                              :collect key
+                              :collect `(lambda () ,value)))))
+           (traverse-children (data)
+             (au:mvlet ((name components children (split-prefab-spec data)))
+               `(list ',name
+                      ,@(mapcar #'thunk-component-args components)
+                      ,@(mapcar #'traverse-children children)))))
+    `(list ,@(mapcar #'traverse-children prefab-spec))))
 
 (defmacro define-prefab (name (&optional library) &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
-         (prefabs `(au:href ,libraries ',library))
-         (data (mapcar #'thunk-component-args body)))
-    (au:with-unique-names (prefab)
+         (prefabs `(au:href ,libraries ',library)))
+    (au:with-unique-names (prefab data)
       `(progn
          (ensure-prefab-name-string ',name)
          (ensure-prefab-name-valid ',name)
@@ -391,39 +433,10 @@
            (fl.data:set 'prefabs (au:dict #'eq)))
          (unless ,prefabs
            (setf ,prefabs (au:dict #'equalp)))
-         (let ((,prefab (make-prefab ',name ',library ',data)))
+         (let* ((,data (thunk-prefab-spec ,body))
+                (,prefab (make-prefab ',name ',library ,data)))
            (setf (au:href ,prefabs ',name) ,prefab)
-           (parse-prefab ,prefab))
+           (parse-prefab ,prefab)
+           (setf (slot-value ,prefab '%func) (make-prefab-factory ,prefab)))
          (export ',library)))))
 
-;;; test data
-
-(define-prefab "foo1" (test)
-  ("q"
-   (fl.comp:mesh () :location 42)
-   ("w"
-    ("e"))))
-
-(define-prefab "foo4" (test)
-  (("a" (:copy "/foo1/q"))
-   ("b"
-    (fl.comp:mesh () :location 2)
-    ("c"
-     (fl.comp:mesh () :location 3))))
-  ("a3"))
-
-(defparameter *test*
-  '(("a"
-     (fl.comp:mesh () :location 1)
-     ("b"
-      (fl.comp:mesh () :location 2)
-      ("c"
-       (fl.comp:mesh () :location 3))))
-    ("a2")))
-
-(defun foo (spec)
-  (dolist (x spec)
-    (au:mvlet ((name components children (split-prefab-spec x)))
-      (format t "name: ~s~%" name)
-      (format t "components: ~s~%" components)
-      (foo children))))

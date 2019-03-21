@@ -10,6 +10,8 @@
                 :initform (au:dict #'eq))
    (%components-by-type :reader components-by-type
                         :initform (au:dict #'eq))
+   (%prefab-node :reader prefab-node
+                 :initarg :prefab-node)
    (%ttl :accessor ttl
          :initarg :ttl
          :initform 0)
