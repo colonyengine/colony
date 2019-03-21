@@ -42,9 +42,10 @@
 (define-function sprite/f ((uv :vec2)
                            &uniform
                            (opacity :float)
+                           (alpha-cutoff :float)
                            (sprite sprite-data))
   (let ((color (texture (sampler sprite) uv)))
-    (if (zerop (.a color))
+    (if (< (.a color) alpha-cutoff)
         (discard)
         (vec4 (.rgb color) opacity))))
 

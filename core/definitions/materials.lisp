@@ -36,7 +36,8 @@
    :shader fl.gpu.sprite:sprite
    :uniforms
    ((:sprite.sampler 'fl.textures:debug-texture)
-    (:opacity 1.0))
+    (:opacity 1.0)
+    (:alpha-cutoff 0.1))
    :blocks
    ((:block-name :spritesheet
      :storage-type :buffer
