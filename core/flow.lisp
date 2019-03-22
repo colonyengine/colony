@@ -52,8 +52,9 @@
   (assert (string= (symbol-name symbol) (string-upcase name))))
 
 (defun parse-flow-state-functions (name funcs)
-  "Parse the selection, action, and transition form from the FUNCS list. They can be in any order,
-but return them as a values in the specific order of selector, action, and transition."
+  "Parse the selection, action, and transition form from the FUNCS list.
+They can be in any order, but return them as a values in the specific order of
+selector, action, and transition."
   (let ((ht (au:dict #'eq)))
     (dolist (func-form funcs)
       (when func-form
