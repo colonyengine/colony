@@ -162,8 +162,8 @@
                  (make-node prefab path)
                  (%expand-path parts))))
       (let ((root-path (make-node-path nil %name)))
-        (setf %root (make-node prefab root-path))
-        (%make-nodes root-path data)
+        (%make-nodes nil data)
+        (setf %root (find-node root-path %library))
         (au:do-hash-keys (path %parse-tree)
           (%expand-path (explode-path path)))))))
 
@@ -408,7 +408,7 @@
              (destructuring-bind (type . options/args) data
                (let ((options-p (listp (first options/args))))
                  `(list ',type
-                        ,(when options-p (first options/args))
+                        ',(when options-p (first options/args))
                         ,@(loop
                             :with args = (if options-p (rest options/args) options/args)
                             :for (key value) :on args :by #'cddr
@@ -425,7 +425,8 @@
 
 (defmacro define-prefab (name (&key library (context 'context)) &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
-         (prefabs `(au:href ,libraries ',library)))
+         (prefabs `(au:href ,libraries ',library))
+         (body (list (cons name body))))
     (au:with-unique-names (prefab data)
       `(progn
          (ensure-prefab-name-string ',name)
@@ -442,10 +443,6 @@
            (parse-prefab ,prefab)
            (setf (slot-value ,prefab '%func) (make-prefab-factory ,prefab)))
          (export ',library)))))
-
-;; implicit root node around toplevel components
-
-;; expands slash node names to multiple nodes
 
 ;; actor/component refs
 
