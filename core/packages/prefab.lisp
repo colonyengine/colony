@@ -7,4 +7,5 @@
   (:export #:define-prefab
            #:find-prefab
            #:print-prefab
-           #:load-prefabs))
+           #:load-prefabs
+           #:ref))

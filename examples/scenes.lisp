@@ -59,26 +59,26 @@
 
 (fl:define-prefab "3d-graph-test-1" (:library examples)
   ("camera"
-   ;; TODO: Implement actor references needed for tracking camera
    (fl.comp:transform :translate (m:vec3 0 70 100))
    (fl.comp:camera :active-p t
                    :mode :perspective
                    :zoom 2)
-   ("graph"
-    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-    (fl.comp:render :material '(3d-graph-test
-                                3d-graph-test/1
-                                :shader fl.gpu.user:3d-graph-test/1
-                                :instances 100000
-                                :uniforms ((:size 0.5)))))))
+   (fl.comp:tracking-camera :target-actor (fl:ref "/3d-graph-test-1/graph")))
+  ("graph"
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material '(3d-graph-test
+                               3d-graph-test/1
+                               :shader fl.gpu.user:3d-graph-test/1
+                               :instances 100000
+                               :uniforms ((:size 0.5))))))
 
 (fl:define-prefab "3d-graph-test-2" (:library examples)
   ("camera"
-   ;; TODO: Implement actor references needed for tracking camera
    (fl.comp:transform :translate (m:vec3 0 50 100))
    (fl.comp:camera :active-p t
                    :mode :perspective
-                   :zoom 2))
+                   :zoom 2)
+   (fl.comp:tracking-camera :target-actor (fl:ref "/3d-graph-test-2/graph")))
   ("graph"
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '(3d-graph-test

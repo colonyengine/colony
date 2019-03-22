@@ -53,4 +53,5 @@
                  #:using-material
                  #:with-shared-storage)
   (:inherit-from #:fl.prefab
-                 #:define-prefab))
+                 #:define-prefab
+                 #:ref))

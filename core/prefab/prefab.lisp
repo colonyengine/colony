@@ -387,10 +387,11 @@
      (actor-component-by-type parent 'fl.comp:transform)
      (actor-component-by-type root 'fl.comp:transform))))
 
-(defun make-prefab-factory (prefab)
+(defun make-prefab-factory (prefab setter)
   (lambda (core-state)
     (let* ((context (context core-state))
            (actors (make-prefab-actors context prefab)))
+      (funcall setter actors)
       (make-prefab-actor-components context actors)
       (make-prefab-actor-relationships context prefab actors)
       (au:do-hash-values (actor actors)
@@ -421,13 +422,23 @@
                `(list ',name
                       ,@(mapcar #'thunk-component-args components)
                       ,@(mapcar #'traverse-children children)))))
-    `(list ,@(mapcar #'traverse-children prefab-spec))))
+    (au:with-unique-names (setter prefab-actors)
+      `(let ((,prefab-actors (au:dict)))
+         (flet ((,setter (arg)
+                  (setf ,prefab-actors arg))
+                (ref (actor-path)
+                  (values (au:href ,prefab-actors actor-path)
+                          ,prefab-actors)))
+           (ref (gensym))
+           (values
+            (list ,@(mapcar #'traverse-children prefab-spec))
+            #',setter))))))
 
 (defmacro define-prefab (name (&key library (context 'context)) &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
          (prefabs `(au:href ,libraries ',library))
          (body (list (cons name body))))
-    (au:with-unique-names (prefab data)
+    (au:with-unique-names (prefab data setter)
       `(progn
          (ensure-prefab-name-string ',name)
          (ensure-prefab-name-valid ',name)
@@ -437,13 +448,28 @@
            (fl.data:set 'prefabs (au:dict #'eq)))
          (unless ,prefabs
            (setf ,prefabs (au:dict #'equalp)))
-         (let* ((,data (thunk-prefab-spec ,context ,body))
-                (,prefab (make-prefab ',name ',library ,data)))
+         (au:mvlet* ((,data ,setter (thunk-prefab-spec ,context ,body))
+                     (,prefab (make-prefab ',name ',library ,data)))
            (setf (au:href ,prefabs ',name) ,prefab)
            (parse-prefab ,prefab)
-           (setf (slot-value ,prefab '%func) (make-prefab-factory ,prefab)))
+           (setf (slot-value ,prefab '%func) (make-prefab-factory ,prefab ,setter)))
          (export ',library)))))
 
 ;; actor/component refs
 
 ;; core prefab library (for cameras etc) (and split up examples into proper prefabs)
+
+(fl:define-scene 3d-graph-test/1 ()
+  (@camera
+   ((fl.comp:transform :translate (m:vec3 0 70 100))
+    (fl.comp:camera :active-p t
+                    :mode :perspective
+                    :zoom 2)
+    (fl.comp:tracking-camera :target-actor @graph)))
+  (@graph
+   ((fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+    (fl.comp:render :material '(3d-graph-test
+                                3d-graph-test/1
+                                :shader fl.gpu.user:3d-graph-test/1
+                                :instances 100000
+                                :uniforms ((:size 0.5)))))))
