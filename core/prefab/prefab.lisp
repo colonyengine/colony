@@ -365,13 +365,18 @@
     prefab-actors))
 
 (defun make-prefab-actor-components (context actors)
-  (au:do-hash-values (actor actors)
-    (au:do-hash (type table (au:href (components-table (prefab-node actor))))
-      (au:do-hash-values (data table)
-        (let* ((args (loop :for (k v) :on (getf data :args) :by #'cddr
-                           :append (list k (funcall v context))))
-               (component (apply #'make-component context type args)))
-          (attach-component actor component))))))
+  (let (components)
+    (au:do-hash-values (actor actors)
+      (au:do-hash (type table (au:href (components-table (prefab-node actor))))
+        (au:do-hash-values (data table)
+          (let ((component (make-component context type)))
+            (attach-component actor component)
+            (push (list data component) components)))))
+    (dolist (c components)
+      (destructuring-bind (data component) c
+        (let ((args (loop :for (k v) :on (getf data :args) :by #'cddr
+                          :append (list k (funcall v context)))))
+          (apply #'reinitialize-instance component args))))))
 
 (defun make-prefab-actor-relationships (context prefab actors &optional parent)
   (let ((parent (or parent (scene-tree (core-state context))))
@@ -426,9 +431,12 @@
       `(let ((,prefab-actors (au:dict)))
          (flet ((,setter (arg)
                   (setf ,prefab-actors arg))
-                (ref (actor-path)
-                  (values (au:href ,prefab-actors actor-path)
-                          ,prefab-actors)))
+                (ref (actor-path &optional component-type)
+                  (let ((actor (au:href ,prefab-actors actor-path)))
+                    (values (if component-type
+                                (actor-component-by-type actor component-type)
+                                actor)
+                            ,prefab-actors))))
            (ref (gensym))
            (values
             (list ,@(mapcar #'traverse-children prefab-spec))
@@ -455,7 +463,4 @@
            (setf (slot-value ,prefab '%func) (make-prefab-factory ,prefab ,setter)))
          (export ',library)))))
 
-;; component refs
-
 ;; core prefab library (for cameras etc) (and split up examples into proper prefabs)
-
