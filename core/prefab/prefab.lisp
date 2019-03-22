@@ -46,19 +46,10 @@
 (defun split-prefab-spec (prefab-spec)
   (destructuring-bind (name &rest body) prefab-spec
     (loop :for tail :on body
-          :for item := (first tail)
+          :for item = (first tail)
           :while (symbolp (first item))
           :collect item :into components
           :finally (return (values name components tail)))))
-
-(defun split-components/children (data)
-  (flet ((children-form-p (form)
-           (and (listp form)
-                (typep (car form) '(and (not null) (or list string))))))
-    (let ((index (or (position-if #'children-form-p data)
-                     (length data))))
-      (values (subseq data 0 index)
-              (subseq data index)))))
 
 (defun explode-path (path)
   (au:string-split path #\/))
@@ -414,14 +405,17 @@
 
 (defmacro thunk-prefab-spec (context prefab-spec)
   (labels ((thunk-component-args (data)
-             (destructuring-bind (type options . args) data
-               `(list ',type
-                      ',options
-                      ,@(loop :for (key value) :on args :by #'cddr
-                              :collect key
-                              :collect `(lambda (,context)
-                                          (declare (ignorable ,context))
-                                          ,value)))))
+             (destructuring-bind (type . options/args) data
+               (let ((options-p (listp (first options/args))))
+                 `(list ',type
+                        ,(when options-p (first options/args))
+                        ,@(loop
+                            :with args = (if options-p (rest options/args) options/args)
+                            :for (key value) :on args :by #'cddr
+                            :collect key
+                            :collect `(lambda (,context)
+                                        (declare (ignorable ,context))
+                                        ,value))))))
            (traverse-children (data)
              (au:mvlet ((name components children (split-prefab-spec data)))
                `(list ',name
@@ -449,3 +443,10 @@
            (setf (slot-value ,prefab '%func) (make-prefab-factory ,prefab)))
          (export ',library)))))
 
+;; implicit root node around toplevel components
+
+;; expands slash node names to multiple nodes
+
+;; actor/component refs
+
+;; core prefab library (for cameras etc) (and split up examples into proper prefabs)
