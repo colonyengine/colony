@@ -455,21 +455,7 @@
            (setf (slot-value ,prefab '%func) (make-prefab-factory ,prefab ,setter)))
          (export ',library)))))
 
-;; actor/component refs
+;; component refs
 
 ;; core prefab library (for cameras etc) (and split up examples into proper prefabs)
 
-(fl:define-scene 3d-graph-test/1 ()
-  (@camera
-   ((fl.comp:transform :translate (m:vec3 0 70 100))
-    (fl.comp:camera :active-p t
-                    :mode :perspective
-                    :zoom 2)
-    (fl.comp:tracking-camera :target-actor @graph)))
-  (@graph
-   ((fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-    (fl.comp:render :material '(3d-graph-test
-                                3d-graph-test/1
-                                :shader fl.gpu.user:3d-graph-test/1
-                                :instances 100000
-                                :uniforms ((:size 0.5)))))))
