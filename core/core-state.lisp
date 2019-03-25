@@ -29,6 +29,8 @@
             :initform (make-instance 'bookkeeping-tables))
    (%call-flows :reader call-flows
                 :initform (au:dict #'eq))
+   (%collider-system :accessor collider-system
+		     :initform nil)
    (%analyzed-graphs :reader analyzed-graphs
                      :initform (au:dict #'equalp))
    (%recompilation-queue :reader recompilation-queue

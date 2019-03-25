@@ -86,7 +86,9 @@
      (:file "camera-tracking")
      (:file "mesh")
      (:file "render")
-     (:file "sprite")))
+     (:file "sprite")
+     (:file "colliders")))
+   (:file "colliders")
    (:module "prefab"
     :components
     ((:file "checks")

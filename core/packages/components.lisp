@@ -36,4 +36,11 @@
            #:local
            #:translate
            #:rotate
-           #:scale))
+           #:scale)
+  ;; Colliders
+  (:export #:collider/sphere
+           #:collide-p
+           #:collision-event-handler
+           #:on-layer
+           #:center
+           #:radius))

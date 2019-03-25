@@ -37,4 +37,3 @@
 (defun delta (context)
   "Return the physics update delta. This is :delta from the cfg file."
   (slot-value (frame-manager (core-state context)) '%delta))
-
