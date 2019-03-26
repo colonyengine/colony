@@ -62,7 +62,8 @@
 (define-function noise-test/simplex-polkadot-3d/frag ((uv :vec2)
                                                       &uniform
                                                       (time :float))
-  (let ((noise (vec3 (fl.gpu.noise:simplex-polkadot (vec3 (* 10 uv) time) 1.0 1.0))))
+  (let ((noise (vec3 (fl.gpu.noise:simplex-polkadot
+                      (vec3 (* 10 uv) time) 1.0 1.0))))
     (vec4 noise 1)))
 
 (define-function noise-test/value-3d/frag ((uv :vec2)
@@ -86,7 +87,8 @@
 (define-function noise-test/value-hermite-3d/frag ((uv :vec2)
                                                    &uniform
                                                    (time :float))
-  (let ((noise (vec3 (fl.gpu.noise:value-hermite (vec3 (* 10 uv) time) 0.5 0.5 1.0))))
+  (let ((noise (vec3 (fl.gpu.noise:value-hermite
+                      (vec3 (* 10 uv) time) 0.5 0.5 1.0))))
     (vec4 noise 1)))
 
 (define-function noise-test/value-perlin-3d/frag ((uv :vec2)
@@ -104,7 +106,8 @@
 (define-function noise-test/polkadot-box-3d/frag ((uv :vec2)
                                                   &uniform
                                                   (time :float))
-  (let ((noise (vec3 (fl.gpu.noise:polkadot-box (vec3 (* 10 uv) time) 0.0 1.0))))
+  (let ((noise (vec3 (fl.gpu.noise:polkadot-box
+                      (vec3 (* 10 uv) time) 0.0 1.0))))
     (vec4 noise 1)))
 
 (define-function noise-test/cubist-3d/frag ((uv :vec2)

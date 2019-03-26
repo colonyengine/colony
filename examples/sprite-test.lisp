@@ -41,7 +41,9 @@
     (setf transform (fl:actor-component-by-type actor 'fl.comp:transform))))
 
 (defmethod fl:on-component-update ((self shot-mover))
-  (with-accessors ((context fl:context) (transform transform) (velocity velocity)) self
+  (with-accessors ((context fl:context) (transform transform)
+                   (velocity velocity))
+      self
     (fl.comp:translate
      transform
      (let ((a (m:normalize (m:vec3 (m:get-column (fl.comp:local transform) 1))))
@@ -53,10 +55,12 @@
 
 (defmethod fl:on-component-initialize ((self shot-emitter))
   (with-accessors ((actor fl:actor) (emitter-transform emitter-transform)) self
-    (setf emitter-transform (fl:actor-component-by-type actor 'fl.comp:transform))))
+    (setf emitter-transform (fl:actor-component-by-type
+                             actor 'fl.comp:transform))))
 
 (defmethod fl:on-component-update ((self shot-emitter))
-  (with-accessors ((context fl:context) (emitter-transform emitter-transform)) self
+  (with-accessors ((context fl:context) (emitter-transform emitter-transform))
+      self
     (when (or (fl.input:input-enter-p (fl:input-data context) '(:gamepad1 :a))
               (fl.input:input-enter-p (fl:input-data context) '(:mouse :left)))
       (let* ((parent-model (fl.comp:model emitter-transform))
@@ -65,9 +69,6 @@
              (new-actor (fl:make-actor context :id (au:unique-name 'shot)))
              (transform (fl:make-component context
                                            'fl.comp:transform
-                                           ;; here I init the local location/rotation
-                                           ;; to semantically match the emitter
-                                           ;; actor.
                                            :translate parent-translation
                                            :rotate parent-rotation))
              (shot-mover (fl:make-component context 'shot-mover :velocity 1000))
@@ -87,6 +88,6 @@
          new-actor transform shot-mover sprite render)
         ;; The shot is free in the universe.
         (fl:spawn-actor new-actor)
-        ;; This is the method for destroying actors and components. Add to public
-        ;; API. Don't use :ttl in the make-actor call yet.
+        ;; This is the method for destroying actors and components. Add to
+        ;; public API. Don't use :ttl in the make-actor call yet.
         (%fl::destroy new-actor :ttl 1)))))

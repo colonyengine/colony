@@ -27,22 +27,21 @@
 (defun attach-component (actor component)
   ;; First, we detach from the current actor (if applicable)
   (detach-component actor component)
-
   ;; Then, we attach to the new component.
   (enqueue-attach-event component actor)
   (setf (actor component) actor
         (au:href (components actor) component) component)
   (let* ((core-state (core-state (context actor)))
-         (qualified-type (qualify-component core-state (component-type component))))
+         (qualified-type (qualify-component core-state
+                                            (component-type component))))
     (push component (au:href (components-by-type actor) qualified-type))))
 
 (defun attach-multiple-components (actor &rest components)
   (dolist (component components)
     (attach-component actor component)))
-
 ;; TODO: This function is going to be hard to implement with the type tables.
-;; just a set of nested hash tables. It might force us to move the type table
-;; to a real object, so it can keep track of what is stored inside of it.
+;; just a set of nested hash tables. It might force us to move the type table to
+;; a real object, so it can keep track of what is stored inside of it.
 (defun number-of-components (actor)
   (hash-table-count (components actor)))
 
@@ -54,7 +53,7 @@
       (enqueue-detach-event component actor)
       (setf (actor component) nil)
       (setf typed-components
-            (remove-if (lambda (c) (eq c component)) typed-components)))))
+            (remove-if (lambda (x) (eq x component)) typed-components)))))
 
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
@@ -64,7 +63,8 @@
 
 (defun actor-component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
-Returns the rest of the components as a secondary value if there are more than one of the same type."
+Returns the rest of the components as a secondary value if there are more than
+one of the same type."
   (let* ((core-state (core-state (context actor)))
          (qualified-type (qualify-component core-state component-type))
          (components (actor-components-by-type actor qualified-type)))
@@ -72,35 +72,39 @@ Returns the rest of the components as a secondary value if there are more than o
             (rest components))))
 
 (defun spawn-actor (actor &key (parent :universe))
-  "Take the ACTOR and place into the initializing db's and view's in the CORE-STATE. The actor is
-not yet in the scene and the main loop protocol will not be called on it or its components. If
-keyword argument :PARENT is supplied it is an actor reference which will be the parent of the
-spawning actor. It defaults to :universe, which means make this actor a child of the universe
+  "Take the ACTOR and place into the initializing db's and view's in the
+CORE-STATE. The actor is not yet in the scene and the main loop protocol will
+not be called on it or its components. If keyword argument :PARENT is supplied
+it is an actor reference which will be the parent of the spawning actor. It
+defaults to :universe, which means make this actor a child of the universe
 actor."
   (let ((core-state (core-state (context actor)))
         (actor-transform (actor-component-by-type actor 'fl.comp:transform)))
     (cond
       ((eq parent :universe)
-       ;; TODO: This isn't exactly correct, but will work in most cases. Namely, it works in the
-       ;; scene DSL expansion since we add children before spawning the actors. We may be able to
-       ;; fix the scene dsl expansion to just supply the :parent keyword to spawn-actor instead and
-       ;; forgo the transform-add-child calls there. Usually, when a user calls SPAWN-ACTOR in their
-       ;; code, they will either leave :parent at default, or already have an actor to reference as
-       ;; the parent.
+       ;; TODO: This isn't exactly correct, but will work in most cases. Namely,
+       ;; it works in the scene DSL expansion since we add children before
+       ;; spawning the actors. We may be able to fix the scene dsl expansion to
+       ;; just supply the :parent keyword to spawn-actor instead and forgo the
+       ;; transform-add-child calls there. Usually, when a user calls
+       ;; SPAWN-ACTOR in their code, they will either leave :parent at default,
+       ;; or already have an actor to reference as the parent.
        (unless (fl.comp::parent actor-transform)
-         (fl.comp:transform-add-child (actor-component-by-type (scene-tree core-state)
-                                                               'fl.comp:transform)
-                                      (actor-component-by-type actor 'fl.comp:transform))))
+         (fl.comp:transform-add-child
+          (actor-component-by-type (scene-tree core-state) 'fl.comp:transform)
+          (actor-component-by-type actor 'fl.comp:transform))))
       ((typep parent 'actor)
-       (fl.comp:transform-add-child (actor-component-by-type parent 'fl.comp:transform)
-                                    (actor-component-by-type actor 'fl.comp:transform)))
+       (fl.comp:transform-add-child
+        (actor-component-by-type parent 'fl.comp:transform)
+        (actor-component-by-type actor 'fl.comp:transform)))
       ((null parent)
        (au:noop))
       (t
        (error "Cannot parent actor ~s to unknown parent ~s" actor parent)))
     (setf (au:href (actor-preinit-db (tables core-state)) actor) actor)
     (au:do-hash-values (v (components actor))
-      (setf (type-table (canonicalize-component-type (component-type v) core-state)
+      (setf (type-table (canonicalize-component-type (component-type v)
+                                                     core-state)
                         (component-preinit-by-type-view (tables core-state)))
             v))))
 
@@ -139,12 +143,14 @@ actor."
              (setf (ttl destroying-actor) 0)
              (actor/init-or-active->destroy destroying-actor))))
     (when actor
-      (fl.comp::map-nodes #'destroy-actor (actor-component-by-type actor 'fl.comp:transform)))))
+      (fl.comp::map-nodes #'destroy-actor
+                          (actor-component-by-type actor 'fl.comp:transform)))))
 
 ;; TODO: this should probably never be run on the @universe actor. :)
 (defun actor/disconnect (actor)
   (let ((actor-transform (actor-component-by-type actor 'fl.comp:transform)))
-    (fl.comp:transform-remove-child (fl.comp::parent actor-transform) actor-transform)))
+    (fl.comp:transform-remove-child (fl.comp::parent actor-transform)
+                                    actor-transform)))
 
 (defun actor/destroy->released (actor)
   (let ((core-state (core-state (context actor))))

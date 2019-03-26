@@ -62,25 +62,28 @@
                       :initform (au:dict #'eq))))
 
 (defun pending-preinit-tasks-p (core-state)
-  "Return T if there are ANY components or actors in the preinit data structures in CORE-STATE."
+  "Return T if there are ANY components or actors in the preinit data structures
+in CORE-STATE."
   (or (plusp (hash-table-count (actor-preinit-db (tables core-state))))
       (block done
-        (au:do-hash-values (v (component-preinit-by-type-view (tables core-state)))
+        (au:do-hash-values (v (component-preinit-by-type-view
+                               (tables core-state)))
           (when (plusp (hash-table-count v))
             (return-from done t))))))
 
 (defun pending-predestroy-tasks-p (core-state)
-  "Return T if there are ANY components or actors that are in the predestroy data structures in
-CORE-STATE."
+  "Return T if there are ANY components or actors that are in the predestroy
+  data structures in CORE-STATE."
   (or (plusp (hash-table-count (component-predestroy-view (tables core-state))))
       (plusp (hash-table-count (actor-predestroy-view (tables core-state))))))
 
 (defun pending-destroy-tasks-p (core-state)
-  "Return T of there are ANY components or actors that are in the destroy data structures in
-CORE-STATE."
+  "Return T of there are ANY components or actors that are in the destroy data
+structures in CORE-STATE."
   (or (plusp (hash-table-count (actor-destroy-db (tables core-state))))
       (block done
-        (au:do-hash-values (v (component-destroy-by-type-view (tables core-state)))
+        (au:do-hash-values (v (component-destroy-by-type-view
+                               (tables core-state)))
           (when (plusp (hash-table-count v))
             (return-from done t))))))
 
@@ -108,8 +111,8 @@ CORE-STATE."
   (:method (value context (key component))
     (setf (shared-storage context (component-type key)) value)))
 
-;;; Interim caching code for (often) resources. Uses nested hash tables like the shared-storage for
-;;; components.
+;;; Interim caching code for (often) resources. Uses nested hash tables like the
+;;; shared-storage for components.
 ;;; TODO: change this when the real cache code shows up.
 
 (defgeneric rcache-layout (entry-type)
@@ -144,7 +147,8 @@ CORE-STATE."
         (apply #'au:href (rcache core-state) (list* entry-type keys))
       (unless presentp
         (setf value (apply #'rcache-construct context entry-type keys)
-              (apply #'au:href (rcache core-state) (list* entry-type keys)) value))
+              (apply #'au:href (rcache core-state) (list* entry-type keys))
+              value))
       value)))
 
 ;; This might call rcache-dispose if needed.

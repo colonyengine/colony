@@ -1,7 +1,8 @@
 (in-package #:%first-light)
 
-;;; This will be the new home of the attributes type so we can manage DSL attributes in a nicer way.
-;;; Semantic-attributes are usually written by a human and read from a DSL.
+;;; This will be the new home of the attributes type so we can manage DSL
+;;; attributes in a nicer way. Semantic-attributes are usually written by a
+;;; human and read from a DSL.
 
 (defclass attributes ()
   ((%semantic-attributes :reader semantic-attributes
@@ -26,7 +27,8 @@
   (clrhash (semantic-attributes attrs)))
 
 (defmethod do-semantic-attributes ((attrs attributes) func)
-  ;; First make a copy-ish of the hash table in case the func wants to modify the hash table.
+  ;; First make a copy-ish of the hash table in case the func wants to modify
+  ;; the hash table.
   (au:do-hash (k v (au:copy-hash-table (semantic-attributes attrs)))
     (funcall func k v)))
 
@@ -42,7 +44,8 @@
   (clrhash (computed-attributes attrs)))
 
 (defmethod do-computed-attributes ((attrs attributes) func)
-  ;; First make a copy-ish of the hash table in case the func wants to modify the hash table.
+  ;; First make a copy-ish of the hash table in case the func wants to modify
+  ;; the hash table.
   (au:do-hash (k v (au:copy-hash-table (computed-attributes attrs)))
     (funcall func k v)))
 
@@ -50,7 +53,8 @@
 
 (defmethod compute-attributes ((attrs attributes) &key (copier-func #'identity))
   ;; Convert the semantic attributes to computed attributes using the copier.
-  ;; NOTE: This will always clear the computed-attributes before doing the computation.
+  ;; NOTE: This will always clear the computed-attributes before doing the
+  ;; computation.
   ;; NOTE: For now, this uses the same copier func for all attributes.
   (clear-computed-attributes attrs)
   (do-semantic-attributes attrs

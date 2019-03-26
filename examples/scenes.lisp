@@ -122,16 +122,18 @@
    (fl.comp:transform :translate (m:vec3 -325 202.5 0)
                       :scale (m:vec3 90 90 0))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '(noise-test
-                               noise-test/perlin-surflet-3d
-                               :shader fl.gpu.user:noise-test/perlin-surflet-3d)))
+   (fl.comp:render
+    :material '(noise-test
+                noise-test/perlin-surflet-3d
+                :shader fl.gpu.user:noise-test/perlin-surflet-3d)))
   ("perlin-improved-3d"
    (fl.comp:transform :translate (m:vec3 -110 202.5 0)
                       :scale (m:vec3 90 90 0))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '(noise-test
-                               noise-test/perlin-improved-3d
-                               :shader fl.gpu.user:noise-test/perlin-improved-3d)))
+   (fl.comp:render
+    :material '(noise-test
+                noise-test/perlin-improved-3d
+                :shader fl.gpu.user:noise-test/perlin-improved-3d)))
   ("perlin-4d"
    (fl.comp:transform :translate (m:vec3 110 202.5 0)
                       :scale (m:vec3 90 90 0))
@@ -150,9 +152,10 @@
    (fl.comp:transform :translate (m:vec3 540 202.5 0)
                       :scale (m:vec3 90 90 0))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '(noise-test
-                               noise-test/cellular-fast-3d
-                               :shader fl.gpu.user:noise-test/cellular-fast-3d)))
+   (fl.comp:render
+    :material '(noise-test
+                noise-test/cellular-fast-3d
+                :shader fl.gpu.user:noise-test/cellular-fast-3d)))
   ("hermite-3d"
    (fl.comp:transform :translate (m:vec3 -540 -22.5 0)
                       :scale (m:vec3 90 90 0))
@@ -164,23 +167,26 @@
    (fl.comp:transform :translate (m:vec3 -325 -22.5 0)
                       :scale (m:vec3 90 90 0))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '(noise-test
-                               noise-test/simplex-perlin-3d
-                               :shader fl.gpu.user:noise-test/simplex-perlin-3d)))
+   (fl.comp:render
+    :material '(noise-test
+                noise-test/simplex-perlin-3d
+                :shader fl.gpu.user:noise-test/simplex-perlin-3d)))
   ("simplex-cellular-3d"
    (fl.comp:transform :translate (m:vec3 -110 -22.5 0)
                       :scale (m:vec3 90 90 0))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '(noise-test
-                               noise-test/simplex-cellular-3d
-                               :shader fl.gpu.user:noise-test/simplex-cellular-3d)))
+   (fl.comp:render
+    :material '(noise-test
+                noise-test/simplex-cellular-3d
+                :shader fl.gpu.user:noise-test/simplex-cellular-3d)))
   ("simplex-polkadot-3d"
    (fl.comp:transform :translate (m:vec3 110 -22.5 0)
                       :scale (m:vec3 90 90 0))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '(noise-test
-                               noise-test/simplex-polkadot-3d
-                               :shader fl.gpu.user:noise-test/simplex-polkadot-3d)))
+   (fl.comp:render
+    :material '(noise-test
+                noise-test/simplex-polkadot-3d
+                :shader fl.gpu.user:noise-test/simplex-polkadot-3d)))
   ("value-3d"
    (fl.comp:transform :translate (m:vec3 325 -22.5 0)
                       :scale (m:vec3 90 90 0))
@@ -199,9 +205,10 @@
    (fl.comp:transform :translate (m:vec3 -540 -247.5 0)
                       :scale (m:vec3 90 90 0))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '(noise-test
-                               noise-test/value-hermite-3d
-                               :shader fl.gpu.user:noise-test/value-hermite-3d)))
+   (fl.comp:render
+    :material '(noise-test
+                noise-test/value-hermite-3d
+                :shader fl.gpu.user:noise-test/value-hermite-3d)))
   ("value-perlin-3d"
    (fl.comp:transform :translate (m:vec3 -325 -247.5 0)
                       :scale (m:vec3 90 90 0))

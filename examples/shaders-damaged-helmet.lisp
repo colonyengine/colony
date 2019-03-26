@@ -43,7 +43,8 @@
     (let* ((pvm (* proj view model))
            (homo-world-pos (* model (vec4 mesh/pos 1.0)))
            (world-pos (/ (.xyz homo-world-pos) (.w homo-world-pos)))
-           (vert-normal (normalize (.xyz (* model (vec4 (.xyz mesh/normal) 0.0))))))
+           (vert-normal (normalize
+                         (.xyz (* model (vec4 (.xyz mesh/normal) 0.0))))))
       (values (* pvm (vec4 mesh/pos 1.0))
               vert-normal
               mesh/uv1
@@ -65,7 +66,7 @@
                 (- (* (.s tex-dx) (.t tex-dy))
                    (* (.s tex-dy) (.t tex-dx)))))
 
-         (ngv (normalize vert-normal)) ; assume we have a normal vertex attribute
+         (ngv (normalize vert-normal))
          (tv (normalize (- tv (* ngv (dot ngv tv)))))
          (bv (normalize (cross ngv tv)))
          (tbn (mat3 tv bv ngv))
@@ -82,7 +83,7 @@
         (pow (saturate (- 1.0 (v-dot-h pbr-inputs))) 5.0))))
 
 ;; This calculates the specular geometric attenuation (aka G()), where rougher
-;; material will reflect less light back to the viewer.  This implementation is
+;; material will reflect less light back to the viewer. This implementation is
 ;; based on [1] Equation 4, and we adopt their modifications to alphaRoughness
 ;; as input as originally proposed in [2].
 (define-function pbr/geometric-occlusion ((pbr-inputs pbr-info))
@@ -96,10 +97,9 @@
 
 ;; The following equation(s) model the distribution of microfacet normals across
 ;; the area being drawn (aka D()) Implementation from "Average Irregularity
-;; Representation of a Roughened Surface for Ray Reflection" by
-;; T. S. Trowbridge, and K. P. Reitz Follows the distribution function
-;; recommended in the SIGGRAPH 2013 course notes from EPIC Games [1], Equation
-;; 3.
+;; Representation of a Roughened Surface for Ray Reflection" by T. S.
+;; Trowbridge, and K. P. Reitz Follows the distribution function recommended in
+;; the SIGGRAPH 2013 course notes from EPIC Games [1], Equation 3.
 (define-function pbr/microfacet-distribution ((pbr-inputs pbr-info))
   (with-slots (alpha-roughness n-dot-h) pbr-inputs
     (let* ((roughness-squared (* alpha-roughness alpha-roughness))
@@ -144,7 +144,8 @@
          ;; convert to material roughness by squaring the perceptual roughness.
          (alpha-roughness (* perceptual-roughness perceptual-roughness))
          ;; we also have a basecolor map
-         (base-color (* (fl.gpu.color:srgb->rgb (texture base-color-sampler uv1))
+         (base-color (* (fl.gpu.color:srgb->rgb
+                         (texture base-color-sampler uv1))
                         base-color-factor))
          (f0 (vec3 0.04))
          (diffuse-color (* (.rgb base-color) (- (vec3 1.0) f0)))
@@ -180,11 +181,18 @@
          (l-dot-h (saturate (dot l h)))
          (v-dot-h (saturate (dot v h)))
          ;; package it up.
-         (pbr-inputs (make-pbr-info n-dot-l n-dot-v n-dot-h l-dot-h v-dot-h
-                                    perceptual-roughness metallic
-                                    specular-environment-r0 specular-environment-r90
+         (pbr-inputs (make-pbr-info n-dot-l
+                                    n-dot-v
+                                    n-dot-h
+                                    l-dot-h
+                                    v-dot-h
+                                    perceptual-roughness
+                                    metallic
+                                    specular-environment-r0
+                                    specular-environment-r90
                                     alpha-roughness
-                                    diffuse-color specular-color))
+                                    diffuse-color
+                                    specular-color))
          ;; Calculate shading terms for the microfacet specular shading model
          (f (pbr/specular-reflection pbr-inputs))
          (g (pbr/geometric-occlusion pbr-inputs))
@@ -201,7 +209,8 @@
          (ao (.r (texture occlusion-sampler uv1)))
          (color (mix color (* color ao) occlusion-strength))
          ;; We assume we have an emissive map, too
-         (emissive (* (.rgb (fl.gpu.color:srgb->rgb (texture emissive-sampler uv1)))
+         (emissive (* (.rgb (fl.gpu.color:srgb->rgb
+                             (texture emissive-sampler uv1)))
                       emissive-factor))
          (color (+ color emissive)))
     (vec4 (pow color (vec3 (/ 2.2))) (.a base-color))))

@@ -52,17 +52,20 @@
   (with-slots (%debug-time %debug-count) frame-manager
     (let* ((debug-interval (debug-interval frame-manager))
            (now (get-internal-real-time))
-           (elapsed-seconds (/ (- now %debug-time) internal-time-units-per-second))
+           (elapsed-seconds (/ (- now %debug-time)
+                               internal-time-units-per-second))
            (fps (/ %debug-count debug-interval)))
       (when (and (>= elapsed-seconds debug-interval)
                  (plusp fps))
-        (v:debug :fl.core.engine "Frame rate: ~,2f fps (~,3f ms/f)" fps (/ 1000 fps))
+        (v:debug :fl.core.engine "Frame rate: ~,2f fps (~,3f ms/f)"
+                 fps (/ 1000 fps))
         (setf %debug-count 0
               %debug-time now))
       (incf %debug-count))))
 
 (defun frame-update (core-state)
-  (with-slots (%alpha %delta %accumulator %frame-time) (frame-manager core-state)
+  (with-slots (%alpha %delta %accumulator %frame-time)
+      (frame-manager core-state)
     (incf %accumulator %frame-time)
     (au:while (>= %accumulator %delta)
       (execute-flow core-state
@@ -88,9 +91,11 @@
     (let ((now (local-time:now))
           (interval %period-interval))
       (when (and interval
-                 (>= (local-time:timestamp-difference now %period-elapsed) interval))
+                 (>= (local-time:timestamp-difference now %period-elapsed)
+                     interval))
         (update-lisp-repl)
-        (v:trace :fl.core.engine "Periodic update performed (every ~d seconds)" interval)
+        (v:trace :fl.core.engine "Periodic update performed (every ~d seconds)"
+                 interval)
         (setf %period-elapsed now)))))
 
 (defun initialize-frame-time (core-state)
@@ -102,11 +107,14 @@
 (defun tick (core-state)
   (let ((frame-manager (frame-manager core-state))
         (refresh-rate (refresh-rate (display core-state))))
-    (with-slots (%start %now %before %total-time %frame-time %vsync-p) frame-manager
+    (with-slots (%start %now %before %total-time %frame-time %vsync-p)
+        frame-manager
       (setf %before %now
             %now (local-time:now)
-            %frame-time (float (local-time:timestamp-difference %now %before) 1f0)
-            %total-time (float (local-time:timestamp-difference %now %start) 1f0))
+            %frame-time (float (local-time:timestamp-difference %now %before)
+                               1f0)
+            %total-time (float (local-time:timestamp-difference %now %start)
+                               1f0))
       (when %vsync-p
         (smooth-delta-time frame-manager refresh-rate))
       (frame-update core-state)

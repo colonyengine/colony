@@ -5,42 +5,59 @@
   (:local-nicknames (#:m #:game-math))
   (:use #:cl #:%first-light)
   ;; camera
-  (:export #:camera
-           #:tracking-camera
-           #:following-camera
-           #:transform
-           #:view
-           #:projection
-           #:zoom-camera
-           #:find-active-camera
-           #:compute-camera-view)
+  (:export
+   #:camera
+   #:tracking-camera
+   #:following-camera
+   #:transform
+   #:view
+   #:projection
+   #:zoom-camera
+   #:find-active-camera
+   #:compute-camera-view)
   ;; action
-  (:export #:actions
-           #:action
-           #:action-list
-           #:sprite-animate)
+  (:export
+   #:actions
+   #:action
+   #:action-list
+   #:sprite-animate)
   ;; mesh
-  (:export #:mesh)
+  (:export
+   #:mesh)
   ;; render
-  (:export #:render
-           #:material
-           #:draw-mesh)
+  (:export
+   #:render
+   #:material
+   #:draw-mesh)
   ;; sprite
-  (:export #:sprite
-           #:update-sprite-index)
+  (:export
+   #:sprite
+   #:update-sprite-index)
   ;; transform
-  (:export #:transform
-           #:transform-add-child
-           #:transform-remove-child
-           #:model
-           #:local
-           #:translate
-           #:rotate
-           #:scale)
+  (:export
+   #:transform
+   #:transform-add-child
+   #:transform-remove-child
+   #:model
+   #:local
+   #:translate
+   #:rotate
+   #:scale)
   ;; Colliders
-  (:export #:collider/sphere
-           #:collide-p
-           #:collision-event-handler
-           #:on-layer
-           #:center
-           #:radius))
+  (:export
+   #:collider/sphere
+   #:collide-p
+   #:collision-event-handler
+   #:on-layer
+   #:center
+   #:radius))
+  (:export
+   #:transform
+   #:transform-add-child
+   #:transform-remove-child
+   #:model
+   #:local
+   #:translate
+   #:rotate
+   #:scale))
+>>>>>>> Began reformatting long lines

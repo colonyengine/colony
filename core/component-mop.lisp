@@ -1,15 +1,11 @@
 (in-package :%first-light)
 
-;;;; NOTE: Currently, there are a pile of commented out format forms.
-;;;; please leave them for a little while so if something goes wrong
-;;;; things are easy to debug.
-
-(defun identity/annotation (val component)
+(defun identity/annotation (value component)
   (declare (ignore component))
-  val)
+  value)
 
-;; in the component-class we keep annotation values for annotations
-;; that are identified by symbol.
+;; In the component-class we keep annotation values for annotations that are
+;; identified by symbol.
 (defclass annotation-value ()
   ((%serialnum :accessor serialnum
                :initarg :serialnum)
@@ -25,7 +21,8 @@
             :initform #'identity/annotation)))
 
 (defun make-annotation-value (name snid state
-                              &key (getter #'identity/annotation)
+                              &key
+                                (getter #'identity/annotation)
                                 (setter #'identity/annotation))
   (make-instance 'annotation-value
                  :name name
@@ -133,10 +130,8 @@
           (annotation-array db) #()
           (annotated-slots db) (au:dict #'eq))))
 
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Define a set of slot definition classes that understand the concept
-;; of being annotated.
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Define a set of slot definition classes that understand the concept of being
+;; annotated.
 
 (defclass annotatable-slot ()
   (;; A list of symbols like: (material transform ... texture)
@@ -155,13 +150,10 @@
 (defmethod annotation-indexes (non-annotatable-slot)
   nil)
 
-;; NOTE:
-;;
-;; First we define the direct and effective slot class we desire for the
-;; component-class metaclass.
-;;
-;; Then the point of having two classes, annotated, and not annotated, is to
-;; make slot-value-using-class ONLY execute on _actually_ annotated slots.
+;; NOTE: First we define the direct and effective slot class we desire for the
+;; component-class metaclass. Then the point of having two classes, annotated,
+;; and not annotated, is to make slot-value-using-class ONLY execute on
+;; _actually_ annotated slots.
 
 ;; component-class has its own definition of standard-direct slots
 (defclass component-direct-slot-definition
@@ -199,15 +191,12 @@
 
 ;; The entry point of the finalization of the component classes.
 (defmethod c2mop:compute-slots ((class component-class))
-  #++(format t "C: compute-slots[component-class] invoked: ~A~%" class)
   (call-next-method))
 
-;; We override this in order that direct slots can have :annotation added to
-;; the slot initializer arguments.
+;; We override this in order that direct slots can have :annotation added to the
+;; slot initializer arguments.
 (defmethod c2mop:direct-slot-definition-class ((class component-class)
                                                &rest initargs)
-  #++(format t "B: direct-slot-definition-class[component-class]:~%~4@Tslot: ~A Annotation: ~A~%"
-             (getf initargs :name) (getf initargs :annotation))
   (cond
     ((getf initargs :annotation)
      (find-class 'component-annotated-direct-slot-definition))
@@ -234,9 +223,6 @@
 ;; direct-slotds SHOULD BE most-specific-to-least-specific order.
 (defun compute-annotated-effective-slot-definition-initargs
     (class direct-slotds)
-
-  #++(format t "F1: computing annotated slot definition initargs.~%")
-
   (let* ((name nil)
          (initfunction nil)
          (initform nil)
@@ -248,70 +234,49 @@
          (initp  nil)
          (allocp nil)
          (annotation nil))
-
-    #++(format t "F2: Attempting to frobnicate: ~A~%" direct-slotds)
-
     (dolist (slotd direct-slotds)
       (when slotd
         (unless namep
           (setq name (c2mop:slot-definition-name slotd)
                 namep t))
-
         ;; Our annotation policy is to merge all annotations going towards the
         ;; root for this slot.
         (when (annotation slotd)
-          #++(format t "F3: Merging annotation: ~A~%" (annotation slotd))
           (push (annotation slotd) annotation))
-
         (unless initp
           (let ((it (c2mop:slot-definition-initfunction slotd)))
             (setq initform (c2mop:slot-definition-initform slotd)
                   initfunction it
                   initp t)))
-
         (unless allocp
           (setq allocation (c2mop:slot-definition-allocation slotd)
-
-                ;; Support SBCL who needs to know what class provided this
-                ;; slot.
-                ;;
+                ;; Support SBCL who needs to know what class provided this slot.
                 ;; TODO CCL might need something like this too.
                 #+sbcl allocation-class
                 #+sbcl (sb-pcl::slot-definition-class slotd)
-
                 allocp t))
-
         (setq initargs
               (append (c2mop:slot-definition-initargs slotd) initargs))
-
         (let ((slotd-type (c2mop:slot-definition-type slotd)))
           (setq type (cond
                        ((eq type t) slotd-type)
                        (t `(and ,type ,slotd-type)))))))
-
-    #++(format t "F4: raw :annotation is ~A~%"
-               (au:flatten (nreverse annotation)))
-    #++(finish-output)
-
     `(:name ,name
       :initform ,initform
       :initfunction ,initfunction
       :initargs ,initargs
       :allocation ,allocation
-
-      ;; SBCL requires the knowlede of the class that initially
-      ;; defined this slot.
+      ;; SBCL requires the knowlede of the class that initially defined this
+      ;; slot.
       #+sbcl :allocation-class
       #+sbcl ,allocation-class
-
       :type ,type
       :class ,class
       ;; documentation is not supported cause no MOP function to get it.
       :documentation nil
-
-      ;; FL new stuff, but only if the any direct slot was actually
-      ;; annotated. If there are no annotations, then return value will produce
-      ;; a component-effective-slot-definition. If there were annotations, then
+      ;; FL new stuff, but only if the any direct slot was actually annotated.
+      ;; If there are no annotations, then return value will produce a
+      ;; component-effective-slot-definition. If there were annotations, then
       ;; this return value will produce a
       ;; component-annotated-direct-slot-definition. Hence, this is why it is
       ;; optionally in this output.
@@ -322,7 +287,8 @@
 
 (defun compute-component-initargs (component-type)
   (let* ((class-args (au:mappend #'c2mop:slot-definition-initargs
-                                 (c2mop:class-slots (find-class component-type))))
+                                 (c2mop:class-slots
+                                  (find-class component-type))))
          (instance-lambda-list (c2mop:method-lambda-list
                                 (first
                                  (c2mop:compute-applicable-methods-using-classes
@@ -340,74 +306,55 @@
 (defmethod c2mop:compute-effective-slot-definition ((class component-class)
                                                     name
                                                     dslotds)
-
-  #++(format t "D: compute-effective-slot-definition[component-class]:~%")
-  #++(dolist (dslotd dslotds)
-       (format t "~4@TSlot: ~A~%" dslotd))
-
-  ;; If none of the slots have any annotations, just do what we were going to
-  ;; do normally. This preserves :documentation on the slot when possible and
+  ;; If none of the slots have any annotations, just do what we were going to do
+  ;; normally. This preserves :documentation on the slot when possible and
   ;; anything else the vendor lisp might be doing.
   (unless (dslotds-annotated-p dslotds)
-    #++(format t "~4@TNo annotated slots. CALL-NEXT-METHOD.~%")
     (return-from c2mop:compute-effective-slot-definition
       (call-next-method)))
-
   ;; All righty, if we have *any* annotated direct slots we're combining into
   ;; the effective slot, we must do the whole of the work ourselves.
-  #++(format t "~4@TFound annotated slots. Compute annotated effective slot.~%")
   (let* ((initargs
-           ;; This function knows what to do with the annotations.
-           ;; Sadly, it drops :documentation since it isn't portable to get.
+           ;; This function knows what to do with the annotations. Sadly, it
+           ;; drops :documentation since it isn't portable to get.
            (compute-annotated-effective-slot-definition-initargs class dslotds))
          (effective-class (apply #'c2mop:effective-slot-definition-class
                                  class initargs))
          (slotd (apply #'make-instance effective-class initargs)))
-
     ;; NOTE: This only happens when we finalize the class, so all
     ;; define-component expansions also expand to c2mop:ensure-finalized.
     (dolist (annotation (getf initargs :annotation))
       (register-annotation '%fl:component annotation :forward-reference))
-
     ;; NOTE: this code is executed (num-components * num-annotations) given the
-    ;; number of components...Since for each component, we rebuild this
-    ;; array. However, there are probably going to not be that many annotations
-    ;; (<100 maybe?) so we're probably ok. Also, this expects the class to
-    ;; have already been finalized (which we force in DEFINE-COMPONENT).
+    ;; number of components...Since for each component, we rebuild this array.
+    ;; However, there are probably going to not be that many annotations (<100
+    ;; maybe?) so we're probably ok. Also, this expects the class to have
+    ;; already been finalized (which we force in DEFINE-COMPONENT).
     (optimize-annotations '%fl:component)
-
-    ;; NOTE: Produce the compiled optimization indexes for this
-    ;; slot so I can execute them properly in slot-value-using-class for
-    ;; this component-type.
+    ;; NOTE: Produce the compiled optimization indexes for this slot so I can
+    ;; execute them properly in slot-value-using-class for this component-type.
     (setf (annotation-indexes slotd)
           (make-array (length (annotation slotd))
                       :initial-contents
                       (mapcar (lambda (annotation)
                                 (serialnum
                                  (au:href (annotations
-                                          (find-class '%fl:component))
-                                         annotation)))
+                                           (find-class '%fl:component))
+                                          annotation)))
                               (annotation slotd))))
 
     slotd))
 
 (defmethod c2mop:effective-slot-definition-class ((class component-class)
                                                   &rest initargs)
-  #++(format t "E: effective-slot-definition-class[component-class]:~%~4@Tslot: ~A annotation: ~A~%"
-             (getf initargs :name) (getf initargs :annotation))
   (let ((chosen-class
-          (cond
-            ((getf initargs :annotation)
-             (find-class 'component-annotated-effective-slot-definition))
-            (t
-             (find-class 'component-effective-slot-definition)))))
-    #++(format t "~4@TChose Slot Class: ~A~%" chosen-class)
+          (if (getf initargs :annotation)
+              (find-class 'component-annotated-effective-slot-definition)
+              (find-class 'component-effective-slot-definition))))
     chosen-class))
 
-;; ;;;;;;;;;;;;;;;
-
-;; Utility function to get me knowledge about all annotated effective slots
-;; in a class. Assumes class is finalized.
+;; Utility function to get me knowledge about all annotated effective slots in a
+;; class. Assumes class is finalized.
 (defun collect-all-annotated-effective-slot-data (component-class-name)
   (remove-if #'null
              (mapcar (lambda (slot)
@@ -417,13 +364,11 @@
                                (annotation slot))))
                      (c2mop::class-slots (find-class component-class-name)))))
 
-;; Here we collect all the annotated slot data from a component and put
-;; it into the COMPONENT meta-class slots.
+;; Here we collect all the annotated slot data from a component and put it into
+;; the COMPONENT meta-class slots.
 (defun track-annotations (component-name)
   (setf (au:href (annotated-slots (find-class '%fl:component)) component-name)
         (collect-all-annotated-effective-slot-data component-name)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; The base component class, manually defined, notice the two end forms that
 ;; come after it. Maybe better to wrap into a define-component-base-type macro
@@ -454,15 +399,14 @@
 (c2mop:ensure-finalized (find-class '%fl:component))
 (clear-annotations '%fl:component)
 
-;; ;;;;;;;;;;;;;;;;;;;;
-;; Stuff used to make DEFINE-COMPONENT work.
-;; ;;;;;;;;;;;;;;;;;;;;
+;;; Stuff used to make DEFINE-COMPONENT work.
 
 (defun %generate-component-slot-forms (slots)
   (loop :for slot :in slots
         :collect
         (destructuring-bind (slot-name &key default allocation type annotation
-                             &allow-other-keys) slot
+                             &allow-other-keys)
+            slot
           (append
            `(,(au:symbolicate '% slot-name)
              :accessor ,slot-name
@@ -487,22 +431,18 @@
          (shared-storage-metadata (second body))
          (defclass-slot-forms (%generate-component-slot-forms slots))
          (annotated-slot-info (%collect-annotated-component-slot-forms slots)))
-
     ;; At macro-expansion time actually forward-declare the annotations into the
     ;; 'component class and store a reference to the registered entries. We use
-    ;; this to generate the optimized lookups in the read/write function.  This
+    ;; this to generate the optimized lookups in the read/write function. This
     ;; works because all DEFINE-COMPONENT invocations must happen AFTER the
     ;; metaclass COMPONENT-CLASS and the base component type of COMPONENT have
     ;; been declared and finalized.
-    (loop
-      :for anno-slot :in annotated-slot-info
-      :do (loop :for anno :in (second anno-slot)
-                :when anno
-                  :do (register-annotation '%fl:component anno
-                                           :forward-reference)))
-
+    (loop :for anno-slot :in annotated-slot-info
+          :do (loop :for anno :in (second anno-slot)
+                    :when anno
+                      :do (register-annotation '%fl:component anno
+                                               :forward-reference)))
     `(progn
-       #++(format t "******* START GENERATING COMPONENT: ~A~%" ',name)
        ;; NOTE: We check the super classes to ensure that if COMPONENT isn't in
        ;; there, we know to add it at the beginning. All components themselves
        ;; are ensure-finalized, so this should work for the most part. If
@@ -517,55 +457,39 @@
          (:metaclass component-class))
        (c2mop:ensure-finalized (find-class ',name))
        (track-annotations ',name)
-
        ;; Reader for annotated slots at this class inheritance level.
        (defmethod c2mop:slot-value-using-class
-           ((class component-class) ;; the component metaclass
-            (instance ,name) ;; the specific component
+           ((class component-class)     ; the component metaclass
+            (instance ,name)            ; the specific component
             (slotd component-annotated-effective-slot-definition))
-
          (let ((annoarray (annotation-array (find-class '%fl:component))))
-           (declare (ignorable annoarray))
-           #++(format t "reader(~A): attempting lookup on slot ~A (~A)~%"
-                      ',name (c2mop:slot-definition-name slotd)
-                      (annotation-indexes slotd))
-
-           (let ((original-slot-value
-                   (c2mop:standard-instance-access
-                    instance (c2mop:slot-definition-location slotd))))
-
-             (loop :with composing-value = original-slot-value
-                   :for index :across (annotation-indexes slotd)
-                   :do (let ((annotation-value (aref annoarray index)))
-                         (setf composing-value
-                               (funcall (getter annotation-value)
-                                        composing-value instance))
-                         :finally (return composing-value))))))
-
+           (loop :with original-slot-value = (c2mop:standard-instance-access
+                                              instance
+                                              (c2mop:slot-definition-location
+                                               slotd))
+                 :with composing-value = original-slot-value
+                 :for index :across (annotation-indexes slotd)
+                 :for annotation-value = (aref annoarray index)
+                 :do (setf composing-value
+                           (funcall (getter annotation-value)
+                                    composing-value instance))
+                 :finally (return composing-value))))
        ;; writer for annotated slots at this class inheritance level.
        (defmethod (setf c2mop:slot-value-using-class)
            (new-value
             (class component-class) ;; the component metaclass
-            (instance ,name) ;; the specific component
+            (instance ,name)        ;; the specific component
             (slotd component-annotated-effective-slot-definition))
-
          (let ((annoarray (annotation-array (find-class '%fl:component))))
-           (declare (ignorable annoarray))
-           #++(format t "writer(~A): attempting write on slot ~A (~A)~%"
-                      ',name (c2mop:slot-definition-name)
-                      (annotation-indexes slotd))
-
            (setf (c2mop:standard-instance-access
                   instance (c2mop:slot-definition-location slotd))
-
                  (loop :with composing-value = new-value
                        :for index :across (annotation-indexes slotd)
-                       :do (let ((annotation-value (aref annoarray index)))
-                             (setf composing-value
-                                   (funcall (setter annotation-value)
-                                            composing-value instance))
-                             :finally (return composing-value))))))
-
+                       :for annotation-value = (aref annoarray index)
+                       :do (setf composing-value
+                                 (funcall (setter annotation-value)
+                                          composing-value instance))
+                       :finally (return composing-value)))))
        ;; A method to locate the metadata in the shared storage form in this
        ;; class.
        (defmethod ,(intern (symbol-name 'shared-storage-metadata) :%fl)
@@ -575,18 +499,16 @@
            (if namespace
                ;; TODO: make this better/faster
                (find namespace ss-meta :key #'first)
-               ss-meta)))
-
-       #++(format t "******* DONE GENERATING COMPONENT: ~A~%" ',name))))
+               ss-meta))))))
 
 (defmacro define-annotation (name &key (getter
-                                        '(lambda (val component)
+                                        '(lambda (value component)
                                           (declare (ignore component)
-                                           val)))
+                                           value)))
                                     (setter
-                                     '(lambda (val component)
+                                     '(lambda (value component)
                                        (declare (ignore component)
-                                        val))))
+                                        value))))
   `(register-annotation '%fl:component ',name :initialized
                         :getter (function ,getter)
                         :setter (function ,setter)))

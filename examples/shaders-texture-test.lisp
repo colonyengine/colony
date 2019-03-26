@@ -108,20 +108,21 @@
             mesh/pos)))
 
 (define-function unlit-texture-cube-map/frag ((color :vec4)
-                                              (tex-cube-map-coord :vec3) ;; pos from the vert shader
+                                              (tex-cube-map-coord :vec3)
                                               &uniform
                                               (tex texture-struct-cube-map)
                                               (mix-color :vec4))
   (let* ((tex-color (texture (sampler1 tex) tex-cube-map-coord)))
     (* tex-color mix-color)))
 
-(define-function unlit-texture-cube-map-array/frag ((color :vec4)
-                                                    (tex-cube-map-coord :vec3) ;; pos from the vert shader
-                                                    &uniform
-                                                    (tex texture-struct-cube-map-array)
-                                                    (cube-layer :float)
-                                                    (num-layers :float)
-                                                    (mix-color :vec4))
+(define-function unlit-texture-cube-map-array/frag
+    ((color :vec4)
+     (tex-cube-map-coord :vec3)
+     &uniform
+     (tex texture-struct-cube-map-array)
+     (cube-layer :float)
+     (num-layers :float)
+     (mix-color :vec4))
   ;; TODO: Fix this to grab out of different layers like 2d-array.
   (let* ((cube-map-array-tex-coord (vec4 tex-cube-map-coord 0))
          (tex-color (texture (sampler1 tex) cube-map-array-tex-coord)))

@@ -25,10 +25,12 @@ DEFINE-COMPONENT form."
     (if (or (null component-type/class)
             (not (subtypep (class-name component-type/class)
                            (class-name base-component-type/class))))
-        (let ((graph (au:href (analyzed-graphs core-state) 'component-package-order)))
+        (let ((graph (au:href (analyzed-graphs core-state)
+                              'component-package-order)))
           (dolist (potential-package (toposort graph))
             (let ((potential-package-name (second potential-package)))
-              (dolist (pkg-to-search (au:href (pattern-matched-packages (annotation graph))
+              (dolist (pkg-to-search (au:href (pattern-matched-packages
+                                               (annotation graph))
                                               potential-package-name))
                 (multiple-value-bind (symbol kind)
                     (find-symbol (symbol-name component-type) pkg-to-search)
@@ -39,8 +41,11 @@ DEFINE-COMPONENT form."
         component-type)))
 
 (defmethod make-component (context component-type &rest initargs)
-  (au:if-let ((qualified-type (qualify-component (core-state context) component-type)))
-    (apply #'make-instance qualified-type :type qualified-type :context context initargs)
+  (au:if-let ((qualified-type (qualify-component (core-state context)
+                                                 component-type)))
+    (apply #'make-instance qualified-type
+           :type qualified-type
+           :context context initargs)
     (error "Could not qualify the component type ~s." component-type)))
 
 (defun get-computed-component-precedence-list (component-type)
@@ -56,39 +61,57 @@ DEFINE-COMPONENT form."
     (funcall thunk)
     (setf (initializer-thunk component) nil))
   (let* ((core-state (core-state (context component)))
-         (component-type (canonicalize-component-type (component-type component) core-state)))
+         (component-type (canonicalize-component-type (component-type component)
+                                                      core-state)))
     (with-slots (%tables) core-state
-      (type-table-drop component component-type (component-preinit-by-type-view %tables))
-      (setf (type-table component-type (component-init-by-type-view %tables)) component))))
+      (type-table-drop component component-type (component-preinit-by-type-view
+                                                 %tables))
+      (setf (type-table component-type (component-init-by-type-view %tables))
+            component))))
 
 (defun component/init->active (component)
   (let* ((core-state (core-state (context component)))
-         (component-type (canonicalize-component-type (component-type component) core-state)))
+         (component-type (canonicalize-component-type (component-type component)
+                                                      core-state)))
     (with-slots (%tables) core-state
-      (type-table-drop component component-type (component-init-by-type-view %tables))
+      (type-table-drop component component-type (component-init-by-type-view
+                                                 %tables))
       (setf (state component) :active
-            (type-table component-type (component-active-by-type-view %tables)) component))))
+            (type-table component-type (component-active-by-type-view %tables))
+            component))))
 
 (defmethod destroy ((thing component) &key (ttl 0))
   (let ((core-state (core-state (context thing))))
     (setf (ttl thing) (if (minusp ttl) 0 ttl)
-          (au:href (component-predestroy-view (tables core-state)) thing) thing)))
+          (au:href (component-predestroy-view
+                    (tables core-state)) thing)
+          thing)))
 
 (defun component/init-or-active->destroy (component)
   (let* ((core-state (core-state (context component)))
-         (component-type (canonicalize-component-type (component-type component) core-state)))
+         (component-type (canonicalize-component-type (component-type component)
+                                                      core-state)))
     (unless (plusp (ttl component))
       (with-slots (%tables) core-state
         (setf (state component) :destroy
-              (type-table component-type (component-destroy-by-type-view %tables)) component)
+              (type-table component-type
+                          (component-destroy-by-type-view %tables))
+              component)
         (remhash component (component-predestroy-view %tables))
-        (unless (type-table-drop component component-type (component-active-by-type-view %tables))
-          (type-table-drop component component-type (component-preinit-by-type-view %tables)))))))
+        (unless (type-table-drop component
+                                 component-type
+                                 (component-active-by-type-view %tables))
+          (type-table-drop component
+                           component-type
+                           (component-preinit-by-type-view %tables)))))))
 
 (defun component/destroy->released (component)
   (let* ((core-state (core-state (context component)))
-         (component-type (canonicalize-component-type (component-type component) core-state)))
-    (type-table-drop component component-type (component-destroy-by-type-view (tables core-state)))
+         (component-type (canonicalize-component-type
+                          (component-type component) core-state)))
+    (type-table-drop component
+                     component-type
+                     (component-destroy-by-type-view (tables core-state)))
     (detach-component (actor component) component)))
 
 (defun component/countdown-to-destruction (component)
@@ -106,7 +129,8 @@ DEFINE-COMPONENT form."
   (fl.dst:qpop (attach/detach-event-queue component)))
 
 (defun component/invoke-attach/detach-events (component)
-  (loop :for (event-kind actor) = (fl.dst:qpop (attach/detach-event-queue component))
+  (loop :for (event-kind actor) = (fl.dst:qpop (attach/detach-event-queue
+                                                component))
         :while event-kind
         :do (ecase event-kind
               (:attached

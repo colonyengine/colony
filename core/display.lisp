@@ -22,8 +22,9 @@
                  (sdl2::sdl-rc-error ()
                    (if (= current-value -1)
                        (try 1)
-                       (v:warn :fl.core.display
-                               "Ignoring vsync option due to driver limitation."))))))
+                       (v:warn
+                        :fl.core.display "Ignoring vsync option due to driver ~
+                                          limitation."))))))
       (try value))))
 
 (defgeneric create-window (core-state)
@@ -31,7 +32,8 @@
     (let* ((context (context core-state))
            (opengl-version (option context :opengl-version))
            (anti-alias-level (option context :anti-alias-level)))
-      (au:mvlet ((major-version minor-version (parse-opengl-version opengl-version)))
+      (au:mvlet ((major-version minor-version (parse-opengl-version
+                                               opengl-version)))
         (sdl2:gl-set-attrs :context-major-version major-version
                            :context-minor-version minor-version
                            :context-profile-mask 1
@@ -46,7 +48,8 @@
       (sdl2:gl-create-context window)
       window)))
 
-(defmethod initialize-instance :after ((instance display) &key &allow-other-keys)
+(defmethod initialize-instance :after ((instance display)
+                                       &key &allow-other-keys)
   (let ((core-state (core-state instance)))
     (setf (slot-value core-state '%display) instance)
     (gl:enable :texture-cube-map-seamless)
@@ -59,7 +62,8 @@
     (make-instance 'display
                    :core-state core-state
                    :window window
-                   :refresh-rate (nth-value 3 (sdl2:get-current-display-mode 0)))))
+                   :refresh-rate (nth-value
+                                  3 (sdl2:get-current-display-mode 0)))))
 
 (defmethod clear-screen ((display display))
   (let ((core-state (core-state display)))

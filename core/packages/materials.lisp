@@ -7,11 +7,12 @@
   ;; helper functions
   (:export #:total-time/uniform)
   ;; profiles
-  (:export #:u-model
-           #:u-mvp
-           #:u-mvpt
-           #:u-proj
-           #:u-time
-           #:u-view
-           #:u-vp
-           #:u-vpt))
+  (:export
+   #:u-model
+   #:u-mvp
+   #:u-mvpt
+   #:u-proj
+   #:u-time
+   #:u-view
+   #:u-vp
+   #:u-vpt))

@@ -75,7 +75,8 @@
   (with-slots (mesh/pos mesh/uv1) mesh-attrs
     (let ((fn (lambda ((i :float))
                 (3d-graph-test/test-1 i time))))
-      (mvlet* ((pos color (3d-graph-test/graph fn mesh/pos view proj size min by)))
+      (mvlet* ((pos color (3d-graph-test/graph
+                           fn mesh/pos view proj size min by)))
         (values pos
                 mesh/uv1
                 color)))))
@@ -92,7 +93,8 @@
   (with-slots (mesh/pos mesh/uv1) mesh-attrs
     (let ((fn (lambda ((i :float))
                 (3d-graph-test/test-2 i time))))
-      (mvlet* ((pos color (3d-graph-test/graph fn mesh/pos view proj size min by)))
+      (mvlet* ((pos color (3d-graph-test/graph
+                           fn mesh/pos view proj size min by)))
         (values pos
                 mesh/uv1
                 color)))))

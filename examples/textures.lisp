@@ -24,13 +24,16 @@
 
 ;;; texture-test
 
-(fl:define-texture texture-test/1d-gradient (:texture-1d fl.textures:clamp-all-edges)
+(fl:define-texture texture-test/1d-gradient
+    (:texture-1d fl.textures:clamp-all-edges)
   (:data #((:texture-test-textures "texture-gradient-1d.tiff"))))
 
-(fl:define-texture texture-test/2d-wood (:texture-2d fl.textures:clamp-all-edges)
+(fl:define-texture texture-test/2d-wood
+    (:texture-2d fl.textures:clamp-all-edges)
   (:data #((:texture-test-textures "wood.tiff"))))
 
-(fl:define-texture texture-test/3d-testpat (:texture-3d fl.textures:clamp-all-edges)
+(fl:define-texture texture-test/3d-testpat
+    (:texture-3d fl.textures:clamp-all-edges)
   ;; TODO: Currently, these are the only valid origin and slices values. They
   ;; directly match the default of opengl.
   (:layout `((:origin :left-back-bottom)
@@ -57,9 +60,10 @@
            ;; Mipmap Level 3
            #((:3d-test "slice_0-mip_3.tiff")))))
 
-(fl:define-texture texture-test/1d-array-testpat (:texture-1d-array fl.textures:clamp-all-edges)
-  ;; If there are multiple images in each list, they are mipmaps.
-  ;; Since this is a test, each mip_0 image is 8 width x 1 height
+(fl:define-texture texture-test/1d-array-testpat
+    (:texture-1d-array fl.textures:clamp-all-edges)
+  ;; If there are multiple images in each list, they are mipmaps. Since this is
+  ;; a test, each mip_0 image is 8 width x 1 height
   (:data #(;; Image 0. First image in array contains its mipmaps.
            #((:1da-test "redline-mip_0.tiff")
              (:1da-test "redline-mip_1.tiff")
@@ -81,7 +85,8 @@
              (:1da-test "whiteline-mip_2.tiff")
              (:1da-test "whiteline-mip_3.tiff")))))
 
-(fl:define-texture texture-test/2d-array-testarray (:texture-2d-array fl.textures:clamp-all-edges)
+(fl:define-texture texture-test/2d-array-testarray
+    (:texture-2d-array fl.textures:clamp-all-edges)
   ;; Since this is a test, each mip_0 image is 1024x1024 and has 11 mipmaps.
   (:data #(;; Layer 0. First image in array contains its mipmaps.
            #((:2da-test "bluefur-mip_0.tiff")
