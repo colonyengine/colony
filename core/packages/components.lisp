@@ -59,5 +59,4 @@
    #:local
    #:translate
    #:rotate
-   #:scale))
->>>>>>> Began reformatting long lines
+   #:scale)
