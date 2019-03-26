@@ -458,9 +458,9 @@
            (setf ,prefabs (au:dict #'equalp)))
          (au:mvlet* ((,data ,setter (thunk-prefab-spec ,context ,body))
                      (,prefab (make-prefab ',name ',library ,data)))
-           (setf (au:href ,prefabs ',name) ,prefab)
-           (parse-prefab ,prefab)
-           (setf (slot-value ,prefab '%func) (make-prefab-factory ,prefab ,setter)))
+           (setf (au:href ,prefabs ',name) ,prefab
+                 (slot-value ,prefab '%func) (make-prefab-factory ,prefab ,setter))
+           (parse-prefab ,prefab))
          (export ',library)))))
 
 ;; core prefab library (for cameras etc) (and split up examples into proper prefabs)
