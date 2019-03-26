@@ -144,11 +144,11 @@ return them as a list."
 
 ;; A crappy kind of pattern matching.
 (defun is-syntax-form-p (syntax-symbol form)
-  (typecase syntax-symbol
-    (cons
+  (cond
+    ((consp syntax-symbol)
      (when (consp form)
        (eql/package-relaxed (first syntax-symbol) (first form))))
-    (symbol
+    ((symbolp syntax-symbol)
      (when (symbolp form)
        (eql/package-relaxed syntax-symbol form)))
     ;; maybe other cases needed?
@@ -213,8 +213,7 @@ null, and contains hyper edges, return values: list of hyper-edge pairs,
      :depforms
      (loop :for dep :in dependency-forms
            :collect
-           (au:mvlet ((lifted-dependency-form kind) (segment-dependency-form
-                                                     category dep))
+           (multiple-value-bind (lifted-dependency-form kind) (segment-dependency-form category dep)
              (make-depform :original-form dep
                            :canonical-form lifted-dependency-form
                            :kind kind))))))
@@ -258,8 +257,8 @@ the cl-graph, the roots as elements, the leaves as elements."
           ;; check this when condition for validity.
           :when canonical-form
             :do (ecase kind
-                  (:empty nil)
-                  (:hyperedges
+                  ((:empty) nil)
+                  ((:hyperedges)
                    (pushnew (car (first canonical-form)) roots :test #'equalp)
                    (pushnew (cadar (last canonical-form)) leaves :test #'equalp)
                    (loop :for (from to) :in canonical-form
@@ -267,7 +266,7 @@ the cl-graph, the roots as elements, the leaves as elements."
                               clg
                               (annotate-splices from gdef)
                               (annotate-splices to gdef))))
-                  (:vertex
+                  ((:vertex)
                    ;; the :vertex for is not only the roots, but also the
                    ;; leaves.
                    (pushnew canonical-form roots :test #'equalp)
@@ -378,49 +377,43 @@ depends-on in that GDEF."
           :do (dolist (splice splices)
                 (let ((parents (cl-graph:parent-vertexes splice))
                       (children (cl-graph:child-vertexes splice)))
-                  (destructuring-bind (splice-form gdef) (cl-graph:element
-                                                          splice)
-                    (au:mvlet* ((lookedup-splice
-                                 lookedup-gdef
-                                 (lookup-splice splice-form gdef))
-                                (clg
-                                 splice-roots splice-leaves
-                                 (absorb-depforms
-                                  clg
-                                  lookedup-gdef
-                                  (depforms lookedup-splice))))
-                      ;; delete the original parent edges.
-                      (dolist (parent parents)
-                        (cl-graph:delete-edge-between-vertexes
-                         clg parent splice))
-                      ;; add the new edges from the parents to the new-roots.
-                      (add-cross-product-edges
-                       clg
-                       parents
-                       (annotate-splices splice-roots lookedup-gdef))
-                      ;; delete the original child edges.
-                      (dolist (child children)
-                        (cl-graph:delete-edge-between-vertexes
-                         clg splice child))
-                      ;; add the new edges from the new-leaves to the children.
-                      (add-cross-product-edges
-                       clg
-                       (annotate-splices splice-leaves lookedup-gdef)
-                       children)
-                      ;; Then finally, delete the expanding splice vertex
-                      (cl-graph:delete-vertex clg splice))))))
+                  (destructuring-bind (splice-form gdef) (cl-graph:element splice)
+                    (multiple-value-bind (lookedup-splice lookedup-gdef)
+                        (lookup-splice splice-form gdef)
+                      ;; Now, absorb the splice into clg, get the roots and
+                      ;; leaves, then fixup the edges.
+                      (multiple-value-bind (clg splice-roots splice-leaves)
+                          (absorb-depforms clg lookedup-gdef (depforms lookedup-splice))
+                        ;; delete the original parent edges.
+                        (dolist (parent parents)
+                          (cl-graph:delete-edge-between-vertexes clg parent splice))
+                        ;; add the new edges from the parents to the new-roots.
+                        (add-cross-product-edges
+                         clg
+                         parents
+                         (annotate-splices splice-roots lookedup-gdef))
+                        ;; delete the original child edges.
+                        (dolist (child children)
+                          (cl-graph:delete-edge-between-vertexes clg splice child))
+                        ;; add the new edges from the new-leaves to the
+                        ;; children.
+                        (add-cross-product-edges
+                         clg
+                         (annotate-splices splice-leaves lookedup-gdef)
+                         children)
+                        ;; Then finally, delete the expanding splice vertex
+                        (cl-graph:delete-vertex clg splice)))))))
     ;; finally store it in the analyhzed-graph.
     (setf (graph graph) clg)
     ;; and then generate any annotations we might need.
     (generate-graph-annotation (category graph) graph)))
 
-(defmethod generate-graph-annotation ((category (eql 'component-dependency))
-                                      graph)
+(defmethod generate-graph-annotation ((category (eql 'component-dependency)) graph)
   (let* ((clg (graph graph))
          (contains-cycles-p
            (cl-graph:find-vertex-if
             clg
-            (lambda (x) (cl-graph:in-cycle-p clg x))))
+            (lambda (vert) (cl-graph:in-cycle-p clg vert))))
          (annotation (make-graph-annotation
                       (category graph)
                       :unknown-type-id (au:unique-name "UNKNOWN-TYPE-ID-"))))
@@ -463,7 +456,7 @@ depends-on in that GDEF."
               ;; because it isn't escaped properly, stuff like . + ? | whatever
               ;; in the package name will mess things up.
               (putative-package-name-regex
-                (au:format-symbol *package* "^~~A&" putative-package-name)))
+                (format nil "^~A$" putative-package-name)))
          ;; Kind of a terrible Big-O...
          (dolist (pkg-name all-packages)
            (au:when-let* ((matched-pkg-name (ppcre:scan-to-strings

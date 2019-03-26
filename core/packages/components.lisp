@@ -50,7 +50,7 @@
    #:collision-event-handler
    #:on-layer
    #:center
-   #:radius))
+   #:radius)
   (:export
    #:transform
    #:transform-add-child
@@ -59,4 +59,4 @@
    #:local
    #:translate
    #:rotate
-   #:scale)
+   #:scale))

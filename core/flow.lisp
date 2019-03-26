@@ -33,7 +33,8 @@
 (defun gen-reset-function (symbols values)
   (let* ((tmp-symbols
            (loop :for sym :in symbols
-                 :collect (au:format-symbol nil "~A-ONCE-ONLY")))
+                 :collect (au:format-symbol nil "~A-ONCE-ONLY"
+                                            (symbol-name sym))))
          (once-only-bindings (mapcar
                               (lambda (tsym value) `(,tsym ,value))
                               tmp-symbols
