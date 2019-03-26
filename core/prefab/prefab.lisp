@@ -129,7 +129,8 @@
          (let ((path (make-node-path parent target)))
            (ensure-path-options-plist path options)
            (ensure-path-options-valid path options)
-           (destructuring-bind (&key (copy nil copy-p) (link nil link-p)) options
+           (destructuring-bind (&key (copy nil copy-p) (link nil link-p))
+               options
              (ensure-path-options-keys path options)
              (au:if-let ((copy/link-form (or copy link)))
                (parse-copy/link library path copy-p link-p copy/link-form)
@@ -150,8 +151,9 @@
   (with-slots (%library %name %root %parse-tree) prefab
     (labels ((%make-nodes (parent data)
                (dolist (node-spec data)
-                 (au:mvlet* ((name components children (split-prefab-spec node-spec))
-                             (path options (parse-path-spec parent %library name)))
+                 (au:mvlet*
+                     ((name components children (split-prefab-spec node-spec))
+                      (path options (parse-path-spec parent %library name)))
                    (with-slots (%options %components) (make-node prefab path)
                      (setf %options options)
                      (au:appendf %components components)
@@ -223,7 +225,8 @@
       (au:do-hash (path node (parse-tree prefab))
         (au:when-let ((parent-path (get-parent path)))
           (setf (slot-value node '%parent) (find-node parent-path %library)
-                (au:href (children (parent node)) path) (find-node path %library)))))))
+                (au:href (children (parent node)) path)
+                (find-node path %library)))))))
 
 (defun get-source-prefab (node)
   (destructuring-bind (&key source from &allow-other-keys) (options node)
@@ -416,7 +419,9 @@
                  `(list ',type
                         ',(when options-p (first options/args))
                         ,@(loop
-                            :with args = (if options-p (rest options/args) options/args)
+                            :with args = (if options-p
+                                             (rest options/args)
+                                             options/args)
                             :for (key value) :on args :by #'cddr
                             :collect key
                             :collect `(lambda (,context)
@@ -459,8 +464,7 @@
          (au:mvlet* ((,data ,setter (thunk-prefab-spec ,context ,body))
                      (,prefab (make-prefab ',name ',library ,data)))
            (setf (au:href ,prefabs ',name) ,prefab
-                 (slot-value ,prefab '%func) (make-prefab-factory ,prefab ,setter))
+                 (slot-value ,prefab '%func) (make-prefab-factory
+                                              ,prefab ,setter))
            (parse-prefab ,prefab))
          (export ',library)))))
-
-;; core prefab library (for cameras etc) (and split up examples into proper prefabs)

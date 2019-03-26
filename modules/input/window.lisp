@@ -1,8 +1,9 @@
 (in-package :first-light.input)
 
 (au:define-constant +window-event-names+
-    #(nil :show :hide nil :move :resize nil :minimize :maximize :restore :mouse-focus-enter
-      :mouse-focus-exit :keyboard-focus-enter :keyboard-focus-exit :close nil nil)
+    #(nil :show :hide nil :move :resize nil :minimize :maximize :restore
+      :mouse-focus-enter :mouse-focus-exit :keyboard-focus-enter
+      :keyboard-focus-exit :close nil nil)
   :test #'equalp)
 
 (defun get-window-title (window)

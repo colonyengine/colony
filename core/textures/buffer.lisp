@@ -1,9 +1,10 @@
 (in-package :%first-light)
 
-;;;; NOTE: This code is likely to really change a lot, since texture buffer
-;;;; objects are implemented very differently than regular textures.
+;;; NOTE: This code is likely to really change a lot, since texture buffer
+;;; objects are implemented very differently than regular textures.
 
-(defmethod load-texture-data ((texture-type (eql :texture-buffer)) texture context)
+(defmethod load-texture-data ((texture-type (eql :texture-buffer)) texture
+                              context)
   ;; NOTE: this one might be a little harder to get right, since the rcache
   ;; stuff might end up being wrong since this is a buffer object, not a
   ;; traditional texture. So pay attention while implementing this one.

@@ -32,7 +32,9 @@
 
 (defun make-buffer (sequence stream)
   (let* ((bytes (fast-io:make-input-buffer :vector sequence :stream stream))
-         (bits (bitio:make-bitio bytes #'fast-io:fast-read-byte #'bits-read-sequence)))
+         (bits (bitio:make-bitio bytes
+                                 #'fast-io:fast-read-byte
+                                 #'bits-read-sequence)))
     (make-instance 'buffer
                    :bytes bytes
                    :bits bits

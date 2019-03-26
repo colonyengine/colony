@@ -76,7 +76,8 @@
 
 (defgeneric parse-chunk-data (gltf chunk-type chunk)
   (:method :around (gltf chunk-type chunk)
-    (fl.binfmt:with-buffer-read (:sequence (fl.binfmt:read-bytes (chunk-length chunk)))
+    (fl.binfmt:with-buffer-read (:sequence (fl.binfmt:read-bytes
+                                            (chunk-length chunk)))
       (call-next-method))))
 
 (defmethod parse-chunk-data (gltf (chunk-type (eql :json-content)) chunk)
@@ -182,7 +183,8 @@
 (defun make-gpu-buffer (gltf target accessor)
   (let ((buffer-view-index (get-property gltf "bufferView" accessor)))
     (unless (member buffer-view-index (allocated-views gltf))
-      (let* ((buffer-view (elt (get-property gltf "bufferViews") buffer-view-index))
+      (let* ((buffer-view (elt (get-property gltf "bufferViews")
+                               buffer-view-index))
              (index (get-property gltf "buffer" buffer-view))
              (offset (+ (or (get-property gltf "byteOffset" accessor) 0)
                         (or (get-property gltf "byteOffset" buffer-view) 0)))
@@ -221,7 +223,8 @@
           (setf %count (get-property gltf "count" accessor)
                 %draw-func (lambda (&key (instance-count 1))
                              (gl:bind-vertex-array %vao)
-                             (gl:draw-arrays-instanced %mode 0 %count instance-count))))))))
+                             (gl:draw-arrays-instanced
+                              %mode 0 %count instance-count))))))))
 
 (defun make-index-buffer (gltf primitive data)
   (au:when-let* ((indices (get-property gltf "indices" data))
@@ -233,7 +236,8 @@
             %draw-func (lambda (&key (instance-count 1))
                          (gl:bind-vertex-array %vao)
                          (gl:bind-buffer :element-array-buffer %index-buffer)
-                         (%gl:draw-elements-instanced %mode %count %type 0 instance-count))))))
+                         (%gl:draw-elements-instanced
+                          %mode %count %type 0 instance-count))))))
 
 (defun make-primitive (gltf data)
   (let ((primitive (make-instance 'primitive

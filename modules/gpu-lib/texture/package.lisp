@@ -4,7 +4,8 @@
   (:nicknames #:fl.gpu.texture)
   (:use #:fl.gpu.lib
         #:fl.gpu.swizzle)
-  (:export #:unlit-color
-           #:unlit-color-decal
-           #:unlit-texture
-           #:unlit-texture-decal))
+  (:export
+   #:unlit-color
+   #:unlit-color-decal
+   #:unlit-texture
+   #:unlit-texture-decal))

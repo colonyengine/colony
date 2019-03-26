@@ -12,7 +12,8 @@
   (let* ((cell (floor point))
          (vec (- point cell))
          (hash (funcall hash-fn cell))
-         (radius (max 0 (+ radius-low (* (.z hash) (- radius-high radius-low)))))
+         (radius (max 0 (+ radius-low (* (.z hash)
+                                         (- radius-high radius-low)))))
          (value (/ radius (max radius-high radius-low)))
          (radius (/ 2 radius))
          (vec (+ (* (.xy hash) (- radius 2))
@@ -22,7 +23,8 @@
 (define-function polkadot ((point :vec2)
                            (radius-low :float)
                            (radius-high :float))
-  (polkadot point radius-low radius-high (lambda ((x :vec2)) (fl.gpu.hash:fast32/cell x))))
+  (polkadot point radius-low radius-high (lambda ((x :vec2))
+                                           (fl.gpu.hash:fast32/cell x))))
 
 ;;; 2D Polka-dot noise (box version)
 
@@ -33,7 +35,8 @@
   (let* ((cell (floor point))
          (vec (- point cell))
          (hash (funcall hash-fn cell))
-         (radius (max 0 (+ radius-low (* (.z hash) (- radius-high radius-low)))))
+         (radius (max 0 (+ radius-low (* (.z hash)
+                                         (- radius-high radius-low)))))
          (value (/ radius (max radius-high radius-low)))
          (radius (/ 2 radius))
          (vec (expt (+ (* (.xy hash) (- radius 2))
@@ -44,7 +47,8 @@
 (define-function polkadot-box ((point :vec2)
                                (radius-low :float)
                                (radius-high :float))
-  (polkadot-box point radius-low radius-high (lambda ((x :vec2)) (fl.gpu.hash:fast32/cell x))))
+  (polkadot-box point radius-low radius-high (lambda ((x :vec2))
+                                               (fl.gpu.hash:fast32/cell x))))
 
 ;;; 3D Polka-dot noise
 
@@ -55,7 +59,8 @@
   (let* ((cell (floor point))
          (vec (- point cell))
          (hash (funcall hash-fn cell))
-         (radius (max 0 (+ radius-low (* (.w hash) (- radius-high radius-low)))))
+         (radius (max 0 (+ radius-low (* (.w hash)
+                                         (- radius-high radius-low)))))
          (value (/ radius (max radius-high radius-low)))
          (radius (/ 2 radius))
          (vec (+ (- (* vec radius) (1- radius))
@@ -65,7 +70,8 @@
 (define-function polkadot ((point :vec3)
                            (radius-low :float)
                            (radius-high :float))
-  (polkadot point radius-low radius-high (lambda ((x :vec3)) (fl.gpu.hash:fast32/cell x))))
+  (polkadot point radius-low radius-high (lambda ((x :vec3))
+                                           (fl.gpu.hash:fast32/cell x))))
 
 ;;; 3D Polka-dot noise (box version)
 
@@ -76,7 +82,8 @@
   (let* ((cell (floor point))
          (vec (- point cell))
          (hash (funcall hash-fn cell))
-         (radius (max 0 (+ radius-low (* (.w hash) (- radius-high radius-low)))))
+         (radius (max 0 (+ radius-low (* (.w hash)
+                                         (- radius-high radius-low)))))
          (value (/ radius (max radius-high radius-low)))
          (radius (/ 2 radius))
          (vec (+ (- (* vec radius) (1- radius))
@@ -87,4 +94,5 @@
 (define-function polkadot-box ((point :vec3)
                                (radius-low :float)
                                (radius-high :float))
-  (polkadot-box point radius-low radius-high (lambda ((x :vec3)) (fl.gpu.hash:fast32/cell x))))
+  (polkadot-box point radius-low radius-high (lambda ((x :vec3))
+                                               (fl.gpu.hash:fast32/cell x))))

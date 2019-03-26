@@ -76,7 +76,9 @@
            (z0w0 z1w0 z0w1 z1w1 (funcall hash-fn cell))
            (blend (fl.gpu.shaping:quintic-curve vec))
            (temp (+ z0w0 (* (- z0w1 z0w0) (.w blend))))
-           (temp (+ temp (* (- (+ z1w0 (* (- z1w1 z1w0) (.w blend))) temp) (.z blend))))
+           (temp (+ temp (* (- (+ z1w0 (* (- z1w1 z1w0) (.w blend)))
+                               temp)
+                            (.z blend))))
            (blend (vec4 (.xy blend) (- 1 (.xy blend)))))
     (dot temp (* (.zxzx blend) (.wwyy blend)))))
 
@@ -89,7 +91,8 @@
                                 (value-scale :float)
                                 (gradient-scale :float)
                                 (normalization-value :float)
-                                (hash-fn (function (:vec2) (:vec4 :vec4 :vec4))))
+                                (hash-fn (function (:vec2)
+                                                   (:vec4 :vec4 :vec4))))
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (hash-x hash-y hash-z (funcall hash-fn cell))
@@ -102,7 +105,8 @@
                  (vec4 (.zw hash-x) (.zw hash-y))
                  (vec4 (.xy hash-z) 0 0)
                  (vec4 (.zw hash-z) 0 0)))
-           (out (* (fl.gpu.shaping:quintic-hermite (.x vec) (.x out) (.y out) (.z out) (.w out))
+           (out (* (fl.gpu.shaping:quintic-hermite
+                    (.x vec) (.x out) (.y out) (.z out) (.w out))
                    normalization-value)))
     (map-domain out -1 1 0 1)))
 
@@ -119,11 +123,13 @@
                                 (value-scale :float)
                                 (gradient-scale :float)
                                 (normalization-value :float)
-                                (hash-fn (function (:vec3) (:vec4 :vec4 :vec4 :vec4
-                                                            :vec4 :vec4 :vec4 :vec4))))
+                                (hash-fn (function (:vec3)
+                                                   (:vec4 :vec4 :vec4 :vec4
+                                                    :vec4 :vec4 :vec4 :vec4))))
   (mvlet* ((cell (floor point))
            (vec (- point cell))
-           (hash-x0 hash-y0 hash-z0 hash-w0 hash-x1 hash-y1 hash-z1 hash-w1 (funcall hash-fn cell))
+           (hash-x0 hash-y0 hash-z0 hash-w0 hash-x1 hash-y1 hash-z1 hash-w1
+                    (funcall hash-fn cell))
            (hash-x0 (* (- hash-x0 0.5) value-scale))
            (hash-y0 (* (- hash-y0 0.5 +epsilon+) gradient-scale))
            (hash-z0 (* (- hash-z0 0.5 +epsilon+) gradient-scale))
@@ -133,15 +139,16 @@
            (hash-z1 (* (- hash-z1 0.5 +epsilon+) gradient-scale))
            (hash-w1 (* (- hash-w1 0.5 +epsilon+) gradient-scale))
            (ival igrad-x igrad-y (fl.gpu.shaping:quintic-hermite
-                                  (.z vec) hash-x0 hash-x1 hash-y0 hash-y1 hash-z0 hash-z1 hash-w0
-                                  hash-w1))
+                                  (.z vec) hash-x0 hash-x1 hash-y0 hash-y1
+                                  hash-z0 hash-z1 hash-w0 hash-w1))
            (out (fl.gpu.shaping:quintic-hermite
                  (.y vec)
                  (vec4 (.xy ival) (.xy igrad-x))
                  (vec4 (.zw ival) (.zw igrad-x))
                  (vec4 (.xy igrad-y) 0 0)
                  (vec4 (.zw igrad-y) 0 0)))
-           (out (* (fl.gpu.shaping:quintic-hermite (.x vec) (.x out) (.y out) (.z out) (.w out))
+           (out (* (fl.gpu.shaping:quintic-hermite
+                    (.x vec) (.x out) (.y out) (.z out) (.w out))
                    normalization-value)))
     (map-domain out -1 1 0 1)))
 
@@ -163,7 +170,8 @@
            (grad-x (- hash-x 0.5 +epsilon+))
            (grad-y (- hash-y 0.5 +epsilon+))
            (grad-results (mix (1- (* hash 2))
-                              (* (inversesqrt (+ (* grad-x grad-x) (* grad-y grad-y)))
+                              (* (inversesqrt (+ (* grad-x grad-x)
+                                                 (* grad-y grad-y)))
                                  (+ (* grad-x (.xzxz vecs))
                                     (* grad-y (.yyww vecs)))
                                  1.4142135)
@@ -175,18 +183,21 @@
 
 (define-function value-perlin ((point :vec2)
                                (blend-value :float))
-  (value-perlin point blend-value (lambda ((x :vec2)) (fl.gpu.hash:fast32/3-per-corner x))))
+  (value-perlin point blend-value (lambda ((x :vec2))
+                                    (fl.gpu.hash:fast32/3-per-corner x))))
 
 ;;; 3D Value Perlin noise
 
 (define-function value-perlin ((point :vec3)
                                (blend-value :float)
-                               (hash-fn (function (:vec3) (:vec4 :vec4 :vec4 :vec4
-                                                           :vec4 :vec4 :vec4 :vec4))))
+                               (hash-fn (function (:vec3)
+                                                  (:vec4 :vec4 :vec4 :vec4
+                                                   :vec4 :vec4 :vec4 :vec4))))
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (vec-1 (1- vec))
-           (hash0 hash-x0 hash-y0 hash-z0 hash1 hash-x1 hash-y1 hash-z1 (funcall hash-fn cell))
+           (hash0 hash-x0 hash-y0 hash-z0 hash1 hash-x1 hash-y1 hash-z1
+                  (funcall hash-fn cell))
            (grad-x0 (- hash-x0 0.5 +epsilon+))
            (grad-y0 (- hash-y0 0.5 +epsilon+))
            (grad-z0 (- hash-z0 0.5 +epsilon+))
@@ -219,4 +230,5 @@
 
 (define-function value-perlin ((point :vec3)
                                (blend-value :float))
-  (value-perlin point blend-value (lambda ((x :vec3)) (fl.gpu.hash:fast32/4-per-corner x))))
+  (value-perlin point blend-value (lambda ((x :vec3))
+                                    (fl.gpu.hash:fast32/4-per-corner x))))

@@ -54,7 +54,8 @@ declaring storage of some kind to the GPU."
   "Return a list of textures that are specified in materials, but haven't been
 completed (no opengl parameters set for them, or data loaded into GPU).
 NOTE: These are already in the RCACHE."
-  (au:hash-values (unrealized-procedural-textures (textures (core-state context)))))
+  (au:hash-values (unrealized-procedural-textures
+                   (textures (core-state context)))))
 
 ;; TODO: Candidate for public API.
 (defun get-procedural-texture-descriptors (context)
@@ -499,7 +500,8 @@ texture."
                ;; first automatically.
                (if (member default-profile-name (profile-overlay-names v))
                    profile-overlays
-                   (list* (au:href profiles default-profile-name) profile-overlays))))
+                   (list* (au:href profiles default-profile-name)
+                          profile-overlays))))
         ;; Now, overlay them left to right into the applied-attributes table in
         ;; texdesc.
         (dolist (profile-overlay profile-overlays)
@@ -524,7 +526,8 @@ texture."
 :texture-3d type texture. If :data has the value :empty, allocate the memory of
 the size and types specified on the GPU."
   ;; TODO: Implement me!
-  (declare (ignore width height depth internal-format pixel-format pixel-type data))
+  (declare (ignore width height depth internal-format pixel-format pixel-type
+                   data))
   #())
 
 ;;; Interim use of the RCACHE API.

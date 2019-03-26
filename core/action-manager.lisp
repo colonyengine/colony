@@ -44,7 +44,8 @@
 (defun insert-action (action where &key target)
   (with-accessors ((manager manager) (type action-type)) action
     (let* ((action-list (action-list manager))
-           (node (fl.dst:insert-dlist-node where action-list type action :target-key target)))
+           (node (fl.dst:insert-dlist-node
+                  where action-list type action :target-key target)))
       (setf (node action) node)
       (on-action-insert action type)
       action)))
@@ -54,7 +55,11 @@
     (fl.dst:remove-dlist-node (action-list manager) type)))
 
 (defun replace-action (action type &rest args)
-  (let ((action (apply #'reinitialize-instance action :type type :elapsed 0 :finished-p nil args)))
+  (let ((action (apply #'reinitialize-instance action
+                       :type type
+                       :elapsed 0
+                       :finished-p nil
+                       args)))
     (fl.dst:update-dlist-node-key (node action) type)))
 
 (defun action-step (action)
@@ -89,12 +94,14 @@
   (:method :around (action type)
     (with-accessors ((actor actor)) (renderer (manager action))
       (call-next-method)
-      (v:trace :fl.comp.action "Action ~a finished for actor ~a." type (id actor)))))
+      (v:trace :fl.comp.action "Action ~a finished for actor ~a."
+               type (id actor)))))
 
 (defgeneric on-action-update (action type)
   (:method (action type))
   (:method :before (action type)
-    (with-slots (%manager %elapsed %self-finishing-p %duration %finished-p) action
+    (with-slots (%manager %elapsed %self-finishing-p %duration %finished-p)
+        action
       (with-accessors ((context context)) (renderer %manager)
         (incf %elapsed (frame-time context))
         (when (and (not %self-finishing-p)

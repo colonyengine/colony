@@ -46,7 +46,8 @@
 (defun make-spritesheet-buffer (spritesheet)
   (with-slots (%spec %buffer) spritesheet
     (fl.gpu:bind-block :spritesheet 1)
-    (setf %buffer (fl.gpu:create-buffer (au:unique-name :spritesheet) :spritesheet))
+    (setf %buffer (fl.gpu:create-buffer (au:unique-name :spritesheet)
+                                        :spritesheet))
     (fl.gpu:bind-buffer (fl.gpu:buffer-name %buffer) 1)
     (write-spritesheet-buffer spritesheet)))
 
@@ -64,8 +65,9 @@
       (gl:bind-vertex-array 0))))
 
 (defmethod on-component-initialize ((self sprite))
-  (with-accessors ((context context) (name name) (spec spec) (spritesheet spritesheet)
-                   (index index) (initial-index initial-index))
+  (with-accessors ((context context) (name name) (spec spec)
+                   (spritesheet spritesheet) (index index)
+                   (initial-index initial-index))
       self
     (unless name
       (error "A sprite component must have a name."))

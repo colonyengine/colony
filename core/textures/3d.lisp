@@ -75,8 +75,6 @@
                                    (pixel-format fl.image:pixel-format)
                                    (pixel-type fl.image:pixel-type))
                       (aref (aref all-slices idx) 0)
-                    #++(format t "Uploading tp GPU 3d mipmap image at level ~A with resolution (w:~A h:~A d:~A)~%"
-                               level mipmap-width mipmap-height mipmap-depth)
                     ;; TODO: I should move this error check to the validation
                     ;; stage above instead of being here.
                     (when (> (max mipmap-width mipmap-height mipmap-depth)

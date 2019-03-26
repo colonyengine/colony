@@ -32,7 +32,8 @@
 (defun get-loader-type (path)
   (let ((extension (get-image-extension-keyword path)))
     (ecase extension
-      ((:tga :bmp :pbm :pgm :ppm :xpm :xcf :pcx :gif :jpg :jpeg :tif :tiff :lbm :iff :png)
+      ((:tga :bmp :pbm :pgm :ppm :xpm :xcf :pcx :gif :jpg :jpeg :tif :tiff :lbm
+        :iff :png)
        :sdl2-image))))
 
 (defmethod get-pixel-size ((image image))

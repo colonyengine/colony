@@ -40,7 +40,8 @@
          (gl:compile-shader shader)
          (push shader shaders)
          (unless (gl:get-shader shader :compile-status)
-           (error "Failed to compile ~a shader stage:~%~a~%" type (gl:get-shader-info-log shader)))))
+           (error "Failed to compile ~a shader stage:~%~a~%"
+                  type (gl:get-shader-info-log shader)))))
      (source program))
     shaders))
 
@@ -56,7 +57,8 @@
             (gl:attach-shader program shader))
           (gl:link-program program)
           (unless (gl:get-program program :link-status)
-            (error "Failed to link shader program: ~a" (gl:get-program-info-log program)))
+            (error "Failed to link shader program: ~a"
+                   (gl:get-program-info-log program)))
           (dolist (shader shaders)
             (gl:detach-shader program shader)
             (gl:delete-shader shader))))
@@ -105,7 +107,8 @@
     (store-stage-program-dependencies program)
     program))
 
-(defmacro define-shader (name (&key (version :430) (primitive :triangles)) &body body)
+(defmacro define-shader (name (&key (version :430) (primitive :triangles))
+                         &body body)
   (let ((definitions '(fl.data:get 'shader-definitions)))
     `(progn
        (setf (au:href ,definitions ',name)

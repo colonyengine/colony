@@ -44,18 +44,21 @@
            (k0-gk0 (- dotval1-grad1 dotval0-grad0))
            (k1-gk1 (- dotval2-grad2 dotval0-grad0))
            (k2-gk2 (- dotval3-grad3 dotval2-grad2 k0-gk0))
-           (blend (fl.gpu.shaping:quintic-curve/interpolate-derivative (.xy vecs)))
+           (blend (fl.gpu.shaping:quintic-curve/interpolate-derivative
+                   (.xy vecs)))
            (out (+ dotval0-grad0
                    (* (.x blend) k0-gk0)
                    (* (.y blend) (+ k1-gk1 (* (.x blend) k2-gk2)))))
            (noise (map-domain (.x out) -0.70710677 0.70710677 0 1))
-           (derivs (* (+ (.yz out) (+ (* (.zw blend) (vec2 (.x k0-gk0) (.x k1-gk1)))
+           (derivs (* (+ (.yz out) (+ (* (.zw blend)
+                                         (vec2 (.x k0-gk0) (.x k1-gk1)))
                                       (* (.yx blend) (.xx k2-gk2))))
                       0.70710677)))
     (vec3 noise derivs)))
 
 (define-function perlin/derivs ((point :vec2))
-  (perlin/derivs point (lambda ((x :vec2)) (fl.gpu.hash:fast32/2-per-corner x))))
+  (perlin/derivs point (lambda ((x :vec2))
+                         (fl.gpu.hash:fast32/2-per-corner x))))
 
 ;;; 2D Perlin Surflet noise
 ;;; http://briansharpe.wordpress.com/2012/03/09/modifications-to-classic-perlin-noise/
@@ -69,19 +72,22 @@
            (grad-y (- hash-y 0.5 +epsilon+))
            (vecs-squared (* vecs vecs))
            (vecs-squared (+ (.xzxz vecs-squared) (.yyww vecs-squared)))
-           (out (dot (fl.gpu.shaping:falloff-squared-c2 (min (vec4 1) vecs-squared))
+           (out (dot (fl.gpu.shaping:falloff-squared-c2
+                      (min (vec4 1) vecs-squared))
                      (* (inversesqrt (+ (* grad-x grad-x) (* grad-y grad-y)))
                         (+ (* grad-x (.xzxz vecs)) (* grad-y (.yyww vecs)))
                         2.3703704))))
     (map-domain out -1 1 0 1)))
 
 (define-function perlin-surflet ((point :vec2))
-  (perlin-surflet point (lambda ((x :vec2)) (fl.gpu.hash:fast32/2-per-corner x))))
+  (perlin-surflet point (lambda ((x :vec2))
+                          (fl.gpu.hash:fast32/2-per-corner x))))
 
 ;;; 2D Perlin Surflet noise with derivatives
 
 (define-function perlin-surflet/derivs ((point :vec2)
-                                        (hash-fn (function (:vec2) (:vec4 :vec4))))
+                                        (hash-fn
+                                         (function (:vec2) (:vec4 :vec4))))
   (mvlet* ((cell (floor point))
            (vecs (- (.xyxy point) (vec4 cell (1+ cell))))
            (hash-x hash-y (funcall hash-fn cell))
@@ -103,7 +109,8 @@
     (vec3 noise derivs)))
 
 (define-function perlin-surflet/derivs ((point :vec2))
-  (perlin-surflet/derivs point (lambda ((x :vec2)) (fl.gpu.hash:fast32/2-per-corner x))))
+  (perlin-surflet/derivs point (lambda ((x :vec2))
+                                 (fl.gpu.hash:fast32/2-per-corner x))))
 
 ;;; 2D Perlin noise improved
 ;;; Ken Perlin's improved version
@@ -126,22 +133,29 @@
 ;;; 3D Perlin noise
 
 (define-function perlin ((point :vec3)
-                         (hash-fn (function (:vec3) (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
+                         (hash-fn (function
+                                   (:vec3)
+                                   (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (vec-1 (1- vec))
-           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1 (funcall hash-fn cell))
+           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1
+                    (funcall hash-fn cell))
            (grad-x0 (- hash-x0 0.5 +epsilon+))
            (grad-y0 (- hash-y0 0.5 +epsilon+))
            (grad-z0 (- hash-z0 0.5 +epsilon+))
            (grad-x1 (- hash-x1 0.5 +epsilon+))
            (grad-y1 (- hash-y1 0.5 +epsilon+))
            (grad-z1 (- hash-z1 0.5 +epsilon+))
-           (temp1 (* (inversesqrt (+ (* grad-x0 grad-x0) (* grad-y0 grad-y0) (* grad-z0 grad-z0)))
+           (temp1 (* (inversesqrt (+ (* grad-x0 grad-x0)
+                                     (* grad-y0 grad-y0)
+                                     (* grad-z0 grad-z0)))
                      (+ (* (.xyxy (vec2 (.x vec) (.x vec-1))) grad-x0)
                         (* (.xxyy (vec2 (.y vec) (.y vec-1))) grad-y0)
                         (* (.z vec) grad-z0))))
-           (temp2 (* (inversesqrt (+ (* grad-x1 grad-x1) (* grad-y1 grad-y1) (* grad-z1 grad-z1)))
+           (temp2 (* (inversesqrt (+ (* grad-x1 grad-x1)
+                                     (* grad-y1 grad-y1)
+                                     (* grad-z1 grad-z1)))
                      (+ (* (.xyxy (vec2 (.x vec) (.x vec-1))) grad-x1)
                         (* (.xxyy (vec2 (.y vec) (.y vec-1))) grad-y1)
                         (* (.z vec-1) grad-z1))))
@@ -157,21 +171,27 @@
 ;;; 3D Perlin noise with derivatives
 
 (define-function perlin/derivs ((point :vec3)
-                                (hash-fn (function
-                                          (:vec3)
-                                          (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
+                                (hash-fn
+                                 (function
+                                  (:vec3)
+                                  (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (vec-1 (1- vec))
-           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1 (funcall hash-fn cell))
+           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1
+                    (funcall hash-fn cell))
            (grad-x0 (- hash-x0 0.5 +epsilon+))
            (grad-y0 (- hash-y0 0.5 +epsilon+))
            (grad-z0 (- hash-z0 0.5 +epsilon+))
            (grad-x1 (- hash-x1 0.5 +epsilon+))
            (grad-y1 (- hash-y1 0.5 +epsilon+))
            (grad-z1 (- hash-z1 0.5 +epsilon+))
-           (norm0 (inversesqrt (+ (* grad-x0 grad-x0) (* grad-y0 grad-y0) (* grad-z0 grad-z0))))
-           (norm1 (inversesqrt (+ (* grad-x1 grad-x1) (* grad-y1 grad-y1) (* grad-z1 grad-z1))))
+           (norm0 (inversesqrt (+ (* grad-x0 grad-x0)
+                                  (* grad-y0 grad-y0)
+                                  (* grad-z0 grad-z0))))
+           (norm1 (inversesqrt (+ (* grad-x1 grad-x1)
+                                  (* grad-y1 grad-y1)
+                                  (* grad-z1 grad-z1))))
            (grad-x0 (* grad-x0 norm0))
            (grad-y0 (* grad-y0 norm0))
            (grad-z0 (* grad-z0 norm0))
@@ -198,60 +218,73 @@
            (k3-gk3 (- dot3-grad3 dot2-grad2 k0-gk0))
            (k4-gk4 (- dot5-grad5 dot4-grad4 k0-gk0))
            (k5-gk5 (- dot6-grad6 dot4-grad4 k1-gk1))
-           (k6-gk6 (- (- dot7-grad7 dot6-grad6) (- dot5-grad5 dot4-grad4) k3-gk3))
+           (k6-gk6 (- (- dot7-grad7 dot6-grad6) (- dot5-grad5 dot4-grad4)
+                      k3-gk3))
            (blend (fl.gpu.shaping:quintic-curve vec))
            (blend-deriv (fl.gpu.shaping:quintic-curve/derivative vec))
            (out (+ dot0-grad0
                    (* (.x blend) (+ k0-gk0 (* (.y blend) k3-gk3)))
                    (* (.y blend) (+ k1-gk1 (* (.z blend) k5-gk5)))
-                   (* (.z blend) (+ k2-gk2 (* (.x blend) (+ k4-gk4 (* (.y blend) k6-gk6)))))))
+                   (* (.z blend) (+ k2-gk2 (* (.x blend)
+                                              (+ k4-gk4
+                                                 (* (.y blend) k6-gk6)))))))
            (noise (map-domain (.x out) -0.8660254 0.8660254 0 1))
            (derivs (* (vec3 (+ (.y out)
                                (dot (vec4 (.x k0-gk0)
                                           (* (.x k3-gk3) (.y blend))
-                                          (* (vec2 (.x k4-gk4) (* (.x k6-gk6) (.y blend)))
+                                          (* (vec2 (.x k4-gk4)
+                                                   (* (.x k6-gk6) (.y blend)))
                                              (.z blend)))
                                     (vec4 (.x blend-deriv))))
                             (+ (.z out)
                                (dot (vec4 (.x k1-gk1)
                                           (* (.x k3-gk3) (.x blend))
-                                          (* (vec2 (.x k5-gk5) (* (.x k6-gk6) (.x blend)))
+                                          (* (vec2 (.x k5-gk5)
+                                                   (* (.x k6-gk6) (.x blend)))
                                              (.z blend)))
                                     (vec4 (.y blend-deriv))))
                             (+ (.w out)
                                (dot (vec4 (.x k2-gk2)
                                           (* (.x k4-gk4) (.x blend))
-                                          (* (vec2 (.x k5-gk5) (* (.x k6-gk6) (.x blend)))
+                                          (* (vec2 (.x k5-gk5)
+                                                   (* (.x k6-gk6) (.x blend)))
                                              (.y blend)))
                                     (vec4 (.x blend-deriv)))))
                       0.57735026)))
     (vec4 noise derivs)))
 
 (define-function perlin/derivs ((point :vec3))
-  (perlin/derivs point (lambda ((x :vec3)) (fl.gpu.hash:fast32/3-per-corner x))))
+  (perlin/derivs point (lambda ((x :vec3))
+                         (fl.gpu.hash:fast32/3-per-corner x))))
 
 ;;; 3D Perlin Surflet noise
 ;;; http://briansharpe.wordpress.com/2012/03/09/modifications-to-classic-perlin-noise/
 
 (define-function perlin-surflet ((point :vec3)
-                                 (hash-fn (function
-                                           (:vec3)
-                                           (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
+                                 (hash-fn
+                                  (function
+                                   (:vec3)
+                                   (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (vec-1 (1- vec))
-           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1 (funcall hash-fn cell))
+           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1
+                    (funcall hash-fn cell))
            (grad-x0 (- hash-x0 0.5 +epsilon+))
            (grad-y0 (- hash-y0 0.5 +epsilon+))
            (grad-z0 (- hash-z0 0.5 +epsilon+))
            (grad-x1 (- hash-x1 0.5 +epsilon+))
            (grad-y1 (- hash-y1 0.5 +epsilon+))
            (grad-z1 (- hash-z1 0.5 +epsilon+))
-           (temp1 (* (inversesqrt (+ (* grad-x0 grad-x0) (* grad-y0 grad-y0) (* grad-z0 grad-z0)))
+           (temp1 (* (inversesqrt (+ (* grad-x0 grad-x0)
+                                     (* grad-y0 grad-y0)
+                                     (* grad-z0 grad-z0)))
                      (+ (* (.xyxy (vec2 (.x vec) (.x vec-1))) grad-x0)
                         (* (.xxyy (vec2 (.y vec) (.y vec-1))) grad-y0)
                         (* (.z vec) grad-z0))))
-           (temp2 (* (inversesqrt (+ (* grad-x1 grad-x1) (* grad-y1 grad-y1) (* grad-z1 grad-z1)))
+           (temp2 (* (inversesqrt (+ (* grad-x1 grad-x1)
+                                     (* grad-y1 grad-y1)
+                                     (* grad-z1 grad-z1)))
                      (+ (* (.xyxy (vec2 (.x vec) (.x vec-1))) grad-x1)
                         (* (.xxyy (vec2 (.y vec) (.y vec-1))) grad-y1)
                         (* (.z vec-1) grad-z1))))
@@ -269,26 +302,34 @@
     (map-domain out -1 1 0 1)))
 
 (define-function perlin-surflet ((point :vec3))
-  (perlin-surflet point (lambda ((x :vec3)) (fl.gpu.hash:fast32/3-per-corner x))))
+  (perlin-surflet point (lambda ((x :vec3))
+                          (fl.gpu.hash:fast32/3-per-corner x))))
 
 ;;; 3D Perlin Surflet noise with derivatives
 
 (define-function perlin-surflet/derivs ((point :vec3)
-                                        (hash-fn (function
-                                                  (:vec3)
-                                                  (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
+                                        (hash-fn
+                                         (function
+                                          (:vec3)
+                                          (:vec4 :vec4 :vec4 :vec4 :vec4
+                                                 :vec4))))
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (vec-1 (1- vec))
-           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1 (funcall hash-fn cell))
+           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1
+                    (funcall hash-fn cell))
            (grad-x0 (- hash-x0 0.5 +epsilon+))
            (grad-y0 (- hash-y0 0.5 +epsilon+))
            (grad-z0 (- hash-z0 0.5 +epsilon+))
            (grad-x1 (- hash-x1 0.5 +epsilon+))
            (grad-y1 (- hash-y1 0.5 +epsilon+))
            (grad-z1 (- hash-z1 0.5 +epsilon+))
-           (norm0 (inversesqrt (+ (* grad-x0 grad-x0) (* grad-y0 grad-y0) (* grad-z0 grad-z0))))
-           (norm1 (inversesqrt (+ (* grad-x1 grad-x1) (* grad-y1 grad-y1) (* grad-z1 grad-z1))))
+           (norm0 (inversesqrt (+ (* grad-x0 grad-x0)
+                                  (* grad-y0 grad-y0)
+                                  (* grad-z0 grad-z0))))
+           (norm1 (inversesqrt (+ (* grad-x1 grad-x1)
+                                  (* grad-y1 grad-y1)
+                                  (* grad-z1 grad-z1))))
            (grad-x0 (* grad-x0 norm0))
            (grad-y0 (* grad-y0 norm0))
            (grad-z0 (* grad-z0 norm0))
@@ -313,11 +354,15 @@
            (m3-1 (* m-1 m2-1))
            (temp0 (* -6 m2-0 grad-results0))
            (temp1 (* -6 m2-1 grad-results1))
-           (deriv0 (vec3 (+ (dot temp0 (.xyxy (vec2 (.x vec) (.x vec-1)))) (dot m3-0 grad-x0))
-                         (+ (dot temp0 (.xxyy (vec2 (.y vec) (.y vec-1)))) (dot m3-0 grad-y0))
+           (deriv0 (vec3 (+ (dot temp0 (.xyxy (vec2 (.x vec) (.x vec-1))))
+                            (dot m3-0 grad-x0))
+                         (+ (dot temp0 (.xxyy (vec2 (.y vec) (.y vec-1))))
+                            (dot m3-0 grad-y0))
                          (+ (dot temp0 (.zzzz vec)) (dot m3-0 grad-z0))))
-           (deriv1 (vec3 (+ (dot temp1 (.xyxy (vec2 (.x vec) (.x vec-1)))) (dot m3-1 grad-x1))
-                         (+ (dot temp1 (.xxyy (vec2 (.y vec) (.y vec-1)))) (dot m3-1 grad-y1))
+           (deriv1 (vec3 (+ (dot temp1 (.xyxy (vec2 (.x vec) (.x vec-1))))
+                            (dot m3-1 grad-x1))
+                         (+ (dot temp1 (.xxyy (vec2 (.y vec) (.y vec-1))))
+                            (dot m3-1 grad-y1))
                          (+ (dot temp1 (.zzzz vec-1)) (dot m3-1 grad-z1))))
            (noise (+ (dot m3-0 grad-results0)
                      (dot m3-1 grad-results1)))
@@ -326,7 +371,8 @@
     (vec4 noise derivs)))
 
 (define-function perlin-surflet/derivs ((point :vec3))
-  (perlin-surflet/derivs point (lambda ((x :vec3)) (fl.gpu.hash:fast32/3-per-corner x))))
+  (perlin-surflet/derivs point (lambda ((x :vec3))
+                                 (fl.gpu.hash:fast32/3-per-corner x))))
 
 ;;; 3D Perlin noise improved
 ;;; Ken Perlin's modified version
@@ -368,7 +414,8 @@
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (vec-1 (1- vec))
-           (a0 a1 a2 a3 b0 b1 b2 b3 c0 c1 c2 c3 d0 d1 d2 d3 (funcall hash-fn cell))
+           (a0 a1 a2 a3 b0 b1 b2 b3 c0 c1 c2 c3 d0 d1 d2 d3
+               (funcall hash-fn cell))
            (a0 (- a0 0.5 +epsilon+))
            (a1 (- a1 0.5 +epsilon+))
            (a2 (- a2 0.5 +epsilon+))
@@ -407,7 +454,9 @@
                          (* (.w vec-1) d3))))
            (blend (fl.gpu.shaping:quintic-curve vec))
            (temp (+ temp-a (* (- temp-c temp-a) (.w blend))))
-           (temp (+ temp (* (- (+ temp-b (* (- temp-d temp-b) (.w blend))) temp) (.z blend))))
+           (temp (+ temp (* (- (+ temp-b (* (- temp-d temp-b) (.w blend)))
+                               temp)
+                            (.z blend))))
            (blend (vec4 (.xy blend) (- 1 (.xy blend)))))
     (map-domain (dot temp (* (.zxzx blend) (.wwyy blend))) -1 1 0 1)))
 

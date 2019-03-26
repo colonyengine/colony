@@ -26,17 +26,19 @@
     (au:noop)))
 
 (defun run-prologue (core-state)
-  "The prologue is a (defmethod prologue ((context context)) ...) method optionally defined in the
-user's project. If it exists, it is called after internal engine setup, but before the first
-frame (specifically, before any component protocol methods are called for the first time). The
-result of the prologue function is automatically stored in the STATE slot of the CONTEXT."
+  "The prologue is a (defmethod prologue ((context context)) ...) method
+optionally defined in the user's project. If it exists, it is called after
+internal engine setup, but before the first frame (specifically, before any
+component protocol methods are called for the first time). The result of the
+prologue function is automatically stored in the STATE slot of the CONTEXT."
   (let ((context (context core-state)))
     (setf (state context) (prologue context))))
 
 (defun run-epilogue (core-state)
-  "The epilogue is a (defmethod epilogue ((context context)) ..) defined in the user's project. If
-it exists, it is called after the last frame, and after the last invocations of any component protocol
-method, but before any engine tear-down procedure occurs when stopping the engine."
+  "The epilogue is a (defmethod epilogue ((context context)) ..) defined in the
+user's project. If it exists, it is called after the last frame, and after the
+last invocations of any component protocol method, but before any engine
+tear-down procedure occurs when stopping the engine."
   (epilogue (context core-state)))
 
 (defun initialize-host (core-state)
@@ -82,8 +84,8 @@ method, but before any engine tear-down procedure occurs when stopping the engin
     (iterate-main-loop core-state)))
 
 (defun start-engine (prefabs &optional profile-duration)
-  "Start the engine. First we initialize the engine. Next we run the prologue as the last step,
-before finally starting the main game loop."
+  "Start the engine. First we initialize the engine. Next we run the prologue as
+the last step, before finally starting the main game loop."
   (unwind-protect
        (let ((core-state (make-instance 'core-state)))
          (load-options core-state)
@@ -97,8 +99,8 @@ before finally starting the main game loop."
     (sdl2::sdl-quit)))
 
 (defun stop-engine (core-state)
-  "Stop the engine, making sure to call any user-defined epilogue function first, and finally
-cleaning up."
+  "Stop the engine, making sure to call any user-defined epilogue function
+first, and finally cleaning up."
   (let ((title (option core-state :title)))
     (v:info :fl.core.engine "Shutting down ~a..." title)
     (run-epilogue core-state)

@@ -15,8 +15,10 @@
            (vec (- point cell))
            (jitter-window 0.25)
            (hash-x hash-y (funcall hash-fn cell))
-           (grad-x (+ (* (cellular-weight-samples hash-x) jitter-window) (vec4 0 1 0 1)))
-           (grad-y (+ (* (cellular-weight-samples hash-y) jitter-window) (vec4 0 0 1 1)))
+           (grad-x (+ (* (cellular-weight-samples hash-x) jitter-window)
+                      (vec4 0 1 0 1)))
+           (grad-y (+ (* (cellular-weight-samples hash-y) jitter-window)
+                      (vec4 0 0 1 1)))
            (dx (- (.x vec) grad-x))
            (dy (- (.y vec) grad-y))
            (d (+ (* dx dx) (* dy dy)))
@@ -34,8 +36,10 @@
            (vec (- point cell))
            (jitter-window 0.25)
            (hash-x hash-y (funcall hash-fn cell))
-           (grad-x (+ (* (cellular-weight-samples hash-x) jitter-window) (vec4 0 1 0 1)))
-           (grad-y (+ (* (cellular-weight-samples hash-y) jitter-window) (vec4 0 0 1 1)))
+           (grad-x (+ (* (cellular-weight-samples hash-x) jitter-window)
+                      (vec4 0 1 0 1)))
+           (grad-y (+ (* (cellular-weight-samples hash-y) jitter-window)
+                      (vec4 0 0 1 1)))
            (dx (- (.x vec) grad-x))
            (dy (- (.y vec) grad-y))
            (d (+ (* dx dx) (* dy dy)))
@@ -50,7 +54,8 @@
        (/ 1.125))))
 
 (define-function cellular/derivs ((point :vec2))
-  (cellular/derivs point (lambda ((x :vec2)) (fl.gpu.hash:fast32/2-per-corner x))))
+  (cellular/derivs point (lambda ((x :vec2))
+                           (fl.gpu.hash:fast32/2-per-corner x))))
 
 ;;; 2D Cellular noise (fast version)
 
@@ -69,21 +74,29 @@
     (* (min (.x d) (.y d)) (/ 1.125))))
 
 (define-function cellular-fast ((point :vec2))
-  (cellular-fast point (lambda ((x :vec2)) (fl.gpu.hash:fast32/2-per-corner x))))
+  (cellular-fast point (lambda ((x :vec2))
+                         (fl.gpu.hash:fast32/2-per-corner x))))
 
 ;;; 3D Cellular noise
 
 (define-function cellular ((point :vec3)
-                           (hash-fn (function (:vec3) (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
+                           (hash-fn
+                            (function (:vec3)
+                                      (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (jitter-window (/ 6.0))
-           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1 (funcall hash-fn cell))
-           (hash-x0 (+ (* (cellular-weight-samples hash-x0) jitter-window) (vec4 0 1 0 1)))
-           (hash-y0 (+ (* (cellular-weight-samples hash-y0) jitter-window) (vec4 0 0 1 1)))
+           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1
+                    (funcall hash-fn cell))
+           (hash-x0 (+ (* (cellular-weight-samples hash-x0) jitter-window)
+                       (vec4 0 1 0 1)))
+           (hash-y0 (+ (* (cellular-weight-samples hash-y0) jitter-window)
+                       (vec4 0 0 1 1)))
            (hash-z0 (* (cellular-weight-samples hash-z0) jitter-window))
-           (hash-x1 (+ (* (cellular-weight-samples hash-x1) jitter-window) (vec4 0 1 0 1)))
-           (hash-y1 (+ (* (cellular-weight-samples hash-y1) jitter-window) (vec4 0 0 1 1)))
+           (hash-x1 (+ (* (cellular-weight-samples hash-x1) jitter-window)
+                       (vec4 0 1 0 1)))
+           (hash-y1 (+ (* (cellular-weight-samples hash-y1) jitter-window)
+                       (vec4 0 0 1 1)))
            (hash-z1 (+ (* (cellular-weight-samples hash-z1) jitter-window) 1))
            (dx1 (- (.x vec) hash-x0))
            (dy1 (- (.y vec) hash-y0))
@@ -102,19 +115,27 @@
 ;;; 3D Cellular noise with derivatives
 
 (define-function cellular/derivs ((point :vec3)
-                                  (hash-fn (function
-                                            (:vec3)
-                                            (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
+                                  (hash-fn
+                                   (function
+                                    (:vec3)
+                                    (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (jitter-window 0.16666667)
-           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1 (funcall hash-fn cell))
-           (hash-x0 (+ (* (cellular-weight-samples hash-x0) jitter-window) (vec4 0 1 0 1)))
-           (hash-y0 (+ (* (cellular-weight-samples hash-y0) jitter-window) (vec4 0 0 1 1)))
-           (hash-z0 (+ (* (cellular-weight-samples hash-z0) jitter-window) (vec4 0)))
-           (hash-x1 (+ (* (cellular-weight-samples hash-x1) jitter-window) (vec4 0 1 0 1)))
-           (hash-y1 (+ (* (cellular-weight-samples hash-y1) jitter-window) (vec4 0 0 1 1)))
-           (hash-z1 (+ (* (cellular-weight-samples hash-z1) jitter-window) (vec4 1)))
+           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1
+                    (funcall hash-fn cell))
+           (hash-x0 (+ (* (cellular-weight-samples hash-x0) jitter-window)
+                       (vec4 0 1 0 1)))
+           (hash-y0 (+ (* (cellular-weight-samples hash-y0) jitter-window)
+                       (vec4 0 0 1 1)))
+           (hash-z0 (+ (* (cellular-weight-samples hash-z0) jitter-window)
+                       (vec4 0)))
+           (hash-x1 (+ (* (cellular-weight-samples hash-x1) jitter-window)
+                       (vec4 0 1 0 1)))
+           (hash-y1 (+ (* (cellular-weight-samples hash-y1) jitter-window)
+                       (vec4 0 0 1 1)))
+           (hash-z1 (+ (* (cellular-weight-samples hash-z1) jitter-window)
+                       (vec4 1)))
            (dx1 (- (.x vec) hash-x0))
            (dy1 (- (.y vec) hash-y0))
            (dz1 (- (.z vec) hash-z0))
@@ -142,18 +163,21 @@
        0.75)))
 
 (define-function cellular/derivs ((point :vec3))
-  (cellular/derivs point (lambda ((x :vec3)) (fl.gpu.hash:fast32/3-per-corner x))))
+  (cellular/derivs point (lambda ((x :vec3))
+                           (fl.gpu.hash:fast32/3-per-corner x))))
 
 ;;; 3D Cellular noise (fast version)
 
 (define-function cellular-fast ((point :vec3)
-                                (hash-fn (function
-                                          (:vec3)
-                                          (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
+                                (hash-fn
+                                 (function
+                                  (:vec3)
+                                  (:vec4 :vec4 :vec4 :vec4 :vec4 :vec4))))
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (jitter-window (vec3 0.4 -0.4 0.6))
-           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1 (funcall hash-fn cell))
+           (hash-x0 hash-y0 hash-z0 hash-x1 hash-y1 hash-z1
+                    (funcall hash-fn cell))
            (hash-x0 (+ (* hash-x0 (.x jitter-window) 2) (.yzyz jitter-window)))
            (hash-y0 (+ (* hash-y0 (.x jitter-window) 2) (.yyzz jitter-window)))
            (hash-z0 (+ (* hash-z0 (.x jitter-window) 2) (.y jitter-window)))
@@ -172,4 +196,5 @@
     (* (min (.x d1) (.y d1)) (/ 9 12.0))))
 
 (define-function cellular-fast ((point :vec3))
-  (cellular-fast point (lambda ((x :vec3)) (fl.gpu.hash:fast32/3-per-corner x))))
+  (cellular-fast point (lambda ((x :vec3))
+                         (fl.gpu.hash:fast32/3-per-corner x))))

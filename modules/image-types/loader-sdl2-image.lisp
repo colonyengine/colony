@@ -3,9 +3,12 @@
 (defun get-surface-channel-count (surface)
   (let ((format (sdl2:surface-format-format surface)))
     (ecase format
-      ((:index8) 1)
-      ((:rgb24 :bgr24 :rgb888 :bgr888) 3)
-      ((:argb8888 :rgba8888 :abgr8888 :bgra8888 :rgba32 :argb32 :bgra32 :abgr32) 4))))
+      ((:index8)
+       1)
+      ((:rgb24 :bgr24 :rgb888 :bgr888)
+       3)
+      ((:argb8888 :rgba8888 :abgr8888 :bgra8888 :rgba32 :argb32 :bgra32 :abgr32)
+       4))))
 
 (defun get-surface-pixel-format (surface)
   (let ((format (sdl2:surface-format-format surface)))

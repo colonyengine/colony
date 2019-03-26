@@ -43,9 +43,11 @@
                                    :unsignedp nil)))
     (funcall processor value)))
 
-(defun read-string (&key bytes (encoding :ascii) (processor #'identity) null-terminated-p)
+(defun read-string (&key bytes (encoding :ascii) (processor #'identity)
+                      null-terminated-p)
   (with-slots (%bytes) *buffer*
-    (let ((octet-vector (fast-io:make-octet-vector (%string-length bytes null-terminated-p))))
+    (let ((octet-vector (fast-io:make-octet-vector
+                         (%string-length bytes null-terminated-p))))
       (fast-io:fast-read-sequence octet-vector %bytes)
       (when null-terminated-p
         (fast-io:fast-read-byte %bytes))

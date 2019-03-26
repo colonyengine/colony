@@ -60,21 +60,25 @@
   (setf (parent child) parent))
 
 (defun transform-remove-child (parent child)
-  (setf (children parent) (remove-if (lambda (x) (eq x child)) (children parent))
+  (setf (children parent) (remove-if
+                           (lambda (x)
+                             (eq x child))
+                           (children parent))
         (parent child) nil))
 
 (defun transform-node (core-state node)
   (let ((delta (delta (context core-state))))
-    (with-slots (%previous %current %incremental-delta %incremental) (scaling node)
+    (with-slots (%previous %current %incremental-delta %incremental)
+        (scaling node)
       (m:copy-into %previous %current)
       (m:+ %current (m:* %incremental delta %incremental-delta) %current))
-    (with-slots (%previous %current %incremental-delta %incremental) (rotation node)
+    (with-slots (%previous %current %incremental-delta %incremental)
+        (rotation node)
       (m:copy-into %previous %current)
       (m:rotate :local %current
-                  (m:* %incremental delta %incremental-delta) %current))
-
-
-    (with-slots (%previous %current %incremental-delta %incremental) (translation node)
+                (m:* %incremental delta %incremental-delta) %current))
+    (with-slots (%previous %current %incremental-delta %incremental)
+        (translation node)
       (m:copy-into %previous %current)
       (m:+ %current (m:* %incremental delta %incremental-delta) %current))))
 
@@ -105,7 +109,9 @@
    (actor-component-by-type (%fl:scene-tree core-state) 'transform)))
 
 (defmethod make-component (context (component-type (eql 'transform)) &rest args)
-  (let ((instance (make-instance component-type :type component-type :context context)))
+  (let ((instance (make-instance component-type
+                                 :type component-type
+                                 :context context)))
     (apply #'reinitialize-instance instance args)
     instance))
 
@@ -148,7 +154,8 @@
 (defun rotate (transform vec &key (space :model) replace-p instant-p)
   (ecase space
     (:model (%rotate/model-space (rotation transform) vec replace-p instant-p))
-    (:world (%rotate/world-space (rotation transform) vec replace-p instant-p))))
+    (:world (%rotate/world-space
+             (rotation transform) vec replace-p instant-p))))
 
 (defun %translate/model-space (translation vec &optional replace-p instant-p)
   (with-accessors ((previous previous) (current current)) translation
@@ -162,8 +169,10 @@
 
 (defun translate (transform vec &key (space :model) replace-p instant-p)
   (ecase space
-    (:model (%translate/model-space (translation transform) vec replace-p instant-p))
-    (:world (%translate/world-space (translation transform) vec replace-p instant-p))))
+    (:model (%translate/model-space
+             (translation transform) vec replace-p instant-p))
+    (:world (%translate/world-space
+             (translation transform) vec replace-p instant-p))))
 
 (defun scale (transform vec &key replace-p instant-p)
   (with-accessors ((previous previous) (current current)) (scaling transform)

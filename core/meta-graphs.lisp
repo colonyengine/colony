@@ -220,7 +220,9 @@
                    (fl.comp:mesh -> fl.comp:sprite -> fl.comp:render))
 
   (execution-order core
-                   (fl.comp:transform -> (splice actions) -> (splice drawable))))
+                   (fl.comp:transform
+                    -> (splice actions)
+                    -> (splice drawable))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project graphs (that use the above)

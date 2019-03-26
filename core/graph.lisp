@@ -168,7 +168,8 @@ return them as a list."
           (t
            `(component-type ,element)))))
 
-(defmethod canonicalize-dependency-form ((category (eql 'component-package-order))
+(defmethod canonicalize-dependency-form ((category
+                                          (eql 'component-package-order))
                                          dependency-form)
   (loop :for element :in dependency-form
         :collect
@@ -213,7 +214,8 @@ null, and contains hyper edges, return values: list of hyper-edge pairs,
      :depforms
      (loop :for dep :in dependency-forms
            :collect
-           (multiple-value-bind (lifted-dependency-form kind) (segment-dependency-form category dep)
+           (multiple-value-bind (lifted-dependency-form kind)
+               (segment-dependency-form category dep)
              (make-depform :original-form dep
                            :canonical-form lifted-dependency-form
                            :kind kind))))))
@@ -311,7 +313,8 @@ graphdef references holding real references to the named subforms."
                       ;; store the semantic analysis of the depends-on form,
                       ;; transmuted into its new graphdef-depends-on form, back
                       ;; into the initiating gdef.
-                      (setf (au:href (depends-on gdef) (name analyzed-depends-on))
+                      (setf (au:href (depends-on gdef)
+                                     (name analyzed-depends-on))
                             analyzed-depends-on))))
 
 (defun lookup-splice (splice-form gdef)
@@ -377,16 +380,19 @@ depends-on in that GDEF."
           :do (dolist (splice splices)
                 (let ((parents (cl-graph:parent-vertexes splice))
                       (children (cl-graph:child-vertexes splice)))
-                  (destructuring-bind (splice-form gdef) (cl-graph:element splice)
+                  (destructuring-bind (splice-form gdef)
+                      (cl-graph:element splice)
                     (multiple-value-bind (lookedup-splice lookedup-gdef)
                         (lookup-splice splice-form gdef)
                       ;; Now, absorb the splice into clg, get the roots and
                       ;; leaves, then fixup the edges.
                       (multiple-value-bind (clg splice-roots splice-leaves)
-                          (absorb-depforms clg lookedup-gdef (depforms lookedup-splice))
+                          (absorb-depforms
+                           clg lookedup-gdef (depforms lookedup-splice))
                         ;; delete the original parent edges.
                         (dolist (parent parents)
-                          (cl-graph:delete-edge-between-vertexes clg parent splice))
+                          (cl-graph:delete-edge-between-vertexes
+                           clg parent splice))
                         ;; add the new edges from the parents to the new-roots.
                         (add-cross-product-edges
                          clg
@@ -394,7 +400,8 @@ depends-on in that GDEF."
                          (annotate-splices splice-roots lookedup-gdef))
                         ;; delete the original child edges.
                         (dolist (child children)
-                          (cl-graph:delete-edge-between-vertexes clg splice child))
+                          (cl-graph:delete-edge-between-vertexes
+                           clg splice child))
                         ;; add the new edges from the new-leaves to the
                         ;; children.
                         (add-cross-product-edges
@@ -408,7 +415,8 @@ depends-on in that GDEF."
     ;; and then generate any annotations we might need.
     (generate-graph-annotation (category graph) graph)))
 
-(defmethod generate-graph-annotation ((category (eql 'component-dependency)) graph)
+(defmethod generate-graph-annotation ((category (eql 'component-dependency))
+                                      graph)
   (let* ((clg (graph graph))
          (contains-cycles-p
            (cl-graph:find-vertex-if

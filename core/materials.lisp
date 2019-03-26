@@ -15,13 +15,16 @@
 
 (defun %lookup-material (material-name core-state)
   "Find a material by its ID in CORE-STATE and return a gethash-like values.
-If the material isn't there, return the 'fl.materials:missing-material. The return value is two
-values, the first is a material instance, and the second is T if the material being looked up was
-actually found, or NIL if it wasn't (and the missing material used)."
+If the material isn't there, return the 'fl.materials:missing-material. The
+return value is two values, the first is a material instance, and the second is
+T if the material being looked up was actually found, or NIL if it wasn't (and
+the missing material used)."
   (symbol-macrolet ((table (material-table (materials core-state))))
     (au:if-found (material (au:href table material-name))
                  material
-                 (au:href table (au:ensure-symbol 'missing-material 'fl.materials)))))
+                 (au:href table
+                          (au:ensure-symbol 'missing-material
+                                            'fl.materials)))))
 
 (defun %add-material (material core-state)
   "Add the MATERIAL by its id into CORE-STATE."
@@ -33,9 +36,9 @@ actually found, or NIL if it wasn't (and the missing material used)."
   (remhash (id material) (material-table (materials core-state))))
 
 (defun %map-materials (func core-state)
-  "Map the function FUNC, which expects a material, across all materials in CORE-STATE. Return a
-list of the return values of the FUNC."
-  (let ((results ()))
+  "Map the function FUNC, which expects a material, across all materials in
+CORE-STATE. Return a list of the return values of the FUNC."
+  (let (results)
     (au:do-hash-values (v (material-table (materials core-state)))
       (push (funcall func v) results))
     (nreverse results)))
@@ -45,51 +48,55 @@ list of the return values of the FUNC."
   (%lookup-material id (core-state context)))
 
 (defclass material-value ()
-  (;; This is a back reference to the material that owns this
-   ;; material-uniform-value.
-   (%material :accessor material
+  ;; This is a back reference to the material that owns this
+  ;; material-uniform-value.
+  ((%material :accessor material
               :initarg :material)))
 
-;;; The value of a uniform is this type in the material. It holds the original semantic value and
-;;; any transformation of it that is actually the usable material value.
-;;;
-;;; NOTE: :initforms are supplied here because if how profiles are implemented. Basically, we need
-;;; to be able to copy pre-annotated material values from profiles BEFORE we annotate them for real
-;;; when reaolving all the materials.
+;;; The value of a uniform is this type in the material. It holds the original
+;;; semantic value and any transformation of it that is actually the usable
+;;; material value.
+;;; NOTE: :initforms are supplied here because if how profiles are implemented.
+;;; Basically, we need to be able to copy pre-annotated material values from
+;;; profiles BEFORE we annotate them for real when reaolving all the materials.
 
 (defclass material-uniform-value (material-value)
-  (;; This is the semantic value for a uniform. In the case of a :sampler-2d it is a string to a
-   ;; texture found on disk, etc.
+  (;; This is the semantic value for a uniform. In the case of a :sampler-2d it
+   ;; is a string to a texture found on disk, etc.
    (%semantic-value :accessor semantic-value
                     :initarg :semantic-value
                     :initform nil)
-   ;; A function the user supplies that performs some a-prioi conversion of the semantic value to
-   ;; something apprpropriate for the next stages of conversion. This will be added to the below
-   ;; composition chain at the right time to form the complete transform of the semantic to the
-   ;; computed value. The function in this slot is always FIRST in the composition.
+   ;; A function the user supplies that performs some a-prioi conversion of the
+   ;; semantic value to something apprpropriate for the next stages of
+   ;; conversion. This will be added to the below composition chain at the right
+   ;; time to form the complete transform of the semantic to the computed value.
+   ;; The function in this slot is always FIRST in the composition.
    (%transformer :reader transformer
                  :initarg :transformer
                  :initform #'identity/for-material-custom-functions)
-   ;; When materials get copied, material-uniform-values get copied, and if the user is using some
-   ;; custom semantic value, they need to supply the function which will deep copy it.
+   ;; When materials get copied, material-uniform-values get copied, and if the
+   ;; user is using some custom semantic value, they need to supply the function
+   ;; which will deep copy it.
    (%copier :reader copier
             :initarg :copier
             :initform (lambda (sv context mat)
                         (declare (ignore context mat))
                         sv))
-   ;; This is a composition of functions, stored as a list, where the first function on the left's
-   ;; result is passed to the next function until the end. The last function should be the final
-   ;; converter which produces something suitable for the computed-value.
+   ;; This is a composition of functions, stored as a list, where the first
+   ;; function on the left's result is passed to the next function until the
+   ;; end. The last function should be the final converter which produces
+   ;; something suitable for the computed-value.
    (%semantic->computed :accessor semantic->computed
                         :initarg :semantic->computed
-                        :initform ())
-   ;; When we're converting the semantic-value to to computed-value, do we attempt to force a copy
-   ;; between the semantic-value and the computed value even though they COULD be the same in common
-   ;; circumstances?
+                        :initform nil)
+   ;; When we're converting the semantic-value to to computed-value, do we
+   ;; attempt to force a copy between the semantic-value and the computed value
+   ;; even though they COULD be the same in common circumstances?
    (%force-copy :accessor force-copy
                 :initarg :force-copy
                 :initform nil)
-   ;; This is the final processed value that is suitable (or nearly suitable) to bind to a uniform.
+   ;; This is the final processed value that is suitable (or nearly suitable) to
+   ;; bind to a uniform.
    (%computed-value :accessor computed-value
                     :initarg :computed-value
                     :initform nil)
@@ -121,16 +128,18 @@ list of the return values of the FUNC."
     (execute-composition/semantic->computed copy-mat-value)
     copy-mat-value))
 
-;; Shader interface blocks get a wildly different material-value implementation and semantics.
+;; Shader interface blocks get a wildly different material-value implementation
+;; and semantics.
 (defclass material-block-value (material-value)
-  (
-   ;; Store which block-name this originated from for debugging
-   (%block-name :reader block-name
+  ;; Store which block-name this originated from for debugging
+  ((%block-name :reader block-name
                 :initarg :block-name)
-   ;; The storage type of the block-alias for which this is a value. Useful for error messages.
+   ;; The storage type of the block-alias for which this is a value. Useful for
+   ;; error messages.
    (%storage-type :reader storage-type
                   :initarg :storage-type)
-   ;; each time I request bindings on the material to be performed, how shall I deal with it?
+   ;; each time I request bindings on the material to be performed, how shall I
+   ;; deal with it?
    (%binding-policy :accessor binding-policy
                     :initarg :binding-policy
                     ;; next value can be :repeat, :once, or :manual
@@ -139,10 +148,10 @@ list of the return values of the FUNC."
    (%binding-buffer :accessor binding-buffer
                     :initarg :binding-buffer)
    ;; TODO: Add in range information for range binding
-
-   ;; If the binding-policy is :once, then this slot represents if we did the binding work. Whenever
-   ;; this goes nil, and the policy is once, we'll rebind the block-alias to the binding-buffer name
-   ;; and set bound-once-p to T again.
+   ;; If the binding-policy is :once, then this slot represents if we did the
+   ;; binding work. Whenever this goes nil, and the policy is once, we'll rebind
+   ;; the block-alias to the binding-buffer name and set bound-once-p to T
+   ;; again.
    (%bound-once-p :accessor bound-once-p
                   :initarg :bound-once-p
                   :initform nil)))
@@ -178,8 +187,9 @@ list of the return values of the FUNC."
 (defclass material ()
   ((%id :reader id
         :initarg :id)
-   ;; This backreference simplifies when we need to change the texture at runtime or do something
-   ;; else that makes us grovel around in the core-state.
+   ;; This backreference simplifies when we need to change the texture at
+   ;; runtime or do something else that makes us grovel around in the
+   ;; core-state.
    (%core-state :reader core-state
                 :initarg :core-state)
    ;; This is the name of the shader as its symbol.
@@ -207,15 +217,15 @@ list of the return values of the FUNC."
                          :initarg :active-texture-unit
                          :initform 0)))
 
-(defmethod (setf shader) (new-val (mat material))
-  ;; If we change the :shader of a material, the new shader must abide by the old shader's uniforms
-  ;; and types.
+(defmethod (setf shader) (value (mat material))
+  ;; If we change the :shader of a material, the new shader must abide by the
+  ;; old shader's uniforms and types.
   (with-slots (%shader) mat
-    (setf %shader new-val)
-    ;; Reinitialize the material with the new shader, ensure it type checks, and recompute any
-    ;; material uniform value changes.
+    (setf %shader value)
+    ;; Reinitialize the material with the new shader, ensure it type checks, and
+    ;; recompute any material uniform value changes.
     (resolve-material mat (core-state mat)))
-  new-val)
+  value)
 
 (defmethod (setf instances) (value (mat material))
   (with-slots (%instances) mat
@@ -233,11 +243,13 @@ list of the return values of the FUNC."
                            :profile-overlay-names profiles
                            :core-state core-state))
 
-(defun %deep-copy-material (current-mat new-mat-name &key (error-p t) (error-value nil))
-
-  (when (au:href (material-table (materials (core-state current-mat))) new-mat-name)
+(defun %deep-copy-material (current-mat new-mat-name
+                            &key (error-p t) (error-value nil))
+  (when (au:href (material-table (materials (core-state current-mat)))
+                 new-mat-name)
     (if error-p
-        (error "Cannot copy the material ~A to new name ~A because the new name already exists!"
+        (error "Cannot copy the material ~A to new name ~A because the new ~
+                name already exists!"
                (id current-mat) new-mat-name)
         (return-from %deep-copy-material error-value)))
   (let* ((new-id new-mat-name)
@@ -262,7 +274,8 @@ list of the return values of the FUNC."
     (maphash
      (lambda (uniform-name material-uniform-value)
        (setf (au:href new-uniforms uniform-name)
-             (%deep-copy-material-uniform-value material-uniform-value new-mat)))
+             (%deep-copy-material-uniform-value material-uniform-value
+                                                new-mat)))
      (uniforms current-mat))
     ;; Now we copy over the blocks.
     (maphash
@@ -290,8 +303,8 @@ list of the return values of the FUNC."
     (maphash
      (lambda (block-alias-name material-block-value)
        (declare (ignore block-alias-name material-block-value))
-       ;; TODO: we probably need to call into core-state buffer binding management services to
-       ;; perform the binding right here.
+       ;; TODO: we probably need to call into core-state buffer binding
+       ;; management services to perform the binding right here.
        nil)
      (blocks mat))))
 
@@ -301,27 +314,30 @@ list of the return values of the FUNC."
   (bind-material-buffers mat))
 
 ;; export PUBLIC API
-;; TODO: these modify the semantic-buffer which then gets processed into a new computed buffer.
+;; TODO: these modify the semantic-buffer which then gets processed into a new
+;; computed buffer.
 (defun mat-uniform-ref (mat uniform-var)
   (au:if-let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
     (semantic-value material-uniform-value)
-    (error "Material ~s does not have the referenced uniform ~s. Please add a uniform to the ~
-            material, and/or check your material profile settings."
+    (error "Material ~s does not have the referenced uniform ~s.~%~
+            Please add a uniform to the material, and/or check your material ~
+            profile settings."
            (id mat) uniform-var)))
 
 ;; export PUBLIC API
-;; We can only set the semantic-value, which gets automatically upgraded to the computed-value upon
-;; setting.
+;; We can only set the semantic-value, which gets automatically upgraded to the
+;; computed-value upon setting.
 (defun (setf mat-uniform-ref) (new-val mat uniform-var)
   (au:if-let ((material-uniform-value (au:href (uniforms mat) uniform-var)))
     (progn
-      ;; TODO: Need to do something with the old computed value since it might be consuming
-      ;; resources like when it is a sampler on the GPU.
+      ;; TODO: Need to do something with the old computed value since it might
+      ;; be consuming resources like when it is a sampler on the GPU.
       (setf (semantic-value material-uniform-value) new-val)
       (execute-composition/semantic->computed material-uniform-value)
       (semantic-value material-uniform-value))
-    (error "Material ~s does not have the referenced uniform ~s. Please add a uniform to the ~
-            material, and/or check your material profile settings."
+    (error "Material ~s does not have the referenced uniform ~s.~%~
+            Please add a uniform to the material, and/or check your material ~
+            profile settings."
            (id mat) uniform-var)))
 
 ;; export PUBLIC API
@@ -333,26 +349,32 @@ list of the return values of the FUNC."
 ;; export PUBLIC API
 ;; current-mat-name must exist.
 ;; new-mat-name must not exist. :)
-(defun copy-material (current-mat new-mat-name &key (error-p t) (error-value nil))
-  "Copy the material CURRENT-MAT and give the new material the name NEW-MAT-NAME. Return the new
-material."
-  (%deep-copy-material current-mat new-mat-name :error-p error-p :error-value error-value))
+(defun copy-material (current-mat new-mat-name
+                      &key (error-p t) (error-value nil))
+  "Copy the material CURRENT-MAT and give the new material the name
+NEW-MAT-NAME. Return the new material."
+  (%deep-copy-material
+   current-mat new-mat-name :error-p error-p :error-value error-value))
 
-;; Default conversion functions for each uniform type.
+;;; Default conversion functions for each uniform type.
 
 (defun gen-sampler/sem->com ()
-  "Generates a function that: Returns a function that takes three arguments: SEMANTIC-VALUE,
-CONTEXT, and MAT. SEMANTIC-VALUE must be a symbol naming a DEFINE-TEXTURE form, or a vector of such
-names. CONTEXT, the context object, and MAT the material that contains this semantic value are
-ignored in the returned function. The returned function will convert the symbolic names to actual
-TEXTURE objects and load all the images from the texture into the GPU. It will only do this once per
-TEXTURE name no matter how many times this is called to perform a conversion. The result is a
-TEXTURE object, or a vector of them corresponding in order to the input."
+  "Generates a function that: Returns a function that takes three arguments:
+SEMANTIC-VALUE, CONTEXT, and MAT. SEMANTIC-VALUE must be a symbol naming a
+DEFINE-TEXTURE form, or a vector of such names. CONTEXT, the context object, and
+MAT the material that contains this semantic value are ignored in the returned
+function. The returned function will convert the symbolic names to actual
+TEXTURE objects and load all the images from the texture into the GPU. It will
+only do this once per TEXTURE name no matter how many times this is called to
+perform a conversion. The result is a TEXTURE object, or a vector of them
+corresponding in order to the input."
   (lambda (semantic-value context mat)
     (declare (ignore mat))
     (etypecase semantic-value
       ((or cons symbol)
-       (rcache-lookup context :texture (canonicalize-texture-name semantic-value)))
+       (rcache-lookup context
+                      :texture
+                      (canonicalize-texture-name semantic-value)))
       (vector
        (map 'vector
             (lambda (sv)
@@ -408,23 +430,25 @@ and ignores the CONTEXT and MATERIAL arguments."
     ;; convert the overlay names to concrete overlay instances
     (let ((concrete-profiles
             (loop :for po-name :in (profile-overlay-names mat)
-                  :for inst = (au:href (profiles (materials core-state)) po-name)
+                  :for inst = (au:href (profiles (materials core-state))
+                                       po-name)
                   :if inst
                     :collect inst
                   :else
-                    :do (error "Material profile name: ~S doesn't exist." po-name))))
-      ;; Insert the uniforms in the profile, overwriting whatever was
-      ;; present for that uniform if it existed in a previous uniform.
+                    :do (error "Material profile name: ~S doesn't exist."
+                               po-name))))
+      ;; Insert the uniforms in the profile, overwriting whatever was present
+      ;; for that uniform if it existed in a previous uniform.
       (dolist (concrete-profile concrete-profiles)
         (au:do-hash
             (uniform-name material-value (uniforms concrete-profile))
           (setf (au:href (uniforms mat) uniform-name)
-                ;; NOTE: We copy here so there is no shared structure
-                ;; between material-values and profiles.
+                ;; NOTE: We copy here so there is no shared structure between
+                ;; material-values and profiles.
                 (%deep-copy-material-uniform-value material-value mat)))))))
 
-
-(defun parse-material (name shader instances attributes profiles uniforms blocks)
+(defun parse-material (name shader instances attributes profiles uniforms
+                       blocks)
   "Return a function which creates a partially complete material instance.
 It is partially complete because it does not yet have the shader binder function
 available for it so BIND-UNIFORMS cannot yet be called on it."
@@ -442,12 +466,12 @@ available for it so BIND-UNIFORMS cannot yet be called on it."
 
 (defun sampler-type->texture-type (sampler-type)
   "Given a SAMPLER-TYPE, like :sampler-2d-array, return the kind of texture-type
-that is appropriate for it, such as :texture-2d-array.  Do this for all sampler
+that is appropriate for it, such as :texture-2d-array. Do this for all sampler
 types and texture types."
-
-  (au:if-found (texture-type (au:href +sampler-type->texture-type+ sampler-type))
-                    texture-type
-                    (error "Unknown sampler-type: ~A~%" sampler-type)))
+  (au:if-found (texture-type (au:href +sampler-type->texture-type+
+                                      sampler-type))
+               texture-type
+               (error "Unknown sampler-type: ~A~%" sampler-type)))
 
 (defun sampler-p (glsl-type)
   "Return T if the GLSL-TYPE is a sampler like :sampler-2d or :sampler-buffer,
@@ -470,8 +494,8 @@ or if it a vector of the same. Return NIL otherwise."
             :test #'eq)))
 
 (defun determine-binder-function (material glsl-type)
-  (cond
-    ((symbolp glsl-type)
+  (typecase glsl-type
+    (symbol
      (if (sampler-p glsl-type)
          (let ((unit (active-texture-unit material)))
            (incf (active-texture-unit material))
@@ -495,8 +519,9 @@ or if it a vector of the same. Return NIL otherwise."
            (:mat3 (lambda (shader uniform value)
                     (fl.gpu:uniform-mat3 shader uniform (m:get-array value))))
            (:mat4 (lambda (shader uniform value)
-                    (fl.gpu:uniform-mat4 shader uniform (m:get-array value)))))))
-    ((consp glsl-type)
+                    (fl.gpu:uniform-mat4 shader uniform
+                                         (m:get-array value)))))))
+    (cons
      (if (sampler-p (car glsl-type))
          (let* ((units
                   (loop :for i :from 0 :below (cdr glsl-type)
@@ -541,86 +566,84 @@ or if it a vector of the same. Return NIL otherwise."
           :do (setf value (funcall transformer value context mat))
           :finally (setf (computed-value material-uniform-value) value))))
 
-(defun annotate-material-uniform (uniform-name uniform-value material shader-program)
-  (au:if-found (type-info (au:href (fl.gpu:uniforms shader-program) uniform-name))
-                    (let ((uniform-type (au:href type-info :type)))
-                      ;; 1. Find the uniform in the shader-program and get its
-                      ;; type-info. Use that to set the binder function.
-                      (setf (binder uniform-value) (determine-binder-function material uniform-type))
-
-                      ;; 2. Figure out the semantic->computed composition function
-                      ;; for this specific uniform type. This will be the last
-                      ;; function executed and will convert the in-flight semantic
-                      ;; value into a real computed value for use by the binder
-                      ;; function.
-                      ;;
-                      ;; NOTE: We set it to NIL here because if we're changing the
-                      ;; shader on a material, we'll push multiple copies of the this
-                      ;; sequence into the list when we resolve-material on that copy
-                      ;; with the changed shader--which is wrong. This will now do
-                      ;; the right thing in any (I believe) situation.
-                      (setf (semantic->computed uniform-value) nil)
-                      (push (if (sampler-p uniform-type)
-                                (gen-sampler/sem->com)
-                                (if (force-copy uniform-value)
-                                    (gen-default-copy/sem->com)
-                                    #'identity/for-material-custom-functions))
-                            (semantic->computed uniform-value))
-
-                      ;; 3. Put the user specified semantic transformer
-                      ;; function into the composition sequence before the above.
-                      (push (transformer uniform-value) (semantic->computed uniform-value))
-
-                      ;; 4. Execute the composition function sequence to produce the
-                      ;; computed value.
-                      (execute-composition/semantic->computed uniform-value))
-
-                    ;; else
-                    (error "Material ~s uses unknown uniform ~s in shader ~s. If it is an implicit ~
-                            uniform, those are not supported in materials."
-                           (id material) uniform-name (shader material))))
+(defun annotate-material-uniform (uniform-name uniform-value material
+                                  shader-program)
+  (au:if-found (type-info (au:href (fl.gpu:uniforms shader-program)
+                                   uniform-name))
+               (let ((uniform-type (au:href type-info :type)))
+                 ;; 1. Find the uniform in the shader-program and get its
+                 ;; type-info. Use that to set the binder function.
+                 (setf (binder uniform-value) (determine-binder-function
+                                               material uniform-type))
+                 ;; 2. Figure out the semantic->computed composition function
+                 ;; for this specific uniform type. This will be the last
+                 ;; function executed and will convert the in-flight semantic
+                 ;; value into a real computed value for use by the binder
+                 ;; function.
+                 ;; NOTE: We set it to NIL here because if we're changing the
+                 ;; shader on a material, we'll push multiple copies of the this
+                 ;; sequence into the list when we resolve-material on that copy
+                 ;; with the changed shader--which is wrong. This will now do
+                 ;; the right thing in any (I believe) situation.
+                 (setf (semantic->computed uniform-value) nil)
+                 (push (if (sampler-p uniform-type)
+                           (gen-sampler/sem->com)
+                           (if (force-copy uniform-value)
+                               (gen-default-copy/sem->com)
+                               #'identity/for-material-custom-functions))
+                       (semantic->computed uniform-value))
+                 ;; 3. Put the user specified semantic transformer function into
+                 ;; the composition sequence before the above.
+                 (push (transformer uniform-value)
+                       (semantic->computed uniform-value))
+                 ;; 4. Execute the composition function sequence to produce the
+                 ;; computed value.
+                 (execute-composition/semantic->computed uniform-value))
+               (error "Material ~s uses unknown uniform ~s in shader ~s."
+                      (id material) uniform-name (shader material))))
 
 (defun annotate-material-uniforms (material shader-program)
   (maphash
    (lambda (uniform-name uniform-value)
-     (annotate-material-uniform uniform-name uniform-value material shader-program))
+     (annotate-material-uniform
+      uniform-name uniform-value material shader-program))
    (uniforms material)))
 
-
-
-(defun annotate-material-block (alias-name block-value material shader-program core-state)
+(defun annotate-material-block (alias-name block-value material shader-program
+                                core-state)
   (declare (ignore shader-program core-state))
-  ;; 1. Validate that this material-block-value is present in the shaders in core-state
-  ;; TODO
-
-  ;; 2. Create the block-name-alias, but only once.
+  ;; 1. Validate that this material-block-value is present in the shaders in
+  ;; core-state
+  ;; TODO: 2. Create the block-name-alias, but only once.
   (unless (fl.gpu:find-block alias-name)
     (fl.gpu:create-block-alias (storage-type block-value)
-                                  (block-name block-value)
-                                  (shader material)
-                                  alias-name)))
+                               (block-name block-value)
+                               (shader material)
+                               alias-name)))
 
 (defun annotate-material-blocks (material shader-program core-state)
   ;; TODO: Ensure that all :block-alias names are unique in the material
   (maphash
    (lambda (alias-name block-value)
-     (annotate-material-block alias-name block-value material shader-program core-state))
+     (annotate-material-block
+      alias-name block-value material shader-program core-state))
    (blocks material)))
-
 
 (defun resolve-material (material-instance core-state)
   "Convert semantic-values to computed-values. Type check the uniforms against
 the shader program in the material."
-  (au:if-found (shader-program (au:href (shaders core-state) (shader material-instance)))
-                    (progn
-                      (annotate-material-uniforms material-instance shader-program)
-                      (annotate-material-blocks material-instance shader-program core-state))
-                    (error "Material ~s uses an undefined shader: ~s."
-                           (id material-instance) (shader material-instance))))
+  (au:if-found (shader-program (au:href (shaders core-state)
+                                        (shader material-instance)))
+               (progn
+                 (annotate-material-uniforms material-instance shader-program)
+                 (annotate-material-blocks
+                  material-instance shader-program core-state))
+               (error "Material ~s uses an undefined shader: ~s."
+                      (id material-instance) (shader material-instance))))
 
 (defun resolve-all-materials (core-state)
-  "Convert all semantic-values to computed-values for all materials. This
-must be executed after all the shader programs have been compiled."
+  "Convert all semantic-values to computed-values for all materials. This must
+be executed after all the shader programs have been compiled."
   ;; TODO: Check that all :block-alias names are actually unique between
   ;; materials.
   (%map-materials (lambda (mat)
@@ -631,8 +654,8 @@ must be executed after all the shader programs have been compiled."
   (au:with-unique-names (matprof)
     `(let* ((,matprof (%make-material-profile :name ',name)))
        ,(parse-material-uniforms matprof uniforms)
-       ;; TODO: We prevent processing of blocks in material-profiles
-       ;; until we discoverifit is a good idea or not.
+       ;; TODO: We prevent processing of blocks in material-profiles until we
+       ;; discoverifit is a good idea or not.
        ;; ,(parse-material-blocks matprof blocks)
        (when ',blocks
          (error "Interface blocks are not supported in material profiles: ~a"
@@ -640,8 +663,8 @@ must be executed after all the shader programs have been compiled."
        ,matprof)))
 
 (defmacro define-material-profile (name &body (body))
-  "Define a set of uniform and block shader attribute defaults that can be applied in an overlay
-manner while defining a material."
+  "Define a set of uniform and block shader attribute defaults that can be
+applied in an overlay manner while defining a material."
   (au:with-unique-names (profile)
     (let ((definition '(fl.data:get 'material-profiles)))
       (destructuring-bind (&key uniforms blocks) body
@@ -654,8 +677,16 @@ manner while defining a material."
   ;; TODO: better parsing and type checking of material forms...
   (au:with-unique-names (func)
     (let ((definition '(fl.data:get 'materials)))
-      (destructuring-bind (&key shader profiles (instances 1) attributes uniforms blocks) body
-        `(let ((,func ,(parse-material name shader instances attributes profiles uniforms blocks)))
+      (destructuring-bind (&key shader profiles (instances 1) attributes
+                             uniforms blocks)
+          body
+        `(let ((,func ,(parse-material name
+                                       shader
+                                       instances
+                                       attributes
+                                       profiles
+                                       uniforms
+                                       blocks)))
            (unless ,definition
              (fl.data:set 'materials (au:dict #'eq)))
            (setf (au:href ,definition ',name) ,func)
@@ -672,7 +703,6 @@ manner while defining a material."
                   ,@body)
              (gl:depth-func old-depth)))
          (progn ,@body))))
-
 
 (defmacro using-material (material (&rest bindings) &body body)
   (au:with-unique-names (material-ref)
@@ -699,4 +729,3 @@ manner while defining a material."
 (defun total-time (context material)
   (declare (ignore material))
   (fl:total-time context))
-

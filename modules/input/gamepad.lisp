@@ -1,13 +1,13 @@
 (in-package :first-light.input)
 
 (au:define-constant +gamepad-axis-names+
-    #((:left-stick :x) (:left-stick :y) (:right-stick :x) (:right-stick :y) (:triggers :x)
-      (:triggers :y))
+    #((:left-stick :x) (:left-stick :y) (:right-stick :x) (:right-stick :y)
+      (:triggers :x) (:triggers :y))
   :test #'equalp)
 
 (au:define-constant +gamepad-button-names+
-    #(:a :b :x :y :back :guide :start :left-stick-button :right-stick-button :left-shoulder
-      :right-shoulder :up :down :left :right)
+    #(:a :b :x :y :back :guide :start :left-stick-button :right-stick-button
+      :left-shoulder :right-shoulder :up :down :left :right)
   :test #'equalp)
 
 (defstruct gamepad id instance name handle)
@@ -22,7 +22,8 @@
 (defun generate-gamepad-id (input-data)
   (with-slots (%gamepad-instances %detached-gamepads) input-data
     (or (pop %detached-gamepads)
-        (au:format-symbol :keyword "GAMEPAD~d" (1+ (hash-table-count %gamepad-instances))))))
+        (au:format-symbol :keyword "GAMEPAD~d"
+                          (1+ (hash-table-count %gamepad-instances))))))
 
 (defun prepare-gamepads (gamepad-database)
   (load-gamepad-database gamepad-database)
@@ -55,7 +56,8 @@
           (values 0.0 0.0)
           (values v.x v.y)))))
 
-(defmethod %get-gamepad-analog ((deadzone-type (eql :radial-scaled)) analog-state)
+(defmethod %get-gamepad-analog ((deadzone-type (eql :radial-scaled))
+                                analog-state)
   (with-slots (deadzone x y) analog-state
     (m:with-vec2 ((v (m:vec2 x y)))
       (let ((length (m:length v)))
@@ -69,7 +71,8 @@
   (sdl2:game-controller-add-mappings-from-file (namestring file-path)))
 
 (defun enable-background-gamepad-events ()
-  (sdl2-ffi.functions:sdl-set-hint sdl2-ffi:+sdl-hint-joystick-allow-background-events+ "1"))
+  (sdl2-ffi.functions:sdl-set-hint
+   sdl2-ffi:+sdl-hint-joystick-allow-background-events+ "1"))
 
 ;;; Events
 

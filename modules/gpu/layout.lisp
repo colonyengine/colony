@@ -45,7 +45,9 @@
                (process (varjo:v-element-type type)))
              (process-struct (type)
                (unless (find type structs :test #'varjo:v-type-eq)
-                 (map nil (lambda (x) (process (second x))) (varjo.internals:v-slots type))
+                 (map nil
+                      (lambda (x) (process (second x)))
+                      (varjo.internals:v-slots type))
                  (push type structs)))
              (find-structs (types)
                (map nil #'process types)
@@ -58,7 +60,8 @@
 
 (defun make-layout-member (layout data)
   (dolist (part (getf data :members))
-    (destructuring-bind (&key type name offset size stride &allow-other-keys) part
+    (destructuring-bind (&key type name offset size stride &allow-other-keys)
+        part
       (au:when-let ((unpacked-type (unpack-type (layout-type layout) type))
                     (path (ensure-keyword
                            (format nil "~{~a~^.~}" (au:ensure-list name)))))

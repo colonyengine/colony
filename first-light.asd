@@ -78,6 +78,7 @@
    (:file "deploy")
    (:file "annotations")
    (:file "action-manager")
+   (:file "colliders")
    (:module "components"
     :components
     ((:file "transform")
@@ -89,7 +90,6 @@
      (:file "render")
      (:file "sprite")
      (:file "colliders")))
-   (:file "colliders")
    (:module "prefab"
     :components
     ((:file "checks")

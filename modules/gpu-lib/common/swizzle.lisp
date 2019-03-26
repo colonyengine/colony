@@ -31,12 +31,14 @@
              (au:make-keyword
               (map 'string
                    (lambda (x)
-                     (elt "XYZW" (%swizzle/char-position mask (position x mask))))
+                     (elt "XYZW" (%swizzle/char-position
+                                  mask (position x mask))))
                    mask))))
       `(progn
          ,@(loop :for mask :in (%swizzle/component-groups 4)
                  :for op = (au:symbolicate "." mask)
                  :collect `(export ',op)
-                 :collect `(v-defmacro ,op (vector) `(swizzle ,vector ,,(map-swizzle mask))))))))
+                 :collect `(v-defmacro ,op (vector)
+                             `(swizzle ,vector ,,(map-swizzle mask))))))))
 
 (define-vari-swizzle-macros)

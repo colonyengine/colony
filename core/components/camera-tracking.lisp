@@ -6,7 +6,8 @@
    (target-transform :default nil)))
 
 (defmethod on-component-initialize ((self tracking-camera))
-  (with-accessors ((slave slave-camera) (actor actor) (target target-actor)) self
+  (with-accessors ((slave slave-camera) (actor actor) (target target-actor))
+      self
     (setf slave (actor-component-by-type actor 'camera))
     (camera-target-actor self target)))
 
@@ -19,7 +20,9 @@
       (m:set-view eye target up view))))
 
 (defmethod camera-target-actor ((camera tracking-camera) actor)
-  (with-accessors ((target-actor target-actor) (target-transform target-transform)) camera
+  (with-accessors ((target-actor target-actor)
+                   (target-transform target-transform))
+      camera
     (setf target-actor actor)
     (when actor
       (setf target-transform (actor-component-by-type actor 'transform)))))

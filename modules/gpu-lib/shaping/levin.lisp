@@ -105,7 +105,8 @@
         (b (- 1 (min 1 (max 0 b)))))
     (if (<= x a)
         (+ (* b x) (* (- 1 b) a (- 1 (expt (- 1 (/ x a)) 3.0))))
-        (+ (* b x) (* (- 1 b) (+ a (* (- 1 a) (expt (/ (- x a) (- 1 a)) 3.0))))))))
+        (+ (* b x) (* (- 1 b) (+ a (* (- 1 a) (expt (/ (- x a) (- 1 a))
+                                                    3.0))))))))
 
 (define-function double-odd-polynomial-seat ((x :float)
                                              (a :float)

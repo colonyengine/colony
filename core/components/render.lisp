@@ -9,7 +9,9 @@
              :annotation (fl.annotations:material))))
 
 (defun set-draw-method (render)
-  (with-accessors ((actor actor) (draw-method draw-method) (mode mode) (material material)) render
+  (with-accessors ((actor actor) (draw-method draw-method) (mode mode)
+                   (material material))
+      render
     (let ((instances (instances material))
           (mesh (actor-component-by-type actor 'mesh))
           (sprite (actor-component-by-type actor 'sprite)))
@@ -24,7 +26,9 @@
     (set-draw-method self)))
 
 (defmethod on-component-render ((self render))
-  (with-accessors ((context context) (transform transform) (draw-method draw-method) (material material)) self
+  (with-accessors ((context context) (transform transform)
+                   (draw-method draw-method) (material material))
+      self
     (au:when-let ((camera (active-camera context)))
       (using-material material
           (:model (fl.comp:model transform)

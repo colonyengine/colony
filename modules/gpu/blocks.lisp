@@ -81,7 +81,8 @@
 
 (defmethod %bind-block ((block-type (eql :buffer)) block binding-point)
   (let* ((program-id (id (program block)))
-         (index (gl:get-program-resource-index program-id :shader-storage-block (name block))))
+         (index (gl:get-program-resource-index
+                 program-id :shader-storage-block (name block))))
     (%gl:shader-storage-block-binding program-id index binding-point)))
 
 (defun bind-block (block-alias binding-point)
@@ -89,7 +90,8 @@
   (let* ((bindings (fl.data:get 'block-bindings))
          (block (find-block block-alias)))
     (or (block-binding-valid-p block binding-point)
-        (error "Cannot bind a block to a binding point with existing blocks of a different layout."))
+        (error "Cannot bind a block to a binding point with existing blocks of ~
+                a different layout."))
     (pushnew block (au:href bindings (block-type block) binding-point))
     (%bind-block (block-type block) block binding-point)
     (setf (slot-value block '%binding-point) binding-point)))

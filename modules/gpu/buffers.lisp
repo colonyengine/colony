@@ -42,7 +42,9 @@
         (%gl:bind-buffer target %id)
         (%gl:buffer-data target (size %layout) (cffi:null-pointer) :static-draw)
         (setf (au:href buffer-table buffer-name) buffer)))
-    (error "Cannot find the block with alias ~s when attempting to create a buffer." block-alias)))
+    (error "Cannot find the block with alias ~s when attempting to create a ~
+            buffer."
+           block-alias)))
 
 (defun bind-buffer (buffer-name binding-point)
   (au:if-let ((buffer (find-buffer buffer-name)))
@@ -64,9 +66,10 @@
 (defun %write-buffer-member (target member value)
   (with-slots (%element-type %offset %element-stride %byte-stride) member
     (let ((count (length value)))
-      (static-vectors:with-static-vector (sv (* count %element-stride)
-                                             :element-type %element-type
-                                             :initial-element (coerce 0 %element-type))
+      (static-vectors:with-static-vector
+          (sv (* count %element-stride)
+              :element-type %element-type
+              :initial-element (coerce 0 %element-type))
         (let ((ptr (static-vectors:static-vector-pointer sv))
               (i 0))
           (map nil
@@ -81,12 +84,14 @@
           (%gl:buffer-sub-data target %offset (* count %byte-stride) ptr))))))
 
 (defun %write-buffer-member-matrix (target member value)
-  (with-slots (%element-type %offset %element-stride %byte-stride %dimensions) member
+  (with-slots (%element-type %offset %element-stride %byte-stride %dimensions)
+      member
     (let ((count (length value)))
       (destructuring-bind (columns rows) %dimensions
-        (static-vectors:with-static-vector (sv (* count columns %element-stride)
-                                               :element-type %element-type
-                                               :initial-element (coerce 0 %element-type))
+        (static-vectors:with-static-vector
+            (sv (* count columns %element-stride)
+                :element-type %element-type
+                :initial-element (coerce 0 %element-type))
           (let ((ptr (static-vectors:static-vector-pointer sv))
                 (i 0))
             (map nil
@@ -98,10 +103,15 @@
                                          (sequence x)
                                          ((or m:mat2 m:mat3 m:mat4)
                                           (m:get-array x)))
-                         :do (replace sv matrix :start1 j :start2 k :end2 (+ k rows)))
+                         :do (replace sv
+                                      matrix
+                                      :start1 j
+                                      :start2 k
+                                      :end2 (+ k rows)))
                    (incf i (* columns %element-stride)))
                  value)
-            (%gl:buffer-sub-data target %offset (* count %byte-stride) ptr)))))))
+            (%gl:buffer-sub-data
+             target %offset (* count %byte-stride) ptr)))))))
 
 (defun write-buffer-path (buffer-name path value)
   (with-slots (%type %id %target %layout) (find-buffer buffer-name)
@@ -155,14 +165,17 @@
               (error "Only 2x2, 3x3, and 4x4")))))))
 
 (defun %read-buffer-member (target member &optional count)
-  (with-slots (%type %dimensions %count %element-stride %element-type %offset %byte-stride) member
+  (with-slots (%type %dimensions %count %element-stride %element-type %offset
+               %byte-stride)
+      member
     (let* ((count (or count %count))
            (element-count (reduce #'* %dimensions))
            (stride (if (and (eq %type :vec)
                             (= element-count 3))
                        4
                        %element-stride))
-           (data (make-array (* stride (cadr %dimensions) count) :element-type %element-type)))
+           (data (make-array (* stride (cadr %dimensions) count)
+                             :element-type %element-type)))
       (cffi:with-pointer-to-vector-data (ptr data)
         (%gl:get-buffer-sub-data target %offset (* count %byte-stride) ptr))
       (ecase %type

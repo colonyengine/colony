@@ -26,8 +26,10 @@
          (.yyww hash-coord))))))
 
 (define-function sgpp/2-per-corner ((grid-cell :vec2))
-  (let* ((hash-coord (sgpp/coord-prepare (vec4 (.xy grid-cell) (1+ (.xy grid-cell)))))
-         (hash0 (sgpp/permute (+ (sgpp/permute (.xzxz hash-coord)) (.yyww hash-coord)))))
+  (let* ((hash-coord (sgpp/coord-prepare
+                      (vec4 (.xy grid-cell) (1+ (.xy grid-cell)))))
+         (hash0 (sgpp/permute (+ (sgpp/permute (.xzxz hash-coord))
+                                 (.yyww hash-coord)))))
     (values (sgpp/resolve hash0)
             (sgpp/resolve (sgpp/permute hash0)))))
 
@@ -50,9 +52,15 @@
          (coords2 (mix coords0 coords3 v2-mask))
          (hash1 (sgpp/permute
                  (sgpp/permute
-                  (+ (sgpp/permute (vec4 (.x coords0) (.x coords1) (.x coords2) (.x coords3)))
+                  (+ (sgpp/permute (vec4 (.x coords0)
+                                         (.x coords1)
+                                         (.x coords2)
+                                         (.x coords3)))
                      (vec4 (.y coords0) (.y coords1) (.y coords2) (.y coords3))
-                     (vec4 (.z coords0) (.z coords1) (.z coords2) (.z coords3))))))
+                     (vec4 (.z coords0)
+                           (.z coords1)
+                           (.z coords2)
+                           (.z coords3))))))
          (hash2 (sgpp/permute hash1)))
     (values (sgpp/resolve hash1)
             (sgpp/resolve hash2)

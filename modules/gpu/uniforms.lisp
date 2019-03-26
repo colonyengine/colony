@@ -15,7 +15,8 @@
         :with element-type = (varjo:v-element-type type)
         :for i :below dimensions
         :when (zerop i)
-          :collect (list (reverse parts) (cons (varjo:type->type-spec element-type) dimensions))
+          :collect (list (reverse parts)
+                         (cons (varjo:type->type-spec element-type) dimensions))
         :append (get-uniform-data element-type (cons i parts))))
 
 (defun store-uniforms (program)
@@ -24,20 +25,24 @@
                  :for type = (varjo:v-type-of uniform)
                  :unless (or (has-qualifier-p uniform :ubo)
                              (has-qualifier-p uniform :ssbo))
-                   :append (get-uniform-data type (list (varjo:name uniform))))))
+                   :append (get-uniform-data type
+                                             (list (varjo:name uniform))))))
     (dolist (stage (translated-stages program))
       (loop :for (parts type-spec) :in (%get-uniforms stage)
             :for id = (ensure-keyword (parts->string parts))
             :do (setf (au:href (uniforms program) id)
                       (au:dict #'eq
-                               :name (parts->string parts #'varjo.internals:safe-glsl-name-string)
+                               :name (parts->string
+                                      parts
+                                      #'varjo.internals:safe-glsl-name-string)
                                :type type-spec))))))
 
 (defun store-uniform-locations (program)
   (let ((id (id program)))
     (gl:use-program id)
     (au:do-hash-values (v (uniforms program))
-      (setf (au:href v :location) (gl:get-uniform-location id (au:href v :name))))
+      (setf (au:href v :location) (gl:get-uniform-location
+                                   id (au:href v :name))))
     (gl:use-program 0)))
 
 (defun get-uniform-location (program-name uniform)
@@ -103,7 +108,8 @@
 (defun uniform-vec4 (program-name uniform value)
   "Specify a vec4 as the VALUE for the uniform variable, UNIFORM."
   (let ((location (get-uniform-location program-name uniform)))
-    (%gl:uniform-4f location (aref value 0) (aref value 1) (aref value 2) (aref value 3))))
+    (%gl:uniform-4f
+     location (aref value 0) (aref value 1) (aref value 2) (aref value 3))))
 
 (defun uniform-vec4-array (program-name uniform value)
   "Specify an array of vec4's as the VALUE for the uniform variable, UNIFORM."

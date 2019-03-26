@@ -4,4 +4,5 @@
   (:nicknames #:fl.gpu.sprite)
   (:use #:fl.gpu.lib
         #:fl.gpu.swizzle)
-  (:export #:sprite))
+  (:export
+   #:sprite))

@@ -25,9 +25,12 @@
      ,@(au:collecting
          (dolist (handler handlers)
            (destructuring-bind (type options . body) handler
-             (let ((body (list* `(declare (ignorable ,@(au:plist-values options))) body)))
+             (let ((body (list*
+                          `(declare (ignorable ,@(au:plist-values options)))
+                          body)))
                (dolist (type (au:ensure-list type))
-                 (au:when-let ((x (sdl2::expand-handler event type options body)))
+                 (au:when-let ((x (sdl2::expand-handler
+                                   event type options body)))
                    (collect x)))))))))
 
 (defun dispatch-event (input-data event)
@@ -73,13 +76,16 @@
      (on-gamepad-detach input-data gamepad-id))
     (:controlleraxismotion
      (:which gamepad-id :axis axis :value value)
-     (on-gamepad-analog-move input-data gamepad-id (aref +gamepad-axis-names+ axis) value))
+     (on-gamepad-analog-move
+      input-data gamepad-id (aref +gamepad-axis-names+ axis) value))
     (:controllerbuttonup
      (:which gamepad-id :button button)
-     (on-gamepad-button-up input-data gamepad-id (aref +gamepad-button-names+ button)))
+     (on-gamepad-button-up
+      input-data gamepad-id (aref +gamepad-button-names+ button)))
     (:controllerbuttondown
      (:which gamepad-id :button button)
-     (on-gamepad-button-down input-data gamepad-id (aref +gamepad-button-names+ button)))))
+     (on-gamepad-button-down
+      input-data gamepad-id (aref +gamepad-button-names+ button)))))
 
 (defun perform-input-state-tasks (input-data)
   (let ((states (au:href (states input-data))))

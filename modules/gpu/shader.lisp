@@ -17,7 +17,9 @@
 (defun store-source (program stage)
   (let ((source (varjo:glsl-code stage)))
     (setf (au:href (source program) (stage-type stage))
-          (subseq source (1+ (position #\newline source)) (- (length source) 2)))))
+          (subseq source
+                  (1+ (position #\newline source))
+                  (- (length source) 2)))))
 
 (defun load-shaders (modify-hook)
   (reset-program-state)

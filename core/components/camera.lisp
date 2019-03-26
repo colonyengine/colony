@@ -25,8 +25,8 @@
                 (id actor) mode (m:get-array translation))))))
 
 (defmethod make-projection (camera (mode (eql :perspective)))
-  (with-accessors ((context context) (zoom zoom) (proj projection) (near clip-near) (far clip-far)
-                   (fovy fovy))
+  (with-accessors ((context context) (zoom zoom) (proj projection)
+                   (near clip-near) (far clip-far) (fovy fovy))
       camera
     (m:set-projection/perspective (/ fovy zoom)
                                   (/ (option context :window-width)
@@ -36,7 +36,8 @@
                                   proj)))
 
 (defmethod make-projection (camera (mode (eql :orthographic)))
-  (with-accessors ((context context) (zoom zoom) (proj projection) (near clip-near) (far clip-far))
+  (with-accessors ((context context) (zoom zoom) (proj projection)
+                   (near clip-near) (far clip-far))
       camera
     (let ((w (/ (option context :window-width) zoom 2))
           (h (/ (option context :window-height) zoom 2)))
@@ -65,7 +66,9 @@
 ;;; Component event hooks
 
 (defmethod on-component-initialize ((self camera))
-  (with-accessors ((context context) (actor actor) (mode mode) (transform transform)) self
+  (with-accessors ((context context) (actor actor) (mode mode)
+                   (transform transform))
+      self
     (setf transform (actor-component-by-type actor 'transform))
     (correct-camera-transform self)
     (make-projection self mode)
