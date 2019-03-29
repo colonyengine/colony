@@ -28,7 +28,7 @@
 (defun make-collider-system (&rest init-args)
   (apply #'make-instance 'collider-system init-args))
 
-(defmethod add-collider ((cs collider-system) collider)
+(defmethod register-collider ((cs collider-system) collider)
   "Add a new collider that may participate in the collision system."
   ;; If the hash table for the layer doesn't exist, make it.
   (unless (au:href (colliders cs) (fl.comp:on-layer collider))
@@ -40,7 +40,7 @@
 
 ;; TODO: Add a new component Cfs-XXX state for computing physics collisions that
 ;; happens just after disabling a component. NOTE: Think about this more.
-(defmethod remove-collider ((cs collider-system) collider)
+(defmethod unregister-collider ((cs collider-system) collider)
   "Remove a collider from participating in the collision system."
   ;; If the collier exists, remove it, but not the hash table for the layer.
   (when (au:href (colliders cs) (fl.comp:on-layer collider))
