@@ -9,19 +9,21 @@
             :initarg :layers
             :initform nil)
    (%collision-plan :reader collision-plan
-                    :initarg :plan
+                    :initarg :collision-plan
                     ;; keyed by layer, value is list of layers it collides with
                     :initform (au:dict #'eq))
+   ;; A hash table holding all possible colliders participating in the collider
+   ;; system.
    (%colliders :reader colliders
                :initarg :colliders
                ;; keyed by on-layer in collider, value is a hash.
                ;; second has is keyed by ref to collider and value is collider.
                :initform (au:dict #'eq))
-   ;; This is a buffer that we'll use to make colliding a layer against
-   ;; itself faster to compute.
+   ;; This is a buffer that we'll use to make colliding a layer against itself
+   ;; faster and easier to compute.
    (%buffer :accessor buffer
             :initarg :buffer
-            :initform (make-array 4096 :adjustable t :fill-pointer t))
+            :initform (make-array 8 :adjustable t :fill-pointer t))
    ;; Are two colliders in collision?
    ;; When they enter this table, ON-COLLISION-ENTER is called.
    ;; When they stay in this table, ON-COLLISION-CONTINUE is called.
@@ -129,7 +131,7 @@ have had--and update all other faces too."
   ;; layers. N^2 for now cause it is fast to write. There is no spatial
   ;; partitioning.
   (dolist (fist-layer (layers collider-system))
-    (let ((face-layers (au:href (collision-plan collider-system))))
+    (let ((face-layers (au:href (collision-plan collider-system) fist-layer)))
       (loop :for face-layer :in face-layers
             :do (compute-layer-collisions collider-system
                                           fist-layer face-layer)))))
@@ -146,25 +148,33 @@ have had--and update all other faces too."
 
      ;; However this does two passes over the keys, so there's that.
      (let ((fists-and-faces (au:href (colliders collider-system) fist-layer)))
-       (setf (fill-pointer (buffer collider-system)) 0)
-       (au:do-hash-keys (fist/face fists-and-faces)
-         (vector-push-extend fist/face (buffer collider-system)))
+       (when fists-and-faces
+         (setf (fill-pointer (buffer collider-system)) 0)
+         (au:do-hash-keys (fist/face fists-and-faces)
+           (vector-push-extend fist/face (buffer collider-system)))
 
-       ;; compute collisions between each unique pair of fists-and-faces
-       (au:map-combinations
-        (lambda (vecpair)
-          (compute-collision-state collider-system
-                                   (aref vecpair 0)
-                                   (aref vecpair 1)))
-        (buffer collider-system))))
+         ;; compute collisions between each unique pair of fists-and-faces
+         (when (>= (length (buffer collider-system)) 2)
+           (au:map-combinations
+            (lambda (vecpair)
+              (compute-collision-state collider-system
+                                       (aref vecpair 0)
+                                       (aref vecpair 1)))
+            (buffer collider-system)
+            :length 2
+            :copy nil)))))
     (t
      ;; otherwise simply iterate each fist collider over all the face
      ;; colliders.
      (let ((fists (au:href (colliders collider-system) fist-layer))
            (faces (au:href (colliders collider-system) face-layer)))
-       (au:do-hash-keys (fist fists)
-         (au:do-hash-keys (face faces)
-           (compute-collision-state collider-system fist face)))))))
+       (when (and fists
+                  faces
+                  (> (hash-table-count fists) 0)
+                  (> (hash-table-count faces) 0))
+         (au:do-hash-keys (fist fists)
+           (au:do-hash-keys (face faces)
+             (compute-collision-state collider-system fist face))))))))
 
 
 (defun compute-collision-state (collider-system
@@ -253,3 +263,58 @@ have had--and update all other faces too."
           (make-collider-system
            :layers (getf collider-system-desc :layers)
            :collision-plan (getf collider-system-desc :collision-plan)))))
+
+(defun test-collider-system ()
+  (let ((core-state (make-instance 'core-state)))
+
+    (with-slots (%context) core-state
+      (setf %context (make-instance 'context :core-state core-state)))
+
+    (let ((c0 (make-component (context core-state) 'fl.comp:collider/sphere
+                              :on-layer :ground
+                              :referent :a
+                              :center (m:vec3 0 0 0)
+                              :radius 1))
+          (c1 (make-component (context core-state) 'fl.comp:collider/sphere
+                              :on-layer :player
+                              :referent :a
+                              :center (m:vec3 -5 3 0)
+                              :radius 1))
+          (c2 (make-component (context core-state) 'fl.comp:collider/sphere
+                              :on-layer :player-bullet
+                              :referent :a
+                              :center (m:vec3 -2 3 0)
+                              :radius 1))
+          (c3 (make-component (context core-state) 'fl.comp:collider/sphere
+                              :on-layer :enemy
+                              :referent :a
+                              :center (m:vec3 5 3 0)
+                              :radius 1))
+          (c4 (make-component (context core-state) 'fl.comp:collider/sphere
+                              :on-layer :enemy-bullet
+                              :referent :a
+                              :center (m:vec3 -1 3 0)
+                              :radius 1))
+          (c5 (make-component (context core-state) 'fl.comp:collider/sphere
+                              :on-layer :enemy-bullet
+                              :referent :a
+                              :center (m:vec3 3 3 0)
+                              :radius 1))
+          (c6 (make-component (context core-state) 'fl.comp:collider/sphere
+                              :on-layer :scenery
+                              :referent :a
+                              :center (m:vec3 -1 0 0)
+                              :radius 1)))
+      (init-collider-system core-state)
+
+      (register-collider (collider-system core-state) c0)
+      (register-collider (collider-system core-state) c1)
+      (register-collider (collider-system core-state) c2)
+      (register-collider (collider-system core-state) c3)
+      (register-collider (collider-system core-state) c4)
+      (register-collider (collider-system core-state) c5)
+      (register-collider (collider-system core-state) c6)
+
+      (compute-all-collisions (collider-system core-state))
+
+      (collider-system core-state))))
