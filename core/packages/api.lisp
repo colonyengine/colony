@@ -42,6 +42,9 @@
    #:on-component-physics-update
    #:on-component-render
    #:on-component-update
+   #:on-collision-enter
+   #:on-collision-continue
+   #:on-collision-exit
    #:option
    #:print-all-resources
    #:project-data
