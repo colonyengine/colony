@@ -375,7 +375,9 @@
 ;; which has exactly ONE invocation. We'd do that in order to allow C-c of this
 ;; class, for example.
 (defclass component ()
-  ((%context :reader context
+  ((%uuid :reader uuid
+          :initform (make-uuid))
+   (%context :reader context
              :initarg :context
              :initform nil)
    (%type :reader component-type

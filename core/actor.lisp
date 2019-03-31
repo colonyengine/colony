@@ -3,6 +3,8 @@
 (defclass actor ()
   ((%id :reader id
         :initarg :id)
+   (%uuid :reader uuid
+          :initform (make-uuid))
    (%state :accessor state
            :initarg :state
            :initform :initialize)
@@ -39,6 +41,7 @@
 (defun attach-multiple-components (actor &rest components)
   (dolist (component components)
     (attach-component actor component)))
+
 ;; TODO: This function is going to be hard to implement with the type tables.
 ;; just a set of nested hash tables. It might force us to move the type table to
 ;; a real object, so it can keep track of what is stored inside of it.
