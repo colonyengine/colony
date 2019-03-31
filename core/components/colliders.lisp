@@ -4,11 +4,11 @@
   (format t "self ~S entered collision with other collider ~S~%"
           self other-collider))
 
-(defmethod on-collision-continue ((self (eql :b)) other-collider)
+(defmethod on-collision-continue ((self (eql :a)) other-collider)
   (format t "self ~S continues collision with other collider ~S~%"
           self other-collider))
 
-(defmethod on-collision-exit ((self (eql :c)) other-collider)
+(defmethod on-collision-exit ((self (eql :a)) other-collider)
   (format t "self ~S exited collision with other collider ~S~%"
           self other-collider))
 

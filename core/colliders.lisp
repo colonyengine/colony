@@ -315,6 +315,12 @@ have had--and update all other faces too."
       (register-collider (collider-system core-state) c5)
       (register-collider (collider-system core-state) c6)
 
+      (format t "Collider Pass 1~%")
+
+      (compute-all-collisions (collider-system core-state))
+
+      (format t "Collider Pass 2~%")
+
       (compute-all-collisions (collider-system core-state))
 
       (collider-system core-state))))
