@@ -91,17 +91,17 @@
   (let ((contacts (contacts collider-system)))
     ;; Remove the link: fist -> face
     (au:when-let (face-set (au:href contacts fist-collider))
-      (remhash face-set face-collider)
+      (remhash face-collider face-set)
       ;; If the fist is colliding with nothing now, remove its table.
       (when (zerop (hash-table-count face-set))
-        (remhash contacts fist-collider)))
+        (remhash fist-collider contacts)))
 
     ;; Remove the link: face -> fist
     (au:when-let (fist-set (au:href contacts face-collider))
-      (remhash fist-set fist-collider)
+      (remhash fist-collider fist-set)
       ;; If the face is colliding with nothing now, remove its table.
       (when (zerop (hash-table-count fist-set))
-        (remhash contacts face-collider)))))
+        (remhash face-collider contacts)))))
 
 (defun remove-all-contacts (collider-system fist-collider)
   "Remove the FIST-COLLIDER from the contacts db and any contacts it might
@@ -321,6 +321,10 @@ have had--and update all other faces too."
 
       (format t "Collider Pass 2~%")
 
+      (compute-all-collisions (collider-system core-state))
+
+      (format t "Moving enemy-bullet.~%")
+      (setf (fl.comp:center c4) (m:vec3 -1 5 0))
       (compute-all-collisions (collider-system core-state))
 
       (collider-system core-state))))
