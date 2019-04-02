@@ -278,22 +278,22 @@ have had--and update all other faces too."
           (c1 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :player
                               :referent :player
-                              :center (m:vec3 -5 3 0)
+                              :center (m:vec3 -6 3 0)
                               :radius 1))
           (c2 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :player-bullet
                               :referent :player-bullet
-                              :center (m:vec3 -2 3 0)
+                              :center (m:vec3 0 3 0)
                               :radius 1))
           (c3 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :enemy
                               :referent :enemy
-                              :center (m:vec3 5 3 0)
+                              :center (m:vec3 6 3 0)
                               :radius 1))
           (c4 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :enemy-bullet
                               :referent :enemy-bullet
-                              :center (m:vec3 -1 3 0)
+                              :center (m:vec3 4 3 0)
                               :radius 1))
           (c5 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :scenery
@@ -309,19 +309,29 @@ have had--and update all other faces too."
       (register-collider (collider-system core-state) c4)
       (register-collider (collider-system core-state) c5)
 
-      (format t "Collider Pass 1: enter~%")
+      (format t "Collider Pass 0: no colliding~%")
+      (compute-all-collisions (collider-system core-state))
 
+      (format t "Collider Pass 1: enter~%")
+      (format t "Moving enemy-bullet.~%")
+      (setf (fl.comp:center c4) (m:vec3 1 3 0))
       (compute-all-collisions (collider-system core-state))
 
       (format t "Collider Pass 2: continue~%")
+      (format t "Moving enemy-bullet.~%")
+      (setf (fl.comp:center c4) (m:vec3 0 3 0))
       (compute-all-collisions (collider-system core-state))
       (format t "Collider Pass 2a: continue~%")
+      (format t "Moving enemy-bullet.~%")
+      (setf (fl.comp:center c4) (m:vec3 -1 3 0))
       (compute-all-collisions (collider-system core-state))
       (format t "Collider Pass 2b: continue~%")
+      (format t "Moving enemy-bullet.~%")
+      (setf (fl.comp:center c4) (m:vec3 -2 3 0))
       (compute-all-collisions (collider-system core-state))
 
       (format t "Moving enemy-bullet.~%")
-      (setf (fl.comp:center c4) (m:vec3 -1 5 0))
+      (setf (fl.comp:center c4) (m:vec3 -3 3 0))
       (format t "Collider Pass 3: exit~%")
       (compute-all-collisions (collider-system core-state))
 
