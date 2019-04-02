@@ -183,6 +183,9 @@
 
 ;; TODO: Make inverses of these three functions.
 ;; TODO: Try and get rid of any produced garbage in these three functions too.
+;; TODO: Think about what types these should take and return. An m:vec4 has
+;; to happen in the middle, but we accept a vec3 and prolly should return one
+;; too.
 
 (defun transform-point (transform point-vec &optional out)
   "Transform the vector in POINT-VEC, assumed to be in the local space of the
