@@ -60,4 +60,7 @@
    #:local
    #:translate
    #:rotate
-   #:scale))
+   #:scale
+   #:transform-point
+   #:transform-vector
+   #:transform-direction))
