@@ -272,37 +272,32 @@ have had--and update all other faces too."
 
     (let ((c0 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :ground
-                              :referent :a
+                              :referent :ground
                               :center (m:vec3 0 0 0)
                               :radius 1))
           (c1 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :player
-                              :referent :a
+                              :referent :player
                               :center (m:vec3 -5 3 0)
                               :radius 1))
           (c2 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :player-bullet
-                              :referent :a
+                              :referent :player-bullet
                               :center (m:vec3 -2 3 0)
                               :radius 1))
           (c3 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :enemy
-                              :referent :a
+                              :referent :enemy
                               :center (m:vec3 5 3 0)
                               :radius 1))
           (c4 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :enemy-bullet
-                              :referent :a
+                              :referent :enemy-bullet
                               :center (m:vec3 -1 3 0)
                               :radius 1))
           (c5 (make-component (context core-state) 'fl.comp:collider/sphere
-                              :on-layer :enemy-bullet
-                              :referent :a
-                              :center (m:vec3 3 3 0)
-                              :radius 1))
-          (c6 (make-component (context core-state) 'fl.comp:collider/sphere
                               :on-layer :scenery
-                              :referent :a
+                              :referent :scenery
                               :center (m:vec3 -1 0 0)
                               :radius 1)))
       (init-collider-system core-state)
@@ -313,18 +308,24 @@ have had--and update all other faces too."
       (register-collider (collider-system core-state) c3)
       (register-collider (collider-system core-state) c4)
       (register-collider (collider-system core-state) c5)
-      (register-collider (collider-system core-state) c6)
 
-      (format t "Collider Pass 1~%")
+      (format t "Collider Pass 1: enter~%")
 
       (compute-all-collisions (collider-system core-state))
 
-      (format t "Collider Pass 2~%")
-
+      (format t "Collider Pass 2: continue~%")
+      (compute-all-collisions (collider-system core-state))
+      (format t "Collider Pass 2a: continue~%")
+      (compute-all-collisions (collider-system core-state))
+      (format t "Collider Pass 2b: continue~%")
       (compute-all-collisions (collider-system core-state))
 
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 -1 5 0))
+      (format t "Collider Pass 3: exit~%")
+      (compute-all-collisions (collider-system core-state))
+
+      (format t "Collider Pass 4: no colliding~%")
       (compute-all-collisions (collider-system core-state))
 
       (collider-system core-state))))

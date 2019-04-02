@@ -1,19 +1,78 @@
 (in-package :first-light.components)
 
-(defmethod on-collision-enter ((self (eql :a)) other-collider)
+;; TODO: These take the place of actual methods on components simply for testing
+;; purposes.
+(defmethod on-collision-enter ((self (eql :ground)) other-collider)
   (format t "self ~S entered collision with other collider ~S~%"
-          self other-collider))
+          self (referent other-collider)))
 
-(defmethod on-collision-continue ((self (eql :a)) other-collider)
+(defmethod on-collision-continue ((self (eql :ground)) other-collider)
   (format t "self ~S continues collision with other collider ~S~%"
-          self other-collider))
+          self (referent other-collider)))
 
-(defmethod on-collision-exit ((self (eql :a)) other-collider)
+(defmethod on-collision-exit ((self (eql :ground)) other-collider)
   (format t "self ~S exited collision with other collider ~S~%"
-          self other-collider))
+          self (referent other-collider)))
 
+(defmethod on-collision-enter ((self (eql :player)) other-collider)
+  (format t "self ~S entered collision with other collider ~S~%"
+          self (referent other-collider)))
 
+(defmethod on-collision-continue ((self (eql :player)) other-collider)
+  (format t "self ~S continues collision with other collider ~S~%"
+          self (referent other-collider)))
 
+(defmethod on-collision-exit ((self (eql :player)) other-collider)
+  (format t "self ~S exited collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-enter ((self (eql :player-bullet)) other-collider)
+  (format t "self ~S entered collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-continue ((self (eql :player-bullet)) other-collider)
+  (format t "self ~S continues collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-exit ((self (eql :player-bullet)) other-collider)
+  (format t "self ~S exited collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-enter ((self (eql :enemy)) other-collider)
+  (format t "self ~S entered collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-continue ((self (eql :enemy)) other-collider)
+  (format t "self ~S continues collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-exit ((self (eql :enemy)) other-collider)
+  (format t "self ~S exited collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-enter ((self (eql :enemy-bullet)) other-collider)
+  (format t "self ~S entered collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-continue ((self (eql :enemy-bullet)) other-collider)
+  (format t "self ~S continues collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-exit ((self (eql :enemy-bullet)) other-collider)
+  (format t "self ~S exited collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-enter ((self (eql :scenery)) other-collider)
+  (format t "self ~S entered collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-continue ((self (eql :scenery)) other-collider)
+  (format t "self ~S continues collision with other collider ~S~%"
+          self (referent other-collider)))
+
+(defmethod on-collision-exit ((self (eql :scenery)) other-collider)
+  (format t "self ~S exited collision with other collider ~S~%"
+          self (referent other-collider)))
 
 
 
