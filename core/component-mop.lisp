@@ -410,7 +410,7 @@
                              &allow-other-keys)
             slot
           (append
-           `(,(au:symbolicate '% slot-name)
+           `(,(au:format-symbol nil "#:~a" slot-name)
              :accessor ,slot-name
              :initarg ,(au:make-keyword slot-name)
              :initform ,default)
@@ -426,23 +426,23 @@
         :for anno = (getf (cdr slot) :annotation)
         :when anno
           ;; We need the ACTUAL slot name, so the % prefixed one.
-          :collect `(,(au:symbolicate "%" (first slot)) ,anno)))
+          :collect `(,(first slot) ,anno)))
 
 (defmacro define-component (name super-classes &body body)
   (destructuring-bind (slots &optional shared-storage-metadata) body
-    (let* ((defclass-slot-forms (%generate-component-slot-forms slots))
-           (annotated-slot-info (%collect-annotated-component-slot-forms slots)))
+    (let* ((slot-forms (%generate-component-slot-forms slots))
+           (annotated-slot-info (%collect-annotated-component-slot-forms
+                                 slot-forms)))
       ;; At macro-expansion time actually forward-declare the annotations into
       ;; the 'component class and store a reference to the registered entries.
       ;; We use this to generate the optimized lookups in the read/write
       ;; function. This works because all DEFINE-COMPONENT invocations must
       ;; happen AFTER the metaclass COMPONENT-CLASS and the base component type
       ;; of COMPONENT have been declared and finalized.
-      (loop :for anno-slot :in annotated-slot-info
-            :do (loop :for anno :in (second anno-slot)
-                      :when anno
-                        :do (register-annotation '%fl:component anno
-                                                 :forward-reference)))
+      (dolist (anno-slot annotated-slot-info)
+        (dolist (anno (second anno-slot))
+          (when anno
+            (register-annotation '%fl:component anno :forward-reference))))
       `(progn
          ;; NOTE: We check the super classes to ensure that if COMPONENT isn't
          ;; in there, we know to add it at the beginning. All components
@@ -454,7 +454,7 @@
                                       super-classes)
                                 super-classes
                                 (append '(component) super-classes)))
-           ,defclass-slot-forms
+           ,slot-forms
            (:metaclass component-class))
          (c2mop:ensure-finalized (find-class ',name))
          (track-annotations ',name)

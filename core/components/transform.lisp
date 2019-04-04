@@ -83,14 +83,18 @@
       (m:+ %current (m:* %incremental delta %incremental-delta) %current))))
 
 (defun resolve-local (node alpha)
-  (with-slots (%local %scaling %rotation %translation) node
-    (interpolate-vector %scaling alpha)
-    (interpolate-quaternion %rotation alpha)
-    (interpolate-vector %translation alpha)
-    (m:* (m:mat4 (interpolated %rotation) %local)
-         (m:set-scale m:+id-mat4+ (interpolated %scaling))
-         %local)
-    (m:set-translation %local (interpolated %translation) %local)))
+  (with-accessors ((local local)
+                   (scaling scaling)
+                   (rotation rotation)
+                   (translation translation))
+      node
+    (interpolate-vector scaling alpha)
+    (interpolate-quaternion rotation alpha)
+    (interpolate-vector translation alpha)
+    (m:* (m:mat4 (interpolated rotation) local)
+         (m:set-scale m:+id-mat4+ (interpolated scaling))
+         local)
+    (m:set-translation local (interpolated translation) local)))
 
 (defun resolve-model (node alpha)
   (au:when-let ((parent (parent node)))
@@ -124,20 +128,23 @@
                                     (rotate/inc (m:vec3))
                                     (scale (m:vec3 1))
                                     (scale/inc (m:vec3)))
-  (with-slots (%translation %rotation %scaling) instance
+  (with-accessors ((translation translation)
+                   (rotation rotation)
+                   (scaling scaling))
+      instance
     (setf (actor instance) actor
           (state instance) :initialize
-          (current %translation) translate
-          (previous %translation) (m:copy translate)
-          (incremental %translation) translate/inc
-          (current %rotation) (etypecase rotate
-                                (m:vec3 (m:rotate :local m:+id-quat+ rotate))
-                                (m:quat rotate))
-          (previous %rotation) (m:copy (current %rotation))
-          (incremental %rotation) rotate/inc
-          (current %scaling) scale
-          (previous %scaling) (m:copy scale)
-          (incremental %scaling) scale/inc)))
+          (current translation) translate
+          (previous translation) (m:copy translate)
+          (incremental translation) translate/inc
+          (current rotation) (etypecase rotate
+                               (m:vec3 (m:rotate :local m:+id-quat+ rotate))
+                               (m:quat rotate))
+          (previous rotation) (m:copy (current rotation))
+          (incremental rotation) rotate/inc
+          (current scaling) scale
+          (previous scaling) (m:copy scale)
+          (incremental scaling) scale/inc)))
 
 ;;; User protocol
 
