@@ -9,6 +9,7 @@
    #:actor
    #:actor-component-by-type
    #:actor-components-by-type
+   #:alpha
    #:attach-component
    #:attach-multiple-components
    #:cameras

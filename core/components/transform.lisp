@@ -109,7 +109,7 @@
 (defun interpolate-transforms (core-state)
   (map-nodes
    (lambda (node)
-     (resolve-model node (%fl::alpha (%fl:frame-manager core-state))))
+     (resolve-model node (%fl:alpha (%fl:frame-manager core-state))))
    (actor-component-by-type (%fl:scene-tree core-state) 'transform)))
 
 (defmethod make-component (context (component-type (eql 'transform)) &rest args)
