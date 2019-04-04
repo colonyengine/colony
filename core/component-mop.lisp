@@ -410,7 +410,7 @@
                              &allow-other-keys)
             slot
           (append
-           `(,(au:format-symbol nil "#:~a" slot-name)
+           `(,(au:symbolicate "%" slot-name)
              :accessor ,slot-name
              :initarg ,(au:make-keyword slot-name)
              :initform ,default)
@@ -502,10 +502,11 @@
                  (find namespace ss-meta :key #'first)
                  ss-meta)))))))
 
-(defmacro define-annotation (name &key (getter
-                                        '(lambda (value component)
-                                          (declare (ignore component)
-                                           value)))
+(defmacro define-annotation (name &key
+                                    (getter
+                                     '(lambda (value component)
+                                       (declare (ignore component)
+                                        value)))
                                     (setter
                                      '(lambda (value component)
                                        (declare (ignore component)
