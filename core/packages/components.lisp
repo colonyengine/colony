@@ -43,14 +43,15 @@
    #:translate
    #:rotate
    #:scale)
-  ;; Colliders
+  ;; various colliders
   (:export
    #:collider/sphere
    #:collide-p
-   #:collision-event-handler
+   #:referent
    #:on-layer
    #:center
    #:radius)
+  ;; transform
   (:export
    #:transform
    #:transform-add-child
@@ -59,4 +60,7 @@
    #:local
    #:translate
    #:rotate
-   #:scale))
+   #:scale
+   #:transform-point
+   #:transform-vector
+   #:transform-direction))

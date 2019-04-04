@@ -88,8 +88,8 @@
     (interpolate-quaternion %rotation alpha)
     (interpolate-vector %translation alpha)
     (m:* (m:mat4 (interpolated %rotation) %local)
-           (m:set-scale m:+id-mat4+ (interpolated %scaling))
-           %local)
+         (m:set-scale m:+id-mat4+ (interpolated %scaling))
+         %local)
     (m:set-translation %local (interpolated %translation) %local)))
 
 (defun resolve-model (node alpha)
@@ -179,3 +179,43 @@
     (m:+ (if replace-p m:+zero-vec3+ current) vec current)
     (when instant-p
       (m:copy-into previous current))))
+
+
+;; TODO: Make inverses of these three functions.
+;; TODO: Try and get rid of any produced garbage in these three functions too.
+;; TODO: Think about what types these should take and return. An m:vec4 has
+;; to happen in the middle, but we accept a vec3 and prolly should return one
+;; too.
+
+(defun transform-point (transform point-vec &optional out)
+  "Transform the vector in POINT-VEC, assumed to be in the local space of the
+TRANSFORM, to world space and returns the new vector. The new vector is affected
+by scale, rotation, and translation. If out is a passed M:VEC3, then the result
+will be written there--otherwise a newly allocated M:VEC3 is returned."
+  (if out
+      (m:* (model transform) (m:vec4 point-vec 1) out)
+      (m:* (model transform) (m:vec4 point-vec 1))))
+
+(defun transform-vector (transform vector-vec &optional out)
+  "Transform the vector in VECTOR-VEC, assumed to be in the local space of the
+TRANSFORM, to world space and return it. The new vector is affected by scale and
+rotation, but not by translation. If out is a passed M:VEC3, then the result
+will be written there--otherwise a newly allocated M:VEC3 is returned."
+  (let ((zero-translation-model (m:copy (model transform))))
+    (m:set-translation zero-translation-model (m:vec3))
+    (if out
+        (m:* zero-translation-model (m:vec4 vector-vec 1) out)
+        (m:* zero-translation-model (m:vec4 vector-vec 1)))))
+
+(defun transform-direction (transform direction-vec &optional out)
+  "Transform the vector in DIRECTION-VEC, assumed to be in the local space of
+the TRANSFORM, to thw world space and return it. The new vector is affected only
+by rotation, and not by translation or scale. If out is a passed M:VEC3, then
+the result will be written there--otherwise a newly allocated M:VEC3 is
+returned."
+  (let ((zero-translation-identity-scale-model (m:copy (model transform))))
+    (m:set-translation zero-translation-identity-scale-model (m:vec3))
+    (m:set-scale zero-translation-identity-scale-model (m:vec3 1))
+    (if out
+        (m:* zero-translation-identity-scale-model (m:vec4 direction-vec 1) out)
+        (m:* zero-translation-identity-scale-model (m:vec4 direction-vec 1)))))
