@@ -429,9 +429,9 @@
           :collect `(,(au:symbolicate "%" (first slot)) ,anno)))
 
 (defmacro define-component (name super-classes &body body)
-  (destructuring-bind (slots shared-storage-metadata) body
-    (let ((defclass-slot-forms (%generate-component-slot-forms slots))
-          (annotated-slot-info (%collect-annotated-component-slot-forms slots)))
+  (destructuring-bind (slots &optional shared-storage-metadata) body
+    (let* ((defclass-slot-forms (%generate-component-slot-forms slots))
+           (annotated-slot-info (%collect-annotated-component-slot-forms slots)))
       ;; At macro-expansion time actually forward-declare the annotations into
       ;; the 'component class and store a reference to the registered entries.
       ;; We use this to generate the optimized lookups in the read/write
