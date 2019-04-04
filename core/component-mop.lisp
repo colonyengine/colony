@@ -429,79 +429,78 @@
           :collect `(,(au:symbolicate "%" (first slot)) ,anno)))
 
 (defmacro define-component (name super-classes &body body)
-  (let* ((slots (first body))
-         (shared-storage-metadata (second body))
-         (defclass-slot-forms (%generate-component-slot-forms slots))
-         (annotated-slot-info (%collect-annotated-component-slot-forms slots)))
-    ;; At macro-expansion time actually forward-declare the annotations into the
-    ;; 'component class and store a reference to the registered entries. We use
-    ;; this to generate the optimized lookups in the read/write function. This
-    ;; works because all DEFINE-COMPONENT invocations must happen AFTER the
-    ;; metaclass COMPONENT-CLASS and the base component type of COMPONENT have
-    ;; been declared and finalized.
-    (loop :for anno-slot :in annotated-slot-info
-          :do (loop :for anno :in (second anno-slot)
-                    :when anno
-                      :do (register-annotation '%fl:component anno
-                                               :forward-reference)))
-    `(progn
-       ;; NOTE: We check the super classes to ensure that if COMPONENT isn't in
-       ;; there, we know to add it at the beginning. All components themselves
-       ;; are ensure-finalized, so this should work for the most part. If
-       ;; anything, we'll have to finalize everything in the super-classes and
-       ;; then check the subtypep.
-       (defclass ,name (,@(if (some (lambda (super-class)
-                                      (subtypep super-class '%fl:component))
-                                    super-classes)
-                              super-classes
-                              (append '(component) super-classes)))
-         ,defclass-slot-forms
-         (:metaclass component-class))
-       (c2mop:ensure-finalized (find-class ',name))
-       (track-annotations ',name)
-       ;; Reader for annotated slots at this class inheritance level.
-       (defmethod c2mop:slot-value-using-class
-           ((class component-class)     ; the component metaclass
-            (instance ,name)            ; the specific component
-            (slotd component-annotated-effective-slot-definition))
-         (let ((annoarray (annotation-array (find-class '%fl:component))))
-           (loop :with original-slot-value = (c2mop:standard-instance-access
-                                              instance
-                                              (c2mop:slot-definition-location
-                                               slotd))
-                 :with composing-value = original-slot-value
-                 :for index :across (annotation-indexes slotd)
-                 :for annotation-value = (aref annoarray index)
-                 :do (setf composing-value
-                           (funcall (getter annotation-value)
-                                    composing-value instance))
-                 :finally (return composing-value))))
-       ;; writer for annotated slots at this class inheritance level.
-       (defmethod (setf c2mop:slot-value-using-class)
-           (new-value
-            (class component-class) ;; the component metaclass
-            (instance ,name)        ;; the specific component
-            (slotd component-annotated-effective-slot-definition))
-         (let ((annoarray (annotation-array (find-class '%fl:component))))
-           (setf (c2mop:standard-instance-access
-                  instance (c2mop:slot-definition-location slotd))
-                 (loop :with composing-value = new-value
-                       :for index :across (annotation-indexes slotd)
-                       :for annotation-value = (aref annoarray index)
-                       :do (setf composing-value
-                                 (funcall (setter annotation-value)
-                                          composing-value instance))
-                       :finally (return composing-value)))))
-       ;; A method to locate the metadata in the shared storage form in this
-       ;; class.
-       (defmethod ,(intern (symbol-name 'shared-storage-metadata) :%fl)
-           ((component-name (eql ',name)) &optional namespace)
-         (declare (ignore component-name))
-         (let ((ss-meta ',shared-storage-metadata))
-           (if namespace
-               ;; TODO: make this better/faster
-               (find namespace ss-meta :key #'first)
-               ss-meta))))))
+  (destructuring-bind (slots shared-storage-metadata) body
+    (let ((defclass-slot-forms (%generate-component-slot-forms slots))
+          (annotated-slot-info (%collect-annotated-component-slot-forms slots)))
+      ;; At macro-expansion time actually forward-declare the annotations into
+      ;; the 'component class and store a reference to the registered entries.
+      ;; We use this to generate the optimized lookups in the read/write
+      ;; function. This works because all DEFINE-COMPONENT invocations must
+      ;; happen AFTER the metaclass COMPONENT-CLASS and the base component type
+      ;; of COMPONENT have been declared and finalized.
+      (loop :for anno-slot :in annotated-slot-info
+            :do (loop :for anno :in (second anno-slot)
+                      :when anno
+                        :do (register-annotation '%fl:component anno
+                                                 :forward-reference)))
+      `(progn
+         ;; NOTE: We check the super classes to ensure that if COMPONENT isn't
+         ;; in there, we know to add it at the beginning. All components
+         ;; themselves are ensure-finalized, so this should work for the most
+         ;; part. If anything, we'll have to finalize everything in the
+         ;; super-classes and then check the subtypep.
+         (defclass ,name (,@(if (some (lambda (super-class)
+                                        (subtypep super-class '%fl:component))
+                                      super-classes)
+                                super-classes
+                                (append '(component) super-classes)))
+           ,defclass-slot-forms
+           (:metaclass component-class))
+         (c2mop:ensure-finalized (find-class ',name))
+         (track-annotations ',name)
+         ;; Reader for annotated slots at this class inheritance level.
+         (defmethod c2mop:slot-value-using-class
+             ((class component-class)   ; the component metaclass
+              (instance ,name)          ; the specific component
+              (slotd component-annotated-effective-slot-definition))
+           (let ((annoarray (annotation-array (find-class '%fl:component))))
+             (loop :with original-slot-value = (c2mop:standard-instance-access
+                                                instance
+                                                (c2mop:slot-definition-location
+                                                 slotd))
+                   :with composing-value = original-slot-value
+                   :for index :across (annotation-indexes slotd)
+                   :for annotation-value = (aref annoarray index)
+                   :do (setf composing-value
+                             (funcall (getter annotation-value)
+                                      composing-value instance))
+                   :finally (return composing-value))))
+         ;; writer for annotated slots at this class inheritance level.
+         (defmethod (setf c2mop:slot-value-using-class)
+             (new-value
+              (class component-class) ;; the component metaclass
+              (instance ,name)        ;; the specific component
+              (slotd component-annotated-effective-slot-definition))
+           (let ((annoarray (annotation-array (find-class '%fl:component))))
+             (setf (c2mop:standard-instance-access
+                    instance (c2mop:slot-definition-location slotd))
+                   (loop :with composing-value = new-value
+                         :for index :across (annotation-indexes slotd)
+                         :for annotation-value = (aref annoarray index)
+                         :do (setf composing-value
+                                   (funcall (setter annotation-value)
+                                            composing-value instance))
+                         :finally (return composing-value)))))
+         ;; A method to locate the metadata in the shared storage form in this
+         ;; class.
+         (defmethod ,(intern (symbol-name 'shared-storage-metadata) :%fl)
+             ((component-name (eql ',name)) &optional namespace)
+           (declare (ignore component-name))
+           (let ((ss-meta ',shared-storage-metadata))
+             (if namespace
+                 ;; TODO: make this better/faster
+                 (find namespace ss-meta :key #'first)
+                 ss-meta)))))))
 
 (defmacro define-annotation (name &key (getter
                                         '(lambda (value component)
