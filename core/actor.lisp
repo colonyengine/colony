@@ -20,8 +20,8 @@
    (%context :reader context
              :initarg :context)))
 
-(au:define-printer (actor stream :type t)
-  (format stream "~a" (id actor)))
+(au:define-printer (actor stream :type nil)
+  (format stream "ACTOR: ~s" (id actor)))
 
 (defun make-actor (context &rest args)
   (apply #'make-instance 'actor :context context args))
