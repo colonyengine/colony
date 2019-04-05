@@ -66,10 +66,13 @@ DEFINE-COMPONENT form."
 
 (defmethod make-component (context component-type &rest args)
   (au:if-let ((qualified-type (qualify-component (core context) component-type)))
-    (apply #'make-instance qualified-type
-           :type qualified-type
-           :context context
-           args)
+    (let ((component (apply #'make-instance qualified-type
+                            :type qualified-type
+                            :context context
+                            args)))
+      (register-object-uuid component)
+      (register-object-id component)
+      component)
     (error "Could not qualify the component type ~s." component-type)))
 
 (defun get-computed-component-precedence-list (component-type)
@@ -106,10 +109,8 @@ DEFINE-COMPONENT form."
 
 (defmethod destroy ((thing component) &key (ttl 0))
   (let ((core (core (context thing))))
-    (setf (ttl thing) (if (minusp ttl) 0 ttl)
-          (au:href (component-predestroy-view
-                    (tables core)) thing)
-          thing)))
+    (setf (ttl thing) (max 0 ttl)
+          (au:href (component-predestroy-view (tables core)) thing) thing)))
 
 (defun component/init-or-active->destroy (component)
   (let* ((core (core (context component)))
@@ -136,7 +137,9 @@ DEFINE-COMPONENT form."
     (type-table-drop component
                      component-type
                      (component-destroy-by-type-view (tables core)))
-    (detach-component (actor component) component)))
+    (detach-component (actor component) component)
+    (deregister-object-uuid component)
+    (deregister-object-id component)))
 
 (defun component/countdown-to-destruction (component)
   (when (plusp (ttl component))

@@ -66,7 +66,7 @@
       (let* ((parent-model (fl.comp:model emitter-transform))
              (parent-translation (m:get-translation parent-model))
              (parent-rotation (m:quat parent-model))
-             (new-actor (fl:make-actor context :id (au:unique-name 'shot)))
+             (new-actor (fl:make-actor context :display-id "Ship bullet"))
              (transform (fl:make-component context
                                            'fl.comp:transform
                                            :translate parent-translation
@@ -90,4 +90,4 @@
         (fl:spawn-actor new-actor)
         ;; This is the method for destroying actors and components. Add to
         ;; public API. Don't use :ttl in the make-actor call yet.
-        (%fl::destroy new-actor :ttl 1)))))
+        (%fl::destroy new-actor :ttl 2)))))

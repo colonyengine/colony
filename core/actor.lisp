@@ -1,11 +1,7 @@
 (in-package :%first-light)
 
-(defclass actor ()
-  ((%id :reader id
-        :initarg :id)
-   (%uuid :reader uuid
-          :initform (make-uuid))
-   (%state :accessor state
+(defclass actor (queryable)
+  ((%state :accessor state
            :initarg :state
            :initform :initialize)
    (%components :reader components
@@ -13,18 +9,21 @@
    (%components-by-type :reader components-by-type
                         :initform (au:dict #'eq))
    (%prefab-node :reader prefab-node
-                 :initarg :prefab-node)
+                 :initarg :prefab-node
+                 :initform nil)
    (%ttl :accessor ttl
          :initarg :ttl
          :initform 0)
    (%context :reader context
              :initarg :context)))
 
-(au:define-printer (actor stream :type nil)
-  (format stream "ACTOR: ~s" (id actor)))
-
-(defun make-actor (context &rest args)
-  (apply #'make-instance 'actor :context context args))
+(defun make-actor (context &rest args &key &allow-other-keys)
+  (let ((actor (apply #'make-instance 'actor
+                      :context context
+                      args)))
+    (register-object-uuid actor)
+    (register-object-id actor)
+    actor))
 
 (defun attach-component (actor component)
   (detach-component actor component)
@@ -137,13 +136,15 @@ reference which will be the parent of the spawning actor. It defaults to
         (component/init-or-active->destroy v)))))
 
 (defun actor/destroy-descendants (actor)
-  (flet ((destroy-actor (descendant-actor-transform)
-           (let ((destroying-actor (actor descendant-actor-transform)))
-             (setf (ttl destroying-actor) 0)
-             (actor/init-or-active->destroy destroying-actor))))
+  (flet ((destroy-actor (actor)
+           (setf (ttl actor) 0)
+           (actor/init-or-active->destroy actor)
+           (deregister-object-uuid actor)
+           (deregister-object-id actor)))
     (when actor
-      (fl.comp::map-nodes #'destroy-actor
-                          (actor-component-by-type actor 'fl.comp:transform)))))
+      (fl.comp::map-nodes
+       (lambda (x) (destroy-actor (actor x)))
+       (actor-component-by-type actor 'fl.comp:transform)))))
 
 ;; TODO: this should probably never be run on the @universe actor. :)
 (defun actor/disconnect (actor)

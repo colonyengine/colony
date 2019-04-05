@@ -77,6 +77,7 @@
    (:file "actor")
    (:file "component")
    (:file "annotations")
+   (:file "object-query")
    (:file "frame")
    (:file "display")
    (:file "materials")

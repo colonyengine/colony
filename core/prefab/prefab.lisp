@@ -23,6 +23,12 @@
 (defclass node ()
   ((%name :reader name
           :initarg :name)
+   (%id :reader id
+        :initarg :id
+        :initform nil)
+   (%display-id :reader display-id
+                :initarg :display-id
+                :initform nil)
    (%prefab :reader prefab
             :initarg :prefab)
    (%path :reader path
@@ -88,13 +94,15 @@
   (au:do-hash-values (child (children node))
     (map-nodes func child)))
 
-(defun parse-copy/link (library path copy-p link-p form)
+(defun parse-copy/link (library id display-id path copy-p link-p form)
   (flet ((check-source (source)
            (ensure-copy/link-source-valid path source)
            (ensure-copy/link-source-absolute path source)
            (ensure-copy/link-source-no-trailing-slash path source))
          (make-path-options (source from)
            (values path
+                   id
+                   display-id
                    (list :mode (cond (copy-p 'copy) (link-p 'link))
                          :source source
                          :from from))))
@@ -116,25 +124,29 @@
              (ensure-path-valid path)
              (ensure-path-relative path)
              (ensure-path-no-trailing-slash path))
-           (direct-path (path)
+           (direct-path (path &key id display-id)
              (check-path path)
              (values (make-node-path parent path)
+                     id
+                     display-id
                      (list :mode 'direct))))
     (typecase path-spec
       (string
-       (direct-path path-spec))
+       (direct-path path-spec :display-id path-spec))
       (list
-       (destructuring-bind (target options) path-spec
+       (destructuring-bind (target . options) path-spec
          (check-path target)
          (let ((path (make-node-path parent target)))
            (ensure-path-options-plist path options)
            (ensure-path-options-valid path options)
-           (destructuring-bind (&key (copy nil copy-p) (link nil link-p))
+           (destructuring-bind (&key id (display-id target) (copy nil copy-p)
+                                  (link nil link-p))
                options
              (ensure-path-options-keys path options)
              (au:if-let ((copy/link-form (or copy link)))
-               (parse-copy/link library path copy-p link-p copy/link-form)
-               (direct-path target)))))))))
+               (parse-copy/link
+                library id display-id path copy-p link-p copy/link-form)
+               (direct-path target :id id :display-id display-id)))))))))
 
 (defun make-node (prefab path)
   (symbol-macrolet ((node (au:href (parse-tree prefab) path)))
@@ -153,9 +165,13 @@
                (dolist (node-spec data)
                  (au:mvlet*
                      ((name components children (split-prefab-spec node-spec))
-                      (path options (parse-path-spec parent %library name)))
-                   (with-slots (%options %components) (make-node prefab path)
-                     (setf %options options)
+                      (path id display-id options
+                            (parse-path-spec parent %library name)))
+                   (with-slots (%id %display-id %options %components)
+                       (make-node prefab path)
+                     (setf %id id
+                           %display-id display-id
+                           %options options)
                      (au:appendf %components components)
                      (%make-nodes path children)))))
              (%expand-path (parts)
@@ -360,10 +376,12 @@
 (defun make-prefab-actors (context prefab)
   (let ((prefab-actors (au:dict #'equalp)))
     (au:do-hash (path node (parse-tree prefab))
-      (setf (au:href prefab-actors path)
-            (make-actor context
-                        :id (au:unique-name path)
-                        :prefab-node node)))
+      (with-slots (%name %id %display-id) node
+        (setf (au:href prefab-actors path)
+              (make-actor context
+                          :prefab-node node
+                          :id %id
+                          :display-id (or %display-id %name)))))
     prefab-actors))
 
 (defun make-prefab-actor-components (context actors)

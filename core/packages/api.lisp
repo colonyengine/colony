@@ -25,6 +25,9 @@
    #:define-texture-profile
    #:destroy
    #:detach-component
+   #:find-actors-by-id
+   #:find-by-uuid
+   #:find-components-by-id
    #:find-resource
    #:frame-count
    #:frame-time

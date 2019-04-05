@@ -48,14 +48,14 @@
            path)))
 
 (defun ensure-path-options-valid (path options)
-  (let ((valid-options '(:copy :link)))
+  (let ((valid-options '(:id :display-id :copy :link)))
     (dolist (x (au:plist-keys options))
       (unless (member x valid-options)
         (error "Invalid path option: ~s.~%Valid options: ~{~s~^, ~}~%Path: ~s."
                x valid-options path)))))
 
 (defun ensure-path-options-keys (path options)
-  (destructuring-bind (&key copy link) options
+  (destructuring-bind (&key copy link &allow-other-keys) options
     (when (and copy link)
       (error "Only one of :COPY or :LINK can be specified for a path.~%~
               Path: ~s."
