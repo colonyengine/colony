@@ -179,7 +179,6 @@
         (ensure-component-type-exists type path)
         (ensure-component-options-plist type options path)
         (ensure-component-options-valid type options path)
-        (ensure-component-id type options path)
         (ensure-component-policy type options path)
         (ensure-component-args-plist type args path)
         (ensure-component-args-valid type args path)))))
@@ -195,8 +194,8 @@
   (let (components)
     (au:do-hash (type table (components-table node))
       (au:do-hash-values (data table)
-        (destructuring-bind (&key id args &allow-other-keys) data
-          (push `(,type (:id ,id) ,@args) components))))
+        (destructuring-bind (&key merge-id args &allow-other-keys) data
+          (push `(,type (:merge-id ,merge-id) ,@args) components))))
     components))
 
 (defun insert-source-components (source target)
@@ -288,12 +287,12 @@
 
 (defmethod merge-component ((policy (eql :new-type)) node type id args)
   (setf (au:href (components-table node) type id)
-        (list :id id :policy policy :args args)))
+        (list :merge-id id :policy policy :args args)))
 
 (defmethod merge-component ((policy (eql :old-type)) node type id args)
   (au:unless-found (components (au:href (components-table node) type id))
     (setf (au:href (components-table node) type id)
-          (list :id id :policy policy :args args))))
+          (list :merge-id id :policy policy :args args))))
 
 (defmethod merge-component ((policy (eql :new-args)) node type id args)
   (let* ((old-args (au:plist->hash
@@ -301,7 +300,7 @@
          (new-args (au:hash->plist
                     (au:merge-tables old-args (au:plist->hash args)))))
     (setf (au:href (components-table node) type id)
-          (list :id id :policy policy :args new-args))))
+          (list :merge-id id :policy policy :args new-args))))
 
 (defmethod merge-component ((policy (eql :old-args)) node type id args)
   (let* ((old-args (au:plist->hash
@@ -309,15 +308,15 @@
          (new-args (au:hash->plist
                     (au:merge-tables (au:plist->hash args) old-args))))
     (setf (au:href (components-table node) type id)
-          (list :id id :policy policy :args new-args))))
+          (list :merge-id id :policy policy :args new-args))))
 
 (defun make-component-table (prefab)
   (au:do-hash-values (node (parse-tree prefab))
     (dolist (component (components node))
-      (destructuring-bind (type (&key (id 0) policy) . args) component
+      (destructuring-bind (type (&key merge-id policy) . args) component
         (unless (au:href (components-table node) type)
-          (setf (au:href (components-table node) type) (au:dict #'eql)))
-        (merge-component policy node type id args)))))
+          (setf (au:href (components-table node) type) (au:dict #'equalp)))
+        (merge-component policy node type merge-id args)))))
 
 (defun print-prefab (name library)
   (flet ((print-line (level value)

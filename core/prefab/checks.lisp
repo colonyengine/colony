@@ -131,18 +131,12 @@
            type path)))
 
 (defun ensure-component-options-valid (type options path)
-  (let ((valid-options '(:id :policy)))
+  (let ((valid-options '(:merge-id :policy)))
     (dolist (x (au:plist-keys options))
       (unless (member x valid-options)
         (error "Component type ~s has an invalid option: ~s.~%Valid options: ~
                 ~{~s~^, ~}.~%Path: ~s."
                type x valid-options path)))))
-
-(defun ensure-component-id (type options path)
-  (au:when-let ((id (getf options :id)))
-    (unless (integerp id)
-      (error "Component type ~s must have an integer ID.~%Path: ~s."
-             type path))))
 
 (defun ensure-component-policy (type options path)
   (au:when-let ((policy (getf options :policy))
