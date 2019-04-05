@@ -505,7 +505,7 @@ or if it a vector of the same. Return NIL otherwise."
              (fl.gpu:uniform-int shader uniform-name unit)))
          (ecase glsl-type
            (:bool #'fl.gpu:uniform-int)
-           ((:int :int32) #'fl.gpu:uniform-int)
+           (:int #'fl.gpu:uniform-int)
            (:float #'fl.gpu:uniform-float)
            (:vec2 (lambda (shader uniform value)
                     (fl.gpu:uniform-vec2 shader uniform (m:get-array value))))
@@ -538,7 +538,7 @@ or if it a vector of the same. Return NIL otherwise."
              (fl.gpu:uniform-int-array shader uniform-name units)))
          (ecase (car glsl-type)
            (:bool #'fl.gpu:uniform-int-array)
-           ((:int :int32) #'fl.gpu:uniform-int-array)
+           (:int #'fl.gpu:uniform-int-array)
            (:float #'fl.gpu:uniform-float-array)
            (:vec2 #'fl.gpu:uniform-vec2-array)
            (:vec3 #'fl.gpu:uniform-vec3-array)
