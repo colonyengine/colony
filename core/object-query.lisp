@@ -79,10 +79,15 @@
     (setf %id value)
     (register-object-id object)))
 
-(defun find-by-uuid (context uuid)
-  "Return the object instance with the given `UUID` as a string."
+(defmethod find-by-uuid (context (uuid uuid))
+  "Return the object instance with the given `UUID` object."
   (let ((table (objects-by-uuid (tables (core context)))))
     (au:href table uuid)))
+
+(defmethod find-by-uuid (context (uuid string))
+  "Return the object instance with the given `UUID` string representation."
+  (let ((table (objects-by-uuid (tables (core context)))))
+    (au:href table (string->uuid uuid))))
 
 (defun find-actors-by-id (context id)
   "Return a list of all actor instances with the given `ID`."

@@ -65,7 +65,7 @@
    (%actors-by-id :reader actors-by-id
                   :initform (au:dict #'equalp))
    (%objects-by-uuid :reader objects-by-uuid
-                     :initform (au:dict #'equal))))
+                     :initform (au:dict #'equalp))))
 
 (defun pending-preinit-tasks-p (core)
   "Return T if there are ANY components or actors in the preinit data structures
