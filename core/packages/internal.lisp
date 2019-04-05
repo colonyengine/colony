@@ -5,6 +5,7 @@
   (:local-nicknames (#:m #:game-math))
   (:use #:cl)
   (:export
+   #:*core-debug*
    #:active-camera
    #:actor
    #:actor-component-by-type
