@@ -27,9 +27,7 @@
   (apply #'make-instance 'actor :context context args))
 
 (defun attach-component (actor component)
-  ;; First, we detach from the current actor (if applicable)
   (detach-component actor component)
-  ;; Then, we attach to the new component.
   (enqueue-attach-event component actor)
   (setf (actor component) actor
         (au:href (components actor) component) component)

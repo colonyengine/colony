@@ -28,16 +28,25 @@ argument :TTL supplied in real seconds, how long the thing has yet to live."))
 of hash tables made (one less than the `KEY-LIST` set of keys) with the correct
 tests, gotten from `TEST-FN-LIST`. NOTE: The first entry in `TEST-FN-LIST` is
 the test function for `HT` itself."
+  ;; TODO: This looks painful for performance., oh well, we'll see if the
+  ;; profiler actually cares or not. It is likely that these won't be nested
+  ;; deeply. Also, the algorithm is slightly painful, but the deal is that we
+  ;; can't make a hash table containing the last key, since the last key is
+  ;; where we'll either look something up or store it.
   (loop :with keylen = (length key-list)
         :for test-fn :in (cdr test-fn-list)
         :for key :in key-list
         :for i :below keylen
-        :for last-p = (= i (1- keylen))
+        :for lastp = (= i (1- keylen))
         :with current-ht = ht
         :do (unless (nth-value 1 (gethash key current-ht))
-              (unless last-p
+              ;; If the key doesn't exist, we make a new hash table and store it
+              ;; at the key UNLESS it is the last entry, in which case we do
+              ;; nothing.
+              (unless lastp
                 (setf (gethash key current-ht)
                       (au:dict (fdefinition test-fn)))))
+            ;; The key is potentially newly minted.
             (setf current-ht (gethash key current-ht)))
   ht)
 
@@ -48,6 +57,8 @@ the test function for `HT` itself."
   (if (typep thing 'sequence)
       (map-into (copy-seq thing) #'copy-thing thing)
       thing))
+
+;;; Recompilation queue
 
 (defun recompile-queued-items (core-state)
   (loop :with queue = (recompilation-queue core-state)

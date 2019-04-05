@@ -370,56 +370,24 @@
   (setf (au:href (annotated-slots (find-class '%fl:component)) component-name)
         (collect-all-annotated-effective-slot-data component-name)))
 
-;; The base component class, manually defined, notice the two end forms that
-;; come after it. Maybe better to wrap into a define-component-base-type macro
-;; which has exactly ONE invocation. We'd do that in order to allow C-c of this
-;; class, for example.
-(defclass component ()
-  ((%uuid :reader uuid
-          :initform (make-uuid))
-   (%context :reader context
-             :initarg :context
-             :initform nil)
-   (%type :reader component-type
-          :initarg :type)
-   (%state :accessor state
-           :initarg :state
-           :initform :initialize)
-   (%actor :accessor actor
-           :initarg :actor
-           :initform nil)
-   (%ttl :accessor ttl
-         :initarg :ttl
-         :initform 0)
-   (%initializer-thunk :accessor initializer-thunk
-                       :initarg :initializer-thunk
-                       :initform nil)
-   (%attach/detach-event-queue :accessor attach/detach-event-queue
-                               :initarg :attach/detach-event-queue
-                               :initform (fl.dst:make-queue :simple-queue)))
-  (:metaclass component-class))
-(c2mop:ensure-finalized (find-class '%fl:component))
-(clear-annotations '%fl:component)
-
 ;;; Stuff used to make DEFINE-COMPONENT work.
 
 (defun %generate-component-slot-forms (slots)
   (loop :for slot :in slots
-        :collect
-        (destructuring-bind (slot-name &key default allocation type annotation
-                             &allow-other-keys)
-            slot
-          (append
-           `(,(au:symbolicate "%" slot-name)
-             :accessor ,slot-name
-             :initarg ,(au:make-keyword slot-name)
-             :initform ,default)
-           (when annotation
-             `(:annotation ,annotation))
-           (when type
-             `(:type ,type))
-           (when allocation
-             `(:allocation ,allocation))))))
+        :collect (destructuring-bind (slot-name &key default allocation type
+                                                  annotation &allow-other-keys)
+                     slot
+                   (append
+                    `(,(au:symbolicate "%" slot-name)
+                      :accessor ,slot-name
+                      :initarg ,(au:make-keyword slot-name)
+                      :initform ,default)
+                    (when annotation
+                      `(:annotation ,annotation))
+                    (when type
+                      `(:type ,type))
+                    (when allocation
+                      `(:allocation ,allocation))))))
 
 (defun %collect-annotated-component-slot-forms (slots)
   (loop :for slot :in slots
@@ -514,3 +482,4 @@
   `(register-annotation '%fl:component ',name :initialized
                         :getter (function ,getter)
                         :setter (function ,setter)))
+

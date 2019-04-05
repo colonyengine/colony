@@ -232,11 +232,6 @@
                     (selector
                         (lambda (core-state)
                           (values :identity-policy
-                                  ;; NOTE: We get the keys here because the
-                                  ;; action will be adding values to this hash
-                                  ;; table as we iterate over the keys. We need
-                                  ;; to copy the list of keys in order to
-                                  ;; satisfy the traversal rules of hash tables.
                                   (au:hash-keys (actor-destroy-db
                                                  (tables core-state))))))
                     ;; NOTE: See selector for this flow-state.

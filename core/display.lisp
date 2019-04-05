@@ -28,7 +28,7 @@
       (try value))))
 
 (defgeneric create-window (core-state)
-  (:method :before ((core-state core-state))
+  (:method :before (core-state)
     (let* ((context (context core-state))
            (opengl-version (option context :opengl-version))
            (anti-alias-level (option context :anti-alias-level)))
@@ -39,7 +39,7 @@
                            :context-profile-mask 1
                            :multisamplebuffers (signum anti-alias-level)
                            :multisamplesamples anti-alias-level))))
-  (:method ((core-state core-state))
+  (:method (core-state)
     (let* ((context (context core-state))
            (window (sdl2:create-window :title (option context :title)
                                        :w (option context :window-width)

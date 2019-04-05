@@ -1,5 +1,30 @@
 (in-package :%first-light)
 
+(defclass component (queryable)
+  ((%context :reader context
+             :initarg :context
+             :initform nil)
+   (%type :reader component-type
+          :initarg :type)
+   (%state :accessor state
+           :initarg :state
+           :initform :initialize)
+   (%actor :accessor actor
+           :initarg :actor
+           :initform nil)
+   (%ttl :accessor ttl
+         :initarg :ttl
+         :initform 0)
+   (%initializer-thunk :accessor initializer-thunk
+                       :initarg :initializer-thunk
+                       :initform nil)
+   (%attach/detach-event-queue :accessor attach/detach-event-queue
+                               :initarg :attach/detach-event-queue
+                               :initform (fl.dst:make-queue :simple-queue)))
+  (:metaclass component-class))
+
+(clear-annotations '%fl:component)
+
 (defun qualify-component (core-state component-type)
   "This function tries to resolve the COMPONENT-TYPE symbol into a potentially
 different packaged symbol of the same name that corresponds to a component
@@ -40,12 +65,13 @@ DEFINE-COMPONENT form."
                     (return-from qualify-component symbol)))))))
         component-type)))
 
-(defmethod make-component (context component-type &rest initargs)
+(defmethod make-component (context component-type &rest args)
   (au:if-let ((qualified-type (qualify-component (core-state context)
                                                  component-type)))
     (apply #'make-instance qualified-type
            :type qualified-type
-           :context context initargs)
+           :context context
+           args)
     (error "Could not qualify the component type ~s." component-type)))
 
 (defun get-computed-component-precedence-list (component-type)
