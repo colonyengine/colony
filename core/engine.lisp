@@ -1,18 +1,18 @@
 (in-package :%first-light)
 
 (au:eval-always
-  (defmacro profile (core-state duration)
+  (defmacro profile (core duration)
     (let ((packages (remove-if-not
                      (lambda (x) (au:string-starts-with-p x "FL."))
                      (mapcar #'package-name (list-all-packages)))))
       `(progn
          (sb-profile:unprofile)
          (sb-profile:profile ,@packages)
-         (au:while (and (running-p core-state)
-                        (<= (total-time (context ,core-state)) ,duration))
-           (iterate-main-loop ,core-state))
-         (when (running-p core-state)
-           (stop-engine ,core-state))
+         (au:while (and (running-p core)
+                        (<= (total-time (context ,core)) ,duration))
+           (iterate-main-loop ,core))
+         (when (running-p core)
+           (stop-engine ,core))
          (sb-profile:report)
          (sb-profile:unprofile)
          (sb-profile:reset)))))
@@ -25,87 +25,87 @@
   (:method (context)
     (au:noop)))
 
-(defun run-prologue (core-state)
+(defun run-prologue (core)
   "The prologue is a (defmethod prologue ((context context)) ...) method
 optionally defined in the user's project. If it exists, it is called after
 internal engine setup, but before the first frame (specifically, before any
 component protocol methods are called for the first time). The result of the
 prologue function is automatically stored in the STATE slot of the CONTEXT."
-  (let ((context (context core-state)))
+  (let ((context (context core)))
     (setf (state context) (prologue context))))
 
-(defun run-epilogue (core-state)
+(defun run-epilogue (core)
   "The epilogue is a (defmethod epilogue ((context context)) ..) defined in the
 user's project. If it exists, it is called after the last frame, and after the
 last invocations of any component protocol method, but before any engine
 tear-down procedure occurs when stopping the engine."
-  (epilogue (context core-state)))
+  (epilogue (context core)))
 
-(defun initialize-host (core-state)
+(defun initialize-host (core)
   (let ((flags '(:everything))
-        (gamepad-db (find-resource (context core-state) '(:core :gamepad-db))))
+        (gamepad-db (find-resource (context core) '(:core :gamepad-db))))
     (unless (apply #'sdl2:was-init flags)
       (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
         (sdl2::check-rc (sdl2::sdl-init flags))))
     (fl.input:prepare-gamepads gamepad-db)
-    (make-display core-state)))
+    (make-display core)))
 
-(defun shutdown-host (core-state)
-  (fl.input:shutdown-gamepads (input-data core-state))
-  (sdl2:destroy-window (window (display core-state)))
+(defun shutdown-host (core)
+  (fl.input:shutdown-gamepads (input-data core))
+  (sdl2:destroy-window (window (display core)))
   (sdl2::sdl-quit))
 
-(defun initialize-engine (core-state prefabs)
-  (let ((title (option (context core-state) :title)))
+(defun initialize-engine (core prefabs)
+  (let ((title (option (context core) :title)))
     (v:info :fl.core.engine "Starting up ~a..." title)
     (setup-lisp-repl)
-    (enable-logging core-state)
-    (make-frame-manager core-state)
-    (initialize-host core-state)
-    (initialize-shaders core-state)
-    (load-graphs core-state)
-    (load-call-flows core-state)
-    (load-texture-descriptors core-state)
-    (load-materials core-state)
-    (fl.prefab:load-prefabs core-state prefabs)
+    (enable-logging core)
+    (make-frame-manager core)
+    (initialize-host core)
+    (initialize-shaders core)
+    (load-graphs core)
+    (load-call-flows core)
+    (load-texture-descriptors core)
+    (load-materials core)
+    (fl.prefab:load-prefabs core prefabs)
     (v:info :fl.core.engine "Finished starting ~a" title)))
 
-(defun iterate-main-loop (core-state)
+(defun iterate-main-loop (core)
   (with-continue-restart "First Light"
-    (fl.input:handle-events (input-data core-state))
-    (render core-state)
+    (fl.input:handle-events (input-data core))
+    (render core)
     ;; TODO: Remove this later when possible.
-    (when (fl.input:input-enter-p (input-data core-state) '(:key :escape))
-      (stop-engine core-state))))
+    (when (fl.input:input-enter-p (input-data core) '(:key :escape))
+      (stop-engine core))))
 
-(defun main-loop (core-state)
-  (initialize-frame-time core-state)
-  (au:while (running-p core-state)
-    (iterate-main-loop core-state)))
+(defun main-loop (core)
+  (initialize-frame-time core)
+  (au:while (running-p core)
+    (iterate-main-loop core)))
 
 (defun start-engine (prefabs &optional profile-duration)
   "Start the engine. First we initialize the engine. Next we run the prologue as
 the last step, before finally starting the main game loop."
   (unwind-protect
-       (let ((core-state (make-instance 'core-state)))
-         (load-options core-state)
-         (make-context core-state)
-         (setf *core-state-debug* core-state)
-         (initialize-engine core-state prefabs)
-         (run-prologue core-state)
+       (let ((core (make-instance 'core)))
+         (load-options core)
+         (make-context core)
+         (setf *core-debug* core)
+         (initialize-engine core prefabs)
+         (run-prologue core)
          (if profile-duration
-             (profile core-state profile-duration)
-             (main-loop core-state)))
+             (profile core profile-duration)
+             (main-loop core)))
     (sdl2::sdl-quit)))
 
-(defun stop-engine (core-state)
+(defun stop-engine (core)
   "Stop the engine, making sure to call any user-defined epilogue function
 first, and finally cleaning up."
-  (let ((title (option core-state :title)))
+  (let ((title (option core :title)))
     (v:info :fl.core.engine "Shutting down ~a..." title)
-    (run-epilogue core-state)
+    (run-epilogue core)
     (fl.gpu:unload-shaders)
-    (shutdown-host core-state)
-    (setf (running-p core-state) nil)
-    (makunbound '*core-state-debug*)
+    (shutdown-host core)
+    (setf (running-p core) nil)
+    (makunbound '*core-debug*)
     (v:info :fl.core.engine "Successfully shut down ~a" title)))

@@ -66,8 +66,8 @@
                            (children parent))
         (parent child) nil))
 
-(defun transform-node (core-state node)
-  (let ((delta (delta (context core-state))))
+(defun transform-node (core node)
+  (let ((delta (delta (context core))))
     (with-slots (%previous %current %incremental-delta %incremental)
         (scaling node)
       (m:copy-into %previous %current)
@@ -106,11 +106,11 @@
   (dolist (child (children parent))
     (map-nodes func child)))
 
-(defun interpolate-transforms (core-state)
+(defun interpolate-transforms (core)
   (map-nodes
    (lambda (node)
-     (resolve-model node (%fl:alpha (%fl:frame-manager core-state))))
-   (actor-component-by-type (%fl:scene-tree core-state) 'transform)))
+     (resolve-model node (%fl:alpha (%fl:frame-manager core))))
+   (actor-component-by-type (%fl:scene-tree core) 'transform)))
 
 (defmethod reinitialize-instance ((instance transform)
                                   &key

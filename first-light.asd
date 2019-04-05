@@ -83,7 +83,7 @@
    (:file "shaders")
    (:file "colliders")
    (:file "action-manager")
-   (:file "core-state")
+   (:file "core")
    (:file "engine")
    (:module "components"
     :components

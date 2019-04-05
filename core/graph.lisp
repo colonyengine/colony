@@ -475,11 +475,11 @@ depends-on in that GDEF."
                                          second)))))))
     (setf (annotation graph) annotation)))
 
-(defun canonicalize-component-type (component-type core-state)
+(defun canonicalize-component-type (component-type core)
   "If the COMPONENT-TYPE is reference in the component-dependency graph, then
 return it, otherwise return the unknown-type-id symbol."
   (let* ((putative-component-type component-type)
-         (component-dependency-graph (au:href (analyzed-graphs core-state)
+         (component-dependency-graph (au:href (analyzed-graphs core)
                                               'component-dependency))
          (annotation (annotation component-dependency-graph)))
     (assert annotation)
@@ -498,8 +498,8 @@ return it, otherwise return the unknown-type-id symbol."
          (fl.data:set 'graphs (au:dict #'eq)))
        (setf (au:href ,definitions ',name) ',(cdr form)))))
 
-(defun load-graphs (core-state)
-  (with-slots (%analyzed-graphs) core-state
+(defun load-graphs (core)
+  (with-slots (%analyzed-graphs) core
     (setf %analyzed-graphs (au:dict #'eq))
     (au:do-hash-values (graph-code (fl.data:get 'graphs))
       (destructuring-bind (name (&key category depends-on roots) . body)

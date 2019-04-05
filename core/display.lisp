@@ -1,8 +1,8 @@
 (in-package :%first-light)
 
 (defclass display ()
-  ((%core-state :reader core-state
-                :initarg :core-state)
+  ((%core :reader core
+          :initarg :core)
    (%window :reader window
             :initarg :window)
    (%refresh-rate :reader refresh-rate
@@ -27,9 +27,9 @@
                                           limitation."))))))
       (try value))))
 
-(defgeneric create-window (core-state)
-  (:method :before (core-state)
-    (let* ((context (context core-state))
+(defgeneric create-window (core)
+  (:method :before (core)
+    (let* ((context (context core))
            (opengl-version (option context :opengl-version))
            (anti-alias-level (option context :anti-alias-level)))
       (au:mvlet ((major-version minor-version (parse-opengl-version
@@ -39,8 +39,8 @@
                            :context-profile-mask 1
                            :multisamplebuffers (signum anti-alias-level)
                            :multisamplesamples anti-alias-level))))
-  (:method (core-state)
-    (let* ((context (context core-state))
+  (:method (core)
+    (let* ((context (context core))
            (window (sdl2:create-window :title (option context :title)
                                        :w (option context :window-width)
                                        :h (option context :window-height)
@@ -50,34 +50,34 @@
 
 (defmethod initialize-instance :after ((instance display)
                                        &key &allow-other-keys)
-  (let ((core-state (core-state instance)))
-    (setf (slot-value core-state '%display) instance)
+  (let ((core (core instance)))
+    (setf (slot-value core '%display) instance)
     (gl:enable :texture-cube-map-seamless)
     (gl:enable :depth-test :blend :multisample :cull-face)
     (gl:blend-func :src-alpha :one-minus-src-alpha)
-    (maybe-set-vsync (option (context core-state) :vsync))))
+    (maybe-set-vsync (option (context core) :vsync))))
 
-(defun make-display (core-state)
-  (let ((window (create-window core-state)))
+(defun make-display (core)
+  (let ((window (create-window core))
+        (refresh-rate (nth-value 3 (sdl2:get-current-display-mode 0))))
     (make-instance 'display
-                   :core-state core-state
+                   :core core
                    :window window
-                   :refresh-rate (nth-value
-                                  3 (sdl2:get-current-display-mode 0)))))
+                   :refresh-rate refresh-rate)))
 
 (defmethod clear-screen ((display display))
-  (let ((core-state (core-state display)))
+  (let ((core (core display)))
     (multiple-value-call #'gl:clear-color
-      (if (eq (option core-state :log-level) :debug)
-          (values (* 0.25 (abs (sin (total-time (context core-state))))) 0 0 1)
+      (if (eq (option core :log-level) :debug)
+          (values (* 0.25 (abs (sin (total-time (context core))))) 0 0 1)
           (values 0 0 0 1)))
     (gl:clear :color-buffer :depth-buffer)))
 
-(defun render (core-state)
-  (with-slots (%frame-manager %display %running-p) core-state
+(defun render (core)
+  (with-slots (%frame-manager %display %running-p) core
     (when %running-p
       (clear-screen %display)
-      (execute-flow core-state
+      (execute-flow core
                     :default
                     'perform-one-frame
                     'entry/perform-one-frame

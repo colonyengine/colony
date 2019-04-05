@@ -382,7 +382,7 @@
           (apply #'reinitialize-instance component args))))))
 
 (defun make-prefab-actor-relationships (context prefab actors &optional parent)
-  (let ((parent (or parent (scene-tree (core-state context))))
+  (let ((parent (or parent (scene-tree (core context))))
         (root (au:href actors (path (root prefab)))))
     (au:do-hash-values (actor actors)
       (let ((node (prefab-node actor)))
@@ -396,8 +396,8 @@
      (actor-component-by-type root 'fl.comp:transform))))
 
 (defun make-prefab-factory (prefab setter)
-  (lambda (core-state)
-    (let* ((context (context core-state))
+  (lambda (core)
+    (let* ((context (context core))
            (actors (make-prefab-actors context prefab)))
       (funcall setter actors)
       (make-prefab-actor-components context actors)
@@ -405,12 +405,12 @@
       (au:do-hash-values (actor actors)
         (spawn-actor actor)))))
 
-(defun load-prefabs (core-state prefabs)
-  (%fl:make-scene-tree core-state)
+(defun load-prefabs (core prefabs)
+  (%fl:make-scene-tree core)
   (dolist (spec prefabs)
     (destructuring-bind (name library) spec
       (let ((prefab (find-prefab name library)))
-        (funcall (func prefab) core-state)))))
+        (funcall (func prefab) core)))))
 
 (defmacro thunk-prefab-spec (context prefab-spec)
   (labels ((thunk-component-args (data)

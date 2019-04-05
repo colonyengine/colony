@@ -17,7 +17,7 @@
    #:compute-component-initargs
    #:context
    #:copy-material
-   #:core-state
+   #:core
    #:define-annotation
    #:define-component
    #:define-graph

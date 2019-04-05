@@ -19,25 +19,25 @@
   (apply #'make-instance 'textures-table init-args))
 
 ;; TODO: Candidate for public API
-(defun add-texture-profile (profile core-state)
-  (setf (au:href (profiles (textures core-state)) (name profile)) profile))
+(defun add-texture-profile (profile core)
+  (setf (au:href (profiles (textures core)) (name profile)) profile))
 
 ;; TODO: Candidate for public API
-(defun remove-texture-profile (profile-name core-state)
-  (remhash profile-name (profiles (textures core-state))))
+(defun remove-texture-profile (profile-name core)
+  (remhash profile-name (profiles (textures core))))
 
 ;; TODO: Candidate for public API
-(defun add-semantic-texture-descriptor (texdesc core-state)
-  (setf (au:href (semantic-texture-descriptors (textures core-state))
+(defun add-semantic-texture-descriptor (texdesc core)
+  (setf (au:href (semantic-texture-descriptors (textures core))
                  (name texdesc))
         texdesc))
 
 ;; TODO: Candidate for public API
 (defun add-unrealized-texture (texture context)
-  "Add a TEXTURE, which only has defined an opengl texid, to core-state. This
-book keeps unrealized textures for the user to finalize before the game starts."
+  "Add a TEXTURE, which only has defined an opengl texid, to core. This book
+keeps unrealized textures for the user to finalize before the game starts."
   (setf (au:href (unrealized-procedural-textures
-                  (textures (core-state context)))
+                  (textures (core context)))
                  (name texture))
         texture))
 
@@ -47,7 +47,7 @@ book keeps unrealized textures for the user to finalize before the game starts."
 have just realized it by setting its opengl parameters and uploading data or
 declaring storage of some kind to the GPU."
   (remhash (name texture) (unrealized-procedural-textures
-                           (textures (core-state context)))))
+                           (textures (core context)))))
 
 ;; TODO: Candidate for public API
 (defun get-unrealized-textures (context)
@@ -55,21 +55,21 @@ declaring storage of some kind to the GPU."
 completed (no opengl parameters set for them, or data loaded into GPU).
 NOTE: These are already in the RCACHE."
   (au:hash-values (unrealized-procedural-textures
-                   (textures (core-state context)))))
+                   (textures (core context)))))
 
 ;; TODO: Candidate for public API.
 (defun get-procedural-texture-descriptors (context)
   "Return a list of all procedural texture descriptors."
   (let (results)
     (au:do-hash-values (texdesc (semantic-texture-descriptors
-                                 (textures (core-state context))))
+                                 (textures (core context))))
       (when (eq (texture-type texdesc) :procedural)
         (push texdesc results)))
     (nreverse results)))
 
 ;; TODO: Candidate for public API
 (defun find-semantic-texture-descriptor (semantic-texture-name context)
-  (au:href (semantic-texture-descriptors (textures (core-state context)))
+  (au:href (semantic-texture-descriptors (textures (core context)))
            semantic-texture-name))
 
 ;; TODO: Candidate for public API
@@ -127,7 +127,7 @@ NOTE: These are already in the RCACHE."
 ;; The texture descriptor as read from the define-texture DSL form. This
 ;; records the original values for that texture definition which may include
 ;; that it is procedural or not. This texdesc is a reference to the only copy
-;; of it as read from the DSL and stored in the texture-table in core-state.
+;; of it as read from the DSL and stored in the texture-table in core.
 (defclass texture ()
   ((%semantic-texdesc :reader semantic-texdesc
                       :initarg :semantic-texdesc)
@@ -200,16 +200,14 @@ TEXTURE-TYPE into the texture memory."))
 (defun read-mipmap-images (context data use-mipmaps-p kind)
   "Read the images described in the mipmap location array DATA into main memory.
 If USE-MIPMAPS-P is true, then load all of the mipmaps, otherwise only load the
-base image, which is the first one in the array. CONTEXT is the core-state
-context slot value. Return a vector of image structure from the function
-READ-IMAGE.
-If KIND is :1d or :2d, then DATA must be an array of location descriptors like:
-#((:project \"a/b/c/foo.tiff\") (:local \"a/b/c/foo.tiff\"))
-If KIND is :1d-array, :2d-array, :3d, then DATA must be an array of slices of
-mipmap images: #(#((:project \"a/b/c/slice0-mip0.tiff\") (:local
-\"a/b/c/slice1-mip0.tiff\")))
-The same vector structure is returned but with the local descriptor lists
-replaced by actual IMAGE instances of the loaded images."
+base image, which is the first one in the array. CONTEXT is the core context
+slot value. Return a vector of image structure from the function READ-IMAGE. If
+KIND is :1d or :2d, then DATA must be an array of location descriptors like:
+#((:project \"a/b/c/foo.tiff\") (:local \"a/b/c/foo.tiff\")) If KIND is
+:1d-array, :2d-array, :3d, then DATA must be an array of slices of mipmap
+images: #(#((:project \"a/b/c/slice0-mip0.tiff\") (:local
+\"a/b/c/slice1-mip0.tiff\"))) The same vector structure is returned but with the
+local descriptor lists replaced by actual IMAGE instances of the loaded images."
   (flet ((read-image-contextually (loc)
            (let ((path (apply #'find-resource context (au:ensure-list loc))))
              (fl.image:read-image path)))
@@ -470,14 +468,14 @@ texture."
          (setf (au:href ,definition ',name) ,desc)
          (export ',name)))))
 
-(defun resolve-all-semantic-texture-descriptors (core-state)
+(defun resolve-all-semantic-texture-descriptors (core)
   " Ensure that these aspects of texture profiles and desdcriptors are ok:
 1. The FL.TEXTURES:DEFAULT-PROFILE exists.
 2. Each texture-descriptor has an updated applied-profile set of attributes.
 3. All currently known about texture descriptors have valid profile references.
 4. All images specified by paths actually exist at that path.
 5. The texture type is valid."
-  (symbol-macrolet ((profiles (profiles (textures core-state)))
+  (symbol-macrolet ((profiles (profiles (textures core)))
                     (default-profile-name (au:ensure-symbol
                                            'default-profile 'fl.textures)))
     ;; 1. Check for fl.textures:default-profile
@@ -485,7 +483,7 @@ texture."
       (error "Default-profile for texture descriptors is not defined."))
     ;; 2. For each texture-descriptor, apply all the profiles in order.
     ;; 3. Check that the specified profiles are valid.
-    (au:do-hash-values (v (semantic-texture-descriptors (textures core-state)))
+    (au:do-hash-values (v (semantic-texture-descriptors (textures core)))
       (let* ((profile-overlays
                ;; First, gather the specified profile-overlays
                (loop :for profile-overlay-name :in (profile-overlay-names v)
@@ -514,7 +512,7 @@ texture."
          (lambda (key value)
            (setf (au:href (applied-attributes v) key) value))
          (attributes v)))
-      (semantic-texture-descriptors (textures core-state)))
+      (semantic-texture-descriptors (textures core)))
     ;; TODO: 4
     ;; TODO: 5
     nil))
@@ -565,9 +563,9 @@ semantic name of it which was specified with a DEFINE-TEXTURE."
       (first texture-name)
       texture-name))
 
-(defun load-texture-descriptors (core-state)
+(defun load-texture-descriptors (core)
   (au:do-hash-values (profile (fl.data:get 'texture-profiles))
-    (add-texture-profile profile core-state))
+    (add-texture-profile profile core))
   (au:do-hash-values (desc (fl.data:get 'textures))
-    (add-semantic-texture-descriptor desc core-state))
-  (resolve-all-semantic-texture-descriptors core-state))
+    (add-semantic-texture-descriptor desc core))
+  (resolve-all-semantic-texture-descriptors core))

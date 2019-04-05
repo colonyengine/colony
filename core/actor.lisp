@@ -31,9 +31,8 @@
   (enqueue-attach-event component actor)
   (setf (actor component) actor
         (au:href (components actor) component) component)
-  (let* ((core-state (core-state (context actor)))
-         (qualified-type (qualify-component core-state
-                                            (component-type component))))
+  (let* ((core (core (context actor)))
+         (qualified-type (qualify-component core (component-type component))))
     (push component (au:href (components-by-type actor) qualified-type))))
 
 (defun attach-multiple-components (actor &rest components)
@@ -58,28 +57,27 @@
 
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
-  (let* ((core-state (core-state (context actor)))
-         (qualified-type (qualify-component core-state component-type)))
+  (let* ((core (core (context actor)))
+         (qualified-type (qualify-component core component-type)))
     (au:href (components-by-type actor) qualified-type)))
 
 (defun actor-component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
 Returns the rest of the components as a secondary value if there are more than
 one of the same type."
-  (let* ((core-state (core-state (context actor)))
-         (qualified-type (qualify-component core-state component-type))
+  (let* ((core (core (context actor)))
+         (qualified-type (qualify-component core component-type))
          (components (actor-components-by-type actor qualified-type)))
     (values (first components)
             (rest components))))
 
 (defun spawn-actor (actor &key (parent :universe))
-  "Take the ACTOR and place into the initializing db's and view's in the
-CORE-STATE. The actor is not yet in the scene and the main loop protocol will
-not be called on it or its components. If keyword argument :PARENT is supplied
-it is an actor reference which will be the parent of the spawning actor. It
-defaults to :universe, which means make this actor a child of the universe
-actor."
-  (let ((core-state (core-state (context actor)))
+  "Take the ACTOR and place into the initializing db's and view's in the CORE.
+The actor is not yet in the scene and the main loop protocol will not be called
+on it or its components. If keyword argument :PARENT is supplied it is an actor
+reference which will be the parent of the spawning actor. It defaults to
+:universe, which means make this actor a child of the universe actor."
+  (let ((core (core (context actor)))
         (actor-transform (actor-component-by-type actor 'fl.comp:transform)))
     (cond
       ((eq parent :universe)
@@ -92,7 +90,7 @@ actor."
        ;; or already have an actor to reference as the parent.
        (unless (fl.comp::parent actor-transform)
          (fl.comp:transform-add-child
-          (actor-component-by-type (scene-tree core-state) 'fl.comp:transform)
+          (actor-component-by-type (scene-tree core) 'fl.comp:transform)
           (actor-component-by-type actor 'fl.comp:transform))))
       ((typep parent 'actor)
        (fl.comp:transform-add-child
@@ -102,32 +100,32 @@ actor."
        (au:noop))
       (t
        (error "Cannot parent actor ~s to unknown parent ~s" actor parent)))
-    (setf (au:href (actor-preinit-db (tables core-state)) actor) actor)
+    (setf (au:href (actor-preinit-db (tables core)) actor) actor)
     (au:do-hash-values (v (components actor))
       (setf (type-table (canonicalize-component-type (component-type v)
-                                                     core-state)
-                        (component-preinit-by-type-view (tables core-state)))
+                                                     core)
+                        (component-preinit-by-type-view (tables core)))
             v))))
 
 (defun actor/preinit->init (actor)
-  (let ((core-state (core-state (context actor))))
-    (remhash actor (actor-preinit-db (tables core-state)))
-    (setf (au:href (actor-init-db (tables core-state)) actor) actor)))
+  (let ((core (core (context actor))))
+    (remhash actor (actor-preinit-db (tables core)))
+    (setf (au:href (actor-init-db (tables core)) actor) actor)))
 
 (defun actor/init->active (actor)
-  (let ((core-state (core-state (context actor))))
-    (remhash actor (actor-init-db (tables core-state)))
+  (let ((core (core (context actor))))
+    (remhash actor (actor-init-db (tables core)))
     (setf (state actor) :active
-          (au:href (actor-active-db (tables core-state)) actor) actor)))
+          (au:href (actor-active-db (tables core)) actor) actor)))
 
 (defmethod destroy ((thing actor) &key (ttl 0))
-  (let ((core-state (core-state (context thing))))
+  (let ((core (core (context thing))))
     (setf (ttl thing) (if (minusp ttl) 0 ttl)
-          (au:href (actor-predestroy-view (tables core-state)) thing) thing)))
+          (au:href (actor-predestroy-view (tables core)) thing) thing)))
 
 (defun actor/init-or-active->destroy (actor)
-  (let* ((core-state (core-state (context actor)))
-         (tables (tables core-state)))
+  (let* ((core (core (context actor)))
+         (tables (tables core)))
     (unless (plusp (ttl actor))
       (setf (au:href (actor-destroy-db tables) actor) actor
             (state actor) :destroy)
@@ -154,10 +152,10 @@ actor."
                                     actor-transform)))
 
 (defun actor/destroy->released (actor)
-  (let ((core-state (core-state (context actor))))
+  (let ((core (core (context actor))))
     (unless (zerop (number-of-components actor))
       (error "actor/destroy->released: destroyed actor still has components!"))
-    (remhash actor (actor-destroy-db (tables core-state)))))
+    (remhash actor (actor-destroy-db (tables core)))))
 
 (defun actor/countdown-to-destruction (actor)
   (when (plusp (ttl actor))

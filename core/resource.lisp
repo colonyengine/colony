@@ -254,7 +254,7 @@
 
 (defun find-resource (context resource-id &optional sub-path)
   (let* ((id (resolve-resource-id resource-id))
-         (resources (resources (core-state context)))
+         (resources (resources (core context)))
          (project (get-resource-project id)))
     (au:when-found (resource (au:href resources id))
       (let ((path (uiop:merge-pathnames* sub-path resource)))

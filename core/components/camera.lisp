@@ -52,12 +52,12 @@
       (m:set-view eye target up (view camera)))))
 
 (defun find-active-camera (context)
-  (dolist (camera (cameras (core-state context)))
+  (dolist (camera (cameras (core context)))
     (when (active-p camera)
       (return-from find-active-camera camera))))
 
 (defun zoom-camera (display direction)
-  (let* ((context (context (core-state display)))
+  (let* ((context (context (core display)))
          (camera (find-active-camera context)))
     (with-accessors ((zoom zoom) (mode mode)) camera
       (setf zoom (au:clamp (+ zoom (/ direction 2)) 1 10))
@@ -72,9 +72,9 @@
     (setf transform (actor-component-by-type actor 'transform))
     (correct-camera-transform self)
     (make-projection self mode)
-    (push self (cameras (core-state context)))))
+    (push self (cameras (core context)))))
 
 (defmethod on-component-destroy ((self camera))
   (with-accessors ((context context)) self
-    (au:deletef (cameras (core-state context)) self)
+    (au:deletef (cameras (core context)) self)
     (setf (active-camera context) nil)))

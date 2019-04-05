@@ -1,10 +1,10 @@
 (in-package :%first-light)
 
-(defun initialize-shaders (core-state)
-  (let ((modify-hook (generate-shader-modify-hook core-state)))
-    (setf (shaders core-state) (fl.gpu:load-shaders modify-hook))))
+(defun initialize-shaders (core)
+  (let ((modify-hook (generate-shader-modify-hook core)))
+    (setf (shaders core) (fl.gpu:load-shaders modify-hook))))
 
-(defun generate-shader-modify-hook (core-state)
+(defun generate-shader-modify-hook (core)
   (lambda (programs)
-    (fl.dst:qpush (recompilation-queue core-state)
+    (fl.dst:qpush (recompilation-queue core)
                   (list :shader-recompilation programs))))

@@ -1,8 +1,8 @@
 (in-package :%first-light)
 
-(defvar *core-state-debug*)
+(defvar *core-debug*)
 
-(defclass core-state ()
+(defclass core ()
   ((%resources :reader resources
                :initform (fl.data:get 'resources))
    (%options :accessor options)
@@ -50,6 +50,8 @@
                                :initform (au:dict #'eq))
    (%component-destroy-by-type-view :reader component-destroy-by-type-view
                                     :initform (au:dict #'eq))
+   (%components-by-id :reader components-by-id
+                      :initform (au:dict #'equalp))
    (%actor-predestroy-view :reader actor-predestroy-view
                            :initform (au:dict #'eq))
    (%actor-preinit-db :reader actor-preinit-db
@@ -59,45 +61,48 @@
    (%actor-active-db :reader actor-active-db
                      :initform (au:dict #'eq))
    (%actor-destroy-db :reader actor-destroy-db
-                      :initform (au:dict #'eq))))
+                      :initform (au:dict #'eq))
+   (%actors-by-id :reader actors-by-id
+                  :initform (au:dict #'equalp))
+   (%objects-by-uuid :reader objects-by-uuid
+                     :initform (au:dict #'equal))))
 
-(defun pending-preinit-tasks-p (core-state)
+(defun pending-preinit-tasks-p (core)
   "Return T if there are ANY components or actors in the preinit data structures
-in CORE-STATE."
-  (or (plusp (hash-table-count (actor-preinit-db (tables core-state))))
+in CORE."
+  (or (plusp (hash-table-count (actor-preinit-db (tables core))))
       (block done
         (au:do-hash-values (v (component-preinit-by-type-view
-                               (tables core-state)))
+                               (tables core)))
           (when (plusp (hash-table-count v))
             (return-from done t))))))
 
-(defun pending-predestroy-tasks-p (core-state)
+(defun pending-predestroy-tasks-p (core)
   "Return T if there are ANY components or actors that are in the predestroy
-  data structures in CORE-STATE."
-  (or (plusp (hash-table-count (component-predestroy-view (tables core-state))))
-      (plusp (hash-table-count (actor-predestroy-view (tables core-state))))))
+  data structures in CORE."
+  (or (plusp (hash-table-count (component-predestroy-view (tables core))))
+      (plusp (hash-table-count (actor-predestroy-view (tables core))))))
 
-(defun pending-destroy-tasks-p (core-state)
+(defun pending-destroy-tasks-p (core)
   "Return T of there are ANY components or actors that are in the destroy data
-structures in CORE-STATE."
-  (or (plusp (hash-table-count (actor-destroy-db (tables core-state))))
+structures in CORE."
+  (or (plusp (hash-table-count (actor-destroy-db (tables core))))
       (block done
-        (au:do-hash-values (v (component-destroy-by-type-view
-                               (tables core-state)))
+        (au:do-hash-values (v (component-destroy-by-type-view (tables core)))
           (when (plusp (hash-table-count v))
             (return-from done t))))))
 
-(defun make-scene-tree (core-state)
-  (let* ((context (context core-state))
-         (actor (make-actor context :id (au:unique-name '@universe)))
+(defun make-scene-tree (core)
+  (let* ((context (context core))
+         (actor (make-actor context :display-id "Universe"))
          (transform (make-component context 'transform :actor actor)))
     (attach-component actor transform)
     (spawn-actor actor :parent nil)
-    (execute-flow core-state :default
+    (execute-flow core :default
                   'initialize-phase
                   'entry/initialize-phase
                   :come-from-state-name 'ef-make-scene-tree)
-    (setf (slot-value core-state '%scene-tree) actor)))
+    (setf (slot-value core '%scene-tree) actor)))
 
 (defgeneric shared-storage (context key)
   (:method (context key)
@@ -138,25 +143,24 @@ structures in CORE-STATE."
 ;; This might call rcache-construct if needed.
 (defmethod rcache-lookup (context (entry-type symbol)
                           &rest keys)
-  (let ((core-state (core-state context)))
-    (ensure-nested-hash-table (rcache core-state)
+  (let ((core (core context)))
+    (ensure-nested-hash-table (rcache core)
                               ;; NOTE: 'eq is for the rcache table itself.
                               (list* 'eq (rcache-layout entry-type))
                               (list* entry-type keys))
     (multiple-value-bind (value presentp)
-        (apply #'au:href (rcache core-state) (list* entry-type keys))
+        (apply #'au:href (rcache core) (list* entry-type keys))
       (unless presentp
         (setf value (apply #'rcache-construct context entry-type keys)
-              (apply #'au:href (rcache core-state) (list* entry-type keys))
-              value))
+              (apply #'au:href (rcache core) (list* entry-type keys)) value))
       value)))
 
 ;; This might call rcache-dispose if needed.
 (defmethod rcache-remove (context (entry-type symbol) &rest keys)
-  (let ((core-state (core-state context)))
+  (let ((core (core context)))
     (multiple-value-bind (value presentp)
-        (apply #'au:href (rcache core-state) (list* entry-type keys))
+        (apply #'au:href (rcache core) (list* entry-type keys))
       (when presentp
-        (remhash (apply #'au:href (rcache core-state) (list* entry-type keys))
-                 (rcache core-state))
+        (remhash (apply #'au:href (rcache core) (list* entry-type keys))
+                 (rcache core))
         (rcache-dispose context entry-type value)))))

@@ -242,7 +242,7 @@ have had--and update all other faces too."
 ;; Then, the collision plan is an sparse representation of which columns for
 ;; each row are marked X.
 
-(defun init-collider-system (core-state)
+(defun init-collider-system (core)
   (let ((collider-system-desc
           `(:layers
             (:ground :player :player-bullet :enemy :enemy-bullet :scenery)
@@ -259,83 +259,83 @@ have had--and update all other faces too."
               :enemy-bullet (list :ground :player :player-bullet)
               :scenery (list)))))
 
-    (setf (collider-system core-state)
+    (setf (collider-system core)
           (make-collider-system
            :layers (getf collider-system-desc :layers)
            :collision-plan (getf collider-system-desc :collision-plan)))))
 
 (defun test-collider-system ()
-  (let ((core-state (make-instance 'core-state)))
+  (let ((core (make-instance 'core)))
 
-    (with-slots (%context) core-state
-      (setf %context (make-instance 'context :core-state core-state)))
+    (with-slots (%context) core
+      (setf %context (make-instance 'context :core core)))
 
-    (let ((c0 (make-component (context core-state) 'fl.comp:collider/sphere
+    (let ((c0 (make-component (context core) 'fl.comp:collider/sphere
                               :on-layer :ground
                               :referent :ground
                               :center (m:vec3 0 0 0)
                               :radius 1))
-          (c1 (make-component (context core-state) 'fl.comp:collider/sphere
+          (c1 (make-component (context core) 'fl.comp:collider/sphere
                               :on-layer :player
                               :referent :player
                               :center (m:vec3 -6 3 0)
                               :radius 1))
-          (c2 (make-component (context core-state) 'fl.comp:collider/sphere
+          (c2 (make-component (context core) 'fl.comp:collider/sphere
                               :on-layer :player-bullet
                               :referent :player-bullet
                               :center (m:vec3 0 3 0)
                               :radius 1))
-          (c3 (make-component (context core-state) 'fl.comp:collider/sphere
+          (c3 (make-component (context core) 'fl.comp:collider/sphere
                               :on-layer :enemy
                               :referent :enemy
                               :center (m:vec3 6 3 0)
                               :radius 1))
-          (c4 (make-component (context core-state) 'fl.comp:collider/sphere
+          (c4 (make-component (context core) 'fl.comp:collider/sphere
                               :on-layer :enemy-bullet
                               :referent :enemy-bullet
                               :center (m:vec3 4 3 0)
                               :radius 1))
-          (c5 (make-component (context core-state) 'fl.comp:collider/sphere
+          (c5 (make-component (context core) 'fl.comp:collider/sphere
                               :on-layer :scenery
                               :referent :scenery
                               :center (m:vec3 -1 0 0)
                               :radius 1)))
-      (init-collider-system core-state)
+      (init-collider-system core)
 
-      (register-collider (collider-system core-state) c0)
-      (register-collider (collider-system core-state) c1)
-      (register-collider (collider-system core-state) c2)
-      (register-collider (collider-system core-state) c3)
-      (register-collider (collider-system core-state) c4)
-      (register-collider (collider-system core-state) c5)
+      (register-collider (collider-system core) c0)
+      (register-collider (collider-system core) c1)
+      (register-collider (collider-system core) c2)
+      (register-collider (collider-system core) c3)
+      (register-collider (collider-system core) c4)
+      (register-collider (collider-system core) c5)
 
       (format t "Collider Pass 0: no colliding~%")
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
       (format t "Collider Pass 1: enter~%")
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 1 3 0))
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
       (format t "Collider Pass 2: continue~%")
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 0 3 0))
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
       (format t "Collider Pass 2a: continue~%")
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 -1 3 0))
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
       (format t "Collider Pass 2b: continue~%")
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 -2 3 0))
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 -3 3 0))
       (format t "Collider Pass 3: exit~%")
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
       (format t "Collider Pass 4: no colliding~%")
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
-      (collider-system core-state))))
+      (collider-system core))))

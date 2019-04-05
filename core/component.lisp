@@ -25,7 +25,7 @@
 
 (clear-annotations '%fl:component)
 
-(defun qualify-component (core-state component-type)
+(defun qualify-component (core component-type)
   "This function tries to resolve the COMPONENT-TYPE symbol into a potentially
 different packaged symbol of the same name that corresponds to a component
 definition in that package. The packages are searched in the order they are are
@@ -42,7 +42,7 @@ DEFINE-COMPONENT. It can only confirm that the symbol passed to it is a
 superclass of a DEFINE-COMPONENT form (up to but not including the COMPONENT
 superclass type all components have), or a component created by the
 DEFINE-COMPONENT form."
-  (let ((search-table (component-search-table (tables core-state)))
+  (let ((search-table (component-search-table (tables core)))
         (component-type/class (find-class component-type nil))
         (base-component-type/class (find-class '%fl:component)))
     (au:when-found (pkg-symbol (au:href search-table component-type))
@@ -50,8 +50,7 @@ DEFINE-COMPONENT form."
     (if (or (null component-type/class)
             (not (subtypep (class-name component-type/class)
                            (class-name base-component-type/class))))
-        (let ((graph (au:href (analyzed-graphs core-state)
-                              'component-package-order)))
+        (let ((graph (au:href (analyzed-graphs core) 'component-package-order)))
           (dolist (potential-package (toposort graph))
             (let ((potential-package-name (second potential-package)))
               (dolist (pkg-to-search (au:href (pattern-matched-packages
@@ -66,8 +65,7 @@ DEFINE-COMPONENT form."
         component-type)))
 
 (defmethod make-component (context component-type &rest args)
-  (au:if-let ((qualified-type (qualify-component (core-state context)
-                                                 component-type)))
+  (au:if-let ((qualified-type (qualify-component (core context) component-type)))
     (apply #'make-instance qualified-type
            :type qualified-type
            :context context
@@ -86,20 +84,20 @@ DEFINE-COMPONENT form."
   (au:when-let ((thunk (initializer-thunk component)))
     (funcall thunk)
     (setf (initializer-thunk component) nil))
-  (let* ((core-state (core-state (context component)))
+  (let* ((core (core (context component)))
          (component-type (canonicalize-component-type (component-type component)
-                                                      core-state)))
-    (with-slots (%tables) core-state
+                                                      core)))
+    (with-slots (%tables) core
       (type-table-drop component component-type (component-preinit-by-type-view
                                                  %tables))
       (setf (type-table component-type (component-init-by-type-view %tables))
             component))))
 
 (defun component/init->active (component)
-  (let* ((core-state (core-state (context component)))
+  (let* ((core (core (context component)))
          (component-type (canonicalize-component-type (component-type component)
-                                                      core-state)))
-    (with-slots (%tables) core-state
+                                                      core)))
+    (with-slots (%tables) core
       (type-table-drop component component-type (component-init-by-type-view
                                                  %tables))
       (setf (state component) :active
@@ -107,18 +105,18 @@ DEFINE-COMPONENT form."
             component))))
 
 (defmethod destroy ((thing component) &key (ttl 0))
-  (let ((core-state (core-state (context thing))))
+  (let ((core (core (context thing))))
     (setf (ttl thing) (if (minusp ttl) 0 ttl)
           (au:href (component-predestroy-view
-                    (tables core-state)) thing)
+                    (tables core)) thing)
           thing)))
 
 (defun component/init-or-active->destroy (component)
-  (let* ((core-state (core-state (context component)))
+  (let* ((core (core (context component)))
          (component-type (canonicalize-component-type (component-type component)
-                                                      core-state)))
+                                                      core)))
     (unless (plusp (ttl component))
-      (with-slots (%tables) core-state
+      (with-slots (%tables) core
         (setf (state component) :destroy
               (type-table component-type
                           (component-destroy-by-type-view %tables))
@@ -132,12 +130,12 @@ DEFINE-COMPONENT form."
                            (component-preinit-by-type-view %tables)))))))
 
 (defun component/destroy->released (component)
-  (let* ((core-state (core-state (context component)))
+  (let* ((core (core (context component)))
          (component-type (canonicalize-component-type
-                          (component-type component) core-state)))
+                          (component-type component) core)))
     (type-table-drop component
                      component-type
-                     (component-destroy-by-type-view (tables core-state)))
+                     (component-destroy-by-type-view (tables core)))
     (detach-component (actor component) component)))
 
 (defun component/countdown-to-destruction (component)

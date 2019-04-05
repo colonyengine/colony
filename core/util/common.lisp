@@ -60,8 +60,8 @@ the test function for `HT` itself."
 
 ;;; Recompilation queue
 
-(defun recompile-queued-items (core-state)
-  (loop :with queue = (recompilation-queue core-state)
+(defun recompile-queued-items (core)
+  (loop :with queue = (recompilation-queue core)
         :for ((kind data) found-p) = (multiple-value-list (fl.dst:qpop queue))
         :while found-p
         :do (ecase kind
