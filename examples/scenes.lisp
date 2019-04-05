@@ -288,8 +288,7 @@
   ("camera"
    (fl.comp:transform :translate (m:vec3 0 0 6))
    (fl.comp:camera :active-p t
-                   :mode :perspective
-                   :fovy (* 90 (/ pi 180))))
+                   :mode :perspective))
   ("plane-1d-texture"
    (fl.comp:transform :translate (m:vec3 -4 3 0))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
