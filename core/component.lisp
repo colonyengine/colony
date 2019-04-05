@@ -70,10 +70,12 @@ DEFINE-COMPONENT form."
                             :type qualified-type
                             :context context
                             args)))
-      (register-object-uuid component)
-      (register-object-id component)
       component)
     (error "Could not qualify the component type ~s." component-type)))
+
+(defmethod initialize-instance :after ((instance component) &key)
+  (register-object-uuid instance)
+  (register-object-id instance))
 
 (defun get-computed-component-precedence-list (component-type)
   (au:when-let ((class (find-class component-type nil)))

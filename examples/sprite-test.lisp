@@ -47,7 +47,7 @@
     (fl.comp:translate
      transform
      (let ((a (m:normalize (m:vec3 (m:get-column (fl.comp:local transform) 1))))
-           (move-delta (* velocity (float (fl:frame-time context)))))
+           (move-delta (* velocity (fl:frame-time context))))
        (m:* a move-delta)))))
 
 (fl:define-component shot-emitter ()

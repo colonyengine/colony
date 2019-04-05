@@ -37,8 +37,7 @@
                  :incremental-delta (m:vec3)))
 
 (defun make-scaling-state ()
-  (make-instance 'transform-state-vector
-                 :current (m:vec3 1)))
+  (make-instance 'transform-state-vector :current (m:vec3 1)))
 
 (defun interpolate-vector (state factor)
   (m:lerp (previous state) (current state) factor (interpolated state)))
@@ -56,7 +55,7 @@
    (model :default (m:mat4 1))))
 
 (defun transform-add-child (parent child)
-  (push child (children parent))
+  (pushnew child (children parent))
   (setf (parent child) parent))
 
 (defun transform-remove-child (parent child)
@@ -66,21 +65,23 @@
                            (children parent))
         (parent child) nil))
 
+(defun transform-node/vector (state delta)
+  (with-slots (%previous %current %incremental-delta %incremental) state
+    (m:copy-into %previous %current)
+    (m:* %incremental delta %incremental-delta)
+    (m:+ %current %incremental-delta %current)))
+
+(defun transform-node/quat (state delta)
+  (with-slots (%previous %current %incremental-delta %incremental) state
+    (m:copy-into %previous %current)
+    (m:* %incremental delta %incremental-delta)
+    (m:rotate :local %current %incremental-delta %current)))
+
 (defun transform-node (core node)
   (let ((delta (delta (context core))))
-    (with-slots (%previous %current %incremental-delta %incremental)
-        (scaling node)
-      (m:copy-into %previous %current)
-      (m:+ %current (m:* %incremental delta %incremental-delta) %current))
-    (with-slots (%previous %current %incremental-delta %incremental)
-        (rotation node)
-      (m:copy-into %previous %current)
-      (m:rotate :local %current
-                (m:* %incremental delta %incremental-delta) %current))
-    (with-slots (%previous %current %incremental-delta %incremental)
-        (translation node)
-      (m:copy-into %previous %current)
-      (m:+ %current (m:* %incremental delta %incremental-delta) %current))))
+    (transform-node/vector (scaling node) delta)
+    (transform-node/quat (rotation node) delta)
+    (transform-node/vector (translation node) delta)))
 
 (defun resolve-local (node alpha)
   (with-accessors ((local local)
@@ -91,7 +92,7 @@
     (interpolate-vector scaling alpha)
     (interpolate-quaternion rotation alpha)
     (interpolate-vector translation alpha)
-    (m:* (m:mat4 (interpolated rotation) local)
+    (m:* (m:copy-into local (m:mat4 (interpolated rotation)))
          (m:set-scale m:+id-mat4+ (interpolated scaling))
          local)
     (m:set-translation local (interpolated translation) local)))
@@ -111,6 +112,13 @@
    (lambda (node)
      (resolve-model node (%fl:alpha (%fl:frame-manager core))))
    (actor-component-by-type (%fl:scene-tree core) 'transform)))
+
+(defmethod make-component (context (component-type (eql 'transform)) &rest args)
+  (let ((instance (make-instance component-type
+                                 :type component-type
+                                 :context context)))
+    (apply #'reinitialize-instance instance args)
+    instance))
 
 (defmethod reinitialize-instance ((instance transform)
                                   &key
@@ -135,8 +143,10 @@
                                (m:quat rotate))
           (previous rotation) (m:copy (current rotation))
           (incremental rotation) rotate/inc
-          (current scaling) scale
-          (previous scaling) (m:copy scale)
+          (current scaling) (etypecase scale
+                              (m:vec3 scale)
+                              (real (m:vec3 scale)))
+          (previous scaling) (m:copy (current scaling))
           (incremental scaling) scale/inc)))
 
 ;;; User protocol
@@ -179,7 +189,6 @@
     (m:+ (if replace-p m:+zero-vec3+ current) vec current)
     (when instant-p
       (m:copy-into previous current))))
-
 
 ;; TODO: Make inverses of these three functions.
 ;; TODO: Try and get rid of any produced garbage in these three functions too.
