@@ -49,13 +49,14 @@
 (au:define-printer (node stream :type t)
   (format stream "~a" (path node)))
 
-(defun split-prefab-spec (prefab-spec)
-  (destructuring-bind (name &rest body) prefab-spec
-    (loop :for tail :on body
-          :for item = (first tail)
-          :while (symbolp (first item))
-          :collect item :into components
-          :finally (return (values name components tail)))))
+(au:eval-always
+  (defun split-prefab-spec (prefab-spec)
+    (destructuring-bind (name &rest body) prefab-spec
+      (loop :for tail :on body
+            :for item = (first tail)
+            :while (symbolp (first item))
+            :collect item :into components
+            :finally (return (values name components tail))))))
 
 (defun explode-path (path)
   (au:string-split path #\/))
@@ -336,7 +337,7 @@
 
 (defun print-prefab (name library)
   (flet ((print-line (level value)
-           (format t "~a~v@<~s~>~%"
+           (format t "~&~a~v@<~s~>~%"
                    (make-string level :initial-element #\Space)
                    level value)))
     (map-nodes
@@ -345,8 +346,7 @@
          (print-line level (name x))
          (au:do-hash (type table (components-table x))
            (au:do-hash-values (data table)
-             (print-line level `(,type ,@(getf data :args)))))
-         (format t "~%")))
+             (print-line level `(,type ,@(getf data :args)))))))
      (root (find-prefab name library)))))
 
 (defun parse-prefab (prefab)
@@ -435,15 +435,14 @@
                (let ((options-p (listp (first options/args))))
                  `(list ',type
                         ',(when options-p (first options/args))
-                        ,@(loop
-                            :with args = (if options-p
-                                             (rest options/args)
-                                             options/args)
-                            :for (key value) :on args :by #'cddr
-                            :collect key
-                            :collect `(lambda (,context)
-                                        (declare (ignorable ,context))
-                                        ,value))))))
+                        ,@(loop :with args = (if options-p
+                                                 (rest options/args)
+                                                 options/args)
+                                :for (key value) :on args :by #'cddr
+                                :collect key
+                                :collect `(lambda (,context)
+                                            (declare (ignorable ,context))
+                                            ,value))))))
            (traverse-children (data)
              (au:mvlet ((name components children (split-prefab-spec data)))
                `(list ',name
