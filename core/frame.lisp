@@ -93,7 +93,7 @@
       (when (and interval
                  (>= (local-time:timestamp-difference now %period-elapsed)
                      interval))
-        (update-lisp-repl)
+        (live-coding-update)
         (v:trace :fl.core.engine "Periodic update performed (every ~d seconds)"
                  interval)
         (setf %period-elapsed now)))))

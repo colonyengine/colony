@@ -58,7 +58,7 @@ tear-down procedure occurs when stopping the engine."
 (defun initialize-engine (core prefabs)
   (let ((title (option (context core) :title)))
     (v:info :fl.core.engine "Starting up ~a..." title)
-    (setup-lisp-repl)
+    (setup-live-coding)
     (enable-logging core)
     (make-frame-manager core)
     (initialize-host core)
