@@ -72,3 +72,11 @@ the test function for `HT` itself."
               ;; NOTE: You will need a similar one for putting prefab
               ;; recompilation tasks into the recompilation queue too.
               (:prefab-recompilation 'put-your-function-here))))
+
+(defun get-time ()
+  #+sbcl
+  (au:mvlet ((s ms (sb-ext:get-time-of-day)))
+    (+ (- s (load-time-value (sb-ext:get-time-of-day)))
+       (/ ms 1d6)))
+  #-sbcl
+  (float (/ (get-internal-real-time) internal-time-units-per-second) 1d0))

@@ -75,12 +75,13 @@
 
 (defun render (core)
   (with-slots (%frame-manager %display %running-p) core
-    (when %running-p
-      (clear-screen %display)
-      (execute-flow core
-                    :default
-                    'perform-one-frame
-                    'entry/perform-one-frame
-                    :come-from-state-name :ef)
-      (sdl2:gl-swap-window (window %display))
-      (incf (%frame-count %frame-manager)))))
+    (with-slots (%frame-count) %frame-manager
+      (when %running-p
+        (clear-screen %display)
+        (execute-flow core
+                      :default
+                      'perform-one-frame
+                      'entry/perform-one-frame
+                      :come-from-state-name :ef)
+        (sdl2:gl-swap-window (window %display))
+        (incf %frame-count)))))

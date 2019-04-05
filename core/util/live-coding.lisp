@@ -1,8 +1,21 @@
 (in-package :%first-light)
 
 (defmacro with-continue-restart (report &body body)
-  `(restart-case (progn ,@body)
-     (continue () :report ,report)))
+  `(let* ((debugger-entry-time)
+          (previous-hook *debugger-hook*)
+          (#+sbcl sb-ext:*invoke-debugger-hook*
+           #-sbcl *debugger-hook
+           (lambda (condition hook)
+             (declare (ignore hook))
+             (setf debugger-entry-time (get-time))
+             (when previous-hook
+               (funcall previous-hook condition previous-hook)))))
+     (restart-case (progn ,@body)
+       (continue ()
+         :report ,report
+         (with-slots (%pause-time) (frame-manager *core-debug*)
+           (when debugger-entry-time
+             (setf %pause-time (- (get-time) debugger-entry-time))))))))
 
 (defun compile-live-coding-functions ()
   (au:if-let ((repl-package (find-if #'find-package '(:slynk :swank))))
