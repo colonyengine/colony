@@ -1,6 +1,6 @@
 (in-package :first-light.gpu.user)
 
-(define-function graph-test/frag ((uv :vec2)
+(define-function graph/frag ((uv :vec2)
                                   &uniform
                                   (time :float))
   (let* ((dim (vec2 (1+ (sin time)) (+ 2 (sin time))))
@@ -14,13 +14,13 @@
      (vec4 1 1 1 0.02)
      10)))
 
-(define-shader graph-test ()
+(define-shader graph ()
   (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
-  (:fragment (graph-test/frag :vec2)))
+  (:fragment (graph/frag :vec2)))
 
 ;;;
 
-(define-function 3d-graph-test/graph ((fn (function (:float) :vec3))
+(define-function 3d-graph/graph ((fn (function (:float) :vec3))
                                       (pos :vec3)
                                       (view :mat4)
                                       (proj :mat4)
@@ -35,8 +35,8 @@
     (values (* proj pos)
             color)))
 
-(define-function 3d-graph-test/test-1 ((i :float)
-                                       (time :float))
+(define-function 3d-graph-1 ((i :float)
+                             (time :float))
   (let* ((offset (vec3 0 0 (* i 0.002)))
          (m3 (mat3 (cos i) 0 (- (sin i))
                    0 1 0
@@ -50,8 +50,8 @@
                      h)))
     (values pos color)))
 
-(define-function 3d-graph-test/test-2 ((i :float)
-                                       (time :float))
+(define-function 3d-graph-2 ((i :float)
+                             (time :float))
   (let* ((dist (* i 0.02))
          (h (* 5 (sin (* 0.005 (+ i (* 400 time))))))
          (offset (vec3 0 h dist))
@@ -63,43 +63,43 @@
          (color (vec4 0 0.6 0.85 1)))
     (values pos color)))
 
-(define-function 3d-graph-test/vert1 ((mesh-attrs mesh-attrs)
-                                      &uniform
-                                      (model :mat4)
-                                      (view :mat4)
-                                      (proj :mat4)
-                                      (size :float)
-                                      (min :float)
-                                      (by :float)
-                                      (time :float))
+(define-function 3d-graph/vert1 ((mesh-attrs mesh-attrs)
+                                 &uniform
+                                 (model :mat4)
+                                 (view :mat4)
+                                 (proj :mat4)
+                                 (size :float)
+                                 (min :float)
+                                 (by :float)
+                                 (time :float))
   (with-slots (mesh/pos mesh/uv1) mesh-attrs
     (let ((fn (lambda ((i :float))
-                (3d-graph-test/test-1 i time))))
-      (mvlet* ((pos color (3d-graph-test/graph
+                (3d-graph-1 i time))))
+      (mvlet* ((pos color (3d-graph/graph
                            fn mesh/pos view proj size min by)))
         (values pos
                 mesh/uv1
                 color)))))
 
-(define-function 3d-graph-test/vert2 ((mesh-attrs mesh-attrs)
-                                      &uniform
-                                      (model :mat4)
-                                      (view :mat4)
-                                      (proj :mat4)
-                                      (size :float)
-                                      (min :float)
-                                      (by :float)
-                                      (time :float))
+(define-function 3d-graph/vert2 ((mesh-attrs mesh-attrs)
+                                 &uniform
+                                 (model :mat4)
+                                 (view :mat4)
+                                 (proj :mat4)
+                                 (size :float)
+                                 (min :float)
+                                 (by :float)
+                                 (time :float))
   (with-slots (mesh/pos mesh/uv1) mesh-attrs
     (let ((fn (lambda ((i :float))
-                (3d-graph-test/test-2 i time))))
-      (mvlet* ((pos color (3d-graph-test/graph
+                (3d-graph-2 i time))))
+      (mvlet* ((pos color (3d-graph/graph
                            fn mesh/pos view proj size min by)))
         (values pos
                 mesh/uv1
                 color)))))
 
-(define-function 3d-graph-test/frag ((uv :vec2)
+(define-function 3d-graph/frag ((uv :vec2)
                                      (color :vec4)
                                      &uniform
                                      (time :float))
@@ -110,10 +110,10 @@
           (fl.gpu.sdf:dist/circle (- (* uv 2 scale) (vec2 scale))
                                   scale)))))
 
-(define-shader 3d-graph-test/1 ()
-  (:vertex (3d-graph-test/vert1 mesh-attrs))
-  (:fragment (3d-graph-test/frag :vec2 :vec4)))
+(define-shader 3d-graph-1 ()
+  (:vertex (3d-graph/vert1 mesh-attrs))
+  (:fragment (3d-graph/frag :vec2 :vec4)))
 
-(define-shader 3d-graph-test/2 ()
-  (:vertex (3d-graph-test/vert2 mesh-attrs))
-  (:fragment (3d-graph-test/frag :vec2 :vec4)))
+(define-shader 3d-graph-2 ()
+  (:vertex (3d-graph/vert2 mesh-attrs))
+  (:fragment (3d-graph/frag :vec2 :vec4)))

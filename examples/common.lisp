@@ -16,20 +16,15 @@
   (:log (:project "log"))
   (:log-debug (:project :log "debug.log"))
   (:log-error (:project :log "error.log"))
-  ;; texture-test
-  (:texture-test-textures (:project :texture "texture-test"))
-  (:1da-test (:project :texture-test-textures "1d-array/test"))
-  (:2da-test (:project :texture-test-textures "2d-array/test"))
-  (:3d-test (:project :texture-test-textures "3d/test"))
-  (:cubemap-test (:project :texture-test-textures "cube-map/test"))
-  (:cubemaparray-test (:project :texture-test-textures "cube-map-array"))
-  ;; sprite-test
-  (:spritesheet (:project :texture "sprite-test/sprites.tiff"))
+  (:example-texture (:project :texture "example-texture"))
+  (:1da (:project :example-texture "1d-array"))
+  (:2da (:project :example-texture "2d-array"))
+  (:3d (:project :example-texture "3d"))
+  (:cubemap (:project :example-texture "cube-map"))
+  (:cubemaparray (:project :example-texture "cube-map-array"))
+  (:spritesheet (:project :texture "example-sprite/sprites.tiff"))
   (:spritesheet-data (:project "sprites.sexp"))
-  ;; damaged helmet
-  (:damaged-helmet-textures (:project :texture "damaged-helmet")))
-
-;;; TODO: Possibly make prologue and epilogue DSLs.
+  (:damaged-helmet-textures (:project :texture "example-damaged-helmet")))
 
 (defun prologue (context)
   (declare (ignore context))
@@ -39,8 +34,32 @@
   (declare (ignore context))
   (v:trace :fl.core.engine "Running epilogue method."))
 
-;;; TODO: Fix graphs to work in user package
+;;; Prefabs
 
+(fl:define-prefab "cameras" (:library examples)
+  ("ortho"
+   (fl.comp:camera :active-p t
+                   :mode :orthographic))
+  ("perspective"
+   (fl.comp:camera :active-p t
+                   :mode :perspective))
+  ("iso"
+   (fl.comp:transform :rotate (m:vec3 0 0 (- (/ pi 4))))
+   ("transform"
+    (fl.comp:transform :rotate (m:vec3 (- (atan (/ (sqrt 2)))) 0 0))
+    ("camera"
+     (fl.comp:transform :translate (m:vec3 0 -5 0)
+                        :rotate (m:vec3 (+ (/ pi 2)) 0 0))
+     (fl.comp:camera :active-p t
+                     :mode :orthographic)))))
+
+(fl:define-prefab "mesh" (:library examples)
+  (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+  (fl.comp:render :material 'fl.materials:unlit-texture))
+
+;;; Graphs
+
+;;; TODO: Fix graphs to work in user package
 (in-package :%first-light)
 
 (fl:define-graph :fl.example

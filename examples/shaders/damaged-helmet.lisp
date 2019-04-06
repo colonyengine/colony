@@ -1,37 +1,18 @@
 (in-package :first-light.gpu.user)
 
 (define-struct pbr-info
-  ;; cos angle between normal and light direction
   (n-dot-l :float :accessor n-dot-l)
-  ;; cos angle between normal and view direction
   (n-dot-v :float :accessor n-dot-v)
-  ;; cos angle between normal and half vector
   (n-dot-h :float :accessor n-dot-h)
-  ;; cos angle between light vector and half vector
   (l-dot-h :float :accessor l-dot-h)
-  ;; cos angle between view direction and half vector
   (v-dot-h :float :accessor v-dot-h)
-  ;; roughness value, as authored by model creator (input to shader)
   (perceptual-roughness :float :accessor perceptual-roughness)
-  ;; metallic value at surface
   (metalness :float :accessor metalness)
-  ;; full reflectance color (normal incidence angle)
   (reflectance-0 :vec3 :accessor reflectance-0)
-  ;; reflectance color at graxing scale
   (reflectance-90 :vec3 :accessor reflectance-90)
-  ;; roughness mapp to a more linear change in the roughness
-  ;; proposed by [2]
   (alpha-roughness :float :accessor alpha-roughness)
-  ;; color contribution from the diffuse lighting
   (diffuse-color :vec3 :accessor diffuse-color)
-  ;; color contribution from the specular lighting
   (specular-color :vec3 :accessor specular-color))
-
-;; PBR vertex shader stage:
-;;
-;; created specifically for the damaged-helmet model:
-;;
-;; USE_IBL HAS_NORMALS HAS_UV
 
 (define-function vert/damaged-helmet ((mesh-attrs mesh-attrs)
                                       &uniform
@@ -55,8 +36,6 @@
                                  (uv1 :vec2)
                                  (normal-sampler :sampler-2d)
                                  (normal-scale :float))
-  ;; I'm assuming that we don't have tangents, but we have normals at the
-  ;; vertex and also a normal map.
   (let* ((pos-dx (d-fdx world-pos))
          (pos-dy (d-fdy world-pos))
          (tex-dx (d-fdx (vec3 uv1 0.0)))
@@ -65,12 +44,11 @@
                    (* (.t tex-dx) pos-dy))
                 (- (* (.s tex-dx) (.t tex-dy))
                    (* (.s tex-dy) (.t tex-dx)))))
-
          (ngv (normalize vert-normal))
          (tv (normalize (- tv (* ngv (dot ngv tv)))))
          (bv (normalize (cross ngv tv)))
          (tbn (mat3 tv bv ngv))
-         (n (.rgb (texture normal-sampler uv1))) ; assume we have a normal map
+         (n (.rgb (texture normal-sampler uv1)))
          (n (normalize (* tbn (- (* 2.0 n) (vec3 1.0))
                           (vec3 normal-scale normal-scale 1.0)))))
     n))
@@ -129,9 +107,9 @@
                                       (occlusion-strength :float)
                                       (emissive-sampler :sampler-2d)
                                       (emissive-factor :float))
-  ;; Metallic and Roughness material properties are packed together
-  ;; In glTF, these factors can be specified by fixed scalar values
-  ;; or from a metallic-roughness map
+  ;; Metallic and Roughness material properties are packed together In glTF,
+  ;; these factors can be specified by fixed scalar values or from a
+  ;; metallic-roughness map
   (let* ((min-roughness 0.04)
          (perceptual-roughness (.y metallic-roughness-values))
          (metallic (.x metallic-roughness-values))
@@ -143,7 +121,6 @@
          ;; roughness is authored as perceptual roughness, as is convention
          ;; convert to material roughness by squaring the perceptual roughness.
          (alpha-roughness (* perceptual-roughness perceptual-roughness))
-         ;; we also have a basecolor map
          (base-color (* (fl.gpu.color:srgb->rgb
                          (texture base-color-sampler uv1))
                         base-color-factor))
@@ -151,13 +128,12 @@
          (diffuse-color (* (.rgb base-color) (- (vec3 1.0) f0)))
          (diffuse-color (* diffuse-color (- 1.0 metallic)))
          (specular-color (mix f0 (.rgb base-color) metallic))
-         ;; compute reflectance
          (reflectance (max (max (.r specular-color) (.g specular-color))
                            (.b specular-color)))
-         ;; For typical incident reflections range (between 4% and 100%) set
-         ;; the grazing reflectance to 100% for typical fresnel effect.
-         ;; For very low reflectance range on highly diffuse objects (below 4%)
-         ;; incrementally reduce grazing reflectance to 0%.
+         ;; For typical incident reflections range (between 4% and 100%) set the
+         ;; grazing reflectance to 100% for typical fresnel effect. For very low
+         ;; reflectance range on highly diffuse objects (below 4%) incrementally
+         ;; reduce grazing reflectance to 0%.
          (reflectance-90 (saturate (* reflectance 25.0)))
          (specular-environment-r0 (.rgb specular-color))
          (specular-environment-r90 (* (vec3 1.0) reflectance-90))
@@ -165,8 +141,8 @@
          (n (pbr/get-normal world-pos vert-normal uv1
                             normal-sampler normal-scale))
          ;; camera pos is taken from view transform.
-         ;; TODO confirm this undo of the translation is right.
-         ;; I may have to pass the actual camera world-pos into here.
+         ;; TODO: confirm this undo of the translation is right. I may have to
+         ;; pass the actual camera world-pos into here.
          (camera-pos (- (.xyz (aref view 3))))
          ;; vector from surface point to camera
          (v (normalize (- camera-pos world-pos)))
@@ -180,7 +156,6 @@
          (n-dot-h (saturate (dot n h)))
          (l-dot-h (saturate (dot l h)))
          (v-dot-h (saturate (dot v h)))
-         ;; package it up.
          (pbr-inputs (make-pbr-info n-dot-l
                                     n-dot-v
                                     n-dot-h

@@ -109,10 +109,12 @@
 (defun ensure-component-not-duplicate (node type id)
   (with-slots (%path %components-table) node
     (when (au:href %components-table type id)
-      (error "Duplicate component type: ~s with the same ID: ~s, and no policy ~
-              set.~%Valid policies: NEW-TYPE, OLD-TYPE, NEW-ARGS, OLD-ARGS.~%~
+      (v:debug :fl.prefab
+               "Duplicate component type: ~s with the same ID: ~s, and no policy ~
+              set.~%Assuming a policy of :NEW-TYPE and overwriting the old ~
+              component.~%~
               Path: ~s."
-             type id %path))))
+               type id %path))))
 
 (defun ensure-component-type-symbol (type path)
   (unless (and (symbolp type)
