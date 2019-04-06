@@ -67,7 +67,7 @@
 
 (defun register-collider (context collider)
   "Add a new collider that may participate in the collision system."
-  (let* ((cs (collider-system (core-state context)))
+  (let* ((cs (collider-system (core context)))
          (registering-colliders (registering-colliders cs)))
 
     ;; Insert the request for processing.
@@ -76,7 +76,7 @@
 
 (defun deregister-collider (context collider)
   "Mark that a collider is ready to leve the collision system."
-  (let* ((cs (collider-system (core-state context)))
+  (let* ((cs (collider-system (core context)))
          (deregistering-colliders (deregistering-colliders cs)))
 
     ;; Insert the request for processing.
@@ -427,7 +427,7 @@ have had--and update all other faces too."
 ;; Then, the collision plan is an sparse representation of which columns for
 ;; each row are marked X.
 
-(defun initialize-collider-system (core-state)
+(defun initialize-collider-system (core)
   (let* ((collider-system-desc
            ;; TODO: This should be a DSL in a define-physics macro or something.
            `(:physics-layers
@@ -447,7 +447,7 @@ have had--and update all other faces too."
          (new-collider-system
            (apply #'make-collider-system collider-system-desc)))
 
-    (setf (collider-system core-state) new-collider-system)
+    (setf (collider-system core) new-collider-system)
 
     (with-accessors ((registering-colliders registering-colliders)
                      (stable-colliders stable-colliders)
@@ -472,43 +472,43 @@ have had--and update all other faces too."
 ;; TODO: Keep going.
 
 (defun test-collider-system ()
-  (let* ((core-state (make-instance 'core-state))
-         (context (make-instance 'context :core-state core-state)))
+  (let* ((core (make-instance 'core))
+         (context (make-instance 'context :core core)))
 
-    (with-slots (%context) core-state
+    (with-slots (%context) core
       (setf %context context))
 
-    (let* ((c0 (make-component (context core-state) 'fl.comp:collider/sphere
+    (let* ((c0 (make-component (context core) 'fl.comp:collider/sphere
                                :name "Ground"
                                :on-layer :ground
                                :center (m:vec3 0 0 0)
                                :radius 1))
-           (c1 (make-component (context core-state) 'fl.comp:collider/sphere
+           (c1 (make-component (context core) 'fl.comp:collider/sphere
                                :name "Player"
                                :on-layer :player
                                :center (m:vec3 -20 5 0)
                                :radius 1))
-           (c2 (make-component (context core-state) 'fl.comp:collider/sphere
+           (c2 (make-component (context core) 'fl.comp:collider/sphere
                                :name "Player-Bullet"
                                :on-layer :player-bullet
                                :center (m:vec3 -10 5 0)
                                :radius 1))
-           (c3 (make-component (context core-state) 'fl.comp:collider/sphere
+           (c3 (make-component (context core) 'fl.comp:collider/sphere
                                :name "Enemy"
                                :on-layer :enemy
                                :center (m:vec3 20 5 0)
                                :radius 1))
-           (c4 (make-component (context core-state) 'fl.comp:collider/sphere
+           (c4 (make-component (context core) 'fl.comp:collider/sphere
                                :name "Enemy-Bullet"
                                :on-layer :enemy-bullet
                                :center (m:vec3 10 5 0)
                                :radius 1))
-           (c5 (make-component (context core-state) 'fl.comp:collider/sphere
+           (c5 (make-component (context core) 'fl.comp:collider/sphere
                                :name "Scenery 1"
                                :on-layer :scenery
                                :center (m:vec3 0 5 0)
                                :radius 1))
-           (c6 (make-component (context core-state) 'fl.comp:collider/sphere
+           (c6 (make-component (context core) 'fl.comp:collider/sphere
                                :name "Scenery 2"
                                :on-layer :scenery
                                :center (m:vec3 1 5 0)
@@ -519,7 +519,7 @@ have had--and update all other faces too."
       (loop :for c :in (list c0 c1 c2 c3 c4 c5 c6)
             :do (setf (fl.comp:referent c) c))
 
-      (initialize-collider-system core-state)
+      (initialize-collider-system core)
 
       (register-collider context c0)
       (register-collider context c1)
@@ -530,37 +530,37 @@ have had--and update all other faces too."
       (register-collider context c6)
 
       (format t "Collider Pass 0: no colliding~%")
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
       (format t "Collider Pass 1: enter~%")
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 -9 5 0))
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
 
       (format t "Collider Pass 2: continue~%")
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 -10 5 0))
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
       (format t "Collider Pass 2a: continue~%")
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 -11 5 0))
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
 
       (format t "Collider Pass 2b: continue~%")
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 -12 5 0))
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
       (format t "Moving enemy-bullet.~%")
       (setf (fl.comp:center c4) (m:vec3 -13 5 0))
       (format t "Collider Pass 3: exit~%")
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
       (format t "Collider Pass 4: no colliding~%")
-      (compute-all-collisions (collider-system core-state))
+      (compute-all-collisions (collider-system core))
 
       (deregister-collider context c0)
       (deregister-collider context c1)
@@ -570,4 +570,4 @@ have had--and update all other faces too."
       (deregister-collider context c5)
       (deregister-collider context c6)
 
-      (collider-system core-state))))
+      (collider-system core))))

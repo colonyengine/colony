@@ -1,7 +1,7 @@
 (in-package :%first-light)
 
 (defun ss-href (context component-name namespace &rest keys)
-  (let* ((qualified-component-name (qualify-component (core-state context)
+  (let* ((qualified-component-name (qualify-component (core context)
                                                       component-name))
          (metadata-ht-test-fns (cdr (shared-storage-metadata
                                      qualified-component-name namespace))))
@@ -22,7 +22,7 @@
            (list* qualified-component-name namespace keys))))
 
 (defun (setf ss-href) (new-value context component-name namespace &rest keys)
-  (let* ((qualified-component-name (qualify-component (core-state context)
+  (let* ((qualified-component-name (qualify-component (core context)
                                                       component-name))
          (metadata-ht-test-fns (cdr (shared-storage-metadata
                                      qualified-component-name namespace))))

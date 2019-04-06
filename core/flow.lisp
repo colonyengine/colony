@@ -125,19 +125,19 @@ which evaluates to a hash table of flows keyed by their name."
                :collect `(setf (au:href ,call-flows ',name) ,flow))
        ,call-flows)))
 
-(defun execute-flow (core-state call-flow-name flow-name flow-state-name
+(defun execute-flow (core call-flow-name flow-name flow-state-name
                      &key come-from-state-name)
-  "Find the CALL-FLOW-NAME call flow in the CORE-STATE, then lookup the flow
-FLOW-NAME, and then the state FLOW-STATE-NAME inside of that flow. Start
-execution of the flow from FLOW-STATE-NAME. Return a values of two states, the
-one which executed before the currnet one which led to an exit of the call-flow.
+  "Find the CALL-FLOW-NAME call flow in CORE, then lookup the flow FLOW-NAME,
+and then the state FLOW-STATE-NAME inside of that flow. Start execution of the
+flow from FLOW-STATE-NAME. Return a values of two states, the one which executed
+before the currnet one which led to an exit of the call-flow.
 COME-FROM-STATE-NAME is an arbitrary symbol that indicates the previous
 flow-state name. This is often a symbolic name so execute-flow can determine how
 the flow exited. Return two values The previous state name and the current state
 name which resulted in the exiting of the flow."
   (v:trace :fl.core.flow "Entering flow: (~a ~a ~a)"
            call-flow-name flow-name flow-state-name)
-  (loop :with call-flow = (get-call-flow call-flow-name core-state)
+  (loop :with call-flow = (get-call-flow call-flow-name core)
         :with flow = (get-flow flow-name call-flow)
         :with flow-state = (get-flow-state flow-state-name flow)
         :with current-state-name = come-from-state-name
@@ -156,7 +156,7 @@ name which resulted in the exiting of the flow."
             ;; Step 3: Run Selector Function
             (multiple-value-bind (the-policy the-selections)
                 (if (selector flow-state)
-                    (funcall (selector flow-state) core-state)
+                    (funcall (selector flow-state) core)
                     (values :identity-policy nil))
               (setf selections the-selections
                     policy the-policy))
@@ -191,7 +191,7 @@ name which resulted in the exiting of the flow."
                      (act-on-item selections)))
                 ((:type-policy)
                  (let* ((component-dependency-graph
-                          (au:href (analyzed-graphs core-state)
+                          (au:href (analyzed-graphs core)
                                    'component-dependency))
                         (annotation (annotation component-dependency-graph))
                         (dependency-type-order
@@ -222,13 +222,13 @@ name which resulted in the exiting of the flow."
             ;; flow.
             (flet ((act-on-transition (transition)
                      (etypecase transition
-                       (function (funcall transition core-state))
+                       (function (funcall transition core))
                        (symbol transition))))
               (setf flow-state (au:href flow (act-on-transition
                                               (transition flow-state)))))))
 
-(defun get-call-flow (call-flow-name core-state)
-  (au:href (call-flows core-state) call-flow-name))
+(defun get-call-flow (call-flow-name core)
+  (au:href (call-flows core) call-flow-name))
 
 (defun get-flow (flow-name call-flow)
   (au:href call-flow flow-name))
@@ -244,6 +244,6 @@ name which resulted in the exiting of the flow."
            (fl.data:set 'call-flows (au:dict #'eq)))
          (setf (au:href ,definition ',name) ,call-flow)))))
 
-(defun load-call-flows (core-state)
+(defun load-call-flows (core)
   (au:do-hash (k v (fl.data:get 'call-flows))
-    (setf (au:href (call-flows core-state) k) v)))
+    (setf (au:href (call-flows core) k) v)))

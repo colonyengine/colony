@@ -7,7 +7,7 @@
    (mode :default :perspective)
    (clip-near :default 0.1)
    (clip-far :default 1024)
-   (fovy :default (* 90 (/ pi 180)))
+   (fov-y :default 90)
    (zoom :default 1)
    (transform :default nil)))
 
@@ -26,9 +26,9 @@
 
 (defmethod make-projection (camera (mode (eql :perspective)))
   (with-accessors ((context context) (zoom zoom) (proj projection)
-                   (near clip-near) (far clip-far) (fovy fovy))
+                   (near clip-near) (far clip-far) (fov-y fov-y))
       camera
-    (m:set-projection/perspective (/ fovy zoom)
+    (m:set-projection/perspective (/ fov-y zoom)
                                   (/ (option context :window-width)
                                      (option context :window-height))
                                   near
@@ -52,12 +52,12 @@
       (m:set-view eye target up (view camera)))))
 
 (defun find-active-camera (context)
-  (dolist (camera (cameras (core-state context)))
+  (dolist (camera (cameras (core context)))
     (when (active-p camera)
       (return-from find-active-camera camera))))
 
 (defun zoom-camera (display direction)
-  (let* ((context (context (core-state display)))
+  (let* ((context (context (core display)))
          (camera (find-active-camera context)))
     (with-accessors ((zoom zoom) (mode mode)) camera
       (setf zoom (au:clamp (+ zoom (/ direction 2)) 1 10))
@@ -67,14 +67,15 @@
 
 (defmethod on-component-initialize ((self camera))
   (with-accessors ((context context) (actor actor) (mode mode)
-                   (transform transform))
+                   (transform transform) (fov-y fov-y))
       self
-    (setf transform (actor-component-by-type actor 'transform))
+    (setf transform (actor-component-by-type actor 'transform)
+          fov-y (* fov-y (/ pi 180)))
     (correct-camera-transform self)
     (make-projection self mode)
-    (push self (cameras (core-state context)))))
+    (push self (cameras (core context)))))
 
 (defmethod on-component-destroy ((self camera))
   (with-accessors ((context context)) self
-    (au:deletef (cameras (core-state context)) self)
+    (au:deletef (cameras (core context)) self)
     (setf (active-camera context) nil)))

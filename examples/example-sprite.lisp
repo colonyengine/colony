@@ -1,5 +1,12 @@
 (in-package :first-light.example)
 
+;;; Textures
+
+(fl:define-texture sprites (:texture-2d)
+  (:data #(:spritesheet)))
+
+;;; Components
+
 (fl:define-component simple-movement ()
   ((transform :default nil)))
 
@@ -23,7 +30,6 @@
                            :instant-p instant-p))
       (unless (= rx ry 0.0)
         (let* ((angle (atan (- rx) ry))
-               ;; keep angle from 0 to 2pi for easier debugging of other things.
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
                           angle)))
@@ -47,7 +53,7 @@
     (fl.comp:translate
      transform
      (let ((a (m:normalize (m:vec3 (m:get-column (fl.comp:local transform) 1))))
-           (move-delta (* velocity (float (fl:frame-time context)))))
+           (move-delta (* velocity (fl:frame-time context))))
        (m:* a move-delta)))))
 
 (fl:define-component shot-emitter ()
@@ -66,7 +72,7 @@
       (let* ((parent-model (fl.comp:model emitter-transform))
              (parent-translation (m:get-translation parent-model))
              (parent-rotation (m:quat parent-model))
-             (new-actor (fl:make-actor context :id (au:unique-name 'shot)))
+             (new-actor (fl:make-actor context :display-id "Ship bullet"))
              (transform (fl:make-component context
                                            'fl.comp:transform
                                            :translate parent-translation
@@ -86,8 +92,48 @@
                                         :mode :sprite)))
         (fl:attach-multiple-components
          new-actor transform shot-mover sprite render)
-        ;; The shot is free in the universe.
         (fl:spawn-actor new-actor)
-        ;; This is the method for destroying actors and components. Add to
-        ;; public API. Don't use :ttl in the make-actor call yet.
-        (%fl::destroy new-actor :ttl 1)))))
+        (%fl::destroy new-actor :ttl 2)))))
+
+;;; Prefabs
+
+(fl:define-prefab "sprite-1" (:library examples)
+  (("camera" :copy "/cameras/ortho"))
+  ("ship"
+   (fl.comp:transform :rotate (m:vec3 0 0 (/ pi -2)))
+   (simple-movement)
+   (shot-emitter)
+   ("ship-body"
+    (fl.comp:sprite :spec :spritesheet-data
+                    :name "ship29")
+    (fl.comp:render :material `(fl.materials:sprite
+                                ,(au:unique-name '#:sprite)
+                                :uniforms ((:sprite.sampler sprites)))
+                    :mode :sprite)
+    ("exhaust"
+     (fl.comp:transform :translate (m:vec3 0 -140 0))
+     (fl.comp:sprite :spec :spritesheet-data
+                     :name "exhaust03-01"
+                     :frames 8)
+     (fl.comp:render :material `(fl.materials:sprite
+                                 ,(au:unique-name '#:sprite)
+                                 :uniforms ((:sprite.sampler sprites)))
+                     :mode :sprite)
+     (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+                                          :duration 0.5
+                                          :repeat-p t)))))))
+
+(fl:define-prefab "sprite-2" (:library examples)
+  (("camera" :copy "/cameras/ortho"))
+  ("plane"
+   (fl.comp:transform :scale (m:vec3 2))
+   (fl.comp:sprite :spec :spritesheet-data
+                   :name "planet04")
+   (fl.comp:render :material `(fl.materials:sprite
+                               ,(au:unique-name '#:sprite)
+                               :uniforms ((:sprite.sampler sprites)))
+                   :mode :sprite)
+   (fl.comp:actions :default-actions '((:type fl.actions:rotate
+                                        :duration 4
+                                        :shape m:bounce-in
+                                        :repeat-p t)))))

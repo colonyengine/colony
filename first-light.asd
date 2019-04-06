@@ -44,22 +44,15 @@
      (:file "actions")
      (:file "prefab")
      (:file "api")))
-   (:file "common")
-   (:file "uuid")
-   (:file "resource")
-   (:file "context")
-   (:file "options")
-   (:file "logging")
-   (:file "shared-storage")
-   (:file "attributes")
-   (:file "component-mop")
-   (:file "component")
-   (:file "core-state")
-   (:file "frame")
-   (:file "display")
-   (:file "actor")
-   (:file "flow")
-   (:file "graph")
+   (:module "mop"
+    :components
+    ((:file "component")))
+   (:module "util"
+    :components
+    ((:file "common")
+     (:file "deploy")
+     (:file "live-coding")
+     (:file "uuid")))
    (:module "textures"
     :components
     ((:file "texture")
@@ -73,13 +66,26 @@
      (:file "cube-map-array")
      (:file "rectangle")
      (:file "buffer")))
+   (:file "resource")
+   (:file "context")
+   (:file "options")
+   (:file "logging")
+   (:file "graph")
+   (:file "flow")
+   (:file "shared-storage")
+   (:file "attributes")
+   (:file "actor")
+   (:file "component")
+   (:file "annotations")
+   (:file "object-query")
+   (:file "frame")
+   (:file "display")
    (:file "materials")
    (:file "shaders")
-   (:file "engine")
-   (:file "deploy")
-   (:file "annotations")
-   (:file "action-manager")
    (:file "colliders")
+   (:file "action-manager")
+   (:file "core")
+   (:file "engine")
    (:module "components"
     :components
     ((:file "transform")
@@ -93,7 +99,10 @@
      (:file "colliders")))
    (:module "prefab"
     :components
-    ((:file "checks")
+    ((:file "common")
+     (:file "checks")
+     (:file "parser")
+     (:file "loader")
      (:file "prefab")))
    (:module "actions"
     :components

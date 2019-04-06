@@ -1,11 +1,7 @@
 (in-package :%first-light)
 
-(defclass actor ()
-  ((%id :reader id
-        :initarg :id)
-   (%uuid :reader uuid
-          :initform (make-uuid))
-   (%state :accessor state
+(defclass actor (queryable)
+  ((%state :accessor state
            :initarg :state
            :initform :initialize)
    (%components :reader components
@@ -13,29 +9,29 @@
    (%components-by-type :reader components-by-type
                         :initform (au:dict #'eq))
    (%prefab-node :reader prefab-node
-                 :initarg :prefab-node)
+                 :initarg :prefab-node
+                 :initform nil)
    (%ttl :accessor ttl
          :initarg :ttl
          :initform 0)
    (%context :reader context
              :initarg :context)))
 
-(au:define-printer (actor stream :type t)
-  (format stream "~a" (id actor)))
-
-(defun make-actor (context &rest args)
-  (apply #'make-instance 'actor :context context args))
+(defun make-actor (context &rest args &key &allow-other-keys)
+  (let ((actor (apply #'make-instance 'actor
+                      :context context
+                      args)))
+    (register-object-uuid actor)
+    (register-object-id actor)
+    actor))
 
 (defun attach-component (actor component)
-  ;; First, we detach from the current actor (if applicable)
   (detach-component actor component)
-  ;; Then, we attach to the new component.
   (enqueue-attach-event component actor)
   (setf (actor component) actor
         (au:href (components actor) component) component)
-  (let* ((core-state (core-state (context actor)))
-         (qualified-type (qualify-component core-state
-                                            (component-type component))))
+  (let* ((core (core (context actor)))
+         (qualified-type (qualify-component core (component-type component))))
     (push component (au:href (components-by-type actor) qualified-type))))
 
 (defun attach-multiple-components (actor &rest components)
@@ -60,28 +56,27 @@
 
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
-  (let* ((core-state (core-state (context actor)))
-         (qualified-type (qualify-component core-state component-type)))
+  (let* ((core (core (context actor)))
+         (qualified-type (qualify-component core component-type)))
     (au:href (components-by-type actor) qualified-type)))
 
 (defun actor-component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
 Returns the rest of the components as a secondary value if there are more than
 one of the same type."
-  (let* ((core-state (core-state (context actor)))
-         (qualified-type (qualify-component core-state component-type))
+  (let* ((core (core (context actor)))
+         (qualified-type (qualify-component core component-type))
          (components (actor-components-by-type actor qualified-type)))
     (values (first components)
             (rest components))))
 
 (defun spawn-actor (actor &key (parent :universe))
-  "Take the ACTOR and place into the initializing db's and view's in the
-CORE-STATE. The actor is not yet in the scene and the main loop protocol will
-not be called on it or its components. If keyword argument :PARENT is supplied
-it is an actor reference which will be the parent of the spawning actor. It
-defaults to :universe, which means make this actor a child of the universe
-actor."
-  (let ((core-state (core-state (context actor)))
+  "Take the ACTOR and place into the initializing db's and view's in the CORE.
+The actor is not yet in the scene and the main loop protocol will not be called
+on it or its components. If keyword argument :PARENT is supplied it is an actor
+reference which will be the parent of the spawning actor. It defaults to
+:universe, which means make this actor a child of the universe actor."
+  (let ((core (core (context actor)))
         (actor-transform (actor-component-by-type actor 'fl.comp:transform)))
     (cond
       ((eq parent :universe)
@@ -94,7 +89,7 @@ actor."
        ;; or already have an actor to reference as the parent.
        (unless (fl.comp::parent actor-transform)
          (fl.comp:transform-add-child
-          (actor-component-by-type (scene-tree core-state) 'fl.comp:transform)
+          (actor-component-by-type (scene-tree core) 'fl.comp:transform)
           (actor-component-by-type actor 'fl.comp:transform))))
       ((typep parent 'actor)
        (fl.comp:transform-add-child
@@ -104,32 +99,32 @@ actor."
        (au:noop))
       (t
        (error "Cannot parent actor ~s to unknown parent ~s" actor parent)))
-    (setf (au:href (actor-preinit-db (tables core-state)) actor) actor)
+    (setf (au:href (actor-preinit-db (tables core)) actor) actor)
     (au:do-hash-values (v (components actor))
       (setf (type-table (canonicalize-component-type (component-type v)
-                                                     core-state)
-                        (component-preinit-by-type-view (tables core-state)))
+                                                     core)
+                        (component-preinit-by-type-view (tables core)))
             v))))
 
 (defun actor/preinit->init (actor)
-  (let ((core-state (core-state (context actor))))
-    (remhash actor (actor-preinit-db (tables core-state)))
-    (setf (au:href (actor-init-db (tables core-state)) actor) actor)))
+  (let ((core (core (context actor))))
+    (remhash actor (actor-preinit-db (tables core)))
+    (setf (au:href (actor-init-db (tables core)) actor) actor)))
 
 (defun actor/init->active (actor)
-  (let ((core-state (core-state (context actor))))
-    (remhash actor (actor-init-db (tables core-state)))
+  (let ((core (core (context actor))))
+    (remhash actor (actor-init-db (tables core)))
     (setf (state actor) :active
-          (au:href (actor-active-db (tables core-state)) actor) actor)))
+          (au:href (actor-active-db (tables core)) actor) actor)))
 
 (defmethod destroy ((thing actor) &key (ttl 0))
-  (let ((core-state (core-state (context thing))))
+  (let ((core (core (context thing))))
     (setf (ttl thing) (if (minusp ttl) 0 ttl)
-          (au:href (actor-predestroy-view (tables core-state)) thing) thing)))
+          (au:href (actor-predestroy-view (tables core)) thing) thing)))
 
 (defun actor/init-or-active->destroy (actor)
-  (let* ((core-state (core-state (context actor)))
-         (tables (tables core-state)))
+  (let* ((core (core (context actor)))
+         (tables (tables core)))
     (unless (plusp (ttl actor))
       (setf (au:href (actor-destroy-db tables) actor) actor
             (state actor) :destroy)
@@ -141,13 +136,15 @@ actor."
         (component/init-or-active->destroy v)))))
 
 (defun actor/destroy-descendants (actor)
-  (flet ((destroy-actor (descendant-actor-transform)
-           (let ((destroying-actor (actor descendant-actor-transform)))
-             (setf (ttl destroying-actor) 0)
-             (actor/init-or-active->destroy destroying-actor))))
+  (flet ((destroy-actor (actor)
+           (setf (ttl actor) 0)
+           (actor/init-or-active->destroy actor)
+           (deregister-object-uuid actor)
+           (deregister-object-id actor)))
     (when actor
-      (fl.comp::map-nodes #'destroy-actor
-                          (actor-component-by-type actor 'fl.comp:transform)))))
+      (fl.comp::map-nodes
+       (lambda (x) (destroy-actor (actor x)))
+       (actor-component-by-type actor 'fl.comp:transform)))))
 
 ;; TODO: this should probably never be run on the @universe actor. :)
 (defun actor/disconnect (actor)
@@ -156,10 +153,10 @@ actor."
                                     actor-transform)))
 
 (defun actor/destroy->released (actor)
-  (let ((core-state (core-state (context actor))))
+  (let ((core (core (context actor))))
     (unless (zerop (number-of-components actor))
       (error "actor/destroy->released: destroyed actor still has components!"))
-    (remhash actor (actor-destroy-db (tables core-state)))))
+    (remhash actor (actor-destroy-db (tables core)))))
 
 (defun actor/countdown-to-destruction (actor)
   (when (plusp (ttl actor))

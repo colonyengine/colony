@@ -70,7 +70,7 @@
 ;; This is a user defined method (and core defines some too). It takes a list of
 ;; active and raw forms from the category and MUST return a single object that
 ;; represents the analyzed and concrete form of that graph that is ready for
-;; use. The result is stored in core-state prolly in a hash table with the
+;; use. The result is stored in core prolly in a hash table with the
 ;; category-name as the key and the result of this function as the value.
 (defgeneric realize-metagraph-category (category definition-form-list))
 

@@ -15,8 +15,8 @@
                       :anti-alias-level 4
                       :opengl-version "4.3"))
 
-(defun load-options (core-state)
-  (setf (options core-state)
+(defun load-options (core)
+  (setf (options core)
         (au:merge-tables (fl.data:get 'options/default)
                          (or (fl.data:get 'options/project)
                              (au:dict #'eq)))))

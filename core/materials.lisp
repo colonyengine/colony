@@ -1,6 +1,6 @@
 (in-package :%first-light)
 
-;; Held in core-state, the material database for all materials everywhere.
+;; Held in core, the material database for all materials everywhere.
 (defclass materials-table ()
   ((%material-table :reader material-table
                     :initarg :material-table
@@ -13,39 +13,39 @@
 (defun %make-materials-table (&rest init-args)
   (apply #'make-instance 'materials-table init-args))
 
-(defun %lookup-material (material-name core-state)
-  "Find a material by its ID in CORE-STATE and return a gethash-like values.
-If the material isn't there, return the 'fl.materials:missing-material. The
-return value is two values, the first is a material instance, and the second is
-T if the material being looked up was actually found, or NIL if it wasn't (and
-the missing material used)."
-  (symbol-macrolet ((table (material-table (materials core-state))))
+(defun %lookup-material (material-name core)
+  "Find a material by its ID in CORE and return a gethash-like values. If the
+material isn't there, return the 'fl.materials:missing-material. The return
+value is two values, the first is a material instance, and the second is T if
+the material being looked up was actually found, or NIL if it wasn't (and the
+missing material used)."
+  (symbol-macrolet ((table (material-table (materials core))))
     (au:if-found (material (au:href table material-name))
                  material
                  (au:href table
                           (au:ensure-symbol 'missing-material
                                             'fl.materials)))))
 
-(defun %add-material (material core-state)
-  "Add the MATERIAL by its id into CORE-STATE."
-  (setf (au:href (material-table (materials core-state)) (id material))
+(defun %add-material (material core)
+  "Add the MATERIAL by its id into CORE."
+  (setf (au:href (material-table (materials core)) (id material))
         material))
 
-(defun %remove-material (material core-state)
-  "Remove the MATERIAL by its id from CORE-STATE."
-  (remhash (id material) (material-table (materials core-state))))
+(defun %remove-material (material core)
+  "Remove the MATERIAL by its id from CORE."
+  (remhash (id material) (material-table (materials core))))
 
-(defun %map-materials (func core-state)
+(defun %map-materials (func core)
   "Map the function FUNC, which expects a material, across all materials in
-CORE-STATE. Return a list of the return values of the FUNC."
+CORE. Return a list of the return values of the FUNC."
   (let (results)
-    (au:do-hash-values (v (material-table (materials core-state)))
+    (au:do-hash-values (v (material-table (materials core)))
       (push (funcall func v) results))
     (nreverse results)))
 
 ;; export PUBLIC API
 (defun lookup-material (id context)
-  (%lookup-material id (core-state context)))
+  (%lookup-material id (core context)))
 
 (defclass material-value ()
   ;; This is a back reference to the material that owns this
@@ -115,7 +115,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
            ;; Copier func lambda list is (semantic-value context new-mat)
            :semantic-value (funcall (copier material-uniform-value)
                                     (semantic-value material-uniform-value)
-                                    (context (core-state new-mat))
+                                    (context (core new-mat))
                                     new-mat)
            :transformer (transformer material-uniform-value)
            :copier (copier material-uniform-value)
@@ -181,17 +181,16 @@ CORE-STATE. Return a list of the return values of the FUNC."
 (defun %make-material-profile (&rest init-args)
   (apply #'make-instance 'material-profile init-args))
 
-(defun %add-material-profile (profile core-state)
-  (setf (au:href (profiles (materials core-state)) (name profile)) profile))
+(defun %add-material-profile (profile core)
+  (setf (au:href (profiles (materials core)) (name profile)) profile))
 
 (defclass material ()
   ((%id :reader id
         :initarg :id)
    ;; This backreference simplifies when we need to change the texture at
-   ;; runtime or do something else that makes us grovel around in the
-   ;; core-state.
-   (%core-state :reader core-state
-                :initarg :core-state)
+   ;; runtime or do something else that makes us grovel around in the core.
+   (%core :reader core
+          :initarg :core)
    ;; This is the name of the shader as its symbol.
    (%shader :reader shader ;; :writer defined below.
             :initarg :shader)
@@ -224,7 +223,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
     (setf %shader value)
     ;; Reinitialize the material with the new shader, ensure it type checks, and
     ;; recompute any material uniform value changes.
-    (resolve-material mat (core-state mat)))
+    (resolve-material mat (core mat)))
   value)
 
 (defmethod (setf instances) (value (mat material))
@@ -235,17 +234,17 @@ CORE-STATE. Return a list of the return values of the FUNC."
   (with-slots (%attributes) mat
     (setf %attributes value)))
 
-(defun %make-material (id shader instances attributes profiles core-state)
+(defun %make-material (id shader instances attributes profiles core)
   (make-instance 'material :id id
                            :shader shader
                            :instances instances
                            :attributes attributes
                            :profile-overlay-names profiles
-                           :core-state core-state))
+                           :core core))
 
 (defun %deep-copy-material (current-mat new-mat-name
                             &key (error-p t) (error-value nil))
-  (when (au:href (material-table (materials (core-state current-mat)))
+  (when (au:href (material-table (materials (core current-mat)))
                  new-mat-name)
     (if error-p
         (error "Cannot copy the material ~A to new name ~A because the new ~
@@ -266,7 +265,7 @@ CORE-STATE. Return a list of the return values of the FUNC."
                           :shader new-shader
                           :instances new-instances
                           :attributes new-attributes
-                          :core-state (core-state current-mat)
+                          :core (core current-mat)
                           :uniforms new-uniforms
                           :blocks new-blocks
                           :active-texture-unit new-active-texture-unit)))
@@ -283,8 +282,8 @@ CORE-STATE. Return a list of the return values of the FUNC."
        (setf (au:href new-blocks block-alias-name)
              (%deep-copy-material-block-value material-block-value new-mat)))
      (blocks current-mat))
-    ;; Finally, insert into core-state so everyone can see it.
-    (%add-material new-mat (core-state new-mat))
+    ;; Finally, insert into core so everyone can see it.
+    (%add-material new-mat (core new-mat))
     new-mat))
 
 (defun bind-material-uniforms (mat)
@@ -303,8 +302,8 @@ CORE-STATE. Return a list of the return values of the FUNC."
     (maphash
      (lambda (block-alias-name material-block-value)
        (declare (ignore block-alias-name material-block-value))
-       ;; TODO: we probably need to call into core-state buffer binding
-       ;; management services to perform the binding right here.
+       ;; TODO: we probably need to call into core buffer binding management
+       ;; services to perform the binding right here.
        nil)
      (blocks mat))))
 
@@ -424,13 +423,13 @@ and ignores the CONTEXT and MATERIAL arguments."
                               :binding-buffer ,binding-buffer
                               :bound-once-p nil))))))
 
-(defun apply-material-profile-overlays (mat core-state)
+(defun apply-material-profile-overlays (mat core)
   ;; Mix in the profiles, in order specified.
   (when (profile-overlay-names mat)
     ;; convert the overlay names to concrete overlay instances
     (let ((concrete-profiles
             (loop :for po-name :in (profile-overlay-names mat)
-                  :for inst = (au:href (profiles (materials core-state))
+                  :for inst = (au:href (profiles (materials core))
                                        po-name)
                   :if inst
                     :collect inst
@@ -453,11 +452,11 @@ and ignores the CONTEXT and MATERIAL arguments."
 It is partially complete because it does not yet have the shader binder function
 available for it so BIND-UNIFORMS cannot yet be called on it."
   (au:with-unique-names (matvar)
-    `(lambda (core-state)
+    `(lambda (core)
        (let ((,matvar (%make-material ',name ',shader ,instances ',attributes
-                                      ',profiles core-state)))
+                                      ',profiles core)))
          ;; First, insert in order the profile overlays for this material.
-         (apply-material-profile-overlays ,matvar core-state)
+         (apply-material-profile-overlays ,matvar core)
          ;; Then, overlay whatever uniforms and blocks the user specified over
          ;; over the profile supplied information, if any. This must come last.
          ,(parse-material-uniforms matvar uniforms)
@@ -506,7 +505,7 @@ or if it a vector of the same. Return NIL otherwise."
              (fl.gpu:uniform-int shader uniform-name unit)))
          (ecase glsl-type
            (:bool #'fl.gpu:uniform-int)
-           ((:int :int32) #'fl.gpu:uniform-int)
+           (:int #'fl.gpu:uniform-int)
            (:float #'fl.gpu:uniform-float)
            (:vec2 (lambda (shader uniform value)
                     (fl.gpu:uniform-vec2 shader uniform (m:get-array value))))
@@ -539,7 +538,7 @@ or if it a vector of the same. Return NIL otherwise."
              (fl.gpu:uniform-int-array shader uniform-name units)))
          (ecase (car glsl-type)
            (:bool #'fl.gpu:uniform-int-array)
-           ((:int :int32) #'fl.gpu:uniform-int-array)
+           (:int #'fl.gpu:uniform-int-array)
            (:float #'fl.gpu:uniform-float-array)
            (:vec2 #'fl.gpu:uniform-vec2-array)
            (:vec3 #'fl.gpu:uniform-vec3-array)
@@ -556,7 +555,7 @@ or if it a vector of the same. Return NIL otherwise."
   ;; semantic-value and end with the computed-value. If the semantic-value is
   ;; actually a function, then invoke it and get the juice it produced and shove
   ;; it down the pipeline.
-  (let ((context (context (core-state (material material-uniform-value))))
+  (let ((context (context (core (material material-uniform-value))))
         (mat (material material-uniform-value))
         (sv (semantic-value material-uniform-value)))
     (loop :with value = (if (functionp sv)
@@ -610,10 +609,10 @@ or if it a vector of the same. Return NIL otherwise."
    (uniforms material)))
 
 (defun annotate-material-block (alias-name block-value material shader-program
-                                core-state)
-  (declare (ignore shader-program core-state))
+                                core)
+  (declare (ignore shader-program core))
   ;; 1. Validate that this material-block-value is present in the shaders in
-  ;; core-state
+  ;; core
   ;; TODO: 2. Create the block-name-alias, but only once.
   (unless (fl.gpu:find-block alias-name)
     (fl.gpu:create-block-alias (storage-type block-value)
@@ -621,34 +620,35 @@ or if it a vector of the same. Return NIL otherwise."
                                (shader material)
                                alias-name)))
 
-(defun annotate-material-blocks (material shader-program core-state)
+(defun annotate-material-blocks (material shader-program core)
   ;; TODO: Ensure that all :block-alias names are unique in the material
   (maphash
    (lambda (alias-name block-value)
      (annotate-material-block
-      alias-name block-value material shader-program core-state))
+      alias-name block-value material shader-program core))
    (blocks material)))
 
-(defun resolve-material (material-instance core-state)
+(defun resolve-material (material-instance core)
   "Convert semantic-values to computed-values. Type check the uniforms against
 the shader program in the material."
-  (au:if-found (shader-program (au:href (shaders core-state)
+  (au:if-found (shader-program (au:href (shaders core)
                                         (shader material-instance)))
                (progn
                  (annotate-material-uniforms material-instance shader-program)
                  (annotate-material-blocks
-                  material-instance shader-program core-state))
+                  material-instance shader-program core))
                (error "Material ~s uses an undefined shader: ~s."
                       (id material-instance) (shader material-instance))))
 
-(defun resolve-all-materials (core-state)
+(defun resolve-all-materials (core)
   "Convert all semantic-values to computed-values for all materials. This must
 be executed after all the shader programs have been compiled."
   ;; TODO: Check that all :block-alias names are actually unique between
   ;; materials.
-  (%map-materials (lambda (mat)
-                    (resolve-material mat core-state))
-                  core-state))
+  (%map-materials
+   (lambda (mat)
+     (resolve-material mat core))
+   core))
 
 (defun parse-material-profile (name uniforms blocks)
   (au:with-unique-names (matprof)
@@ -715,12 +715,12 @@ applied in an overlay manner while defining a material."
          (with-depth-function ,material-ref
            ,@body)))))
 
-(defun load-materials (core-state)
+(defun load-materials (core)
   (au:do-hash-values (profile (fl.data:get 'material-profiles))
-    (%add-material-profile profile core-state))
+    (%add-material-profile profile core))
   (au:do-hash-values (material-func (fl.data:get 'materials))
-    (%add-material (funcall material-func core-state) core-state))
-  (resolve-all-materials core-state))
+    (%add-material (funcall material-func core) core))
+  (resolve-all-materials core))
 
 ;;; Helper functions
 

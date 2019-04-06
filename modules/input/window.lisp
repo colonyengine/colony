@@ -34,38 +34,38 @@
 (defun set-window-visible (window)
   (sdl2:show-window window))
 
-(defun on-window-show (core-state)
-  (declare (ignore core-state)))
+(defun on-window-show (core)
+  (declare (ignore core)))
 
-(defun on-window-hide (core-state)
-  (declare (ignore core-state)))
+(defun on-window-hide (core)
+  (declare (ignore core)))
 
-(defun on-window-move (core-state &key x y)
-  (declare (ignore core-state x y)))
+(defun on-window-move (core &key x y)
+  (declare (ignore core x y)))
 
-(defun on-window-resize (core-state &key width height)
-  (declare (ignore core-state width height)))
+(defun on-window-resize (core &key width height)
+  (declare (ignore core width height)))
 
-(defun on-window-minimize (core-state)
-  (declare (ignore core-state)))
+(defun on-window-minimize (core)
+  (declare (ignore core)))
 
-(defun on-window-maximize (core-state)
-  (declare (ignore core-state)))
+(defun on-window-maximize (core)
+  (declare (ignore core)))
 
-(defun on-window-restore (core-state)
-  (declare (ignore core-state)))
+(defun on-window-restore (core)
+  (declare (ignore core)))
 
-(defun on-window-mouse-focus-enter (core-state)
-  (declare (ignore core-state)))
+(defun on-window-mouse-focus-enter (core)
+  (declare (ignore core)))
 
-(defun on-window-mouse-focus-exit (core-state)
-  (declare (ignore core-state)))
+(defun on-window-mouse-focus-exit (core)
+  (declare (ignore core)))
 
-(defun on-window-keyboard-focus-enter (core-state)
-  (declare (ignore core-state)))
+(defun on-window-keyboard-focus-enter (core)
+  (declare (ignore core)))
 
-(defun on-window-keyboard-focus-exit (core-state)
-  (declare (ignore core-state)))
+(defun on-window-keyboard-focus-exit (core)
+  (declare (ignore core)))
 
-(defun on-window-close (core-state)
-  (declare (ignore core-state)))
+(defun on-window-close (core)
+  (declare (ignore core)))

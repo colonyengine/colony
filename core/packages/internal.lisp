@@ -5,10 +5,12 @@
   (:local-nicknames (#:m #:game-math))
   (:use #:cl)
   (:export
+   #:*core-debug*
    #:active-camera
    #:actor
    #:actor-component-by-type
    #:actor-components-by-type
+   #:alpha
    #:attach-component
    #:attach-multiple-components
    #:cameras
@@ -16,7 +18,7 @@
    #:compute-component-initargs
    #:context
    #:copy-material
-   #:core-state
+   #:core
    #:define-annotation
    #:define-component
    #:define-graph
@@ -31,6 +33,9 @@
    #:deregister-collider
    #:destroy
    #:detach-component
+   #:find-actors-by-id
+   #:find-by-uuid
+   #:find-components-by-id
    #:find-resource
    #:frame-count
    #:frame-manager

@@ -23,51 +23,49 @@
                     (selector nil)
                     (action nil)
                     (transition
-                     (lambda (core-state)
-                       (if (pending-preinit-tasks-p core-state)
+                     (lambda (core)
+                       (if (pending-preinit-tasks-p core)
                            init-components
                            exit/initialize-phase))))
         ;; 1
         (flow-state init-components :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :type-policy
                                   (component-preinit-by-type-view
-                                   (tables core-state)))))
+                                   (tables core)))))
                     (action #'component/preinit->init)
                     (transition init-actors))
         ;; 2
         (flow-state init-actors :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  (actor-preinit-db (tables core-state)))))
+                                  (actor-preinit-db (tables core)))))
                     (action #'actor/preinit->init)
                     (transition protocol-initialize-components))
         ;; 3
         (flow-state protocol-initialize-components :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :type-policy
-                                  (component-init-by-type-view
-                                   (tables core-state)))))
+                                  (component-init-by-type-view (tables core)))))
                     (action #'on-component-initialize)
                     (transition realize-components))
         ;; 4
         (flow-state realize-components :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :type-policy
-                                  (component-init-by-type-view
-                                   (tables core-state)))))
+                                  (component-init-by-type-view (tables core)))))
                     (action #'component/init->active)
                     (transition realize-actors))
         ;; 5
         (flow-state realize-actors :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  (actor-init-db (tables core-state)))))
+                                  (actor-init-db (tables core)))))
                     (action #'actor/init->active)
                     (transition while-initialize-phase))
         ;; 6
@@ -75,11 +73,11 @@
                     (selector nil)
                     (action nil)
                     (transition
-                     (lambda (core-state)
+                     (lambda (core)
                        ;; Running PROTOCOL-INITIALIZE-COMPONENTS may have caused
                        ;; additional actors/components to be created, so we
                        ;; check for that here and repeat as needed.
-                       (if (pending-preinit-tasks-p core-state)
+                       (if (pending-preinit-tasks-p core)
                            ;; Then do the process over again.
                            init-components
                            ;; Or exit this phase, we're done initializing.
@@ -96,23 +94,23 @@
                     (transition physics-loop))
         (flow-state physics-loop :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  core-state)))
+                                  core)))
                     (action
-                     (lambda (core-state)
-                       (tick core-state)
-                       (fl.comp::interpolate-transforms core-state)))
+                     (lambda (core)
+                       (tick core)
+                       (fl.comp::interpolate-transforms core)))
                     (transition make-active-camera-view))
         ;; NOTE: This flow-state is invoked deep inside of TICK in the
         ;; flow-state physics loop. Its purpose is to be called every time the
         ;; physics has been actually computed.
         (flow-state protocol-physics-update :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :type-policy
                                   (component-active-by-type-view
-                                   (tables core-state)))))
+                                   (tables core)))))
                     (action #'on-component-physics-update)
                     (transition nil))
 
@@ -141,8 +139,8 @@
                     (selector
                         ;; TODO: Move this code into a real function inside of
                         ;; the engine.
-                        (lambda (core-state)
-                          (let ((context (context core-state)))
+                        (lambda (core)
+                          (let ((context (context core)))
                             (symbol-macrolet ((camera (active-camera context)))
                               (unless (and camera (fl.comp::active-p camera))
                                 (setf camera (fl.comp:find-active-camera
@@ -153,26 +151,26 @@
                     (transition protocol-attach/detach-components))
         (flow-state protocol-attach/detach-components :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :type-policy
                                   (component-active-by-type-view
-                                   (tables core-state)))))
+                                   (tables core)))))
                     (action #'component/invoke-attach/detach-events)
                     (transition protocol-update-component))
         (flow-state protocol-update-component :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :type-policy
                                   (component-active-by-type-view
-                                   (tables core-state)))))
+                                   (tables core)))))
                     (action #'on-component-update)
                     (transition protocol-render-component))
         (flow-state protocol-render-component :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :type-policy
                                   (component-active-by-type-view
-                                   (tables core-state)))))
+                                   (tables core)))))
                     (action #'on-component-render)
                     (transition exit/active-phase))
         (flow-state exit/active-phase :reset ()
@@ -213,59 +211,51 @@
                     (selector nil)
                     (action nil)
                     (transition
-                     (lambda (core-state)
-                       (if (pending-predestroy-tasks-p core-state)
+                     (lambda (core)
+                       (if (pending-predestroy-tasks-p core)
                            prepare-predestroy-components
                            pending-destroy-tasks))))
 
         ;; 1
         (flow-state prepare-predestroy-components :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  (component-predestroy-view
-                                   (tables core-state)))))
+                                  (component-predestroy-view (tables core)))))
                     (action #'component/init-or-active->destroy)
                     (transition prepare-predestroy-actors))
         ;; 2
         (flow-state prepare-predestroy-actors :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  (actor-predestroy-view
-                                   (tables core-state)))))
+                                  (actor-predestroy-view (tables core)))))
                     (action #'actor/init-or-active->destroy)
                     (transition destroy-actor-children))
         ;; 3
         (flow-state destroy-actor-children :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  ;; NOTE: We get the keys here because the
-                                  ;; action will be adding values to this hash
-                                  ;; table as we iterate over the keys. We need
-                                  ;; to copy the list of keys in order to
-                                  ;; satisfy the traversal rules of hash tables.
                                   (au:hash-keys (actor-destroy-db
-                                                 (tables core-state))))))
+                                                 (tables core))))))
                     ;; NOTE: See selector for this flow-state.
                     (action #'actor/destroy-descendants)
                     (transition decrement-component-destroy-timer))
         ;; 4 A
         (flow-state decrement-component-destroy-timer :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  (component-predestroy-view
-                                   (tables core-state)))))
+                                  (component-predestroy-view (tables core)))))
                     (action #'component/countdown-to-destruction)
                     (transition decrement-actor-destroy-timer))
         ;; 4 B
         (flow-state decrement-actor-destroy-timer :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  (actor-predestroy-view (tables core-state)))))
+                                  (actor-predestroy-view (tables core)))))
                     (action #'actor/countdown-to-destruction)
                     (transition pending-destroy-tasks))
         ;; 5
@@ -273,17 +263,17 @@
                     (selector nil)
                     (action nil)
                     (transition
-                     (lambda (core-state)
-                       (if (pending-destroy-tasks-p core-state)
+                     (lambda (core)
+                       (if (pending-destroy-tasks-p core)
                            protocol-attach/detach-components
                            exit/destroy-phase))))
         ;; 5.5
         (flow-state protocol-attach/detach-components :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :type-policy
                                   (component-destroy-by-type-view
-                                   (tables core-state)))))
+                                   (tables core)))))
                     (action #'component/invoke-attach/detach-events)
                     (transition deregister-colliders))
 
@@ -308,35 +298,35 @@
         ;; 6
         (flow-state protocol-destroy-component :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :type-policy
                                   (component-destroy-by-type-view
-                                   (tables core-state)))))
+                                   (tables core)))))
                     (action #'on-component-destroy)
                     (transition disconnect-destroyed-actors))
         ;; 7
         (flow-state disconnect-destroyed-actors :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  (actor-destroy-db (tables core-state)))))
+                                  (actor-destroy-db (tables core)))))
                     (action #'actor/disconnect)
                     (transition release-components))
         ;; 8
         (flow-state release-components :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :type-policy
                                   (component-destroy-by-type-view
-                                   (tables core-state)))))
+                                   (tables core)))))
                     (action #'component/destroy->released)
                     (transition release-actors))
         ;; 9
         (flow-state release-actors :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  (actor-destroy-db (tables core-state)))))
+                                  (actor-destroy-db (tables core)))))
                     (action #'actor/destroy->released)
                     (transition restart-predestroy-phase))
         ;; 10
@@ -356,9 +346,9 @@
                     (transition shader-refresh))
         (flow-state shader-refresh :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  core-state)))
+                                  core)))
                     (action nil)
                     (transition exit/maintenance-phase))
         (flow-state exit/maintenance-phase :reset ()
@@ -376,19 +366,19 @@
         ;; these atomic changes.
         (flow-state perform-recompilations :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  core-state)))
+                                  core)))
                     (action #'recompile-queued-items)
                     (transition initialize-phase))
         (flow-state initialize-phase :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  core-state)))
+                                  core)))
                     (action
-                     (lambda (core-state)
-                       (execute-flow core-state
+                     (lambda (core)
+                       (execute-flow core
                                      :default
                                      'initialize-phase
                                      'entry/initialize-phase
@@ -397,12 +387,12 @@
                     (transition active-phase))
         (flow-state active-phase :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  core-state)))
+                                  core)))
                     (action
-                     (lambda (core-state)
-                       (execute-flow core-state
+                     (lambda (core)
+                       (execute-flow core
                                      :default
                                      'active-phase
                                      'entry/active-phase
@@ -411,12 +401,12 @@
                     (transition destroy-phase))
         (flow-state destroy-phase :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  core-state)))
+                                  core)))
                     (action
-                     (lambda (core-state)
-                       (execute-flow core-state
+                     (lambda (core)
+                       (execute-flow core
                                      :default
                                      'destroy-phase
                                      'entry/destroy-phase
@@ -425,12 +415,12 @@
                     (transition maintenance-phase))
         (flow-state maintenance-phase :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  core-state)))
+                                  core)))
                     (action
-                     (lambda (core-state)
-                       (execute-flow core-state
+                     (lambda (core)
+                       (execute-flow core
                                      :default
                                      'maintenance-phase
                                      'entry/maintenance-phase

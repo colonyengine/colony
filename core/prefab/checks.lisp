@@ -48,14 +48,14 @@
            path)))
 
 (defun ensure-path-options-valid (path options)
-  (let ((valid-options '(:copy :link)))
+  (let ((valid-options '(:id :display-id :copy :link)))
     (dolist (x (au:plist-keys options))
       (unless (member x valid-options)
         (error "Invalid path option: ~s.~%Valid options: ~{~s~^, ~}~%Path: ~s."
                x valid-options path)))))
 
 (defun ensure-path-options-keys (path options)
-  (destructuring-bind (&key copy link) options
+  (destructuring-bind (&key copy link &allow-other-keys) options
     (when (and copy link)
       (error "Only one of :COPY or :LINK can be specified for a path.~%~
               Path: ~s."
@@ -109,10 +109,12 @@
 (defun ensure-component-not-duplicate (node type id)
   (with-slots (%path %components-table) node
     (when (au:href %components-table type id)
-      (error "Duplicate component type: ~s with the same ID: ~s, and no policy ~
-              set.~%Valid policies: NEW-TYPE, OLD-TYPE, NEW-ARGS, OLD-ARGS.~%~
+      (v:debug :fl.prefab
+               "Duplicate component type: ~s with the same ID: ~s, and no policy ~
+              set.~%Assuming a policy of :NEW-TYPE and overwriting the old ~
+              component.~%~
               Path: ~s."
-             type id %path))))
+               type id %path))))
 
 (defun ensure-component-type-symbol (type path)
   (unless (and (symbolp type)
@@ -131,18 +133,12 @@
            type path)))
 
 (defun ensure-component-options-valid (type options path)
-  (let ((valid-options '(:id :policy)))
+  (let ((valid-options '(:merge-id :policy)))
     (dolist (x (au:plist-keys options))
       (unless (member x valid-options)
         (error "Component type ~s has an invalid option: ~s.~%Valid options: ~
                 ~{~s~^, ~}.~%Path: ~s."
                type x valid-options path)))))
-
-(defun ensure-component-id (type options path)
-  (au:when-let ((id (getf options :id)))
-    (unless (integerp id)
-      (error "Component type ~s must have an integer ID.~%Path: ~s."
-             type path))))
 
 (defun ensure-component-policy (type options path)
   (au:when-let ((policy (getf options :policy))
