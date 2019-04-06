@@ -13,7 +13,7 @@
      :name "Player"
      :on-layer :player
      :referent (fl:ref "/collision-1/rot-0-center/plane-0"
-                       'fl.comp:collider/sphere)
+                       :component 'fl.comp:collider/sphere)
      :center (m:vec3)
      :radius 1)
     (fl.comp:render :material '2d-wood)))
@@ -27,7 +27,7 @@
      :name "Enemy"
      :on-layer :enemy
      :referent (fl:ref "/collision-1/rot-1-center/plane-1"
-                       'fl.comp:collider/sphere)
+		       :component 'fl.comp:collider/sphere)
      :center (m:vec3)
      :radius 1)
     (fl.comp:render :material '2d-wood))))
