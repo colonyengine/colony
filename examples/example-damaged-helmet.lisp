@@ -46,5 +46,4 @@
    (fl.comp:transform :rotate (m:vec3 (/ pi 2) 0 0)
                       :rotate/inc (m:vec3 0 0 -0.6)
                       :scale (m:vec3 4))
-   (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
-   (fl.comp:render :material 'damaged-helmet)))
+   (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))))

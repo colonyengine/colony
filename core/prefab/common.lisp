@@ -62,7 +62,8 @@
   (au:string-split path #\/))
 
 (defun make-node-path (parent name)
-  (au:string-merge parent "/" name))
+  (let ((path (au:string-merge parent "/" name)))
+    (string-right-trim "/" path)))
 
 (defun make-node-path-from-parts (path-parts)
   (format nil "/~{~a~^/~}" path-parts))

@@ -25,23 +25,31 @@
     `(list ,@(mapcar #'traverse-children spec))))
 
 (defmacro preprocess-spec (context spec)
-  (au:with-unique-names (setter actors)
-    `(let ((,actors (au:dict)))
-       (flet ((,setter (arg)
-                (setf ,actors arg))
-              (ref (actor &optional ctype)
-                (declare (ignore ctype))
-                (let ((actor (au:href ,actors actor)))
-                  (values actor ,actors))))
+  (au:with-unique-names
+      (actor-table-setter actor-table current-actor-setter current)
+    `(let ((,actor-table (au:dict))
+           (,current))
+       (flet ((,actor-table-setter (value)
+                (setf ,actor-table value))
+              (,current-actor-setter (value)
+                (setf ,current value))
+              (ref (id &key component)
+                (let ((reference (make-reference
+                                  id
+                                  ,current
+                                  ,actor-table
+                                  (au:ensure-list component))))
+                  (parse-reference reference))))
          (values
           (thunk-spec ,context ,spec)
-          #',setter)))))
+          #',actor-table-setter
+          #',current-actor-setter)))))
 
 (defmacro define-prefab (name (&key library (context 'context)) &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
          (prefabs `(au:href ,libraries ',library))
          (body (list (cons name body))))
-    (au:with-unique-names (prefab data setter)
+    (au:with-unique-names (prefab data actor-table-setter current-actor-setter)
       `(progn
          (ensure-prefab-name-string ',name)
          (ensure-prefab-name-valid ',name)
@@ -51,9 +59,13 @@
            (fl.data:set 'prefabs (au:dict #'eq)))
          (unless ,prefabs
            (setf ,prefabs (au:dict #'equalp)))
-         (au:mvlet* ((,data ,setter (preprocess-spec ,context ,body))
+         (au:mvlet* ((,data ,actor-table-setter ,current-actor-setter
+                            (preprocess-spec ,context ,body))
                      (,prefab (make-prefab ',name ',library ,data)))
            (setf (au:href ,prefabs ',name) ,prefab
-                 (slot-value ,prefab '%func) (make-factory ,prefab ,setter))
+                 (slot-value ,prefab '%func) (make-factory
+                                              ,prefab
+                                              ,actor-table-setter
+                                              ,current-actor-setter))
            (parse-prefab ,prefab))
          (export ',library)))))

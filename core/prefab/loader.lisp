@@ -11,7 +11,7 @@
                           :display-id (or %display-id %name)))))
     actors))
 
-(defun make-actor-components (context actors)
+(defun make-actor-components (context actors current-actor-setter)
   (let (components)
     (au:do-hash-values (actor actors)
       (au:do-hash (type table (au:href (components-table (prefab-node actor))))
@@ -21,6 +21,7 @@
             (push (list data actor component) components)))))
     (dolist (c components)
       (destructuring-bind (data actor component) c
+        (funcall current-actor-setter actor)
         (let ((args (loop :for (k v) :on (getf data :args) :by #'cddr
                           :append (list k (funcall v context)))))
           (apply #'reinitialize-instance component :actor actor args))))))
@@ -39,12 +40,12 @@
      (actor-component-by-type parent 'fl.comp:transform)
      (actor-component-by-type root 'fl.comp:transform))))
 
-(defun make-factory (prefab setter)
+(defun make-factory (prefab setter current-actor-setter)
   (lambda (core)
     (let* ((context (context core))
            (actors (make-actors context prefab)))
       (funcall setter actors)
-      (make-actor-components context actors)
+      (make-actor-components context actors current-actor-setter)
       (make-actor-relationships context prefab actors)
       (au:do-hash-values (actor actors)
         (spawn-actor actor)))))
