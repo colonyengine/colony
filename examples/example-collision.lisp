@@ -16,7 +16,7 @@
                        'fl.comp:collider/sphere)
      :center (m:vec3)
      :radius 1)
-    (fl.comp:render :material 'texture-test/2d-wood)))
+    (fl.comp:render :material '2d-wood)))
   ("rot-1-center"
    (fl.comp:transform :translate (m:vec3 2 0 0)
                       :rotate/inc (m:vec3 0 0 (- pi)))
@@ -30,4 +30,4 @@
                        'fl.comp:collider/sphere)
      :center (m:vec3)
      :radius 1)
-    (fl.comp:render :material 'texture-test/2d-wood))))
+    (fl.comp:render :material '2d-wood))))
