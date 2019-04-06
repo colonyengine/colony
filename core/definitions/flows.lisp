@@ -122,11 +122,11 @@
         ;; and out.
         (flow-state physics-collisions :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  core-state)))
-                    (action (lambda (core-state)
-                              (let ((cs (collider-system core-state)))
+                                  core)))
+                    (action (lambda (core)
+                              (let ((cs (collider-system core)))
                                 ;; NOTE: This order is required.
                                 (compute-stable-collisions cs)
                                 (compute-registering-collisions cs))))
@@ -287,12 +287,12 @@
         ;; will do the right thing!
         (flow-state deregister-colliders :reset ()
                     (selector
-                        (lambda (core-state)
+                        (lambda (core)
                           (values :identity-policy
-                                  core-state)))
+                                  core)))
                     (action
-                     (lambda (core-state)
-                       (let ((cs (collider-system core-state)))
+                     (lambda (core)
+                       (let ((cs (collider-system core)))
                          (compute-deregistering-collisions cs))))
                     (transition protocol-destroy-component))
         ;; 6
