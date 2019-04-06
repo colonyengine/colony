@@ -41,6 +41,13 @@
                       Path: ~s."
                      path)))
 
+(defun ensure-path-not-parent (path)
+  (when (au:string-contains-p ".." path)
+    (error "Path cannot contain the character sequence \"..\".~%~
+            This is reserved for the start of a path for backtracking with ~
+            `REF`.~%Path: ~s."
+           path)))
+
 (defun ensure-path-options-plist (path options)
   (unless (au:plist-p options)
     (error "Path options must be a property list of keyword keys and values.~%~

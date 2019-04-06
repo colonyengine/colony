@@ -22,6 +22,9 @@
 
 (defun parse-reference-path/absolute (reference)
   (with-slots (%id %actor-table) reference
+    (ensure-path-no-trailing-slash %id)
+    (ensure-path-valid %id)
+    (ensure-path-not-parent %id)
     (au:href %actor-table %id)))
 
 (defun parse-reference-path/parent (reference)
@@ -33,22 +36,26 @@
                  (if (and (au:string-starts-with-p rest "../")
                           (> (count #\/ parent-path) 1))
                      (find-actor rest node)
-                     (au:href %actor-table
-                              (make-node-path
-                               parent-path
-                               (remove-if (lambda (x) (find x "./")) rest)))))))
-      (find-actor %id (prefab-node %current)))))
+                     (values parent-path
+                             rest)))))
+      (au:mvlet* ((parent sub-path (find-actor %id (prefab-node %current)))
+                  (sub-path (string-left-trim "./" sub-path)))
+        (ensure-path-no-trailing-slash sub-path)
+        (ensure-path-valid sub-path)
+        (ensure-path-not-parent sub-path)
+        (au:href %actor-table (make-node-path parent sub-path))))))
 
 (defun parse-reference-path/relative (reference)
   (with-slots (%id %current %actor-table) reference
     (let* ((parent-path (path (prefab-node %current)))
-           (final-path (make-node-path parent-path %id)))
-      (au:href %actor-table final-path))))
+           (path (make-node-path parent-path %id)))
+      (ensure-path-no-trailing-slash path)
+      (ensure-path-valid path)
+      (ensure-path-not-parent path)
+      (au:href %actor-table path))))
 
 (defun parse-reference-path (reference)
-  ;; TODO: ensure all valid forms of an actor path
-  ;; TODO: disallow ".." for a node name in prefab parser
-  (case (elt (id reference) 0)
+  (case (char (id reference) 0)
     (#\/ (parse-reference-path/absolute reference))
     (#\. (parse-reference-path/parent reference))
     (t (parse-reference-path/relative reference))))
