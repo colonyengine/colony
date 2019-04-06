@@ -99,7 +99,10 @@
      (:file "colliders")))
    (:module "prefab"
     :components
-    ((:file "checks")
+    ((:file "common")
+     (:file "checks")
+     (:file "parser")
+     (:file "loader")
      (:file "prefab")))
    (:module "actions"
     :components
