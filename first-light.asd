@@ -45,6 +45,7 @@
      (:file "prefab")
      (:file "api")))
    (:file "common")
+   (:file "uuid")
    (:file "resource")
    (:file "context")
    (:file "options")
