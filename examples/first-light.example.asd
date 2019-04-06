@@ -17,6 +17,7 @@
      (:file "graph")
      (:file "noise")
      (:file "texture")))
+   (:file "example-collision")
    (:file "example-damaged-helmet")
    (:file "example-geometric-volumes")
    (:file "example-graph")
