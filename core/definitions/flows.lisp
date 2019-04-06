@@ -117,7 +117,8 @@
         ;; TODO: PHYSICS-COLLISIONS has a tentative implementation, there may be
         ;; more work here than this single state. This will compute collisions
         ;; and then inform the recipients of those collisions as desired in the
-        ;; boundary regions components (yet to be written).  NOTE: This
+        ;; boundary regions components (yet to be written).
+        ;; NOTE: This
         ;; flow-state is invoked deep inside of TICK, hence no transitions in
         ;; and out.
         (flow-state physics-collisions :reset ()
@@ -278,8 +279,8 @@
                     (transition deregister-colliders))
 
         ;; 5.75 HACKISH
-	;;
-	;; TODO: Might call on-collision-* on components that have been
+        ;;
+        ;; TODO: Might call on-collision-* on components that have been
         ;; detached? Might have to have a much finer grained understanding of
         ;; something that is about to be destroyed and a barrier that all the
         ;; about to be destroyed colliders can send their message before any

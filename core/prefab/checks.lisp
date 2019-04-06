@@ -1,4 +1,4 @@
-(in-package :fl.prefab)
+(in-package :first-light.prefab)
 
 (defun ensure-prefab-name-string (name)
   (unless (stringp name)
