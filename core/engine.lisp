@@ -67,6 +67,10 @@ tear-down procedure occurs when stopping the engine."
     (load-call-flows core-state)
     (load-texture-descriptors core-state)
     (load-materials core-state)
+    ;; TODO: This next call is a hack to put in the collision system
+    ;; so we can do a game jam. This feature requires a new DSL for describing
+    ;; physics properties of the world, collision layers, etc, etc, etc.
+    (initialize-collider-system core-state)
     (fl.prefab:load-prefabs core-state prefabs)
     (v:info :fl.core.engine "Finished starting ~a" title)))
 

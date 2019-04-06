@@ -325,3 +325,40 @@
                       :rotate/inc (m:vec3 0.5))
    (fl.comp:mesh :location '((:core :mesh) "cube.glb"))
    (fl.comp:render :material 'texture-test/testcubemaparray)))
+
+(fl:define-prefab "simple-collision-test-0" (:library examples)
+  ("camera"
+   (fl.comp:transform :translate (m:vec3 0 0 6))
+   (fl.comp:camera :active-p t
+                   :mode :perspective
+                   :fovy (* 90 (/ pi 180))))
+  ("rot-0-center"
+   (fl.comp:transform :translate (m:vec3 -2 0 0)
+                      :rotate/inc (m:vec3 0 0 pi))
+   ("plane-0"
+    (fl.comp:transform :translate (m:vec3 -2 0 0))
+    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+    (fl.comp:collider/sphere
+     :name "Player"
+     :on-layer :player
+     :referent (fl:ref "/simple-collision-test-0/rot-0-center/plane-0"
+                       'fl.comp:collider/sphere)
+     :center (m:vec3)
+     :radius 1)
+    (fl.comp:render :material 'texture-test/2d-wood)))
+
+  ("rot-1-center"
+   (fl.comp:transform :translate (m:vec3 2 0 0)
+                      :rotate/inc (m:vec3 0 0 (- pi)))
+
+   ("plane-1"
+    (fl.comp:transform :translate (m:vec3 2 0 0))
+    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+    (fl.comp:collider/sphere
+     :name "Enemy"
+     :on-layer :enemy
+     :referent (fl:ref "/simple-collision-test-0/rot-1-center/plane-1"
+                       'fl.comp:collider/sphere)
+     :center (m:vec3)
+     :radius 1)
+    (fl.comp:render :material 'texture-test/2d-wood))))
