@@ -50,8 +50,8 @@
   (format stream "~a" (path node)))
 
 (au:eval-always
-  (defun split-prefab-spec (prefab-spec)
-    (destructuring-bind (name &rest body) prefab-spec
+  (defun split-spec (spec)
+    (destructuring-bind (name &rest body) spec
       (loop :for tail :on body
             :for item = (first tail)
             :while (symbolp (first item))
@@ -81,8 +81,8 @@
       (error "Prefab ~s not found in library ~s." name library)))
 
 (defun %find-node (path library)
-  (let* ((prefab-name (first (explode-path path)))
-         (prefab (%find-prefab prefab-name library)))
+  (let* ((name (first (explode-path path)))
+         (prefab (%find-prefab name library)))
     (when prefab
       (au:href (parse-tree prefab) path))))
 
@@ -165,7 +165,7 @@
     (labels ((%make-nodes (parent data)
                (dolist (node-spec data)
                  (au:mvlet*
-                     ((name components children (split-prefab-spec node-spec))
+                     ((name components children (split-spec node-spec))
                       (path id display-id options
                             (parse-path-spec parent %library name)))
                    (with-slots (%id %display-id %options %components)
@@ -373,32 +373,32 @@
       (clrhash %parse-tree))
     prefab))
 
-(defun make-prefab-actors (context prefab)
-  (let ((prefab-actors (au:dict #'equalp)))
+(defun make-actors (context prefab)
+  (let ((actors (au:dict #'equalp)))
     (au:do-hash (path node (parse-tree prefab))
       (with-slots (%name %id %display-id) node
-        (setf (au:href prefab-actors path)
+        (setf (au:href actors path)
               (make-actor context
                           :prefab-node node
                           :id %id
                           :display-id (or %display-id %name)))))
-    prefab-actors))
+    actors))
 
-(defun make-prefab-actor-components (context actors)
+(defun make-actor-components (context actors)
   (let (components)
     (au:do-hash-values (actor actors)
       (au:do-hash (type table (au:href (components-table (prefab-node actor))))
         (au:do-hash-values (data table)
           (let ((component (make-component context type)))
             (attach-component actor component)
-            (push (list data component) components)))))
+            (push (list data actor component) components)))))
     (dolist (c components)
-      (destructuring-bind (data component) c
+      (destructuring-bind (data actor component) c
         (let ((args (loop :for (k v) :on (getf data :args) :by #'cddr
                           :append (list k (funcall v context)))))
-          (apply #'reinitialize-instance component args))))))
+          (apply #'reinitialize-instance component :actor actor args))))))
 
-(defun make-prefab-actor-relationships (context prefab actors &optional parent)
+(defun make-actor-relationships (context prefab actors &optional parent)
   (let ((parent (or parent (scene-tree (core context))))
         (root (au:href actors (path (root prefab)))))
     (au:do-hash-values (actor actors)
@@ -412,13 +412,13 @@
      (actor-component-by-type parent 'fl.comp:transform)
      (actor-component-by-type root 'fl.comp:transform))))
 
-(defun make-prefab-factory (prefab setter)
+(defun make-factory (prefab setter)
   (lambda (core)
     (let* ((context (context core))
-           (actors (make-prefab-actors context prefab)))
+           (actors (make-actors context prefab)))
       (funcall setter actors)
-      (make-prefab-actor-components context actors)
-      (make-prefab-actor-relationships context prefab actors)
+      (make-actor-components context actors)
+      (make-actor-relationships context prefab actors)
       (au:do-hash-values (actor actors)
         (spawn-actor actor)))))
 
@@ -429,39 +429,42 @@
       (let ((prefab (find-prefab name library)))
         (funcall (func prefab) core)))))
 
-(defmacro thunk-prefab-spec (context prefab-spec)
-  (labels ((thunk-component-args (data)
-             (destructuring-bind (type . options/args) data
-               (let ((options-p (listp (first options/args))))
-                 `(list ',type
-                        ',(when options-p (first options/args))
-                        ,@(loop :with args = (if options-p
-                                                 (rest options/args)
-                                                 options/args)
-                                :for (key value) :on args :by #'cddr
-                                :collect key
-                                :collect `(lambda (,context)
-                                            (declare (ignorable ,context))
-                                            ,value))))))
-           (traverse-children (data)
-             (au:mvlet ((name components children (split-prefab-spec data)))
+(defun thunk-component-args (context data)
+  (destructuring-bind (type . options/args) data
+    (let ((options-p (listp (first options/args))))
+      `(list ',type
+             ',(when options-p (first options/args))
+             ,@(loop :with args = (if options-p
+                                      (rest options/args)
+                                      options/args)
+                     :for (key value) :on args :by #'cddr
+                     :collect key
+                     :collect `(lambda (,context)
+                                 (declare (ignorable ,context))
+                                 ,value))))))
+
+(defmacro thunk-spec (context spec)
+  (labels ((traverse-children (data)
+             (au:mvlet ((name components children (split-spec data)))
                `(list ',name
-                      ,@(mapcar #'thunk-component-args components)
+                      ,@(mapcar
+                         (lambda (x) (thunk-component-args context x))
+                         components)
                       ,@(mapcar #'traverse-children children)))))
-    (au:with-unique-names (setter prefab-actors)
-      `(let ((,prefab-actors (au:dict)))
-         (flet ((,setter (arg)
-                  (setf ,prefab-actors arg))
-                (ref (actor-path &optional component-type)
-                  (let ((actor (au:href ,prefab-actors actor-path)))
-                    (values (if component-type
-                                (actor-component-by-type actor component-type)
-                                actor)
-                            ,prefab-actors))))
-           (ref (gensym))
-           (values
-            (list ,@(mapcar #'traverse-children prefab-spec))
-            #',setter))))))
+    `(list ,@(mapcar #'traverse-children spec))))
+
+(defmacro preprocess-spec (context spec)
+  (au:with-unique-names (setter actors)
+    `(let ((,actors (au:dict)))
+       (flet ((,setter (arg)
+                (setf ,actors arg))
+              (ref (actor)
+                (let ((actor (au:href ,actors actor)))
+                  (values actor ,actors))))
+         (ref nil)
+         (values
+          (thunk-spec ,context ,spec)
+          #',setter)))))
 
 (defmacro define-prefab (name (&key library (context 'context)) &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
@@ -477,10 +480,9 @@
            (fl.data:set 'prefabs (au:dict #'eq)))
          (unless ,prefabs
            (setf ,prefabs (au:dict #'equalp)))
-         (au:mvlet* ((,data ,setter (thunk-prefab-spec ,context ,body))
+         (au:mvlet* ((,data ,setter (preprocess-spec ,context ,body))
                      (,prefab (make-prefab ',name ',library ,data)))
            (setf (au:href ,prefabs ',name) ,prefab
-                 (slot-value ,prefab '%func) (make-prefab-factory
-                                              ,prefab ,setter))
+                 (slot-value ,prefab '%func) (make-factory ,prefab ,setter))
            (parse-prefab ,prefab))
          (export ',library)))))
