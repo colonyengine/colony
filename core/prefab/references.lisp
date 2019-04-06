@@ -33,10 +33,10 @@
                  (if (and (au:string-starts-with-p rest "../")
                           (> (count #\/ parent-path) 1))
                      (find-actor rest node)
-                     (return-from find-actor
-                       (let* ((cleaned (remove-if (lambda (x) (find x "./")) rest))
-                              (final-path (make-node-path parent-path cleaned)))
-                         (au:href %actor-table final-path)))))))
+                     (au:href %actor-table
+                              (make-node-path
+                               parent-path
+                               (remove-if (lambda (x) (find x "./")) rest)))))))
       (find-actor %id (prefab-node %current)))))
 
 (defun parse-reference-path/relative (reference)
@@ -47,6 +47,7 @@
 
 (defun parse-reference-path (reference)
   ;; TODO: ensure all valid forms of an actor path
+  ;; TODO: disallow ".." for a node name in prefab parser
   (case (elt (id reference) 0)
     (#\/ (parse-reference-path/absolute reference))
     (#\. (parse-reference-path/parent reference))
