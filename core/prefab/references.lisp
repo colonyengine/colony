@@ -12,14 +12,13 @@
    (%merge-id :reader merge-id
               :initarg :merge-id)))
 
-(defun make-reference (id current actor-table component-spec)
-  (destructuring-bind (component-type &optional merge-id) component-spec
-    (make-instance 'reference
-                   :id id
-                   :current current
-                   :actor-table actor-table
-                   :component-type component-type
-                   :merge-id merge-id)))
+(defun make-reference (id current actor-table component-type merge-id)
+  (make-instance 'reference
+                 :id id
+                 :current current
+                 :actor-table actor-table
+                 :component-type component-type
+                 :merge-id merge-id))
 
 (defun parse-reference-path/absolute (reference)
   (with-slots (%id %actor-table) reference

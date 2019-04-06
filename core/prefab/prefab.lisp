@@ -33,12 +33,13 @@
                 (setf ,actor-table value))
               (,current-actor-setter (value)
                 (setf ,current value))
-              (ref (id &key component)
+              (ref (id &key component merge-id)
                 (let ((reference (make-reference
                                   id
                                   ,current
                                   ,actor-table
-                                  (au:ensure-list component))))
+                                  component
+                                  merge-id)))
                   (parse-reference reference))))
          (values
           (thunk-spec ,context ,spec)
