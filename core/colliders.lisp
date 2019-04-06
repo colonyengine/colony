@@ -336,9 +336,9 @@ have had--and update all other faces too."
               ;; The FIST is good to go! collide it and stabilize it!
               (let ((face-layers
                       (au:href (collision-plan collider-system) fist-layer)))
-                (format t "Checking registering fist: ~S, [~S: ~S]~%"
-                        (fl.comp:name fist) (fl.comp:on-layer fist)
-                        face-layers)
+                #++(format t "Checking registering fist: ~S, [~S: ~S]~%"
+                           (fl.comp:name fist) (fl.comp:on-layer fist)
+                           face-layers)
                 (cond
                   ((null face-layers)
                    ;; If no face layers to collide against AT ALL,
@@ -351,8 +351,8 @@ have had--and update all other faces too."
                    ;; Else, we collide the fist against each face in each
                    ;; layer.
                    (dolist (face-layer face-layers)
-                     (format t " Checking contacts between layers: ~S <=> ~S~%"
-                             fist-layer face-layer)
+                     #++(format t " Checking contacts between layers: ~S <=> ~S~%"
+                                fist-layer face-layer)
                      ;; Find all the face-layer colliders to which we need to
                      ;; collide.
                      (let ((face-layer-stable-colliders
@@ -363,8 +363,8 @@ have had--and update all other faces too."
                        (unless (zerop (hash-table-count
                                        face-layer-stable-colliders))
                          (au:do-hash-keys (face face-layer-stable-colliders)
-                           (format t "  compute-contact-state: [reg: ~S <-> stable: ~S]~%"
-                                   (fl.comp:name fist) (fl.comp:name face))
+                           #++(format t "  compute-contact-state: [reg: ~S <-> stable: ~S]~%"
+                                      (fl.comp:name fist) (fl.comp:name face))
                            (compute-contact-state collider-system fist
                                                   face)))))
                    ;; And when we *FINISH* colliding the specific registering
@@ -373,7 +373,7 @@ have had--and update all other faces too."
                    ;; is so the next registering fist can collide against it if
                    ;; need be. NOTE: We CANNOT stabilize until AFTER the
                    ;; registering fist has been collided with all stable faces.
-                   (format t " Stabilizing[1]: ~S~%" (fl.comp:name fist))
+                   #++(format t " Stabilizing[1]: ~S~%" (fl.comp:name fist))
                    (setf (au:href stable-colliders fist-layer fist)
                          fist)))))))))))
 

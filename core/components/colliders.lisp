@@ -19,16 +19,14 @@
 
 (defmethod on-component-attach ((self collider/sphere) actor)
   (declare (ignore actor))
-  ;; register to communal collider db
   (let ((context (context self)))
-    (declare (ignore context))
+    (register-collider context self)
     nil))
 
 (defmethod on-component-detach ((self collider/sphere) actor)
   (declare (ignore actor))
-  ;; register to communal collider db
   (let ((context (context self)))
-    (declare (ignore context))
+    (deregister-collider context self)
     nil))
 
 (defmethod on-component-destroy ((self collider/sphere))
@@ -37,15 +35,15 @@
 ;; We'll use myself as the referent so I can debug when things happen.
 
 (defmethod on-collision-enter ((self collider/sphere) other-collider)
-  (format t "self ~S entered collision with other collider ~S~%"
+  (format t "Collider[~S] entered collision with other Collider[~S]~%"
           (name self) (name (referent other-collider))))
 
 (defmethod on-collision-continue ((self collider/sphere) other-collider)
-  (format t "self ~S continues collision with other collider ~S~%"
+  (format t "Collider[~S] continues collision with other Collider[~S]~%"
           (name self) (name (referent other-collider))))
 
 (defmethod on-collision-exit ((self collider/sphere) other-collider)
-  (format t "self ~S exited collision with other collider ~S~%"
+  (format t "Collider[~S] exited collision with other Collider[~S]~%"
           (name self) (name (referent other-collider))))
 
 
@@ -89,7 +87,14 @@
                                   face-collider-world-center))
             (distance/2 (/ distance 2.0)))
 
+       #++(format t "  fist[~A]: <~A, ~A [~A]>~%  face[~A]: <~A, ~A [~A]>~%"
+                  (fl.comp:name fist) fist-collider-world-center fist-world-radius
+                  (m:length fist-world-radius)
+
+                  (fl.comp:name face) face-collider-world-center face-world-radius
+                  (m:length face-world-radius))
+
        ;; Now, compute the collision is the common world space we converted
        ;; everything into.
-       (or (<= distance/2 (m:length (m:vec3 fist-world-radius)))
-           (<= distance/2 (m:length (m:vec3 face-world-radius))))))))
+       (or (<= distance/2 (m:length fist-world-radius))
+           (<= distance/2 (m:length face-world-radius)))))))

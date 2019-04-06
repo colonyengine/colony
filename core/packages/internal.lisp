@@ -28,6 +28,7 @@
    #:define-texture-profile
    #:delta
    #:deploy-binary
+   #:deregister-collider
    #:destroy
    #:detach-component
    #:find-resource
@@ -58,6 +59,7 @@
    #:prefab-node
    #:print-all-resources
    #:project-data
+   #:register-collider
    #:scene-tree
    #:shader
    #:shared-storage

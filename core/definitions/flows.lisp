@@ -115,15 +115,23 @@
                                    (tables core-state)))))
                     (action #'on-component-physics-update)
                     (transition nil))
-        ;; TODO: PHYSICS-COLLISIONS is not yet implemented, there may be more
-        ;; work here than this single state. This will compute collisions and
-        ;; then inform the recipients of those collisions as desired in the
-        ;; boundary regions components (yet to be written).
-        ;; NOTE: This flow-state is invoked deep inside of TICK, hence no
-        ;; transitions in and out.
+
+        ;; TODO: PHYSICS-COLLISIONS has a tentative implementation, there may be
+        ;; more work here than this single state. This will compute collisions
+        ;; and then inform the recipients of those collisions as desired in the
+        ;; boundary regions components (yet to be written).  NOTE: This
+        ;; flow-state is invoked deep inside of TICK, hence no transitions in
+        ;; and out.
         (flow-state physics-collisions :reset ()
-                    (selector nil)
-                    (action nil)
+                    (selector
+                        (lambda (core-state)
+                          (values :identity-policy
+                                  core-state)))
+                    (action (lambda (core-state)
+                              (let ((cs (collider-system core-state)))
+                                ;; NOTE: This order is required.
+                                (compute-stable-collisions cs)
+                                (compute-registering-collisions cs))))
                     (transition nil))
         ;; TODO: Should I run flow destroy-phase just before this next
         ;; flow-state so that those actors/components aren't even drawn?
@@ -192,6 +200,7 @@
         ;;    decrement ttl by frame-time for predestroying actors.
         ;; 5. If destroy is empty, go to 11.
         ;; 5.5 run ON-ATTACH-COMPONENT & ON-DETACH-COMPONENT by-type.
+        ;; 5.75 HACKISH: run any deregistration of colliders. Maybe too late?
         ;; 6. run ON-COMPONENT-DESTROY by-type in destroy.
         ;; 7. disconnect all destroyed actors from the scene heirarchy.
         ;; 8. release-components (and remove from actors) from destroy.
@@ -276,6 +285,25 @@
                                   (component-destroy-by-type-view
                                    (tables core-state)))))
                     (action #'component/invoke-attach/detach-events)
+                    (transition deregister-colliders))
+
+        ;; 5.75 HACKISH
+	;;
+	;; TODO: Might call on-collision-* on components that have been
+        ;; detached? Might have to have a much finer grained understanding of
+        ;; something that is about to be destroyed and a barrier that all the
+        ;; about to be destroyed colliders can send their message before any
+        ;; actual detaches/destroys happen. Confirm that the new flow design
+        ;; will do the right thing!
+        (flow-state deregister-colliders :reset ()
+                    (selector
+                        (lambda (core-state)
+                          (values :identity-policy
+                                  core-state)))
+                    (action
+                     (lambda (core-state)
+                       (let ((cs (collider-system core-state)))
+                         (compute-deregistering-collisions cs))))
                     (transition protocol-destroy-component))
         ;; 6
         (flow-state protocol-destroy-component :reset ()

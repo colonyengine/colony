@@ -23,6 +23,7 @@
    #:define-resources
    #:define-texture
    #:define-texture-profile
+   #:deregister-collider
    #:destroy
    #:detach-component
    #:find-resource
@@ -48,6 +49,7 @@
    #:option
    #:print-all-resources
    #:project-data
+   #:register-collider
    #:shared-storage
    #:spawn-actor
    #:ss-href
