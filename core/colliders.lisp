@@ -61,10 +61,8 @@
   (apply #'make-instance 'collider-system init-args))
 
 
-;; TODO: Add a new component Cfs-XXX state for computing physics collisions that
+;; TODO: Add a new component Cfs-NNN state for computing physics collisions that
 ;; happens just after disabling a component. NOTE: Think about this more.
-
-
 (defun register-collider (context collider)
   "Add a new collider that may participate in the collision system."
   (let* ((cs (collider-system (core context)))
