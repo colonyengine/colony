@@ -1,5 +1,6 @@
 (in-package :%first-light)
 
+#+sbcl
 (au:eval-always
   (defmacro profile (core duration)
     (let ((packages (remove-if-not
