@@ -1,56 +1,42 @@
 (in-package :first-light.prefab)
 
-(defun thunk-component-args (context data)
-  (destructuring-bind (type . options/args) data
-    (let ((options-p (listp (first options/args))))
-      `(list ',type
-             ',(when options-p (first options/args))
-             ,@(loop :with args = (if options-p
-                                      (rest options/args)
-                                      options/args)
-                     :for (key value) :on args :by #'cddr
-                     :collect key
-                     :collect `(lambda (,context)
-                                 (declare (ignorable ,context))
-                                 ,value))))))
-
-(defmacro thunk-spec (context spec)
-  (labels ((traverse-children (data)
+(defmacro preprocess-spec (name context spec)
+  (labels ((rec (data)
              (au:mvlet ((name components children (split-spec data)))
                `(list ',name
-                      ,@(mapcar
-                         (lambda (x) (thunk-component-args context x))
-                         components)
-                      ,@(mapcar #'traverse-children children)))))
-    `(list ,@(mapcar #'traverse-children spec))))
+                      ,@(mapcar #'thunk components)
+                      ,@(mapcar #'rec children))))
+           (thunk (data)
+             (destructuring-bind (type . options/args) data
+               (let ((options-p (listp (first options/args))))
+                 `(list ',type
+                        ',(when options-p (first options/args))
+                        ,@(loop :with args = (if options-p
+                                                 (rest options/args)
+                                                 options/args)
+                                :for (key value) :on args :by #'cddr
+                                :collect key
+                                :collect `(lambda (,context)
+                                            (declare (ignorable ,context))
+                                            ,value)))))))
+    `(values
+      (list ,@(mapcar #'rec (list (cons name spec))))
+      (au:dlambda
+        (:actors (x) (setf actor-table x))
+        (:current-actor (x) (setf current x))))))
 
-(defmacro preprocess-spec (context spec)
-  (au:with-unique-names
-      (actor-table-setter actor-table current-actor-setter current)
-    `(let ((,actor-table (au:dict))
-           (,current))
-       (flet ((,actor-table-setter (value)
-                (setf ,actor-table value))
-              (,current-actor-setter (value)
-                (setf ,current value))
-              (ref (id &key component merge-id)
-                (let ((reference (make-reference
-                                  id
-                                  ,current
-                                  ,actor-table
-                                  component
-                                  merge-id)))
-                  (parse-reference reference))))
-         (values
-          (thunk-spec ,context ,spec)
-          #',actor-table-setter
-          #',current-actor-setter)))))
+(defmacro inject-ref-environment (&body body)
+  `(let ((actor-table (au:dict))
+         (current))
+     (flet ((ref (id &key component merge-id)
+              (parse-reference
+               (make-reference id current actor-table component merge-id))))
+       ,@body)))
 
 (defmacro define-prefab (name (&key library (context 'context)) &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
-         (prefabs `(au:href ,libraries ',library))
-         (body (list (cons name body))))
-    (au:with-unique-names (prefab data actor-table-setter current-actor-setter)
+         (prefabs `(au:href ,libraries ',library)))
+    (au:with-unique-names (prefab data setter)
       `(progn
          (ensure-prefab-name-string ',name)
          (ensure-prefab-name-valid ',name)
@@ -60,13 +46,10 @@
            (fl.data:set 'prefabs (au:dict #'eq)))
          (unless ,prefabs
            (setf ,prefabs (au:dict #'equalp)))
-         (au:mvlet* ((,data ,actor-table-setter ,current-actor-setter
-                            (preprocess-spec ,context ,body))
-                     (,prefab (make-prefab ',name ',library ,data)))
-           (setf (au:href ,prefabs ',name) ,prefab
-                 (slot-value ,prefab '%func) (make-factory
-                                              ,prefab
-                                              ,actor-table-setter
-                                              ,current-actor-setter))
-           (parse-prefab ,prefab))
+         (inject-ref-environment
+           (au:mvlet* ((,data ,setter (preprocess-spec ,name ,context ,body))
+                       (,prefab (make-prefab ',name ',library ,data)))
+             (setf (au:href ,prefabs ',name) ,prefab
+                   (func ,prefab) (make-factory ,prefab ,setter))
+             (parse-prefab ,prefab)))
          (export ',library)))))

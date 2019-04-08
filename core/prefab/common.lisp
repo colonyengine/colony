@@ -14,7 +14,7 @@
            :initform (au:dict #'eq
                               :source->targets (au:dict #'equalp)
                               :target->source (au:dict #'equalp)))
-   (%func :reader func
+   (%func :accessor func
           :initform (constantly nil))))
 
 (au:define-printer (prefab stream :type t)
