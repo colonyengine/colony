@@ -103,17 +103,3 @@
       (setf %data data)
       (clrhash %parse-tree))
     prefab))
-
-(defun print-prefab (name library)
-  (flet ((print-line (level value)
-           (format t "~&~a~v@<~s~>~%"
-                   (make-string level :initial-element #\Space)
-                   level value)))
-    (map-nodes
-     (lambda (x)
-       (let ((level (* 3 (1- (length (explode-path (path x)))))))
-         (print-line level (name x))
-         (au:do-hash (type table (components-table x))
-           (au:do-hash-values (data table)
-             (print-line level `(,type ,@(getf data :args)))))))
-     (root (find-prefab name library)))))
