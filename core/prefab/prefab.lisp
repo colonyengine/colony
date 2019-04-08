@@ -23,14 +23,14 @@
       (list ,@(mapcar #'rec (list (cons name spec))))
       (au:dlambda
         (:actors (x) (setf actor-table x))
-        (:current-actor (x) (setf current x))))))
+        (:components (x) (setf component-table x))
+        (:current-actor (x) (setf current-actor x))))))
 
 (defmacro inject-ref-environment (&body body)
-  `(let ((actor-table (au:dict))
-         (current))
-     (flet ((ref (id &key component merge-id)
-              (parse-reference
-               (make-reference id current actor-table component merge-id))))
+  `(let (actor-table component-table current-actor)
+     (flet ((ref (&rest args)
+              (lookup-reference
+               args current-actor actor-table component-table)))
        ,@body)))
 
 (defmacro define-prefab (name (&key library (context 'context)) &body body)

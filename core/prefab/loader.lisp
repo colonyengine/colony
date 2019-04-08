@@ -12,19 +12,26 @@
     actors))
 
 (defun make-actor-components (context actors setter)
-  (let (components)
+  (let ((components (au:dict #'eq)))
     (au:do-hash-values (actor actors)
       (au:do-hash (type table (au:href (components-table (prefab-node actor))))
-        (au:do-hash-values (data table)
+        (unless (au:href components actor)
+          (setf (au:href components actor) (au:dict #'eq)))
+        (au:do-hash (id data table)
+          (unless (au:href components actor type)
+            (setf (au:href components actor type) (au:dict #'equalp)))
           (let ((component (make-component context type)))
-            (attach-component actor component)
-            (push (list data actor component) components)))))
-    (dolist (c components)
-      (destructuring-bind (data actor component) c
-        (funcall setter :current-actor actor)
-        (let ((args (loop :for (k v) :on (getf data :args) :by #'cddr
-                          :append (list k (funcall v context)))))
-          (apply #'reinitialize-instance component :actor actor args))))))
+            (setf (au:href components actor type id) (cons component data))
+            (attach-component actor component)))))
+    (funcall setter :components components)
+    (au:do-hash (actor actor-table components)
+      (funcall setter :current-actor actor)
+      (au:do-hash-values (id actor-table)
+        (au:do-hash-values (data id)
+          (destructuring-bind (component . (&key args &allow-other-keys)) data
+            (let ((args (loop :for (k v) :on args :by #'cddr
+                              :append (list k (funcall v context)))))
+              (apply #'reinitialize-instance component :actor actor args))))))))
 
 (defun make-actor-relationships (context prefab actors &optional parent)
   (let ((parent (or parent (scene-tree (core context))))
