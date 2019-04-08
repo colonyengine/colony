@@ -1,6 +1,6 @@
 (in-package :defpackage+-user-1)
 
-(defpackage #:first-light.actions
+(defpackage+ #:first-light.actions
   (:nicknames #:fl.actions)
   (:local-nicknames (#:m #:game-math))
   (:use #:cl #:%first-light)
