@@ -26,6 +26,7 @@
    #:deregister-collider
    #:destroy
    #:detach-component
+   #:display-id
    #:find-actors-by-id
    #:find-by-uuid
    #:find-components-by-id
