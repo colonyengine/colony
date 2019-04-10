@@ -103,3 +103,10 @@
       (setf %data data)
       (clrhash %parse-tree))
     prefab))
+
+(defun get-node-option (node option &optional (inherit-p t))
+  (let ((parent (parent node)))
+    (or (getf (options node) option)
+        (and inherit-p
+             parent
+             (getf (options parent) option)))))

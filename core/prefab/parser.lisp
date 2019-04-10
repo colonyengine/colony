@@ -16,29 +16,33 @@
         (unless success-p
           (remhash %name (au:href (fl.data:get 'prefabs) %library)))))))
 
-(defun parse-copy/link (library id display-id path copy-p link-p form policy)
-  (flet ((check-source (source)
-           (ensure-copy/link-source-valid path source)
-           (ensure-copy/link-source-absolute path source)
-           (ensure-copy/link-source-no-trailing-slash path source))
-         (make-path-options (source from)
-           (values path
-                   id
-                   display-id
-                   (list :mode (cond (copy-p 'copy) (link-p 'link))
-                         :policy policy
-                         :source source
-                         :from from))))
-    (typecase form
-      (string
-       (check-source form)
-       (make-path-options form library))
-      (list
-       (destructuring-bind (source &key (from library)) form
-         (check-source source)
-         (ensure-copy/link-source-string path source)
-         (ensure-copy/link-library path from)
-         (make-path-options source from))))))
+(defun parse-copy/link (library path target options)
+  (destructuring-bind (&key id (display-id target) (copy nil copy-p)
+                         (link nil link-p) policy)
+      options
+    (flet ((check-source (source)
+             (ensure-copy/link-source-valid path source)
+             (ensure-copy/link-source-absolute path source)
+             (ensure-copy/link-source-no-trailing-slash path source))
+           (make-path-options (source from)
+             (values path
+                     id
+                     display-id
+                     (list :mode (cond (copy-p 'copy) (link-p 'link))
+                           :source source
+                           :from from
+                           :policy policy))))
+      (let ((form (or copy link)))
+        (typecase form
+          (string
+           (check-source form)
+           (make-path-options form library))
+          (list
+           (destructuring-bind (source &key (from library)) form
+             (check-source source)
+             (ensure-copy/link-source-string path source)
+             (ensure-copy/link-library path from)
+             (make-path-options source from))))))))
 
 (defun parse-path-spec (parent library path-spec)
   (labels ((check-path (path)
@@ -63,13 +67,11 @@
          (let ((path (make-node-path parent target)))
            (ensure-path-options-plist path options)
            (ensure-path-options-valid path options)
-           (destructuring-bind (&key id (display-id target) (copy nil copy-p)
-                                  (link nil link-p) policy)
+           (destructuring-bind (&key id (display-id target) copy link policy)
                options
              (ensure-path-options-keys path options)
              (au:if-let ((copy/link-form (or copy link)))
-               (parse-copy/link
-                library id display-id path copy-p link-p copy/link-form policy)
+               (parse-copy/link library path target options)
                (direct-path target :id id
                                    :display-id display-id
                                    :policy policy)))))))))
@@ -228,40 +230,38 @@
 (defgeneric merge-component (policy node type id args)
   (:method ((policy null) node type id args)
     (ensure-component-not-duplicate node type id)
-    (merge-component :new-type node type id args)))
+    (merge-component :new-type node type id args))
+  (:method :around (policy node type id args)
+    (let ((table (components-table node)))
+      (setf (au:href table type id) (call-next-method)))))
 
 (defmethod merge-component ((policy (eql :new-type)) node type id args)
-  (setf (au:href (components-table node) type id)
-        (list :merge-id id :policy policy :args args)))
+  (list :merge-id id :policy policy :args args))
 
 (defmethod merge-component ((policy (eql :old-type)) node type id args)
   (au:unless-found (components (au:href (components-table node) type id))
-    (setf (au:href (components-table node) type id)
-          (list :merge-id id :policy policy :args args))))
+    (list :merge-id id :policy policy :args args)))
 
 (defmethod merge-component ((policy (eql :new-args)) node type id args)
   (let* ((old-args (au:plist->hash
                     (getf (au:href (components-table node) type id) :args)))
          (new-args (au:hash->plist
                     (au:merge-tables old-args (au:plist->hash args)))))
-    (setf (au:href (components-table node) type id)
-          (list :merge-id id :policy policy :args new-args))))
+    (list :merge-id id :policy policy :args new-args)))
 
 (defmethod merge-component ((policy (eql :old-args)) node type id args)
   (let* ((old-args (au:plist->hash
                     (getf (au:href (components-table node) type id) :args)))
          (new-args (au:hash->plist
                     (au:merge-tables (au:plist->hash args) old-args))))
-    (setf (au:href (components-table node) type id)
-          (list :merge-id id :policy policy :args new-args))))
+    (list :merge-id id :policy policy :args new-args)))
 
 (defun make-component-table (prefab)
   (au:do-hash-values (node (parse-tree prefab))
-    (let* ((parent (parent node))
-           (path-policy (or (getf (options node) :policy)
-                            (and parent (getf (options parent) :policy)))))
-      (dolist (component (components node))
-        (destructuring-bind (type (&key merge-id policy) . args) component
+    (dolist (component (components node))
+      (destructuring-bind (type (&key merge-id policy) . args)
+          component
+        (let ((policy (or policy (get-node-option node :policy))))
           (unless (au:href (components-table node) type)
             (setf (au:href (components-table node) type) (au:dict #'equalp)))
-          (merge-component (or policy path-policy) node type merge-id args))))))
+          (merge-component policy node type merge-id args))))))

@@ -1,6 +1,6 @@
 (in-package :first-light.prefab)
 
-(defmacro preprocess-spec (name context policy spec)
+(defmacro preprocess-spec (prefab-name context policy spec)
   (labels ((rec (data)
              (au:mvlet ((name components children (split-spec data)))
                `(list ',name
@@ -20,7 +20,9 @@
                                             (declare (ignorable ,context))
                                             ,value)))))))
     `(values
-      (list ,@(mapcar #'rec (list (cons (list name :policy policy) spec))))
+      (list ,@(mapcar
+               #'rec
+               (list (cons (list prefab-name :policy policy) spec))))
       (au:dlambda
         (:actors (x) (setf actor-table x))
         (:components (x) (setf component-table x))
