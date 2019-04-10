@@ -9,14 +9,14 @@
              (verify-components prefab)
              (insert-missing-transforms prefab)
              (copy-source-nodes prefab)
-             (make-component-table prefab)
              (make-relationships prefab)
+             (make-component-table prefab)
              (update-links prefab)
              (setf success-p t))
         (unless success-p
           (remhash %name (au:href (fl.data:get 'prefabs) %library)))))))
 
-(defun parse-copy/link (library id display-id path copy-p link-p form)
+(defun parse-copy/link (library id display-id path copy-p link-p form policy)
   (flet ((check-source (source)
            (ensure-copy/link-source-valid path source)
            (ensure-copy/link-source-absolute path source)
@@ -26,6 +26,7 @@
                    id
                    display-id
                    (list :mode (cond (copy-p 'copy) (link-p 'link))
+                         :policy policy
                          :source source
                          :from from))))
     (typecase form
@@ -47,12 +48,12 @@
              (ensure-path-relative path)
              (ensure-path-no-trailing-slash path)
              (ensure-path-not-parent path))
-           (direct-path (path &key id display-id)
+           (direct-path (path &key id display-id policy)
              (check-path path)
              (values (make-node-path parent path)
                      id
                      display-id
-                     (list :mode 'direct))))
+                     (list :mode 'direct :policy policy))))
     (typecase path-spec
       (string
        (direct-path path-spec :display-id path-spec))
@@ -63,23 +64,28 @@
            (ensure-path-options-plist path options)
            (ensure-path-options-valid path options)
            (destructuring-bind (&key id (display-id target) (copy nil copy-p)
-                                  (link nil link-p))
+                                  (link nil link-p) policy)
                options
              (ensure-path-options-keys path options)
              (au:if-let ((copy/link-form (or copy link)))
                (parse-copy/link
-                library id display-id path copy-p link-p copy/link-form)
-               (direct-path target :id id :display-id display-id)))))))))
+                library id display-id path copy-p link-p copy/link-form policy)
+               (direct-path target :id id
+                                   :display-id display-id
+                                   :policy policy)))))))))
 
-(defun make-node (prefab path)
+(defun make-node (prefab path &optional options)
   (symbol-macrolet ((node (au:href (parse-tree prefab) path)))
     (unless node
-      (let ((name (first (last (explode-path path)))))
+      (let ((name (first (last (explode-path path))))
+            (options (if options
+                         (append options (list :mode :direct))
+                         (list :mode :direct))))
         (setf node (make-instance 'node
                                   :name name
                                   :prefab prefab
                                   :path path
-                                  :options '(:mode direct)))))
+                                  :options options))))
     node))
 
 (defun make-parse-tree (prefab data)
@@ -91,7 +97,7 @@
                       (path id display-id options
                             (parse-path-spec parent %library name)))
                    (with-slots (%id %display-id %options %components)
-                       (make-node prefab path)
+                       (make-node prefab path options)
                      (setf %id id
                            %display-id display-id
                            %options options)
@@ -251,8 +257,11 @@
 
 (defun make-component-table (prefab)
   (au:do-hash-values (node (parse-tree prefab))
-    (dolist (component (components node))
-      (destructuring-bind (type (&key merge-id policy) . args) component
-        (unless (au:href (components-table node) type)
-          (setf (au:href (components-table node) type) (au:dict #'equalp)))
-        (merge-component policy node type merge-id args)))))
+    (let* ((parent (parent node))
+           (path-policy (or (getf (options node) :policy)
+                            (and parent (getf (options parent) :policy)))))
+      (dolist (component (components node))
+        (destructuring-bind (type (&key merge-id policy) . args) component
+          (unless (au:href (components-table node) type)
+            (setf (au:href (components-table node) type) (au:dict #'equalp)))
+          (merge-component (or policy path-policy) node type merge-id args))))))

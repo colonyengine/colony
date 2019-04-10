@@ -1,6 +1,6 @@
 (in-package :first-light.prefab)
 
-(defmacro preprocess-spec (name context spec)
+(defmacro preprocess-spec (name context policy spec)
   (labels ((rec (data)
              (au:mvlet ((name components children (split-spec data)))
                `(list ',name
@@ -20,7 +20,7 @@
                                             (declare (ignorable ,context))
                                             ,value)))))))
     `(values
-      (list ,@(mapcar #'rec (list (cons name spec))))
+      (list ,@(mapcar #'rec (list (cons (list name :policy policy) spec))))
       (au:dlambda
         (:actors (x) (setf actor-table x))
         (:components (x) (setf component-table x))
@@ -33,7 +33,8 @@
                args current-actor actor-table component-table)))
        ,@body)))
 
-(defmacro define-prefab (name (&key library (context 'context)) &body body)
+(defmacro define-prefab (name (&key library (context 'context) policy)
+                         &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
          (prefabs `(au:href ,libraries ',library)))
     (au:with-unique-names (prefab data setter)
@@ -47,7 +48,8 @@
          (unless ,prefabs
            (setf ,prefabs (au:dict #'equalp)))
          (inject-ref-environment
-           (au:mvlet* ((,data ,setter (preprocess-spec ,name ,context ,body))
+           (au:mvlet* ((,data ,setter (preprocess-spec
+                                       ,name ,context ,policy ,body))
                        (,prefab (make-prefab ',name ',library ,data)))
              (setf (au:href ,prefabs ',name) ,prefab
                    (func ,prefab) (make-factory ,prefab ,setter))
