@@ -5,6 +5,8 @@
           :initarg :name)
    (%library :reader library
              :initarg :library)
+   (%doc :reader doc
+         :initarg :doc)
    (%data :reader data
           :initarg :data)
    (%parse-tree :reader parse-tree
@@ -96,9 +98,11 @@
   (au:do-hash-values (child (children node))
     (map-nodes func child)))
 
-(defun make-prefab (name library data)
+(defun make-prefab (name library doc data)
   (let ((prefab (or (%find-prefab name library)
-                    (make-instance 'prefab :name name :library library))))
+                    (make-instance 'prefab :name name
+                                           :library library
+                                           :doc doc))))
     (with-slots (%data %parse-tree) prefab
       (setf %data data)
       (clrhash %parse-tree))

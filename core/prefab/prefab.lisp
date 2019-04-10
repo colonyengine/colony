@@ -39,25 +39,31 @@
                                 component-table)))
        ,@body)))
 
+(defmethod documentation ((object string) (doc-type symbol))
+  (au:when-let ((prefab (%find-prefab object doc-type)))
+    (doc prefab)))
+
 (defmacro define-prefab (name (&key library (context 'context) policy)
                          &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
          (prefabs `(au:href ,libraries ',library)))
     (au:with-unique-names (prefab data setter)
-      `(progn
-         (ensure-prefab-name-string ',name)
-         (ensure-prefab-name-valid ',name)
-         (ensure-prefab-library-set ',name ',library)
-         (ensure-prefab-library-symbol ',name ',library)
-         (unless ,libraries
-           (fl.data:set 'prefabs (au:dict #'eq)))
-         (unless ,prefabs
-           (setf ,prefabs (au:dict #'equalp)))
-         (inject-ref-environment
-           (au:mvlet* ((,data ,setter (preprocess-spec
-                                       ,name ,context ,policy ,body))
-                       (,prefab (make-prefab ',name ',library ,data)))
-             (setf (au:href ,prefabs ',name) ,prefab
-                   (func ,prefab) (make-factory ,prefab ,setter))
-             (parse-prefab ,prefab)))
-         (export ',library)))))
+      (au:mvlet ((body decls doc (au:parse-body body :documentation t)))
+        (declare (ignore decls))
+        `(progn
+           (ensure-prefab-name-string ',name)
+           (ensure-prefab-name-valid ',name)
+           (ensure-prefab-library-set ',name ',library)
+           (ensure-prefab-library-symbol ',name ',library)
+           (unless ,libraries
+             (fl.data:set 'prefabs (au:dict #'eq)))
+           (unless ,prefabs
+             (setf ,prefabs (au:dict #'equalp)))
+           (inject-ref-environment
+             (au:mvlet* ((,data ,setter (preprocess-spec
+                                         ,name ,context ,policy ,body))
+                         (,prefab (make-prefab ',name ',library ,doc ,data)))
+               (setf (au:href ,prefabs ',name) ,prefab
+                     (func ,prefab) (make-factory ,prefab ,setter))
+               (parse-prefab ,prefab)))
+           (export ',library))))))
