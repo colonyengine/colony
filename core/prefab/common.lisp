@@ -5,6 +5,8 @@
           :initarg :name)
    (%library :reader library
              :initarg :library)
+   (%doc :reader doc
+         :initarg :doc)
    (%data :reader data
           :initarg :data)
    (%parse-tree :reader parse-tree
@@ -14,7 +16,7 @@
            :initform (au:dict #'eq
                               :source->targets (au:dict #'equalp)
                               :target->source (au:dict #'equalp)))
-   (%func :reader func
+   (%func :accessor func
           :initform (constantly nil))))
 
 (au:define-printer (prefab stream :type t)
@@ -96,24 +98,19 @@
   (au:do-hash-values (child (children node))
     (map-nodes func child)))
 
-(defun make-prefab (name library data)
+(defun make-prefab (name library doc data)
   (let ((prefab (or (%find-prefab name library)
-                    (make-instance 'prefab :name name :library library))))
+                    (make-instance 'prefab :name name
+                                           :library library
+                                           :doc doc))))
     (with-slots (%data %parse-tree) prefab
       (setf %data data)
       (clrhash %parse-tree))
     prefab))
 
-(defun print-prefab (name library)
-  (flet ((print-line (level value)
-           (format t "~&~a~v@<~s~>~%"
-                   (make-string level :initial-element #\Space)
-                   level value)))
-    (map-nodes
-     (lambda (x)
-       (let ((level (* 3 (1- (length (explode-path (path x)))))))
-         (print-line level (name x))
-         (au:do-hash (type table (components-table x))
-           (au:do-hash-values (data table)
-             (print-line level `(,type ,@(getf data :args)))))))
-     (root (find-prefab name library)))))
+(defun get-node-option (node option &optional (inherit-p t))
+  (let ((parent (parent node)))
+    (or (getf (options node) option)
+        (and inherit-p
+             parent
+             (getf (options parent) option)))))

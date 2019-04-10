@@ -55,7 +55,7 @@
            path)))
 
 (defun ensure-path-options-valid (path options)
-  (let ((valid-options '(:id :display-id :copy :link)))
+  (let ((valid-options '(:id :display-id :copy :link :policy)))
     (dolist (x (au:plist-keys options))
       (unless (member x valid-options)
         (error "Invalid path option: ~s.~%Valid options: ~{~s~^, ~}~%Path: ~s."
