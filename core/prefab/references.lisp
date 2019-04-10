@@ -5,12 +5,14 @@
         :initarg :id)
    (%current-actor :reader current-actor
                    :initarg :current-actor)
+   (%current-component :reader current-component
+                       :initarg :current-component)
    (%actors :reader actors
             :initarg :actors)
    (%components :reader components
                 :initarg :components)
-   (%component-type :reader component-type
-                    :initarg :component-type)
+   (%component :reader component
+               :initarg :component)
    (%merge-id :reader merge-id
               :initarg :merge-id)))
 
@@ -68,25 +70,31 @@
        (parse-reference-path reference)))))
 
 (defun get-reference-component (reference)
-  (with-slots (%id %merge-id %component-type %components) reference
+  (with-slots (%id %current-component %merge-id %component %components)
+      reference
     (let* ((actor (get-reference-actor reference))
-           (type-table (au:href %components actor %component-type)))
-      (or (if (and (null %merge-id)
-                   (= (hash-table-count type-table) 1))
-              (first (au:hash-values type-table))
-              (au:href type-table %merge-id))
-          (error "Component reference ~s with merge-id ~s not found."
-                 %id %merge-id)))))
+           (type-table (au:href %components actor %component)))
+      (cond
+        ((eq %component :self)
+         %current-component)
+        ((and (null %merge-id)
+              type-table
+              (= (hash-table-count type-table) 1))
+         (first (au:hash-values type-table)))
+        (type-table
+         (au:href type-table %merge-id))
+        (t (error "Component reference ~s not found." %id))))))
 
-(defun lookup-reference (args current-actor actors components)
-  (destructuring-bind (id &key component-type merge-id) args
+(defun lookup-reference (args current-actor current-component actors components)
+  (destructuring-bind (id &key component merge-id) args
     (let ((reference (make-instance 'reference
                                     :id id
-                                    :component-type component-type
+                                    :component component
                                     :merge-id merge-id
                                     :current-actor current-actor
+                                    :current-component current-component
                                     :actors actors
                                     :components components)))
-      (if (component-type reference)
+      (if (component reference)
           (get-reference-component reference)
           (get-reference-actor reference)))))

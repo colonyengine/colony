@@ -29,6 +29,7 @@
       (au:do-hash-values (id actor-table)
         (au:do-hash-values (data id)
           (destructuring-bind (component . (&key args &allow-other-keys)) data
+            (funcall setter :current-component component)
             (let ((args (loop :for (k v) :on args :by #'cddr
                               :append (list k (funcall v context)))))
               (apply #'reinitialize-instance component :actor actor args))))))))

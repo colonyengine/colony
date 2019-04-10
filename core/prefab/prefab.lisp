@@ -26,13 +26,17 @@
       (au:dlambda
         (:actors (x) (setf actor-table x))
         (:components (x) (setf component-table x))
-        (:current-actor (x) (setf current-actor x))))))
+        (:current-actor (x) (setf current-actor x))
+        (:current-component (x) (setf current-component x))))))
 
 (defmacro inject-ref-environment (&body body)
-  `(let (actor-table component-table current-actor)
+  `(let (actor-table component-table current-actor current-component)
      (flet ((ref (&rest args)
-              (lookup-reference
-               args current-actor actor-table component-table)))
+              (lookup-reference args
+                                current-actor
+                                current-component
+                                actor-table
+                                component-table)))
        ,@body)))
 
 (defmacro define-prefab (name (&key library (context 'context) policy)
