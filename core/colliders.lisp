@@ -181,6 +181,7 @@ have had--and update all other faces too."
         ;; removing hash tables we don't need anymore.
         (dolist (face-collider face-colliders)
           (when (contact-p collider-system fist-collider face-collider)
+	    #++(format t "remove-all-contacts: attempting to remove ~A from contacting ~A.~%" fist-collider face-collider)
             (exit-contact collider-system fist-collider face-collider)))))))
 
 (defun compute-contact-state (collider-system
@@ -335,13 +336,13 @@ have had--and update all other faces too."
               (let ((face-layers
                       (au:href (collision-plan collider-system) fist-layer)))
                 #++(format t "Checking registering fist: ~S, [~S: ~S]~%"
-                           (fl.comp:name fist) (fl.comp:on-layer fist)
+                           (fl:display-id fist) (fl.comp:on-layer fist)
                            face-layers)
                 (cond
                   ((null face-layers)
                    ;; If no face layers to collide against AT ALL,
                    ;; automatically stabilize the fist and we're done with it.
-                   (format t " Stabilizing[0]: ~S~%" (fl.comp:name fist))
+                   #++(format t " Stabilizing[0]: ~S~%" (fl:display-id fist))
                    (setf (au:href stable-colliders fist-layer fist)
                          fist))
 
@@ -362,7 +363,7 @@ have had--and update all other faces too."
                                        face-layer-stable-colliders))
                          (au:do-hash-keys (face face-layer-stable-colliders)
                            #++(format t "  compute-contact-state: [reg: ~S <-> stable: ~S]~%"
-                                      (fl.comp:name fist) (fl.comp:name face))
+                                      (fl:display-id fist) (fl:display-id face))
                            (compute-contact-state collider-system fist
                                                   face)))))
                    ;; And when we *FINISH* colliding the specific registering
@@ -371,7 +372,7 @@ have had--and update all other faces too."
                    ;; is so the next registering fist can collide against it if
                    ;; need be. NOTE: We CANNOT stabilize until AFTER the
                    ;; registering fist has been collided with all stable faces.
-                   #++(format t " Stabilizing[1]: ~S~%" (fl.comp:name fist))
+                   #++(format t " Stabilizing[1]: ~S~%" (fl:display-id fist))
                    (setf (au:href stable-colliders fist-layer fist)
                          fist)))))))))))
 
@@ -477,37 +478,37 @@ have had--and update all other faces too."
       (setf %context context))
 
     (let* ((c0 (make-component (context core) 'fl.comp:collider/sphere
-                               :name "Ground"
+                               :display-id "Ground"
                                :on-layer :ground
                                :center (m:vec3 0 0 0)
                                :radius 1))
            (c1 (make-component (context core) 'fl.comp:collider/sphere
-                               :name "Player"
+                               :display-id "Player"
                                :on-layer :player
                                :center (m:vec3 -20 5 0)
                                :radius 1))
            (c2 (make-component (context core) 'fl.comp:collider/sphere
-                               :name "Player-Bullet"
+                               :display-id "Player-Bullet"
                                :on-layer :player-bullet
                                :center (m:vec3 -10 5 0)
                                :radius 1))
            (c3 (make-component (context core) 'fl.comp:collider/sphere
-                               :name "Enemy"
+                               :display-id "Enemy"
                                :on-layer :enemy
                                :center (m:vec3 20 5 0)
                                :radius 1))
            (c4 (make-component (context core) 'fl.comp:collider/sphere
-                               :name "Enemy-Bullet"
+                               :display-id "Enemy-Bullet"
                                :on-layer :enemy-bullet
                                :center (m:vec3 10 5 0)
                                :radius 1))
            (c5 (make-component (context core) 'fl.comp:collider/sphere
-                               :name "Scenery 1"
+                               :display-id "Scenery 1"
                                :on-layer :scenery
                                :center (m:vec3 0 5 0)
                                :radius 1))
            (c6 (make-component (context core) 'fl.comp:collider/sphere
-                               :name "Scenery 2"
+                               :display-id "Scenery 2"
                                :on-layer :scenery
                                :center (m:vec3 1 5 0)
                                :radius 1)))
