@@ -123,17 +123,23 @@ reference which will be the parent of the spawning actor. It defaults to
           (au:href (actor-predestroy-view (tables core)) thing) thing)))
 
 (defun actor/init-or-active->destroy (actor)
-  (let* ((core (core (context actor)))
-         (tables (tables core)))
-    (unless (plusp (ttl actor))
-      (setf (au:href (actor-destroy-db tables) actor) actor
-            (state actor) :destroy)
-      (remhash actor (actor-predestroy-view tables))
-      (unless (remhash actor (actor-active-db tables))
-        (remhash actor (actor-preinit-db tables)))
-      (au:do-hash-values (v (components actor))
-        (setf (ttl v) 0)
-        (component/init-or-active->destroy v)))))
+  ;; TODO: A different logic error (that of a destroyed object not having its
+  ;; components also destroyed), and a destroyed object being destroyed
+  ;; twice--which is legal but not explicitly handled) caused this UNLESS to be
+  ;; here. Replace with new flow.
+  (unless (eq (state actor) :destroy)
+    (let* ((core (core (context actor)))
+           (tables (tables core)))
+      (unless (plusp (ttl actor))
+        (setf (au:href (actor-destroy-db tables) actor) actor
+              (state actor) :destroy)
+        (remhash actor (actor-predestroy-view tables))
+        (unless (remhash actor (actor-active-db tables))
+          (remhash actor (actor-preinit-db tables)))
+        (au:do-hash-values (v (components actor))
+          (setf (ttl v) 0)
+          (enqueue-detach-event v actor)
+          (component/init-or-active->destroy v))))))
 
 (defun actor/destroy-descendants (actor)
   (flet ((destroy-actor (actor)
