@@ -115,11 +115,8 @@ are currently in contact."
 
     ;; Now that the contact has been added we'll invoke the enter
     ;; protocol for the contact.
-    (au:when-let (referent (fl.comp:referent fist-collider))
-      (on-collision-enter referent face-collider))
-
-    (au:when-let (referent (fl.comp:referent face-collider))
-      (on-collision-enter referent fist-collider))
+    (on-collision-enter fist-collider face-collider)
+    (on-collision-enter face-collider fist-collider)
 
     :enter))
 
@@ -131,11 +128,8 @@ the FIST-COLLIDER and FACE-COLLIDER."
   (assert (not (eq fist-collider face-collider)))
 
   ;; If we're continuing to collide, run the protocol!
-  (au:when-let (referent (fl.comp:referent fist-collider))
-    (on-collision-continue referent face-collider))
-
-  (au:when-let (referent (fl.comp:referent face-collider))
-    (on-collision-continue referent fist-collider))
+  (on-collision-continue fist-collider face-collider)
+  (on-collision-continue face-collider fist-collider)
 
   :ontinue)
 
@@ -160,11 +154,8 @@ the FIST-COLLIDER and FACE-COLLIDER."
 
     ;; Now that the contact has been removed, invoke the exit protocol
     ;; for the exiting contacts.
-    (au:when-let (referent (fl.comp:referent fist-collider))
-      (on-collision-exit referent face-collider))
-
-    (au:when-let (referent (fl.comp:referent face-collider))
-      (on-collision-exit referent fist-collider))
+    (on-collision-exit fist-collider face-collider)
+    (on-collision-exit face-collider fist-collider)
 
     :exit))
 
@@ -181,7 +172,7 @@ have had--and update all other faces too."
         ;; removing hash tables we don't need anymore.
         (dolist (face-collider face-colliders)
           (when (contact-p collider-system fist-collider face-collider)
-	    #++(format t "remove-all-contacts: attempting to remove ~A from contacting ~A.~%" fist-collider face-collider)
+            #++(format t "remove-all-contacts: attempting to remove ~A from contacting ~A.~%" fist-collider face-collider)
             (exit-contact collider-system fist-collider face-collider)))))))
 
 (defun compute-contact-state (collider-system

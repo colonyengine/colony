@@ -43,3 +43,13 @@
   (:shader fl.gpu.texture:unlit-texture
    :profiles (u-mvp)
    :uniforms ((:tex.sampler1 'fl.textures:debug-texture))))
+
+;; Materials for visualizations of colliders
+
+(fl:define-material collider/sphere
+  (:shader fl.gpu.visualization:collider/sphere
+   :profiles (u-mvp)
+   :uniforms ((:collider-local-position (m:vec3))
+              (:color (m:vec4 0 1 0 .5))
+              (:in-contact-p nil)
+              (:radius 0.0))))

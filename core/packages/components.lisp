@@ -47,7 +47,6 @@
   (:export
    #:collider/sphere
    #:collide-p
-   #:name ;; <- TODO: convert to display-id
    #:referent
    #:on-layer
    #:center
