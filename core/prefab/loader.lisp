@@ -21,16 +21,18 @@
           (unless (au:href components actor type)
             (setf (au:href components actor type) (au:dict #'equalp)))
           (let ((component (make-component context type)))
-            (setf (au:href components actor type id) (cons component data))
+            (unless (au:href components actor type id)
+              (setf (au:href components actor type id) (au:dict #'eq)))
+            (setf (au:href components actor type id component) data)
             (attach-component actor component)))))
     (funcall setter :components components)
     (au:do-hash (actor actor-table components)
       (funcall setter :current-actor actor)
-      (au:do-hash-values (id actor-table)
-        (au:do-hash-values (data id)
-          (destructuring-bind (component . (&key args &allow-other-keys)) data
+      (au:do-hash-values (id-table actor-table)
+        (au:do-hash-values (component-table id-table)
+          (au:do-hash (component data component-table)
             (funcall setter :current-component component)
-            (let ((args (loop :for (k v) :on args :by #'cddr
+            (let ((args (loop :for (k v) :on (getf data :args) :by #'cddr
                               :append (list k (funcall v context)))))
               (apply #'reinitialize-instance component :actor actor args))))))))
 

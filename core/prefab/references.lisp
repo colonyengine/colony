@@ -72,18 +72,18 @@
 (defun get-reference-component (reference)
   (with-slots (%id %current-component %merge-id %component %components)
       reference
-    (let* ((actor (get-reference-actor reference))
-           (type-table (au:href %components actor %component)))
-      (cond
-        ((eq %component :self)
-         %current-component)
-        ((and (null %merge-id)
-              type-table
-              (= (hash-table-count type-table) 1))
-         (first (au:hash-values type-table)))
-        (type-table
-         (au:href type-table %merge-id))
-        (t (error "Component reference ~s not found." %id))))))
+    (if (eq %component :self)
+        %current-component
+        (let* ((actor (get-reference-actor reference))
+               (type-table (au:href %components actor %component %merge-id)))
+          (cond
+            ((and (null %merge-id)
+                  type-table
+                  (= (hash-table-count type-table) 1))
+             (first (au:hash-keys type-table)))
+            (type-table
+             (au:href type-table %merge-id))
+            (t (error "Component reference ~s not found." %component)))))))
 
 (defun lookup-reference (args current-actor current-component actors components)
   (destructuring-bind (id &key component merge-id) args
