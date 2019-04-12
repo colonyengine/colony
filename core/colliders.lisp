@@ -172,7 +172,9 @@ have had--and update all other faces too."
         ;; removing hash tables we don't need anymore.
         (dolist (face-collider face-colliders)
           (when (contact-p collider-system fist-collider face-collider)
-            #++(format t "remove-all-contacts: attempting to remove ~A from contacting ~A.~%" fist-collider face-collider)
+            (v:trace :fl.core.collider
+                     "remove-all-contacts: attempting to remove ~A from contacting ~A."
+                     fist-collider face-collider)
             (exit-contact collider-system fist-collider face-collider)))))))
 
 (defun compute-contact-state (collider-system
@@ -326,14 +328,16 @@ have had--and update all other faces too."
               ;; The FIST is good to go! collide it and stabilize it!
               (let ((face-layers
                       (au:href (collision-plan collider-system) fist-layer)))
-                #++(format t "Checking registering fist: ~S, [~S: ~S]~%"
-                           (fl:display-id fist) (fl.comp:on-layer fist)
-                           face-layers)
+                (v:trace :fl.core.collider
+                         "Checking registering fist: ~S, [~S: ~S]"
+                         (fl:display-id fist) (fl.comp:on-layer fist)
+                         face-layers)
                 (cond
                   ((null face-layers)
                    ;; If no face layers to collide against AT ALL,
                    ;; automatically stabilize the fist and we're done with it.
-                   #++(format t " Stabilizing[0]: ~S~%" (fl:display-id fist))
+                   (v:trace :fl.core.collider
+                            " Stabilizing[0]: ~S" (fl:display-id fist))
                    (setf (au:href stable-colliders fist-layer fist)
                          fist))
 
@@ -341,8 +345,9 @@ have had--and update all other faces too."
                    ;; Else, we collide the fist against each face in each
                    ;; layer.
                    (dolist (face-layer face-layers)
-                     #++(format t " Checking contacts between layers: ~S <=> ~S~%"
-                                fist-layer face-layer)
+                     (v:trace :fl.core.collider
+                              " Checking contacts between layers: ~S <=> ~S"
+                              fist-layer face-layer)
                      ;; Find all the face-layer colliders to which we need to
                      ;; collide.
                      (let ((face-layer-stable-colliders
@@ -353,8 +358,9 @@ have had--and update all other faces too."
                        (unless (zerop (hash-table-count
                                        face-layer-stable-colliders))
                          (au:do-hash-keys (face face-layer-stable-colliders)
-                           #++(format t "  compute-contact-state: [reg: ~S <-> stable: ~S]~%"
-                                      (fl:display-id fist) (fl:display-id face))
+                           (v:trace :fl.core.collider
+                                    "  compute-contact-state: [reg: ~S <-> stable: ~S]"
+                                    (fl:display-id fist) (fl:display-id face))
                            (compute-contact-state collider-system fist
                                                   face)))))
                    ;; And when we *FINISH* colliding the specific registering
@@ -363,7 +369,8 @@ have had--and update all other faces too."
                    ;; is so the next registering fist can collide against it if
                    ;; need be. NOTE: We CANNOT stabilize until AFTER the
                    ;; registering fist has been collided with all stable faces.
-                   #++(format t " Stabilizing[1]: ~S~%" (fl:display-id fist))
+                   (v:trace :fl.core.collider
+                            " Stabilizing[1]: ~S" (fl:display-id fist))
                    (setf (au:href stable-colliders fist-layer fist)
                          fist)))))))))))
 
@@ -423,7 +430,7 @@ have had--and update all other faces too."
            `(:physics-layers
              (:ground :player :player-bullet :enemy :enemy-bullet :scenery)
 
-             ;; NOTE: FOrmat and legality described in comment above.
+             ;; NOTE: Format and legality described in comment above.
              :collision-plan
              ;; The KEY is the row header, the VALUE is the X locations
              ;; that indicate a collision situation.
@@ -459,9 +466,10 @@ have had--and update all other faces too."
       (funcall func a b))))
 
 
-;; TODO: Keep going.
 
 (defun test-collider-system ()
+  "Manually test the basic functionality of the collider system. To be run at
+the repl when the game is NOT running."
   (let* ((core (make-instance 'core))
          (context (make-instance 'context :core core)))
 
