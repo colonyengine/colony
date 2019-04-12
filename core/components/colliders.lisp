@@ -6,7 +6,6 @@
    (center :default (m:vec3))
    (radius :default 1.0)
    (num-contacts :default 0)
-
    ;; TODO: This block of slots are really here for debugging drawing of a
    ;; collider hack on it a bit to make it better.
    (visualize :default t)
@@ -14,19 +13,16 @@
    (geometry :default (gl:gen-vertex-array))
    (material :default 'fl.materials::collider/sphere
              :annotation (fl.annotations:material))
-
    ;; TODO: We do not have a difference between triggers and collisions yet.
    ;; That will come when actual physics arrives.
    ;; on-collision-enter
    ;; on-collision-continue
    ;; on-collision-exit
-   ;;
    ;; We'll need to add soon:
    ;; on-trigger-enter
    ;; on-trigger-continue
    ;; on-trigger-exit
    (referent :default nil)))
-
 
 (defmethod on-component-initialize ((self collider/sphere))
   nil)
@@ -44,17 +40,14 @@
 (defmethod on-component-destroy ((self collider/sphere))
   (setf (referent self) nil)
   nil)
-
-;; TODO: When I implement the ability to not call protocol methods on
-;; types that don't have them defined, ALSO create a feature that I can
-;; turn off calling them for types that DO have them. Then I can leave
-;; this here and also not pay the cost to render it.
+;; TODO: When I implement the ability to not call protocol methods on types that
+;; don't have them defined, ALSO create a feature that I can turn off calling
+;; them for types that DO have them. Then I can leave this here and also not pay
+;; the cost to render it.
 (defmethod on-component-render ((self collider/sphere))
   (unless (visualize self)
     (return-from on-component-render))
-
-  (with-accessors ((context context) (material material) (actor actor))
-      self
+  (with-accessors ((context context) (material material) (actor actor)) self
     (au:when-let ((camera (active-camera context)))
       (let ((transform (actor-component-by-type actor 'fl.comp:transform)))
         (using-material material
@@ -66,15 +59,13 @@
              ;; NOTE: The shader computes the radius appropriately for
              ;; visualization purposes.
              :radius (radius self))
-
           ;; Finally, draw the visualizaiton.
           (gl:bind-vertex-array (geometry self))
           (gl:draw-arrays-instanced :points 0 1 1)
           (gl:bind-vertex-array 0))))))
 
-
 ;; NOTE: We bubble the collision messages from the collider system through
-;; ourselves to our referent (who implements this same API).  This way, the
+;; ourselves to our referent (who implements this same API). This way, the
 ;; collider component instance can keep data about itself for visualization or
 ;; other purposes.
 (defmethod on-collision-enter ((self collider/sphere) other-collider)
@@ -97,10 +88,8 @@
       (error "The referent of a collider must not be same collider component!"))
     (on-collision-continue referent other-collider)))
 
-
-;; All colliders define a COLLIDE-P method appropriate for any combination
-;; that could be computed.
-;;
+;; All colliders define a COLLIDE-P method appropriate for any combination that
+;; could be computed.
 ;; TODO: Currently these COLLIDE-P are discrete. There needs to be a slot in the
 ;; collider which indicates :discrete or :continuous, and then these collider
 ;; functions should do the right thing if at all possible.
@@ -113,7 +102,6 @@
      (let ((distance/2 (/ (m:distance (center fist) (center face)) 2.0)))
        (or (<= distance/2 (fl.comp:radius fist))
            (<= distance/2 (fl.comp:radius face)))))
-
     (t
      ;; The real path through this code, which transforms the collider into
      ;; world space appropriately.
@@ -121,24 +109,22 @@
               (actor-component-by-type (actor fist) 'fl.comp:transform))
             (face-transform
               (actor-component-by-type (actor face) 'fl.comp:transform))
-            ;; figure out where the center for these colliders are in world
+            ;; Figure out where the center for these colliders are in world
             ;; space.
             (fist-collider-world-center
               (transform-point fist-transform (center fist)))
             (face-collider-world-center
               (transform-point face-transform (center face)))
-            ;; Figure out the size of the radius in world space.  We treat the
+            ;; Figure out the size of the radius in world space. We treat the
             ;; radius as a vector and rotate/scale (but no translate!) it by the
             ;; world matrix.
             (fist-world-radius
               (transform-vector fist-transform (m:vec3 (radius fist) 0 0)))
             (face-world-radius
               (transform-vector face-transform (m:vec3 (radius face) 0 0)))
-
             ;; Compute the half way point between the two colliders.
             (distance (m:distance fist-collider-world-center
                                   face-collider-world-center)))
-
        ;; Now, compute the collision is the common world space we converted
        ;; everything into.
        (<= distance (+ (m:length fist-world-radius)

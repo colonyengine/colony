@@ -172,7 +172,6 @@ useful for indention purposes. This function maps FUNC over each actor."
   (funcall func parent-actor level)
   (let ((parent-actor-transform
           (actor-component-by-type parent-actor 'fl.comp:transform)))
-
     ;; TODO: Fix FL.COMP::CHILDREN (on the transform component) to be exported.
     (dolist (child (fl.comp::children parent-actor-transform))
       (map-scene-tree func (actor child) (1+ level)))))
