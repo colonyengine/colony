@@ -4,7 +4,7 @@
 (au:eval-always
   (defmacro profile (core duration)
     (let ((packages (remove-if-not
-                     (lambda (x) (au:string-starts-with-p x "FL."))
+                     (lambda (x) (au:string-contains-p "FIRST-LIGHT" x))
                      (mapcar #'package-name (list-all-packages)))))
       `(progn
          (sb-profile:unprofile)
