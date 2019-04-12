@@ -2,17 +2,31 @@
 
 (define-component collider/sphere ()
   (;; The collider is only ever on a single layer.
-   (name :default "Unknown Collider") ;; Temporary, for debugging.
    (on-layer :default nil)
    (center :default (m:vec3))
    (radius :default 1.0)
+   (num-contacts :default 0)
+
+   ;; TODO: This block of slots are really here for debugging drawing of a
+   ;; collider hack on it a bit to make it better.
+   (visualize :default t)
+   ;; TODO: Put geometry into shared storage for all collider/sphere's to use.
+   (geometry :default (gl:gen-vertex-array))
+   (material :default 'fl.materials::collider/sphere
+             :annotation (fl.annotations:material))
 
    ;; TODO: We do not have a difference between triggers and collisions yet.
    ;; That will come when actual physics arrives.
    ;; on-collision-enter
    ;; on-collision-continue
    ;; on-collision-exit
+   ;;
+   ;; We'll need to add soon:
+   ;; on-trigger-enter
+   ;; on-trigger-continue
+   ;; on-trigger-exit
    (referent :default nil)))
+
 
 (defmethod on-component-initialize ((self collider/sphere))
   nil)
@@ -20,37 +34,76 @@
 (defmethod on-component-attach ((self collider/sphere) actor)
   (declare (ignore actor))
   (let ((context (context self)))
-    (register-collider context self)
-    nil))
+    (register-collider context self)))
 
 (defmethod on-component-detach ((self collider/sphere) actor)
   (declare (ignore actor))
   (let ((context (context self)))
-    (deregister-collider context self)
-    nil))
+    (deregister-collider context self)))
 
 (defmethod on-component-destroy ((self collider/sphere))
+  (setf (referent self) nil)
   nil)
 
-;; We'll use myself as the referent so I can debug when things happen.
+;; TODO: When I implement the ability to not call protocol methods on
+;; types that don't have them defined, ALSO create a feature that I can
+;; turn off calling them for types that DO have them. Then I can leave
+;; this here and also not pay the cost to render it.
+(defmethod on-component-render ((self collider/sphere))
+  (unless (visualize self)
+    (return-from on-component-render))
 
+  (with-accessors ((context context) (material material) (actor actor))
+      self
+    (au:when-let ((camera (active-camera context)))
+      (let ((transform (actor-component-by-type actor 'fl.comp:transform)))
+        (using-material material
+            (:model (fl.comp:model transform)
+             :view (fl.comp:view camera)
+             :proj (fl.comp:projection camera)
+             :collider-local-position (center self)
+             :in-contact-p (> (num-contacts self) 0)
+             ;; NOTE: The shader computes the radius appropriately for
+             ;; visualization purposes.
+             :radius (radius self))
+
+          ;; Finally, draw the visualizaiton.
+          (gl:bind-vertex-array (geometry self))
+          (gl:draw-arrays-instanced :points 0 1 1)
+          (gl:bind-vertex-array 0))))))
+
+
+;; NOTE: We bubble the collision messages from the collider system through
+;; ourselves to our referent (who implements this same API).  This way, the
+;; collider component instance can keep data about itself for visualization or
+;; other purposes.
 (defmethod on-collision-enter ((self collider/sphere) other-collider)
-  (format t "Collider[~S] entered collision with other Collider[~S]~%"
-          (name self) (name (referent other-collider))))
+  (incf (num-contacts self))
+  (au:when-let (referent (referent self))
+    (when (eq self referent)
+      (error "The referent of a collider must not be same collider component!"))
+    (on-collision-enter referent other-collider)))
 
 (defmethod on-collision-continue ((self collider/sphere) other-collider)
-  (format t "Collider[~S] continues collision with other Collider[~S]~%"
-          (name self) (name (referent other-collider))))
+  (au:when-let (referent (referent self))
+    (when (eq self referent)
+      (error "The referent of a collider must not be same collider component!"))
+    (on-collision-continue referent other-collider)))
 
 (defmethod on-collision-exit ((self collider/sphere) other-collider)
-  (format t "Collider[~S] exited collision with other Collider[~S]~%"
-          (name self) (name (referent other-collider))))
-
-
+  (decf (num-contacts self))
+  (au:when-let (referent (referent self))
+    (when (eq self referent)
+      (error "The referent of a collider must not be same collider component!"))
+    (on-collision-continue referent other-collider)))
 
 
 ;; All colliders define a COLLIDE-P method appropriate for any combination
 ;; that could be computed.
+;;
+;; TODO: Currently these COLLIDE-P are discrete. There needs to be a slot in the
+;; collider which indicates :discrete or :continuous, and then these collider
+;; functions should do the right thing if at all possible.
 
 (defmethod collide-p ((fist collider/sphere) (face collider/sphere))
   "Return T if the two collider/spheres actually collided."
@@ -84,17 +137,9 @@
 
             ;; Compute the half way point between the two colliders.
             (distance (m:distance fist-collider-world-center
-                                  face-collider-world-center))
-            (distance/2 (/ distance 2.0)))
-
-       #++(format t "  fist[~A]: <~A, ~A [~A]>~%  face[~A]: <~A, ~A [~A]>~%"
-                  (fl.comp:name fist) fist-collider-world-center fist-world-radius
-                  (m:length fist-world-radius)
-
-                  (fl.comp:name face) face-collider-world-center face-world-radius
-                  (m:length face-world-radius))
+                                  face-collider-world-center)))
 
        ;; Now, compute the collision is the common world space we converted
        ;; everything into.
-       (or (<= distance/2 (m:length fist-world-radius))
-           (<= distance/2 (m:length face-world-radius)))))))
+       (<= distance (+ (m:length fist-world-radius)
+                       (m:length face-world-radius)))))))

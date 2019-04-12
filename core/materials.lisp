@@ -504,7 +504,8 @@ or if it a vector of the same. Return NIL otherwise."
                               (texid texture))
              (fl.gpu:uniform-int shader uniform-name unit)))
          (ecase glsl-type
-           (:bool #'fl.gpu:uniform-int)
+           (:bool (lambda (shader uniform value)
+                    (fl.gpu:uniform-int shader uniform (if value 1 0))))
            (:int #'fl.gpu:uniform-int)
            (:float #'fl.gpu:uniform-float)
            (:vec2 (lambda (shader uniform value)

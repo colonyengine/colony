@@ -30,7 +30,7 @@
    (%call-flows :reader call-flows
                 :initform (au:dict #'eq))
    (%collider-system :accessor collider-system
-		     :initform nil)
+                     :initform nil)
    (%analyzed-graphs :reader analyzed-graphs
                      :initform (au:dict #'equalp))
    (%recompilation-queue :reader recompilation-queue
@@ -164,3 +164,35 @@ structures in CORE."
         (remhash (apply #'au:href (rcache core) (list* entry-type keys))
                  (rcache core))
         (rcache-dispose context entry-type value)))))
+
+(defun map-scene-tree (func parent-actor &optional (level 0))
+  "Similar to FL.COMP::MAP-NODES, this instead maps over the actor starting
+at the PARENT-ACTOR root. Level is how far you are down in the tree and is
+useful for indention purposes. This function maps FUNC over each actor."
+  (funcall func parent-actor level)
+  (let ((parent-actor-transform
+          (actor-component-by-type parent-actor 'fl.comp:transform)))
+
+    ;; TODO: Fix FL.COMP::CHILDREN (on the transform component) to be exported.
+    (dolist (child (fl.comp::children parent-actor-transform))
+      (map-scene-tree func (actor child) (1+ level)))))
+
+(defun print-scene-tree (core)
+  "Print an ascii representation of the scene tree indented to show children."
+  (map-scene-tree
+   (lambda (actor level)
+     (let ((prefix-level 5))
+       ;; NOTE: prefix-level is used for left justifying the level number to a
+       ;; certian number of tens places for each actor. It makes the output
+       ;; easier to read.
+       (format t "~v@<~D~> ~v,,,v<~>Actor: ~S~%"
+               prefix-level level level #\Space (display-id actor))
+       (au:do-hash-values (component (components actor))
+         (format t " ~v,,,v<~> + (~(~A~):~(~A~)) [~S]~%"
+                 ;; 5 for the left justified
+                 (+ prefix-level level) #\Space
+                 (first
+                  (package-nicknames
+                   (symbol-package (component-type component))))
+                 (component-type component) (display-id component)))))
+   (scene-tree core)))

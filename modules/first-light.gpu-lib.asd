@@ -68,4 +68,8 @@
    (:module "sprite"
     :components
     ((:file "package")
-     (:file "sprite")))))
+     (:file "sprite")))
+   (:module "visualization"
+    :components
+    ((:file "package")
+     (:file "colliders")))))
