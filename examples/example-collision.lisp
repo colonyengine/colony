@@ -1,29 +1,31 @@
 (in-package :first-light.example)
 
-;; This is not really a general purpose component. It is just here to
-;; help out testing how destruction and colliders work together.
+;; This is not really a general purpose component. It is just here to help out
+;; testing how destruction and colliders work together.
 (fl:define-component destroy-my-actor ()
   ((time-to-destroy :default 5)))
 
 (defmethod fl:on-collision-enter ((self destroy-my-actor) other-collider)
   (v:info :fl.example
-          "DESTROY-MY-ACTOR: Actor ~A entered collision with collider ~A(on actor ~A)"
+          "DESTROY-MY-ACTOR: Actor ~A entered collision with collider ~
+           ~A(on actor ~A)"
           (fl:actor self) other-collider (fl:actor other-collider))
   (when (string= (fl:display-id other-collider) "Ground")
     (v:info :fl.example
-            "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" object, so destroy myself!")
+            "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" ~
+             object, so destroy myself!")
     (fl:destroy (fl:actor self))))
 
 (defmethod fl:on-collision-exit ((self destroy-my-actor) other-collider)
   (v:info :fl.example
-          "DESTROY-MY-ACTOR: Actor ~A is exiting collision with ~A(on actor: ~A)."
+          "DESTROY-MY-ACTOR: Actor ~A is exiting collision with ~
+           ~A(on actor: ~A)."
           (fl:actor self) other-collider (fl:actor other-collider)))
 
 (defmethod fl:on-component-update ((self destroy-my-actor))
   (decf (time-to-destroy self) (fl:frame-time (fl:context self)))
   (when (<= (time-to-destroy self) 0)
     (fl:destroy (fl:actor self))))
-
 
 (fl:define-prefab "collision-smoke-test" (:library examples)
   (("camera" :copy "/cameras/perspective")
@@ -58,18 +60,15 @@
 ananother actor near the bottom of the screen. These three are unmoving. The
 green spiral (if VISUALIZE defaults to T in the collider/sphere component) is a
 sphere collider being rendered as a spiral wound around it (it is 3d and you're
-seeing the top of it in the ortho projection).  A small actor shows up and
-moves downwards. When it hits the narrow gape, when the colliders touch they
-will highlight and there will be output to the repl. After it leaves the narrow
-gap and hits the bottom actor, it will disappear, having destroyed itself when
+seeing the top of it in the ortho projection). A small actor shows up and moves
+downwards. When it hits the narrow gape, when the colliders touch they will
+highlight and there will be output to the repl. After it leaves the narrow gap
+and hits the bottom actor, it will disappear, having destroyed itself when
 hitting the bottom actor. The DESTROY-MY-ACTOR component specifically checks for
 the \"Ground\" collider via its display-id. This is a hack, but good enough for
-a test. After it disappears, nothing else happens.
-
-TODO: Make a spawner object that just spawns stone prefabs so they rain down
-onto the ground, which should be made bigger. to accomodate it. Maybe some
-fragments too when it hits..."
-
+a test. After it disappears, nothing else happens. TODO: Make a spawner object
+that just spawns stone prefabs so they rain down onto the ground, which should
+be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   (("camera" :copy "/cameras/perspective")
    (fl.comp:camera (:policy :new-args) :zoom 7))
