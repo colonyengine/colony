@@ -75,5 +75,6 @@
    #:state
    #:stop-engine
    #:total-time
+   #:ttl
    #:using-material
    #:with-shared-storage))

@@ -1,15 +1,19 @@
 (in-package :first-light.prefab)
 
 (defun make-actors (context prefab)
-  (let ((actors (au:dict #'equalp)))
+  (let ((actors (au:dict #'equalp))
+        (root))
     (au:do-hash (path node (parse-tree prefab))
       (with-slots (%name %id %display-id) node
-        (setf (au:href actors path)
-              (make-actor context
-                          :prefab-node node
-                          :id %id
-                          :display-id (or %display-id %name)))))
-    actors))
+        (let ((actor (make-actor context
+                                 :prefab-node node
+                                 :id %id
+                                 :display-id (or %display-id %name))))
+          (setf (au:href actors path) actor)
+          (unless (parent node)
+            (setf root actor)))))
+    (values actors
+            root)))
 
 (defun make-actor-components (context actors setter)
   (let ((components (au:dict #'eq)))
@@ -52,17 +56,23 @@
 
 (defun make-factory (prefab setter)
   (lambda (core)
-    (let* ((context (context core))
-           (actors (make-actors context prefab)))
+    (au:mvlet* ((context (context core))
+                (actors root (make-actors context prefab)))
       (funcall setter :actors actors)
       (make-actor-components context actors setter)
       (make-actor-relationships context prefab actors)
       (au:do-hash-values (actor actors)
-        (spawn-actor actor)))))
+        (spawn-actor actor))
+      root)))
 
-(defun load-prefabs (core prefabs)
-  (%fl:make-scene-tree core)
-  (dolist (spec prefabs)
-    (destructuring-bind (name library) spec
-      (let ((prefab (find-prefab name library)))
-        (funcall (func prefab) core)))))
+(defun load-prefabs (core prefabs &key (parent 'universe) (ttl 0))
+  ;; TODO: Support parenting to arbitrary actor
+  (declare (ignore parent))
+  (let (roots)
+    (dolist (spec prefabs)
+      (destructuring-bind (name library) spec
+        (let* ((prefab (find-prefab name library))
+               (actor (funcall (func prefab) core)))
+          (setf (ttl actor) ttl)
+          (push actor roots))))
+    (values-list (nreverse roots))))

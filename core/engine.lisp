@@ -69,6 +69,7 @@ tear-down procedure occurs when stopping the engine."
     (load-texture-descriptors core)
     (load-materials core)
     (initialize-collider-system core)
+    (make-scene-tree core)
     (fl.prefab:load-prefabs core prefabs)
     (v:info :fl.core.engine "Finished starting ~a" title)))
 
