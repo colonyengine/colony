@@ -78,30 +78,16 @@
 ;; collider component instance can keep data about itself for visualization or
 ;; other purposes.
 (defmethod on-collision-enter ((self collider/sphere) other-collider)
-  (when (visualize self)
-    (format t "Collider[~S] entered collision with other collider[~S]~%"
-            (display-id self) (display-id other-collider)))
-
   (incf (num-contacts self))
-
   (au:when-let (referent (referent self))
     (on-collision-enter referent other-collider)))
 
 (defmethod on-collision-continue ((self collider/sphere) other-collider)
-  (when (visualize self)
-    (format t "Collider[~S] continues collision with other collider[~S]~%"
-            (display-id self) (display-id other-collider)))
-
   (au:when-let (referent (referent self))
     (on-collision-continue referent other-collider)))
 
 (defmethod on-collision-exit ((self collider/sphere) other-collider)
-  (when (visualize self)
-    (format t "Collider[~S] exited collision with other collider[~S]~%"
-            (display-id self) (display-id other-collider)))
-
   (decf (num-contacts self))
-
   (au:when-let (referent (referent self))
     (on-collision-continue referent other-collider)))
 
