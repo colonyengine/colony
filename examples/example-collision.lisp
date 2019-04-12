@@ -6,14 +6,17 @@
   ((time-to-destroy :default 5)))
 
 (defmethod fl:on-collision-enter ((self destroy-my-actor) other-collider)
-  (format t "DESTROY-MY-ACTOR: Actor ~A entered collision with collider ~A(on actor ~A)~%"
+  (v:info :fl.example
+          "DESTROY-MY-ACTOR: Actor ~A entered collision with collider ~A(on actor ~A)"
           (fl:actor self) other-collider (fl:actor other-collider))
   (when (string= (fl:display-id other-collider) "Ground")
-    (format t "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" object, so destroy myself!~%")
+    (v:info :fl.example
+            "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" object, so destroy myself!")
     (fl:destroy (fl:actor self))))
 
 (defmethod fl:on-collision-exit ((self destroy-my-actor) other-collider)
-  (format t "DESTROY-MY-ACTOR: Actor ~A is exiting collision with ~A(on actor: ~A).~%"
+  (v:info :fl.example
+          "DESTROY-MY-ACTOR: Actor ~A is exiting collision with ~A(on actor: ~A)."
           (fl:actor self) other-collider (fl:actor other-collider)))
 
 (defmethod fl:on-component-update ((self destroy-my-actor))
