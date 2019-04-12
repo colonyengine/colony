@@ -114,6 +114,9 @@ fragments too when it hits..."
    (fl.comp:render :material '2d-wood)))
 
 (fl:define-prefab "collision-test-1" (:library examples)
+  "This test demonstrates that at frame 0 colliders that should be colliding
+actually are. You have to view the results to see the colliders lighting up."
+
   (("camera" :copy "/cameras/perspective")
    (fl.comp:camera (:policy :new-args) :zoom 7))
 
