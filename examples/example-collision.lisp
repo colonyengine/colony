@@ -52,7 +52,7 @@
      :radius 1)
     (fl.comp:render :material '2d-wood))))
 
-(fl:define-prefab "collision-simple-destroy-0" (:library examples)
+(fl:define-prefab "collision-test-0" (:library examples)
   #++
   "In this test, you should see two actors with a narrow gap between them and
 ananother actor near the bottom of the screen. These three are unmoving. The
@@ -112,3 +112,45 @@ fragments too when it hits..."
                             :center (m:vec3)
                             :radius 1)
    (fl.comp:render :material '2d-wood)))
+
+(fl:define-prefab "collision-test-1" (:library examples)
+  (("camera" :copy "/cameras/perspective")
+   (fl.comp:camera (:policy :new-args) :zoom 7))
+
+  ("upper-left"
+   (fl.comp:transform :translate (m:vec3 -2 2 -.1))
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material '2d-wood)
+   (fl.comp:collider/sphere :display-id "Upper-Left"
+                            :on-layer :ground))
+  ("upper-right"
+   (fl.comp:transform :translate (m:vec3 2 2 -.1))
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material '2d-wood)
+   (fl.comp:collider/sphere :display-id "Upper-Right"
+                            :on-layer :ground))
+  ("lower-left"
+   (fl.comp:transform :translate (m:vec3 -2 -2 -.1))
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material '2d-wood)
+   (fl.comp:collider/sphere :display-id "Lower-Left"
+                            :on-layer :ground))
+  ("lower-right"
+   (fl.comp:transform :translate (m:vec3 2 -2 -.1))
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material '2d-wood)
+   (fl.comp:collider/sphere :display-id "Lower-Right"
+                            :on-layer :ground))
+  ("stone"
+   (fl.comp:transform :translate (m:vec3 0 0 0)
+                      :scale (m:vec3 2)
+                      :rotate (m:vec3 (/ 2 pi 2) 0 0)
+                      :rotate/inc (m:vec3 (/ pi -2) (/ pi -2) (/ pi -2))
+                      :translate/inc (m:vec3 0 0 0))
+   (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
+   (destroy-my-actor :time-to-destroy 2)
+   (fl.comp:collider/sphere :display-id "Stone"
+                            :on-layer :player
+                            :center (m:vec3)
+                            :radius 1)
+   (fl.comp:render :material 'damaged-helmet)))
