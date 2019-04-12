@@ -40,7 +40,7 @@
                               :append (list k (funcall v context)))))
               (apply #'reinitialize-instance component :actor actor args))))))))
 
-(defun make-actor-relationships (context prefab actors &optional parent)
+(defun make-actor-relationships (context prefab actors parent)
   (let ((parent (or parent (scene-tree (core context))))
         (root (au:href actors (path (root prefab)))))
     (au:do-hash-values (actor actors)
@@ -55,24 +55,22 @@
      (actor-component-by-type root 'fl.comp:transform))))
 
 (defun make-factory (prefab setter)
-  (lambda (core)
+  (lambda (core &key parent)
     (au:mvlet* ((context (context core))
                 (actors root (make-actors context prefab)))
       (funcall setter :actors actors)
       (make-actor-components context actors setter)
-      (make-actor-relationships context prefab actors)
+      (make-actor-relationships context prefab actors parent)
       (au:do-hash-values (actor actors)
         (spawn-actor actor))
       root)))
 
-(defun load-prefabs (core prefabs &key (parent 'universe) (ttl 0))
-  ;; TODO: Support parenting to arbitrary actor
-  (declare (ignore parent))
+(defun load-prefabs (core prefabs &key parent (ttl 0))
   (let (roots)
     (dolist (spec prefabs)
       (destructuring-bind (name library) spec
         (let* ((prefab (find-prefab name library))
-               (actor (funcall (func prefab) core)))
+               (actor (funcall (func prefab) core :parent parent)))
           (setf (ttl actor) ttl)
           (push actor roots))))
     (values-list (nreverse roots))))
