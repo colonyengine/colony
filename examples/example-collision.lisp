@@ -34,7 +34,6 @@
     (fl.comp:collider/sphere
      :display-id "Player"
      :on-layer :player
-     :referent (fl:ref :self :component 'fl.comp:collider/sphere)
      :center (m:vec3)
      :radius 1)
     (fl.comp:render :material '2d-wood)))
@@ -47,7 +46,6 @@
     (fl.comp:collider/sphere
      :display-id "Enemy"
      :on-layer :enemy
-     :referent (fl:ref :self :component 'fl.comp:collider/sphere)
      :center (m:vec3)
      :radius 1)
     (fl.comp:render :material '2d-wood))))

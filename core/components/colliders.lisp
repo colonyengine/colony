@@ -80,15 +80,21 @@
 (defmethod on-collision-enter ((self collider/sphere) other-collider)
   (incf (num-contacts self))
   (au:when-let (referent (referent self))
+    (when (eq self referent)
+      (error "The referent of a collider must not be same collider component!"))
     (on-collision-enter referent other-collider)))
 
 (defmethod on-collision-continue ((self collider/sphere) other-collider)
   (au:when-let (referent (referent self))
+    (when (eq self referent)
+      (error "The referent of a collider must not be same collider component!"))
     (on-collision-continue referent other-collider)))
 
 (defmethod on-collision-exit ((self collider/sphere) other-collider)
   (decf (num-contacts self))
   (au:when-let (referent (referent self))
+    (when (eq self referent)
+      (error "The referent of a collider must not be same collider component!"))
     (on-collision-continue referent other-collider)))
 
 
