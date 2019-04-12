@@ -34,11 +34,13 @@
 
 
 (define-function collider/sphere/frag (&uniform
-                                       (color :vec4)
+                                       (in-contact-color :vec4)
+                                       (not-in-contact-color :vec4)
                                        (in-contact-p :bool))
   (if in-contact-p
-      (vec4 (mix (vec3 color) (vec3 1) .5) 1)
-      color))
+      in-contact-color
+      not-in-contact-color))
+
 
 (define-shader collider/sphere (:primitive :points)
   (:vertex (collider/sphere/vert))
