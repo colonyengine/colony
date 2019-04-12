@@ -54,7 +54,6 @@
     (fl.comp:render :material '2d-wood))))
 
 (fl:define-prefab "collision-test-0" (:library examples)
-  #++
   "In this test, you should see two actors with a narrow gap between them and
 ananother actor near the bottom of the screen. These three are unmoving. The
 green spiral (if VISUALIZE defaults to T in the collider/sphere component) is a
