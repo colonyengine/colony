@@ -145,12 +145,12 @@ return them as a list."
 ;; A crappy kind of pattern matching.
 (defun is-syntax-form-p (syntax-symbol form)
   (cond
-    ((consp syntax-symbol)
-     (when (consp form)
-       (eql/package-relaxed (first syntax-symbol) (first form))))
-    ((symbolp syntax-symbol)
-     (when (symbolp form)
-       (eql/package-relaxed syntax-symbol form)))
+    ((and (consp syntax-symbol)
+          (consp form))
+     (eql/package-relaxed (first syntax-symbol) (first form)))
+    ((and (symbolp syntax-symbol)
+          (symbolp form))
+     (eql/package-relaxed syntax-symbol form))
     ;; maybe other cases needed?
     (t nil)))
 

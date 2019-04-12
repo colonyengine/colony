@@ -40,9 +40,11 @@
   (make-instance 'transform-state-vector :current (m:vec3 1)))
 
 (defun interpolate-vector (state factor)
+  (declare (optimize speed))
   (m:lerp (previous state) (current state) factor (interpolated state)))
 
 (defun interpolate-quaternion (state factor)
+  (declare (optimize speed))
   (m:slerp (previous state) (current state) factor (interpolated state)))
 
 (define-component transform ()
@@ -66,24 +68,29 @@
         (parent child) nil))
 
 (defun transform-node/vector (state delta)
+  (declare (optimize speed))
   (with-slots (%previous %current %incremental-delta %incremental) state
     (m:copy-into %previous %current)
     (m:* %incremental delta %incremental-delta)
     (m:+ %current %incremental-delta %current)))
 
 (defun transform-node/quat (state delta)
+  (declare (optimize speed))
   (with-slots (%previous %current %incremental-delta %incremental) state
     (m:copy-into %previous %current)
     (m:* %incremental delta %incremental-delta)
     (m:rotate :local %current %incremental-delta %current)))
 
 (defun transform-node (core node)
+  (declare (optimize speed)
+           (inline transform-node/vector transform-node/quat))
   (let ((delta (delta (context core))))
     (transform-node/vector (scaling node) delta)
     (transform-node/quat (rotation node) delta)
     (transform-node/vector (translation node) delta)))
 
 (defun resolve-local (node alpha)
+  (declare (optimize speed))
   (with-accessors ((local local)
                    (scaling scaling)
                    (rotation rotation)
@@ -98,16 +105,20 @@
     (m:set-translation local (interpolated translation) local)))
 
 (defun resolve-model (node alpha)
+  (declare (optimize speed))
   (au:when-let ((parent (parent node)))
     (resolve-local node alpha)
     (m:* (model parent) (local node) (model node))))
 
 (defun map-nodes (func parent)
+  (declare (optimize speed)
+           (type function func))
   (funcall func parent)
   (dolist (child (children parent))
     (map-nodes func child)))
 
 (defun interpolate-transforms (core)
+  (declare (optimize speed))
   (map-nodes
    (lambda (node)
      (resolve-model node (%fl:alpha (%fl:frame-manager core))))

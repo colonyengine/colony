@@ -222,6 +222,7 @@
         (when (string= attr "POSITION")
           (setf %count (get-property gltf "count" accessor)
                 %draw-func (lambda (&key (instance-count 1))
+                             (declare (optimize speed))
                              (gl:bind-vertex-array %vao)
                              (gl:draw-arrays-instanced
                               %mode 0 %count instance-count))))))))
@@ -234,6 +235,7 @@
             %type (get-component-type gltf accessor)
             %index-buffer (make-gpu-buffer gltf :element-array-buffer accessor)
             %draw-func (lambda (&key (instance-count 1))
+                         (declare (optimize speed))
                          (gl:bind-vertex-array %vao)
                          (gl:bind-buffer :element-array-buffer %index-buffer)
                          (%gl:draw-elements-instanced

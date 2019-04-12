@@ -88,6 +88,7 @@
       input-data gamepad-id (aref +gamepad-button-names+ button)))))
 
 (defun perform-input-state-tasks (input-data)
+  (declare (optimize speed))
   (let ((states (au:href (states input-data))))
     (setf (au:href states '(:mouse :scroll-horizontal)) 0
           (au:href states '(:mouse :scroll-vertical)) 0)
@@ -95,8 +96,9 @@
     (disable-exiting input-data)))
 
 (defun handle-events (input-data)
+  (declare (optimize speed))
   (perform-input-state-tasks input-data)
   (loop :with event = (sdl2:new-event)
-        :until (zerop (sdl2:next-event event :poll))
+        :until (zerop (the fixnum (sdl2:next-event event :poll)))
         :do (dispatch-event input-data event)
         :finally (sdl2:free-event event)))
