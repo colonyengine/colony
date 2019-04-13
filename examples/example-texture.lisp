@@ -273,3 +273,8 @@
    (fl.comp:mesh :location '((:core :mesh) "cube.glb"))
    (fl.comp:render
     :material 'cubemaparray)))
+
+;;; Prefab descriptors
+
+(fl:define-prefab-descriptor texture ()
+  ("texture" fl.example:examples))

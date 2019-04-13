@@ -93,7 +93,7 @@
         (fl:attach-multiple-components
          new-actor transform shot-mover sprite render)
         (fl:spawn-actor new-actor)
-        (%fl::destroy new-actor :ttl 2)))))
+        (fl:destroy-after-time new-actor :ttl 2)))))
 
 ;;; Prefabs
 
@@ -137,3 +137,11 @@
                                         :duration 4
                                         :shape m:bounce-in
                                         :repeat-p t)))))
+
+;;; Prefab descriptors
+
+(fl:define-prefab-descriptor sprite-1 ()
+  ("sprite-1" fl.example:examples))
+
+(fl:define-prefab-descriptor sprite-2 ()
+  ("sprite-2" fl.example:examples))

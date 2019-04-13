@@ -12,3 +12,8 @@
   (("cube2" :copy "/mesh")
    (fl.comp:transform :translate (m:vec3 2 0 0))
    (fl.comp:mesh :location '((:core :mesh) "cube.glb"))))
+
+;;; Prefab descriptors
+
+(fl:define-prefab-descriptor isometric-view ()
+  ("isometric-view" fl.example:examples))

@@ -48,3 +48,8 @@
                       :scale (m:vec3 4))
    (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
    (fl.comp:render :material 'damaged-helmet)))
+
+;;; Prefab descriptors
+
+(fl:define-prefab-descriptor damaged-helmet ()
+  ("damaged-helmet" fl.example:examples))

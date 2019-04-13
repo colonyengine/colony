@@ -6,7 +6,8 @@
   :window-height 1080
   :vsync :off
   :log-level :debug
-  :log-repl-categories '(:fl))
+  :log-repl-categories '(:fl)
+  :initial-scene 'geometric-volumes)
 
 (fl:define-resources (:project :first-light.example)
   (:project "data/project")

@@ -13,7 +13,8 @@
                       :log-repl-categories '(:fl)
                       :log-level :debug
                       :anti-alias-level 4
-                      :opengl-version "4.3"))
+                      :opengl-version "4.3"
+                      :initial-scene nil))
 
 (defun load-options (core)
   (setf (options core)

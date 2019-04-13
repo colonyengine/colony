@@ -28,3 +28,8 @@
                       :scale (m:vec3 6))
    (fl.comp:mesh :location '((:core :mesh) "cone.glb"))
    (fl.comp:render :material 'fl.materials:unlit-texture-decal-bright)))
+
+;;; Prefab descriptors
+
+(fl:define-prefab-descriptor geometric-volumes ()
+  ("geometric-volumes" fl.example:examples))

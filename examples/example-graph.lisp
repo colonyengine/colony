@@ -49,3 +49,14 @@
                                :shader fl.gpu.user:3d-graph-2
                                :instances 100000
                                :uniforms ((:size 1))))))
+
+;;; Prefab descriptors
+
+(fl:define-prefab-descriptor graph ()
+  ("graph" fl.example:examples))
+
+(fl:define-prefab-descriptor 3d-graph-1 ()
+  ("3d-graph-1" fl.example:examples))
+
+(fl:define-prefab-descriptor 3d-graph-2 ()
+  ("3d-graph-2" fl.example:examples))

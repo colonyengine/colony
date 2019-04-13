@@ -67,4 +67,7 @@
   (:inherit-from
    #:fl.prefab
    #:define-prefab
+   #:define-prefab-descriptor
+   #:find-prefab-descriptor
+   #:make-prefab-instance
    #:ref))

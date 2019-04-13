@@ -56,7 +56,12 @@ tear-down procedure occurs when stopping the engine."
   (sdl2:destroy-window (window (display core)))
   (sdl2::sdl-quit))
 
-(defun initialize-engine (core prefabs)
+(defun load-initial-scene (core scene-name)
+  (let* ((scene-name (or scene-name (option (context core) :initial-scene)))
+         (prefab-descriptor (fl.prefab:find-prefab-descriptor scene-name)))
+    (fl.prefab:make-prefab-instance core prefab-descriptor)))
+
+(defun initialize-engine (core scene-name)
   (let ((title (option (context core) :title)))
     (v:info :fl.core.engine "Starting up ~a..." title)
     (setup-live-coding)
@@ -70,7 +75,7 @@ tear-down procedure occurs when stopping the engine."
     (load-materials core)
     (initialize-collider-system core)
     (make-scene-tree core)
-    (fl.prefab:load-prefabs core prefabs)
+    (load-initial-scene core scene-name)
     (v:info :fl.core.engine "Finished starting ~a" title)))
 
 (defun iterate-main-loop (core)
@@ -86,7 +91,7 @@ tear-down procedure occurs when stopping the engine."
   (au:while (running-p core)
     (iterate-main-loop core)))
 
-(defun start-engine (prefabs &optional profile-duration)
+(defun start-engine (&key scene profile)
   "Start the engine. First we initialize the engine. Next we run the prologue as
 the last step, before finally starting the main game loop."
   (unwind-protect
@@ -94,10 +99,10 @@ the last step, before finally starting the main game loop."
          (load-options core)
          (make-context core)
          (setf *core-debug* core)
-         (initialize-engine core prefabs)
+         (initialize-engine core scene)
          (run-prologue core)
-         (if profile-duration
-             (profile core profile-duration)
+         (if profile
+             (profile core profile)
              (main-loop core)))
     (sdl2::sdl-quit)))
 

@@ -156,3 +156,14 @@ actually are. You have to view the results to see the colliders lighting up."
                             :center (m:vec3)
                             :radius 1)
    (fl.comp:render :material 'damaged-helmet)))
+
+;;; Prefab descriptors
+
+(fl:define-prefab-descriptor collision-test-0 ()
+  ("collision-test-0" fl.example:examples))
+
+(fl:define-prefab-descriptor collision-test-1 ()
+  ("collision-test-1" fl.example:examples))
+
+(fl:define-prefab-descriptor collision-smoke-test ()
+  ("collision-smoke-test" fl.example:examples))

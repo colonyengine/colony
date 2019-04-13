@@ -106,3 +106,8 @@
    (fl.comp:render :material '(noise
                                noise/cubist-3d
                                :shader fl.gpu.user:noise/cubist-3d))))
+
+;;; Prefab descriptors
+
+(fl:define-prefab-descriptor noise ()
+  ("noise" fl.example:examples))
