@@ -116,40 +116,71 @@
   (let* ((actor (fl:actor self))
          (actor-transform
            (fl:actor-component-by-type actor 'fl.comp:transform))
-         (test-0/object-space-point-0 (m:vec3 1 1 1))
-         (test-0/world-space-point-0 (m:vec3 2 2 2))
-         (test-0/local->world
+         (object-space-point (m:vec3 1 0 0))
+         (world-space-point (m:vec3 1 3 1))
+         (local->world
            (fl.comp:transform-point actor-transform
-                                    test-0/object-space-point-0))
-         (test-0/world->local
+                                    object-space-point))
+         (world->local
            (fl.comp:inverse-transform-point actor-transform
-                                            test-0/world-space-point-0)))
+                                            world-space-point)))
 
     ;; See if transform-point and inverse-transform-point work.
-    (let ((test-0/result-0
-            (m:~ test-0/local->world test-0/world-space-point-0))
-          (test-0/result-1
-            (m:~ test-0/world->local test-0/object-space-point-0)))
+    (let ((result-0
+            (m:~ local->world world-space-point))
+          (result-1
+            (m:~ world->local object-space-point)))
 
-      (unless (and test-0/result-0 test-0/result-1)
-        (unless test-0/result-0
-          (v:debug
+      (unless (and result-0 result-1)
+        (unless result-0
+          (v:error
            :fl.example
-           "FAILED: (m:~~ test-0/local->world:~A test-0/world-space-point0: ~A) -> ~A"
-           test-0/local->world test-0/world-space-point-0 test-0/result-0))
+           "FAILED: (m:~~ local->world:~A world-space-point: ~A) -> ~A"
+           local->world world-space-point result-0))
 
-        (unless test-0/result-1
-          (v:debug
+        (unless result-1
+          (v:error
            :fl.example
-           "FAILED: (m:~~ test-0/world->local:~A test-0/object-space-point-0: ~A) -> ~A"
-           test-0/world->local test-0/object-space-point-0 test-0/result-1))
+           "FAILED: (m:~~ world->local:~A object-space-point: ~A) -> ~A"
+           world->local object-space-point result-1))
 
-        (error "TRANSFORM-POINT Failed test-0")))))
+        (error "TRANSFORM-POINT API Failed!")))))
 
 (defun test-transform-vector-api (self)
-  (declare (ignore self))
-  ;; TODO implement test-transform-vector-api
-  nil)
+  "Test if the TRANSFORM-VECTOR and INVERSE-TRANSFORM-VECTOR work."
+  (let* ((actor (fl:actor self))
+         (actor-transform
+           (fl:actor-component-by-type actor 'fl.comp:transform))
+         (object-space-vector (m:vec3 2 2 0))
+         (world-space-vector (m:vec3 -4 4 0))
+         (local->world
+           (fl.comp:transform-vector actor-transform
+                                     object-space-vector))
+         (world->local
+           (fl.comp:inverse-transform-vector actor-transform
+                                             world-space-vector)))
+
+    ;; See if transform-point and inverse-transform-point work.
+    (let ((result-0
+            (m:~ local->world world-space-vector))
+          (result-1
+            (m:~ world->local object-space-vector)))
+
+      (unless (and result-0 result-1)
+        (unless result-0
+          (v:error
+           :fl.example
+           "FAILED: (m:~~ local->world:~A world-space-vector: ~A) -> ~A"
+           local->world world-space-vector result-0))
+
+        (unless result-1
+          (v:error
+           :fl.example
+           "FAILED: (m:~~ world->local:~A object-space-vector: ~A) -> ~A"
+           world->local object-space-vector result-1))
+
+        (error "TRANSFORM-VECTOR API Failed!")))))
+
 
 (defun test-transform-direction-api (self)
   (declare (ignore self))
@@ -195,7 +226,11 @@ world space for a particular transform."
     (fl.comp:transform :translate (m:vec3 0 1 0))
     ("back"
      (fl.comp:transform :translate (m:vec3 0 0 1))
-     ("mark" ;; Sitting at 1,1,1 wrt the universe.
+     ("mark"
+      ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
+      ;; "mark" Z axis.
+      (fl.comp:transform :rotate (m:vec3 0 0 (/ pi 2))
+                         :scale (m:vec3 2 2 2))
       (debug-transform :test-type :test-transform-api)
       (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
       (fl.comp:render :material '2d-wood))))))
