@@ -62,5 +62,14 @@
    #:rotate
    #:scale
    #:transform-point
+   #:inverse-transform-point
    #:transform-vector
-   #:transform-direction))
+   #:inverse-transform-vector
+   #:transform-direction
+   #:inverse-transform-direction
+   #:transform-forward
+   #:transform-backward
+   #:transform-up
+   #:transform-down
+   #:transform-right
+   #:transform-left))

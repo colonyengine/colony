@@ -1,7 +1,9 @@
 (in-package :first-light.example)
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This is not really a general purpose component. It is just here to help out
 ;; testing how destruction and colliders work together.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (fl:define-component destroy-my-actor ()
   ((time-to-destroy :default 5)))
 
@@ -54,6 +56,67 @@
      :center (m:vec3)
      :radius 1)
     (fl.comp:render :material '2d-wood))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Testing getting the directions from a transform
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(fl:define-component debug-transform ()
+  ((done-once :default nil)))
+
+(defmethod fl:on-component-physics-update ((self debug-transform))
+  (let* ((actor (fl:actor self))
+         (actor-transform
+           (fl:actor-component-by-type actor 'fl.comp:transform)))
+    (unless (done-once self)
+      (let ((forward (fl.comp:transform-forward actor-transform))
+            (backward (fl.comp:transform-backward actor-transform))
+            (up (fl.comp:transform-up actor-transform))
+            (down (fl.comp:transform-down actor-transform))
+            (right (fl.comp:transform-right actor-transform))
+            (left (fl.comp:transform-left actor-transform)))
+
+        (v:trace :fl.example "FORWARD Vector -> ~A" forward)
+        (v:trace :fl.example "BACKWARD Vector -> ~A" backward)
+        (v:trace :fl.example "UP Vector -> ~A" up)
+        (v:trace :fl.example "DOWN Vector -> ~A" down)
+        (v:trace :fl.example "RIGHT Vector -> ~A" right)
+        (v:trace :fl.example "LEFT Vector -> ~A" left)
+
+        ;; NOTE: This expects the actor to be unrotated wrt the universe.
+        (unless (and (m:~ forward (m:vec3 0 0 -1))
+                     (m:~ backward (m:vec3 0 0 1))
+                     (m:~ up (m:vec3 0 1 0))
+                     (m:~ down (m:vec3 0 -1 0))
+                     (m:~ right (m:vec3 1 0 0))
+                     (m:~ left (m:vec3 -1 0 0)))
+          (error "The Transform API didn't match expectations!"))
+        (setf (done-once self) t)))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; The test prefabs.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(fl:define-prefab "collision-transform-test" (:library examples)
+  "This test just prints out the directions of the actor transform. Since
+the actor is at universe 0,0,0 and has no rotations, we should see the
+unit world vector representations of the axis directions as:
+  forward:  (0 0 -1)
+  backward: (0 0 1)
+  up:       (0 1 0)
+  down:     (0 -1 0)
+  right:    (1 0 0)
+  left:     (-1 0 0)
+"
+  (("camera" :copy "/cameras/perspective")
+   (fl.comp:camera (:policy :new-args) :zoom 7))
+
+  ("thingy"
+   (fl.comp:transform :translate (m:vec3 5 0 0))
+   (debug-transform)
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material '2d-wood)))
+
+
 
 (fl:define-prefab "collision-test-0" (:library examples)
   "In this test, you should see two actors with a narrow gap between them and
