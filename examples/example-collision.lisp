@@ -61,13 +61,23 @@
 ;; Testing getting the directions from a transform
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (fl:define-component debug-transform ()
-  ((done-once :default nil)))
+  ((test-type :default nil) ;; You must specify this
+   (test-performed :default (au:dict #'eq))))
 
 (defmethod fl:on-component-physics-update ((self debug-transform))
+  (ecase (test-type self)
+    (:test-direction-vectors
+     (test-axis-directions self))
+    (:test-transform-api
+     (test-transform-api self))))
+
+(defun test-axis-directions (self)
   (let* ((actor (fl:actor self))
+         (test-type (test-type self))
          (actor-transform
            (fl:actor-component-by-type actor 'fl.comp:transform)))
-    (unless (done-once self)
+
+    (unless (au:href (test-performed self) test-type)
       (let ((forward (fl.comp:transform-forward actor-transform))
             (backward (fl.comp:transform-backward actor-transform))
             (up (fl.comp:transform-up actor-transform))
@@ -89,14 +99,69 @@
                      (m:~ down (m:vec3 0 -1 0))
                      (m:~ right (m:vec3 1 0 0))
                      (m:~ left (m:vec3 -1 0 0)))
-          (error "The Transform API didn't match expectations!"))
-        (setf (done-once self) t)))))
+          (error "The Transform Axis Direction API didn't match expectations!"))
+        (setf (au:href (test-performed self) test-type) t)))))
+
+(defun test-transform-api (self)
+  (let* ((test-type (test-type self)))
+    (unless (au:href (test-performed self) test-type)
+      (test-transform-point-api self)
+      (test-transform-vector-api self)
+      (test-transform-direction-api self)
+      ;; And ensure we don't run this again.
+      (setf (au:href (test-performed self) test-type) t))))
+
+(defun test-transform-point-api (self)
+  "Test if the TRANSFORM-POINT and INVERSE-TRANSFORM-POINT work."
+  (let* ((actor (fl:actor self))
+         (actor-transform
+           (fl:actor-component-by-type actor 'fl.comp:transform))
+         (test-0/object-space-point-0 (m:vec3 1 1 1))
+         (test-0/world-space-point-0 (m:vec3 2 2 2))
+         (test-0/local->world
+           (fl.comp:transform-point actor-transform
+                                    test-0/object-space-point-0))
+         (test-0/world->local
+           (fl.comp:inverse-transform-point actor-transform
+                                            test-0/world-space-point-0)))
+
+    ;; See if transform-point and inverse-transform-point work.
+    (let ((test-0/result-0
+            (m:~ test-0/local->world test-0/world-space-point-0))
+          (test-0/result-1
+            (m:~ test-0/world->local test-0/object-space-point-0)))
+
+      (unless (and test-0/result-0 test-0/result-1)
+        (unless test-0/result-0
+          (v:debug
+           :fl.example
+           "FAILED: (m:~~ test-0/local->world:~A test-0/world-space-point0: ~A) -> ~A"
+           test-0/local->world test-0/world-space-point-0 test-0/result-0))
+
+        (unless test-0/result-1
+          (v:debug
+           :fl.example
+           "FAILED: (m:~~ test-0/world->local:~A test-0/object-space-point-0: ~A) -> ~A"
+           test-0/world->local test-0/object-space-point-0 test-0/result-1))
+
+        (error "TRANSFORM-POINT Failed test-0")))))
+
+(defun test-transform-vector-api (self)
+  (declare (ignore self))
+  ;; TODO implement test-transform-vector-api
+  nil)
+
+(defun test-transform-direction-api (self)
+  (declare (ignore self))
+  ;; TODO implement test-transform-vector-api
+  nil)
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The test prefabs.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(fl:define-prefab "collision-transform-test" (:library examples)
+(fl:define-prefab "collision-transform-test-0" (:library examples)
   "This test just prints out the directions of the actor transform. Since
 the actor is at universe 0,0,0 and has no rotations, we should see the
 unit world vector representations of the axis directions as:
@@ -111,11 +176,29 @@ unit world vector representations of the axis directions as:
    (fl.comp:camera (:policy :new-args) :zoom 7))
 
   ("thingy"
+   ;; NOTE: The 5 0 0 is specific to the debug-transform tests.
    (fl.comp:transform :translate (m:vec3 5 0 0))
-   (debug-transform)
+   (debug-transform :test-type :test-direction-vectors)
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)))
 
+(fl:define-prefab "collision-transform-test-1" (:library examples)
+  "This test checks to see if we can move in and out of object space and
+world space for a particular transform."
+
+  (("camera" :copy "/cameras/perspective")
+   (fl.comp:camera (:policy :new-args) :zoom 7))
+
+  ("right"
+   (fl.comp:transform :translate (m:vec3 1 0 0))
+   ("up"
+    (fl.comp:transform :translate (m:vec3 0 1 0))
+    ("back"
+     (fl.comp:transform :translate (m:vec3 0 0 1))
+     ("mark" ;; Sitting at 1,1,1 wrt the universe.
+      (debug-transform :test-type :test-transform-api)
+      (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+      (fl.comp:render :material '2d-wood))))))
 
 
 (fl:define-prefab "collision-test-0" (:library examples)
