@@ -65,12 +65,12 @@
         (spawn-actor actor))
       root)))
 
-(defun load-prefabs (core prefabs &key parent (ttl 0))
+(defun load-prefabs (core prefabs &key parent ttl)
   (let (roots)
     (dolist (spec prefabs)
       (destructuring-bind (name library) spec
         (let* ((prefab (find-prefab name library))
                (actor (funcall (func prefab) core :parent parent)))
-          (setf (ttl actor) ttl)
+          (destroy actor :ttl ttl)
           (push actor roots))))
     (values-list (nreverse roots))))

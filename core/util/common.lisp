@@ -2,7 +2,10 @@
 
 (defgeneric destroy (thing &key ttl)
   (:documentation "Destroy may take either an ACTOR or a COMPONENT. The keyword
-argument :TTL supplied in real seconds, how long the thing has yet to live."))
+argument :TTL supplied in real seconds, how long the thing has yet to live.")
+  (:method :around (thing &key ttl)
+    (when (numberp ttl)
+      (call-next-method))))
 
 (defun type-table (key type-table)
   (au:href type-table key))
