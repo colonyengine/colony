@@ -183,9 +183,40 @@
 
 
 (defun test-transform-direction-api (self)
-  (declare (ignore self))
-  ;; TODO implement test-transform-vector-api
-  nil)
+  (let* ((actor (fl:actor self))
+         (actor-transform
+           (fl:actor-component-by-type actor 'fl.comp:transform))
+         ;; NOTE: these must be normalized for the test. I specified it this way
+         ;; so it would be easier to see in your mind's eye.
+         (object-space-direction (m:normalize (m:vec3 1 1 0)))
+         (world-space-direction (m:normalize (m:vec3 -1 1 0)))
+         (local->world
+           (fl.comp:transform-direction actor-transform
+                                        object-space-direction))
+         (world->local
+           (fl.comp:inverse-transform-direction actor-transform
+                                                world-space-direction)))
+
+    ;; See if transform-point and inverse-transform-point work.
+    (let ((result-0
+            (m:~ local->world world-space-direction))
+          (result-1
+            (m:~ world->local object-space-direction)))
+
+      (unless (and result-0 result-1)
+        (unless result-0
+          (v:error
+           :fl.example
+           "FAILED: (m:~~ local->world:~A world-space-direction: ~A) -> ~A"
+           local->world world-space-direction result-0))
+
+        (unless result-1
+          (v:error
+           :fl.example
+           "FAILED: (m:~~ world->local:~A object-space-direction: ~A) -> ~A"
+           world->local object-space-direction result-1))
+
+        (error "TRANSFORM-DIRECTION API Failed!")))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
