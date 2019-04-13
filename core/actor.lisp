@@ -117,10 +117,15 @@ reference which will be the parent of the spawning actor. It defaults to
     (setf (state actor) :active
           (au:href (actor-active-db (tables core)) actor) actor)))
 
-(defmethod destroy ((thing actor) &key (ttl 0))
-  (let ((core (core (context thing))))
-    (setf (ttl thing) (if (minusp ttl) 0 ttl)
-          (au:href (actor-predestroy-view (tables core)) thing) thing)))
+(defmethod destroy-after-time ((thing actor) &key (ttl 0))
+  (let* ((core (core (context thing)))
+         (table (au:href (actor-predestroy-view (tables core)))))
+    (setf (ttl thing) (and ttl (max 0 ttl)))
+    (if ttl
+        (setf (au:href table thing) thing)
+        ;; If the TTL is stopped, we want to remove the actor from the
+        ;; pre-destroy view!
+        (remhash thing table))))
 
 (defun actor/init-or-active->destroy (actor)
   ;; TODO: A different logic error (that of a destroyed object not having its

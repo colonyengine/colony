@@ -109,10 +109,15 @@ DEFINE-COMPONENT form."
             (type-table component-type (component-active-by-type-view %tables))
             component))))
 
-(defmethod destroy ((thing component) &key (ttl 0))
-  (let ((core (core (context thing))))
-    (setf (ttl thing) (max 0 ttl)
-          (au:href (component-predestroy-view (tables core)) thing) thing)))
+(defmethod destroy-after-time ((thing component) &key (ttl 0))
+  (let* ((core (core (context thing)))
+         (table (au:href (component-predestroy-view (tables core)))))
+    (setf (ttl thing) (and ttl (max 0 ttl)))
+    (if ttl
+        (setf (au:href table thing) thing)
+        ;; If the TTL is stopped, we want to remove the component from the
+        ;; pre-destroy view!
+        (remhash thing table))))
 
 (defun component/init-or-active->destroy (component)
   (let* ((core (core (context component)))

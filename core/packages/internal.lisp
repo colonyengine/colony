@@ -32,6 +32,7 @@
    #:deploy-binary
    #:deregister-collider
    #:destroy
+   #:destroy-after-time
    #:detach-component
    #:display-id
    #:find-actors-by-id
