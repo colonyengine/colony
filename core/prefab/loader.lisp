@@ -74,3 +74,7 @@
           (destroy-after-time actor :ttl ttl)
           (push actor roots))))
     (values-list (nreverse roots))))
+
+(defun load-prefab-descriptor (core prefab-descriptor)
+  (dolist (spec prefab-descriptor)
+    ))

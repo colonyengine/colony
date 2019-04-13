@@ -82,8 +82,6 @@
     (m:rotate :local %current %incremental-delta %current)))
 
 (defun transform-node (core node)
-  (declare (optimize speed)
-           (inline transform-node/vector transform-node/quat))
   (let ((delta (delta (context core))))
     (transform-node/vector (scaling node) delta)
     (transform-node/quat (rotation node) delta)

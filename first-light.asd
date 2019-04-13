@@ -53,19 +53,6 @@
      (:file "deploy")
      (:file "live-coding")
      (:file "uuid")))
-   (:module "textures"
-    :components
-    ((:file "texture")
-     (:file "common")
-     (:file "1d")
-     (:file "2d")
-     (:file "3d")
-     (:file "1d-array")
-     (:file "2d-array")
-     (:file "cube-map")
-     (:file "cube-map-array")
-     (:file "rectangle")
-     (:file "buffer")))
    (:file "resource")
    (:file "context")
    (:file "options")
@@ -80,12 +67,25 @@
    (:file "object-query")
    (:file "frame")
    (:file "display")
-   (:file "materials")
    (:file "shaders")
    (:file "colliders")
    (:file "action-manager")
    (:file "core")
    (:file "engine")
+   (:module "textures"
+    :components
+    ((:file "texture")
+     (:file "common")
+     (:file "1d")
+     (:file "2d")
+     (:file "3d")
+     (:file "1d-array")
+     (:file "2d-array")
+     (:file "cube-map")
+     (:file "cube-map-array")
+     (:file "rectangle")
+     (:file "buffer")))
+   (:file "materials")
    (:module "components"
     :components
     ((:file "transform")
@@ -104,6 +104,7 @@
      (:file "parser")
      (:file "loader")
      (:file "reference")
+     (:file "descriptor")
      (:file "prefab")))
    (:module "actions"
     :components
