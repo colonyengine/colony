@@ -103,7 +103,7 @@
      (:file "checks")
      (:file "parser")
      (:file "loader")
-     (:file "references")
+     (:file "reference")
      (:file "prefab")))
    (:module "actions"
     :components
