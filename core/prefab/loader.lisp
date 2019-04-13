@@ -71,6 +71,7 @@
       (destructuring-bind (name library) spec
         (let* ((prefab (find-prefab name library))
                (actor (funcall (func prefab) core :parent parent)))
-          (destroy actor :ttl ttl)
+          (when ttl
+            (destroy actor :ttl ttl))
           (push actor roots))))
     (values-list (nreverse roots))))
