@@ -29,42 +29,15 @@
   (when (<= (time-to-destroy self) 0)
     (fl:destroy (fl:actor self))))
 
-(fl:define-prefab "collision-smoke-test" (:library examples)
-  (("camera" :copy "/cameras/perspective")
-   (fl.comp:camera (:policy :new-args) :zoom 6))
-  ("rot-0-center"
-   (fl.comp:transform :translate (m:vec3 -2 0 0)
-                      :rotate/inc (m:vec3 0 0 pi))
-   ("plane-0"
-    (fl.comp:transform :translate (m:vec3 -2 0 0))
-    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-    (fl.comp:collider/sphere
-     :display-id "Player"
-     :on-layer :player
-     :center (m:vec3)
-     :radius 1)
-    (fl.comp:render :material '2d-wood)))
-  ("rot-1-center"
-   (fl.comp:transform :translate (m:vec3 2 0 0)
-                      :rotate/inc (m:vec3 0 0 (- pi)))
-   ("plane-1"
-    (fl.comp:transform :translate (m:vec3 2 0 0))
-    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
-    (fl.comp:collider/sphere
-     :display-id "Enemy"
-     :on-layer :enemy
-     :center (m:vec3)
-     :radius 1)
-    (fl.comp:render :material '2d-wood))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing getting the directions from a transform
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(fl:define-component debug-transform ()
+(fl:define-component unit-test-transform-api ()
   ((test-type :default nil) ;; You must specify this
    (test-performed :default (au:dict #'eq))))
 
-(defmethod fl:on-component-physics-update ((self debug-transform))
+(defmethod fl:on-component-physics-update ((self unit-test-transform-api))
   (ecase (test-type self)
     (:test-direction-vectors
      (test-axis-directions self))
@@ -223,6 +196,34 @@
 ;; The test prefabs.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(fl:define-prefab "collision-smoke-test" (:library examples)
+  (("camera" :copy "/cameras/perspective")
+   (fl.comp:camera (:policy :new-args) :zoom 6))
+  ("rot-0-center"
+   (fl.comp:transform :translate (m:vec3 -2 0 0)
+                      :rotate/inc (m:vec3 0 0 pi))
+   ("plane-0"
+    (fl.comp:transform :translate (m:vec3 -2 0 0))
+    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+    (fl.comp:collider/sphere
+     :display-id "Player"
+     :on-layer :player
+     :center (m:vec3)
+     :radius 1)
+    (fl.comp:render :material '2d-wood)))
+  ("rot-1-center"
+   (fl.comp:transform :translate (m:vec3 2 0 0)
+                      :rotate/inc (m:vec3 0 0 (- pi)))
+   ("plane-1"
+    (fl.comp:transform :translate (m:vec3 2 0 0))
+    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+    (fl.comp:collider/sphere
+     :display-id "Enemy"
+     :on-layer :enemy
+     :center (m:vec3)
+     :radius 1)
+    (fl.comp:render :material '2d-wood))))
+
 (fl:define-prefab "collision-transform-test-0" (:library examples)
   "This test just prints out the directions of the actor transform. Since
 the actor is at universe 0,0,0 and has no rotations, we should see the
@@ -238,9 +239,9 @@ unit world vector representations of the axis directions as:
    (fl.comp:camera (:policy :new-args) :zoom 7))
 
   ("thingy"
-   ;; NOTE: The 5 0 0 is specific to the debug-transform tests.
+   ;; NOTE: The 5 0 0 is specific to the unit-test-transform-api tests.
    (fl.comp:transform :translate (m:vec3 5 0 0))
-   (debug-transform :test-type :test-direction-vectors)
+   (unit-test-transform-api :test-type :test-direction-vectors)
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)))
 
@@ -262,7 +263,7 @@ world space for a particular transform."
       ;; "mark" Z axis.
       (fl.comp:transform :rotate (m:vec3 0 0 (/ pi 2))
                          :scale (m:vec3 2 2 2))
-      (debug-transform :test-type :test-transform-api)
+      (unit-test-transform-api :test-type :test-transform-api)
       (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
       (fl.comp:render :material '2d-wood))))))
 
