@@ -199,14 +199,20 @@
     (when instant-p
       (m:copy-into previous current))))
 
-;; TODO: Make inverses of these three functions.
-;; TODO: Try and get rid of any produced garbage in these three functions too.
+;; TODO: Try and get rid of any produced garbage in the functions below.
 
 (defun transform-point (transform point-vec)
   "Transform the vector in POINT-VEC, assumed to be in the local space of the
 TRANSFORM, to world space and returns the new vector. The new vector is affected
 by scale, rotation, and translation. A newly allocated M:VEC3 is returned."
   (m:vec3 (m:* (model transform) (m:vec4 point-vec 1))))
+
+(defun inverse-transform-point (transform point-vec)
+  "Transform the vector in POINT-VEC, assumed to be in the world space, to the
+local space of the TRANSFORM and returns the new vector. The new vector is
+affected by scale, rotation, and translation. A newly allocated M:VEC3 is
+returned."
+  (m:vec3 (m:* (m:invert (model transform)) (m:vec4 point-vec 1))))
 
 (defun transform-vector (transform vector-vec)
   "Transform the vector in VECTOR-VEC, assumed to be in the local space of the
@@ -218,6 +224,19 @@ rotation, but not by translation. A newly allocated M:VEC3 is returned."
                        zero-translation-model)
 
     (m:vec3 (m:* zero-translation-model (m:vec4 vector-vec 1)))))
+
+(defun inverse-transform-vector (transform vector-vec)
+  "Transform the vector in VECTOR-VEC, assumed to be in the world space,
+to the local space of the TRANSFORM and return it. The new vector is affected by
+scale and rotation, but not by translation. A newly allocated M:VEC3 is
+returned."
+  (let ((zero-translation-model (m:copy (model transform))))
+
+    (m:set-translation zero-translation-model (m:vec3)
+                       zero-translation-model)
+
+    (m:vec3 (m:* (m:invert zero-translation-model) (m:vec4 vector-vec 1)))))
+
 
 (defun transform-direction (transform direction-vec)
   "Transform the vector in DIRECTION-VEC, assumed to be in the local space of
@@ -235,3 +254,53 @@ returned."
 
     (m:vec3 (m:* zero-translation-identity-scale-model
                  (m:vec4 direction-vec 1)))))
+
+(defun inverse-transform-direction (transform direction-vec)
+  "Transform the vector in DIRECTION-VEC, assumed to be in world space,
+to the local space of the TRANSFORM and return it. The new vector is affected
+only by rotation, and not by translation or scale. A newly allocated M:VEC3 is
+returned."
+  (let ((zero-translation-identity-scale-model (m:copy (model transform))))
+
+    (m:set-translation zero-translation-identity-scale-model (m:vec3)
+                       zero-translation-identity-scale-model)
+
+    ;; TODO: Just need to normalize the rotation portion, not also
+    ;; make it ortho, but there is no math function for it. We need to
+    ;; write one.
+    (m::orthonormalize zero-translation-identity-scale-model
+                       zero-translation-identity-scale-model)
+
+    (m:vec3 (m:* (m:invert zero-translation-identity-scale-model)
+                 (m:vec4 direction-vec 1)))))
+
+;; NOTE: These functions return the vectors that represent
+;; forward, backward, up, down, right, and left in _world space_.
+;;
+;; We define these axes as the directions for an object in FL:
+;;
+;; +z back, -z forward, +y up, -y down, +x right, -x left
+
+(defun transform-forward (transform)
+  "Return the forward vector (-Z axis) in world space for this TRANSFORM."
+  (m:negate (m:vec3 (m:get-column (model transform) 2))))
+
+(defun transform-backward (transform)
+  "Return the backward vector (+Z axis) in world space for this TRANSFORM."
+  (m:vec3 (m:get-column (model transform) 2)))
+
+(defun transform-up (transform)
+  "Return the up vector (+Y axis) in world space for this TRANSFORM."
+  (m:vec3 (m:get-column (model transform) 1)))
+
+(defun transform-down (transform)
+  "Return the down vector (-Y axis) in world space for this TRANSFORM."
+  (m:negate (m:vec3 (m:get-column (model transform) 1))))
+
+(defun transform-right (transform)
+  "Return the right vector (+X axis) in world space for this TRANSFORM."
+  (m:vec3 (m:get-column (model transform) 0)))
+
+(defun transform-left (transform)
+  "Return the left vector (+X axis) in world space for this TRANSFORM."
+  (m:negate (m:vec3 (m:get-column (model transform) 0))))
