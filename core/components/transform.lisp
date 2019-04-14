@@ -276,7 +276,9 @@ returned."
     (m:vec3 (m:* (m:invert zero-translation-identity-scale-model)
                  (m:vec4 direction-vec 1)))))
 
-;; NOTE:
+;; NOTE: These functions return the vectors that represent
+;; forward, backward, up, down, right, and left in _world space_.
+;;
 ;; We define these axes as the directions for an object in FL:
 ;;
 ;; +z back, -z forward, +y up, -y down, +x right, -x left
