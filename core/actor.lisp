@@ -120,6 +120,8 @@ reference which will be the parent of the spawning actor. It defaults to
 (defmethod destroy-after-time ((thing actor) &key (ttl 0))
   (let* ((core (core (context thing)))
          (table (au:href (actor-predestroy-view (tables core)))))
+    (when (eq thing (scene-tree core))
+      (error "Cannot destroy the scene tree root."))
     (setf (ttl thing) (and ttl (max 0 ttl)))
     (if ttl
         (setf (au:href table thing) thing)
