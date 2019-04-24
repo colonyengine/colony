@@ -233,7 +233,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; Component: line-mover
 ;;
 ;; Move something in a straight line along a specified cardinal axis. This is
-;; not a sophisticated component. We use it to move bullets.
+;; not a sophisticated component. We use it to move projectiles.
 ;;;;;;;;;
 
 (fl:define-component line-mover ()
@@ -258,12 +258,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
        (m:* a move-delta)))))
 
 ;; ;;;;;;;;;
-;; Component: bullet
+;; Component: projectile
 ;;
-;; This describes a bullet and its API to set it up when it spawns.
+;; This describes a projectile (bullet, asteroid, etc) and its API to set it up
+;; when it spawns.
 ;;;;;;;;;
 
-(fl:define-component bullet ()
+(fl:define-component projectile ()
   ((name :default nil)
    (frames :default 0)
    (hit-points :default 1)
@@ -273,71 +274,70 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    (sprite :default nil)))
 
 ;; If the bullet hit anything else according to the physics system, it dies.
-(defmethod fl:on-collision-enter ((self bullet) other-collider)
+(defmethod fl:on-collision-enter ((self projectile) other-collider)
   (fl:destroy (fl:actor self)))
 
 ;; we use this at runtime to instantiate a bullet prefab and fill in everything
 ;; it needs to become effective in the world.
-(defun make-bullet (context translation rotation physics-layer
-                    &key (destroy-ttl 2) (velocity 1000)
-                      (prefab-name "bullet")
-                      (prefab-library 'lgj-04/2019)
-                      (name "bullet01")
-                      (frames 1))
-  (let* ((new-bullet
+(defun make-projectile (context translation rotation physics-layer
+                        &key (destroy-ttl 2) (velocity 1000)
+                          (prefab-name "projectile")
+                          (prefab-library 'lgj-04/2019)
+                          (name "bullet01")
+                          (frames 1))
+  (let* ((new-projectile
            ;; TODO: This API needs to take a context. prefab-descriptor prolly
            ;; needs to be a function, not a macro.
            (first (fl:make-prefab-instance
                    (%fl::core context)
                    ;; TODO: prefab-descriptor is wrong here.
                    `((,prefab-name ,prefab-library)))))
-         ;; TODO: I'm expecting the new-bullet to have components here without
-         ;; having gone through the flow. BAD!
-         (bullet-transform (fl:actor-component-by-type new-bullet
-                                                       'fl.comp:transform))
-         ;; Get the bullet component so I can manage everything.
-         (bullet (fl:actor-component-by-type new-bullet 'bullet)))
+         ;; TODO: I'm expecting the new-projectile to have components here
+         ;; without having gone through the flow. BAD!
+         (projectile-transform (fl:actor-component-by-type new-projectile
+                                                           'fl.comp:transform))
+         (projectile (fl:actor-component-by-type new-projectile 'projectile)))
 
     ;; Set the spatial configuration
-    (fl.comp:translate bullet-transform translation
+    (fl.comp:translate projectile-transform translation
                        :instant-p t :replace-p t)
-    ;; XXX This interfacec need to take a quat here also
-    (fl.comp:rotate bullet-transform rotation
+    ;; XXX This interface needs to take a quat here also
+    (fl.comp:rotate projectile-transform rotation
                     :instant-p t :replace-p t)
 
     (setf
-     ;; Basic identification of the bullet
-     (name bullet) name
-     (frames bullet) frames
+     ;; Basic identification of the projectile
+     (name projectile) name
+     (frames projectile) frames
      ;; Give the collider a cheesy name until I get rid of this name feature.
-     (fl:display-id (collider bullet)) name
+     (fl:display-id (collider projectile)) name
      ;; Set what layer is the collider on?
      ;; TODO: When setting this, ensure I move the collider to the right
      ;; layer in the physics system. XXXXXXXXXX
-     (fl.comp:on-layer (collider bullet)) physics-layer
-     ;; How fast is the bullet going?
-     (velocity (mover bullet)) velocity
+     (fl.comp:on-layer (collider projectile)) physics-layer
+     ;; How fast is the projectile going?
+     (velocity (mover projectile)) velocity
      ;; Tell the sprite what it should be rendering
      ;; TODO: make NAME and FRAMES public for sprite component.
-     (fl.comp::name (sprite bullet)) name
-     (fl.comp::frames (sprite bullet)) frames)
+     (fl.comp::name (sprite projectile)) name
+     (fl.comp::frames (sprite projectile)) frames)
 
-    ;; By default bullets live a certain amount of time.
-    (fl:destroy-after-time new-bullet :ttl destroy-ttl)
+    ;; By default projectiles live a certain amount of time.
+    (fl:destroy-after-time new-projectile :ttl destroy-ttl)
 
-    new-bullet))
+    new-projectile))
 
 
 ;; ;;;;;;;;;
 ;; Component: gun
 ;;
-;; This fires the specified bullets
+;; This fires the specified projectiles
 ;;;;;;;;;
 
 (fl:define-component gun ()
   ((emitter-transform :default nil)
    (physics-layer :default nil)
-   ;; name and frames of bullet to fire.
+   ;; name and frames of projectile to fire.
    (name :default "bullet01")
    ;; TODO: Bug, if I put 1 here, I get the WRONG sprite sometimes.
    (frames :default 2)))
@@ -358,13 +358,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       (let* ((parent-model (fl.comp:model emitter-transform))
              (parent-translation (m:get-translation parent-model))
              (parent-rotation (m:quat parent-model)))
-        (make-bullet context
-                     parent-translation
-                     (quat->euler parent-rotation)
-                     (physics-layer self)
-                     :velocity 2000
-                     :name (name self)
-                     :frames (frames self))))))
+        (make-projectile context
+                         parent-translation
+                         (quat->euler parent-rotation)
+                         (physics-layer self)
+                         :velocity 2000
+                         :name (name self)
+                         :frames (frames self))))))
 
 
 
@@ -372,15 +372,15 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; Prefabs
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(fl:define-prefab "bullet" (:library lgj-04/2019)
-  (bullet :transform (fl:ref :self :component 'fl.comp:transform)
-          :mover (fl:ref :self :component 'line-mover)
-          :collider (fl:ref :self :component 'fl.comp:collider/sphere)
-          :sprite (fl:ref :self :component 'fl.comp:sprite))
+(fl:define-prefab "projectile" (:library lgj-04/2019)
+  (projectile :transform (fl:ref :self :component 'fl.comp:transform)
+              :mover (fl:ref :self :component 'line-mover)
+              :collider (fl:ref :self :component 'fl.comp:collider/sphere)
+              :sprite (fl:ref :self :component 'fl.comp:sprite))
   (line-mover)
   (fl.comp:sprite :spec :spritesheet-data)
   (fl.comp:collider/sphere :center (m:vec3)
-                           :referent (fl:ref :self :component 'bullet)
+                           :referent (fl:ref :self :component 'projectile)
                            :radius 10)
 
   (fl.comp:render :material 'sprite-sheet
@@ -394,13 +394,16 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   ("ship"
    (fl.comp:transform)
    (player-movement)
+   (fl.comp:collider/sphere :center (m:vec3)
+                            :on-layer :player
+                            :radius 30)
    ("ship-body"
     (fl.comp:sprite :spec :spritesheet-data
                     :name "ship26")
     (fl.comp:render :material 'sprite-sheet
                     :mode :sprite)
     ("center-gun"
-     (gun :physics-layer :player))
+     (gun :physics-layer :player :name "asteroid05-01" :frames 16))
     ("exhaust"
      (fl.comp:transform :translate (m:vec3 0 -60 0))
      (fl.comp:sprite :spec :spritesheet-data
