@@ -24,4 +24,5 @@
    (:file "example-isometric-view")
    (:file "example-noise")
    (:file "example-sprite")
-   (:file "example-texture")))
+   (:file "example-texture")
+   (:file "example-lisp-game-jam-april-2019")))

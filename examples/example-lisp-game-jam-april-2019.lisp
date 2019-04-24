@@ -1,0 +1,417 @@
+(in-package :first-light.example)
+
+
+;; "Protect the Planets!" by Peter Keller (psilord@cs.wisc.edu)
+;; Requirements: gamepad, preferably xbox one like, linux, gtx 660 or better.
+;;
+;; left stick controls movement, right-stick controls orientation
+;;
+
+;; The various categories don't have to be defined in this order or in a single
+;; file.
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Textures
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; We only use a single sprite sheet atlas that contains all of our textures.
+
+(fl:define-texture sprite-atlas (:texture-2d)
+  (:data #(:spritesheet)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Materials
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; A material is pre-packaged set of values for a particular shader. Different
+;; materials can be made for the same shader each providing diferent inputs to
+;; that shader.
+(fl:define-material sprite-sheet
+  (:profiles (fl.materials:u-mvp)
+   :shader fl.gpu.sprite:sprite
+   :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
+              (:opacity 1.0)
+              (:alpha-cutoff 0.1))
+   :blocks ((:block-name :spritesheet
+             :storage-type :buffer
+             :block-alias :spritesheet
+             :binding-policy :manual))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Random Types we need, some will go into FL properly in a future date
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass boundary-cube ()
+  ((%minx :accessor minx
+          :initarg :minx
+          :initform 0)
+   (%maxx :accessor maxx
+          :initarg :maxx
+          :initform 0)
+   (%miny :accessor miny
+          :initarg :miny
+          :initform 0)
+   (%maxy :accessor maxy
+          :initarg :maxy
+          :initform 0)
+   (%minz :accessor minz
+          :initarg :minz
+          :initform 0)
+   (%maxz :accessor maxz
+          :initarg :maxz
+          :initform 0)))
+
+(defun make-boundary-cube (minx maxx miny maxy minz maxz)
+  (make-instance 'boundary-cube
+                 :minx minx :maxx maxx
+                 :miny miny :maxy maxy
+                 :minz minz :maxz maxz))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Utility functions some will go into FL in a future date.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun clip-movement-vector (movement-vector current-translation boundary-cube)
+  "Clip the MOVEMENT-VECTOR by an amount that will cause it to not violate the
+BOUNDARY-CUBE when MOVEMENT-VECTOR is added to the CURRENT-TRANSLATION.
+Return a newly allocated and adjusted MOVEMENT-VECTOR."
+
+  (with-accessors ((minx minx) (maxx maxx) (miny miny) (maxy maxy)
+                   (minz minz) (maxz maxz))
+      boundary-cube
+    (m:with-vec3 ((c current-translation))
+      (m:with-vec3 ((m movement-vector))
+        ;; add the movement-vector to the current-translation
+        (let* ((nx (+ c.x m.x))
+               (ny (+ c.y m.y))
+               (nz (+ c.z m.z))
+               ;; And the default adjustments to the movement-vector
+               (adj-x 0)
+               (adj-y 0)
+               (adj-z 0))
+          ;; Then if it violates the boundary cube, compute the adjustment we
+          ;; need to the movement vector to fix it.
+          (when (< nx minx)
+            (setf adj-x (- minx nx)))
+
+          (when (> nx maxx)
+            (setf adj-x (- maxx nx)))
+
+          (when (< ny miny)
+            (setf adj-y (- miny ny)))
+
+          (when (> ny maxy)
+            (setf adj-y (- maxy ny)))
+
+          (when (< nz minz)
+            (setf adj-z (- minz nz)))
+
+          (when (> nz maxz)
+            (setf adj-z (- maxz nz)))
+
+          ;; NOTE: Allocates memory.
+          (m:vec3 (+ m.x adj-x) (+ m.y adj-y) (+ m.z adj-z)))))))
+
+(defun quat->euler (quat)
+  #|
+  // roll (x-axis rotation)
+  double sinr_cosp = +2.0 * (q.w() * q.x() + q.y() * q.z());
+  double cosr_cosp = +1.0 - 2.0 * (q.x() * q.x() + q.y() * q.y());
+  roll = atan2(sinr_cosp, cosr_cosp);
+
+  // pitch (y-axis rotation)
+  double sinp = +2.0 * (q.w() * q.y() - q.z() * q.x());
+  if (fabs(sinp) >= 1)
+  pitch = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+  else
+  pitch = asin(sinp);
+
+  // yaw (z-axis rotation)
+  double siny_cosp = +2.0 * (q.w() * q.z() + q.x() * q.y());
+  double cosy_cosp = +1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z());
+  yaw = atan2(siny_cosp, cosy_cosp);
+  |#
+  (flet ((copysign (x y)
+           (let ((x (abs x))
+                 (sign (signum y)))
+             (if (= sign -1)
+                 (* -1 x)
+                 x))))
+
+    (m:with-quat ((q quat))
+      (let* (;; Roll (x-axis)
+             (sinr_cosp (* 2.0 (+ (* q.w q.x) (* q.y q.z))))
+             (cosr_cosp (- 1.0 (* 2.0 (+ (* q.x q.x) (* q.y q.y)))))
+             (roll (atan sinr_cosp cosr_cosp))
+             ;; Pitch (y-axis)
+             (sinp (* 2.0 (- (* q.w q.y) (* q.z q.x))))
+             (pitch (if (>= (abs sinp) 1)
+                        (copysign (/ pi 2) sinp)
+                        (asin sinp)))
+             ;; Yaw (z-axis)
+             (siny_cosp (* 2.0 (+ (* q.w q.z) (* q.x q.y))))
+             (cosy_cosp (- 1.0 (* 2.0 (+ (* q.y q.y) (* q.z q.z)))))
+             (yaw (atan siny_cosp cosy_cosp)))
+
+        (m:vec3 roll pitch yaw)))))
+
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Components
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; ;;;;;;;;;
+;; Component: player-movement
+;;
+;; First we need a component that allows the player to move around.
+;; We're going to left the left joystick place the player and the right one
+;; orient the player.
+;; ;;;;;;;;;
+
+(fl:define-component player-movement ()
+  ((transform :default nil)
+   (max-velocity :default 1500)
+   (translate-deadzone :default .1)
+   (rotate-deadzone :default .1)
+   ;; We just hack in a boundary cube you can't go outside of.
+   ;; The format is minx, maxx, miny, maxy, minz, maxz
+   (boundary-cube :default (make-boundary-cube -900 900 -500 500 0 0))))
+
+;; upon attaching, this component will store find the transform component
+;; on the actor to which it has been attached and keep a direct reference to it.
+(defmethod fl:on-component-attach ((self player-movement) actor)
+  (declare (ignore actor))
+  (with-accessors ((actor fl:actor) (transform transform)) self
+    (setf transform (fl:actor-component-by-type actor 'transform))))
+
+
+(defmethod fl:on-component-update ((self player-movement))
+  (with-accessors ((context fl:context) (transform transform)
+                   (max-velocity max-velocity)
+                   (translate-deadzone translate-deadzone)
+                   (rotate-deadzone rotate-deadzone)
+                   (boundary-cube boundary-cube))
+      self
+    (au:mvlet* ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
+                                                    '(:gamepad1 :left-stick)))
+                (rx ry (fl.input:get-gamepad-analog (fl:input-data context)
+                                                    '(:gamepad1 :right-stick)))
+                (instant-p (zerop (fl:frame-count context))))
+
+      ;; First, we settle the notion of how the player translates around with
+      ;; left stick
+      (let* (;; Dead with deadzones and other bad data around the input vector.
+             (vec (m:vec3 lx ly 0))
+             (vec (if (> (m:length vec) 1) (m:normalize vec) vec))
+             (vec (if (< (m:length vec) translate-deadzone) (m:vec3) vec))
+             ;; Compute the actual translation vector related to our frame time!
+             (vec (m:* vec (* max-velocity (fl:frame-time context))))
+             ;; and ensure we clip the translation vector so we can't go out of
+             ;; the boundary cube we set.
+             (current-translation
+               ;; TODO NOTE: Prolly should fix these to be external.
+               (fl.comp::current (fl.comp::translation transform)))
+             (vec (clip-movement-vector vec current-translation boundary-cube)))
+
+        (fl.comp:translate transform vec))
+
+      ;; Then we settle the notion of how the player rotates around with right
+      ;; stick. We're setting a hard angle of rotation each time so we overwrite
+      ;; the previous value.
+      (unless (or (= rx ry 0.0) (< (m:length (m:vec3 rx ry 0)) rotate-deadzone))
+        (let* ((angle (atan (- rx) ry))
+               (angle (if (< angle 0)
+                          (+ pi (- pi (abs angle)))
+                          angle)))
+          (fl.comp:rotate transform
+                          (m:vec3 0 0 angle)
+                          :replace-p t
+                          :instant-p instant-p))))))
+
+;; ;;;;;;;;;
+;; Component: line-mover
+;;
+;; Move something in a straight line along a specified cardinal axis. This is
+;; not a sophisticated component. We use it to move bullets.
+;;;;;;;;;
+
+(fl:define-component line-mover ()
+  ((axis :default 1) ;; NOTE: 0 is x, 1 is y, 2 is z.
+   (transform :default nil)
+   (velocity :default 0)))
+
+(defmethod fl:on-component-attach ((self line-mover) actor)
+  (declare (ignore actor))
+  (with-accessors ((actor fl:actor) (transform transform)) self
+    (setf transform (fl:actor-component-by-type actor 'fl.comp:transform))))
+
+(defmethod fl:on-component-update ((self line-mover))
+  (with-accessors ((context fl:context) (transform transform)
+                   (velocity velocity) (axis axis))
+      self
+    (fl.comp:translate
+     transform
+     (let ((a (m:normalize (m:vec3 (m:get-column (fl.comp:local transform)
+                                                 axis))))
+           (move-delta (* velocity (fl:frame-time context))))
+       (m:* a move-delta)))))
+
+;; ;;;;;;;;;
+;; Component: bullet
+;;
+;; This describes a bullet and its API to set it up when it spawns.
+;;;;;;;;;
+
+(fl:define-component bullet ()
+  ((name :default nil)
+   (frames :default 0)
+   (hit-points :default 1)
+   (transform :default nil)
+   (collider :default nil)
+   (mover :default nil)
+   (sprite :default nil)))
+
+;; If the bullet hit anything else according to the physics system, it dies.
+(defmethod fl:on-collision-enter ((self bullet) other-collider)
+  (fl:destroy (fl:actor self)))
+
+;; we use this at runtime to instantiate a bullet prefab and fill in everything
+;; it needs to become effective in the world.
+(defun make-bullet (context translation rotation physics-layer
+                    &key (destroy-ttl 2) (velocity 1000)
+                      (prefab-name "bullet")
+                      (prefab-library 'lgj-04/2019)
+                      (name "bullet01")
+                      (frames 1))
+  (let* ((new-bullet
+           ;; TODO: This API needs to take a context. prefab-descriptor prolly
+           ;; needs to be a function, not a macro.
+           (first (fl:make-prefab-instance
+                   (%fl::core context)
+                   ;; TODO: prefab-descriptor is wrong here.
+                   `((,prefab-name ,prefab-library)))))
+         ;; TODO: I'm expecting the new-bullet to have components here without
+         ;; having gone through the flow. BAD!
+         (bullet-transform (fl:actor-component-by-type new-bullet
+                                                       'fl.comp:transform))
+         ;; Get the bullet component so I can manage everything.
+         (bullet (fl:actor-component-by-type new-bullet 'bullet)))
+
+    ;; Set the spatial configuration
+    (fl.comp:translate bullet-transform translation
+                       :instant-p t :replace-p t)
+    ;; XXX This interfacec need to take a quat here also
+    (fl.comp:rotate bullet-transform rotation
+                    :instant-p t :replace-p t)
+
+    (setf
+     ;; Basic identification of the bullet
+     (name bullet) name
+     (frames bullet) frames
+     ;; Give the collider a cheesy name until I get rid of this name feature.
+     (fl:display-id (collider bullet)) name
+     ;; Set what layer is the collider on?
+     ;; TODO: When setting this, ensure I move the collider to the right
+     ;; layer in the physics system. XXXXXXXXXX
+     (fl.comp:on-layer (collider bullet)) physics-layer
+     ;; How fast is the bullet going?
+     (velocity (mover bullet)) velocity
+     ;; Tell the sprite what it should be rendering
+     ;; TODO: make NAME and FRAMES public for sprite component.
+     (fl.comp::name (sprite bullet)) name
+     (fl.comp::frames (sprite bullet)) frames)
+
+    ;; By default bullets live a certain amount of time.
+    (fl:destroy-after-time new-bullet :ttl destroy-ttl)
+
+    new-bullet))
+
+
+;; ;;;;;;;;;
+;; Component: gun
+;;
+;; This fires the specified bullets
+;;;;;;;;;
+
+(fl:define-component gun ()
+  ((emitter-transform :default nil)
+   (physics-layer :default nil)
+   ;; name and frames of bullet to fire.
+   (name :default "bullet01")
+   ;; TODO: Bug, if I put 1 here, I get the WRONG sprite sometimes.
+   (frames :default 2)))
+
+(defmethod fl:on-component-attach ((self gun) actor)
+  (declare (ignore actor))
+  (with-accessors ((actor fl:actor) (emitter-transform emitter-transform)) self
+    (setf emitter-transform (fl:actor-component-by-type
+                             actor 'fl.comp:transform))))
+
+(defmethod fl:on-component-update ((self gun))
+  (with-accessors ((context fl:context) (emitter-transform emitter-transform))
+      self
+    (when (or (fl.input:input-enter-p
+               (fl:input-data context) '(:gamepad1 :right-shoulder))
+              (fl.input:input-enter-p
+               (fl:input-data context) '(:mouse :left)))
+      (let* ((parent-model (fl.comp:model emitter-transform))
+             (parent-translation (m:get-translation parent-model))
+             (parent-rotation (m:quat parent-model)))
+        (make-bullet context
+                     parent-translation
+                     (quat->euler parent-rotation)
+                     (physics-layer self)
+                     :velocity 2000
+                     :name (name self)
+                     :frames (frames self))))))
+
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Prefabs
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(fl:define-prefab "bullet" (:library lgj-04/2019)
+  (bullet :transform (fl:ref :self :component 'fl.comp:transform)
+          :mover (fl:ref :self :component 'line-mover)
+          :collider (fl:ref :self :component 'fl.comp:collider/sphere)
+          :sprite (fl:ref :self :component 'fl.comp:sprite))
+  (line-mover)
+  (fl.comp:sprite :spec :spritesheet-data)
+  (fl.comp:collider/sphere :center (m:vec3)
+                           :referent (fl:ref :self :component 'bullet)
+                           :radius 10)
+
+  (fl.comp:render :material 'sprite-sheet
+                  :mode :sprite)
+  (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+                                       :duration 0.5
+                                       :repeat-p t))))
+
+(fl:define-prefab "player-ship" (:library lgj-04/2019)
+  (("camera" :copy ("/cameras/ortho" :from fl.example::examples)))
+  ("ship"
+   (fl.comp:transform)
+   (player-movement)
+   ("ship-body"
+    (fl.comp:sprite :spec :spritesheet-data
+                    :name "ship26")
+    (fl.comp:render :material 'sprite-sheet
+                    :mode :sprite)
+    ("center-gun"
+     (gun :physics-layer :player))
+    ("exhaust"
+     (fl.comp:transform :translate (m:vec3 0 -60 0))
+     (fl.comp:sprite :spec :spritesheet-data
+                     :name "exhaust03-01"
+                     :frames 8)
+     (fl.comp:render :material 'sprite-sheet
+                     :mode :sprite)
+     (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+                                          :duration 0.5
+                                          :repeat-p t)))))))
+
+
+(fl:define-prefab-descriptor player-ship ()
+  ("player-ship" fl.example::lgj-04/2019))
