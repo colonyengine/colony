@@ -390,31 +390,39 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                                        :repeat-p t))))
 
 (fl:define-prefab "player-ship" (:library lgj-04/2019)
-  (("camera" :copy ("/cameras/ortho" :from fl.example::examples)))
-  ("ship"
-   (fl.comp:transform)
-   (player-movement)
-   (fl.comp:collider/sphere :center (m:vec3)
-                            :on-layer :player
-                            :radius 30)
-   ("ship-body"
+  (fl.comp:transform)
+  (player-movement)
+  (fl.comp:collider/sphere :center (m:vec3)
+                           :on-layer :player
+                           :radius 30)
+  ("ship-body"
+   (fl.comp:sprite :spec :spritesheet-data
+                   :name "ship26")
+   (fl.comp:render :material 'sprite-sheet
+                   :mode :sprite)
+   ("center-gun"
+    (gun :physics-layer :player :name "bullet01" :frames 2))
+   ("exhaust"
+    (fl.comp:transform :translate (m:vec3 0 -60 0))
     (fl.comp:sprite :spec :spritesheet-data
-                    :name "ship26")
+                    :name "exhaust03-01"
+                    :frames 8)
     (fl.comp:render :material 'sprite-sheet
                     :mode :sprite)
-    ("center-gun"
-     (gun :physics-layer :player :name "asteroid05-01" :frames 16))
-    ("exhaust"
-     (fl.comp:transform :translate (m:vec3 0 -60 0))
-     (fl.comp:sprite :spec :spritesheet-data
-                     :name "exhaust03-01"
-                     :frames 8)
-     (fl.comp:render :material 'sprite-sheet
-                     :mode :sprite)
-     (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
-                                          :duration 0.5
-                                          :repeat-p t)))))))
+    (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+                                         :duration 0.5
+                                         :repeat-p t))))))
 
+(fl:define-prefab "level-0" (:library lgj-04/2019)
+  (("camera" :copy ("/cameras/ortho" :from fl.example::examples)))
+  (("player-ship" :copy ("/player-ship" :from fl.example::lgj-04/2019))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Prefab descriptors for convenience
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (fl:define-prefab-descriptor player-ship ()
   ("player-ship" fl.example::lgj-04/2019))
+
+(fl:define-prefab-descriptor lgj-04/2019 ()
+  ("level-0" fl.example::lgj-04/2019))
