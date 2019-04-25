@@ -16,6 +16,7 @@
     ((:file "damaged-helmet")
      (:file "graph")
      (:file "noise")
+     (:file "starfield")
      (:file "texture")))
    (:file "example-collision")
    (:file "example-damaged-helmet")

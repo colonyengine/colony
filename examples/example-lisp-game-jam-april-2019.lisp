@@ -15,9 +15,17 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; We only use a single sprite sheet atlas that contains all of our textures.
-
+;; This one is invluded with FL
 (fl:define-texture sprite-atlas (:texture-2d)
   (:data #(:spritesheet)))
+
+;; This background image was downloaded off the web here:
+;; https://www.wikitree.com/photo/jpg/Tileable_Background_Images
+;; And the url for the license is 404, but the wayback machine found it:
+;; https://web.archive.org/web/20180723233810/http://webtreats.mysitemyway.com/terms-of-use/
+;; Which says it can be used for any purpose.
+(fl:define-texture starfield (:texture-2d)
+  (:data #((:lgj-04/2019 "starfield.tiff"))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Materials
@@ -36,6 +44,12 @@
              :storage-type :buffer
              :block-alias :spritesheet
              :binding-policy :manual))))
+
+(fl:define-material starfield
+  (:profiles (fl.materials:u-mvpt)
+   :shader fl.gpu.user:starfield
+   :uniforms ((:tex 'fl.example::starfield)
+              (:mix-color (m:vec4 1 1 1 1)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Random Types we need, some will go into FL properly in a future date
@@ -372,7 +386,10 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; Prefabs
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 (fl:define-prefab "projectile" (:library lgj-04/2019)
+  "A generic projectile that can be a bullet, or an asteroid, or whatever."
+
   (projectile :transform (fl:ref :self :component 'fl.comp:transform)
               :mover (fl:ref :self :component 'line-mover)
               :collider (fl:ref :self :component 'fl.comp:collider/sphere)
@@ -390,7 +407,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                                        :repeat-p t))))
 
 (fl:define-prefab "player-ship" (:library lgj-04/2019)
-  (fl.comp:transform)
   (player-movement)
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :player
@@ -413,9 +429,21 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                                          :duration 0.5
                                          :repeat-p t))))))
 
+(fl:define-prefab "starfield" (:library lgj-04/2019)
+  ("bug-todo:implicit-transform:see-trello"
+   (fl.comp:transform (:policy :new-args)
+                      :scale (m:vec3 960)
+                      ;; NOTE: ortho projection, so we can put starfield way
+                      ;; back.
+                      :translate (m:vec3 0 0 -100))
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material 'starfield)))
+
+
 (fl:define-prefab "level-0" (:library lgj-04/2019)
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples)))
-  (("player-ship" :copy ("/player-ship" :from fl.example::lgj-04/2019))))
+  (("starfield" :link ("/starfield" :from fl.example::lgj-04/2019)))
+  (("player-ship" :link ("/player-ship" :from fl.example::lgj-04/2019))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefab descriptors for convenience
