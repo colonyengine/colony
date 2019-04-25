@@ -431,8 +431,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 (fl:define-prefab "starfield" (:library lgj-04/2019)
   ("bug-todo:implicit-transform:see-trello"
-   (fl.comp:transform (:policy :new-args)
-                      :scale (m:vec3 960)
+   (fl.comp:transform :scale (m:vec3 960)
                       ;; NOTE: ortho projection, so we can put starfield way
                       ;; back.
                       :translate (m:vec3 0 0 -100))
