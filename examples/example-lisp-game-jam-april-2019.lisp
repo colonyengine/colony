@@ -260,16 +260,19 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   (with-accessors ((actor fl:actor) (transform transform)) self
     (setf transform (fl:actor-component-by-type actor 'fl.comp:transform))))
 
-(defmethod fl:on-component-update ((self line-mover))
+(defmethod fl:on-component-physics-update ((self line-mover))
   (with-accessors ((context fl:context) (transform transform)
                    (velocity velocity) (axis axis))
       self
-    (fl.comp:translate
-     transform
-     (let ((a (m:normalize (m:vec3 (m:get-column (fl.comp:local transform)
-                                                 axis))))
-           (move-delta (* velocity (fl:frame-time context))))
-       (m:* a move-delta)))))
+    ;; TODO: Figure out why I need this when physics is faster. It appears I
+    ;; can compute a physics frame before components are attached?
+    (when transform
+      (fl.comp:translate
+       transform
+       (let ((a (m:normalize (m:vec3 (m:get-column (fl.comp:local transform)
+                                                   axis))))
+             (move-delta (* velocity (fl:delta context))))
+         (m:* a move-delta))))))
 
 ;; ;;;;;;;;;
 ;; Component: projectile
@@ -417,6 +420,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    (fl.comp:render :material 'sprite-sheet
                    :mode :sprite)
    ("center-gun"
+    (fl.comp:transform :translate (m:vec3 0 50 0))
     (gun :physics-layer :player :name "bullet01" :frames 2))
    ("exhaust"
     (fl.comp:transform :translate (m:vec3 0 -60 0))
