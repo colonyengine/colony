@@ -209,8 +209,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       self
     (au:mvlet* ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
                                                     '(:gamepad1 :left-stick)))
-                (rx ry (fl.input:get-gamepad-analog (fl:input-data context)
-                                                    '(:gamepad1 :right-stick)))
                 (instant-p (zerop (fl:frame-count context))))
 
       ;; First, we settle the notion of how the player translates around with
@@ -233,8 +231,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       ;; Then we settle the notion of how the player rotates around with right
       ;; stick. We're setting a hard angle of rotation each time so we overwrite
       ;; the previous value.
-      (unless (or (= rx ry 0.0) (< (m:length (m:vec3 rx ry 0)) rotate-deadzone))
-        (let* ((angle (atan (- rx) ry))
+      (unless (or (= lx ly 0.0) (< (m:length (m:vec3 lx ly 0)) rotate-deadzone))
+        (let* ((angle (atan (- lx) ly))
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
                           angle)))
@@ -354,6 +352,10 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 (fl:define-component gun ()
   ((emitter-transform :default nil)
    (physics-layer :default nil)
+   (rotate-deadzone :default .1)
+   (fire-period :default 20);; hz
+   ;; Below keeps track of how much time passed since we fired last.
+   (cooldown-time :default 0)
    ;; name and frames of projectile to fire.
    (name :default "bullet01")
    ;; TODO: Bug, if I put 1 here, I get the WRONG sprite sometimes.
@@ -366,22 +368,43 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                              actor 'fl.comp:transform))))
 
 (defmethod fl:on-component-update ((self gun))
-  (with-accessors ((context fl:context) (emitter-transform emitter-transform))
+  (with-accessors ((context fl:context)
+                   (rotate-deadzone rotate-deadzone)
+                   (fire-period fire-period)
+                   (cooldown-time cooldown-time)
+                   (emitter-transform emitter-transform))
       self
-    (when (or (fl.input:input-enter-p
-               (fl:input-data context) '(:gamepad1 :right-shoulder))
-              (fl.input:input-enter-p
-               (fl:input-data context) '(:mouse :left)))
-      (let* ((parent-model (fl.comp:model emitter-transform))
-             (parent-translation (m:get-translation parent-model))
-             (parent-rotation (m:quat parent-model)))
-        (make-projectile context
-                         parent-translation
-                         (quat->euler parent-rotation)
-                         (physics-layer self)
-                         :velocity 2000
-                         :name (name self)
-                         :frames (frames self))))))
+
+    (cond
+      ;; We exceeded our cooldown time, so time to fire!
+      ((>= cooldown-time (/ fire-period))
+       ;; We keep track of time such that we're most accurate in time that we
+       ;; next need to fire.
+       (loop :while (>= cooldown-time (/ fire-period))
+             :do (decf cooldown-time (/ fire-period)))
+
+       (au:mvlet* ((rx ry (fl.input:get-gamepad-analog
+                           (fl:input-data context) '(:gamepad1 :right-stick))))
+         (let* ((parent-model (fl.comp:model emitter-transform))
+                (parent-translation (m:get-translation parent-model)))
+           (unless (or (= rx ry 0.0)
+                       (< (m:length (m:vec3 rx ry 0)) rotate-deadzone))
+             (let* ((angle (atan (- rx) ry))
+                    (angle (if (< angle 0)
+                               (+ pi (- pi (abs angle)))
+                               angle)))
+               ;; The rotation we use is indicated by the stick vector.
+               (make-projectile context
+                                parent-translation
+                                (m:vec3 0 0 angle)
+                                (physics-layer self)
+                                :velocity 2000
+                                :name (name self)
+                                :frames (frames self)))))))
+
+      ;; Just accumulate more time until we know we can fire again.
+      (t
+       (incf cooldown-time (fl:frame-time context))))))
 
 
 
@@ -420,13 +443,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    (fl.comp:render :material 'sprite-sheet
                    :mode :sprite)
    ("center-gun"
-    (fl.comp:transform :translate (m:vec3 0 50 0))
-    (gun :physics-layer :player :name "bullet01" :frames 2)
-    (("sphere" :copy ("/mesh" :from fl.example::examples))
-     (fl.comp:transform :translate (m:vec3 0 0 0)
-                        :rotate/inc (m:vec3 1)
-                        :scale (m:vec3 20))
-     (fl.comp:mesh :location '((:core :mesh) "sphere.glb"))))
+    (fl.comp:transform :translate (m:vec3 0 0 0))
+    (gun :physics-layer :player :name "bullet01" :frames 2))
 
    ("exhaust"
     (fl.comp:transform :translate (m:vec3 0 -60 0))
@@ -480,16 +498,57 @@ once the player dies. When they are all gone, the game is over."
                                                               lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
-  (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 0 0 -1)
-                      :scale (m:vec3 .9))))
+  (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 0 100 -1)
+                      :scale (m:vec3 .9))
+   (fl.comp:sprite :spec :spritesheet-data
+                   :name "planet01")))
 
+
+(fl:define-prefab "level-1" (:library lgj-04/2019)
+  (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  (("remaining-player-ships" :link ("/remaining-player-ships" :from
+                                                              lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 -900 550 -10)))
+  (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
+  (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 -200 100 -1)
+                      :scale (m:vec3 .9))
+   (fl.comp:sprite :spec :spritesheet-data
+                   :name "planet01"))
+  (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 200 100 -1)
+                      :scale (m:vec3 .9))
+   (fl.comp:sprite :spec :spritesheet-data
+                   :name "planet02")))
+
+(fl:define-prefab "level-2" (:library lgj-04/2019)
+  (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  (("remaining-player-ships" :link ("/remaining-player-ships" :from
+                                                              lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 -900 550 -10)))
+  (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
+  (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 0 100 -1)
+                      :scale (m:vec3 .9))
+   (fl.comp:sprite :spec :spritesheet-data
+                   :name "planet01"))
+  (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 -200 -100 -1)
+                      :scale (m:vec3 .9))
+   (fl.comp:sprite :spec :spritesheet-data
+                   :name "planet02"))
+  (("planet-2" :link ("/generic-planet" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 200 -100 -1)
+                      :scale (m:vec3 .9))
+   (fl.comp:sprite :spec :spritesheet-data
+                   :name "planet03")))
 
 (fl:define-prefab "protect-the-planets" (:library lgj-04/2019)
   "The top most level prefab which has the component which drives the game
 sequencing."
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples)))
-  (("level-0" :copy ("/level-0" :from lgj-04/2019))))
+  (("current-level" :copy ("/level-2" :from lgj-04/2019))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
