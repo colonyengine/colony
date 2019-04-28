@@ -421,7 +421,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    :mode :sprite)
    ("center-gun"
     (fl.comp:transform :translate (m:vec3 0 50 0))
-    (gun :physics-layer :player :name "bullet01" :frames 2))
+    (gun :physics-layer :player :name "bullet01" :frames 2)
+    (("sphere" :copy ("/mesh" :from fl.example::examples))
+     (fl.comp:transform :translate (m:vec3 0 0 0)
+                        :rotate/inc (m:vec3 1)
+                        :scale (m:vec3 20))
+     (fl.comp:mesh :location '((:core :mesh) "sphere.glb"))))
+
    ("exhaust"
     (fl.comp:transform :translate (m:vec3 0 -60 0))
     (fl.comp:sprite :spec :spritesheet-data
@@ -432,6 +438,31 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
     (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
                                          :duration 0.5
                                          :repeat-p t))))))
+
+(fl:define-prefab "player-ship-mockette" (:library lgj-04/2019)
+  "An image of the ship, but no colliders or guns."
+  (fl.comp:sprite :spec :spritesheet-data
+                  :name "ship26")
+  (fl.comp:render :material 'sprite-sheet
+                  :mode :sprite))
+
+
+(fl:define-prefab "remaining-player-ships" (:library lgj-04/2019)
+  "These are the unused remaining player ships. They are subtraced from
+once the player dies. When they are all gone, the game is over."
+  (("player-ship-1" :link ("/player-ship-mockette" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 200 -60 0)))
+  (("player-ship-2" :link ("/player-ship-mockette" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 100 -60 0)))
+  (("player-ship-3" :link ("/player-ship-mockette" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 0 -60 0))))
+
+(fl:define-prefab "generic-planet" (:library lgj-04/2019)
+  (fl.comp:sprite :spec :spritesheet-data
+                  :name "planet01")
+  (fl.comp:render :material 'sprite-sheet
+                  :mode :sprite))
+
 
 (fl:define-prefab "starfield" (:library lgj-04/2019)
   ("bug-todo:implicit-transform:see-trello"
@@ -444,9 +475,22 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 
 (fl:define-prefab "level-0" (:library lgj-04/2019)
+  (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  (("remaining-player-ships" :link ("/remaining-player-ships" :from
+                                                              lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 -900 550 -10)))
+  (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
+  (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 0 0 -1)
+                      :scale (m:vec3 .9))))
+
+
+(fl:define-prefab "protect-the-planets" (:library lgj-04/2019)
+  "The top most level prefab which has the component which drives the game
+sequencing."
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples)))
-  (("starfield" :link ("/starfield" :from fl.example::lgj-04/2019)))
-  (("player-ship" :link ("/player-ship" :from fl.example::lgj-04/2019))))
+  (("level-0" :copy ("/level-0" :from lgj-04/2019))))
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefab descriptors for convenience
@@ -456,4 +500,4 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   ("player-ship" fl.example::lgj-04/2019))
 
 (fl:define-prefab-descriptor lgj-04/2019 ()
-  ("level-0" fl.example::lgj-04/2019))
+  ("protect-the-planets" fl.example::lgj-04/2019))
