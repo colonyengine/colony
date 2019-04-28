@@ -364,15 +364,17 @@ had--and update all other faces too."
 ;; (which means these two do collide).
 ;;
 ;; Here is a collision system: (notice :scenery collides with nothing)
+;; (NOTE: :p represents the kwyword :planet, it was too long to fit)
 ;;
-;;               :ground :player :player-bullet :enemy :enemy-bullet :scenery
-;;                -----------------------------------------------------------
-;; :ground        | X       @           @          @         @           @
-;; :player        | X                   @          @         @           @
-;; :player-bullet | X                              @         @           @
-;; :enemy         | X       X           X                    @           @
-;; :enemy-bullet  | X       X           X                                @
+;;               :ground :player :player-bullet :enemy :enemy-bullet :scenery :p
+;;                --------------------------------------------------------------
+;; :ground        | X       @           @          @         @           @     @
+;; :player        | X                   @          @         @           @     @
+;; :player-bullet | X                              @         @           @     @
+;; :enemy         | X       X           X                    @           @     @
+;; :enemy-bullet  | X       X           X                                @     @
 ;; :scenery       |
+;; :planet        |                                X
 ;;
 ;; Then, the collision plan is an sparse representation of which columns for
 ;; each row are marked X.
@@ -381,7 +383,8 @@ had--and update all other faces too."
   (let* ((collider-system-desc
            ;; TODO: This should be a DSL in a define-physics macro or something.
            `(:physics-layers
-             (:ground :player :player-bullet :enemy :enemy-bullet :scenery)
+             (:ground :player :player-bullet :enemy :enemy-bullet :scenery
+              :planet)
              ;; NOTE: Format and legality described in comment above.
              :collision-plan
              ;; The KEY is the row header, the VALUE is the X locations that
@@ -392,7 +395,9 @@ had--and update all other faces too."
                :player-bullet (list :ground)
                :enemy (list :ground :player :player-bullet)
                :enemy-bullet (list :ground :player :player-bullet)
-               :scenery (list))))
+               :scenery (list)
+               :planet (list :enemy))))
+
          (new-collider-system
            (apply #'make-collider-system collider-system-desc)))
     (setf (collider-system core) new-collider-system)

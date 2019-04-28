@@ -393,7 +393,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                     (angle (if (< angle 0)
                                (+ pi (- pi (abs angle)))
                                angle)))
-               ;; The rotation we use is indicated by the stick vector.
+               ;; The rotation we use is indicated by the right stick vector.
                (make-projectile context
                                 parent-translation
                                 (m:vec3 0 0 angle)
@@ -476,6 +476,9 @@ once the player dies. When they are all gone, the game is over."
    (fl.comp:transform :translate (m:vec3 0 -60 0))))
 
 (fl:define-prefab "generic-planet" (:library lgj-04/2019)
+  (fl.comp:collider/sphere :center (m:vec3)
+                           :on-layer :planet
+                           :radius 145)
   (fl.comp:sprite :spec :spritesheet-data
                   :name "planet01")
   (fl.comp:render :material 'sprite-sheet
@@ -547,7 +550,8 @@ once the player dies. When they are all gone, the game is over."
 (fl:define-prefab "protect-the-planets" (:library lgj-04/2019)
   "The top most level prefab which has the component which drives the game
 sequencing."
-  (("camera" :copy ("/cameras/ortho" :from fl.example::examples)))
+  (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
+   (fl.comp:transform :translate (m:vec3 0 0 500)))
   (("current-level" :copy ("/level-2" :from lgj-04/2019))))
 
 
