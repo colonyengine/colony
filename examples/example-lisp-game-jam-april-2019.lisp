@@ -545,7 +545,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :player
                            ;; XXX BROKEN!
-                           ;;:referent (fl:ref :self :component 'hit-points)
+                           :referent (fl:ref :self :component 'hit-points)
                            :radius 30)
   ("ship-body"
    (fl.comp:sprite :spec :spritesheet-data
