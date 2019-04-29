@@ -169,8 +169,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
         (m:vec3 roll pitch yaw)))))
 
-
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -272,6 +270,51 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
          (m:* a move-delta))))))
 
 ;; ;;;;;;;;;
+;; Component: hit-points
+;;
+;; Manage a number of hit-points for something and destroy my actor if I fall
+;; to zero or below.
+;;;;;;;;;
+
+(fl:define-component hit-points ()
+  ((hp :default 1)))
+
+(defmethod fl:on-collision-enter ((self hit-points) other-collider)
+  (with-accessors ((context fl:context)) self
+    (let ((other-hit-points (fl:actor-component-by-type
+                             (fl:actor other-collider)
+                             'hit-points)))
+      (cond
+        (other-hit-points
+         (decf (hp self) (hp other-hit-points)))
+        (t
+         ;; The physics system discovered a hit, but the thing that hit us
+         ;; doesn't have a hit-points component, so we'll assume one point
+         ;; of damage arbitrarily.
+         (decf (hp self) 1)))
+
+      ;; Now, do the consequences.
+      (when (<= (hp self) 0)
+        ;; Destroy my actor.
+        (fl:destroy (fl:actor self))
+        ;; And, if the actor had an explosion component, cause the explosion
+        ;; to happen
+        (let* ((actor-transform (fl:actor-component-by-type (fl:actor self)
+                                                            'fl.comp:transform))
+               (parent-model (fl.comp:model actor-transform))
+               (parent-translation (m:get-translation parent-model))
+               (parent-rotation (m:quat parent-model))
+               (explosion (fl:actor-component-by-type (fl:actor self)
+                                                      'explosion)))
+          (when explosion
+            (make-explosion context
+                            parent-translation
+                            (quat->euler parent-rotation)
+                            :name (name explosion)
+                            :frames (frames explosion))))))))
+
+
+;; ;;;;;;;;;
 ;; Component: projectile
 ;;
 ;; This describes a projectile (bullet, asteroid, etc) and its API to set it up
@@ -281,15 +324,10 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 (fl:define-component projectile ()
   ((name :default nil)
    (frames :default 0)
-   (hit-points :default 1)
    (transform :default nil)
    (collider :default nil)
    (mover :default nil)
    (sprite :default nil)))
-
-;; If the bullet hit anything else according to the physics system, it dies.
-(defmethod fl:on-collision-enter ((self projectile) other-collider)
-  (fl:destroy (fl:actor self)))
 
 ;; we use this at runtime to instantiate a bullet prefab and fill in everything
 ;; it needs to become effective in the world.
@@ -343,6 +381,49 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 
 ;; ;;;;;;;;;
+;; Component: explosion
+;;
+;; Describe an explosion.
+;;;;;;;;;
+
+(fl:define-component explosion ()
+  ((sprite :default nil)
+   (name :default "explode01-01")
+   (frames :default 15)))
+
+;; NOTE: No physics layers for this since they don't even participate in the
+;; collisions.
+(defun make-explosion (context translation rotation
+                       &key (destroy-ttl 2)
+                         (prefab-name "generic-explosion")
+                         (prefab-library 'lgj-04/2019)
+                         (name "explode01-01")
+                         (frames 15))
+  (let* ((new-explosion
+           (first (fl:make-prefab-instance
+                   (%fl::core context)
+                   ;; TODO: prefab-descriptor is wrong here.
+                   `((,prefab-name ,prefab-library)))))
+         (explosion-transform (fl:actor-component-by-type new-explosion
+                                                          'fl.comp:transform))
+         (explosion (fl:actor-component-by-type new-explosion 'explosion)))
+
+    (setf
+     ;; Configure the sprite.
+     (fl.comp::name (sprite explosion)) name
+     (fl.comp::frames (sprite explosion)) frames)
+
+    (fl.comp:translate explosion-transform translation
+                       :instant-p t :replace-p t)
+    (fl.comp:rotate explosion-transform rotation
+                    :instant-p t :replace-p t)
+
+    ;; By default explosions live a certain amount of time.
+    (fl:destroy-after-time new-explosion :ttl destroy-ttl)
+
+    new-explosion))
+
+;; ;;;;;;;;;
 ;; Component: gun
 ;;
 ;; This fires the specified projectiles
@@ -353,7 +434,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    (physics-layer :default nil)
    (rotate-deadzone :default .1)
    (fire-period :default 20);; hz
-   ;; Below keeps track of how much time passed since we fired last.
+   ;; Keeps track of how much time passed since we fired last.
    (cooldown-time :default 0)
    ;; name and frames of projectile to fire.
    (name :default "bullet01")
@@ -374,6 +455,10 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (emitter-transform emitter-transform))
       self
 
+    ;; TODO: I could make a macro to do this syntax work, like WITH-TIMER, but I
+    ;; think a names registrant of a function into the component that is called
+    ;; repeatedly is better since enabling and disabling from elsewhere becomes
+    ;; possible. Will think about for later.
     (cond
       ;; We exceeded our cooldown time, so time to fire!
       ((>= cooldown-time (/ fire-period))
@@ -405,6 +490,16 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       (t
        (incf cooldown-time (fl:frame-time context))))))
 
+;; ;;;;;;;;;
+;; Component: planet
+;;
+;; Handles hit point management of the planet, plus animations/behavior when it
+;; is about to be destroyed.
+;;;;;;;;;
+
+(fl:define-component planet ()
+  ;; TODO: Can't have nil slots, fix it so we can.
+  ((junk :default 0)))
 
 ;; ;;;;;;;;;
 ;; Component: director
@@ -413,11 +508,12 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;;;;;;;;;
 
 
+(fl:define-component director ()
+  ((junk :default 0)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefabs
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 (fl:define-prefab "projectile" (:library lgj-04/2019)
   "A generic projectile that can be a bullet, or an asteroid, or whatever."
@@ -426,10 +522,12 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
               :mover (fl:ref :self :component 'line-mover)
               :collider (fl:ref :self :component 'fl.comp:collider/sphere)
               :sprite (fl:ref :self :component 'fl.comp:sprite))
+  (hit-points :hp 1)
   (line-mover)
   (fl.comp:sprite :spec :spritesheet-data)
   (fl.comp:collider/sphere :center (m:vec3)
-                           :referent (fl:ref :self :component 'projectile)
+                           ;; XXX NOT BROKEN!
+                           :referent (fl:ref :self :component 'hit-points)
                            :radius 10)
 
   (fl.comp:render :material 'sprite-sheet
@@ -439,9 +537,14 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                                        :repeat-p t))))
 
 (fl:define-prefab "player-ship" (:library lgj-04/2019)
+  "The venerable Player Ship. Controls how it looks, collides, and movement."
+  (explosion :name "explode01-01" :frames 15)
+  (hit-points :hp 1)
   (player-movement)
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :player
+                           ;; XXX BROKEN!
+                           :referent (fl:ref :self :component 'hit-points)
                            :radius 30)
   ("ship-body"
    (fl.comp:sprite :spec :spritesheet-data
@@ -482,14 +585,47 @@ once the player dies. When they are all gone, the game is over."
    (fl.comp:transform :translate (m:vec3 0 -60 0))))
 
 (fl:define-prefab "generic-planet" (:library lgj-04/2019)
+  (planet)
+  (hit-points :hp 5)
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :planet
                            :radius 145)
   (fl.comp:sprite :spec :spritesheet-data
                   :name "planet01")
   (fl.comp:render :material 'sprite-sheet
-                  :mode :sprite))
+                  :mode :sprite)
+  ;; This has a bug when using a single frame.
+  #++(fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+                                          :duration 0.5
+                                          :repeat-p t))))
 
+(fl:define-prefab "generic-explosion" (:library lgj-04/2019)
+  (explosion :sprite (fl:ref :self :component 'fl.comp:sprite))
+  (fl.comp:sprite :spec :spritesheet-data
+                  ;; TODO: When this is misnamed, the error is extremely obscure
+                  :name "explode01-01"
+                  :frames 15)
+  (fl.comp:render :material 'sprite-sheet
+                  :mode :sprite)
+  (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+                                       :duration 0.5
+                                       :repeat-p t))))
+
+(fl:define-prefab "asteroid-test" (:library lgj-04/2019)
+  (hit-points :hp 5)
+  (explosion :name "explode04-01" :frames 15)
+  (fl.comp:collider/sphere :center (m:vec3)
+                           :on-layer :enemy
+                           ;; XXX BROKEN!
+                           ;;:referent (fl:ref :self :component 'hit-points)
+                           :radius 20)
+  (fl.comp:sprite :spec :spritesheet-data
+                  :name "asteroid01-01")
+  (fl.comp:render :material 'sprite-sheet
+                  :mode :sprite)
+  (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+                                       :duration 0.5
+                                       :repeat-p t))))
 
 (fl:define-prefab "starfield" (:library lgj-04/2019)
   ("bug-todo:implicit-transform:see-trello"
@@ -537,6 +673,8 @@ once the player dies. When they are all gone, the game is over."
                                                               lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
+  (("asteroid" :link ("/asteroid-test" :from lgj-04/2019))
+   (fl.comP:transform :translate (m:vec3 0 450 0)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 0 100 -1)
                       :scale (m:vec3 .9))
