@@ -246,7 +246,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;;;;;;;;;
 
 (fl:define-component line-mover ()
-  ((axis :default 1) ;; NOTE: 0 is x, 1 is y, 2 is z.
+  ((direction :default :+y) ;; NOTE: may be :+y :-y :+x :-x :+z :-z or an m:vec3
    (transform :default nil)
    (velocity :default 0)))
 
@@ -256,17 +256,32 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
     (setf transform (fl:actor-component-by-type actor 'fl.comp:transform))))
 
 (defmethod fl:on-component-physics-update ((self line-mover))
-  (with-accessors ((context fl:context) (transform transform)
-                   (velocity velocity) (axis axis))
+  (with-accessors ((context fl:context)
+                   (transform transform)
+                   (velocity velocity)
+                   (direction direction))
       self
     ;; TODO: Figure out why I need this when physics is faster. It appears I
     ;; can compute a physics frame before components are attached?
     (when transform
       (fl.comp:translate
        transform
-       (let ((a (m:normalize (m:vec3 (m:get-column (fl.comp:local transform)
-                                                   axis))))
-             (move-delta (* velocity (fl:delta context))))
+       (let* ((local (fl.comp:local transform))
+              (a (m:normalize
+                  (if (symbolp direction)
+                      (m:vec3
+                       (case direction
+                         (:+x (m:get-column local 0))
+                         (:-x (m:negate
+                               (m:get-column local 0)))
+                         (:+y (m:get-column local 1))
+                         (:-y (m:negate
+                               (m:get-column local 1)))
+                         (:+z (m:get-column local 2))
+                         (:-z (m:negate
+                               (m:get-column local 2)))))
+                      direction)))
+              (move-delta (* velocity (fl:delta context))))
          (m:* a move-delta))))))
 
 ;; ;;;;;;;;;
@@ -332,7 +347,10 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; we use this at runtime to instantiate a bullet prefab and fill in everything
 ;; it needs to become effective in the world.
 (defun make-projectile (context translation rotation physics-layer
-                        &key (destroy-ttl 2) (velocity 1000)
+                        &key
+                          (destroy-ttl 2)
+                          (velocity 1000)
+                          (direction :+y)
                           (prefab-name "projectile")
                           (prefab-library 'lgj-04/2019)
                           (name "bullet01")
@@ -372,7 +390,10 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
      ;; Tell the sprite what it should be rendering
      ;; TODO: make NAME and FRAMES public for sprite component.
      (fl.comp::name (sprite projectile)) name
-     (fl.comp::frames (sprite projectile)) frames)
+     (fl.comp::frames (sprite projectile)) frames
+
+     ;; and, what direction is it going in?
+     (direction (mover projectile)) direction)
 
     ;; By default projectiles live a certain amount of time.
     (fl:destroy-after-time new-projectile :ttl destroy-ttl)
@@ -509,7 +530,56 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 
 (fl:define-component director ()
-  ((junk :default 0)))
+  ((spawn-period :default 1) ;; hz
+   (cooldown-time :default 0)))
+
+
+(defmethod fl:on-component-update ((self director))
+  (with-accessors ((spawn-period spawn-period)
+                   (cooldown-time cooldown-time)
+                   (context fl:context))
+      self
+    (flet ((ransign (val)
+             (* val (if (zerop (random 2)) 1 -1))))
+      (cond
+        ((>= cooldown-time (/ spawn-period))
+         (loop :while (>= cooldown-time (/ spawn-period))
+               :do (decf cooldown-time (/ spawn-period)))
+         ;; Find a spot offscreen to start the asteroid
+         (let* ((ax 0)
+                (ay 0)
+                (quadrant (random 4)))
+           (case quadrant
+             (0 ;; left side
+              (setf ax -600
+                    ay (ransign 600)))
+             (1 ;; top side
+              (setf ax (ransign 600)
+                    ay 600))
+             (2 ;; right side
+              (setf ax 600
+                    ay (ransign 600)))
+             (3 ;; bottom side
+              (setf ax (ransign 600)
+                    ay -600)))
+
+           (make-projectile context
+                            (m:vec3 ax ay 0)
+                            (m:vec3)
+                            :enemy-bullet
+                            :velocity (+ 500 (ransign 50))
+                            ;; TODO: Stright to origin for now.
+                            :direction (m:vec3 (- (ransign 100.0) ax)
+                                               (- (ransign 100.0) ay)
+                                               .1)
+                            :name "asteroid01-01"
+                            :frames 16
+                            :destroy-ttl 4)))
+
+        (t
+         (incf cooldown-time (fl:frame-time context)))))))
+
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefabs
@@ -522,12 +592,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
               :mover (fl:ref :self :component 'line-mover)
               :collider (fl:ref :self :component 'fl.comp:collider/sphere)
               :sprite (fl:ref :self :component 'fl.comp:sprite))
+  (explosion :name "explode01-01" :frames 15)
   (hit-points :hp 1)
   (line-mover)
   (fl.comp:sprite :spec :spritesheet-data)
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :enemy-bullet
-                           ;; XXX NOT BROKEN! WHY?
+                           ;; XXX NOT BROKEN! WHY? one layer of instantiation.
                            :referent (fl:ref :self :component 'hit-points)
                            :radius 10)
 
@@ -545,7 +616,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :player
                            ;; XXX BROKEN!
-                           :referent (fl:ref :self :component 'hit-points)
+                           ;;:referent (fl:ref :self :component 'hit-points)
                            :radius 30)
   ("ship-body"
    (fl.comp:sprite :spec :spritesheet-data
@@ -610,7 +681,7 @@ once the player dies. When they are all gone, the game is over."
                   :mode :sprite)
   (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
                                        :duration 0.5
-                                       :repeat-p t))))
+                                       :repeat-p nil))))
 
 (fl:define-prefab "asteroid-test" (:library lgj-04/2019)
   (hit-points :hp 5)
@@ -640,7 +711,6 @@ once the player dies. When they are all gone, the game is over."
 
 (fl:define-prefab "level-0" (:library lgj-04/2019)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
-  (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 0 100 -1)
                       :scale (m:vec3 .9))
@@ -650,7 +720,6 @@ once the player dies. When they are all gone, the game is over."
 
 (fl:define-prefab "level-1" (:library lgj-04/2019)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
-  (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -200 100 -1)
                       :scale (m:vec3 .9))
@@ -664,7 +733,6 @@ once the player dies. When they are all gone, the game is over."
 
 (fl:define-prefab "level-2" (:library lgj-04/2019)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
-  (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("asteroid" :link ("/asteroid-test" :from lgj-04/2019))
    (fl.comP:transform :translate (m:vec3 0 450 0)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
@@ -686,11 +754,13 @@ once the player dies. When they are all gone, the game is over."
 (fl:define-prefab "protect-the-planets" (:library lgj-04/2019)
   "The top most level prefab which has the component which drives the game
 sequencing."
+  (director)
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (m:vec3 0 0 500)))
   (("remaining-player-ships" :link ("/remaining-player-ships" :from
                                                               lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -900 550 -10)))
+  (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("current-level" :copy ("/level-0" :from lgj-04/2019))))
 
 
