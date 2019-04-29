@@ -527,8 +527,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   (fl.comp:sprite :spec :spritesheet-data)
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :enemy-bullet
-                           ;; XXX NOT BROKEN!
-                           ;;:referent (fl:ref :self :component 'hit-points)
+                           ;; XXX NOT BROKEN! WHY?
+                           :referent (fl:ref :self :component 'hit-points)
                            :radius 10)
 
   (fl.comp:render :material 'sprite-sheet
@@ -545,7 +545,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :player
                            ;; XXX BROKEN!
-                           :referent (fl:ref :self :component 'hit-points)
+                           ;;:referent (fl:ref :self :component 'hit-points)
                            :radius 30)
   ("ship-body"
    (fl.comp:sprite :spec :spritesheet-data
@@ -640,9 +640,6 @@ once the player dies. When they are all gone, the game is over."
 
 (fl:define-prefab "level-0" (:library lgj-04/2019)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
-  (("remaining-player-ships" :link ("/remaining-player-ships" :from
-                                                              lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 0 100 -1)
@@ -653,9 +650,6 @@ once the player dies. When they are all gone, the game is over."
 
 (fl:define-prefab "level-1" (:library lgj-04/2019)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
-  (("remaining-player-ships" :link ("/remaining-player-ships" :from
-                                                              lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -200 100 -1)
@@ -670,9 +664,6 @@ once the player dies. When they are all gone, the game is over."
 
 (fl:define-prefab "level-2" (:library lgj-04/2019)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
-  (("remaining-player-ships" :link ("/remaining-player-ships" :from
-                                                              lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("asteroid" :link ("/asteroid-test" :from lgj-04/2019))
    (fl.comP:transform :translate (m:vec3 0 450 0)))
@@ -697,15 +688,15 @@ once the player dies. When they are all gone, the game is over."
 sequencing."
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (m:vec3 0 0 500)))
-  (("current-level" :copy ("/level-2" :from lgj-04/2019))))
+  (("remaining-player-ships" :link ("/remaining-player-ships" :from
+                                                              lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 -900 550 -10)))
+  (("current-level" :copy ("/level-0" :from lgj-04/2019))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefab descriptors for convenience
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(fl:define-prefab-descriptor player-ship ()
-  ("player-ship" fl.example::lgj-04/2019))
 
 (fl:define-prefab-descriptor lgj-04/2019 ()
   ("protect-the-planets" fl.example::lgj-04/2019))
