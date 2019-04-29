@@ -531,20 +531,28 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 (fl:define-component director ()
   ((spawn-period :default 1) ;; hz
-   (cooldown-time :default 0)))
+   (cooldown-time :default 0)
+   (difficulty :default 1)
+   (difficulty-period :default 1/10) ;; Hz
+   (difficulty-time :default 0)))
+
 
 
 (defmethod fl:on-component-update ((self director))
   (with-accessors ((spawn-period spawn-period)
                    (cooldown-time cooldown-time)
+                   (difficulty difficulty)
+                   (difficulty-period difficulty-period)
+                   (difficulty-time difficulty-time)
                    (context fl:context))
       self
     (flet ((ransign (val)
              (* val (if (zerop (random 2)) 1 -1))))
       (cond
-        ((>= cooldown-time (/ spawn-period))
-         (loop :while (>= cooldown-time (/ spawn-period))
-               :do (decf cooldown-time (/ spawn-period)))
+        ((>= cooldown-time (/ (* spawn-period difficulty)))
+         (loop :while (>= cooldown-time (/ (* spawn-period difficulty)))
+               :do (decf cooldown-time (/ (* spawn-period difficulty))))
+
          ;; Find a spot offscreen to start the asteroid
          (let* ((ax 0)
                 (ay 0)
@@ -569,15 +577,29 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                             :enemy-bullet
                             :velocity (+ 500 (ransign 50))
                             ;; TODO: Stright to origin for now.
-                            :direction (m:vec3 (- (ransign 100.0) ax)
-                                               (- (ransign 100.0) ay)
+                            :direction (m:vec3 (- (ransign 200.0) ax)
+                                               (- (ransign 200.0) ay)
                                                .1)
                             :name "asteroid01-01"
                             :frames 16
                             :destroy-ttl 4)))
 
         (t
-         (incf cooldown-time (fl:frame-time context)))))))
+         (incf cooldown-time (fl:frame-time context))))
+
+      ;; Now increase difficulty!
+      (cond
+        ((>= difficulty-time (/ difficulty-period))
+         (loop :while (>= difficulty-time (/ difficulty-period))
+               :do (decf difficulty-time (/ difficulty-period)))
+
+         (incf difficulty 1))
+
+        (t
+         (incf difficulty-time (fl:frame-time context)))))))
+
+
+
 
 
 
@@ -600,7 +622,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                            :on-layer :enemy-bullet
                            ;; XXX NOT BROKEN! WHY? one layer of instantiation.
                            :referent (fl:ref :self :component 'hit-points)
-                           :radius 10)
+                           :radius 15)
 
   (fl.comp:render :material 'sprite-sheet
                   :mode :sprite)
@@ -733,8 +755,6 @@ once the player dies. When they are all gone, the game is over."
 
 (fl:define-prefab "level-2" (:library lgj-04/2019)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
-  (("asteroid" :link ("/asteroid-test" :from lgj-04/2019))
-   (fl.comP:transform :translate (m:vec3 0 450 0)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 0 100 -1)
                       :scale (m:vec3 .9))
@@ -761,7 +781,7 @@ sequencing."
                                                               lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
-  (("current-level" :copy ("/level-0" :from lgj-04/2019))))
+  (("current-level" :copy ("/level-2" :from lgj-04/2019))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
