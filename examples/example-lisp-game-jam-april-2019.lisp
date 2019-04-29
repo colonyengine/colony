@@ -228,9 +228,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
         (fl.comp:translate transform vec))
 
-      ;; Then we settle the notion of how the player rotates around with right
-      ;; stick. We're setting a hard angle of rotation each time so we overwrite
-      ;; the previous value.
+      ;; Then we settle the notion of how the player is oriented.  We're setting
+      ;; a hard angle of rotation each time so we overwrite the previous value.
       (unless (or (= lx ly 0.0) (< (m:length (m:vec3 lx ly 0)) rotate-deadzone))
         (let* ((angle (atan (- lx) ly))
                (angle (if (< angle 0)
@@ -407,6 +406,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
        (incf cooldown-time (fl:frame-time context))))))
 
 
+;; ;;;;;;;;;
+;; Component: director
+;;
+;; Control all the game logic and sense the state things should be in
+;;;;;;;;;
+
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefabs
@@ -444,7 +450,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    :mode :sprite)
    ("center-gun"
     (fl.comp:transform :translate (m:vec3 0 0 0))
-    (gun :physics-layer :player :name "bullet01" :frames 2))
+    (gun :physics-layer :player-bullet :name "bullet01" :frames 2))
 
    ("exhaust"
     (fl.comp:transform :translate (m:vec3 0 -60 0))
