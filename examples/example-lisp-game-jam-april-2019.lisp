@@ -546,57 +546,70 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (difficulty-time difficulty-time)
                    (context fl:context))
       self
-    (flet ((ransign (val)
-             (* val (if (zerop (random 2)) 1 -1))))
-      (cond
-        ((>= cooldown-time (/ (* spawn-period difficulty)))
-         (loop :while (>= cooldown-time (/ (* spawn-period difficulty)))
-               :do (decf cooldown-time (/ (* spawn-period difficulty))))
+    (let ((transform
+            (fl:actor-component-by-type (fl:actor self) 'fl.comp:transform)))
+      (flet ((ransign (val &optional (offset 0))
+               (+ (* (random (if (zerop val) 1 val))
+                     (if (zerop (random 2)) 1 -1))
+                  offset)))
+        (cond
+          ((>= cooldown-time (/ (* spawn-period difficulty)))
+           (loop :while (>= cooldown-time (/ (* spawn-period difficulty)))
+                 :do (decf cooldown-time (/ (* spawn-period difficulty))))
 
-         ;; Find a spot offscreen to start the asteroid
-         (let* ((ax 0)
-                (ay 0)
-                (quadrant (random 4)))
-           (case quadrant
-             (0 ;; left side
-              (setf ax -600
-                    ay (ransign 600)))
-             (1 ;; top side
-              (setf ax (ransign 600)
-                    ay 600))
-             (2 ;; right side
-              (setf ax 600
-                    ay (ransign 600)))
-             (3 ;; bottom side
-              (setf ax (ransign 600)
-                    ay -600)))
+           ;; Find a spot offscreen to start the asteroid
+           (let* (origin
+                  ;; The target point picked out of the center box in director
+                  ;; space that we'll convert to world space.
+                  ;;
+                  ;; TODO: abstract this to ue a boundary cube.
+                  (target
+                    (fl.comp:transform-point
+                     transform
+                     (m:vec3 (ransign 300.0) (ransign 300.0) .1)))
+                  (quadrant (random 4)))
 
-           (make-projectile context
-                            (m:vec3 ax ay 0)
-                            (m:vec3)
-                            :enemy-bullet
-                            :velocity (+ 500 (ransign 50))
-                            ;; TODO: Stright to origin for now.
-                            :direction (m:vec3 (- (ransign 200.0) ax)
-                                               (- (ransign 200.0) ay)
-                                               .1)
-                            :name "asteroid01-01"
-                            :frames 16
-                            :destroy-ttl 4)))
+             ;; pick an origin point in director space and convert it to world
+             ;; space
+             (setf origin
+                   (fl.comp:transform-point
+                    transform
+                    (case quadrant
+                      (0 ;; left side
+                       (m:vec3 -1000.0 (ransign 600.0) .1))
+                      (1 ;; top side
+                       (m:vec3 (ransign 1000.0) 600.0 .1))
+                      (2 ;; right side
+                       (m:vec3 1000.0 (ransign 600.0) .1))
+                      (3 ;; bottom side
+                       (m:vec3 (ransign 1000.0) -600.0 .1)))))
 
-        (t
-         (incf cooldown-time (fl:frame-time context))))
+             (make-projectile context
+                              ;; from director space to world space.
+                              origin
+                              (m:vec3)
+                              :enemy-bullet
+                              :velocity  (ransign 50 400)
+                              ;; this direction is in world space.
+                              ;; it moves from the origin to the target.
+                              :direction (m:normalize (m:- target origin))
+                              :name "asteroid01-01"
+                              :frames 16
+                              :destroy-ttl 4)))
 
-      ;; Now increase difficulty!
-      (cond
-        ((>= difficulty-time (/ difficulty-period))
-         (loop :while (>= difficulty-time (/ difficulty-period))
-               :do (decf difficulty-time (/ difficulty-period)))
+          (t
+           (incf cooldown-time (fl:frame-time context))))
 
-         (incf difficulty 1))
+        ;; Now increase difficulty!
+        (cond
+          ((>= difficulty-time (/ difficulty-period))
+           (loop :while (>= difficulty-time (/ difficulty-period))
+                 :do (decf difficulty-time (/ difficulty-period)))
 
-        (t
-         (incf difficulty-time (fl:frame-time context)))))))
+           (incf difficulty 1))
+
+          (t
+           (incf difficulty-time (fl:frame-time context))))))))
 
 
 
@@ -774,6 +787,7 @@ once the player dies. When they are all gone, the game is over."
 (fl:define-prefab "protect-the-planets" (:library lgj-04/2019)
   "The top most level prefab which has the component which drives the game
 sequencing."
+  (fl.comp:transform :scale (m:vec3 1))
   (director)
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (m:vec3 0 0 500)))
