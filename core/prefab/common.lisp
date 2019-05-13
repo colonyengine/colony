@@ -52,6 +52,30 @@
   (format stream "~a" (path node)))
 
 (au:eval-always
+  ;; Each component initialization argument is converted temporarily to an
+  ;; instance of this class which, after we figure out which argument values
+  ;; are actually valid and present due to component merge policies, we then
+  ;; initialize the env and force the thunk. This is usef to implement the
+  ;; FL:REF function in the value form of the components.
+  (defclass injectable-ref-value-thunk ()
+    (;; A lambda function wrapped around the value lexically supplying a CONTEXT
+     ;; variable. This function also exists in a injection ref environment (a
+     ;; closure), which means the REF function is available in the value of the
+     ;; argument.
+     (%thunk :reader thunk
+             :initarg :thunk)
+     ;; Each injection ref environment has a secret back door to fill in the
+     ;; lexical variables that the FL:REF lexicaly scoped call needs to process
+     ;; each argument.  We use this to poke in the values to the lexical closure
+     ;; before evaluating the thunk.
+     (%env-injection-control-func :reader env-injection-control-func
+                                  :initarg :env-injection-control-func
+                                  :initform (constantly nil))))
+
+  (defun make-injectable-ref-value-thunk (&rest init-args)
+    (apply #'make-instance 'injectable-ref-value-thunk init-args)))
+
+(au:eval-always
   (defun split-spec (spec)
     (destructuring-bind (name &rest body) spec
       (loop :for tail :on body
