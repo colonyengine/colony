@@ -285,6 +285,18 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
          (m:* a move-delta))))))
 
 ;; ;;;;;;;;;
+;; Component: damage-points
+;;
+;; We describe an amount of damage that we give to something under appropriate
+;; conditions during a collision. No need for any methods since this is only a
+;; repository of information consulted by the game as it is needed for each
+;; appropriate actor that has it.
+;; ;;;;;;;;;
+
+(fl:define-component damage-points ()
+  ((dp :default 1)))
+
+;; ;;;;;;;;;
 ;; Component: hit-points
 ;;
 ;; Manage a number of hit-points for something and destroy my actor if I fall
@@ -296,12 +308,12 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 (defmethod fl:on-collision-enter ((self hit-points) other-collider)
   (with-accessors ((context fl:context)) self
-    (let ((other-hit-points (fl:actor-component-by-type
-                             (fl:actor other-collider)
-                             'hit-points)))
+    (let ((other-damage-points (fl:actor-component-by-type
+                                (fl:actor other-collider)
+                                'damage-points)))
       (cond
-        (other-hit-points
-         (decf (hp self) (hp other-hit-points)))
+        (other-damage-points
+         (decf (hp self) (dp other-damage-points)))
         (t
          ;; The physics system discovered a hit, but the thing that hit us
          ;; doesn't have a hit-points component, so we'll assume one point
@@ -549,7 +561,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       self
 
     (when pause-p
-      ;;
       (return-from fl:on-component-update))
 
     (let ((transform
@@ -618,9 +629,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 
 
-
-
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefabs
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -632,6 +640,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
               :mover (fl:ref :self :component 'line-mover)
               :collider (fl:ref :self :component 'fl.comp:collider/sphere)
               :sprite (fl:ref :self :component 'fl.comp:sprite))
+  (damage-points :dp 1)
   (explosion :name "explode01-01" :frames 15)
   (hit-points :hp 1)
   (line-mover)
@@ -650,6 +659,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 (fl:define-prefab "player-ship" (:library lgj-04/2019)
   "The venerable Player Ship. Controls how it looks, collides, and movement."
   (explosion :name "explode01-01" :frames 15)
+  (damage-points :dp 1)
   (hit-points :hp 1)
   (player-movement)
   (fl.comp:collider/sphere :center (m:vec3)
@@ -720,21 +730,6 @@ once the player dies. When they are all gone, the game is over."
   (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
                                        :duration 0.5
                                        :repeat-p nil))))
-
-(fl:define-prefab "asteroid-test" (:library lgj-04/2019)
-  (hit-points :hp 5)
-  (explosion :name "explode04-01" :frames 15)
-  (fl.comp:collider/sphere :center (m:vec3)
-                           :on-layer :enemy
-                           :referent (fl:ref :self :component 'hit-points)
-                           :radius 20)
-  (fl.comp:sprite :spec :spritesheet-data
-                  :name "asteroid01-01")
-  (fl.comp:render :material 'sprite-sheet
-                  :mode :sprite)
-  (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
-                                       :duration 0.5
-                                       :repeat-p t))))
 
 (fl:define-prefab "starfield" (:library lgj-04/2019)
   ("bug-todo:implicit-transform:see-trello"
