@@ -523,22 +523,23 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   ((junk :default 0)))
 
 ;; ;;;;;;;;;
-;; Component: director
+;; Component: asteroid-field
 ;;
-;; Control all the game logic and sense the state things should be in
+;; The asteroid field simply fires asteroids at the plaent in an ever increasing
+;; difficulty.
 ;;;;;;;;;
 
-
-(fl:define-component director ()
+(fl:define-component asteroid-field ()
   ((spawn-period :default 1) ;; hz
    (cooldown-time :default 0)
    (difficulty :default 1)
    (difficulty-period :default 1/10) ;; Hz
-   (difficulty-time :default 0)))
+   (difficulty-time :default 0)
+   (junkref :default nil)
+   (junkref2 :default nil)))
 
 
-
-(defmethod fl:on-component-update ((self director))
+(defmethod fl:on-component-update ((self asteroid-field))
   (with-accessors ((spawn-period spawn-period)
                    (cooldown-time cooldown-time)
                    (difficulty difficulty)
@@ -585,7 +586,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                        (m:vec3 (ransign 1000.0) -600.0 .1)))))
 
              (make-projectile context
-                              ;; from director space to world space.
                               origin
                               (m:vec3)
                               :enemy-bullet
@@ -633,7 +633,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   (fl.comp:sprite :spec :spritesheet-data)
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :enemy-bullet
-                           ;; XXX NOT BROKEN! WHY? one layer of instantiation.
                            :referent (fl:ref :self :component 'hit-points)
                            :radius 15)
 
@@ -650,8 +649,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   (player-movement)
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :player
-                           ;; XXX BROKEN!
-                           ;;:referent (fl:ref :self :component 'hit-points)
+                           :referent (fl:ref :self :component 'hit-points)
                            :radius 30)
   ("ship-body"
    (fl.comp:sprite :spec :spritesheet-data
@@ -723,8 +721,7 @@ once the player dies. When they are all gone, the game is over."
   (explosion :name "explode04-01" :frames 15)
   (fl.comp:collider/sphere :center (m:vec3)
                            :on-layer :enemy
-                           ;; XXX BROKEN!
-                           ;;:referent (fl:ref :self :component 'hit-points)
+                           :referent (fl:ref :self :component 'hit-points)
                            :radius 20)
   (fl.comp:sprite :spec :spritesheet-data
                   :name "asteroid01-01")
@@ -745,6 +742,7 @@ once the player dies. When they are all gone, the game is over."
 
 
 (fl:define-prefab "level-0" (:library lgj-04/2019)
+  (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 0 100 -1)
@@ -754,6 +752,7 @@ once the player dies. When they are all gone, the game is over."
 
 
 (fl:define-prefab "level-1" (:library lgj-04/2019)
+  (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -200 100 -1)
@@ -767,6 +766,7 @@ once the player dies. When they are all gone, the game is over."
                    :name "planet02")))
 
 (fl:define-prefab "level-2" (:library lgj-04/2019)
+  (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 0 100 -1)
@@ -788,14 +788,13 @@ once the player dies. When they are all gone, the game is over."
   "The top most level prefab which has the component which drives the game
 sequencing."
   (fl.comp:transform :scale (m:vec3 1))
-  (director)
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (m:vec3 0 0 500)))
   (("remaining-player-ships" :link ("/remaining-player-ships" :from
                                                               lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
-  (("current-level" :copy ("/level-2" :from lgj-04/2019))))
+  (("current-level" :copy ("/level-0" :from lgj-04/2019))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
