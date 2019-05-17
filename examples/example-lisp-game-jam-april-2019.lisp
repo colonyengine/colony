@@ -454,7 +454,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   ((emitter-transform :default nil)
    (physics-layer :default nil)
    (rotate-deadzone :default .1)
-   (fire-period :default 20);; hz
+   (fire-period :default 25);; hz
    ;; Keeps track of how much time passed since we fired last.
    (cooldown-time :default 0)
    ;; name and frames of projectile to fire.
@@ -525,18 +525,17 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; ;;;;;;;;;
 ;; Component: asteroid-field
 ;;
-;; The asteroid field simply fires asteroids at the plaent in an ever increasing
+;; The asteroid field simply fires asteroids at the planet in an ever increasing
 ;; difficulty.
 ;;;;;;;;;
 
 (fl:define-component asteroid-field ()
-  ((spawn-period :default 1) ;; hz
+  ((pause-p :default nil)
+   (spawn-period :default 1) ;; hz
    (cooldown-time :default 0)
    (difficulty :default 1)
    (difficulty-period :default 1/10) ;; Hz
-   (difficulty-time :default 0)
-   (junkref :default nil)
-   (junkref2 :default nil)))
+   (difficulty-time :default 0)))
 
 
 (defmethod fl:on-component-update ((self asteroid-field))
@@ -545,8 +544,14 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (difficulty difficulty)
                    (difficulty-period difficulty-period)
                    (difficulty-time difficulty-time)
+                   (pause-p pause-p)
                    (context fl:context))
       self
+
+    (when pause-p
+      ;;
+      (return-from fl:on-component-update))
+
     (let ((transform
             (fl:actor-component-by-type (fl:actor self) 'fl.comp:transform)))
       (flet ((ransign (val &optional (offset 0))
