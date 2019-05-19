@@ -127,24 +127,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
           (m:vec3 (+ m.x adj-x) (+ m.y adj-y) (+ m.z adj-z)))))))
 
 (defun quat->euler (quat)
-  #|
-  // roll (x-axis rotation)
-  double sinr_cosp = +2.0 * (q.w() * q.x() + q.y() * q.z());
-  double cosr_cosp = +1.0 - 2.0 * (q.x() * q.x() + q.y() * q.y());
-  roll = atan2(sinr_cosp, cosr_cosp);
-
-  // pitch (y-axis rotation)
-  double sinp = +2.0 * (q.w() * q.y() - q.z() * q.x());
-  if (fabs(sinp) >= 1)
-  pitch = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
-  else
-  pitch = asin(sinp);
-
-  // yaw (z-axis rotation)
-  double siny_cosp = +2.0 * (q.w() * q.z() + q.x() * q.y());
-  double cosy_cosp = +1.0 - 2.0 * (q.y() * q.y() + q.z() * q.z());
-  yaw = atan2(siny_cosp, cosy_cosp);
-  |#
   (flet ((copysign (x y)
            (let ((x (abs x))
                  (sign (signum y)))
@@ -395,7 +377,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
      (fl:display-id (collider projectile)) name
      ;; Set what layer is the collider on?
      ;; TODO: When setting this, ensure I move the collider to the right
-     ;; layer in the physics system. XXXXXXXXXX
+     ;; layer in the physics system.
      (fl.comp:on-layer (collider projectile)) physics-layer
      ;; How fast is the projectile going?
      (velocity (mover projectile)) velocity
@@ -524,17 +506,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
        (incf cooldown-time (fl:frame-time context))))))
 
 ;; ;;;;;;;;;
-;; Component: planet
-;;
-;; Handles hit point management of the planet, plus animations/behavior when it
-;; is about to be destroyed.
-;;;;;;;;;
-
-(fl:define-component planet ()
-  ;; TODO: Can't have nil slots, fix it so we can.
-  ((junk :default 0)))
-
-;; ;;;;;;;;;
 ;; Component: asteroid-field
 ;;
 ;; The asteroid field simply fires asteroids at the planet in an ever increasing
@@ -627,6 +598,116 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
           (t
            (incf difficulty-time (fl:frame-time context))))))))
 
+;; ;;;;;;;;;
+;; Component: player-stable
+;;
+;; This component manages a stable of player ships, subtracting or adding to
+;; that stable as the player dies (or perhaps gets 1ups).
+;; ;;;;;;;;;
+
+;; TODO: This component will have a much different form when we're able to
+;; enable/disable actors.
+
+(fl:define-component player-stable ()
+  ((max-lives :default 3)
+   (lives-remaining :default 3)
+   (stable :default nil)
+   ;; TODO: make prefab-descriptor external (and possibly also have a function
+   ;; variant. Also have it return a vector instead of a list, more useful
+   ;; for indexing.
+   (mockette-prefab :default (fl.prefab::prefab-descriptor
+                               ("player-ship-mockette" lgj-04/2019)))
+   ;; We keep references to all of the mockettes in an array that matches their
+   ;; position on the screen so we can destroy them or re-create them as the
+   ;; player dies or gets 1ups.
+   (mockette-refs :default nil)
+   (width-increment :default 100)))
+
+(defmethod fl:on-component-initialize ((self player-stable))
+  (setf (mockette-refs self) (make-array (max-lives self))))
+
+(defun make-mockette (player-stable mockette-index)
+  (with-accessors ((mockette-prefab mockette-prefab)
+                   (mockette-refs mockette-refs)
+                   (width-increment width-increment)
+                   (stable stable))
+      player-stable
+    (let* ((mockette (first
+                      (fl:make-prefab-instance
+                       (%fl::core (fl:context player-stable))
+                       mockette-prefab
+                       :parent stable)))
+           (transform (fl:actor-component-by-type mockette 'fl.comp:transform)))
+
+      (fl.comp:translate transform
+                         (m:vec3 (* mockette-index width-increment) -60 0))
+
+      (setf (aref mockette-refs mockette-index) mockette))))
+
+
+(defmethod fl:on-component-attach ((self player-stable) actor)
+  (declare (ignore actor))
+  (with-accessors ((max-lives max-lives)
+                   (lives-remaining lives-remaining)
+                   (mockette-prefab mockette-prefab)
+                   (mockette-holder mockette-holder)
+                   (mockette-refs mockette-refs)
+                   (width-increment width-increment)
+                   (stable stable))
+      self
+    ;; Initialize the stable under the holder with player-remaining mockettes.
+    (format t "stable is ~S~%" stable)
+    (dotimes (life lives-remaining)
+      (make-mockette self life))))
+
+(defun consume-life (player-stable)
+  "Remove a life from the stable (which removes it from the display too).
+If there are no more lives to remove, return NIL. If there was a life to remove,
+return the lives-remaining after the life has been consumed."
+  (with-accessors ((max-lives max-lives)
+                   (lives-remaining lives-remaining)
+                   (mockette-refs mockette-refs)
+                   (stable stable))
+      player-stable
+
+    (when (zerop lives-remaining)
+      (return-from consume-life NIL))
+
+    ;; lives-remaining is indexed by one, but the mockettes are indexed by zero.
+    (let ((mockette-index (1- lives-remaining)))
+      (fl:destroy (aref mockette-refs mockette-index))
+      (setf (aref mockette-refs mockette-index) nil)
+      (decf lives-remaining))
+    lives-remaining))
+
+(defun add-life (player-stable)
+  (with-accessors ((max-lives max-lives)
+                   (lives-remaining lives-remaining)
+                   (mockette-prefab mockette-prefab)
+                   (mockette-holder mockette-holder)
+                   (mockette-refs mockette-refs)
+                   (width-increment width-increment)
+                   (stable stable))
+      player-stable
+
+    (when (eql lives-remaining max-lives)
+      ;; You don't get more than max-lives in this implementation.
+      (return-from add-life NIL))
+
+    (incf lives-remaining)
+    (make-mockette player-stable (1- lives-remaining))))
+
+;; ;;;;;;;;;
+;; Component: planet
+;;
+;; Handles hit point management of the planet, plus animations/behavior when it
+;; is about to be destroyed.
+;;;;;;;;;
+
+(fl:define-component planet ()
+  ;; TODO: Can't have nil slots, fix it so we can.
+  ((junk :default 0)))
+
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -694,15 +775,11 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                   :mode :sprite))
 
 
-(fl:define-prefab "remaining-player-ships" (:library lgj-04/2019)
-  "These are the unused remaining player ships. They are subtraced from
-once the player dies. When they are all gone, the game is over."
-  (("player-ship-1" :link ("/player-ship-mockette" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 200 -60 0)))
-  (("player-ship-2" :link ("/player-ship-mockette" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 100 -60 0)))
-  (("player-ship-3" :link ("/player-ship-mockette" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 0 -60 0))))
+(fl:define-prefab "player-stable" (:library lgj-04/2019)
+  ;; TODO: Clarify when we actually need the / infront of the actor name during
+  ;; use of FL:REF. Here is seems we DON'T need one, but sometimes we do!
+  (player-stable :stable (fl:ref "stable-holder"))
+  ("stable-holder"))
 
 (fl:define-prefab "generic-planet" (:library lgj-04/2019)
   (planet)
@@ -790,8 +867,7 @@ sequencing."
   (fl.comp:transform :scale (m:vec3 1))
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (m:vec3 0 0 500)))
-  (("remaining-player-ships" :link ("/remaining-player-ships" :from
-                                                              lgj-04/2019))
+  (("player-stable" :link ("/player-stable" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("current-level" :copy ("/level-0" :from lgj-04/2019))))
