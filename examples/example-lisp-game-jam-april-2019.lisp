@@ -656,7 +656,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (stable stable))
       self
     ;; Initialize the stable under the holder with player-remaining mockettes.
-    (format t "stable is ~S~%" stable)
     (dotimes (life lives-remaining)
       (make-mockette self life))))
 
