@@ -621,50 +621,58 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    ;; position on the screen so we can destroy them or re-create them as the
    ;; player dies or gets 1ups.
    (mockette-refs :default nil)
+   ;; Next one is do increaseing lives grow :left or :right from the origin?
+   ;; THis is to support two or more player.
+   (direction :default :right)
+   ;; How far to place the mockette origins from each other.
    (width-increment :default 100)))
 
 (defmethod fl:on-component-initialize ((self player-stable))
-  (setf (mockette-refs self) (make-array (max-lives self))))
+  (setf (mockette-refs self)
+        (make-array (max-lives self) :initial-element nil)))
 
 (defun make-mockette (player-stable mockette-index)
   (with-accessors ((mockette-prefab mockette-prefab)
                    (mockette-refs mockette-refs)
                    (width-increment width-increment)
+                   (direction direction)
                    (stable stable))
       player-stable
-    (let* ((mockette (first
+    (let* ((dir (ecase direction (:left -1) (:right 1)))
+           (mockette (first
                       (fl:make-prefab-instance
                        (%fl::core (fl:context player-stable))
                        mockette-prefab
                        :parent stable)))
            (transform (fl:actor-component-by-type mockette 'fl.comp:transform)))
 
-      (fl.comp:translate transform
-                         (m:vec3 (* mockette-index width-increment) -60 0))
+      (fl.comp:translate
+       transform (m:vec3 (* mockette-index (* dir width-increment)) -60 0))
 
       (setf (aref mockette-refs mockette-index) mockette))))
+
+;; This is useful if you want to use the prefab in a player1 or player2
+;; configuration. Just change the direction and regenerate it.
+(defun regenerate-lives (player-stable)
+  (with-accessors ((lives-remaining lives-remaining)
+                   (mockette-refs mockette-refs))
+      player-stable
+    ;; Initialize the stable under the holder with player-remaining mockettes.
+    (dotimes (life lives-remaining)
+      (when (aref mockette-refs life)
+        (fl:destroy (aref mockette-refs life)))
+      (make-mockette player-stable life))))
 
 
 (defmethod fl:on-component-attach ((self player-stable) actor)
   (declare (ignore actor))
-  (with-accessors ((max-lives max-lives)
-                   (lives-remaining lives-remaining)
-                   (mockette-prefab mockette-prefab)
-                   (mockette-holder mockette-holder)
-                   (mockette-refs mockette-refs)
-                   (width-increment width-increment)
-                   (stable stable))
-      self
-    ;; Initialize the stable under the holder with player-remaining mockettes.
-    (dotimes (life lives-remaining)
-      (make-mockette self life))))
+  (regenerate-lives self))
 
 (defun consume-life (player-stable)
   "Remove a life from the stable (which removes it from the display too).
 If there are no more lives to remove, return NIL. If there was a life to remove,
 return the lives-remaining after the life has been consumed."
-  (with-accessors ((max-lives max-lives)
-                   (lives-remaining lives-remaining)
+  (with-accessors ((lives-remaining lives-remaining)
                    (mockette-refs mockette-refs)
                    (stable stable))
       player-stable
@@ -706,6 +714,34 @@ return the lives-remaining after the life has been consumed."
 (fl:define-component planet ()
   ;; TODO: Can't have nil slots, fix it so we can.
   ((junk :default 0)))
+
+;; ;;;;;;;;;
+;; Component: director
+;;
+;; The director component runs the entire game, ensuring to move between
+;; states of the game, notice and replace the player when they die
+;;;;;;;;;
+
+(fl:define-component director ()
+  (;; The director manages the overall state the game is in, plus it
+   ;; micromanages the playing state to ensure fun ensues.
+   ;;
+   ;; state-machine:
+   ;; :waiting-to-play -> :playing -> :game-over -> :initials-entry
+   ;;    ^                                              |
+   ;;    |                                              |
+   ;;    +----------------------------------------------+
+   (current-game-state :default :waiting-to-play)
+   (levels :default (fl.prefab::prefab-descriptor
+                      ("level-0" lgj-04/2019)
+                      ("level-1" lgj-04/2019)
+                      ("level-2" lgj-04/2019)))
+   ;; which level is considered the demo level.
+   (demo-level :default 0)
+   ;; Which level are we playing?
+   (current-level :default 0)
+   ;; This is where the current level is instanced and stored as a child
+   (level-holder :default NIL)))
 
 
 
@@ -864,9 +900,15 @@ return the lives-remaining after the life has been consumed."
   "The top most level prefab which has the component which drives the game
 sequencing."
   (fl.comp:transform :scale (m:vec3 1))
+  (director :level-holder (fl:ref "/protect-the-planets/active-level"))
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (m:vec3 0 0 500)))
-  (("player-stable" :link ("/player-stable" :from lgj-04/2019))
+  ("active-level")
+  #++("player-1-stable"
+      (fl.comp:transform :translate (m:vec3 -900 550 -10)))
+
+  ;; make reference
+  (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("current-level" :copy ("/level-0" :from lgj-04/2019))))
