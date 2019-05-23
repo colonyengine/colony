@@ -27,6 +27,13 @@
 (fl:define-texture starfield (:texture-2d)
   (:data #((:lgj-04/2019 "starfield.tiff"))))
 
+;; These two textures were created by Pixel_Outlaw for use in this game.
+(fl:define-texture warning-wave (:texture-2d)
+  (:data #((:lgj-04/2019 "warning-wave.tiff"))))
+
+(fl:define-texture warning-mothership (:texture-2d)
+  (:data #((:lgj-04/2019 "warning-mothership.tiff"))))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Materials
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -50,6 +57,22 @@
    :shader fl.gpu.user:starfield
    :uniforms ((:tex 'fl.example::starfield)
               (:mix-color (m:vec4 1 1 1 1)))))
+
+(fl:define-material warning-mothership
+  (:profiles (fl.materials:u-mvp)
+   :shader fl.gpu.texture:unlit-texture
+   :uniforms ((:tex.sampler1 'warning-mothership)
+              (:mix-color (m:vec4 1 1 1 1))
+              #++(:min-intensity (m:vec4 .1 .1 .1 0))
+              #++(:max-intensity (m:vec4 1 1 1 1)))))
+
+(fl:define-material warning-wave
+  (:profiles (fl.materials:u-mvp)
+   :shader fl.gpu.texture:unlit-texture
+   :uniforms ((:tex.sampler1 'warning-wave)
+              (:mix-color (m:vec4 1 1 1 1))
+              #++(:min-intensity (m:vec4 .1 .1 .1 1))
+              #++(:max-intensity (m:vec4 1 1 1 1)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Random Types we need, some will go into FL properly in a future date
@@ -843,6 +866,16 @@ return the lives-remaining after the life has been consumed."
                                        :duration 0.5
                                        :repeat-p nil))))
 
+(fl:define-prefab "warning-wave-sign" (:library lgj-04/2019)
+  ("sign"
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material 'warning-wave)))
+
+(fl:define-prefab "warning-mothership-sign" (:library lgj-04/2019)
+  ("sign"
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material 'warning-mothership)))
+
 (fl:define-prefab "starfield" (:library lgj-04/2019)
   ("bug-todo:implicit-transform:see-trello"
    (fl.comp:transform :scale (m:vec3 960)
@@ -901,13 +934,16 @@ return the lives-remaining after the life has been consumed."
 sequencing."
   (fl.comp:transform :scale (m:vec3 1))
   (director :level-holder (fl:ref "/protect-the-planets/active-level"))
+
+  (("WARNING" :copy ("/warning-wave-sign" :from lgj-04/2019))
+   (fl.comp:transform :translate (m:vec3 0 0 10)
+                      :scale (m:vec3 500)))
+
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (m:vec3 0 0 500)))
   ("active-level")
-  #++("player-1-stable"
-      (fl.comp:transform :translate (m:vec3 -900 550 -10)))
 
-  ;; make reference
+  ;; make reference so we know where to get players when they die/1up
   (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
    (fl.comp:transform :translate (m:vec3 -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
