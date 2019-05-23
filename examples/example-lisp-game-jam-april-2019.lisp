@@ -935,9 +935,9 @@ sequencing."
   (fl.comp:transform :scale (m:vec3 1))
   (director :level-holder (fl:ref "/protect-the-planets/active-level"))
 
-  (("WARNING" :copy ("/warning-wave-sign" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 0 0 10)
-                      :scale (m:vec3 500)))
+  #++(("WARNING" :copy ("/warning-wave-sign" :from lgj-04/2019))
+      (fl.comp:transform :translate (m:vec3 0 0 10)
+			 :scale (m:vec3 500)))
 
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (m:vec3 0 0 500)))
