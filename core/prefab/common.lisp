@@ -61,7 +61,7 @@
             :finally (return (values name components tail))))))
 
 (defun explode-path (path)
-  (au:string-split path #\/))
+  (au:split-sequence #\/ path :remove-empty-subseqs t))
 
 (defun make-node-path (parent name)
   (let ((path (au:string-merge parent "/" name)))
