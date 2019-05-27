@@ -7,6 +7,9 @@
   :vsync :off
   :log-level :debug
   :log-repl-categories '(:fl)
+  ;; NOTE: Make physics compute faster as fast for these examples.
+  ;; This is really here because of the lisp game jam april 2019 codes.
+  :delta 1/120
   :initial-scene 'geometric-volumes)
 
 (fl:define-resources (:project :first-light.example)
@@ -14,6 +17,7 @@
   (:ext (:project "ext"))
   (:mesh (:project "mesh"))
   (:texture (:project "texture"))
+  (:lgj-04/2019 (:project :texture "lisp-game-jam-04-2019"))
   (:log (:project "log"))
   (:log-debug (:project :log "debug.log"))
   (:log-error (:project :log "error.log"))
