@@ -1,4 +1,4 @@
-(in-package :first-light.gpu)
+(in-package #:first-light.gpu)
 
 (defclass shader-buffer ()
   ((%id :reader id
@@ -76,8 +76,8 @@
                (lambda (x)
                  (typecase x
                    (sequence (replace sv x :start1 i))
-                   ((or m:vec2 m:vec3 m:vec4)
-                    (replace sv (m:get-array x) :start1 i))
+                   ((or v2:vec v3:vec v4:vec)
+                    (replace sv x :start1 i))
                    (t (setf (aref sv i) x)))
                  (incf i %element-stride))
                value)
@@ -99,12 +99,8 @@
                    (loop :repeat columns
                          :for j :from i :by %element-stride
                          :for k :by rows
-                         :for matrix = (etypecase x
-                                         (sequence x)
-                                         ((or m:mat2 m:mat3 m:mat4)
-                                          (m:get-array x)))
                          :do (replace sv
-                                      matrix
+                                      x
                                       :start1 j
                                       :start2 k
                                       :end2 (+ k rows)))

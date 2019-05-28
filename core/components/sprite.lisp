@@ -1,4 +1,4 @@
-(in-package :first-light.components)
+(in-package #:first-light.components)
 
 (define-component sprite ()
   ((name :default nil)
@@ -37,8 +37,8 @@
           :for i :from 0
           :do (destructuring-bind (&key id x y w h) sprite
                 (when (and id x y w h)
-                  (setf (aref pos i) (m:vec2 x y)
-                        (aref size i) (m:vec2 w h)
+                  (setf (aref pos i) (v2:make x y)
+                        (aref size i) (v2:make w h)
                         (au:href %sprites id) i)))
           :finally (fl.gpu:write-buffer-path buffer-name :pos pos)
                    (fl.gpu:write-buffer-path buffer-name :size size))))

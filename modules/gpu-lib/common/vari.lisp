@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.lib)
+(in-package #:first-light.gpu.lib)
 
 (v-def-glsl-template-fun vec2 (a) "vec2(~a)" (:vec2) :vec2 :pure t)
 (v-def-glsl-template-fun vec2 (a) "vec2(~a)" (:vec3) :vec2 :pure t)

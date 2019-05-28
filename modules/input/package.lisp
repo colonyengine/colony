@@ -1,8 +1,8 @@
-(in-package :defpackage+-user-1)
+(in-package #:cl-user)
 
-(defpackage+ #:first-light.input
+(defpackage #:first-light.input
   (:nicknames #:fl.input)
-  (:local-nicknames (#:m #:game-math))
+  (:local-nicknames (#:v2 #:box.math.vec2))
   (:use #:cl)
   (:export
    #:get-gamepad-analog

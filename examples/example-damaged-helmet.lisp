@@ -1,4 +1,4 @@
-(in-package :fl.example)
+(in-package #:fl.example)
 
 ;;; Textures
 
@@ -20,22 +20,22 @@
 ;;; Materials
 
 (fl:define-material damaged-helmet
-  (:shader fl.gpu.user:damaged-helmet
-   :profiles (fl.materials:u-mvp)
-   :uniforms
-   ((:metallic-roughness-values (m:vec2 1))
-    (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)
-    (:base-color-sampler 'damaged-helmet/color)
-    (:base-color-factor (m:vec4 1))
-    (:normal-sampler 'damaged-helmet/normal)
-    (:normal-scale 1.0)
-    ;; NOTE: This vector points TOWARDS the light.
-    (:light-direction (m:vec3 0 1 1))
-    (:light-color (m:vec3 1))
-    (:occlusion-sampler 'damaged-helmet/ambient-occlusion)
-    (:occlusion-strength 1.0)
-    (:emissive-sampler 'damaged-helmet/emissive)
-    (:emissive-factor 0.3))))
+    (:shader fl.gpu.user:damaged-helmet
+     :profiles (fl.materials:u-mvp)
+     :uniforms
+             ((:metallic-roughness-values (v2:one))
+              (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)
+              (:base-color-sampler 'damaged-helmet/color)
+              (:base-color-factor (v4:one))
+              (:normal-sampler 'damaged-helmet/normal)
+              (:normal-scale 1.0)
+              ;; NOTE: This vector points TOWARDS the light.
+              (:light-direction (v3:make 0 1 1))
+              (:light-color (v3:one))
+              (:occlusion-sampler 'damaged-helmet/ambient-occlusion)
+              (:occlusion-strength 1.0)
+              (:emissive-sampler 'damaged-helmet/emissive)
+              (:emissive-factor 0.3))))
 
 ;;; Prefabs
 
@@ -43,9 +43,9 @@
   (("camera" :copy "/cameras/perspective")
    (fl.comp:camera (:policy :new-args) :zoom 10))
   (("helmet" :copy "/mesh")
-   (fl.comp:transform :rotate (m:vec3 (/ pi 2) 0 0)
-                      :rotate/inc (m:vec3 0 0 -0.6)
-                      :scale (m:vec3 4))
+   (fl.comp:transform :rotate (v3:make (/ pi 2) 0 0)
+                      :rotate/inc (v3:make 0 0 -0.6)
+                      :scale (v3:make 4 4 4))
    (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
    (fl.comp:render :material 'damaged-helmet)))
 

@@ -1,4 +1,4 @@
-(in-package :first-light.input)
+(in-package #:first-light.input)
 
 (defstruct input-state enter enabled exit)
 

@@ -1,4 +1,4 @@
-(in-package :cl-user)
+(in-package #:cl-user)
 
 (defpackage #:first-light.binary-formats
   (:nicknames #:fl.binfmt)

@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.graph)
+(in-package #:first-light.gpu.graph)
 
 ;;;; Graphing
 ;;;; Credits:

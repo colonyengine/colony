@@ -1,4 +1,4 @@
-(in-package :first-light.gpu)
+(in-package #:first-light.gpu)
 
 (defun reset-program-state ()
   (fl.data:set 'programs (au:dict #'eq))

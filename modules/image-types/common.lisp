@@ -1,4 +1,4 @@
-(in-package :first-light.image-types)
+(in-package #:first-light.image-types)
 
 (defclass image ()
   ((%path :reader path

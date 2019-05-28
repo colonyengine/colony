@@ -1,4 +1,4 @@
-(in-package :first-light.prefab)
+(in-package #:first-light.prefab)
 
 (defmacro prefab-descriptor (&body prefab-specs)
   `(list

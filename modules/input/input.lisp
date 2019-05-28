@@ -1,4 +1,4 @@
-(in-package :first-light.input)
+(in-package #:first-light.input)
 
 (defclass input-data ()
   ((%gamepad-instances :reader gamepad-instances

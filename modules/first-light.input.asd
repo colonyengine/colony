@@ -12,7 +12,6 @@
   :source-control (:git "git@github.com:hackertheory/first-light.git")
   :encoding :utf-8
   :depends-on (#:sdl2
-               #:defpackage-plus
                #:golden-utils)
   :pathname "input"
   :serial t

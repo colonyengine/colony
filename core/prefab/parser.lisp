@@ -1,4 +1,4 @@
-(in-package :first-light.prefab)
+(in-package #:first-light.prefab)
 
 (defun parse-prefab (prefab)
   (let (success-p)

@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.user)
+(in-package #:first-light.gpu.user)
 
 (define-function noise/frag ((uv :vec2)
                              &uniform

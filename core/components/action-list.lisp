@@ -1,4 +1,4 @@
-(in-package :first-light.components)
+(in-package #:first-light.components)
 
 (define-component actions ()
   ((manager :default nil)

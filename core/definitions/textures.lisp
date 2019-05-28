@@ -1,4 +1,4 @@
-(in-package :first-light.textures)
+(in-package #:first-light.textures)
 
 (define-texture framebuffer-color (:procedural framebuffer))
 

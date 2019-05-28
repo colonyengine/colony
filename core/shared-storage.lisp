@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (defun ss-href (context component-name namespace &rest keys)
   (let* ((qualified-component-name (qualify-component (core context)

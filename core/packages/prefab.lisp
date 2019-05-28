@@ -1,8 +1,7 @@
-(in-package :defpackage+-user-1)
+(in-package #:cl-user)
 
-(defpackage+ #:first-light.prefab
+(defpackage #:first-light.prefab
   (:nicknames #:fl.prefab)
-  (:local-nicknames (#:m #:game-math))
   (:use #:cl #:%first-light)
   (:export
    #:define-prefab

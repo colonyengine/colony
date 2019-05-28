@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.noise)
+(in-package #:first-light.gpu.noise)
 
 ;;;; Polka-dot noise
 ;;; Brian Sharpe https://github.com/BrianSharpe/GPU-Noise-Lib

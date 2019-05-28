@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.noise)
+(in-package #:first-light.gpu.noise)
 
 ;;;; Perlin noise
 ;;;; Original implementation by Ken Perlin

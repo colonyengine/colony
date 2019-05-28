@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (defclass context ()
   ((%core :reader core

@@ -1,4 +1,4 @@
-(in-package :first-light.gpu)
+(in-package #:first-light.gpu)
 
 (defclass program ()
   ((%id :reader id

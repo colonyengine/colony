@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 #+sbcl
 (au:eval-always

@@ -1,4 +1,4 @@
-(in-package :first-light.binary-formats)
+(in-package #:first-light.binary-formats)
 
 (defun octets= (octet-vector octet-list)
   (equalp octet-vector (fast-io:octets-from octet-list)))

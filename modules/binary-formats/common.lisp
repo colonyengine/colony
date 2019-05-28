@@ -1,4 +1,4 @@
-(in-package :first-light.binary-formats)
+(in-package #:first-light.binary-formats)
 
 (defun %uncompress-octets (octet-vector compression-scheme)
   (chipz:decompress nil compression-scheme octet-vector

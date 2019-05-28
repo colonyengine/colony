@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (defmethod load-texture-data ((texture-type (eql :texture-2d)) texture context)
   ;; TODO: This assumes no use of the general-data-descriptor or procedurally

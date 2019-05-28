@@ -1,4 +1,4 @@
-(in-package :first-light.binary-formats)
+(in-package #:first-light.binary-formats)
 
 (defvar *buffer*)
 

@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.noise)
+(in-package #:first-light.gpu.noise)
 
 ;;;; Cellular noise
 ;;;; Brian Sharpe https://github.com/BrianSharpe/GPU-Noise-Lib

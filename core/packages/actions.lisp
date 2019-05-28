@@ -1,8 +1,8 @@
-(in-package :defpackage+-user-1)
+(in-package #:cl-user)
 
-(defpackage+ #:first-light.actions
+(defpackage #:first-light.actions
   (:nicknames #:fl.actions)
-  (:local-nicknames (#:m #:game-math))
+  (:local-nicknames (#:v3 #:box.math.vec3))
   (:use #:cl #:%first-light)
   ;; protocol
   (:export

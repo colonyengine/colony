@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (defmethod load-texture-data ((texture-type (eql :texture-3d)) texture context)
   ;; Determine if loading :images or :volume

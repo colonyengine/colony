@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (defstruct (uuid (:constructor %make-uuid))
   version

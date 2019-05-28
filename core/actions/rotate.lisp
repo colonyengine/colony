@@ -1,4 +1,4 @@
-(in-package :first-light.actions)
+(in-package #:first-light.actions)
 
 (defmethod on-action-update (action (type (eql 'rotate)))
   (let* ((transform (fl.comp:transform (renderer (manager action))))
@@ -6,9 +6,9 @@
          (angle (or (au:href attrs :angle) (* pi 2)))
          (step (au:map-domain 0 1 0 angle (action-step action))))
     (ecase (or (au:href attrs :axis) :z)
-      (:x (fl.comp:rotate transform (m:vec3 step 0 0) :replace-p t))
-      (:y (fl.comp:rotate transform (m:vec3 0 step 0) :replace-p t))
-      (:z (fl.comp:rotate transform (m:vec3 0 0 step) :replace-p t)))))
+      (:x (fl.comp:rotate transform (v3:make step 0 0) :replace-p t))
+      (:y (fl.comp:rotate transform (v3:make 0 step 0) :replace-p t))
+      (:z (fl.comp:rotate transform (v3:make 0 0 step) :replace-p t)))))
 
 (defmethod on-action-finish (action (type (eql 'rotate)))
   (when (repeat-p action)
@@ -20,9 +20,9 @@
          (angle (or (au:href attrs :angle) (* pi 2)))
          (step (- angle (au:map-domain 0 1 0 angle (action-step action)))))
     (ecase (or (au:href attrs :axis) :z)
-      (:x (fl.comp:rotate transform (m:vec3 step 0 0) :replace-p t))
-      (:y (fl.comp:rotate transform (m:vec3 0 step 0) :replace-p t))
-      (:z (fl.comp:rotate transform (m:vec3 0 0 step) :replace-p t)))))
+      (:x (fl.comp:rotate transform (v3:make step 0 0) :replace-p t))
+      (:y (fl.comp:rotate transform (v3:make 0 step 0) :replace-p t))
+      (:z (fl.comp:rotate transform (v3:make 0 0 step) :replace-p t)))))
 
 (defmethod on-action-finish (action (type (eql 'rotate/reverse)))
   (when (repeat-p action)

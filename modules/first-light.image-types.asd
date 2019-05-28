@@ -13,7 +13,6 @@
   :encoding :utf-8
   :depends-on (#:sdl2
                #:sdl2-image
-               #:defpackage-plus
                #:golden-utils)
   :pathname "image-types"
   :serial t

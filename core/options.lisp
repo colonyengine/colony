@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (fl.data:set 'options/default
              (au:dict #'eq

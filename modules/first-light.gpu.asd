@@ -12,13 +12,12 @@
   :source-control (:git "git@github.com:hackertheory/first-light.git")
   :encoding :utf-8
   :depends-on (#:static-vectors
-               #:defpackage-plus
                #:glsl-packing
                #:varjo
                #:cl-opengl
                #:verbose
                #:golden-utils
-               #:game-math
+               #:gamebox-math
                #:first-light.metadata)
   :pathname "gpu"
   :serial t

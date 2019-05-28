@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.noise)
+(in-package #:first-light.gpu.noise)
 
 ;;;; Hermite noise
 

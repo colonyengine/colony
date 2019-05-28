@@ -1,4 +1,4 @@
-(in-package :first-light.actions)
+(in-package #:first-light.actions)
 
 (defmethod on-action-update (action (type (eql 'fade-in)))
   (let ((material (fl.comp:material (renderer (manager action)))))

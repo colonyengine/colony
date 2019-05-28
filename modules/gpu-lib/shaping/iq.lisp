@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.shaping)
+(in-package #:first-light.gpu.shaping)
 
 ;;;; Shaping Functions
 ;;;; Various functions to modify a signal or interpolate a value non-linearly.

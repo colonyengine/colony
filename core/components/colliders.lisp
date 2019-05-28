@@ -1,9 +1,9 @@
-(in-package :first-light.components)
+(in-package #:first-light.components)
 
 (define-component collider/sphere ()
   (;; The collider is only ever on a single layer.
    (on-layer :default nil)
-   (center :default (m:vec3))
+   (center :default (v3:zero))
    (radius :default 1.0)
    (num-contacts :default 0)
    ;; TODO: This block of slots are really here for debugging drawing of a
@@ -99,7 +99,7 @@
   (cond
     ;; A test path when testing colliders outside of FL's prefabs.
     ((not (and (actor fist) (actor face))) ;; a test case, no transform comp.
-     (let ((distance/2 (/ (m:distance (center fist) (center face)) 2.0)))
+     (let ((distance/2 (/ (v3:distance (center fist) (center face)) 2.0)))
        (or (<= distance/2 (fl.comp:radius fist))
            (<= distance/2 (fl.comp:radius face)))))
     (t
@@ -119,13 +119,13 @@
             ;; radius as a vector and rotate/scale (but no translate!) it by the
             ;; world matrix.
             (fist-world-radius
-              (transform-vector fist-transform (m:vec3 (radius fist) 0 0)))
+              (transform-vector fist-transform (v3:make (radius fist) 0 0)))
             (face-world-radius
-              (transform-vector face-transform (m:vec3 (radius face) 0 0)))
+              (transform-vector face-transform (v3:make (radius face) 0 0)))
             ;; Compute the half way point between the two colliders.
-            (distance (m:distance fist-collider-world-center
-                                  face-collider-world-center)))
+            (distance (v3:distance fist-collider-world-center
+                                   face-collider-world-center)))
        ;; Now, compute the collision is the common world space we converted
        ;; everything into.
-       (<= distance (+ (m:length fist-world-radius)
-                       (m:length face-world-radius)))))))
+       (<= distance (+ (v3:length fist-world-radius)
+                       (v3:length face-world-radius)))))))

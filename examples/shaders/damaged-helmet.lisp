@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.user)
+(in-package #:first-light.gpu.user)
 
 (define-struct pbr-info
   (n-dot-l :float :accessor n-dot-l)

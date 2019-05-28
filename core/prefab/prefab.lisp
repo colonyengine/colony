@@ -1,4 +1,4 @@
-(in-package :first-light.prefab)
+(in-package #:first-light.prefab)
 
 (defmacro preprocess-spec (prefab-name context policy spec)
   (labels ((rec (data)

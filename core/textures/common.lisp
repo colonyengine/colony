@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (au:define-constant +sampler-type->texture-type+
     (au:dict #'eq

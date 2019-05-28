@@ -1,4 +1,4 @@
-(in-package :first-light.input)
+(in-package #:first-light.input)
 
 (au:define-constant +gamepad-axis-names+
     #((:left-stick :x) (:left-stick :y) (:right-stick :x) (:right-stick :y)
@@ -45,27 +45,28 @@
 
 (defmethod %get-gamepad-analog ((deadzone-type (eql :axial)) analog-state)
   (with-slots (deadzone x y) analog-state
-    (m:with-vec2 ((v (m:vec2 x y)))
-      (m:stabilize v deadzone v)
-      (values v.x v.y))))
+    (v2:with-components ((v (v2:make x y)))
+      (values vx vy))))
 
 (defmethod %get-gamepad-analog ((deadzone-type (eql :radial)) analog-state)
   (with-slots (deadzone x y) analog-state
-    (m:with-vec2 ((v (m:vec2 x y)))
-      (if (< (m:length v) deadzone)
+    (v2:with-components ((v (v2:make x y)))
+      (if (< (v2:length v) deadzone)
           (values 0.0 0.0)
-          (values v.x v.y)))))
+          (values vx vy)))))
 
 (defmethod %get-gamepad-analog ((deadzone-type (eql :radial-scaled))
                                 analog-state)
   (with-slots (deadzone x y) analog-state
-    (m:with-vec2 ((v (m:vec2 x y)))
-      (let ((length (m:length v)))
+    (v2:with-components ((v (v2:make x y)))
+      (let ((length (v2:length v)))
         (if (< length deadzone)
             (values 0.0 0.0)
             (progn
-              (m:* (m:normalize v) (/ (- length deadzone) (- 1 deadzone)) v)
-              (values v.x v.y)))))))
+              (v2:scale! v
+                         (v2:normalize v)
+                         (/ (- length deadzone) (- 1 deadzone)))
+              (values vx vy)))))))
 
 (defun load-gamepad-database (file-path)
   (sdl2:game-controller-add-mappings-from-file (namestring file-path)))

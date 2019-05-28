@@ -1,4 +1,4 @@
-(in-package :defpackage+-user-1)
+(in-package #:defpackage+-user-1)
 
 (defpackage+ #:first-light.gpu.lib
   (:nicknames #:fl.gpu.lib)

@@ -1,4 +1,4 @@
-(in-package :first-light.components)
+(in-package #:first-light.components)
 
 (define-component render ()
   ((mesh :default nil)

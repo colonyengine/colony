@@ -1,4 +1,4 @@
-(in-package :first-light.example)
+(in-package #:first-light.example)
 
 (fl:define-options ()
   :title "First-Light Examples"
@@ -49,12 +49,12 @@
    (fl.comp:camera :active-p t
                    :mode :perspective))
   ("iso"
-   (fl.comp:transform :rotate (m:vec3 0 0 (- (/ pi 4))))
+   (fl.comp:transform :rotate (v3:make 0 0 (- (/ pi 4))))
    ("transform"
-    (fl.comp:transform :rotate (m:vec3 (- (atan (/ (sqrt 2)))) 0 0))
+    (fl.comp:transform :rotate (v3:make (- (atan (/ (sqrt 2)))) 0 0))
     ("camera"
-     (fl.comp:transform :translate (m:vec3 0 -5 0)
-                        :rotate (m:vec3 (+ (/ pi 2)) 0 0))
+     (fl.comp:transform :translate (v3:make 0 -5 0)
+                        :rotate (v3:make (+ (/ pi 2)) 0 0))
      (fl.comp:camera :active-p t
                      :mode :orthographic)))))
 
@@ -65,7 +65,7 @@
 ;;; Graphs
 
 ;;; TODO: Fix graphs to work in user package
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (fl:define-graph :fl.example
     (:category component-dependency

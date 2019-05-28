@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 ;; TODO: This is a naive collider resolution system that doesn't even take into
 ;; consideration or provide the feature of a sleeping collider. Also the main
@@ -430,37 +430,37 @@ the repl when the game is NOT running."
     (let* ((c0 (make-component (context core) 'fl.comp:collider/sphere
                                :display-id "Ground"
                                :on-layer :ground
-                               :center (m:vec3 0 0 0)
+                               :center (v3:make 0 0 0)
                                :radius 1))
            (c1 (make-component (context core) 'fl.comp:collider/sphere
                                :display-id "Player"
                                :on-layer :player
-                               :center (m:vec3 -20 5 0)
+                               :center (v3:make -20 5 0)
                                :radius 1))
            (c2 (make-component (context core) 'fl.comp:collider/sphere
                                :display-id "Player-Bullet"
                                :on-layer :player-bullet
-                               :center (m:vec3 -10 5 0)
+                               :center (v3:make -10 5 0)
                                :radius 1))
            (c3 (make-component (context core) 'fl.comp:collider/sphere
                                :display-id "Enemy"
                                :on-layer :enemy
-                               :center (m:vec3 20 5 0)
+                               :center (v3:make 20 5 0)
                                :radius 1))
            (c4 (make-component (context core) 'fl.comp:collider/sphere
                                :display-id "Enemy-Bullet"
                                :on-layer :enemy-bullet
-                               :center (m:vec3 10 5 0)
+                               :center (v3:make 10 5 0)
                                :radius 1))
            (c5 (make-component (context core) 'fl.comp:collider/sphere
                                :display-id "Scenery 1"
                                :on-layer :scenery
-                               :center (m:vec3 0 5 0)
+                               :center (v3:make 0 5 0)
                                :radius 1))
            (c6 (make-component (context core) 'fl.comp:collider/sphere
                                :display-id "Scenery 2"
                                :on-layer :scenery
-                               :center (m:vec3 1 5 0)
+                               :center (v3:make 1 5 0)
                                :radius 1)))
       ;; Set referent to the same component for
       (loop :for c :in (list c0 c1 c2 c3 c4 c5 c6)
@@ -477,22 +477,22 @@ the repl when the game is NOT running."
       (compute-all-collisions (collider-system core))
       (format t "Collider Pass 1: enter~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (fl.comp:center c4) (m:vec3 -9 5 0))
+      (setf (fl.comp:center c4) (v3:make -9 5 0))
       (compute-all-collisions (collider-system core))
       (format t "Collider Pass 2: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (fl.comp:center c4) (m:vec3 -10 5 0))
+      (setf (fl.comp:center c4) (v3:make -10 5 0))
       (compute-all-collisions (collider-system core))
       (format t "Collider Pass 2a: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (fl.comp:center c4) (m:vec3 -11 5 0))
+      (setf (fl.comp:center c4) (v3:make -11 5 0))
       (compute-all-collisions (collider-system core))
       (format t "Collider Pass 2b: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (fl.comp:center c4) (m:vec3 -12 5 0))
+      (setf (fl.comp:center c4) (v3:make -12 5 0))
       (compute-all-collisions (collider-system core))
       (format t "Moving enemy-bullet.~%")
-      (setf (fl.comp:center c4) (m:vec3 -13 5 0))
+      (setf (fl.comp:center c4) (v3:make -13 5 0))
       (format t "Collider Pass 3: exit~%")
       (compute-all-collisions (collider-system core))
       (format t "Collider Pass 4: no colliding~%")

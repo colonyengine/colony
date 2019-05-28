@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 ;; Held in core, the material database for all materials everywhere.
 (defclass materials-table ()
@@ -508,19 +508,12 @@ or if it a vector of the same. Return NIL otherwise."
                     (fl.gpu:uniform-int shader uniform (if value 1 0))))
            (:int #'fl.gpu:uniform-int)
            (:float #'fl.gpu:uniform-float)
-           (:vec2 (lambda (shader uniform value)
-                    (fl.gpu:uniform-vec2 shader uniform (m:get-array value))))
-           (:vec3 (lambda (shader uniform value)
-                    (fl.gpu:uniform-vec3 shader uniform (m:get-array value))))
-           (:vec4 (lambda (shader uniform value)
-                    (fl.gpu:uniform-vec4 shader uniform (m:get-array value))))
-           (:mat2 (lambda (shader uniform value)
-                    (fl.gpu:uniform-mat2 shader uniform (m:get-array value))))
-           (:mat3 (lambda (shader uniform value)
-                    (fl.gpu:uniform-mat3 shader uniform (m:get-array value))))
-           (:mat4 (lambda (shader uniform value)
-                    (fl.gpu:uniform-mat4 shader uniform
-                                         (m:get-array value)))))))
+           (:vec2 #'fl.gpu:uniform-vec2)
+           (:vec3 #'fl.gpu:uniform-vec3)
+           (:vec4 #'fl.gpu:uniform-vec4)
+           (:mat2 #'fl.gpu:uniform-mat2)
+           (:mat3 #'fl.gpu:uniform-mat3)
+           (:mat4 #'fl.gpu:uniform-mat4))))
     (cons
      (if (sampler-p (car glsl-type))
          (let* ((units
@@ -725,7 +718,7 @@ applied in an overlay manner while defining a material."
 
 ;;; Helper functions
 
-(in-package :fl.materials)
+(in-package #:fl.materials)
 
 (defun total-time (context material)
   (declare (ignore material))

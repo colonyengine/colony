@@ -21,7 +21,7 @@
                #:sdl2
                #:verbose
                #:golden-utils
-               #:game-math
+               #:gamebox-math
                #:first-light.metadata
                #:first-light.data-structures
                #:first-light.binary-formats

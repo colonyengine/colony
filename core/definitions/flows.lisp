@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (define-call-flow :default ()
   (flow initialize-phase

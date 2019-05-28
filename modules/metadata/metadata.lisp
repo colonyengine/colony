@@ -1,4 +1,4 @@
-(in-package :first-light.metadata)
+(in-package #:first-light.metadata)
 
 (defvar *store* (au:dict #'eq))
 

@@ -1,4 +1,4 @@
-(in-package :first-light.geometry)
+(in-package #:first-light.geometry)
 
 (au:define-constant +attribute-locations+
     '(("POSITION" . 0)

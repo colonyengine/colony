@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 ;;;; This file handles the framework for querying actors and components by the
 ;;;; different ID types, such is ID, UUID, and DISPLAY-ID.

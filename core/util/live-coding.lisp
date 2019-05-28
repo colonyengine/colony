@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (defmacro with-continue-restart (report &body body)
   `(let* ((debugger-entry-time)

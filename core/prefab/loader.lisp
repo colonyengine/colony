@@ -1,4 +1,4 @@
-(in-package :first-light.prefab)
+(in-package #:first-light.prefab)
 
 (defun make-actors (context prefab)
   (let ((actors (au:dict #'equalp))

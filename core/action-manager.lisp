@@ -1,4 +1,4 @@
-(in-package :first-light.actions)
+(in-package #:first-light.actions)
 
 (defclass action-manager ()
   ((%action-list :reader action-list
@@ -32,7 +32,7 @@
               :initform nil)
    (%shape :reader shape
            :initarg :shape
-           :initform 'm:linear)
+           :initform 'box.math.shaping:linear)
    (%attrs :reader attrs
            :initarg :attrs
            :initform nil)))

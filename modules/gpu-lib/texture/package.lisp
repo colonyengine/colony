@@ -1,6 +1,6 @@
-(in-package :defpackage+-user-1)
+(in-package #:cl-user)
 
-(defpackage+ #:first-light.gpu.texture
+(defpackage #:first-light.gpu.texture
   (:nicknames #:fl.gpu.texture)
   (:use #:fl.gpu.lib
         #:fl.gpu.swizzle)

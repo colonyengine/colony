@@ -1,9 +1,9 @@
-(in-package :first-light.components)
+(in-package #:first-light.components)
 
 (define-component camera ()
   ((active-p :default nil)
-   (view :default (m:mat4 1))
-   (projection :default (m:mat4 1))
+   (view :default (m4:id))
+   (projection :default (m4:id))
    (mode :default :perspective)
    (clip-near :default 0.1)
    (clip-far :default 1024)
@@ -13,27 +13,27 @@
 
 (defun correct-camera-transform (camera)
   (with-accessors ((actor actor) (mode mode) (transform transform)) camera
-    (when (m:zero-p (current (translation transform)))
+    (when (v3:zero-p (current (translation transform)))
       (let ((translation (ecase mode
-                           (:orthographic (m:vec3 0 0 1))
-                           (:perspective (m:vec3 0 0 50)))))
+                           (:orthographic (v3:make 0 0 1))
+                           (:perspective (v3:make 0 0 50)))))
         (translate transform translation)
         (v:warn :fl.comp.camera
                 "Camera ~a was attached to an actor without a translation ~
                  transform.~%~
                  Using a sane default value for ~(~a~): ~s."
-                (id actor) mode (m:get-array translation))))))
+                (id actor) mode translation)))))
 
 (defmethod make-projection (camera (mode (eql :perspective)))
   (with-accessors ((context context) (zoom zoom) (proj projection)
                    (near clip-near) (far clip-far) (fov-y fov-y))
       camera
-    (m:set-projection/perspective (/ fov-y zoom)
-                                  (/ (option context :window-width)
-                                     (option context :window-height))
-                                  near
-                                  far
-                                  proj)))
+    (m4:set-projection/perspective! proj
+                                    (/ fov-y zoom)
+                                    (/ (option context :window-width)
+                                       (option context :window-height))
+                                    near
+                                    far)))
 
 (defmethod make-projection (camera (mode (eql :orthographic)))
   (with-accessors ((context context) (zoom zoom) (proj projection)
@@ -41,15 +41,15 @@
       camera
     (let ((w (/ (option context :window-width) zoom 2))
           (h (/ (option context :window-height) zoom 2)))
-      (m:set-projection/orthographic (- w) w (- h) h near far proj))))
+      (m4:set-projection/orthographic! proj (- w) w (- h) h near far))))
 
 (defun compute-camera-view (camera)
   (when (active-p camera)
     (let* ((model (model (transform camera)))
-           (eye (m:get-translation model))
-           (target (m:+ eye (m:negate (m:vec3 (m:get-column model 2)))))
-           (up (m:vec3 (m:get-column model 1))))
-      (m:set-view eye target up (view camera)))))
+           (eye (m4:get-translation model))
+           (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3 model :z))))
+           (up (m4:rotation-axis-to-vec3 model :y)))
+      (m4:set-view! (view camera) eye target up))))
 
 (defun find-active-camera (context)
   (dolist (camera (cameras (core context)))

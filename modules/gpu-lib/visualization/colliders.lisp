@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.visualization)
+(in-package #:first-light.gpu.visualization)
 
 (define-function collider/sphere/vert ()
   (values))

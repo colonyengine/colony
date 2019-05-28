@@ -1,4 +1,4 @@
-(in-package :first-light.input)
+(in-package #:first-light.input)
 
 (au:define-constant +window-event-names+
     #(nil :show :hide nil :move :resize nil :minimize :maximize :restore

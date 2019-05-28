@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.user)
+(in-package #:first-light.gpu.user)
 
 (define-function starfield/frag ((color :vec4)
                                  (uv1 :vec2)

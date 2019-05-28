@@ -1,6 +1,6 @@
-(in-package :defpackage+-user-1)
+(in-package #:cl-user)
 
-(defpackage+ #:first-light.gpu.hash
+(defpackage #:first-light.gpu.hash
   (:nicknames #:fl.gpu.hash)
   (:use #:fl.gpu.lib
         #:fl.gpu.swizzle)

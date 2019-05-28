@@ -1,4 +1,4 @@
-(in-package :first-light.data-structures)
+(in-package #:first-light.data-structures)
 
 (defstruct (dlist (:constructor %make-dlist (&key test)))
   "A doubly linked list that holds sequential nodes with links to the previous

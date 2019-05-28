@@ -1,8 +1,8 @@
-(in-package :defpackage+-user-1)
+(in-package #:cl-user)
 
-(defpackage+ #:first-light.textures
+(defpackage #:first-light.textures
   (:nicknames #:fl.textures)
-  (:local-nicknames (#:m #:game-math))
+  (:local-nicknames (#:v4 #:box.math.vec4))
   (:use #:cl #:%first-light)
   ;; profiles
   (:export

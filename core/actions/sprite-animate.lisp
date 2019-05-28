@@ -1,4 +1,4 @@
-(in-package :first-light.actions)
+(in-package #:first-light.actions)
 
 (defmethod on-action-update (action (type (eql 'sprite-animate)))
   (au:when-let* ((actor (actor (renderer (manager action))))

@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.noise)
+(in-package #:first-light.gpu.noise)
 
 ;;;; Miscellaneous noise functions
 ;;; Brian Sharpe https://github.com/BrianSharpe/GPU-Noise-Lib

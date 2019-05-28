@@ -1,6 +1,6 @@
-(in-package :defpackage+-user-1)
+(in-package #:cl-user)
 
-(defpackage+ #:first-light.geometry
+(defpackage #:first-light.geometry
   (:nicknames #:fl.geom)
   (:use #:cl)
   (:export

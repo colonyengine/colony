@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.texture)
+(in-package #:first-light.gpu.texture)
 
 (define-struct texture-struct
   (sampler1 :sampler-2d :accessor sampler1)

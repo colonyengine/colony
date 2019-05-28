@@ -1,8 +1,13 @@
-(in-package :defpackage+-user-1)
+(in-package #:cl-user)
 
-(defpackage+ #:first-light.components
+(defpackage #:first-light.components
   (:nicknames #:fl.comp)
-  (:local-nicknames (#:m #:game-math))
+  (:local-nicknames (#:~ #:box.math.swizzle)
+                    (#:v2 #:box.math.vec2)
+                    (#:v3 #:box.math.vec3)
+                    (#:v4 #:box.math.vec4)
+                    (#:m4 #:box.math.mat4)
+                    (#:q #:box.math.quat))
   (:use #:cl #:%first-light)
   ;; camera
   (:export

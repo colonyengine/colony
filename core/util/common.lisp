@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (defgeneric destroy-after-time (thing &key ttl)
   (:documentation "Takes either an ACTOR or a COMPONENT. The keyword argument

@@ -1,4 +1,4 @@
-(in-package :first-light.image-types)
+(in-package #:first-light.image-types)
 
 (defun get-surface-channel-count (surface)
   (let ((format (sdl2:surface-format-format surface)))

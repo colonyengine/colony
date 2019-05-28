@@ -11,8 +11,7 @@
   :bug-tracker "https://github.com/hackertheory/first-light/issues"
   :source-control (:git "git@github.com:hackertheory/first-light.git")
   :encoding :utf-8
-  :depends-on (#:golden-utils
-               #:defpackage-plus)
+  :depends-on (#:golden-utils)
   :pathname "metadata"
   :serial t
   :components

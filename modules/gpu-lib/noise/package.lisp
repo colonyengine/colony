@@ -1,6 +1,6 @@
-(in-package :defpackage+-user-1)
+(in-package #:cl-user)
 
-(defpackage+ #:first-light.gpu.noise
+(defpackage #:first-light.gpu.noise
   (:nicknames #:fl.gpu.noise)
   (:use #:fl.gpu.lib
         #:fl.gpu.swizzle)

@@ -1,4 +1,4 @@
-(in-package :first-light.input)
+(in-package #:first-light.input)
 
 (au:define-constant +mouse-button-names+
     #(nil :left :middle :right :x1 :x2)

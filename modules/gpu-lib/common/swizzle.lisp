@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.swizzle)
+(in-package #:first-light.gpu.swizzle)
 
 (au:eval-always
   (defun %swizzle/combinations (n items)

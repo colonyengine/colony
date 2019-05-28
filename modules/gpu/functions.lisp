@@ -1,4 +1,4 @@
-(in-package :first-light.gpu)
+(in-package #:first-light.gpu)
 
 (defun find-gpu-function (func-spec)
   (destructuring-bind (name . types) func-spec

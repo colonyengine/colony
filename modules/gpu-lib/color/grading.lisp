@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.color)
+(in-package #:first-light.gpu.color)
 
 ;;; Exposure
 

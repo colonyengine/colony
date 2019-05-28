@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.hash)
+(in-package #:first-light.gpu.hash)
 
 ;;;; Hashing functions
 ;;;; Permutation polynomial

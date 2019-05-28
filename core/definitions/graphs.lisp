@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (define-graph :core (:category component-dependency)
   (subdag all-unknown-types ((unknown-types)))

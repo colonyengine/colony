@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.sdf)
+(in-package #:first-light.gpu.sdf)
 
 ;;;; 2D signed distance field functions
 ;;;; Credits: https://www.shadertoy.com/view/4dfXDn

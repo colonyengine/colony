@@ -1,4 +1,4 @@
-(in-package :first-light.host)
+(in-package #:first-light.host)
 
 (defun get-gpu-parameter (name)
   (or (handler-case (gl:get* name)

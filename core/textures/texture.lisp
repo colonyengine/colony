@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (defclass textures-table ()
   ((%profiles :reader profiles
@@ -185,9 +185,7 @@ NOTE: These are already in the RCACHE."
                                                putative-parameter))
                   (gl:tex-parameter texture-type
                                     putative-parameter
-                                    (typecase value
-                                      (m:vec4 (m:get-array value))
-                                      (t value))))))))
+                                    value))))))
 
 ;;; TODO: These are cut into individual functions for their context. Maybe later
 ;;; I'll see about condensing them to be more concise.

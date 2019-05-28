@@ -1,4 +1,4 @@
-(in-package :first-light.example)
+(in-package #:first-light.example)
 
 
 ;; "Protect the Planets!" by Peter Keller (psilord@cs.wisc.edu)
@@ -56,23 +56,23 @@
   (:profiles (fl.materials:u-mvpt)
    :shader fl.gpu.user:starfield
    :uniforms ((:tex 'fl.example::starfield)
-              (:mix-color (m:vec4 1 1 1 1)))))
+              (:mix-color (v4:one)))))
 
 (fl:define-material warning-mothership
   (:profiles (fl.materials:u-mvp)
    :shader fl.gpu.texture:unlit-texture
    :uniforms ((:tex.sampler1 'warning-mothership)
-              (:mix-color (m:vec4 1 1 1 1))
-              #++(:min-intensity (m:vec4 .1 .1 .1 0))
-              #++(:max-intensity (m:vec4 1 1 1 1)))))
+              (:mix-color (v4:one))
+              #++(:min-intensity (v4:make 0.1 0.1 0.1 0))
+              #++(:max-intensity (v4:one)))))
 
 (fl:define-material warning-wave
   (:profiles (fl.materials:u-mvp)
    :shader fl.gpu.texture:unlit-texture
    :uniforms ((:tex.sampler1 'warning-wave)
-              (:mix-color (m:vec4 1 1 1 1))
-              #++(:min-intensity (m:vec4 .1 .1 .1 1))
-              #++(:max-intensity (m:vec4 1 1 1 1)))))
+              (:mix-color (v4:one))
+              #++(:min-intensity (v3:make 0.1 0.1 0.1 1))
+              #++(:max-intensity (v4:one)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Random Types we need, some will go into FL properly in a future date
@@ -116,38 +116,38 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   (with-accessors ((minx minx) (maxx maxx) (miny miny) (maxy maxy)
                    (minz minz) (maxz maxz))
       boundary-cube
-    (m:with-vec3 ((c current-translation))
-      (m:with-vec3 ((m movement-vector))
-        ;; add the movement-vector to the current-translation
-        (let* ((nx (+ c.x m.x))
-               (ny (+ c.y m.y))
-               (nz (+ c.z m.z))
-               ;; And the default adjustments to the movement-vector
-               (adj-x 0)
-               (adj-y 0)
-               (adj-z 0))
-          ;; Then if it violates the boundary cube, compute the adjustment we
-          ;; need to the movement vector to fix it.
-          (when (< nx minx)
-            (setf adj-x (- minx nx)))
+    (v3:with-components ((c current-translation)
+                         (m movement-vector))
+      ;; add the movement-vector to the current-translation
+      (let* ((nx (+ cx mx))
+             (ny (+ cy my))
+             (nz (+ cz mz))
+             ;; And the default adjustments to the movement-vector
+             (adj-x 0)
+             (adj-y 0)
+             (adj-z 0))
+        ;; Then if it violates the boundary cube, compute the adjustment we
+        ;; need to the movement vector to fix it.
+        (when (< nx minx)
+          (setf adj-x (- minx nx)))
 
-          (when (> nx maxx)
-            (setf adj-x (- maxx nx)))
+        (when (> nx maxx)
+          (setf adj-x (- maxx nx)))
 
-          (when (< ny miny)
-            (setf adj-y (- miny ny)))
+        (when (< ny miny)
+          (setf adj-y (- miny ny)))
 
-          (when (> ny maxy)
-            (setf adj-y (- maxy ny)))
+        (when (> ny maxy)
+          (setf adj-y (- maxy ny)))
 
-          (when (< nz minz)
-            (setf adj-z (- minz nz)))
+        (when (< nz minz)
+          (setf adj-z (- minz nz)))
 
-          (when (> nz maxz)
-            (setf adj-z (- maxz nz)))
+        (when (> nz maxz)
+          (setf adj-z (- maxz nz)))
 
-          ;; NOTE: Allocates memory.
-          (m:vec3 (+ m.x adj-x) (+ m.y adj-y) (+ m.z adj-z)))))))
+        ;; NOTE: Allocates memory.
+        (v3:make (+ mx adj-x) (+ my adj-y) (+ mz adj-z))))))
 
 (defun quat->euler (quat)
   (flet ((copysign (x y)
@@ -157,22 +157,22 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                  (* -1 x)
                  x))))
 
-    (m:with-quat ((q quat))
+    (q:with-components ((q quat))
       (let* (;; Roll (x-axis)
-             (sinr_cosp (* 2.0 (+ (* q.w q.x) (* q.y q.z))))
-             (cosr_cosp (- 1.0 (* 2.0 (+ (* q.x q.x) (* q.y q.y)))))
+             (sinr_cosp (* 2.0 (+ (* qw qx) (* qy qz))))
+             (cosr_cosp (- 1.0 (* 2.0 (+ (* qx qx) (* qy qy)))))
              (roll (atan sinr_cosp cosr_cosp))
              ;; Pitch (y-axis)
-             (sinp (* 2.0 (- (* q.w q.y) (* q.z q.x))))
+             (sinp (* 2.0 (- (* qw qy) (* qz qx))))
              (pitch (if (>= (abs sinp) 1)
                         (copysign (/ pi 2) sinp)
                         (asin sinp)))
              ;; Yaw (z-axis)
-             (siny_cosp (* 2.0 (+ (* q.w q.z) (* q.x q.y))))
-             (cosy_cosp (- 1.0 (* 2.0 (+ (* q.y q.y) (* q.z q.z)))))
+             (siny_cosp (* 2.0 (+ (* qw qz) (* qx qy))))
+             (cosy_cosp (- 1.0 (* 2.0 (+ (* qy qy) (* qz qz)))))
              (yaw (atan siny_cosp cosy_cosp)))
 
-        (m:vec3 roll pitch yaw)))))
+        (v3:make roll pitch yaw)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
@@ -217,11 +217,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       ;; First, we settle the notion of how the player translates around with
       ;; left stick
       (let* (;; Dead with deadzones and other bad data around the input vector.
-             (vec (m:vec3 lx ly 0))
-             (vec (if (> (m:length vec) 1) (m:normalize vec) vec))
-             (vec (if (< (m:length vec) translate-deadzone) (m:vec3) vec))
+             (vec (v3:make lx ly 0))
+             (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
+             (vec (if (< (v3:length vec) translate-deadzone) (v3:zero) vec))
              ;; Compute the actual translation vector related to our frame time!
-             (vec (m:* vec (* max-velocity (fl:frame-time context))))
+             (vec (v3:scale vec
+                            (float (* max-velocity (fl:frame-time context))
+                                   1f0)))
              ;; and ensure we clip the translation vector so we can't go out of
              ;; the boundary cube we set.
              (current-translation
@@ -233,13 +235,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
       ;; Then we settle the notion of how the player is oriented.  We're setting
       ;; a hard angle of rotation each time so we overwrite the previous value.
-      (unless (or (= lx ly 0.0) (< (m:length (m:vec3 lx ly 0)) rotate-deadzone))
+      (unless (or (= lx ly 0.0) (< (v3:length (v3:make lx ly 0)) rotate-deadzone))
         (let* ((angle (atan (- lx) ly))
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
                           angle)))
           (fl.comp:rotate transform
-                          (m:vec3 0 0 angle)
+                          (v3:make 0 0 angle)
                           :replace-p t
                           :instant-p instant-p))))))
 
@@ -251,7 +253,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;;;;;;;;;
 
 (fl:define-component line-mover ()
-  ((direction :default :+y) ;; NOTE: may be :+y :-y :+x :-x :+z :-z or an m:vec3
+  ((direction :default :+y) ;; NOTE: may be :+y :-y :+x :-x :+z :-z or a vec3
    (transform :default nil)
    (velocity :default 0)))
 
@@ -272,22 +274,21 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       (fl.comp:translate
        transform
        (let* ((local (fl.comp:local transform))
-              (a (m:normalize
+              (x (m4:rotation-axis-to-vec3 local :x))
+              (y (m4:rotation-axis-to-vec3 local :y))
+              (z (m4:rotation-axis-to-vec3 local :z))
+              (a (v3:normalize
                   (if (symbolp direction)
-                      (m:vec3
-                       (case direction
-                         (:+x (m:get-column local 0))
-                         (:-x (m:negate
-                               (m:get-column local 0)))
-                         (:+y (m:get-column local 1))
-                         (:-y (m:negate
-                               (m:get-column local 1)))
-                         (:+z (m:get-column local 2))
-                         (:-z (m:negate
-                               (m:get-column local 2)))))
+                      (ecase direction
+                        (:+x x)
+                        (:-x (v3:negate x))
+                        (:+y y)
+                        (:-y (v3:negate y))
+                        (:+z z)
+                        (:-z (v3:negate z)))
                       direction)))
               (move-delta (* velocity (fl:delta context))))
-         (m:* a move-delta))))))
+         (v3:scale a move-delta))))))
 
 ;; ;;;;;;;;;
 ;; Component: damage-points
@@ -334,8 +335,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
         (let* ((actor-transform (fl:actor-component-by-type (fl:actor self)
                                                             'fl.comp:transform))
                (parent-model (fl.comp:model actor-transform))
-               (parent-translation (m:get-translation parent-model))
-               (parent-rotation (m:quat parent-model))
+               (parent-translation (m4:get-translation parent-model))
+               (parent-rotation (q:from-mat4 parent-model))
                (explosion (fl:actor-component-by-type (fl:actor self)
                                                       'explosion)))
           (when explosion
@@ -508,9 +509,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
        (au:mvlet* ((rx ry (fl.input:get-gamepad-analog
                            (fl:input-data context) '(:gamepad1 :right-stick))))
          (let* ((parent-model (fl.comp:model emitter-transform))
-                (parent-translation (m:get-translation parent-model)))
+                (parent-translation (m4:get-translation parent-model)))
            (unless (or (= rx ry 0.0)
-                       (< (m:length (m:vec3 rx ry 0)) rotate-deadzone))
+                       (< (v3:length (v3:make rx ry 0)) rotate-deadzone))
              (let* ((angle (atan (- rx) ry))
                     (angle (if (< angle 0)
                                (+ pi (- pi (abs angle)))
@@ -518,7 +519,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                ;; The rotation we use is indicated by the right stick vector.
                (make-projectile context
                                 parent-translation
-                                (m:vec3 0 0 angle)
+                                (v3:make 0 0 angle)
                                 (physics-layer self)
                                 :velocity 2000
                                 :name (name self)
@@ -577,7 +578,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                   (target
                     (fl.comp:transform-point
                      transform
-                     (m:vec3 (ransign 300.0) (ransign 300.0) .1)))
+                     (v3:make (ransign 300.0) (ransign 300.0) 0.1)))
                   (quadrant (random 4)))
 
              ;; pick an origin point in director space and convert it to world
@@ -587,22 +588,22 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                     transform
                     (case quadrant
                       (0 ;; left side
-                       (m:vec3 -1000.0 (ransign 600.0) .1))
+                       (v3:make -1000.0 (ransign 600.0) 0.1))
                       (1 ;; top side
-                       (m:vec3 (ransign 1000.0) 600.0 .1))
+                       (v3:make (ransign 1000.0) 600.0 0.1))
                       (2 ;; right side
-                       (m:vec3 1000.0 (ransign 600.0) .1))
+                       (v3:make 1000.0 (ransign 600.0) 0.1))
                       (3 ;; bottom side
-                       (m:vec3 (ransign 1000.0) -600.0 .1)))))
+                       (v3:make (ransign 1000.0) -600.0 0.1)))))
 
              (make-projectile context
                               origin
-                              (m:vec3)
+                              (v3:zero)
                               :enemy-bullet
                               :velocity  (ransign 50 400)
                               ;; this direction is in world space.
                               ;; it moves from the origin to the target.
-                              :direction (m:normalize (m:- target origin))
+                              :direction (v3:normalize (v3:- target origin))
                               :name "asteroid01-01"
                               :frames 16
                               :destroy-ttl 4)))
@@ -670,7 +671,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
            (transform (fl:actor-component-by-type mockette 'fl.comp:transform)))
 
       (fl.comp:translate
-       transform (m:vec3 (* mockette-index (* dir width-increment)) -60 0))
+       transform (v3:make (* mockette-index (* dir width-increment)) -60 0))
 
       (setf (aref mockette-refs mockette-index) mockette))))
 
@@ -784,7 +785,7 @@ return the lives-remaining after the life has been consumed."
   (hit-points :hp 1)
   (line-mover)
   (fl.comp:sprite :spec :spritesheet-data)
-  (fl.comp:collider/sphere :center (m:vec3)
+  (fl.comp:collider/sphere :center (v3:zero)
                            :on-layer :enemy-bullet
                            :referent (fl:ref :self :component 'hit-points)
                            :radius 15)
@@ -801,7 +802,7 @@ return the lives-remaining after the life has been consumed."
   (damage-points :dp 1)
   (hit-points :hp 1)
   (player-movement)
-  (fl.comp:collider/sphere :center (m:vec3)
+  (fl.comp:collider/sphere :center (v3:zero)
                            :on-layer :player
                            :referent (fl:ref :self :component 'hit-points)
                            :radius 30)
@@ -811,11 +812,11 @@ return the lives-remaining after the life has been consumed."
    (fl.comp:render :material 'sprite-sheet
                    :mode :sprite)
    ("center-gun"
-    (fl.comp:transform :translate (m:vec3 0 0 0))
+    (fl.comp:transform :translate (v3:zero))
     (gun :physics-layer :player-bullet :name "bullet01" :frames 2))
 
    ("exhaust"
-    (fl.comp:transform :translate (m:vec3 0 -60 0))
+    (fl.comp:transform :translate (v3:make 0 -60 0))
     (fl.comp:sprite :spec :spritesheet-data
                     :name "exhaust03-01"
                     :frames 8)
@@ -842,7 +843,7 @@ return the lives-remaining after the life has been consumed."
 (fl:define-prefab "generic-planet" (:library lgj-04/2019)
   (planet)
   (hit-points :hp 5)
-  (fl.comp:collider/sphere :center (m:vec3)
+  (fl.comp:collider/sphere :center (v3:zero)
                            :on-layer :planet
                            :radius 145)
   (fl.comp:sprite :spec :spritesheet-data
@@ -878,10 +879,10 @@ return the lives-remaining after the life has been consumed."
 
 (fl:define-prefab "starfield" (:library lgj-04/2019)
   ("bug-todo:implicit-transform:see-trello"
-   (fl.comp:transform :scale (m:vec3 960)
+   (fl.comp:transform :scale (v3:make 960 960 960)
                       ;; NOTE: ortho projection, so we can put starfield way
                       ;; back.
-                      :translate (m:vec3 0 0 -100))
+                      :translate (v3:make 0 0 -100))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'starfield)))
 
@@ -890,8 +891,8 @@ return the lives-remaining after the life has been consumed."
   (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 0 100 -1)
-                      :scale (m:vec3 .9))
+   (fl.comp:transform :translate (v3:make 0 100 -1)
+                      :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01")))
 
@@ -900,13 +901,13 @@ return the lives-remaining after the life has been consumed."
   (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 -200 100 -1)
-                      :scale (m:vec3 .9))
+   (fl.comp:transform :translate (v3:make -200 100 -1)
+                      :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 200 100 -1)
-                      :scale (m:vec3 .9))
+   (fl.comp:transform :translate (v3:make 200 100 -1)
+                      :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02")))
 
@@ -914,38 +915,38 @@ return the lives-remaining after the life has been consumed."
   (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 0 100 -1)
-                      :scale (m:vec3 .9))
+   (fl.comp:transform :translate (v3:make 0 100 -1)
+                      :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 -200 -100 -1)
-                      :scale (m:vec3 .9))
+   (fl.comp:transform :translate (v3:make -200 -100 -1)
+                      :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 200 -100 -1)
-                      :scale (m:vec3 .9))
+   (fl.comp:transform :translate (v3:make 200 -100 -1)
+                      :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet03")))
 
 (fl:define-prefab "protect-the-planets" (:library lgj-04/2019)
   "The top most level prefab which has the component which drives the game
 sequencing."
-  (fl.comp:transform :scale (m:vec3 1))
+  (fl.comp:transform :scale (v3:one))
   (director :level-holder (fl:ref "/protect-the-planets/active-level"))
 
   #++(("WARNING" :copy ("/warning-wave-sign" :from lgj-04/2019))
-      (fl.comp:transform :translate (m:vec3 0 0 10)
-			 :scale (m:vec3 500)))
+      (fl.comp:transform :translate (v3:make 0 0 10)
+                         :scale (v3:make 500 500 500)))
 
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
-   (fl.comp:transform :translate (m:vec3 0 0 500)))
+   (fl.comp:transform :translate (v3:make 0 0 500)))
   ("active-level")
 
   ;; make reference so we know where to get players when they die/1up
   (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
-   (fl.comp:transform :translate (m:vec3 -900 550 -10)))
+   (fl.comp:transform :translate (v3:make -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("current-level" :copy ("/level-0" :from lgj-04/2019))))
 

@@ -1,4 +1,4 @@
-(in-package :first-light.gpu.sprite)
+(in-package #:first-light.gpu.sprite)
 
 (define-struct sprite-data
   (sampler :sampler-2d :accessor sampler)

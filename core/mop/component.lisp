@@ -1,4 +1,4 @@
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (defun identity/annotation (value component)
   (declare (ignore component))
@@ -482,4 +482,3 @@
   `(register-annotation '%fl:component ',name :initialized
                         :getter (function ,getter)
                         :setter (function ,setter)))
-
