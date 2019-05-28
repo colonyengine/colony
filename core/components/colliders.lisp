@@ -8,7 +8,7 @@
    (num-contacts :default 0)
    ;; TODO: This block of slots are really here for debugging drawing of a
    ;; collider hack on it a bit to make it better.
-   (visualize :default t)
+   (visualize :default nil)
    ;; TODO: Put geometry into shared storage for all collider/sphere's to use.
    (geometry :default (gl:gen-vertex-array))
    (material :default 'fl.materials::collider/sphere

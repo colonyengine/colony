@@ -15,7 +15,7 @@
     (values actors
             root)))
 
-(defun make-actor-components (context actors setter)
+(defun make-actor-components (context actors)
   (let ((components (au:dict #'eq)))
     (au:do-hash-values (actor actors)
       (au:do-hash (type table (au:href (components-table (prefab-node actor))))
@@ -29,16 +29,34 @@
               (setf (au:href components actor type id) (au:dict #'eq)))
             (setf (au:href components actor type id component) data)
             (attach-component actor component)))))
-    (funcall setter :components components)
     (au:do-hash (actor actor-table components)
-      (funcall setter :current-actor actor)
       (au:do-hash-values (id-table actor-table)
         (au:do-hash-values (component-table id-table)
           (au:do-hash (component data component-table)
-            (funcall setter :current-component component)
-            (let ((args (loop :for (k v) :on (getf data :args) :by #'cddr
-                              :append (list k (funcall v context)))))
-              (apply #'reinitialize-instance component :actor actor args))))))))
+            ;; Now, for each argument value itself, we adjust the exact
+            ;; lexical scope it closed over with enough stuff for REF to
+            ;; work.
+            (flet ((%init-injected-ref-environment (v)
+                     (funcall (env-injection-control-func v)
+                              :actors actors)
+                     (funcall (env-injection-control-func v)
+                              :components components)
+                     (funcall (env-injection-control-func v)
+                              :current-actor actor)
+                     (funcall (env-injection-control-func v)
+                              :current-component component)))
+              (let ((args (loop :for (k v) :on (getf data :args) :by #'cddr
+                                :append
+                                (list k (progn
+                                          ;; Set up the injected REF environment
+                                          ;; specific to >THIS< argument value
+                                          ;; which may have been replaced per
+                                          ;; policy rules, etc, etc, etc
+                                          (%init-injected-ref-environment v)
+                                          (funcall (thunk v) context))))))
+
+                (apply #'reinitialize-instance
+                       component :actor actor args)))))))))
 
 (defun make-actor-relationships (context prefab actors parent)
   (let ((parent (or parent (scene-tree (core context))))
@@ -54,12 +72,11 @@
      (actor-component-by-type parent 'fl.comp:transform)
      (actor-component-by-type root 'fl.comp:transform))))
 
-(defun make-factory (prefab setter)
+(defun make-factory (prefab)
   (lambda (core &key parent)
     (au:mvlet* ((context (context core))
                 (actors root (make-actors context prefab)))
-      (funcall setter :actors actors)
-      (make-actor-components context actors setter)
+      (make-actor-components context actors)
       (make-actor-relationships context prefab actors parent)
       (au:do-hash-values (actor actors)
         (spawn-actor actor))

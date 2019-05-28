@@ -25,7 +25,9 @@
              (z (* radius (cos phi)))
              (spiral-world-point (* mvp (vec4 x y z 1))))
         (emit ()
-              spiral-world-point)))))
+              spiral-world-point)))
+    (end-primitive))
+  (values))
 
 (define-function collider/sphere/frag (&uniform
                                        (in-contact-color :vec4)
