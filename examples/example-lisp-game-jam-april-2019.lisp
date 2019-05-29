@@ -360,12 +360,14 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    (transform :default nil)
    (collider :default nil)
    (mover :default nil)
-   (sprite :default nil)))
+   (sprite :default nil)
+   (action :default nil)))
 
 ;; we use this at runtime to instantiate a bullet prefab and fill in everything
 ;; it needs to become effective in the world.
 (defun make-projectile (context translation rotation physics-layer
                         &key
+                          (scale (v3:make 1.0 1.0 1.0))
                           (destroy-ttl 2)
                           (velocity 1000)
                           (direction :+y)
@@ -392,6 +394,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
     ;; XXX This interface needs to take a quat here also
     (fl.comp:rotate projectile-transform rotation
                     :instant-p t :replace-p t)
+    ;; And adjust the scale too.
+    (fl.comp:scale projectile-transform scale
+                   :instant-p t :replace-p t)
 
     (setf
      ;; Basic identification of the projectile
@@ -542,7 +547,14 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    (cooldown-time :default 0)
    (difficulty :default 1)
    (difficulty-period :default 1/10) ;; Hz
-   (difficulty-time :default 0)))
+   (difficulty-time :default 0)
+   (asteroid-db :default #(("asteroid01-01" 16)
+                           ("asteroid02-01" 16)
+                           ("asteroid03-01" 16)
+                           ("asteroid04-01" 16)
+                           ("asteroid05-01" 16)
+                           ("asteroid06-01" 16)))
+   (scale-range :default (v2:make .75 1.25))))
 
 
 (defmethod fl:on-component-update ((self asteroid-field))
@@ -552,7 +564,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (difficulty-period difficulty-period)
                    (difficulty-time difficulty-time)
                    (pause-p pause-p)
-                   (context fl:context))
+                   (context fl:context)
+                   (asteroid-db asteroid-db)
+                   (scale-range scale-range))
       self
 
     (when pause-p
@@ -596,17 +610,26 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                       (3 ;; bottom side
                        (v3:make (ransign 1000.0) -600.0 0.1)))))
 
-             (make-projectile context
-                              origin
-                              (v3:zero)
-                              :enemy-bullet
-                              :velocity  (ransign 50 400)
-                              ;; this direction is in world space.
-                              ;; it moves from the origin to the target.
-                              :direction (v3:normalize (v3:- target origin))
-                              :name "asteroid01-01"
-                              :frames 16
-                              :destroy-ttl 4)))
+             (destructuring-bind (name frames)
+                 (aref asteroid-db (random (length asteroid-db)))
+               (let* ((uniform-scale
+                        (+ (aref scale-range 0)
+                           (random (- (float (aref scale-range 1) 1.0)
+                                      (float (aref scale-range 0) 1.0))))))
+                 (make-projectile context
+                                  origin
+                                  (v3:zero)
+                                  :enemy-bullet
+                                  :velocity  (ransign 50 400)
+                                  ;; this direction is in world space.
+                                  ;; it moves from the origin to the target.
+                                  :direction (v3:normalize (v3:- target origin))
+                                  :scale (v3:make uniform-scale
+                                                  uniform-scale
+                                                  uniform-scale)
+                                  :name name
+                                  :frames frames
+                                  :destroy-ttl 4)))))
 
           (t
            (incf cooldown-time (fl:frame-time context))))
@@ -779,7 +802,8 @@ return the lives-remaining after the life has been consumed."
   (projectile :transform (fl:ref :self :component 'fl.comp:transform)
               :mover (fl:ref :self :component 'line-mover)
               :collider (fl:ref :self :component 'fl.comp:collider/sphere)
-              :sprite (fl:ref :self :component 'fl.comp:sprite))
+              :sprite (fl:ref :self :component 'fl.comp:sprite)
+              :action (fl:ref :self :component 'fl.comp:actions))
   (damage-points :dp 1)
   (explosion :name "explode01-01" :frames 15)
   (hit-points :hp 1)
