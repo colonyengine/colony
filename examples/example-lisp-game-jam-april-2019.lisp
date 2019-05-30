@@ -10,6 +10,11 @@
 ;; The various categories don't have to be defined in this order or in a single
 ;; file.
 
+;; TODO: Pixel_Outlaw says to use an egg shape for a shot pattern:
+;; http://i.imgur.com/J6oKb1E.png
+;; And here is some math that can help:
+;; http://www.mathematische-basteleien.de/eggcurves.htm
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Textures
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
