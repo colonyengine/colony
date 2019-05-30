@@ -83,7 +83,12 @@
 ;; Random Types we need, some will go into FL properly in a future date
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass boundary-cube ()
+(defclass region ()
+  ((%center :accessor center
+            :initarg :center
+            :initform (v3:make 0.0 0.0 0.0))))
+
+(defclass boundary-cube (region)
   ((%minx :accessor minx
           :initarg :minx
           :initform 0)
@@ -103,8 +108,9 @@
           :initarg :maxz
           :initform 0)))
 
-(defun make-boundary-cube (minx maxx miny maxy minz maxz)
+(defun make-boundary-cube (center minx maxx miny maxy minz maxz)
   (make-instance 'boundary-cube
+                 :center center
                  :minx minx :maxx maxx
                  :miny miny :maxy maxy
                  :minz minz :maxz maxz))
@@ -118,7 +124,8 @@
 BOUNDARY-CUBE when MOVEMENT-VECTOR is added to the CURRENT-TRANSLATION.
 Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
-  (with-accessors ((minx minx) (maxx maxx) (miny miny) (maxy maxy)
+  (with-accessors ((center center)
+                   (minx minx) (maxx maxx) (miny miny) (maxy maxy)
                    (minz minz) (maxz maxz))
       boundary-cube
     (v3:with-components ((c current-translation)
@@ -133,26 +140,32 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
              (adj-z 0))
         ;; Then if it violates the boundary cube, compute the adjustment we
         ;; need to the movement vector to fix it.
-        (when (< nx minx)
-          (setf adj-x (- minx nx)))
+        (let ((offset-minx (+ (v3:x center) minx))
+              (offset-maxx (+ (v3:x center) maxx))
+              (offset-miny (+ (v3:y center) miny))
+              (offset-maxy (+ (v3:y center) maxy))
+              (offset-minz (+ (v3:z center) minz))
+              (offset-maxz (+ (v3:z center) maxz)))
+          (when (< nx offset-minx)
+            (setf adj-x (- offset-minx nx)))
 
-        (when (> nx maxx)
-          (setf adj-x (- maxx nx)))
+          (when (> nx offset-maxx)
+            (setf adj-x (- offset-maxx nx)))
 
-        (when (< ny miny)
-          (setf adj-y (- miny ny)))
+          (when (< ny offset-miny)
+            (setf adj-y (- offset-miny ny)))
 
-        (when (> ny maxy)
-          (setf adj-y (- maxy ny)))
+          (when (> ny offset-maxy)
+            (setf adj-y (- offset-maxy ny)))
 
-        (when (< nz minz)
-          (setf adj-z (- minz nz)))
+          (when (< nz offset-minz)
+            (setf adj-z (- offset-minz nz)))
 
-        (when (> nz maxz)
-          (setf adj-z (- maxz nz)))
+          (when (> nz offset-maxz)
+            (setf adj-z (- offset-maxz nz)))
 
-        ;; NOTE: Allocates memory.
-        (v3:make (+ mx adj-x) (+ my adj-y) (+ mz adj-z))))))
+          ;; NOTE: Allocates memory.
+          (v3:make (+ mx adj-x) (+ my adj-y) (+ mz adj-z)))))))
 
 (defun quat->euler (quat)
   (flet ((copysign (x y)
@@ -196,9 +209,11 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    (max-velocity :default 1500)
    (translate-deadzone :default .1)
    (rotate-deadzone :default .1)
-   ;; We just hack in a boundary cube you can't go outside of.
+   ;; We just hack in a boundary cube you can't go outside of. This is in the
+   ;; local space of the actor to which this component is attached.
    ;; The format is minx, maxx, miny, maxy, minz, maxz
-   (boundary-cube :default (make-boundary-cube -900 900 -500 500 0 0))))
+   (boundary-cube :default (make-boundary-cube (v3:make 0.0 0.0 0.0)
+                                               -900 900 -500 500 0 0))))
 
 ;; upon attaching, this component will store find the transform component
 ;; on the actor to which it has been attached and keep a direct reference to it.
