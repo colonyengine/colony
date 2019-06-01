@@ -88,7 +88,7 @@
             :initarg :center
             :initform (v3:make 0.0 0.0 0.0))))
 
-(defclass boundary-cube (region)
+(defclass region-cuboid (region)
   ((%minx :accessor minx
           :initarg :minx
           :initform 0)
@@ -108,8 +108,8 @@
           :initarg :maxz
           :initform 0)))
 
-(defun make-boundary-cube (center minx maxx miny maxy minz maxz)
-  (make-instance 'boundary-cube
+(defun make-region-cuboid (center minx maxx miny maxy minz maxz)
+  (make-instance 'region-cuboid
                  :center center
                  :minx minx :maxx maxx
                  :miny miny :maxy maxy
@@ -119,15 +119,15 @@
 ;; Utility functions some will go into FL in a future date.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun clip-movement-vector (movement-vector current-translation boundary-cube)
+(defun clip-movement-vector (movement-vector current-translation region-cuboid)
   "Clip the MOVEMENT-VECTOR by an amount that will cause it to not violate the
-BOUNDARY-CUBE when MOVEMENT-VECTOR is added to the CURRENT-TRANSLATION.
+REGION-CUBOID when MOVEMENT-VECTOR is added to the CURRENT-TRANSLATION.
 Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
   (with-accessors ((center center)
                    (minx minx) (maxx maxx) (miny miny) (maxy maxy)
                    (minz minz) (maxz maxz))
-      boundary-cube
+      region-cuboid
     (v3:with-components ((c current-translation)
                          (m movement-vector))
       ;; add the movement-vector to the current-translation
@@ -212,7 +212,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    ;; We just hack in a boundary cube you can't go outside of. This is in the
    ;; local space of the actor to which this component is attached.
    ;; The format is minx, maxx, miny, maxy, minz, maxz
-   (boundary-cube :default (make-boundary-cube (v3:make 0.0 0.0 0.0)
+   (region-cuboid :default (make-region-cuboid (v3:make 0.0 0.0 0.0)
                                                -900 900 -500 500 0 0))))
 
 ;; upon attaching, this component will store find the transform component
@@ -228,7 +228,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (max-velocity max-velocity)
                    (translate-deadzone translate-deadzone)
                    (rotate-deadzone rotate-deadzone)
-                   (boundary-cube boundary-cube))
+                   (region-cuboid region-cuboid))
       self
     (au:mvlet* ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
                                                     '(:gamepad1 :left-stick)))
@@ -249,7 +249,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
              (current-translation
                ;; TODO NOTE: Prolly should fix these to be external.
                (fl.comp::current (fl.comp::translation transform)))
-             (vec (clip-movement-vector vec current-translation boundary-cube)))
+             (vec (clip-movement-vector vec current-translation region-cuboid)))
 
         (fl.comp:translate transform vec))
 
