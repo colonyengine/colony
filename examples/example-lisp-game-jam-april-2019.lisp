@@ -781,7 +781,11 @@ return the lives-remaining after the life has been consumed."
 ;; ;;;;;;;;;
 
 (fl:define-component tags ()
-  ((tags :default nil))
+  (;; TODO: Technically, this is for initialization only.  I should rename it.
+   ;; Also the tags only are present if this component is attached to something.
+   ;; So, when looking for "does this component have this tag" I shouldn't just
+   ;; MEMBER it out of this list, cause that isn't the point.
+   (tags :default nil))
 
   (;; In this shared storage, we keep an association between a tag and the actor
    ;; set which uses it, and form each actor to the tag set it has. This allows
@@ -839,6 +843,7 @@ return the lives-remaining after the life has been consumed."
           (remhash tag tag->actors))))))
 
 (defmethod tags-has-tag-p ((self tags) query-tag)
+  "Return T if the SELF tags component contains the QUERY-TAG."
   (with-accessors ((context fl:context)
                    (actor fl:actor))
       self
@@ -847,6 +852,8 @@ return the lives-remaining after the life has been consumed."
       (au:href actor->tags actor query-tag))))
 
 (defmethod tags-has-tag-p ((self fl:actor) query-tag)
+  "Return T if there is a tags component on the SELF actor and it also
+contains the QUERY-TAG."
   (au:when-let ((tags-component (fl:actor-component-by-type self 'tags)))
     (tags-has-tag-p tags-component query-tag)))
 
