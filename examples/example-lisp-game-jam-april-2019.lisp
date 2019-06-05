@@ -772,6 +772,102 @@ return the lives-remaining after the life has been consumed."
     (make-mockette player-stable (1- lives-remaining))))
 
 ;; ;;;;;;;;;
+;; Component: Tags (candidate component for core FL)
+;;
+;; This component is a registration system for tag symbols that we can insert
+;; into this component. This allows us to locate all actors with a certain tag,
+;; or query if an actor currently has a certain tag.
+;;
+;; ;;;;;;;;;
+
+(fl:define-component tags ()
+  ((tags :default nil))
+
+  (;; In this shared storage, we keep an association between a tag and the actor
+   ;; set which uses it, and form each actor to the tag set it has. This allows
+   ;; extremely fast lookups in either direction.
+   (:db eq)))
+
+(defun tags-refs (self)
+  (with-accessors ((context fl:context)) self
+    ;; Create the DB if not present.
+    (fl:with-shared-storage
+        (context context)
+        ((tag->actors tag->actors/present-p ('tags :db :tag->actors)
+                      ;; key: tag, Value: hash table of actor -> actor
+                      (au:dict #'eq))
+         (actor->tags actor->tags/present-p ('tags :db :actor->tags)
+                      ;; Key: actor, Value: hash table of tag -> tag
+                      (au:dict #'eq)))
+
+      (values tag->actors actor->tags))))
+
+(defmethod fl:on-component-initialize ((self tags))
+  ;; Seed the shared storage cache.
+  (tags-refs self))
+
+(defun tags-add (self &rest adding-tags)
+  (with-accessors ((context fl:context)
+                   (actor fl:actor))
+      self
+    (au:mvlet ((tag->actors actor->tags (tags-refs self)))
+      (dolist (tag adding-tags)
+        ;; Add a tag -> actor set link
+        (unless (au:href tag->actors tag)
+          (setf (au:href tag->actors tag) (au:dict #'eq)))
+        (setf (au:href tag->actors tag actor) actor)
+
+        ;; Add an actor -> tag set link
+        (unless (au:href actor->tags actor)
+          (setf (au:href actor->tags actor) (au:dict #'eq)))
+        (setf (au:href actor->tags actor tag) tag)))))
+
+(defun tags-remove (self &rest removing-tags)
+  (with-accessors ((context fl:context)
+                   (actor fl:actor))
+      self
+    (au:mvlet ((tag->actors actor->tags (tags-refs self)))
+      (dolist (tag removing-tags)
+        ;; Remove the tag -> actor set link
+        (remhash tag (au:href actor->tags actor))
+        (when (zerop (hash-table-count (au:href actor->tags actor)))
+          (remhash actor actor->tags))
+
+        ;; Remove the actor -> tag set link
+        (remhash actor (au:href tag->actors tag))
+        (when (zerop (hash-table-count (au:href tag->actors tag)))
+          (remhash tag tag->actors))))))
+
+(defmethod tags-has-tag-p ((self tags) query-tag)
+  (with-accessors ((context fl:context)
+                   (actor fl:actor))
+      self
+    (au:mvlet ((tag->actors actor->tags (tags-refs self)))
+      (declare (ignore tag->actors))
+      (au:href actor->tags actor query-tag))))
+
+(defmethod tags-has-tag-p ((self fl:actor) query-tag)
+  (au:when-let ((tags-component (fl:actor-component-by-type self 'tags)))
+    (tags-has-tag-p tags-component query-tag)))
+
+(defmethod fl:on-component-attach ((self tags) actor)
+  (with-accessors ((context fl:context)
+                   (actor fl:actor)
+                   (tags tags))
+      self
+    (dolist (tag tags)
+      (tags-add self tag))))
+
+(defmethod fl:on-component-detach ((self tags) actor)
+  ;; NOTE: all components are detached before they are destroyed.
+  (with-accessors ((context fl:context)
+                   (actor fl:actor)
+                   (tags tags))
+      self
+    (dolist (tag tags)
+      (tags-remove self tag))))
+
+;; ;;;;;;;;;
 ;; Component: planet
 ;;
 ;; Handles hit point management of the planet, plus animations/behavior when it
@@ -808,8 +904,82 @@ return the lives-remaining after the life has been consumed."
    ;; Which level are we playing?
    (current-level :default 0)
    ;; This is where the current level is instanced and stored as a child
-   (level-holder :default NIL)))
+   (level-holder :default NIL)
+   ;; When we instantiate a player, this is the place it goes.
+   (current-player-holder :default NIL)))
 
+(defmethod fl:on-component-update ((self director))
+  (with-accessors ((current-game-state current-game-state)
+                   (levels levels)
+                   (demo-level demo-level)
+                   (current-level current-level)
+                   (level-holder level-holder)
+                   (current-player-holder current-player-holder))
+      self
+    (setf current-game-state
+          (process-director-state self current-game-state))))
+
+;; each method returns the new state it should do for the next update.
+(defgeneric process-director-state (director state))
+
+(defmethod process-director-state ((self director)
+                                   (state (eql :waiting-to-play)))
+  (declare (ignore state))
+  (with-accessors ((current-game-state current-game-state)
+                   (levels levels)
+                   (demo-level demo-level)
+                   (current-level current-level)
+                   (level-holder level-holder)
+                   (current-player-holder current-player-holder))
+      self
+    ;; 1. Spawn the demo-level
+    ;; 2. Flash "Press Start to Play" sign
+    ;; 3. Listen for Start button.
+    ;; 4. When start button is pressed, destroy the level
+    ;; and transition to :playing state.
+    :waiting-to-play))
+
+(defmethod process-director-state ((self director)
+                                   (state (eql :playing)))
+  (declare (ignore state))
+  (with-accessors ((current-game-state current-game-state)
+                   (levels levels)
+                   (demo-level demo-level)
+                   (current-level current-level)
+                   (level-holder level-holder)
+                   (current-player-holder current-player-holder))
+      self
+    ;; TODO: Not done yet.
+    ;; 1. If the current-level is not loaded, load it.
+    ;; 2. load a new player if need be and start asteroid field,
+    ;; if no new player available, goto 4.
+    ;; 3. if player is dead, goto 2
+    ;; 4. player has used all lives, transition to :game-over.
+    :playing))
+
+(defmethod process-director-state ((self director)
+                                   (state (eql :game-over)))
+  (declare (ignore state))
+  (with-accessors ((current-game-state current-game-state)
+                   (levels levels)
+                   (demo-level demo-level)
+                   (current-level current-level)
+                   (level-holder level-holder)
+                   (current-player-holder current-player-holder))
+      self
+    :game-over))
+
+(defmethod process-director-state ((self director)
+                                   (state (eql :initials-entry)))
+  (declare (ignore state))
+  (with-accessors ((current-game-state current-game-state)
+                   (levels levels)
+                   (demo-level demo-level)
+                   (current-level current-level)
+                   (level-holder level-holder)
+                   (current-player-holder current-player-holder))
+      self
+    :initials-entry))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -979,6 +1149,7 @@ return the lives-remaining after the life has been consumed."
 sequencing."
   (fl.comp:transform :scale (v3:one))
   (director :level-holder (fl:ref "/protect-the-planets/active-level"))
+  (tags :tags '(:one :two :three))
 
   #++(("WARNING" :copy ("/warning-wave-sign" :from lgj-04/2019))
       (fl.comp:transform :translate (v3:make 0 0 10)
@@ -991,7 +1162,9 @@ sequencing."
   ;; make reference so we know where to get players when they die/1up
   (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make -900 550 -10)))
+
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
+
   (("current-level" :copy ("/level-0" :from lgj-04/2019))))
 
 
