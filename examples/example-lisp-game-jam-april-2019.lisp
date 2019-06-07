@@ -792,6 +792,8 @@ return the lives-remaining after the life has been consumed."
    ;; extremely fast lookups in either direction.
    (:db eq)))
 
+;; TODO: Fixme to only take a context since we're looking into shared-storage
+;; and we don't specifically need a concrete tags instance here.
 (defun tags-refs (self)
   (with-accessors ((context fl:context)) self
     ;; Create the DB if not present.
@@ -810,7 +812,11 @@ return the lives-remaining after the life has been consumed."
   ;; Seed the shared storage cache.
   (tags-refs self))
 
-(defun tags-add (self &rest adding-tags)
+;; TODO: Make API %tags-add, %tags-remove lower level layer, and the higher
+;; level layer adds/deletes from the tags list in the component too.
+
+(defun %tags-add (self &rest adding-tags)
+  "An internal function in the TAGS component, not for public use."
   (with-accessors ((context fl:context)
                    (actor fl:actor))
       self
@@ -826,7 +832,16 @@ return the lives-remaining after the life has been consumed."
           (setf (au:href actor->tags actor) (au:dict #'eq)))
         (setf (au:href actor->tags actor tag) tag)))))
 
-(defun tags-remove (self &rest removing-tags)
+(defun tags-add (self &rest tags)
+  "Uniquely add a set of TAGS to the current tags in the SELF instance which
+must be a TAGS component."
+  (dolist (tag tags)
+    (pushnew tag (tags self)))
+  (apply #'%tags-add tags))
+
+
+(defun %tags-remove (self &rest removing-tags)
+  "An internal function in the TAGS component, not for public use."
   (with-accessors ((context fl:context)
                    (actor fl:actor))
       self
@@ -841,6 +856,13 @@ return the lives-remaining after the life has been consumed."
         (remhash actor (au:href tag->actors tag))
         (when (zerop (hash-table-count (au:href tag->actors tag)))
           (remhash tag tag->actors))))))
+
+(defun tags-remove (self &rest tags)
+  "Remove all specified tags from the set of TAGS from the current tags in the
+SELF instance which must be a TAGS component."
+  (dolist (tag tags)
+    (setf (tags self) (remove tag (tags self))))
+  (apply #'%tags-remove tags))
 
 (defmethod tags-has-tag-p ((self tags) query-tag)
   "Return T if the SELF tags component contains the QUERY-TAG."
@@ -857,13 +879,19 @@ contains the QUERY-TAG."
   (au:when-let ((tags-component (fl:actor-component-by-type self 'tags)))
     (tags-has-tag-p tags-component query-tag)))
 
+(defun tags-find-actors-with-tag (self query-tag)
+  (au:mvlet ((tag->actors actor->tags (tags-refs self)))
+    (declare (ignore actor->tags))
+    (au:when-let ((actors (au:href tag->actors query-tag)))
+      (au:hash-keys actors))))
+
 (defmethod fl:on-component-attach ((self tags) actor)
   (with-accessors ((context fl:context)
                    (actor fl:actor)
                    (tags tags))
       self
     (dolist (tag tags)
-      (tags-add self tag))))
+      (%tags-add self tag))))
 
 (defmethod fl:on-component-detach ((self tags) actor)
   ;; NOTE: all components are detached before they are destroyed.
@@ -872,7 +900,7 @@ contains the QUERY-TAG."
                    (tags tags))
       self
     (dolist (tag tags)
-      (tags-remove self tag))))
+      (%tags-remove self tag))))
 
 ;; ;;;;;;;;;
 ;; Component: planet
