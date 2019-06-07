@@ -792,35 +792,33 @@ return the lives-remaining after the life has been consumed."
    ;; extremely fast lookups in either direction.
    (:db eq)))
 
-;; TODO: Fixme to only take a context since we're looking into shared-storage
-;; and we don't specifically need a concrete tags instance here.
-(defun tags-refs (self)
-  (with-accessors ((context fl:context)) self
-    ;; Create the DB if not present.
-    (fl:with-shared-storage
-        (context context)
-        ((tag->actors tag->actors/present-p ('tags :db :tag->actors)
-                      ;; key: tag, Value: hash table of actor -> actor
-                      (au:dict #'eq))
-         (actor->tags actor->tags/present-p ('tags :db :actor->tags)
-                      ;; Key: actor, Value: hash table of tag -> tag
-                      (au:dict #'eq)))
+;; private API (probably)
+(defun tags-refs (context)
+  ;; Create the DB if not present.
+  (fl:with-shared-storage
+      (context context)
+      ((tag->actors tag->actors/present-p ('tags :db :tag->actors)
+                    ;; key: tag, Value: hash table of actor -> actor
+                    (au:dict #'eq))
+       (actor->tags actor->tags/present-p ('tags :db :actor->tags)
+                    ;; Key: actor, Value: hash table of tag -> tag
+                    (au:dict #'eq)))
 
-      (values tag->actors actor->tags))))
+    (values tag->actors actor->tags)))
 
 (defmethod fl:on-component-initialize ((self tags))
   ;; Seed the shared storage cache.
-  (tags-refs self))
+  ;; We're modifying the tags list, so copy-seq it to ensure it isn't a quoted
+  ;; list.
+  (setf (tags self) (copy-seq (tags self)))
+  (tags-refs (fl:context self)))
 
-;; TODO: Make API %tags-add, %tags-remove lower level layer, and the higher
-;; level layer adds/deletes from the tags list in the component too.
-
+;; private API
 (defun %tags-add (self &rest adding-tags)
-  "An internal function in the TAGS component, not for public use."
   (with-accessors ((context fl:context)
                    (actor fl:actor))
       self
-    (au:mvlet ((tag->actors actor->tags (tags-refs self)))
+    (au:mvlet ((tag->actors actor->tags (tags-refs context)))
       (dolist (tag adding-tags)
         ;; Add a tag -> actor set link
         (unless (au:href tag->actors tag)
@@ -832,6 +830,7 @@ return the lives-remaining after the life has been consumed."
           (setf (au:href actor->tags actor) (au:dict #'eq)))
         (setf (au:href actor->tags actor tag) tag)))))
 
+;; public API
 (defun tags-add (self &rest tags)
   "Uniquely add a set of TAGS to the current tags in the SELF instance which
 must be a TAGS component."
@@ -839,13 +838,12 @@ must be a TAGS component."
     (pushnew tag (tags self)))
   (apply #'%tags-add tags))
 
-
+;; private API
 (defun %tags-remove (self &rest removing-tags)
-  "An internal function in the TAGS component, not for public use."
   (with-accessors ((context fl:context)
                    (actor fl:actor))
       self
-    (au:mvlet ((tag->actors actor->tags (tags-refs self)))
+    (au:mvlet ((tag->actors actor->tags (tags-refs context)))
       (dolist (tag removing-tags)
         ;; Remove the tag -> actor set link
         (remhash tag (au:href actor->tags actor))
@@ -857,6 +855,7 @@ must be a TAGS component."
         (when (zerop (hash-table-count (au:href tag->actors tag)))
           (remhash tag tag->actors))))))
 
+;; public API
 (defun tags-remove (self &rest tags)
   "Remove all specified tags from the set of TAGS from the current tags in the
 SELF instance which must be a TAGS component."
@@ -864,23 +863,28 @@ SELF instance which must be a TAGS component."
     (setf (tags self) (remove tag (tags self))))
   (apply #'%tags-remove tags))
 
+;; public API
 (defmethod tags-has-tag-p ((self tags) query-tag)
   "Return T if the SELF tags component contains the QUERY-TAG."
   (with-accessors ((context fl:context)
                    (actor fl:actor))
       self
-    (au:mvlet ((tag->actors actor->tags (tags-refs self)))
+    (au:mvlet ((tag->actors actor->tags (tags-refs context)))
       (declare (ignore tag->actors))
       (au:href actor->tags actor query-tag))))
 
+;; public API
 (defmethod tags-has-tag-p ((self fl:actor) query-tag)
   "Return T if there is a tags component on the SELF actor and it also
 contains the QUERY-TAG."
   (au:when-let ((tags-component (fl:actor-component-by-type self 'tags)))
     (tags-has-tag-p tags-component query-tag)))
 
-(defun tags-find-actors-with-tag (self query-tag)
-  (au:mvlet ((tag->actors actor->tags (tags-refs self)))
+;; public API
+(defun tags-find-actors-with-tag (context query-tag)
+  "Return a list of actors that are tagged with the QUERY-TAG. Return
+NIL if no such list exists."
+  (au:mvlet ((tag->actors actor->tags (tags-refs context)))
     (declare (ignore actor->tags))
     (au:when-let ((actors (au:href tag->actors query-tag)))
       (au:hash-keys actors))))
@@ -940,6 +944,8 @@ contains the QUERY-TAG."
    (current-level :default 0)
    ;; This is where the current level is instanced and stored as a child
    (level-holder :default NIL)
+   ;; The stable from which we know we can get another player.
+   (player-1-stable :default nil)
    ;; When we instantiate a player, this is the place it goes.
    (current-player-holder :default NIL)))
 
@@ -972,25 +978,46 @@ contains the QUERY-TAG."
     ;; 3. Listen for Start button.
     ;; 4. When start button is pressed, destroy the level
     ;; and transition to :playing state.
-    :waiting-to-play))
+
+    ;; TOOD: For now, skip this and transition directly to :playing.
+    :playing))
 
 (defmethod process-director-state ((self director)
                                    (state (eql :playing)))
   (declare (ignore state))
-  (with-accessors ((current-game-state current-game-state)
+  (with-accessors ((context fl:context)
+                   (current-game-state current-game-state)
                    (levels levels)
                    (demo-level demo-level)
                    (current-level current-level)
                    (level-holder level-holder)
+                   (player-1-stable player-1-stable)
                    (current-player-holder current-player-holder))
       self
     ;; TODO: Not done yet.
     ;; 1. If the current-level is not loaded, load it.
-    ;; 2. load a new player if need be and start asteroid field,
-    ;; if no new player available, goto 4.
-    ;; 3. if player is dead, goto 2
-    ;; 4. player has used all lives, transition to :game-over.
-    :playing))
+
+    ;; 2. load a new player if need be
+    (let ((player-alive-p (tags-find-actors-with-tag context :player)))
+      (if (not player-alive-p)
+          ;; Ask the player-stable to see if I can get a new player.
+          (let ((player-life (consume-life player-1-stable)))
+            (cond
+              (player-life
+               ;; TODO instantiate a new player and put it in the right
+               ;; spot.
+               (let ((new-player-instance
+                       (first (fl:make-prefab-instance
+                               (%fl::core context)
+                               '(("player-ship" lgj-04/2019))
+                               :parent current-player-holder))))
+                 (format t "Created new player: ~S~%" new-player-instance))
+               :playing)
+              (t
+               ;; No new players, game over!
+               :game-over)))
+
+          :playing))))
 
 (defmethod process-director-state ((self director)
                                    (state (eql :game-over)))
@@ -1047,6 +1074,7 @@ contains the QUERY-TAG."
 
 (fl:define-prefab "player-ship" (:library lgj-04/2019)
   "The venerable Player Ship. Controls how it looks, collides, and movement."
+  (tags :tags '(:player))
   (explosion :name "explode01-01" :frames 15)
   (damage-points :dp 1)
   (hit-points :hp 1)
@@ -1074,6 +1102,7 @@ contains the QUERY-TAG."
     (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
                                          :duration 0.5
                                          :repeat-p t))))))
+
 
 (fl:define-prefab "player-ship-mockette" (:library lgj-04/2019)
   "An image of the ship, but no colliders or guns."
@@ -1183,8 +1212,14 @@ contains the QUERY-TAG."
   "The top most level prefab which has the component which drives the game
 sequencing."
   (fl.comp:transform :scale (v3:one))
-  (director :level-holder (fl:ref "/protect-the-planets/active-level"))
-  (tags :tags '(:one :two :three))
+  (director :level-holder (fl:ref "/protect-the-planets/active-level")
+            :player-1-stable (fl:ref "/protect-the-planets/player-1-stable"
+                                     :component 'player-stable))
+
+  ;; The component that controls how many players we have left and how to
+  ;; visualize that.
+  (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
+   (fl.comp:transform :translate (v3:make -900 550 -10)))
 
   #++(("WARNING" :copy ("/warning-wave-sign" :from lgj-04/2019))
       (fl.comp:transform :translate (v3:make 0 0 10)
@@ -1192,13 +1227,11 @@ sequencing."
 
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (v3:make 0 0 500)))
+
   ("active-level")
 
-  ;; make reference so we know where to get players when they die/1up
-  (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make -900 550 -10)))
 
-  (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
+  #++(("player-ship" :link ("/player-ship" :from lgj-04/2019)))
 
   (("current-level" :copy ("/level-0" :from lgj-04/2019))))
 
