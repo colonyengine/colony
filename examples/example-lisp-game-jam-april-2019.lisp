@@ -330,13 +330,30 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;;;;;;;;;
 
 (fl:define-component hit-points ()
-  ((hp :default 1)))
+  ((hp :default 1)
+   (invulnerability-timer :default 0)))
+
+(defmethod fl:on-component-update ((self hit-points))
+  (with-accessors ((context fl:context)
+                   (invulnerability-timer invulnerability-timer))
+      self
+    (when (> invulnerability-timer 0)
+      (decf invulnerability-timer (fl:frame-time context))
+      (when (<= invulnerability-timer 0)
+        (setf invulnerability-timer 0)))))
 
 (defmethod fl:on-collision-enter ((self hit-points) other-collider)
-  (with-accessors ((context fl:context)) self
+  (with-accessors ((context fl:context)
+                   (invulnerability-timer invulnerability-timer))
+      self
     (let ((other-damage-points (fl:actor-component-by-type
                                 (fl:actor other-collider)
                                 'damage-points)))
+
+      (when (> invulnerability-timer 0)
+        ;; If we're invulnerable, we cannot take damage.
+        (return-from fl:on-collision-enter nil))
+
       (cond
         (other-damage-points
          (decf (hp self) (dp other-damage-points)))
@@ -1004,15 +1021,15 @@ NIL if no such list exists."
           (let ((player-life (consume-life player-1-stable)))
             (cond
               (player-life
-               ;; TODO instantiate a new player and put it in the right
-               ;; spot.
                (let ((new-player-instance
                        (first (fl:make-prefab-instance
                                (%fl::core context)
                                '(("player-ship" lgj-04/2019))
                                :parent current-player-holder))))
-                 (format t "Created new player: ~S~%" new-player-instance))
-               :playing)
+                 ;; TODO: we don't use new-player-instance yet. If it looks
+                 ;; like I don't need to, then remove this binding.
+                 (declare (ignore new-player-instance))
+                 :playing))
               (t
                ;; No new players, game over!
                :game-over)))
@@ -1077,7 +1094,10 @@ NIL if no such list exists."
   (tags :tags '(:player))
   (explosion :name "explode01-01" :frames 15)
   (damage-points :dp 1)
-  (hit-points :hp 1)
+  (hit-points :hp 1
+              ;; When the player is born, they are automatically invulnerable
+              ;; for 1 second.
+              :invulnerability-timer 1)
   (player-movement)
   (fl.comp:collider/sphere :center (v3:zero)
                            :on-layer :player
