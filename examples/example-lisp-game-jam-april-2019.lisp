@@ -277,11 +277,11 @@ entire sequence of right to left applied axis/angle rotations."
 
 This function does the same thing as ORIENT<- except the AXIS/ANGLES are applied
 in LEFT to RIGHT ordering."
-  (orient<-
-   (au:flatten
-    (nreverse
-     (loop :for (axis angle) :on axis/angles :by #'cddr
-           :collect (list axis angle))))))
+  (apply #'orient<-
+	 (au:flatten
+	  (nreverse
+	   (loop :for (axis angle) :on axis/angles :by #'cddr
+		 :collect (list axis angle))))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
