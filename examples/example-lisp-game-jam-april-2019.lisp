@@ -192,7 +192,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
         (v3:make roll pitch yaw)))))
 
-(defun orient<- (&rest axis/angles)
+(defun orient<- (style &rest axis/angles)
   "Compute a RIGHT TO LEFT composite rotation of the plist of AXIS/ANGLE
 specifications.
 
@@ -266,22 +266,27 @@ entire sequence of right to left applied axis/angle rotations."
               ;; the multiplications. But, since we're keeping the ultimate
               ;; order of the applications the same as the argument order, the
               ;; final rotation applies right to left.
-              (q:*! total-quat-rotation total-quat-rotation current-quat)
+              (ecase style
+                (:local
+                  (q:*! total-quat-rotation current-quat total-quat-rotation))
+                (:world
+                 (q:*! total-quat-rotation total-quat-rotation current-quat)))
               ;; And ensure it is normalizes for the next concatenation....
               (q:normalize! total-quat-rotation total-quat-rotation))
 
     total-quat-rotation))
 
-(defun orient-> (&rest axis/angles)
+(defun orient-> (style &rest axis/angles)
   "The ORIENT<- function is preferred over this one.
 
 This function does the same thing as ORIENT<- except the AXIS/ANGLES are applied
 in LEFT to RIGHT ordering."
   (apply #'orient<-
-	 (au:flatten
-	  (nreverse
-	   (loop :for (axis angle) :on axis/angles :by #'cddr
-		 :collect (list axis angle))))))
+         style
+         (au:flatten
+          (nreverse
+           (loop :for (axis angle) :on axis/angles :by #'cddr
+                 :collect (list axis angle))))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
