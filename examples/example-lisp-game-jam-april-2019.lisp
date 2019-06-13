@@ -192,6 +192,97 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
         (v3:make roll pitch yaw)))))
 
+(defun orient<- (&rest axis/angles)
+  "Compute a RIGHT TO LEFT composite rotation of the plist of AXIS/ANGLE
+specifications.
+
+AXIS/ANGLES is a p-list of AXIS and ANGLE values repeating after one another.
+
+An AXIS can be :X, :Y, :Z, or a v3 representing the axis of rotation.
+
+ANGLE is a number in radians.
+
+Together an AXIS/ANGLE combination represents a rotation of an angle around an
+axis.
+
+An example call: (orient<- :x (/ pi 4) (v3:make 1.0 1.0 1.0) (/ pi 2) :y pi)
+Which means:
+  Build a quaternion that represents the final state of:
+    First, rotate pi around the Y axis first,
+    Second, rotate (/ pi 2) around the #(1.0 1.0 1.0) axis,
+    Third, rotate (/ pi 4) around the :X axis.
+
+The returned value is a single quaternion representing the final state of the
+entire sequence of right to left applied axis/angle rotations."
+
+  (let ((total-quat-rotation (q:id))
+        (rotation-axis (v3:make 0.0 0.0 0.0))
+        (current-quat (q:id)))
+
+    ;; TODO: Fix to handle destructuring errors or other types of errors.
+    (loop :for (axis angle) :on axis/angles :by #'cddr
+          :do (v3:with-components ((v rotation-axis))
+                (case axis
+                  (:x
+                   (psetf vx 1.0
+                          vy 0.0
+                          vz 0.0))
+                  (:y
+                   (psetf vx 0.0
+                          vy 1.0
+                          vz 0.0))
+                  (:z
+                   (psetf vx 0.0
+                          vy 0.0
+                          vz 1.0))
+                  (otherwise
+                   ;; TODO: Typecheck, or otherwise try and figure out quickly,
+                   ;; that we passed in a v3 representing the axis itself.
+                   (v3:with-components ((a axis))
+                     (psetf vx ax
+                            vy ay
+                            vz az))))
+
+                ;; We rotate around the UNIT axis vector!
+                (v3:normalize! rotation-axis rotation-axis)
+
+                ;; Make the individual quaternion rotation to represent the
+                ;; axis/angle representation.
+                ;; TODO: Why is this not in the quaternion API?
+                (q:with-components ((c current-quat))
+                  (let* ((angle/2 (/ angle 2.0))
+                         (ca2 (float (cos angle/2) 1f0))
+                         (sa2 (float (sin angle/2) 1f0)))
+                    (psetf cw ca2
+                           cx (* vx sa2)
+                           cy (* vy sa2)
+                           cz (* vz sa2)))))
+
+              ;; Then update the accumulating rotation carefully minding the
+              ;; multiplication order to ensure the final rotation we compute
+              ;; applies in _right to left_ order. NOTE: That means the order
+              ;; for this multiply should be total <- total * current because
+              ;; we're using a reduction like pass to _associate_ left to right
+              ;; the multiplications. But, since we're keeping the ultimate
+              ;; order of the applications the same as the argument order, the
+              ;; final rotation applies right to left.
+              (q:*! total-quat-rotation total-quat-rotation current-quat)
+              ;; And ensure it is normalizes for the next concatenation....
+              (q:normalize! total-quat-rotation total-quat-rotation))
+
+    total-quat-rotation))
+
+(defun orient-> (&rest axis/angles)
+  "The ORIENT<- function is preferred over this one.
+
+This function does the same thing as ORIENT<- except the AXIS/ANGLES are applied
+in LEFT to RIGHT ordering."
+  (orient<-
+   (au:flatten
+    (nreverse
+     (loop :for (axis angle) :on axis/angles :by #'cddr
+           :collect (list axis angle))))))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
