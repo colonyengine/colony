@@ -192,101 +192,155 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
         (v3:make roll pitch yaw)))))
 
-(defun orient<- (style &rest axis/angles)
-  "Compute a RIGHT TO LEFT composite rotation of the plist of AXIS/ANGLE
-specifications.
+;; TODO: Request to put into vec3 package, make one for vec2, and vec4 too.
+(defmacro raw-dot (lx ly lz rx ry rz)
+  "Return a scalar value that is the dot product of the left vector and the
+right vector."
+  `(cl:+ (cl:* ,lx ,rx) (cl:* ,ly ,ry) (cl:* ,lz ,rz)))
+
+;; TODO: Request to put into quaternion package, we need this like 5 other
+;; places too.
+(defmacro raw-quaternion-multiply (ow ox oy oz lqw lqx lqy lqz rqw rqx rqy rqz)
+  ;; TODO: Figure out of I did a once only, how does the assembly look and
+  ;; will it add any additional instructions. If so, keep it like it is.
+  "Return a quaternion multiplication form to psetf OW OX OY OZ with the
+result of the multiplication of a left quaternion, represented as
+LQW LQX LQY LQZ, with a right quaternion, represented as RQW RQX RQY RQZ.
+This exapnsion does NOT perform once only bindings of the input forms
+in the interest of speed. So, if you need that you must do it before the
+macro is expanded."
+  `(psetf ,ow (cl:- (cl:* ,lqw ,rqw) (cl:* ,lqx ,rqx) (cl:* ,lqy ,rqy)
+                    (cl:* ,lqz ,rqz))
+          ,ox (cl:- (cl:+ (cl:* ,lqw ,rqx) (cl:* ,lqx ,rqw) (cl:* ,lqy ,rqz))
+                    (cl:* ,lqz ,rqy))
+          ,oy (cl:- (cl:+ (cl:* ,lqw ,rqy) (cl:* ,lqy ,rqw) (cl:* ,lqz ,rqx))
+                    (cl:* ,lqx ,rqz))
+          ,oz (cl:- (cl:+ (cl:* ,lqw ,rqz) (cl:* ,lqz ,rqw) (cl:* ,lqx ,rqy))
+                    (cl:* ,lqy ,rqx))))
+
+;; TODO: Request to put this into the quaternion package.
+(defun orient<-! (out style &rest axis/angles)
+  "Compute a RIGHT to LEFT composite rotation of the plist of AXIS/ANGLE
+specifications. RIGHT to LEFT means the right most AXIS/ANGLE in the AXIS/ANGLES
+argument list is the first rotation applied, and so on, going leftwards. This is
+the notation most commonly used when performing quaternion transforms on paper,
+and we replicate it here.
+
+OUT is a destructively modified quaternion representing the final state of all
+specified rotations. This quaternion rotsation does not suffer from gimbal lock
+no matter what the rotations were that created it.
+
+STYLE is wither :WORLD or :LOCAL.
+ :WORLD means that each rotation should act as if it is around the axis
+specified in world space.
+ :LOCAL means that each rotation rotates around the specified axis after that
+axis had been rotated by the previous rotation. The initial previous rotation
+is identity.
 
 AXIS/ANGLES is a p-list of AXIS and ANGLE values repeating after one another.
 
-An AXIS can be :X, :Y, :Z, or a v3 representing the axis of rotation.
+An AXIS can be :X, :Y, :Z, or a v3 vector representing the axis of rotation.
+A supplied v3 vector does not have to be normalized.
 
-ANGLE is a number in radians.
+ANGLE is a single-float in radians.
 
 Together an AXIS/ANGLE combination represents a rotation of an angle around an
 axis.
 
-An example call: (orient<- :x (/ pi 4) (v3:make 1.0 1.0 1.0) (/ pi 2) :y pi)
-Which means:
+An example call:
+
+  (orient<-! out :world :x (/ pi 4) (v3:make 1.0 1.0 1.0) (/ pi 2) :y pi)
+
+means:
   Build a quaternion that represents the final state of:
-    First, rotate pi around the Y axis first,
-    Second, rotate (/ pi 2) around the #(1.0 1.0 1.0) axis,
-    Third, rotate (/ pi 4) around the :X axis.
+    First, rotate pi around the world Y axis first,
+    Second, rotate (/ pi 2) around the world #(1.0 1.0 1.0) axis,
+    Third, rotate (/ pi 4) around the world X axis.
+    Lastly, destructively store the final quaternion into OUT.
+    The return value will be OUT.
+"
 
-The returned value is a single quaternion representing the final state of the
-entire sequence of right to left applied axis/angle rotations."
+  ;; NOTE: We use this raw method of the math to prevent any consing.
+  (let ((vx 0f0) ;; rotation axis vector as a vec3
+        (vy 0f0)
+        (vz 0f0)
+        (cw 1f0) ;; current axis/angle as a quaternion
+        (cx 0f0)
+        (cy 0f0)
+        (cz 0f0))
 
-  (let ((total-quat-rotation (q:id))
-        (rotation-axis (v3:make 0.0 0.0 0.0))
-        (current-quat (q:id)))
+    (q:id! out)
 
     ;; TODO: Fix to handle destructuring errors or other types of errors.
     (loop :for (axis angle) :on axis/angles :by #'cddr
-          :do (v3:with-components ((v rotation-axis))
-                (case axis
-                  (:x
-                   (psetf vx 1.0
-                          vy 0.0
-                          vz 0.0))
-                  (:y
-                   (psetf vx 0.0
-                          vy 1.0
-                          vz 0.0))
-                  (:z
-                   (psetf vx 0.0
-                          vy 0.0
-                          vz 1.0))
-                  (otherwise
-                   ;; TODO: Typecheck, or otherwise try and figure out quickly,
-                   ;; that we passed in a v3 representing the axis itself.
-                   (v3:with-components ((a axis))
-                     (psetf vx ax
-                            vy ay
-                            vz az))))
+          :do (case axis
+                ;; all the default axes are considered normalized already.
+                (:x
+                 (psetf vx 1.0
+                        vy 0.0
+                        vz 0.0))
+                (:y
+                 (psetf vx 0.0
+                        vy 1.0
+                        vz 0.0))
+                (:z
+                 (psetf vx 0.0
+                        vy 0.0
+                        vz 1.0))
+                (otherwise
+                 ;; TODO: Typecheck, or otherwise try and figure out quickly,
+                 ;; that we passed in a v3 representing the axis itself.
+                 (v3:with-components ((a axis))
+                   (psetf vx ax
+                          vy ay
+                          vz az))
+                 ;; Normalize the supplied axis vector.
+                 (let ((len (sqrt (raw-dot vx vy vz vx vy vz))))
+                   ;; TODO: In the event of an actual zero, this will be wildly
+                   ;; wrong. Prolly should look at it more.
+                   (unless (zerop len)
+                     (psetf vx (/ vx len)
+                            vy (/ vy len)
+                            vz (/ vz len))))))
 
-                ;; We rotate around the UNIT axis vector!
-                (v3:normalize! rotation-axis rotation-axis)
+              ;; Make the individual quaternion rotation to represent the
+              ;; axis/angle representation.
+              ;; TODO: Why is this generally not in the quaternion API?
+              ;; It should be.
+              (let* ((angle/2 (/ angle 2.0))
+                     (ca2 (float (cos angle/2) 1f0))
+                     (sa2 (float (sin angle/2) 1f0)))
+                (psetf cw ca2
+                       cx (* vx sa2)
+                       cy (* vy sa2)
+                       cz (* vz sa2)))
 
-                ;; Make the individual quaternion rotation to represent the
-                ;; axis/angle representation.
-                ;; TODO: Why is this not in the quaternion API?
-                (q:with-components ((c current-quat))
-                  (let* ((angle/2 (/ angle 2.0))
-                         (ca2 (float (cos angle/2) 1f0))
-                         (sa2 (float (sin angle/2) 1f0)))
-                    (psetf cw ca2
-                           cx (* vx sa2)
-                           cy (* vy sa2)
-                           cz (* vz sa2)))))
+              ;; Then accumulate the current rotation into the OUT variable.
+              ;; The order of multiplication indicates wether or not we're
+              ;; using local axis rotations, or world axis rotations.
+              ;; But notice we're _associating_ the arguments left to right,
+              ;; but we aren't changing their commutativity (wrt to style).
+              (q:with-components ((o out))
+                (ecase style
+                  (:local
+                    (raw-quaternion-multiply ow ox oy oz
+                                             cw cx cy cz
+                                             ow ox oy oz))
+                  (:world
+                   (raw-quaternion-multiply ow ox oy oz
+                                            ow ox oy oz
+                                            cw cx cy cz))))
 
-              ;; Then update the accumulating rotation carefully minding the
-              ;; multiplication order to ensure the final rotation we compute
-              ;; applies in _right to left_ order. NOTE: That means the order
-              ;; for this multiply should be total <- total * current because
-              ;; we're using a reduction like pass to _associate_ left to right
-              ;; the multiplications. But, since we're keeping the ultimate
-              ;; order of the applications the same as the argument order, the
-              ;; final rotation applies right to left.
-              (ecase style
-                (:local
-                  (q:*! total-quat-rotation current-quat total-quat-rotation))
-                (:world
-                 (q:*! total-quat-rotation total-quat-rotation current-quat)))
-              ;; And ensure it is normalizes for the next concatenation....
-              (q:normalize! total-quat-rotation total-quat-rotation))
+              ;; Ensure it is ready for the next accumulation.
+              (q:normalize! out out))
 
-    total-quat-rotation))
+    out))
 
-(defun orient-> (style &rest axis/angles)
-  "The ORIENT<- function is preferred over this one.
-
-This function does the same thing as ORIENT<- except the AXIS/ANGLES are applied
-in LEFT to RIGHT ordering."
-  (apply #'orient<-
-         style
-         (au:flatten
-          (nreverse
-           (loop :for (axis angle) :on axis/angles :by #'cddr
-                 :collect (list axis angle))))))
+;; TODO: Request to put this into the quaternion package.
+(defun orient<- (style &rest axis/angles)
+  "Please see the documentation string for the function ORIENT<-! to understand
+how to use this function."
+  (apply #'orient<-! (q:id) style axis/angles))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
