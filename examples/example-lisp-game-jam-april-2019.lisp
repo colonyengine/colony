@@ -1114,7 +1114,9 @@ NIL if no such list exists."
    ;; The stable from which we know we can get another player.
    (player-1-stable :default nil)
    ;; When we instantiate a player, this is the place it goes.
-   (current-player-holder :default NIL)))
+   (current-player-holder :default NIL)
+   ;; And a reference to the actual player instance
+   (current-player :default NIL)))
 
 (defmethod fl:on-component-update ((self director))
   (with-accessors ((current-game-state current-game-state)
@@ -1159,7 +1161,8 @@ NIL if no such list exists."
                    (current-level current-level)
                    (level-holder level-holder)
                    (player-1-stable player-1-stable)
-                   (current-player-holder current-player-holder))
+                   (current-player-holder current-player-holder)
+                   (current-player current-player))
       self
     ;; TODO: Not done yet.
     ;; 1. If the current-level is not loaded, load it.
@@ -1167,7 +1170,10 @@ NIL if no such list exists."
     ;; 2. load a new player if need be
     (let ((player-alive-p (tags-find-actors-with-tag context :player)))
       (if (not player-alive-p)
+          ;; The player is not present! Must have died.
           ;; Ask the player-stable to see if I can get a new player.
+          ;; NOTE: This happens IMMEDIATELY, I should prolly stick a timer
+          ;; in here somewhere.
           (let ((player-life (consume-life player-1-stable)))
             (cond
               (player-life
@@ -1176,10 +1182,56 @@ NIL if no such list exists."
                                (%fl::core context)
                                '(("player-ship" lgj-04/2019))
                                :parent current-player-holder))))
-                 ;; TODO: we don't use new-player-instance yet. If it looks
-                 ;; like I don't need to, then remove this binding.
-                 (declare (ignore new-player-instance))
-                 :playing))
+
+		 ;; TODO: BROKEN. The old ship, when it does, will have all of
+		 ;; the components detached and destroyed out of it, so
+		 ;; book keeping where the player was means the player-movement
+		 ;; has to have a ref to where it shoudl write its data.
+
+		 ;; ANOTHER option, which I should pick instead, is there is
+		 ;; only ever a single player object, and only the stable
+		 ;; decreases until the game is done. Then, I can just hide the
+		 ;; player for a bit and then "respawn it" from the point of
+		 ;; view of the player (when in reality, I just show the same
+		 ;; player instance again, with a reset to be a new life, and
+		 ;; then just decrease one from the player-stable.  I really
+		 ;; should do this, since it is must easier to manage.
+
+                 ;; TODO: Use the old player ref, which has died but we still
+                 ;; have a reference to, to update the position and rotation of
+                 ;; the newlay made ship to be the same where the first one
+                 ;; died.
+                 (when current-player
+                   (let* ((old-player-transform
+                            (fl:actor-component-by-type current-player
+                                                        'fl.comp:transform))
+                          (old-position
+                            (fl.comp::current
+                             (fl.comp::translation old-player-transform)))
+
+                          (old-rotation
+                            (fl.comp::current
+                             (fl.comp::rotation old-player-transform)))
+
+                          (new-transform
+                            (fl:actor-component-by-type new-player-instance
+                                                        'fl.comp:transform)))
+
+                     ;; Then make the new player instance start where the old
+                     ;; one died.
+                     (fl.comp:translate new-transform old-position
+                                        :replace-p t :instant-p t)
+                     (fl.comp:rotate new-transform
+                                     ;; TODO: When transform.lisp is fixed, get
+                                     ;; rid of this and just set the quat
+                                     ;; normally.
+                                     (quat->euler old-rotation)
+                                     :replace-p t :instant-p t)))
+
+                 ;; And then we store the NEW ref.
+                 (setf current-player new-player-instance))
+               :playing)
+
               (t
                ;; No new players, game over!
                :game-over)))
