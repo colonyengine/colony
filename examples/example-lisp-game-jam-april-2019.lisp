@@ -530,6 +530,7 @@ how to use this function."
             (make-explosion context
                             parent-translation
                             (quat->euler parent-rotation)
+                            (scale explosion)
                             :name (name explosion)
                             :frames (frames explosion))))))))
 
@@ -620,11 +621,12 @@ how to use this function."
 (fl:define-component explosion ()
   ((sprite :default nil)
    (name :default "explode01-01")
+   (scale :default (v3:make 1.0 1.0 1.0))
    (frames :default 15)))
 
 ;; NOTE: No physics layers for this since they don't even participate in the
 ;; collisions.
-(defun make-explosion (context translation rotation
+(defun make-explosion (context translation rotation scale
                        &key (destroy-ttl 2)
                          (prefab-name "generic-explosion")
                          (prefab-library 'lgj-04/2019)
@@ -644,6 +646,8 @@ how to use this function."
      (fl.comp::name (sprite explosion)) name
      (fl.comp::frames (sprite explosion)) frames)
 
+    (fl.comp:scale explosion-transform scale
+                   :instant-p t :replace-p t)
     (fl.comp:translate explosion-transform translation
                        :instant-p t :replace-p t)
     (fl.comp:rotate explosion-transform rotation
@@ -1093,13 +1097,38 @@ NIL if no such list exists."
 
 (fl:define-component director ()
   (;; The director manages the overall state the game is in, plus it
-   ;; micromanages the playing state to ensure fun ensues.
+   ;; micromanages the playing state to ensure fun ensues. Each state is
+   ;; non-blocking and manages a distinct state in which the game may be.
    ;;
    ;; state-machine:
-   ;; :waiting-to-play -> :playing -> :game-over -> :initials-entry
-   ;;    ^                                              |
-   ;;    |                                              |
-   ;;    +----------------------------------------------+
+   ;;
+   ;; <start>
+   ;;   |
+   ;;   v
+   ;; :waiting-to-play -> :quit
+   ;;   |
+   ;;   v
+   ;; :level-spawn
+   ;;   |
+   ;;   v
+   ;; :player-spawn -> :game-over
+   ;;   |
+   ;;   v
+   ;; :playing -> :player-spawn | :end-of-level | :quit
+   ;;   |
+   ;;   v
+   ;; :game-over -> :waiting-to-play | :quit
+   ;;   |
+   ;;   v
+   ;; :initials-entry -> :waiting-to-play | :quit
+   ;;
+   ;; :end-of-level -> :level-spawn | :quit
+   ;;
+   ;; :quit
+   ;;   |
+   ;;   v
+   ;; <terminate>
+   ;;
    (current-game-state :default :waiting-to-play)
    (levels :default (fl.prefab::prefab-descriptor
                       ("level-0" lgj-04/2019)
@@ -1118,6 +1147,10 @@ NIL if no such list exists."
    ;; And a reference to the actual player instance
    (current-player :default NIL)))
 
+;; each method returns the new state it should do for the next update.
+(defgeneric process-director-state (director state))
+
+;; From here, we dispatch to the state management GF.
 (defmethod fl:on-component-update ((self director))
   (with-accessors ((current-game-state current-game-state)
                    (levels levels)
@@ -1129,8 +1162,8 @@ NIL if no such list exists."
     (setf current-game-state
           (process-director-state self current-game-state))))
 
-;; each method returns the new state it should do for the next update.
-(defgeneric process-director-state (director state))
+
+
 
 (defmethod process-director-state ((self director)
                                    (state (eql :waiting-to-play)))
@@ -1152,6 +1185,16 @@ NIL if no such list exists."
     :playing))
 
 (defmethod process-director-state ((self director)
+                                   (state (eql :level-spawn)))
+  nil)
+
+(defmethod process-director-state ((self director)
+                                   (state (eql :player-spawn)))
+
+
+  nil)
+
+(defmethod process-director-state ((self director)
                                    (state (eql :playing)))
   (declare (ignore state))
   (with-accessors ((context fl:context)
@@ -1166,6 +1209,8 @@ NIL if no such list exists."
       self
     ;; TODO: Not done yet.
     ;; 1. If the current-level is not loaded, load it.
+
+
 
     ;; 2. load a new player if need be
     (let ((player-alive-p (tags-find-actors-with-tag context :player)))
@@ -1183,50 +1228,50 @@ NIL if no such list exists."
                                '(("player-ship" lgj-04/2019))
                                :parent current-player-holder))))
 
-		 ;; TODO: BROKEN. The old ship, when it does, will have all of
-		 ;; the components detached and destroyed out of it, so
-		 ;; book keeping where the player was means the player-movement
-		 ;; has to have a ref to where it shoudl write its data.
+                 ;; TODO: BROKEN. The old ship, when it does, will have all of
+                 ;; the components detached and destroyed out of it, so
+                 ;; book keeping where the player was means the player-movement
+                 ;; has to have a ref to where it shoudl write its data.
 
-		 ;; ANOTHER option, which I should pick instead, is there is
-		 ;; only ever a single player object, and only the stable
-		 ;; decreases until the game is done. Then, I can just hide the
-		 ;; player for a bit and then "respawn it" from the point of
-		 ;; view of the player (when in reality, I just show the same
-		 ;; player instance again, with a reset to be a new life, and
-		 ;; then just decrease one from the player-stable.  I really
-		 ;; should do this, since it is must easier to manage.
+                 ;; ANOTHER option, which I should pick instead, is there is
+                 ;; only ever a single player object, and only the stable
+                 ;; decreases until the game is done. Then, I can just hide the
+                 ;; player for a bit and then "respawn it" from the point of
+                 ;; view of the player (when in reality, I just show the same
+                 ;; player instance again, with a reset to be a new life, and
+                 ;; then just decrease one from the player-stable.  I really
+                 ;; should do this, since it is much easier to manage.
 
                  ;; TODO: Use the old player ref, which has died but we still
                  ;; have a reference to, to update the position and rotation of
                  ;; the newlay made ship to be the same where the first one
                  ;; died.
-                 (when current-player
-                   (let* ((old-player-transform
-                            (fl:actor-component-by-type current-player
-                                                        'fl.comp:transform))
-                          (old-position
-                            (fl.comp::current
-                             (fl.comp::translation old-player-transform)))
+                 #++(when current-player
+                      (let* ((old-player-transform
+                               (fl:actor-component-by-type current-player
+                                                           'fl.comp:transform))
+                             (old-position
+                               (fl.comp::current
+                                (fl.comp::translation old-player-transform)))
 
-                          (old-rotation
-                            (fl.comp::current
-                             (fl.comp::rotation old-player-transform)))
+                             (old-rotation
+                               (fl.comp::current
+                                (fl.comp::rotation old-player-transform)))
 
-                          (new-transform
-                            (fl:actor-component-by-type new-player-instance
-                                                        'fl.comp:transform)))
+                             (new-transform
+                               (fl:actor-component-by-type new-player-instance
+                                                           'fl.comp:transform)))
 
-                     ;; Then make the new player instance start where the old
-                     ;; one died.
-                     (fl.comp:translate new-transform old-position
-                                        :replace-p t :instant-p t)
-                     (fl.comp:rotate new-transform
-                                     ;; TODO: When transform.lisp is fixed, get
-                                     ;; rid of this and just set the quat
-                                     ;; normally.
-                                     (quat->euler old-rotation)
-                                     :replace-p t :instant-p t)))
+                        ;; Then make the new player instance start where the old
+                        ;; one died.
+                        #++(fl.comp:translate new-transform old-position
+                                              :replace-p t :instant-p t)
+                        #++(fl.comp:rotate new-transform
+                                           ;; TODO: When transform.lisp is fixed, get
+                                           ;; rid of this and just set the quat
+                                           ;; normally.
+                                           (quat->euler old-rotation)
+                                           :replace-p t :instant-p t)))
 
                  ;; And then we store the NEW ref.
                  (setf current-player new-player-instance))
@@ -1237,6 +1282,7 @@ NIL if no such list exists."
                :game-over)))
 
           :playing))))
+
 
 (defmethod process-director-state ((self director)
                                    (state (eql :game-over)))
@@ -1294,7 +1340,8 @@ NIL if no such list exists."
 (fl:define-prefab "player-ship" (:library lgj-04/2019)
   "The venerable Player Ship. Controls how it looks, collides, and movement."
   (tags :tags '(:player))
-  (explosion :name "explode01-01" :frames 15)
+  (explosion :name "explode04-01" :frames 15
+             :scale (v3:make 2.0 2.0 2.0))
   (damage-points :dp 1)
   (hit-points :hp 1
               ;; When the player is born, they are automatically invulnerable
