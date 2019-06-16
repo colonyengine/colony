@@ -33,9 +33,10 @@
                                     :starfield -100f0
                                     :player-stable -99f0
 
-                                    :planet -.06f0
-                                    :planet-explosion -.05f0
-                                    :asteroid -.04f0
+                                    :planet -.07f0
+                                    :planet-explosion -.06f0
+                                    :asteroid -.05f0
+				    :enemy-ship -.04f0
                                     :enemy-explosion -.03f0
                                     :enemy-bullet -.02f0
                                     :player-bullet -.01f0
