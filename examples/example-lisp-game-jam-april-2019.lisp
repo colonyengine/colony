@@ -115,19 +115,17 @@
 
 (fl:define-material warning-mothership
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.texture:unlit-texture
+   :shader fl.gpu.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-mothership)
-              (:mix-color (v4:one))
-              #++(:min-intensity (v4:make 0.1 0.1 0.1 0))
-              #++(:max-intensity (v4:one)))))
+              (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
+              (:max-intensity (v4:one)))))
 
 (fl:define-material warning-wave
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.texture:unlit-texture
+   :shader fl.gpu.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-wave)
-              (:mix-color (v4:one))
-              #++(:min-intensity (v4:make 0.1 0.1 0.1 1))
-              #++(:max-intensity (v4:one)))))
+              (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
+              (:max-intensity (v4:one)))))
 
 (fl:define-material game-over
   (:profiles (fl.materials:u-mvp)
