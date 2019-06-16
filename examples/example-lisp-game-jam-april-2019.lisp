@@ -36,7 +36,7 @@
                                     :planet -.07f0
                                     :planet-explosion -.06f0
                                     :asteroid -.05f0
-				    :enemy-ship -.04f0
+                                    :enemy-ship -.04f0
                                     :enemy-explosion -.03f0
                                     :enemy-bullet -.02f0
                                     :player-bullet -.01f0
@@ -59,6 +59,8 @@
 (fl:define-texture sprite-atlas (:texture-2d)
   (:data #(:spritesheet)))
 
+
+
 ;; This background image was downloaded off the web here:
 ;; https://www.wikitree.com/photo/jpg/Tileable_Background_Images
 ;; And the url for the license is 404, but the wayback machine found it:
@@ -73,6 +75,12 @@
 
 (fl:define-texture warning-mothership (:texture-2d)
   (:data #((:lgj-04/2019 "warning-mothership.tiff"))))
+
+(fl:define-texture game-over (:texture-2d)
+  (:data #((:lgj-04/2019 "game-over.tiff"))))
+
+(fl:define-texture title (:texture-2d)
+  (:data #((:lgj-04/2019 "title.tiff"))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Materials
@@ -91,6 +99,13 @@
              :storage-type :buffer
              :block-alias :spritesheet
              :binding-policy :manual))))
+
+(fl:define-material title
+  (:profiles (fl.materials:u-mvp)
+   :shader fl.gpu.texture:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'title)
+              (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
+              (:max-intensity (v4:one)))))
 
 (fl:define-material starfield
   (:profiles (fl.materials:u-mvpt)
@@ -111,8 +126,15 @@
    :shader fl.gpu.texture:unlit-texture
    :uniforms ((:tex.sampler1 'warning-wave)
               (:mix-color (v4:one))
-              #++(:min-intensity (v3:make 0.1 0.1 0.1 1))
+              #++(:min-intensity (v4:make 0.1 0.1 0.1 1))
               #++(:max-intensity (v4:one)))))
+
+(fl:define-material game-over
+  (:profiles (fl.materials:u-mvp)
+   :shader fl.gpu.texture:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'game-over)
+              (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
+              (:max-intensity (v4:one)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Random Types we need, some will go into FL properly in a future date
@@ -590,6 +612,7 @@ how to use this function."
 ;; it needs to become effective in the world.
 (defun make-projectile (context translation rotation physics-layer depth-layer
                         &key
+                          (parent nil)
                           (scale (v3:make 1.0 1.0 1.0))
                           (destroy-ttl 2)
                           (velocity 1000)
@@ -604,7 +627,8 @@ how to use this function."
            (first (fl:make-prefab-instance
                    (%fl::core context)
                    ;; TODO: prefab-descriptor is wrong here.
-                   `((,prefab-name ,prefab-library)))))
+                   `((,prefab-name ,prefab-library))
+                   :parent parent)))
          ;; TODO: I'm expecting the new-projectile to have components here
          ;; without having gone through the flow. BAD!
          (projectile-transform (fl:actor-component-by-type new-projectile
@@ -775,6 +799,7 @@ how to use this function."
   ((pause-p :default nil)
    (spawn-period :default 1) ;; hz
    (cooldown-time :default 0)
+   (asteroid-holder :default nil)
    (difficulty :default 1)
    (difficulty-period :default 1/10) ;; Hz
    (difficulty-time :default 0)
@@ -790,6 +815,7 @@ how to use this function."
 (defmethod fl:on-component-update ((self asteroid-field))
   (with-accessors ((spawn-period spawn-period)
                    (cooldown-time cooldown-time)
+                   (asteroid-holder asteroid-holder)
                    (difficulty difficulty)
                    (difficulty-period difficulty-period)
                    (difficulty-time difficulty-time)
@@ -860,7 +886,8 @@ how to use this function."
                                                   uniform-scale)
                                   :name name
                                   :frames frames
-                                  :destroy-ttl 4)))))
+                                  :destroy-ttl 4
+                                  :parent asteroid-holder)))))
 
           (t
            (incf cooldown-time (fl:frame-time context))))
@@ -981,6 +1008,15 @@ return the lives-remaining after the life has been consumed."
 
     (incf lives-remaining)
     (make-mockette player-stable (1- lives-remaining))))
+
+(defun reset-stable (player-stable)
+  (with-accessors ((max-lives max-lives)
+                   (lives-remaining lives-remaining))
+      player-stable
+
+    (setf lives-remaining max-lives)
+    (regenerate-lives player-stable)))
+
 
 ;; ;;;;;;;;;
 ;; Component: Tags (candidate component for core FL)
@@ -1135,108 +1171,216 @@ NIL if no such list exists."
 ;; states of the game, notice and replace the player when they die
 ;;;;;;;;;
 
+;; The director manages the overall state the game is in, plus it
+;; micromanages the playing state to ensure fun ensues. Each state is
+;; non-blocking and manages a distinct state in which the game may be.
+;;
+;; state-machine:
+;;
+;; <start>
+;;   |
+;;   v
+;; :waiting-to-play -> :quit
+;;   |
+;;   v
+;; :level-spawn
+;;   |
+;;   v
+;; :player-spawn -> :game-over
+;;   |
+;;   v
+;; :playing -> :player-spawn | :end-of-level | :quit
+;;   |
+;;   v
+;; :game-over -> :waiting-to-play | :quit
+;;   |
+;;   v
+;; :initials-entry -> :waiting-to-play | :quit
+;;
+;; :end-of-level -> :level-spawn | :quit
+;;
+;; :quit
+;;   |
+;;   v
+;; <terminate>
+;;
+
 (fl:define-component director ()
-  (;; The director manages the overall state the game is in, plus it
-   ;; micromanages the playing state to ensure fun ensues. Each state is
-   ;; non-blocking and manages a distinct state in which the game may be.
-   ;;
-   ;; state-machine:
-   ;;
-   ;; <start>
-   ;;   |
-   ;;   v
-   ;; :waiting-to-play -> :quit
-   ;;   |
-   ;;   v
-   ;; :level-spawn
-   ;;   |
-   ;;   v
-   ;; :player-spawn -> :game-over
-   ;;   |
-   ;;   v
-   ;; :playing -> :player-spawn | :end-of-level | :quit
-   ;;   |
-   ;;   v
-   ;; :game-over -> :waiting-to-play | :quit
-   ;;   |
-   ;;   v
-   ;; :initials-entry -> :waiting-to-play | :quit
-   ;;
-   ;; :end-of-level -> :level-spawn | :quit
-   ;;
-   ;; :quit
-   ;;   |
-   ;;   v
-   ;; <terminate>
-   ;;
-   (current-game-state :default :waiting-to-play)
+  ((current-game-state :default :waiting-to-play)
+   (previous-game-state :default nil)
+   ;; The db of levels over which the game progresses.
    (levels :default (fl.prefab::prefab-descriptor
                       ("level-0" lgj-04/2019)
                       ("level-1" lgj-04/2019)
                       ("level-2" lgj-04/2019)))
    ;; which level is considered the demo level.
-   (demo-level :default 0)
+   (demo-level :default (fl.prefab::prefab-descriptor
+                          ("demo-level" lgj-04/2019)))
    ;; Which level are we playing?
    (current-level :default 0)
-   ;; This is where the current level is instanced and stored as a child
-   (level-holder :default NIL)
+   ;; The actual root instance of the actor for the current level.
+   (current-level-ref :default nil)
+   ;; This is the parent of the levels when they are instantiated.
+   (level-holder :default nil)
    ;; The stable from which we know we can get another player.
    (player-1-stable :default nil)
    ;; When we instantiate a player, this is the place it goes.
    (current-player-holder :default NIL)
    ;; And a reference to the actual player instance
-   (current-player :default NIL)))
+   (current-player :default NIL)
+
+   ;; Timer
+   ;; When we respawn a player, we wait max-wait-time before they show up.
+   (player-respawn-max-wait-time :default .5f0)
+   (player1-respawn-timer :default 0)
+   (player1-waiting-for-respawn :default nil)
+
+   ;; Timer
+   ;; When we enter game over, this is how long to show the gameover sign.
+   (game-over-max-wait-time :default 2)
+   (game-over-timer :default 0)))
 
 ;; each method returns the new state it should do for the next update.
-(defgeneric process-director-state (director state))
+(defgeneric process-director-state (director state previous-state))
 
 ;; From here, we dispatch to the state management GF.
 (defmethod fl:on-component-update ((self director))
   (with-accessors ((current-game-state current-game-state)
+                   (previous-game-state previous-game-state)
                    (levels levels)
                    (demo-level demo-level)
                    (current-level current-level)
                    (level-holder level-holder)
                    (current-player-holder current-player-holder))
       self
-    (setf current-game-state
-          (process-director-state self current-game-state))))
 
+    (let (new-game-state)
+      (setf new-game-state
+            (process-director-state self current-game-state previous-game-state)
 
+            previous-game-state current-game-state
 
+            current-game-state new-game-state))))
 
 (defmethod process-director-state ((self director)
-                                   (state (eql :waiting-to-play)))
-  (declare (ignore state))
-  (with-accessors ((current-game-state current-game-state)
+                                   (state (eql :waiting-to-play))
+                                   previous-state)
+  (with-accessors ((context fl:context)
+                   (demo-level demo-level)
+                   (current-level current-level)
+                   (current-level-ref current-level-ref)
+                   (level-holder level-holder)
+                   (player-1-stable player-1-stable))
+      self
+    (let ((next-state :waiting-to-play))
+      ;; When we've just transitioned to this state from not itself, it means
+      ;; we need to do the work to show the demo level.
+      (unless (eq state previous-state)
+        ;; 1. Spawn the demo-level which includes the PtP sign and press play
+        ;; to start.
+
+        (when current-level-ref
+          ;; Whatever was previously there, get rid of.
+          (fl:destroy current-level-ref))
+
+        (setf current-level-ref
+              (first (fl:make-prefab-instance
+                      (%fl::core context)
+                      demo-level
+                      :parent level-holder)))
+
+        ;; 2. ensure the lives player1-stable is set to max if not already so.
+        (when (/= (lives-remaining player-1-stable)
+                  (max-lives player-1-stable))
+          ;; TODO: If this happens first frame, something goes wrong. FIXME.
+          ;; The TODO is why the WHEN guard is around this line.
+          (reset-stable player-1-stable)))
+
+
+      ;; 3. We always listen for the start button so we can play a game.
+      (when (fl.input:input-enter-p (fl:input-data context) '(:gamepad1 :start))
+        (setf current-level 0 ;; start at beginning of level progression
+              next-state :level-spawn))
+
+      next-state)))
+
+(defmethod process-director-state ((self director)
+                                   (state (eql :level-spawn))
+                                   previous-state)
+  (with-accessors ((context fl:context)
+                   (current-game-state current-game-state)
                    (levels levels)
                    (demo-level demo-level)
                    (current-level current-level)
+                   (current-level-ref current-level-ref)
                    (level-holder level-holder)
                    (current-player-holder current-player-holder))
       self
-    ;; 1. Spawn the demo-level
-    ;; 2. Flash "Press Start to Play" sign
-    ;; 3. Listen for Start button.
-    ;; 4. When start button is pressed, destroy the level
-    ;; and transition to :playing state.
 
-    ;; TOOD: For now, skip this and transition directly to :playing.
-    :playing))
+    ;; Destroy old level, if any.
+    (when current-level-ref
+      (fl:destroy current-level-ref)
+      (setf current-level-ref nil))
+
+    ;; spawn current level requested
+    (setf current-level-ref
+          (first (fl:make-prefab-instance
+                  (%fl::core context)
+                  ;; TODO: Odd requirement for the LIST here given how I access
+                  ;; this prefab description.
+                  (list (nth current-level levels))
+                  :parent level-holder)))
+
+    :player-spawn))
+
 
 (defmethod process-director-state ((self director)
-                                   (state (eql :level-spawn)))
-  nil)
+                                   (state (eql :player-spawn))
+                                   previous-state)
+  (with-accessors ((context fl:context)
+                   (current-player-holder current-player-holder)
+                   (current-player current-player)
+                   (player-1-stable player-1-stable)
+                   (player-respawn-max-wait-time player-respawn-max-wait-time)
+                   (player1-respawn-timer player1-respawn-timer)
+                   (player1-waiting-for-respawn player1-waiting-for-respawn))
+      self
+
+    (let ((next-state :playing)
+          (player-alive-p (tags-find-actors-with-tag context :player)))
+
+      (when (not player-alive-p)
+        (if (not (eq state previous-state))
+            (setf player1-respawn-timer 0
+                  next-state :player-spawn)
+            (if (>= player1-respawn-timer player-respawn-max-wait-time)
+                ;; We're waiting for respawn, and the time has come.
+                ;; Create the player.
+                (let ((player-life (consume-life player-1-stable)))
+                  (if (null player-life)
+                      ;; out of players!
+                      (setf next-state :game-over)
+                      (let ((new-player-instance
+                              (first (fl:make-prefab-instance
+                                      (%fl::core context)
+                                      '(("player-ship" lgj-04/2019))
+                                      :parent current-player-holder))))
+                        ;; TODO: make player respawn in same place and
+                        ;; orientation as where they died.
+
+                        ;; Store the new player, and implicitly go to the
+                        ;; unchanged next-state.
+                        (setf current-player new-player-instance))))
+                (progn
+                  (incf player1-respawn-timer (fl:frame-time context))
+                  (setf next-state :player-spawn)))))
+
+      next-state)))
 
 (defmethod process-director-state ((self director)
-                                   (state (eql :player-spawn)))
+                                   (state (eql :playing))
+                                   previous-state)
 
-
-  nil)
-
-(defmethod process-director-state ((self director)
-                                   (state (eql :playing)))
-  (declare (ignore state))
   (with-accessors ((context fl:context)
                    (current-game-state current-game-state)
                    (levels levels)
@@ -1247,98 +1391,48 @@ NIL if no such list exists."
                    (current-player-holder current-player-holder)
                    (current-player current-player))
       self
-    ;; TODO: Not done yet.
-    ;; 1. If the current-level is not loaded, load it.
 
-
-
-    ;; 2. load a new player if need be
+    ;; Notice if the player is dead and go to respawn.
     (let ((player-alive-p (tags-find-actors-with-tag context :player)))
-      (if (not player-alive-p)
-          ;; The player is not present! Must have died.
-          ;; Ask the player-stable to see if I can get a new player.
-          ;; NOTE: This happens IMMEDIATELY, I should prolly stick a timer
-          ;; in here somewhere.
-          (let ((player-life (consume-life player-1-stable)))
-            (cond
-              (player-life
-               (let ((new-player-instance
-                       (first (fl:make-prefab-instance
-                               (%fl::core context)
-                               '(("player-ship" lgj-04/2019))
-                               :parent current-player-holder))))
-
-                 ;; TODO: BROKEN. The old ship, when it does, will have all of
-                 ;; the components detached and destroyed out of it, so
-                 ;; book keeping where the player was means the player-movement
-                 ;; has to have a ref to where it shoudl write its data.
-
-                 ;; ANOTHER option, which I should pick instead, is there is
-                 ;; only ever a single player object, and only the stable
-                 ;; decreases until the game is done. Then, I can just hide the
-                 ;; player for a bit and then "respawn it" from the point of
-                 ;; view of the player (when in reality, I just show the same
-                 ;; player instance again, with a reset to be a new life, and
-                 ;; then just decrease one from the player-stable.  I really
-                 ;; should do this, since it is much easier to manage.
-
-                 ;; TODO: Use the old player ref, which has died but we still
-                 ;; have a reference to, to update the position and rotation of
-                 ;; the newlay made ship to be the same where the first one
-                 ;; died.
-                 #++(when current-player
-                      (let* ((old-player-transform
-                               (fl:actor-component-by-type current-player
-                                                           'fl.comp:transform))
-                             (old-position
-                               (fl.comp::current
-                                (fl.comp::translation old-player-transform)))
-
-                             (old-rotation
-                               (fl.comp::current
-                                (fl.comp::rotation old-player-transform)))
-
-                             (new-transform
-                               (fl:actor-component-by-type new-player-instance
-                                                           'fl.comp:transform)))
-
-                        ;; Then make the new player instance start where the old
-                        ;; one died.
-                        #++(fl.comp:translate new-transform old-position
-                                              :replace-p t :instant-p t)
-                        #++(fl.comp:rotate new-transform
-                                           ;; TODO: When transform.lisp is fixed, get
-                                           ;; rid of this and just set the quat
-                                           ;; normally.
-                                           (quat->euler old-rotation)
-                                           :replace-p t :instant-p t)))
-
-                 ;; And then we store the NEW ref.
-                 (setf current-player new-player-instance))
-               :playing)
-
-              (t
-               ;; No new players, game over!
-               :game-over)))
-
-          :playing))))
+      (if player-alive-p
+          :playing
+          :player-spawn))))
 
 
 (defmethod process-director-state ((self director)
-                                   (state (eql :game-over)))
-  (declare (ignore state))
-  (with-accessors ((current-game-state current-game-state)
+                                   (state (eql :game-over))
+                                   previous-state)
+  (with-accessors ((context fl:context)
                    (levels levels)
                    (demo-level demo-level)
                    (current-level current-level)
                    (level-holder level-holder)
+                   (game-over-max-wait-time game-over-max-wait-time)
+                   (game-over-timer game-over-timer)
                    (current-player-holder current-player-holder))
       self
-    :game-over))
+
+    ;; TODO: Show a game over sign for a while.
+    (unless (eq state previous-state)
+      (setf game-over-timer 0)
+      ;; TODO: Spawn game-over sign and set to destroy in max-time seconds
+      (let ((game-over-sign
+              (first (fl:make-prefab-instance
+                      (%fl::core context)
+                      '(("game-over-sign" lgj-04/2019))))))
+        (fl:destroy-after-time game-over-sign :ttl game-over-max-wait-time)))
+
+    (cond
+      ((>= game-over-timer game-over-max-wait-time)
+       :waiting-to-play)
+      (t
+       (incf game-over-timer (fl:frame-time context))
+       :game-over))))
 
 (defmethod process-director-state ((self director)
-                                   (state (eql :initials-entry)))
-  (declare (ignore state))
+                                   (state (eql :initials-entry))
+                                   previous-state)
+
   (with-accessors ((current-game-state current-game-state)
                    (levels levels)
                    (demo-level demo-level)
@@ -1386,6 +1480,7 @@ NIL if no such list exists."
   (hit-points :hp 1
               ;; When the player is born, they are automatically invulnerable
               ;; for 1 second.
+              ;; TODO: NEED(!) to visualize this effect!
               :invulnerability-timer 1)
   (player-movement)
   (fl.comp:collider/sphere :center (v3:zero)
@@ -1457,14 +1552,32 @@ NIL if no such list exists."
                                        :repeat-p nil))))
 
 (fl:define-prefab "warning-wave-sign" (:library lgj-04/2019)
+  (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+                     :scale (v3:make 512 512 512))
   ("sign"
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'warning-wave)))
 
 (fl:define-prefab "warning-mothership-sign" (:library lgj-04/2019)
+  (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+                     :scale (v3:make 512 512 512))
   ("sign"
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'warning-mothership)))
+
+(fl:define-prefab "title-sign" (:library lgj-04/2019)
+  (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+                     :scale (v3:make 512 512 512))
+  ("sign"
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material 'title)))
+
+(fl:define-prefab "game-over-sign" (:library lgj-04/2019)
+  (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+                     :scale (v3:make 512 512 512))
+  ("sign"
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material 'game-over)))
 
 (fl:define-prefab "starfield" (:library lgj-04/2019)
   ("bug-todo:implicit-transform:see-trello"
@@ -1476,8 +1589,20 @@ NIL if no such list exists."
    (fl.comp:render :material 'starfield)))
 
 
+(fl:define-prefab "demo-level" (:library lgj-04/2019)
+  (asteroid-field :asteroid-holder (fl:ref "/demo-level/asteroids"))
+  (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  ("asteroids")
+  (("title" :copy ("/title-sign" :from lgj-04/2019))
+   (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+                      ;; TODO: BUG: the scale in the original transform
+                      ;; should have been preserved.
+                      :scale (v3:make 512 512 512))))
+
+
 (fl:define-prefab "level-0" (:library lgj-04/2019)
-  (asteroid-field)
+  (asteroid-field :asteroid-holder (fl:ref "/level-0/asteroids"))
+  ("asteroids")
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
@@ -1487,8 +1612,9 @@ NIL if no such list exists."
 
 
 (fl:define-prefab "level-1" (:library lgj-04/2019)
-  (asteroid-field)
+  (asteroid-field :asteroid-holder (fl:ref "/level-1/asteroids"))
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  ("asteroids")
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make -200 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
@@ -1501,8 +1627,9 @@ NIL if no such list exists."
                    :name "planet02")))
 
 (fl:define-prefab "level-2" (:library lgj-04/2019)
-  (asteroid-field)
+  (asteroid-field :asteroid-holder (fl:ref "/level-2/asteroids"))
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  ("asteroids")
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
@@ -1523,29 +1650,21 @@ NIL if no such list exists."
   "The top most level prefab which has the component which drives the game
 sequencing."
   (fl.comp:transform :scale (v3:one))
-  (director :level-holder (fl:ref "/protect-the-planets/active-level")
+  (director :level-holder (fl:ref "/protect-the-planets/current-level")
             :player-1-stable (fl:ref "/protect-the-planets/player-1-stable"
                                      :component 'player-stable))
-
-  ;; The component that controls how many players we have left and how to
-  ;; visualize that.
-  (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
-   (fl.comp:transform
-    :translate (v3:make -900 550 (dl :player-stable))))
-
-  #++(("WARNING" :copy ("/warning-wave-sign" :from lgj-04/2019))
-      (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
-                         :scale (v3:make 500 500 500)))
 
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (v3:make 0 0 (dl :camera))))
 
-  ("active-level")
+  (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
+   (fl.comp:transform
+    :translate (v3:make -900 550 (dl :player-stable))))
 
 
-  #++(("player-ship" :link ("/player-ship" :from lgj-04/2019)))
+  ("current-level"))
 
-  (("current-level" :copy ("/level-0" :from lgj-04/2019))))
+
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
