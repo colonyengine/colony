@@ -1,6 +1,9 @@
 (in-package #:first-light.example)
 
 
+;; Until origin is done, use this commit from gamebox-math as the commit
+;; which works with first-light. 47f1618604e86c63daf2fed68d326f53613c480d
+
 ;; "Protect the Planets!" by Peter Keller (psilord@cs.wisc.edu)
 ;; Requirements: gamepad, preferably xbox one like, linux, gtx 660 or better.
 ;;
@@ -14,6 +17,37 @@
 ;; http://i.imgur.com/J6oKb1E.png
 ;; And here is some math that can help:
 ;; http://www.mathematische-basteleien.de/eggcurves.htm
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Constants
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; NOTE: Because FL don't yet have mesh/sprite rendering order in first-light,
+;; or order independent transparency tools, etc yet, we'll need to define were
+;; things exist in layers perpendicular to the camera so they can be rendered in
+;; order according tot he zbuffer. This also means no translucency since the
+;; rendering can happen in any order. Stencil textures are ok though.  NOTE: We
+;; must be careful here since things that collide with each other must actually
+;; be physically close together in the game.
+(defparameter *draw-layer* (au:dict #'eq
+                                    :starfield -100f0
+                                    :player-stable -99f0
+
+                                    :planet -.06f0
+                                    :planet-explosion -.05f0
+                                    :asteroid -.04f0
+                                    :enemy-explosion -.03f0
+                                    :enemy-bullet -.02f0
+                                    :player-bullet -.01f0
+                                    :player 0.00f0
+                                    :player-explosion 0.01f0
+
+                                    :sign 400f0
+                                    :camera 500f0
+                                    ))
+(defun dl (draw-layer-name)
+  (au:href *draw-layer* draw-layer-name))
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Textures
@@ -553,7 +587,7 @@ how to use this function."
 
 ;; we use this at runtime to instantiate a bullet prefab and fill in everything
 ;; it needs to become effective in the world.
-(defun make-projectile (context translation rotation physics-layer
+(defun make-projectile (context translation rotation physics-layer depth-layer
                         &key
                           (scale (v3:make 1.0 1.0 1.0))
                           (destroy-ttl 2)
@@ -577,6 +611,7 @@ how to use this function."
          (projectile (fl:actor-component-by-type new-projectile 'projectile)))
 
     ;; Set the spatial configuration
+    (setf (v3:z translation) (dl depth-layer))
     (fl.comp:translate projectile-transform translation
                        :instant-p t :replace-p t)
     ;; XXX This interface needs to take a quat here also
@@ -667,6 +702,7 @@ how to use this function."
 (fl:define-component gun ()
   ((emitter-transform :default nil)
    (physics-layer :default nil)
+   (depth-layer :default nil)
    (rotate-deadzone :default .1)
    (fire-period :default 25);; hz
    ;; Keeps track of how much time passed since we fired last.
@@ -687,7 +723,8 @@ how to use this function."
                    (rotate-deadzone rotate-deadzone)
                    (fire-period fire-period)
                    (cooldown-time cooldown-time)
-                   (emitter-transform emitter-transform))
+                   (emitter-transform emitter-transform)
+                   (depth-layer depth-layer))
       self
 
     ;; TODO: I could make a macro to do this syntax work, like WITH-TIMER, but I
@@ -717,6 +754,7 @@ how to use this function."
                                 parent-translation
                                 (v3:make 0 0 angle)
                                 (physics-layer self)
+                                depth-layer
                                 :velocity 2000
                                 :name (name self)
                                 :frames (frames self)))))))
@@ -811,6 +849,7 @@ how to use this function."
                                   origin
                                   (v3:zero)
                                   :enemy-bullet
+                                  :asteroid
                                   :velocity  (ransign 50 400)
                                   ;; this direction is in world space.
                                   ;; it moves from the origin to the target.
@@ -1359,7 +1398,9 @@ NIL if no such list exists."
                    :mode :sprite)
    ("center-gun"
     (fl.comp:transform :translate (v3:zero))
-    (gun :physics-layer :player-bullet :name "bullet01" :frames 2))
+    (gun :physics-layer :player-bullet
+         :depth-layer :player-bullet
+         :name "bullet01" :frames 2))
 
    ("exhaust"
     (fl.comp:transform :translate (v3:make 0 -60 0))
@@ -1429,7 +1470,7 @@ NIL if no such list exists."
    (fl.comp:transform :scale (v3:make 960 960 960)
                       ;; NOTE: ortho projection, so we can put starfield way
                       ;; back.
-                      :translate (v3:make 0 0 -100))
+                      :translate (v3:make 0 0 (dl :starfield)))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'starfield)))
 
@@ -1438,7 +1479,7 @@ NIL if no such list exists."
   (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make 0 100 -1)
+   (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01")))
@@ -1448,12 +1489,12 @@ NIL if no such list exists."
   (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make -200 100 -1)
+   (fl.comp:transform :translate (v3:make -200 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make 200 100 -1)
+   (fl.comp:transform :translate (v3:make 200 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02")))
@@ -1462,17 +1503,17 @@ NIL if no such list exists."
   (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make 0 100 -1)
+   (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make -200 -100 -1)
+   (fl.comp:transform :translate (v3:make -200 -100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make 200 -100 -1)
+   (fl.comp:transform :translate (v3:make 200 -100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet03")))
@@ -1488,14 +1529,15 @@ sequencing."
   ;; The component that controls how many players we have left and how to
   ;; visualize that.
   (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make -900 550 -10)))
+   (fl.comp:transform
+    :translate (v3:make -900 550 (dl :player-stable))))
 
   #++(("WARNING" :copy ("/warning-wave-sign" :from lgj-04/2019))
-      (fl.comp:transform :translate (v3:make 0 0 10)
+      (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
                          :scale (v3:make 500 500 500)))
 
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
-   (fl.comp:transform :translate (v3:make 0 0 500)))
+   (fl.comp:transform :translate (v3:make 0 0 (dl :camera))))
 
   ("active-level")
 
