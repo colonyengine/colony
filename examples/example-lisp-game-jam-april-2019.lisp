@@ -441,20 +441,28 @@ how to use this function."
 
       ;; First, we settle the notion of how the player translates around with
       ;; left stick
-      (let* (;; Dead with deadzones and other bad data around the input vector.
-             (vec (v3:make lx ly 0))
-             (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
-             (vec (if (< (v3:length vec) translate-deadzone) (v3:zero) vec))
-             ;; Compute the actual translation vector related to our frame time!
-             (vec (v3:scale vec
-                            (float (* max-velocity (fl:frame-time context))
-                                   1f0)))
-             ;; and ensure we clip the translation vector so we can't go out of
-             ;; the boundary cube we set.
-             (current-translation
-               ;; TODO NOTE: Prolly should fix these to be external.
-               (fl.comp::current (fl.comp::translation transform)))
-             (vec (clip-movement-vector vec current-translation region-cuboid)))
+      (au:mvlet*
+          (;; Deal with deadzones and other bad data around the input vector.
+           (vec (v3:make lx ly 0))
+           (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
+           (vec (if (< (v3:length vec) translate-deadzone) (v3:zero) vec))
+           ;; Right trigger modifies speed. pull to lerp from full speed
+           ;; to half speed.
+           (ty
+            (nth-value 1 (fl.input:get-gamepad-analog (fl:input-data context)
+                                                      '(:gamepad1 :triggers))))
+           ;; Compute the actual translation vector related to our frame time!
+           (vec
+            (v3:scale vec
+                      (float (* (au:lerp ty max-velocity (/ max-velocity 2f0))
+                                (fl:frame-time context))
+                             1f0)))
+           ;; and ensure we clip the translation vector so we can't go out of
+           ;; the boundary cube we set.
+           (current-translation
+            ;; TODO NOTE: Prolly should fix these to be external.
+            (fl.comp::current (fl.comp::translation transform)))
+           (vec (clip-movement-vector vec current-translation region-cuboid)))
 
         (fl.comp:translate transform vec))
 
