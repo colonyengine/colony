@@ -4,13 +4,20 @@
 ;; by Peter Keller (psilord@cs.wisc.edu)
 ;; With significant contributions by: Michael Fiano (mail@michaelfiano.com)
 ;;
-;; Requirements: gamepad, preferably xbox/ps4 like, linux, gtx 660 or better.
+;; Requirements: gamepad, preferably xbox/ps4 like, linux, gtx 660 or better but
+;; nvidia gpus are not specifically required.
 ;;
-;; left stick controls movement, right-stick controls orientation
+;; Controls:
+;; left stick controls movement,
+;; right-stick controls shooting and direction of shooting,
 ;; right trigger slows movement.
 
-;; The various comment demlimited categoriues don't have to be defined in this
-;; order or in a single file.
+;; The commented delimited categories group the code into various sections.  The
+;; FL related sections, like Textures, Materials, Components, etc, generally
+;; don't have to be in this order and don't have to be in a single file. They
+;; can be spread sround and in any order you like. BUT--Components must be
+;; defined before the Prefabs that use it.
+
 
 ;; TODO: Pixel_Outlaw says to use an egg shape for a shot pattern:
 ;; http://i.imgur.com/J6oKb1E.png
