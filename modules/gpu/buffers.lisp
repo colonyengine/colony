@@ -74,11 +74,9 @@
               (i 0))
           (map nil
                (lambda (x)
-                 (typecase x
-                   (sequence (replace sv x :start1 i))
-                   ((or v2:vec v3:vec v4:vec)
-                    (replace sv x :start1 i))
-                   (t (setf (aref sv i) x)))
+                 (if (typep x 'sequence)
+                     (replace sv x :start1 i)
+                     (setf (aref sv i) x))
                  (incf i %element-stride))
                value)
           (%gl:buffer-sub-data target %offset (* count %byte-stride) ptr))))))
