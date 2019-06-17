@@ -2,7 +2,7 @@
 
 (defpackage #:first-light.textures
   (:nicknames #:fl.textures)
-  (:local-nicknames (#:v4 #:box.math.vec4))
+  (:local-nicknames (#:v4 #:origin.vec4))
   (:use #:cl #:%first-light)
   ;; profiles
   (:export

@@ -136,7 +136,7 @@
                    :mode :sprite)
    (fl.comp:actions :default-actions '((:type fl.actions:rotate
                                         :duration 4
-                                        :shape box.math.shaping:bounce-in
+                                        :shape origin.shaping:bounce-in
                                         :repeat-p t)))))
 
 ;;; Prefab descriptors

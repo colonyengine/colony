@@ -2,9 +2,9 @@
 
 (defpackage #:first-light.gpu
   (:nicknames #:fl.gpu)
-  (:local-nicknames (#:v2 #:box.math.vec2)
-                    (#:v3 #:box.math.vec3)
-                    (#:v4 #:box.math.vec4))
+  (:local-nicknames (#:v2 #:origin.vec2)
+                    (#:v3 #:origin.vec3)
+                    (#:v4 #:origin.vec4))
   (:use #:cl)
   (:export
    #:define-function

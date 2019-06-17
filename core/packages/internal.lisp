@@ -2,7 +2,7 @@
 
 (defpackage #:%first-light
   (:nicknames #:%fl)
-  (:local-nicknames (#:v3 #:box.math.vec3))
+  (:local-nicknames (#:v3 #:origin.vec3))
   (:use #:cl)
   (:export
    #:*core-debug*

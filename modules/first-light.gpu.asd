@@ -17,7 +17,7 @@
                #:cl-opengl
                #:verbose
                #:golden-utils
-               #:gamebox-math
+               #:origin
                #:first-light.metadata)
   :pathname "gpu"
   :serial t
