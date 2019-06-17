@@ -1,17 +1,16 @@
 (in-package #:first-light.example)
 
-
-;; Until origin is done, use this commit from gamebox-math as the commit
-;; which works with first-light. 47f1618604e86c63daf2fed68d326f53613c480d
-
-;; "Protect the Planets!" by Peter Keller (psilord@cs.wisc.edu)
-;; Requirements: gamepad, preferably xbox one like, linux, gtx 660 or better.
+;; "Protect the Planets!"
+;; by Peter Keller (psilord@cs.wisc.edu)
+;; With significant contributions by: Michael Fiano (mail@michaelfiano.com)
+;;
+;; Requirements: gamepad, preferably xbox/ps4 like, linux, gtx 660 or better.
 ;;
 ;; left stick controls movement, right-stick controls orientation
-;;
+;; right trigger slows movement.
 
-;; The various categories don't have to be defined in this order or in a single
-;; file.
+;; The various comment demlimited categoriues don't have to be defined in this
+;; order or in a single file.
 
 ;; TODO: Pixel_Outlaw says to use an egg shape for a shot pattern:
 ;; http://i.imgur.com/J6oKb1E.png
