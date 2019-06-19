@@ -28,7 +28,7 @@
 ;; Constants
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; NOTE: Because FL don't yet have mesh/sprite rendering order in first-light,
+;; NOTE: Because we don't yet have mesh/sprite rendering order in first-light,
 ;; or order independent transparency tools, etc yet, we'll need to define were
 ;; things exist in layers perpendicular to the orthographic camera so they can
 ;; be rendered in order according to the zbuffer. This also means no
