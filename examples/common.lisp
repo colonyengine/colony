@@ -49,14 +49,14 @@
    (fl.comp:camera :active-p t
                    :mode :perspective))
   ("iso"
-   (fl.comp:transform :rotate (v3:make 0 0 (- (/ pi 4))))
-   ("transform"
-    (fl.comp:transform :rotate (v3:make (- (atan (/ (sqrt 2)))) 0 0))
-    ("camera"
-     (fl.comp:transform :translate (v3:make 0 -5 0)
-                        :rotate (v3:make (+ (/ pi 2)) 0 0))
-     (fl.comp:camera :active-p t
-                     :mode :orthographic)))))
+   (fl.comp:transform :rotate (q:orient :local
+                                        :x (- (atan (/ (sqrt 2))))
+                                        :y (- (/ pi 4))
+                                        ))
+   ("camera"
+    (fl.comp:transform :translate (v3:make 0 0 10))
+    (fl.comp:camera :active-p t
+                    :mode :orthographic))))
 
 (fl:define-prefab "mesh" (:library examples)
   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
