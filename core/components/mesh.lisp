@@ -16,11 +16,11 @@
       self
     (unless location
       (error "A mesh component must have a location set."))
-    (let ((location (au:ensure-list location)))
+    (let ((location (a:ensure-list location)))
       (with-shared-storage
           (context context)
-          ((cached-mesh mesh-present-p
-                        ('mesh :cached-mesh-data location index)
-                        (fl.geom:load-gltf
-                         (apply #'find-resource context location) index)))
+        ((cached-mesh mesh-present-p
+                      ('mesh :cached-mesh-data location index)
+                      (fl.geom:load-gltf
+                       (apply #'find-resource context location) index)))
         (setf primitives cached-mesh)))))

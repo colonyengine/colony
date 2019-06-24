@@ -23,26 +23,26 @@
       ((:slynk :swank)
        (compile 'find-lisp-repl
                 `(lambda ()
-                   (or ,(au:ensure-symbol "*EMACS-CONNECTION*" repl-package)
-                       (,(au:ensure-symbol "DEFAULT-CONNECTION"
-                                           repl-package)))))
+                   (or ,(a:ensure-symbol "*EMACS-CONNECTION*" repl-package)
+                       (,(a:ensure-symbol "DEFAULT-CONNECTION"
+                                          repl-package)))))
        (compile 'setup-lisp-repl
                 (ecase repl-package
                   (:slynk
                    `(lambda ()
                       ,(when (find-package "SLYNK-MREPL")
-                         `(,(au:ensure-symbol "SEND-PROMPT" "SLYNK-MREPL")
+                         `(,(a:ensure-symbol "SEND-PROMPT" "SLYNK-MREPL")
                            (find (bt:current-thread)
-                                 (,(au:ensure-symbol "CHANNELS" repl-package))
-                                 :key #',(au:ensure-symbol "CHANNEL-THREAD"
-                                                           repl-package))))))
+                                 (,(a:ensure-symbol "CHANNELS" repl-package))
+                                 :key #',(a:ensure-symbol "CHANNEL-THREAD"
+                                                          repl-package))))))
                   (:swank
                    (constantly nil))))
        (compile 'update-lisp-repl
                 `(lambda ()
-                   (au:when-let ((repl (find-lisp-repl)))
+                   (a:when-let ((repl (find-lisp-repl)))
                      (with-continue-restart "REPL"
-                       (,(au:ensure-symbol "HANDLE-REQUESTS" repl-package)
+                       (,(a:ensure-symbol "HANDLE-REQUESTS" repl-package)
                         repl t))))))
       (t (setf (symbol-function 'setup-lisp-repl) (constantly nil)
                (symbol-function 'update-lisp-repl) (constantly nil))))))

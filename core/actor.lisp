@@ -5,9 +5,9 @@
            :initarg :state
            :initform :initialize)
    (%components :reader components
-                :initform (au:dict #'eq))
+                :initform (u:dict))
    (%components-by-type :reader components-by-type
-                        :initform (au:dict #'eq))
+                        :initform (u:dict))
    (%prefab-node :reader prefab-node
                  :initarg :prefab-node
                  :initform nil)
@@ -29,10 +29,10 @@
   (detach-component actor component)
   (enqueue-attach-event component actor)
   (setf (actor component) actor
-        (au:href (components actor) component) component)
+        (u:href (components actor) component) component)
   (let* ((core (core (context actor)))
          (qualified-type (qualify-component core (component-type component))))
-    (push component (au:href (components-by-type actor) qualified-type))))
+    (push component (u:href (components-by-type actor) qualified-type))))
 
 (defun attach-multiple-components (actor &rest components)
   (dolist (component components)
@@ -47,8 +47,8 @@
 (defun detach-component (actor component)
   "If COMPONENT is contained in the ACTOR. Remove it. Otherwise, do nothing."
   (when (remhash component (components actor))
-    (symbol-macrolet ((typed-components (au:href (components-by-type actor)
-                                                 (component-type component))))
+    (symbol-macrolet ((typed-components (u:href (components-by-type actor)
+                                                (component-type component))))
       (enqueue-detach-event component actor)
       (setf (actor component) nil)
       (setf typed-components
@@ -58,7 +58,7 @@
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
   (let* ((core (core (context actor)))
          (qualified-type (qualify-component core component-type)))
-    (au:href (components-by-type actor) qualified-type)))
+    (u:href (components-by-type actor) qualified-type)))
 
 (defun actor-component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
@@ -96,11 +96,11 @@ reference which will be the parent of the spawning actor. It defaults to
         (actor-component-by-type parent 'fl.comp:transform)
         (actor-component-by-type actor 'fl.comp:transform)))
       ((null parent)
-       (au:noop))
+       (u:noop))
       (t
        (error "Cannot parent actor ~s to unknown parent ~s" actor parent)))
-    (setf (au:href (actor-preinit-db (tables core)) actor) actor)
-    (au:do-hash-values (v (components actor))
+    (setf (u:href (actor-preinit-db (tables core)) actor) actor)
+    (u:do-hash-values (v (components actor))
       (setf (type-table (canonicalize-component-type (component-type v)
                                                      core)
                         (component-preinit-by-type-view (tables core)))
@@ -109,22 +109,22 @@ reference which will be the parent of the spawning actor. It defaults to
 (defun actor/preinit->init (actor)
   (let ((core (core (context actor))))
     (remhash actor (actor-preinit-db (tables core)))
-    (setf (au:href (actor-init-db (tables core)) actor) actor)))
+    (setf (u:href (actor-init-db (tables core)) actor) actor)))
 
 (defun actor/init->active (actor)
   (let ((core (core (context actor))))
     (remhash actor (actor-init-db (tables core)))
     (setf (state actor) :active
-          (au:href (actor-active-db (tables core)) actor) actor)))
+          (u:href (actor-active-db (tables core)) actor) actor)))
 
 (defmethod destroy-after-time ((thing actor) &key (ttl 0))
   (let* ((core (core (context thing)))
-         (table (au:href (actor-predestroy-view (tables core)))))
+         (table (actor-predestroy-view (tables core))))
     (when (eq thing (scene-tree core))
       (error "Cannot destroy the scene tree root."))
     (setf (ttl thing) (and ttl (max 0 ttl)))
     (if ttl
-        (setf (au:href table thing) thing)
+        (setf (u:href table thing) thing)
         ;; If the TTL is stopped, we want to remove the actor from the
         ;; pre-destroy view!
         (remhash thing table))))
@@ -138,12 +138,12 @@ reference which will be the parent of the spawning actor. It defaults to
     (let* ((core (core (context actor)))
            (tables (tables core)))
       (unless (plusp (ttl actor))
-        (setf (au:href (actor-destroy-db tables) actor) actor
+        (setf (u:href (actor-destroy-db tables) actor) actor
               (state actor) :destroy)
         (remhash actor (actor-predestroy-view tables))
         (unless (remhash actor (actor-active-db tables))
           (remhash actor (actor-preinit-db tables)))
-        (au:do-hash-values (v (components actor))
+        (u:do-hash-values (v (components actor))
           (setf (ttl v) 0)
           (enqueue-detach-event v actor)
           (component/init-or-active->destroy v))))))

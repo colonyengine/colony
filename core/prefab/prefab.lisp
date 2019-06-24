@@ -2,7 +2,7 @@
 
 (defmacro preprocess-spec (prefab-name context policy spec)
   (labels ((rec (data)
-             (au:mvlet ((name components children (split-spec data)))
+             (u:mvlet ((name components children (split-spec data)))
                `(list ',name
                       ,@(mapcar #'thunk components)
                       ,@(mapcar #'rec children))))
@@ -30,7 +30,7 @@
                                   :env-injection-control-func
                                   ;; NOTE: lexical intercourse ensues with the
                                   ;; INJECT-REF-ENVIRONMENT macro.
-                                  (au:dlambda
+                                  (u:dlambda
                                     (:actors (x)
                                              (setf actor-table x))
                                     (:components (x)
@@ -55,25 +55,24 @@
        ,@body)))
 
 (defmethod documentation ((object string) (doc-type symbol))
-  (au:when-let ((prefab (%find-prefab object doc-type)))
+  (a:when-let ((prefab (%find-prefab object doc-type)))
     (doc prefab)))
 
 (defmacro define-prefab (name (&key library (context 'context) policy)
                          &body body)
   (let* ((libraries '(fl.data:get 'prefabs))
-         (prefabs `(au:href ,libraries ',library)))
-    (au:with-unique-names (prefab data)
-      (au:mvlet ((body decls doc (au:parse-body body :documentation t)))
-        (declare (ignore decls))
+         (prefabs `(u:href ,libraries ',library)))
+    (a:with-gensyms (prefab data)
+      (u:mvlet ((body decls doc (a:parse-body body :documentation t)))
         `(progn
            (ensure-prefab-name-string ',name)
            (ensure-prefab-name-valid ',name)
            (ensure-prefab-library-set ',name ',library)
            (ensure-prefab-library-symbol ',name ',library)
            (unless ,libraries
-             (fl.data:set 'prefabs (au:dict #'eq)))
+             (fl.data:set 'prefabs (u:dict)))
            (unless ,prefabs
-             (setf ,prefabs (au:dict #'equalp)))
+             (setf ,prefabs (u:dict #'equalp)))
            ;; NOTE: This prefab-wide ref environment is accessible via a
            ;; pandoric function in the INJECTABLE-REF-VALUE-THUNK instance
            ;; created for each component initarg value. We use it later to
@@ -84,10 +83,10 @@
            ;; to do that, we'll just do it for all the components in this prefab
            ;; itself.
            (inject-ref-environment
-             (au:mvlet* ((,data (preprocess-spec
-                                 ,name ,context ,policy ,body))
-                         (,prefab (make-prefab ',name ',library ,doc ,data)))
-               (setf (au:href ,prefabs ',name) ,prefab
+             (u:mvlet ((,data (preprocess-spec
+                               ,name ,context ,policy ,body))
+                       (,prefab (make-prefab ',name ',library ,doc ,data)))
+               (setf (u:href ,prefabs ',name) ,prefab
                      (func ,prefab) (make-factory ,prefab))
 
                (parse-prefab ,prefab)))

@@ -18,53 +18,53 @@
                 :initarg :display-id
                 :initform "No name")))
 
-(au:define-printer (queryable stream)
+(u:define-printer (queryable stream)
   (format stream "~a" (display-id queryable)))
 
 ;;; Query table management
 
 (defun register-object-uuid (object)
-  (au:if-let ((table (objects-by-uuid (tables (core (context object)))))
-              (uuid (uuid object)))
-    (symbol-macrolet ((found (au:href table uuid)))
-      (au:if-found (found (au:href table uuid))
-                   (error "A UUID collision occured between the following ~
+  (a:if-let ((table (objects-by-uuid (tables (core (context object)))))
+             (uuid (uuid object)))
+    (symbol-macrolet ((found (u:href table uuid)))
+      (u:if-found (found (u:href table uuid))
+                  (error "A UUID collision occured between the following ~
                            objects:~%~s~%~s."
-                          found object)
-                   (setf (au:href table uuid) object)))
+                         found object)
+                  (setf (u:href table uuid) object)))
     (error "Object ~s has no UUID. This is a bug and should be reported."
            object)))
 
 (defmethod register-object-id ((object actor))
-  (au:when-let ((table (actors-by-id (tables (core (context object)))))
-                (id (id object)))
-    (unless (au:href table id)
-      (setf (au:href table id) (au:dict #'eq)))
-    (setf (au:href table id object) object)))
+  (a:when-let ((table (actors-by-id (tables (core (context object)))))
+               (id (id object)))
+    (unless (u:href table id)
+      (setf (u:href table id) (u:dict)))
+    (setf (u:href table id object) object)))
 
 (defmethod register-object-id ((object component))
-  (au:when-let ((table (components-by-id (tables (core (context object)))))
-                (id (id object)))
-    (unless (au:href table id)
-      (setf (au:href table id) (au:dict #'eq)))
-    (setf (au:href table id object) object)))
+  (a:when-let ((table (components-by-id (tables (core (context object)))))
+               (id (id object)))
+    (unless (u:href table id)
+      (setf (u:href table id) (u:dict)))
+    (setf (u:href table id object) object)))
 
 (defun deregister-object-uuid (object)
   (remhash (uuid object)
            (objects-by-uuid (tables (core (context object))))))
 
 (defmethod deregister-object-id ((self actor))
-  (au:when-let ((table (actors-by-id (tables (core (context self)))))
-                (id (id self)))
-    (symbol-macrolet ((actors (au:href table id)))
+  (a:when-let ((table (actors-by-id (tables (core (context self)))))
+               (id (id self)))
+    (symbol-macrolet ((actors (u:href table id)))
       (remhash self actors)
       (unless (plusp (hash-table-count actors))
         (remhash id table)))))
 
 (defmethod deregister-object-id ((self component))
-  (au:when-let ((table (components-by-id (tables (core (context self)))))
-                (id (id self)))
-    (symbol-macrolet ((components (au:href table id)))
+  (a:when-let ((table (components-by-id (tables (core (context self)))))
+               (id (id self)))
+    (symbol-macrolet ((components (u:href table id)))
       (remhash self components)
       (unless (plusp (hash-table-count components))
         (remhash id table)))))
@@ -82,21 +82,21 @@
 (defmethod find-by-uuid (context (uuid uuid))
   "Return the object instance with the given `UUID` object."
   (let ((table (objects-by-uuid (tables (core context)))))
-    (au:href table uuid)))
+    (u:href table uuid)))
 
 (defmethod find-by-uuid (context (uuid string))
   "Return the object instance with the given `UUID` string representation."
   (let ((table (objects-by-uuid (tables (core context)))))
-    (au:href table (string->uuid uuid))))
+    (u:href table (string->uuid uuid))))
 
 (defun find-actors-by-id (context id)
   "Return a list of all actor instances with the given `ID`."
-  (au:when-let* ((table (actors-by-id (tables (core context))))
-                 (by-id (au:href table id)))
-    (au:hash-values by-id)))
+  (a:when-let* ((table (actors-by-id (tables (core context))))
+                (by-id (u:href table id)))
+    (u:hash-values by-id)))
 
 (defun find-components-by-id (context id)
   "Return a list of all component instances with the given `ID`."
-  (au:when-let* ((table (components-by-id (tables (core context))))
-                 (by-id (au:href table id)))
-    (au:hash-values by-id)))
+  (a:when-let* ((table (components-by-id (tables (core context))))
+                (by-id (u:href table id)))
+    (u:hash-values by-id)))

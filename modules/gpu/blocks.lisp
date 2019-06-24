@@ -14,7 +14,7 @@
    (%binding-point :reader binding-point
                    :initform 0)))
 
-(au:define-printer (shader-block stream :type nil)
+(u:define-printer (shader-block stream :type nil)
   (format stream "BLOCK ~s" (id shader-block)))
 
 (defun get-block-type (struct)
@@ -29,8 +29,8 @@
          (id (ensure-keyword (varjo:name uniform)))
          (name (varjo.internals:safe-glsl-name-string id))
          (type (varjo:v-type-of uniform)))
-    (au:mvlet ((block-type buffer-type (get-block-type type)))
-      (setf (au:href (blocks program) (cons block-type id))
+    (u:mvlet ((block-type buffer-type (get-block-type type)))
+      (setf (u:href (blocks program) (cons block-type id))
             (make-instance 'shader-block
                            :id id
                            :name (format nil "_~a_~a" buffer-type name)
@@ -42,9 +42,9 @@
   (let* ((program-name (name (find-program program-name)))
          (aliases (fl.data:get 'block-aliases))
          (block (%find-block program-name block-type block-id)))
-    (if (au:href aliases block-alias)
+    (if (u:href aliases block-alias)
         (error "The block alias ~s is already in use." block-alias)
-        (setf (au:href aliases block-alias) block))))
+        (setf (u:href aliases block-alias) block))))
 
 (defun delete-block-alias (block-alias &key unbind-block)
   (when unbind-block
@@ -57,13 +57,13 @@
 
 (defun %find-block (program-name block-type block-id)
   (if (keywordp block-id)
-      (au:when-let ((program (find-program program-name)))
-        (au:href (blocks program) (cons block-type block-id)))
+      (a:when-let ((program (find-program program-name)))
+        (u:href (blocks program) (cons block-type block-id)))
       (error "Block ID must be a keyword symbol: ~a" block-id)))
 
 (defun find-block (block-alias)
   (let ((aliases (fl.data:get 'block-aliases)))
-    (au:href aliases block-alias)))
+    (u:href aliases block-alias)))
 
 (defun block-binding-valid-p (block binding-point)
   (let ((bindings (fl.data:get 'block-bindings)))
@@ -72,7 +72,7 @@
        (varjo:v-type-eq
         (varjo:v-type-of (uniform (layout block)))
         (varjo:v-type-of (uniform (layout x)))))
-     (au:href bindings (block-type block) binding-point))))
+     (u:href bindings (block-type block) binding-point))))
 
 (defmethod %bind-block ((block-type (eql :uniform)) block binding-point)
   (let* ((program-id (id (program block)))
@@ -92,7 +92,7 @@
     (or (block-binding-valid-p block binding-point)
         (error "Cannot bind a block to a binding point with existing blocks of ~
                 a different layout."))
-    (pushnew block (au:href bindings (block-type block) binding-point))
+    (pushnew block (u:href bindings (block-type block) binding-point))
     (%bind-block (block-type block) block binding-point)
     (setf (slot-value block '%binding-point) binding-point)))
 
@@ -104,12 +104,12 @@
   "Rebind all blocks that are members of PROGRAMS."
   (flet ((rebind (block-type)
            (let* ((bindings (fl.data:get 'block-bindings))
-                  (table (au:href bindings block-type)))
-             (au:do-hash-values (blocks table)
+                  (table (u:href bindings block-type)))
+             (u:do-hash-values (blocks table)
                (dolist (block blocks)
                  (with-slots (%program %binding-point) block
                    (when (member (name %program) programs)
                      (%bind-block :buffer block %binding-point))))))))
     (rebind :uniform)
     (rebind :buffer)
-    (au:noop)))
+    (u:noop)))

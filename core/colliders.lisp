@@ -15,7 +15,7 @@
    (%collision-plan :reader collision-plan
                     :initarg :collision-plan
                     ;; keyed by layer, value is list of layers it collides with
-                    :initform (au:dict #'eq))
+                    :initform (u:dict))
 
    ;; Keyed by :layer-name,
    ;; Value is ht
@@ -26,19 +26,19 @@
                            ;; keyed by on-layer in collider, value is a hash.
                            ;; second has is keyed by ref to collider and value
                            ;; is collider.
-                           :initform (au:dict #'eq))
+                           :initform (u:dict))
    ;; Stable colliders are ones that have already been registered.
    (%stable-colliders :reader stable-colliders
                       :initarg :stable-colliders
                       ;; keyed by on-layer in collider, value is a hash. second
                       ;; has is keyed by ref to collider and value is collider.
-                      :initform (au:dict #'eq))
+                      :initform (u:dict))
    (%deregistering-colliders :reader deregistering-colliders
                              :initarg :deregistering-colliders
                              ;; keyed by on-layer in collider, value is a hash.
                              ;; second has is keyed by ref to collider and value
                              ;; is collider.
-                             :initform (au:dict #'eq))
+                             :initform (u:dict))
    ;; This is a buffer that we'll use to make colliding a layer against itself
    ;; faster and easier to compute.
    (%buffer :accessor buffer
@@ -53,7 +53,7 @@
    ;; updated to be consistent.
    (%contacts :reader contacts
               :initarg :contacts
-              :initform (au:dict #'eq))))
+              :initform (u:dict))))
 
 (defun make-collider-system (&rest init-args)
   (apply #'make-instance 'collider-system init-args))
@@ -65,7 +65,7 @@
   (let* ((cs (collider-system (core context)))
          (registering-colliders (registering-colliders cs)))
     ;; Insert the request for processing.
-    (setf (au:href registering-colliders (fl.comp:on-layer collider) collider)
+    (setf (u:href registering-colliders (fl.comp:on-layer collider) collider)
           collider)))
 
 (defun deregister-collider (context collider)
@@ -73,7 +73,7 @@
   (let* ((cs (collider-system (core context)))
          (deregistering-colliders (deregistering-colliders cs)))
     ;; Insert the request for processing.
-    (setf (au:href deregistering-colliders (fl.comp:on-layer collider) collider)
+    (setf (u:href deregistering-colliders (fl.comp:on-layer collider) collider)
           collider)))
 
 ;;; Contacts are symmetric in the internal data structures.
@@ -84,8 +84,8 @@ currently in contact."
   (assert (not (eq fist-collider face-collider)))
   ;; since there is a symmetric link, I can check any one and be satisfied.
   (let ((contacts (contacts collider-system)))
-    (when (au:href contacts fist-collider)
-      (au:when-let (found-p (au:href contacts fist-collider face-collider))
+    (when (u:href contacts fist-collider)
+      (a:when-let (found-p (u:href contacts fist-collider face-collider))
         ;; generalized-boolean.
         found-p))))
 
@@ -93,13 +93,13 @@ currently in contact."
   (assert (not (eq fist-collider face-collider)))
   (let ((contacts (contacts collider-system)))
     ;; First, we add a link: fist -> face.
-    (unless (au:href contacts fist-collider)
-      (setf (au:href contacts fist-collider) (au:dict)))
-    (setf (au:href contacts fist-collider face-collider) face-collider)
+    (unless (u:href contacts fist-collider)
+      (setf (u:href contacts fist-collider) (u:dict)))
+    (setf (u:href contacts fist-collider face-collider) face-collider)
     ;; Then we add a symmetric back link: face -> fist.
-    (unless (au:href contacts face-collider)
-      (setf (au:href contacts face-collider) (au:dict)))
-    (setf (au:href contacts face-collider fist-collider) fist-collider)
+    (unless (u:href contacts face-collider)
+      (setf (u:href contacts face-collider) (u:dict)))
+    (setf (u:href contacts face-collider fist-collider) fist-collider)
     ;; Now that the contact has been added we'll invoke the enter
     ;; protocol for the contact.
     (on-collision-enter fist-collider face-collider)
@@ -121,13 +121,13 @@ FIST-COLLIDER and FACE-COLLIDER."
   (assert (not (eq fist-collider face-collider)))
   (let ((contacts (contacts collider-system)))
     ;; Remove the link: fist -> face
-    (au:when-let (face-set (au:href contacts fist-collider))
+    (a:when-let (face-set (u:href contacts fist-collider))
       (remhash face-collider face-set)
       ;; If the fist is colliding with nothing now, remove its table.
       (when (zerop (hash-table-count face-set))
         (remhash fist-collider contacts)))
     ;; Remove the link: face -> fist
-    (au:when-let (fist-set (au:href contacts face-collider))
+    (a:when-let (fist-set (u:href contacts face-collider))
       (remhash fist-collider fist-set)
       ;; If the face is colliding with nothing now, remove its table.
       (when (zerop (hash-table-count fist-set))
@@ -143,10 +143,10 @@ FIST-COLLIDER and FACE-COLLIDER."
 had--and update all other faces too."
   (let ((contacts (contacts collider-system)))
     ;; Look up the fist to see if anything at all is contacting it.
-    (au:when-let (face-set (au:href contacts fist-collider))
+    (a:when-let (face-set (u:href contacts fist-collider))
       ;; NOTE: get a list of the faces, since we'll be altering the hash tables
       ;; while iterating over the faces
-      (let ((face-colliders (au:hash-keys face-set)))
+      (let ((face-colliders (u:hash-keys face-set)))
         ;; Now force exit each symmetric contact, if present. This will handle
         ;; removing hash tables we don't need anymore.
         (dolist (face-collider face-colliders)
@@ -203,7 +203,7 @@ had--and update all other faces too."
   ;; layers. N^2 for now cause it is fast to write. There is no spatial
   ;; partitioning.
   (dolist (fist-layer (physics-layers collider-system))
-    (let ((face-layers (au:href (collision-plan collider-system) fist-layer)))
+    (let ((face-layers (u:href (collision-plan collider-system) fist-layer)))
       (loop :for face-layer :in face-layers
             :do (compute-stable-layer-collisions collider-system
                                                  fist-layer face-layer)))))
@@ -224,14 +224,14 @@ had--and update all other faces too."
       ;; dynamically growing reusable buffer.
       ;; However this does two passes over the keys, so there's that....
       (let ((fists-and-faces
-              (au:href (stable-colliders collider-system) fist-layer)))
+              (u:href (stable-colliders collider-system) fist-layer)))
         (when fists-and-faces
           (setf (fill-pointer (buffer collider-system)) 0)
-          (au:do-hash-keys (fist/face fists-and-faces)
+          (u:do-hash-keys (fist/face fists-and-faces)
             (vector-push-extend fist/face (buffer collider-system)))
           ;; compute collisions between each _unique_ pair of fists-and-faces
           (when (>= (length (buffer collider-system)) 2)
-            (au:map-combinations
+            (a:map-combinations
              (lambda (vecpair)
                (compute-contact-state collider-system
                                       (aref vecpair 0)
@@ -243,8 +243,8 @@ had--and update all other faces too."
              :copy nil))))
       ;; ELSE simply iterate pairwise each fist collider over all the face
       ;; colliders. No chance of duplicate invocation of protocol here.
-      (let ((fists (au:href (stable-colliders collider-system) fist-layer))
-            (faces (au:href (stable-colliders collider-system) face-layer)))
+      (let ((fists (u:href (stable-colliders collider-system) fist-layer))
+            (faces (u:href (stable-colliders collider-system) face-layer)))
         (when (and fists
                    faces
                    (> (hash-table-count fists) 0)
@@ -273,20 +273,20 @@ had--and update all other faces too."
       ;; We will be processing each registering fist collider of the current
       ;; fist-layer.
       (let ((fist-layer-registering-colliders
-              (au:href registering-colliders fist-layer)))
+              (u:href registering-colliders fist-layer)))
         (unless (zerop (hash-table-count fist-layer-registering-colliders))
           ;; Now for each fist in our specified fist-layer, we'll collide it
           ;; against each collider in every single face physics layer its
           ;; on-layer slot implies.
-          (au:do-hash-keys (fist fist-layer-registering-colliders)
+          (u:do-hash-keys (fist fist-layer-registering-colliders)
             ;; we're processing it right now, so no matter what happens we
             ;; remove it from the registering-colliders.
             (remhash fist fist-layer-registering-colliders)
             ;; If somehow it is also currently stable, we totally ignore it.
-            (unless (au:href stable-colliders fist-layer fist)
+            (unless (u:href stable-colliders fist-layer fist)
               ;; The FIST is good to go! collide it and stabilize it!
               (let ((face-layers
-                      (au:href (collision-plan collider-system) fist-layer)))
+                      (u:href (collision-plan collider-system) fist-layer)))
                 (v:trace :fl.core.collider
                          "Checking registering fist: ~S, [~S: ~S]"
                          (fl:display-id fist) (fl.comp:on-layer fist)
@@ -297,7 +297,7 @@ had--and update all other faces too."
                    ;; automatically stabilize the fist and we're done with it.
                    (v:trace :fl.core.collider
                             " Stabilizing[0]: ~S" (fl:display-id fist))
-                   (setf (au:href stable-colliders fist-layer fist)
+                   (setf (u:href stable-colliders fist-layer fist)
                          fist))
                   (t
                    ;; Else, we collide the fist against each face in each
@@ -309,12 +309,12 @@ had--and update all other faces too."
                      ;; Find all the face-layer colliders to which we need to
                      ;; collide.
                      (let ((face-layer-stable-colliders
-                             (au:href stable-colliders face-layer)))
+                             (u:href stable-colliders face-layer)))
                        ;; Do the work of colliding the single fist to all
                        ;; faces in this face-layer.
                        (unless (zerop (hash-table-count
                                        face-layer-stable-colliders))
-                         (au:do-hash-keys (face face-layer-stable-colliders)
+                         (u:do-hash-keys (face face-layer-stable-colliders)
                            (v:trace :fl.core.collider
                                     "  compute-contact-state: [reg: ~S <-> stable: ~S]"
                                     (fl:display-id fist) (fl:display-id face))
@@ -329,7 +329,7 @@ had--and update all other faces too."
                    ;; has been collided with all stable faces.
                    (v:trace :fl.core.collider
                             " Stabilizing[1]: ~S" (fl:display-id fist))
-                   (setf (au:href stable-colliders fist-layer fist)
+                   (setf (u:href stable-colliders fist-layer fist)
                          fist)))))))))))
 
 (defun compute-deregistering-collisions (collider-system)
@@ -342,15 +342,15 @@ had--and update all other faces too."
         (deregistering-colliders (deregistering-colliders collider-system)))
     (dolist (fist-layer (physics-layers collider-system))
       (let ((fist-layer-deregistering-colliders
-              (au:href deregistering-colliders fist-layer)))
+              (u:href deregistering-colliders fist-layer)))
         (unless (zerop (hash-table-count fist-layer-deregistering-colliders))
-          (au:do-hash-keys (fist fist-layer-deregistering-colliders)
+          (u:do-hash-keys (fist fist-layer-deregistering-colliders)
             ;; 1. Remove from stable-colliders, cause it is leaving.
-            (remhash fist (au:href stable-colliders fist-layer))
+            (remhash fist (u:href stable-colliders fist-layer))
             ;; 2. Remove from registering-colliders. Either they have been
             ;; processed by now and this is empty or they will never be
             ;; processed cause the collider is leaving.
-            (remhash fist (au:href registering-colliders fist-layer))
+            (remhash fist (u:href registering-colliders fist-layer))
             ;; 3. Break all current fist contacts (if any)
             (remove-all-contacts collider-system fist)
             ;; 4. Now remove from myself, cause I just processed it.
@@ -389,7 +389,7 @@ had--and update all other faces too."
              :collision-plan
              ;; The KEY is the row header, the VALUE is the X locations that
              ;; indicate a collision situation.
-             ,(au:dict
+             ,(u:dict
                :ground (list :ground)
                :player (list :ground)
                :player-bullet (list :ground)
@@ -408,16 +408,16 @@ had--and update all other faces too."
       (dolist (physics-layer (physics-layers new-collider-system))
         ;; Set up the htables to receive the collider references for each
         ;; physics-layer
-        (setf (au:href registering-colliders physics-layer) (au:dict #'eq)
-              (au:href stable-colliders physics-layer) (au:dict #'eq)
-              (au:href deregistering-colliders physics-layer) (au:dict #'eq))))))
+        (setf (u:href registering-colliders physics-layer) (u:dict)
+              (u:href stable-colliders physics-layer) (u:dict)
+              (u:href deregistering-colliders physics-layer) (u:dict))))))
 
 ;; TODO: Move to utility file, maybe put in goldern-utils. Possibly extend to
 ;; take &rest and perform all combinations of keys/values/etc in hash table.
 ;; transfer-func deals with moving a from ht0 to ht1.
 (defun do-hash-keys-pairwise (func ht0 ht1)
-  (au:do-hash-keys (a ht0)
-    (au:do-hash-keys (b ht1)
+  (u:do-hash-keys (a ht0)
+    (u:do-hash-keys (b ht1)
       (funcall func a b))))
 
 (defun test-collider-system ()

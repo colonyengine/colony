@@ -2,7 +2,10 @@
 
 (defpackage #:first-light.actions
   (:nicknames #:fl.actions)
-  (:local-nicknames (#:v3 #:origin.vec3)
+  (:local-nicknames (#:a #:alexandria)
+                    (#:u #:golden-utils)
+                    (#:dll #:doubly-linked-list)
+                    (#:v3 #:origin.vec3)
                     (#:q #:origin.quat))
   (:use #:cl #:%first-light)
   ;; protocol

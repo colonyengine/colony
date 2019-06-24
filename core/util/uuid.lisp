@@ -6,7 +6,7 @@
   (low 0 :type (unsigned-byte 64))
   (high 0 :type (unsigned-byte 64)))
 
-(au:define-printer (uuid stream)
+(u:define-printer (uuid stream)
   (format stream "~a" (uuid->string uuid)))
 
 (defmacro write-uuid-chunk (string count offset bits word)

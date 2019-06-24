@@ -72,7 +72,7 @@
 (defun frame-update (core)
   (with-slots (%alpha %delta %accumulator %frame-time) (frame-manager core)
     (incf %accumulator %frame-time)
-    (au:while (>= %accumulator %delta)
+    (u:while (>= %accumulator %delta)
       (execute-flow core
                     :default
                     'active-phase

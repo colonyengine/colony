@@ -45,27 +45,27 @@ DEFINE-COMPONENT form."
   (let ((search-table (component-search-table (tables core)))
         (component-type/class (find-class component-type nil))
         (base-component-type/class (find-class '%fl:component))
-        (graph (au:href (analyzed-graphs core) 'component-package-order)))
-    (au:when-found (pkg-symbol (au:href search-table component-type))
+        (graph (u:href (analyzed-graphs core) 'component-package-order)))
+    (u:when-found (pkg-symbol (u:href search-table component-type))
       (return-from qualify-component pkg-symbol))
     (if (or (null component-type/class)
             (not (subtypep (class-name component-type/class)
                            (class-name base-component-type/class))))
         (dolist (potential-package (toposort graph))
           (let ((potential-package-name (second potential-package)))
-            (dolist (pkg-to-search (au:href (pattern-matched-packages
-                                             (annotation graph))
-                                            potential-package-name))
-              (au:mvlet ((symbol kind (find-symbol (symbol-name component-type)
-                                                   pkg-to-search)))
+            (dolist (pkg-to-search (u:href (pattern-matched-packages
+                                            (annotation graph))
+                                           potential-package-name))
+              (u:mvlet ((symbol kind (find-symbol (symbol-name component-type)
+                                                  pkg-to-search)))
                 (when (and (eq kind :external)
                            (find-class symbol nil))
-                  (setf (au:href search-table component-type) symbol)
+                  (setf (u:href search-table component-type) symbol)
                   (return-from qualify-component symbol))))))
         component-type)))
 
 (defmethod make-component (context component-type &rest args)
-  (au:if-let ((qualified-type (qualify-component (core context) component-type)))
+  (a:if-let ((qualified-type (qualify-component (core context) component-type)))
     (let ((component (apply #'make-instance qualified-type
                             :type qualified-type
                             :context context
@@ -78,7 +78,7 @@ DEFINE-COMPONENT form."
   (register-object-id instance))
 
 (defun get-computed-component-precedence-list (component-type)
-  (au:when-let ((class (find-class component-type nil)))
+  (a:when-let ((class (find-class component-type nil)))
     (loop :for class :in (c2mop:compute-class-precedence-list class)
           :for name = (class-name class)
           :until (eq name 'component)
@@ -86,7 +86,7 @@ DEFINE-COMPONENT form."
             :collect name)))
 
 (defun component/preinit->init (component)
-  (au:when-let ((thunk (initializer-thunk component)))
+  (a:when-let ((thunk (initializer-thunk component)))
     (funcall thunk)
     (setf (initializer-thunk component) nil))
   (let* ((core (core (context component)))
@@ -111,10 +111,10 @@ DEFINE-COMPONENT form."
 
 (defmethod destroy-after-time ((thing component) &key (ttl 0))
   (let* ((core (core (context thing)))
-         (table (au:href (component-predestroy-view (tables core)))))
+         (table (u:href (component-predestroy-view (tables core)))))
     (setf (ttl thing) (and ttl (max 0 ttl)))
     (if ttl
-        (setf (au:href table thing) thing)
+        (setf (u:href table thing) thing)
         ;; If the TTL is stopped, we want to remove the component from the
         ;; pre-destroy view!
         (remhash thing table))))

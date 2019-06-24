@@ -33,8 +33,8 @@
 (defun gen-reset-function (symbols values)
   (let* ((tmp-symbols
            (loop :for sym :in symbols
-                 :collect (au:format-symbol nil "~A-ONCE-ONLY"
-                                            (symbol-name sym))))
+                 :collect (a:format-symbol nil "~A-ONCE-ONLY"
+                                           (symbol-name sym))))
          (once-only-bindings (mapcar
                               (lambda (tsym value) `(,tsym ,value))
                               tmp-symbols
@@ -56,13 +56,13 @@
   "Parse the selection, action, and transition form from the FUNCS list.
 They can be in any order, but return them as a values in the specific order of
 selector, action, and transition."
-  (let ((ht (au:dict #'eq)))
+  (let ((ht (u:dict)))
     (dolist (func-form funcs)
       (when func-form
-        (setf (au:href ht (first func-form)) (second func-form))))
-    (au:mvlet ((selector selector-present-p (au:href ht 'selector))
-               (action action-present-p (au:href ht 'action))
-               (transition transition-present-p (au:href ht 'transition)))
+        (setf (u:href ht (first func-form)) (second func-form))))
+    (u:mvlet ((selector selector-present-p (u:href ht 'selector))
+              (action action-present-p (u:href ht 'action))
+              (transition transition-present-p (u:href ht 'transition)))
       (unless selector-present-p
         (error "Missing selector function in flow-state: ~a" name))
       (unless action-present-p
@@ -76,9 +76,9 @@ selector, action, and transition."
 flow-state CLOS instance for it."
   (destructuring-bind (match name policy binds . funcs) form
     (let ((binds (mapcar #'canonicalize-binding binds)))
-      (au:mvlet* ((selector action transition (parse-flow-state-functions
-                                               name funcs))
-                  (bind-syms bind-vals (binding-partition binds)))
+      (u:mvlet ((selector action transition (parse-flow-state-functions
+                                             name funcs))
+                (bind-syms bind-vals (binding-partition binds)))
         (ensure-matched-symbol match "flow-state")
         (let ((reset-function (gen-reset-function bind-syms bind-vals)))
           ;; Generate the instance maker for this flow-state.
@@ -105,24 +105,24 @@ flow-state CLOS instance for it."
 containing each flow-state indexed by name."
   (destructuring-bind (match flow-name . flow-states) form
     (multiple-value-bind (binds ignores) (get-flow-state-variables flow-states)
-      (let ((flow-table (au:unique-name 'flow-table)))
+      (let ((flow-table (a:make-gensym '#:flow-table)))
         (ensure-matched-symbol match "flow")
         `(,flow-name
-          (let ((,flow-table (au:dict #'eq))
+          (let ((,flow-table (u:dict))
                 ,@binds)
             ,@ignores
             ,@(loop :for (name state) :in (mapcar #'parse-flow-state
                                                   flow-states)
-                    :collect `(setf (au:href ,flow-table ',name) ,state))
+                    :collect `(setf (u:href ,flow-table ',name) ,state))
             ,flow-table))))))
 
 (defun parse-call-flows (form)
   "Parse an entire call-flow and return a list of the name of it and a form
 which evaluates to a hash table of flows keyed by their name."
-  (let ((call-flows (au:unique-name 'call-flows)))
-    `(let ((,call-flows (au:dict #'eq)))
+  (let ((call-flows (a:make-gensym '#:call-flows)))
+    `(let ((,call-flows (u:dict)))
        ,@(loop :for (name flow) :in (mapcar #'parse-flow form)
-               :collect `(setf (au:href ,call-flows ',name) ,flow))
+               :collect `(setf (u:href ,call-flows ',name) ,flow))
        ,call-flows)))
 
 (defun execute-flow (core call-flow-name flow-name flow-state-name
@@ -171,15 +171,15 @@ name which resulted in the exiting of the flow."
             ;; type-table instance (more semantics for :type-policy could be
             ;; added at a later date).
             (labels ((act-on-item (item)
-                       (au:when-let ((action (action flow-state)))
+                       (a:when-let ((action (action flow-state)))
                          (etypecase item
-                           (hash-table (au:do-hash-values (v item)
+                           (hash-table (u:do-hash-values (v item)
                                          (funcall action v)))
                            (atom (funcall action item)))))
                      (act-on-type-table (type-key type-table)
                        ;; Get the hash of components for the type-key
-                       (au:when-found (component-table (type-table type-key
-                                                                   type-table))
+                       (u:when-found (component-table (type-table type-key
+                                                                  type-table))
                          (act-on-item component-table))))
               (ecase policy
                 ;; TODO: :type-policy is in this branch until I write the code
@@ -191,8 +191,8 @@ name which resulted in the exiting of the flow."
                      (act-on-item selections)))
                 ((:type-policy)
                  (let* ((component-dependency-graph
-                          (au:href (analyzed-graphs core)
-                                   'component-dependency))
+                          (u:href (analyzed-graphs core)
+                                  'component-dependency))
                         (annotation (annotation component-dependency-graph))
                         (dependency-type-order
                           (toposort component-dependency-graph)))
@@ -224,26 +224,26 @@ name which resulted in the exiting of the flow."
                      (etypecase transition
                        (function (funcall transition core))
                        (symbol transition))))
-              (setf flow-state (au:href flow (act-on-transition
-                                              (transition flow-state)))))))
+              (setf flow-state (u:href flow (act-on-transition
+                                             (transition flow-state)))))))
 
 (defun get-call-flow (call-flow-name core)
-  (au:href (call-flows core) call-flow-name))
+  (u:href (call-flows core) call-flow-name))
 
 (defun get-flow (flow-name call-flow)
-  (au:href call-flow flow-name))
+  (u:href call-flow flow-name))
 
 (defun get-flow-state (flow-state-name flow)
-  (au:href flow flow-state-name))
+  (u:href flow flow-state-name))
 
 (defmacro define-call-flow (name () &body body)
-  (au:with-unique-names (call-flow)
+  (a:with-gensyms (call-flow)
     (let ((definition '(fl.data:get 'call-flows)))
       `(let ((,call-flow ,(parse-call-flows body)))
          (unless ,definition
-           (fl.data:set 'call-flows (au:dict #'eq)))
-         (setf (au:href ,definition ',name) ,call-flow)))))
+           (fl.data:set 'call-flows (u:dict)))
+         (setf (u:href ,definition ',name) ,call-flow)))))
 
 (defun load-call-flows (core)
-  (au:do-hash (k v (fl.data:get 'call-flows))
-    (setf (au:href (call-flows core) k) v)))
+  (u:do-hash (k v (fl.data:get 'call-flows))
+    (setf (u:href (call-flows core) k) v)))

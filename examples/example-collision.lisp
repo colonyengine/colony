@@ -35,7 +35,7 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (fl:define-component unit-test-transform-api ()
   ((test-type :default nil) ;; You must specify this
-   (test-performed :default (au:dict #'eq))))
+   (test-performed :default (u:dict))))
 
 (defmethod fl:on-component-physics-update ((self unit-test-transform-api))
   (ecase (test-type self)
@@ -50,7 +50,7 @@
          (actor-transform
            (fl:actor-component-by-type actor 'fl.comp:transform)))
 
-    (unless (au:href (test-performed self) test-type)
+    (unless (u:href (test-performed self) test-type)
       (let ((forward (fl.comp:transform-forward actor-transform))
             (backward (fl.comp:transform-backward actor-transform))
             (up (fl.comp:transform-up actor-transform))
@@ -73,16 +73,16 @@
                      (v3:~ right (v3:make 1 0 0))
                      (v3:~ left (v3:make -1 0 0)))
           (error "The Transform Axis Direction API didn't match expectations!"))
-        (setf (au:href (test-performed self) test-type) t)))))
+        (setf (u:href (test-performed self) test-type) t)))))
 
 (defun test-transform-api (self)
   (let* ((test-type (test-type self)))
-    (unless (au:href (test-performed self) test-type)
+    (unless (u:href (test-performed self) test-type)
       (test-transform-point-api self)
       (test-transform-vector-api self)
       (test-transform-direction-api self)
       ;; And ensure we don't run this again.
-      (setf (au:href (test-performed self) test-type) t))))
+      (setf (u:href (test-performed self) test-type) t))))
 
 (defun test-transform-point-api (self)
   "Test if the TRANSFORM-POINT and INVERSE-TRANSFORM-POINT work."

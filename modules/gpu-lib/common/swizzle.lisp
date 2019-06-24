@@ -1,6 +1,6 @@
 (in-package #:first-light.gpu.swizzle)
 
-(au:eval-always
+(u:eval-always
   (defun %swizzle/combinations (n items)
     (if (= n 1)
         (mapcar #'list items)
@@ -28,7 +28,7 @@
 
   (defmacro define-vari-swizzle-macros ()
     (flet ((map-swizzle (mask)
-             (au:make-keyword
+             (u:make-keyword
               (map 'string
                    (lambda (x)
                      (elt "XYZW" (%swizzle/char-position
@@ -36,7 +36,7 @@
                    mask))))
       `(progn
          ,@(loop :for mask :in (%swizzle/component-groups 4)
-                 :for op = (au:symbolicate "." mask)
+                 :for op = (a:symbolicate "." mask)
                  :collect `(export ',op)
                  :collect `(v-defmacro ,op (vector)
                              `(swizzle ,vector ,,(map-swizzle mask))))))))

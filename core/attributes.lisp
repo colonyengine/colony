@@ -7,10 +7,10 @@
 (defclass attributes ()
   ((%semantic-attributes :reader semantic-attributes
                          :initarg :semantic-attributes
-                         :initform (au:dict #'eql))
+                         :initform (u:dict))
    (%computed-attributes :reader computed-attributes
                          :initarg :computed-attributes
-                         :initform (au:dict #'eql))))
+                         :initform (u:dict))))
 
 (defun make-attributes (&rest args)
   (apply #'make-instance 'attributes args))
@@ -18,10 +18,10 @@
 ;;; Semantic attributes API
 
 (defmethod semantic-attribute ((attrs attributes) (name symbol))
-  (au:href (semantic-attributes attrs) name))
+  (u:href (semantic-attributes attrs) name))
 
 (defmethod (setf semantic-attribute) (value (attrs attributes) (name symbol))
-  (setf (au:href (semantic-attributes attrs) name) value))
+  (setf (u:href (semantic-attributes attrs) name) value))
 
 (defmethod clear-semantic-attributes ((attrs attributes))
   (clrhash (semantic-attributes attrs)))
@@ -29,16 +29,16 @@
 (defmethod do-semantic-attributes ((attrs attributes) func)
   ;; First make a copy-ish of the hash table in case the func wants to modify
   ;; the hash table.
-  (au:do-hash (k v (au:copy-hash-table (semantic-attributes attrs)))
+  (u:do-hash (k v (a:copy-hash-table (semantic-attributes attrs)))
     (funcall func k v)))
 
 ;;; Computed attributes API
 
 (defmethod computed-attribute ((attrs attributes) (name symbol))
-  (au:href (computed-attributes attrs) name))
+  (u:href (computed-attributes attrs) name))
 
 (defmethod (setf computed-attribute) (value (attrs attributes) (name symbol))
-  (setf (au:href (computed-attributes attrs) name) value))
+  (setf (u:href (computed-attributes attrs) name) value))
 
 (defmethod clear-computed-attributes ((attrs attributes))
   (clrhash (computed-attributes attrs)))
@@ -46,7 +46,7 @@
 (defmethod do-computed-attributes ((attrs attributes) func)
   ;; First make a copy-ish of the hash table in case the func wants to modify
   ;; the hash table.
-  (au:do-hash (k v (au:copy-hash-table (computed-attributes attrs)))
+  (u:do-hash (k v (a:copy-hash-table (computed-attributes attrs)))
     (funcall func k v)))
 
 ;;; Attribute computation and merging API
