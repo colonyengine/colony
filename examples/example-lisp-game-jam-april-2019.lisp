@@ -480,7 +480,7 @@ how to use this function."
                           (+ pi (- pi (abs angle)))
                           angle)))
           (fl.comp:rotate transform
-                          (v3:make 0 0 angle)
+                          (q:orient :local :z angle)
                           :replace-p t
                           :instant-p instant-p))))))
 
@@ -598,8 +598,8 @@ how to use this function."
           (when explosion
             (make-explosion context
                             parent-translation
-                            (quat->euler parent-rotation)
-                            (scale explosion)
+                            parent-rotation
+			    (scale explosion)
                             :name (name explosion)
                             :frames (frames explosion))))))))
 
@@ -789,7 +789,7 @@ how to use this function."
                ;; The rotation we use is indicated by the right stick vector.
                (make-projectile context
                                 parent-translation
-                                (v3:make 0 0 angle)
+                                (q:orient :local :z angle)
                                 (physics-layer self)
                                 depth-layer
                                 :velocity 2000
@@ -886,7 +886,7 @@ how to use this function."
                                       (float (aref scale-range 0) 1.0))))))
                  (make-projectile context
                                   origin
-                                  (v3:zero)
+                                  q:+id+
                                   :enemy-bullet
                                   :asteroid
                                   :velocity  (ransign 50 400)

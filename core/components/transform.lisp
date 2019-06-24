@@ -32,9 +32,7 @@
   (make-instance 'transform-state-vector))
 
 (defun make-rotation-state ()
-  (make-instance 'transform-state-quaternion
-                 :incremental (v3:zero)
-                 :incremental-delta (v3:zero)))
+  (make-instance 'transform-state-quaternion))
 
 (defun make-scaling-state ()
   (make-instance 'transform-state-vector :current (v3:one)))
@@ -78,7 +76,7 @@
   (declare (optimize speed))
   (with-slots (%previous %current %incremental-delta %incremental) state
     (q:copy! %previous %current)
-    (q:scale! %incremental-delta %incremental delta)
+    (q:slerp! %incremental-delta q:+id+ %incremental delta)
     (q:rotate! %current %current %incremental-delta)))
 
 (defun transform-node (core node)
@@ -134,8 +132,8 @@
                                     actor
                                     (translate (v3:zero))
                                     (translate/inc (v3:zero))
-                                    (rotate (v3:zero))
-                                    (rotate/inc (v3:zero))
+                                    (rotate (q:id))
+                                    (rotate/inc (q:id))
                                     (scale (v3:one))
                                     (scale/inc (v3:zero)))
   (with-accessors ((translation translation)
@@ -144,37 +142,38 @@
       instance
     (setf (actor instance) actor
           (state instance) :initialize
-          (current translation) translate
-          (previous translation) (v3:copy translate)
-          (incremental translation) translate/inc
-          (current rotation) (etypecase rotate
-                               (v3:vec (q:rotate q:+id+ rotate))
-                               (q:quat rotate))
+
+          (current translation) (v3:copy translate)
+          (previous translation) (v3:copy (current translation))
+          (incremental translation) (v3:copy translate/inc)
+
+          (current rotation) (q:copy rotate)
           (previous rotation) (q:copy (current rotation))
-          (incremental rotation) rotate/inc
+          (incremental rotation) (q:copy rotate/inc)
+
           (current scaling) (etypecase scale
-                              (v3:vec scale)
+                              (v3:vec (v3:copy scale))
                               (real (v3:make scale scale scale)))
           (previous scaling) (v3:copy (current scaling))
-          (incremental scaling) scale/inc)))
+          (incremental scaling) (v3:copy scale/inc))))
 
 ;;; User protocol
 
-(defun %rotate/model-space (rotation vec &optional replace-p instant-p)
+(defun %rotate/model-space (rotation rot &optional replace-p instant-p)
   (with-accessors ((previous previous) (current current)) rotation
-    (q:rotate! current (if replace-p q:+id+ current) vec)
+    (q:rotate! current (if replace-p q:+id+ current) rot)
     (when instant-p
       (q:copy! previous current))))
 
-(defun %rotate/world-space (rotation vec &optional replace-p instant-p)
-  (declare (ignore rotation vec replace-p instant-p))
+(defun %rotate/world-space (rotation rot &optional replace-p instant-p)
+  (declare (ignore rotation rot replace-p instant-p))
   (error "ROTATE not yet implemented for world space."))
 
-(defun rotate (transform vec &key (space :model) replace-p instant-p)
+(defun rotate (transform rot &key (space :model) replace-p instant-p)
   (ecase space
-    (:model (%rotate/model-space (rotation transform) vec replace-p instant-p))
+    (:model (%rotate/model-space (rotation transform) rot replace-p instant-p))
     (:world (%rotate/world-space
-             (rotation transform) vec replace-p instant-p))))
+             (rotation transform) rot replace-p instant-p))))
 
 (defun %translate/model-space (translation vec &optional replace-p instant-p)
   (with-accessors ((previous previous) (current current)) translation
