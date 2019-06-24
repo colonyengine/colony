@@ -133,77 +133,77 @@
 ;;; Materials
 
 (fl:define-material 1d-gradient
-    (:shader fl.gpu.user:unlit-texture-1d
-     :profiles (fl.materials:u-mvp)
-     :uniforms
-             ((:tex.sampler1 '1d-gradient)
-              (:mix-color (v4:make 1 1 1 1)))))
+  (:shader fl.gpu.user:unlit-texture-1d
+   :profiles (fl.materials:u-mvp)
+   :uniforms
+   ((:tex.sampler1 '1d-gradient)
+    (:mix-color (v4:make 1 1 1 1)))))
 
 (fl:define-material 2d-wood
-    (:shader fl.gpu.texture:unlit-texture
-     :profiles (fl.materials:u-mvp)
-     :uniforms
-             ((:tex.sampler1 '2d-wood)
-              (:mix-color (v4:one)))))
+  (:shader fl.gpu.texture:unlit-texture
+   :profiles (fl.materials:u-mvp)
+   :uniforms
+   ((:tex.sampler1 '2d-wood)
+    (:mix-color (v4:one)))))
 
 (fl:define-material 3d
-    (:shader fl.gpu.user:unlit-texture-3d
-     :profiles (fl.materials:u-mvp)
-     :uniforms
-             ((:tex.sampler1 '3d)
-              (:mix-color (v4:one))
-              (:uv-z (lambda (context material)
-                       (declare (ignore material))
-                       ;; make sin in the range of 0 to 1 for texture coord.
-                       (/ (1+ (sin (* (fl:total-time context) 1.5))) 2.0))))))
+  (:shader fl.gpu.user:unlit-texture-3d
+   :profiles (fl.materials:u-mvp)
+   :uniforms
+   ((:tex.sampler1 '3d)
+    (:mix-color (v4:one))
+    (:uv-z (lambda (context material)
+             (declare (ignore material))
+             ;; make sin in the range of 0 to 1 for texture coord.
+             (/ (1+ (sin (* (fl:total-time context) 1.5))) 2.0))))))
 
 (fl:define-material 1d-array
-    (:shader fl.gpu.user:unlit-texture-1d-array
-     :profiles (fl.materials:u-mvpt)
-     :uniforms
-             ((:tex.sampler1 '1d-array)
-              (:mix-color (v4:one))
-              (:num-layers 4))))
+  (:shader fl.gpu.user:unlit-texture-1d-array
+   :profiles (fl.materials:u-mvpt)
+   :uniforms
+   ((:tex.sampler1 '1d-array)
+    (:mix-color (v4:one))
+    (:num-layers 4))))
 
 (fl:define-material 2d-array
-    (:shader fl.gpu.user:unlit-texture-2d-array
-     :profiles (fl.materials:u-mvpt)
-     :uniforms
-             ((:tex.sampler1 '2d-array)
-              (:mix-color (v4:one))
-              (:uv-z (lambda (context material)
-                       (declare (ignore material))
-                       ;; make sin in the range of 0 to 1 for texture coord.
-                       (/ (1+ (sin (* (fl:total-time context) 1.5))) 2.0)))
-              (:num-layers 4))))
+  (:shader fl.gpu.user:unlit-texture-2d-array
+   :profiles (fl.materials:u-mvpt)
+   :uniforms
+   ((:tex.sampler1 '2d-array)
+    (:mix-color (v4:one))
+    (:uv-z (lambda (context material)
+             (declare (ignore material))
+             ;; make sin in the range of 0 to 1 for texture coord.
+             (/ (1+ (sin (* (fl:total-time context) 1.5))) 2.0)))
+    (:num-layers 4))))
 
 (fl:define-material 2d-sweep-input
-    (:shader fl.gpu.user:noise-2d/sweep-input
-     :profiles (fl.materials:u-mvp)
-     :uniforms
-             ;; any old 2d texture here will do since we overwrite it with noise.
-             ((:tex.sampler1 '2d-wood)
-              (:tex.channel0 (v2:zero))
-              (:mix-color (v4:one)))))
+  (:shader fl.gpu.user:noise-2d/sweep-input
+   :profiles (fl.materials:u-mvp)
+   :uniforms
+   ;; any old 2d texture here will do since we overwrite it with noise.
+   ((:tex.sampler1 '2d-wood)
+    (:tex.channel0 (v2:zero))
+    (:mix-color (v4:one)))))
 
 (fl:define-material cubemap
-    (:shader fl.gpu.user:unlit-texture-cube-map
-     :profiles (fl.materials:u-mvp)
-     :uniforms
-             ((:tex.sampler1 'cubemap)
-              (:mix-color (v4:one)))))
+  (:shader fl.gpu.user:unlit-texture-cube-map
+   :profiles (fl.materials:u-mvp)
+   :uniforms
+   ((:tex.sampler1 'cubemap)
+    (:mix-color (v4:one)))))
 
 (fl:define-material cubemaparray
-    (:shader fl.gpu.user:unlit-texture-cube-map-array
-     :profiles (fl.materials:u-mvp)
-     :uniforms
-             ((:tex.sampler1 'cubemaparray)
-              (:mix-color (v4:one))
-              (:cube-layer (lambda (context material)
-                             (declare (ignore material))
-                             ;; make sin in the range of 0 to 1 for texture coord.
-                             (/ (1+ (sin (* (fl:total-time context) 1.5))) 2.0)))
-              (:num-layers 2))))
+  (:shader fl.gpu.user:unlit-texture-cube-map-array
+   :profiles (fl.materials:u-mvp)
+   :uniforms
+   ((:tex.sampler1 'cubemaparray)
+    (:mix-color (v4:one))
+    (:cube-layer (lambda (context material)
+                   (declare (ignore material))
+                   ;; make sin in the range of 0 to 1 for texture coord.
+                   (/ (1+ (sin (* (fl:total-time context) 1.5))) 2.0)))
+    (:num-layers 2))))
 
 ;;; Components
 
@@ -264,12 +264,12 @@
    (shader-sweep))
   (("cube-map" :copy "/mesh")
    (fl.comp:transform :translate (v3:make 0 -1 0)
-                      :rotate (v3:make 0.5 0.5 0.5))
+                      :rotate (q:orient :world :x (asin (/ (sqrt 2)))  :z (/ pi 4)))
    (fl.comp:mesh :location '((:core :mesh) "cube.glb"))
    (fl.comp:render :material 'cubemap))
   (("cube-map-array" :copy "/mesh")
    (fl.comp:transform :translate (v3:make 3 -1 0)
-                      :rotate/inc (v3:make 0.5 0.5 0.5))
+                      :rotate/inc (q:orient :world (v3:one) (/ pi 4)))
    (fl.comp:mesh :location '((:core :mesh) "cube.glb"))
    (fl.comp:render
     :material 'cubemaparray)))

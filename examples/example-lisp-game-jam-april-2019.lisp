@@ -261,7 +261,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                           (+ pi (- pi (abs angle)))
                           angle)))
           (fl.comp:rotate transform
-                          (v3:make 0 0 angle)
+                          (q:orient :local :z angle)
                           :replace-p t
                           :instant-p instant-p))))))
 
@@ -362,7 +362,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
           (when explosion
             (make-explosion context
                             parent-translation
-                            (quat->euler parent-rotation)
+                            parent-rotation
                             :name (name explosion)
                             :frames (frames explosion))))))))
 
@@ -544,7 +544,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                ;; The rotation we use is indicated by the right stick vector.
                (make-projectile context
                                 parent-translation
-                                (v3:make 0 0 angle)
+                                (q:orient :local :z angle)
                                 (physics-layer self)
                                 :velocity 2000
                                 :name (name self)
@@ -638,7 +638,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                                       (float (aref scale-range 0) 1.0))))))
                  (make-projectile context
                                   origin
-                                  (v3:zero)
+                                  q:+id+
                                   :enemy-bullet
                                   :velocity  (ransign 50 400)
                                   ;; this direction is in world space.

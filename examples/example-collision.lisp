@@ -201,24 +201,26 @@
    (fl.comp:camera (:policy :new-args) :zoom 6))
   ("rot-0-center"
    (fl.comp:transform :translate (v3:make -2 0 0)
-                      :rotate/inc (v3:make 0 0 pi))
+                      :rotate/inc (q:orient :local :z pi))
    ("plane-0"
     (fl.comp:transform :translate (v3:make -2 0 0))
     (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
     (fl.comp:collider/sphere
      :display-id "Player"
+     :visualize t
      :on-layer :player
      :center (v3:zero)
      :radius 1)
     (fl.comp:render :material '2d-wood)))
   ("rot-1-center"
    (fl.comp:transform :translate (v3:make 2 0 0)
-                      :rotate/inc (v3:make 0 0 (- pi)))
+                      :rotate/inc (q:orient :local :z (- pi)))
    ("plane-1"
     (fl.comp:transform :translate (v3:make 2 0 0))
     (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
     (fl.comp:collider/sphere
      :display-id "Enemy"
+     :visualize t
      :on-layer :enemy
      :center (v3:zero)
      :radius 1)
@@ -261,7 +263,7 @@ world space for a particular transform."
      ("mark"
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
-      (fl.comp:transform :rotate (v3:make 0 0 (/ pi 2))
+      (fl.comp:transform :rotate (q:orient :local :z (/ pi 2))
                          :scale (v3:make 2 2 2))
       (unit-test-transform-api :test-type :test-transform-api)
       (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
@@ -291,6 +293,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Left-Gate"
+                            :visualize t
                             :on-layer :ground))
 
   ("right-gate"
@@ -298,17 +301,19 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Right-Gate"
+                            :visualize t
                             :on-layer :ground))
 
   ("stone"
    (fl.comp:transform :translate (v3:make 0 5 0)
                       :scale (v3:make 0.5 0.5 0.5)
-                      :rotate (v3:make (/ 2 pi 2) 0 0)
-                      :rotate/inc (v3:make (/ pi -2) (/ pi -2) (/ pi -2))
+                      :rotate (q:orient :local :x (/ pi 2))
+                      :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:make 0 -2 0))
    (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
    (fl.comp:collider/sphere :display-id "Stone"
+                            :visualize t
                             :on-layer :player
                             :referent (fl:ref :self
                                               :component 'destroy-my-actor)
@@ -320,6 +325,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (fl.comp:transform :translate (v3:make 0 -2 0.1))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:collider/sphere :display-id "Ground"
+                            :visualize t
                             :on-layer :ground
                             :center (v3:zero)
                             :radius 1)
@@ -337,34 +343,39 @@ actually are. You have to view the results to see the colliders lighting up."
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Upper-Left"
+                            :visualize t
                             :on-layer :ground))
   ("upper-right"
    (fl.comp:transform :translate (v3:make 2 2 -0.1))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Upper-Right"
+                            :visualize t
                             :on-layer :ground))
   ("lower-left"
    (fl.comp:transform :translate (v3:make -2 -2 -0.1))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Lower-Left"
+                            :visualize t
                             :on-layer :ground))
   ("lower-right"
    (fl.comp:transform :translate (v3:make 2 -2 -0.1))
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Lower-Right"
+                            :visualize t
                             :on-layer :ground))
   ("stone"
    (fl.comp:transform :translate (v3:zero)
                       :scale (v3:make 2 2 2)
-                      :rotate (v3:make (/ 2 pi 2) 0 0)
-                      :rotate/inc (v3:make (/ pi -2) (/ pi -2) (/ pi -2))
+                      :rotate (q:orient :local :x (/ pi 2))
+                      :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:zero))
    (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :time-to-destroy 2)
    (fl.comp:collider/sphere :display-id "Stone"
+                            :visualize t
                             :on-layer :player
                             :center (v3:zero)
                             :radius 1)
@@ -372,11 +383,11 @@ actually are. You have to view the results to see the colliders lighting up."
 
 ;;; Prefab descriptors
 
+(fl:define-prefab-descriptor collision-smoke-test ()
+  ("collision-smoke-test" fl.example:examples))
+
 (fl:define-prefab-descriptor collision-test-0 ()
   ("collision-test-0" fl.example:examples))
 
 (fl:define-prefab-descriptor collision-test-1 ()
   ("collision-test-1" fl.example:examples))
-
-(fl:define-prefab-descriptor collision-smoke-test ()
-  ("collision-smoke-test" fl.example:examples))
