@@ -34,7 +34,7 @@
                           (+ pi (- pi (abs angle)))
                           angle)))
           (fl.comp:rotate transform
-                          (v3:make 0 0 angle)
+                          (q:orient :local :z angle)
                           :replace-p t
                           :instant-p instant-p))))))
 
@@ -101,7 +101,7 @@
 (fl:define-prefab "sprite-1" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("ship"
-   (fl.comp:transform :rotate (v3:make 0 0 (/ pi -2)))
+   (fl.comp:transform :rotate (q:orient :local :z (/ pi -2)))
    (simple-movement)
    (shot-emitter)
    ("ship-body"
