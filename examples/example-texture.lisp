@@ -269,7 +269,7 @@
    (fl.comp:render :material 'cubemap))
   (("cube-map-array" :copy "/mesh")
    (fl.comp:transform :translate (v3:make 3 -1 0)
-                      :rotate/inc (q:orient :world (v3:make 1 1 1) (/ pi 4)))
+                      :rotate/inc (q:orient :world (v3:one) (/ pi 4)))
    (fl.comp:mesh :location '((:core :mesh) "cube.glb"))
    (fl.comp:render
     :material 'cubemaparray)))
