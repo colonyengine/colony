@@ -25,4 +25,7 @@
            #:noise
            #:sprite-1
            #:sprite-2
-           #:texture))
+           #:texture
+           ;; Scenes from PtP
+           #:lgj-04/2019
+           #:starfield-demo))

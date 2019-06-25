@@ -1677,7 +1677,14 @@ sequencing."
   ("current-level"))
 
 
+(fl:define-prefab "starfield-demo" (:library lgj-04/2019)
+  "A simple demo scene of the starfield. Not used in the game, but for
+testing the starfield shader."
 
+  (("starfield" :link ("/starfield" :from lgj-04/2019)))
+
+  (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
+   (fl.comp:transform :translate (v3:make 0 0 (dl :camera)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefab descriptors for convenience
@@ -1685,3 +1692,6 @@ sequencing."
 
 (fl:define-prefab-descriptor lgj-04/2019 ()
   ("protect-the-planets" fl.example::lgj-04/2019))
+
+(fl:define-prefab-descriptor starfield-demo ()
+  ("starfield-demo" fl.example::lgj-04/2019))
