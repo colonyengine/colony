@@ -599,7 +599,7 @@ how to use this function."
             (make-explosion context
                             parent-translation
                             parent-rotation
-			    (scale explosion)
+                            (scale explosion)
                             :name (name explosion)
                             :frames (frames explosion))))))))
 
