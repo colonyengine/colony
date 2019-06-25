@@ -23,8 +23,7 @@ missing material used)."
     (u:if-found (material (u:href table material-name))
                 material
                 (u:href table
-                        (a:ensure-symbol 'missing-material
-                                         'fl.materials)))))
+                        (a:ensure-symbol 'missing-material 'fl.materials)))))
 
 (defun %add-material (material core)
   "Add the MATERIAL by its id into CORE."
@@ -429,8 +428,7 @@ and ignores the CONTEXT and MATERIAL arguments."
     ;; convert the overlay names to concrete overlay instances
     (let ((concrete-profiles
             (loop :for po-name :in (profile-overlay-names mat)
-                  :for inst = (u:href (profiles (materials core))
-                                      po-name)
+                  :for inst = (u:href (profiles (materials core)) po-name)
                   :if inst
                     :collect inst
                   :else
@@ -439,8 +437,7 @@ and ignores the CONTEXT and MATERIAL arguments."
       ;; Insert the uniforms in the profile, overwriting whatever was present
       ;; for that uniform if it existed in a previous uniform.
       (dolist (concrete-profile concrete-profiles)
-        (u:do-hash
-            (uniform-name material-value (uniforms concrete-profile))
+        (u:do-hash (uniform-name material-value (uniforms concrete-profile))
           (setf (u:href (uniforms mat) uniform-name)
                 ;; NOTE: We copy here so there is no shared structure between
                 ;; material-values and profiles.
@@ -467,8 +464,7 @@ available for it so BIND-UNIFORMS cannot yet be called on it."
   "Given a SAMPLER-TYPE, like :sampler-2d-array, return the kind of texture-type
 that is appropriate for it, such as :texture-2d-array. Do this for all sampler
 types and texture types."
-  (u:if-found (texture-type (u:href +sampler-type->texture-type+
-                                    sampler-type))
+  (u:if-found (texture-type (u:href +sampler-type->texture-type+ sampler-type))
               texture-type
               (error "Unknown sampler-type: ~A~%" sampler-type)))
 
@@ -674,13 +670,8 @@ applied in an overlay manner while defining a material."
       (destructuring-bind (&key shader profiles (instances 1) attributes
                              uniforms blocks)
           body
-        `(let ((,func ,(parse-material name
-                                       shader
-                                       instances
-                                       attributes
-                                       profiles
-                                       uniforms
-                                       blocks)))
+        `(let ((,func ,(parse-material name shader instances attributes profiles
+                                       uniforms blocks)))
            (unless ,definition
              (setf (%fl:meta 'materials) (u:dict)))
            (setf (u:href ,definition ',name) ,func)

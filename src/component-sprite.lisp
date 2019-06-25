@@ -76,9 +76,9 @@
     (let ((spec (a:ensure-list spec)))
       (with-shared-storage
           (context context)
-        ((cached-spritesheet spritesheet-present-p
-                             ('sprite :cached-spritesheet-data spec)
-                             (make-spritesheet context self)))
+          ((cached-spritesheet spritesheet-present-p
+                               ('sprite :cached-spritesheet-data spec)
+                               (make-spritesheet context self)))
         (setf spritesheet cached-spritesheet
               index (u:href (sprites spritesheet) name)
               initial-index index)))))

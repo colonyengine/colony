@@ -51,18 +51,18 @@
     (a:when-let ((camera (active-camera context)))
       (let ((transform (actor-component-by-type actor 'fl.comp:transform)))
         (using-material material
-                        (:model (fl.comp:model transform)
-                         :view (fl.comp:view camera)
-                         :proj (fl.comp:projection camera)
-                         :collider-local-position (center self)
-                         :in-contact-p (> (num-contacts self) 0)
-                         ;; NOTE: The shader computes the radius appropriately for
-                         ;; visualization purposes.
-                         :radius (radius self))
-                        ;; Finally, draw the visualizaiton.
-                        (gl:bind-vertex-array (geometry self))
-                        (gl:draw-arrays-instanced :points 0 1 1)
-                        (gl:bind-vertex-array 0))))))
+            (:model (fl.comp:model transform)
+             :view (fl.comp:view camera)
+             :proj (fl.comp:projection camera)
+             :collider-local-position (center self)
+             :in-contact-p (> (num-contacts self) 0)
+             ;; NOTE: The shader computes the radius appropriately for
+             ;; visualization purposes.
+             :radius (radius self))
+          ;; Finally, draw the visualizaiton.
+          (gl:bind-vertex-array (geometry self))
+          (gl:draw-arrays-instanced :points 0 1 1)
+          (gl:bind-vertex-array 0))))))
 
 ;; NOTE: We bubble the collision messages from the collider system through
 ;; ourselves to our referent (who implements this same API). This way, the

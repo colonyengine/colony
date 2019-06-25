@@ -31,7 +31,7 @@
       self
     (a:when-let ((camera (active-camera context)))
       (using-material material
-                      (:model (fl.comp:model transform)
-                       :view (fl.comp:view camera)
-                       :proj (fl.comp:projection camera))
-                      (funcall draw-method)))))
+          (:model (fl.comp:model transform)
+           :view (fl.comp:view camera)
+           :proj (fl.comp:projection camera))
+        (funcall draw-method)))))
