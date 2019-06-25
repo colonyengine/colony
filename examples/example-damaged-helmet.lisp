@@ -20,7 +20,7 @@
 ;;; Materials
 
 (fl:define-material damaged-helmet
-  (:shader fl.gpu.user:damaged-helmet
+  (:shader fl.shader.user:damaged-helmet
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:metallic-roughness-values (v2:one))

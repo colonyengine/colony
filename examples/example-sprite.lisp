@@ -17,10 +17,10 @@
 
 (defmethod fl:on-component-update ((self simple-movement))
   (with-accessors ((context fl:context) (transform transform)) self
-    (u:mvlet ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
-                                                  '(:gamepad1 :left-stick)))
-              (rx ry (fl.input:get-gamepad-analog (fl:input-data context)
-                                                  '(:gamepad1 :right-stick)))
+    (u:mvlet ((lx ly (fl:get-gamepad-analog (fl:input-data context)
+                                            '(:gamepad1 :left-stick)))
+              (rx ry (fl:get-gamepad-analog (fl:input-data context)
+                                            '(:gamepad1 :right-stick)))
               (instant-p (zerop (fl:frame-count context))))
       (let ((vec (v3:make lx ly 0)))
         (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150.0)
@@ -68,8 +68,8 @@
 (defmethod fl:on-component-update ((self shot-emitter))
   (with-accessors ((context fl:context) (emitter-transform emitter-transform))
       self
-    (when (or (fl.input:input-enter-p (fl:input-data context) '(:gamepad1 :a))
-              (fl.input:input-enter-p (fl:input-data context) '(:mouse :left)))
+    (when (or (fl:input-enter-p (fl:input-data context) '(:gamepad1 :a))
+              (fl:input-enter-p (fl:input-data context) '(:mouse :left)))
       (let* ((parent-model (fl.comp:model emitter-transform))
              (parent-translation (m4:get-translation parent-model))
              (parent-rotation (q:from-mat4 parent-model))

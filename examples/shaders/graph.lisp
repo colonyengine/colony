@@ -1,12 +1,12 @@
-(in-package #:first-light.gpu.user)
+(in-package #:first-light.shader.user)
 
 (define-function graph/frag ((uv :vec2)
-                                  &uniform
-                                  (time :float))
+                             &uniform
+                             (time :float))
   (let* ((dim (vec2 (1+ (sin time)) (+ 2 (sin time))))
          (uv (+ (* uv (- (.y dim) (.x dim)))
                 (vec2 (.x dim) -0.5))))
-    (fl.gpu.graph:graph
+    (fl.shader.graph:graph
      (lambda ((x :float))
        (* (sin (* x x x)) (sin x)))
      (* 4 uv)
@@ -15,7 +15,7 @@
      10)))
 
 (define-shader graph ()
-  (:vertex (fl.gpu.texture:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (fl.shader.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (graph/frag :vec2)))
 
 ;;;
@@ -42,8 +42,8 @@
                    0 1 0
                    (sin i) 0 (cos i)))
          (pos (* m3 offset))
-         (h (* 40 (fl.gpu.noise:perlin-surflet (+ (* 0.03 pos)
-                                                  (vec3 (* 0.5 time))))))
+         (h (* 40 (fl.shader.noise:perlin-surflet (+ (* 0.03 pos)
+                                                     (vec3 (* 0.5 time))))))
          (pos (vec3 (.x pos) h (.z pos)))
          (color (mix (vec4 1 0.8 0 0)
                      (vec4 0.85)
@@ -100,15 +100,15 @@
                 color)))))
 
 (define-function 3d-graph/frag ((uv :vec2)
-                                     (color :vec4)
-                                     &uniform
-                                     (time :float))
+                                (color :vec4)
+                                &uniform
+                                (time :float))
   (let ((scale 1))
     (mix (vec4 0)
          color
-         (fl.gpu.sdf:mask/fill
-          (fl.gpu.sdf:dist/circle (- (* uv 2 scale) (vec2 scale))
-                                  scale)))))
+         (fl.shader.sdf:mask/fill
+          (fl.shader.sdf:dist/circle (- (* uv 2 scale) (vec2 scale))
+                                     scale)))))
 
 (define-shader 3d-graph-1 ()
   (:vertex (3d-graph/vert1 mesh-attrs))
