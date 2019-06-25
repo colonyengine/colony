@@ -228,6 +228,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
           ;; NOTE: Allocates memory.
           (v3:make (+ mx adj-x) (+ my adj-y) (+ mz adj-z)))))))
 
+;; This and it's inverse should prolly go into origin. We currently do not use
+;; this function in this code, but it is useful in its own right.
 (defun quat->euler (quat)
   (flet ((copysign (x y)
            (let ((x (abs x))
