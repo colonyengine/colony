@@ -645,7 +645,7 @@ be executed after all the shader programs have been compiled."
     `(let* ((,matprof (%make-material-profile :name ',name)))
        ,(parse-material-uniforms matprof uniforms)
        ;; TODO: We prevent processing of blocks in material-profiles until we
-       ;; discoverifit is a good idea or not.
+       ;; discover if it is a good idea or not.
        ;; ,(parse-material-blocks matprof blocks)
        (when ',blocks
          (error "Interface blocks are not supported in material profiles: ~a"

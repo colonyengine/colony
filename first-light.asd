@@ -34,9 +34,7 @@
   :pathname "src"
   :serial t
   :components
-  (
-
-   (:file "package-internal")
+  ((:file "package-internal")
    (:file "package-gpu")
    (:file "package-shader")
    (:file "package-materials")
