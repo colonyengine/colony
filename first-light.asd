@@ -1,9 +1,7 @@
 (asdf:defsystem #:first-light
   :description "An experimental game engine."
   :author ("Michael Fiano <mail@michaelfiano.com>"
-           "Peter Keller <psilord@cs.wisc.edu>"
-           "Bart Botta <00003b at gmail.com>"
-           "Elijah Malaby <djeis>")
+           "Peter Keller <psilord@cs.wisc.edu>")
   :maintainer ("Michael Fiano <mail@michaelfiano.com>"
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
@@ -11,48 +9,47 @@
   :bug-tracker "https://github.com/hackertheory/first-light/issues"
   :source-control (:git "https://github.com/hackertheory/first-light.git")
   :encoding :utf-8
-  :depends-on (#:closer-mop
-               #:defpackage-plus
-               #:doubly-linked-list
-               #:cl-ppcre
+  :depends-on (#:alexandria
+               #:babel
+               #:bitio
                #:cl-graph
                #:cl-opengl
-               #:sdl2
-               #:split-sequence
-               #:verbose
+               #:cl-ppcre
+               #:closer-mop
+               #:defpackage-plus
+               #:doubly-linked-list
+               #:fast-io
+               #:glsl-packing
                #:golden-utils
+               #:jsown
                #:origin
-               #:first-light.metadata
-               #:first-light.data-structures
-               #:first-light.binary-formats
-               #:first-light.host
-               #:first-light.image-types
-               #:first-light.geometry
-               #:first-light.input
-               #:first-light.gpu
-               #:first-light.gpu-lib)
-  :pathname "core"
+               #:queues.simple-cqueue
+               #:sdl2
+               #:sdl2-image
+               #:split-sequence
+               #:static-vectors
+               #:uiop
+               #:varjo
+               #:verbose)
+  :pathname "src"
   :serial t
   :components
-  ((:module "packages"
-    :components
-    ((:file "internal")
-     (:file "materials")
-     (:file "textures")
-     (:file "annotations")
-     (:file "components")
-     (:file "actions")
-     (:file "prefab")
-     (:file "api")))
-   (:module "mop"
-    :components
-    ((:file "component")))
-   (:module "util"
-    :components
-    ((:file "common")
-     (:file "deploy")
-     (:file "live-coding")
-     (:file "uuid")))
+  ((:file "package-internal")
+   (:file "package-gpu")
+   (:file "package-shader")
+   (:file "package-materials")
+   (:file "package-textures")
+   (:file "package-annotations")
+   (:file "package-components")
+   (:file "package-actions")
+   (:file "package-prefab")
+   (:file "package-api")
+   (:file "common")
+   (:file "interactive-development")
+   (:file "metadata")
+   (:file "parser-common")
+   (:file "parser-gltf2")
+   (:file "uuid")
    (:file "resource")
    (:file "context")
    (:file "options")
@@ -62,60 +59,101 @@
    (:file "shared-storage")
    (:file "attributes")
    (:file "actor")
+   (:file "component-mop")
    (:file "component")
-   (:file "annotations")
    (:file "object-query")
+   (:file "annotations")
    (:file "frame")
    (:file "display")
+   (:file "input-keyboard")
+   (:file "input-mouse")
+   (:file "input-gamepad")
+   (:file "input-window")
+   (:file "input-states")
+   (:file "input")
    (:file "shaders")
    (:file "colliders")
-   (:file "action-manager")
+   (:file "action")
+   (:file "action-fade")
+   (:file "action-rotate")
+   (:file "action-sprite-animate")
+   (:file "gpu-shader")
+   (:file "gpu-common")
+   (:file "gpu-functions")
+   (:file "gpu-stages")
+   (:file "gpu-program")
+   (:file "gpu-packing")
+   (:file "gpu-attributes")
+   (:file "gpu-uniforms")
+   (:file "gpu-layout")
+   (:file "gpu-blocks")
+   (:file "gpu-buffers")
+   (:file "image")
+   (:file "image-sdl2")
+   (:file "texture-common")
+   (:file "texture")
+   (:file "texture-1d")
+   (:file "texture-2d")
+   (:file "texture-3d")
+   (:file "texture-1d-array")
+   (:file "texture-2d-array")
+   (:file "texture-cube-map")
+   (:file "texture-cube-map-array")
+   (:file "texture-rectangle")
+   (:file "texture-buffer")
+   (:file "materials")
+   (:file "component-transform")
+   (:file "component-action-list")
+   (:file "component-camera")
+   (:file "component-camera-following")
+   (:file "component-camera-tracking")
+   (:file "component-mesh")
+   (:file "component-render")
+   (:file "component-sprite")
+   (:file "component-collider")
+   (:file "prefab-common")
+   (:file "prefab-checks")
+   (:file "prefab-parser")
+   (:file "prefab-loader")
+   (:file "prefab-reference")
+   (:file "prefab-descriptor")
+   (:file "prefab")
    (:file "core")
    (:file "engine")
-   (:module "textures"
-    :components
-    ((:file "texture")
-     (:file "common")
-     (:file "1d")
-     (:file "2d")
-     (:file "3d")
-     (:file "1d-array")
-     (:file "2d-array")
-     (:file "cube-map")
-     (:file "cube-map-array")
-     (:file "rectangle")
-     (:file "buffer")))
-   (:file "materials")
-   (:module "components"
-    :components
-    ((:file "transform")
-     (:file "action-list")
-     (:file "camera")
-     (:file "camera-following")
-     (:file "camera-tracking")
-     (:file "mesh")
-     (:file "render")
-     (:file "sprite")
-     (:file "colliders")))
-   (:module "prefab"
-    :components
-    ((:file "common")
-     (:file "checks")
-     (:file "parser")
-     (:file "loader")
-     (:file "reference")
-     (:file "descriptor")
-     (:file "prefab")))
-   (:module "actions"
-    :components
-    ((:file "fade")
-     (:file "rotate")
-     (:file "sprite-animate")))
-   (:module "definitions"
-    :components
-    ((:file "graphs")
-     (:file "flows")
-     (:file "texture-profiles")
-     (:file "textures")
-     (:file "material-profiles")
-     (:file "materials")))))
+   (:file "deployment")
+
+   (:file "shader/common")
+   (:file "shader/common-swizzle")
+   (:file "shader/common-vari")
+   (:file "shader/common-math")
+   (:file "shader/common-structs")
+   (:file "shader/color-grading")
+   (:file "shader/color-space")
+   (:file "shader/graph")
+   (:file "shader/shaping-iq")
+   (:file "shader/shaping-levin")
+   (:file "shader/shaping-penner")
+   (:file "shader/shaping-misc")
+   (:file "shader/hashing-bbs")
+   (:file "shader/hashing-fast32")
+   (:file "shader/hashing-fast32-2")
+   (:file "shader/noise-cellular")
+   (:file "shader/noise-hermite")
+   (:file "shader/noise-perlin")
+   (:file "shader/noise-polkadot")
+   (:file "shader/noise-simplex")
+   (:file "shader/noise-value")
+   (:file "shader/noise-misc")
+   (:file "shader/sdf-2d")
+   (:file "shader/texture")
+   (:file "shader/sprite")
+   (:file "shader/visualization-collider")
+
+   (:file "definition/graphs")
+   (:file "definition/flows")
+   (:file "definition/texture-profiles")
+   (:file "definition/textures")
+   (:file "definition/material-profiles")
+   (:file "definition/materials")
+
+   (:file "staging/hardware-query")))

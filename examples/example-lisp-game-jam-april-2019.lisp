@@ -48,7 +48,7 @@
 ;; that shader.
 (fl:define-material sprite-sheet
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.sprite:sprite
+   :shader fl.shader.sprite:sprite
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
               (:opacity 1.0)
               (:alpha-cutoff 0.1))
@@ -59,13 +59,13 @@
 
 (fl:define-material starfield
   (:profiles (fl.materials:u-mvpt)
-   :shader fl.gpu.user:starfield
+   :shader fl.shader.user:starfield
    :uniforms ((:tex 'fl.example::starfield)
               (:mix-color (v4:one)))))
 
 (fl:define-material warning-mothership
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.texture:unlit-texture
+   :shader fl.shader.texture:unlit-texture
    :uniforms ((:tex.sampler1 'warning-mothership)
               (:mix-color (v4:one))
               #++(:min-intensity (v4:make 0.1 0.1 0.1 0))
@@ -73,7 +73,7 @@
 
 (fl:define-material warning-wave
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.texture:unlit-texture
+   :shader fl.shader.texture:unlit-texture
    :uniforms ((:tex.sampler1 'warning-wave)
               (:mix-color (v4:one))
               #++(:min-intensity (v3:make 0.1 0.1 0.1 1))
@@ -230,8 +230,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (rotate-deadzone rotate-deadzone)
                    (boundary-cube boundary-cube))
       self
-    (u:mvlet ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
-                                                  '(:gamepad1 :left-stick)))
+    (u:mvlet ((lx ly (fl:get-gamepad-analog (fl:input-data context)
+                                            '(:gamepad1 :left-stick)))
               (instant-p (zerop (fl:frame-count context))))
 
       ;; First, we settle the notion of how the player translates around with
@@ -531,7 +531,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
        (loop :while (>= cooldown-time (/ fire-period))
              :do (decf cooldown-time (/ fire-period)))
 
-       (u:mvlet ((rx ry (fl.input:get-gamepad-analog
+       (u:mvlet ((rx ry (fl:get-gamepad-analog
                          (fl:input-data context) '(:gamepad1 :right-stick))))
          (let* ((parent-model (fl.comp:model emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
