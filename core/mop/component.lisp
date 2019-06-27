@@ -41,7 +41,7 @@
    (%annotations :accessor annotations
                  :initarg :annotations
                  ;; key: symbol, value: component-class/annotation-value
-                 :initform (au:dict #'eq))
+                 :initform (u:dict))
    (%annotations-dirty-p :accessor annotations-dirty-p
                          :initarg :annotations-dirty-p
                          :initform nil)
@@ -57,7 +57,7 @@
    ;; annotations across inherited components.
    (%annotated-slots :accessor annotated-slots
                      :initarg :annotated-slots
-                     :initform (au:dict #'eq))))
+                     :initform (u:dict))))
 
 (defmethod c2mop:validate-superclass ((class component-class)
                                       (super standard-class))
@@ -74,7 +74,7 @@
                               (setter #'identity/annotation))
   (let* ((db (find-class component-metaclass-name))
          (annodb (annotations db))
-         (entry (au:href annodb annotation-name)))
+         (entry (u:href annodb annotation-name)))
 
     ;; first look it up.
     ;; use AU to fix this.
@@ -84,7 +84,7 @@
         ;; make a new generic one with defaults.
         (setf entry (make-annotation-value
                      annotation-name snid :forward-reference))
-        (setf (au:href annodb annotation-name) entry
+        (setf (u:href annodb annotation-name) entry
               (annotations-dirty-p db) t)))
 
     ;; then debate what to do based upon state.
@@ -112,7 +112,7 @@
              (num-annotations (hash-table-count annodb))
              (optiarray (make-array num-annotations)))
         ;; now, fill the array with the annotations at their snid spots.
-        (au:maphash-values
+        (a:maphash-values
          (lambda (anno)
            (setf (aref optiarray (serialnum anno)) anno))
          annodb)
@@ -124,11 +124,11 @@
 ;; Ability to reset the annotations.
 (defun clear-annotations (component-metaclass-name)
   (let ((db (find-class component-metaclass-name)))
-    (setf (annotations db) (au:dict #'eq)
+    (setf (annotations db) (u:dict)
           (annotation-serialnum db) 0
           (annotations-dirty-p db) nil
           (annotation-array db) #()
-          (annotated-slots db) (au:dict #'eq))))
+          (annotated-slots db) (u:dict))))
 
 ;; Define a set of slot definition classes that understand the concept of being
 ;; annotated.
@@ -213,7 +213,7 @@
     (dolist (dslotd dslotds)
       (when (annotated-slot-p dslotd)
         (push (annotation dslotd) annotations)))
-    (au:flatten (nreverse annotations))))
+    (u:flatten-tree (nreverse annotations))))
 
 ;; Lifted from sb-pcl::compute-effective-slot-definition-initargs
 ;; We add knowledge of the :annotation slot and how it works across
@@ -282,13 +282,13 @@
       ;; optionally in this output.
       ,@(when annotation
           (list :annotation (remove-duplicates
-                             (au:flatten (nreverse annotation))
+                             (u:flatten-tree (nreverse annotation))
                              :from-end t))))))
 
 (defun compute-component-initargs (component-type)
-  (let* ((class-args (au:mappend #'c2mop:slot-definition-initargs
-                                 (c2mop:class-slots
-                                  (find-class component-type))))
+  (let* ((class-args (a:mappend #'c2mop:slot-definition-initargs
+                                (c2mop:class-slots
+                                 (find-class component-type))))
          (instance-lambda-list (c2mop:method-lambda-list
                                 (first
                                  (c2mop:compute-applicable-methods-using-classes
@@ -296,8 +296,8 @@
                                   (list (find-class component-type))))))
          (instance-args (mapcar
                          (lambda (x)
-                           (au:make-keyword
-                            (car (au:ensure-list x))))
+                           (u:make-keyword
+                            (car (a:ensure-list x))))
                          (rest (member '&key instance-lambda-list)))))
     (union class-args instance-args)))
 
@@ -338,9 +338,9 @@
                       :initial-contents
                       (mapcar (lambda (annotation)
                                 (serialnum
-                                 (au:href (annotations
-                                           (find-class '%fl:component))
-                                          annotation)))
+                                 (u:href (annotations
+                                          (find-class '%fl:component))
+                                         annotation)))
                               (annotation slotd))))
 
     slotd))
@@ -367,7 +367,7 @@
 ;; Here we collect all the annotated slot data from a component and put it into
 ;; the COMPONENT meta-class slots.
 (defun track-annotations (component-name)
-  (setf (au:href (annotated-slots (find-class '%fl:component)) component-name)
+  (setf (u:href (annotated-slots (find-class '%fl:component)) component-name)
         (collect-all-annotated-effective-slot-data component-name)))
 
 ;;; Stuff used to make DEFINE-COMPONENT work.
@@ -378,9 +378,9 @@
                                                   annotation &allow-other-keys)
                      slot
                    (append
-                    `(,(au:symbolicate "%" slot-name)
+                    `(,(a:symbolicate "%" slot-name)
                       :accessor ,slot-name
-                      :initarg ,(au:make-keyword slot-name)
+                      :initarg ,(u:make-keyword slot-name)
                       :initform ,default)
                     (when annotation
                       `(:annotation ,annotation))

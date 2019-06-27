@@ -30,10 +30,10 @@
 
 (defun find-buffer (buffer-name)
   (let ((buffer-table (fl.data:get 'buffers)))
-    (au:href buffer-table buffer-name)))
+    (u:href buffer-table buffer-name)))
 
 (defun create-buffer (buffer-name block-alias)
-  (au:if-let ((block (find-block block-alias)))
+  (a:if-let ((block (find-block block-alias)))
     (let* ((buffer-table (fl.data:get 'buffers))
            (type (block-type->buffer-type (block-type block)))
            (target (buffer-type->target type))
@@ -41,13 +41,13 @@
       (with-slots (%id %layout) buffer
         (%gl:bind-buffer target %id)
         (%gl:buffer-data target (size %layout) (cffi:null-pointer) :static-draw)
-        (setf (au:href buffer-table buffer-name) buffer)))
+        (setf (u:href buffer-table buffer-name) buffer)))
     (error "Cannot find the block with alias ~s when attempting to create a ~
             buffer."
            block-alias)))
 
 (defun bind-buffer (buffer-name binding-point)
-  (au:if-let ((buffer (find-buffer buffer-name)))
+  (a:if-let ((buffer (find-buffer buffer-name)))
     (with-slots (%target %id) buffer
       (%gl:bind-buffer-base %target binding-point %id)
       (%gl:bind-buffer %target 0))
@@ -109,7 +109,7 @@
 
 (defun write-buffer-path (buffer-name path value)
   (with-slots (%type %id %target %layout) (find-buffer buffer-name)
-    (let ((member (au:href (members %layout) path)))
+    (let ((member (u:href (members %layout) path)))
       (check-type value sequence)
       (gl:bind-buffer %target %id)
       (if (eq (object-type member) :mat)
@@ -126,7 +126,7 @@
 (defun %read-buffer-member/vector (member data count)
   (with-slots (%dimensions %element-stride) member
     (let* ((size (car %dimensions))
-           (func (au:format-symbol :m "VEC~a" size)))
+           (func (a:format-symbol :m "VEC~a" size)))
       (flet ((make-vector (data index size)
                (let ((args (loop :for i :below size
                                  :collect (aref data (+ index i)))))
@@ -140,7 +140,7 @@
 (defun %read-buffer-member/matrix (member data count)
   (with-slots (%dimensions %element-stride) member
     (destructuring-bind (columns rows) %dimensions
-      (let ((func (au:format-symbol :m "MAT~d" columns)))
+      (let ((func (a:format-symbol :m "MAT~d" columns)))
         (flet ((make-matrix (data index)
                  (let ((args (loop :repeat columns
                                    :for i :from index :by %element-stride
@@ -179,7 +179,7 @@
 
 (defun read-buffer-path (buffer-name path &optional count)
   (with-slots (%id %target %layout) (find-buffer buffer-name)
-    (let ((member (au:href (members %layout) path)))
+    (let ((member (u:href (members %layout) path)))
       (gl:bind-buffer %target %id)
       (unwind-protect (%read-buffer-member %target member count)
         (gl:bind-buffer %target 0)))))

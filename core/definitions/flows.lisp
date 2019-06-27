@@ -238,8 +238,8 @@
                     (selector
                         (lambda (core)
                           (values :identity-policy
-                                  (au:hash-keys (actor-destroy-db
-                                                 (tables core))))))
+                                  (u:hash-keys (actor-destroy-db
+                                                (tables core))))))
                     ;; NOTE: See selector for this flow-state.
                     (action #'actor/destroy-descendants)
                     (transition decrement-component-destroy-timer))

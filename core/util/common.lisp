@@ -9,13 +9,13 @@ meaning infinity."))
   (destroy-after-time thing :ttl 0))
 
 (defun type-table (key type-table)
-  (au:href type-table key))
+  (u:href type-table key))
 
 (defun (setf type-table) (entry type-name-key type-table)
-  (symbol-macrolet ((entry-table (au:href type-table type-name-key)))
+  (symbol-macrolet ((entry-table (u:href type-table type-name-key)))
     (unless (nth-value 1 entry-table)
-      (setf entry-table (au:dict #'eq)))
-    (setf (au:href entry-table entry) entry)))
+      (setf entry-table (u:dict)))
+    (setf (u:href entry-table entry) entry)))
 
 (defun type-table-drop (component component-type type-table)
   (remhash component (type-table component-type type-table)))
@@ -49,7 +49,7 @@ the test function for `HT` itself."
               ;; nothing.
               (unless lastp
                 (setf (gethash key current-ht)
-                      (au:dict (fdefinition test-fn)))))
+                      (u:dict (fdefinition test-fn)))))
             ;; The key is potentially newly minted.
             (setf current-ht (gethash key current-ht)))
   ht)
@@ -79,8 +79,27 @@ the test function for `HT` itself."
 
 (defun get-time ()
   #+sbcl
-  (au:mvlet ((s ms (sb-ext:get-time-of-day)))
+  (u:mvlet ((s ms (sb-ext:get-time-of-day)))
     (+ (- s (load-time-value (sb-ext:get-time-of-day)))
        (/ ms 1d6)))
   #-sbcl
   (float (/ (get-internal-real-time) internal-time-units-per-second) 1d0))
+
+(defun resolve-system-path (system &optional path)
+  "Resolve the absolute path of the filesystem where `PATH` is located, relative
+to the ASDF system, `SYSTEM`, or relative to the program location in the case of
+running a dumped Lisp image from the command line. Note: A dumped image must
+have either been created with UIOP:DUMP-IMAGE, or have manually set
+UIOP/IMAGE:*IMAGE-DUMPED-P* prior to dumping."
+  (if uiop/image:*image-dumped-p*
+      (truename (uiop/pathname:merge-pathnames*
+                 path
+                 (uiop:pathname-directory-pathname (uiop:argv0))))
+      (asdf/system:system-relative-pathname (asdf:find-system system) path)))
+
+(defmacro without-float-traps (&body body)
+  #+sbcl
+  `(sb-int:with-float-traps-masked (:invalid :divide-by-zero)
+     ,@body)
+  #-sbcl
+  `(progn ,@body))

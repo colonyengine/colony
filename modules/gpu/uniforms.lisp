@@ -30,27 +30,26 @@
     (dolist (stage (translated-stages program))
       (loop :for (parts type-spec) :in (%get-uniforms stage)
             :for id = (ensure-keyword (parts->string parts))
-            :do (setf (au:href (uniforms program) id)
-                      (au:dict #'eq
-                               :name (parts->string
-                                      parts
-                                      #'varjo.internals:safe-glsl-name-string)
-                               :type type-spec))))))
+            :do (setf (u:href (uniforms program) id)
+                      (u:dict :name (parts->string
+                                     parts
+                                     #'varjo.internals:safe-glsl-name-string)
+                              :type type-spec))))))
 
 (defun store-uniform-locations (program)
   (let ((id (id program)))
     (gl:use-program id)
-    (au:do-hash-values (v (uniforms program))
-      (setf (au:href v :location) (gl:get-uniform-location
-                                   id (au:href v :name))))
+    (u:do-hash-values (v (uniforms program))
+      (setf (u:href v :location) (gl:get-uniform-location
+                                  id (u:href v :name))))
     (gl:use-program 0)))
 
 (defun get-uniform-location (program-name uniform)
   (let ((program (find-program program-name)))
-    (au:href (uniforms program) uniform :location)))
+    (u:href (uniforms program) uniform :location)))
 
 (defmacro %uniform-array (location func component-count element-type sequence)
-  (au:with-unique-names (count sv)
+  (a:with-gensyms (count sv)
     `(let ((,count (length ,sequence)))
        (static-vectors:with-static-vector
            (,sv (* ,count ,component-count)

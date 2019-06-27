@@ -102,7 +102,7 @@
 
 (defun resolve-model (node alpha)
   (declare (optimize speed))
-  (au:when-let ((parent (parent node)))
+  (a:when-let ((parent (parent node)))
     (resolve-local node alpha)
     (m4:*! (model node) (model parent) (local node))))
 

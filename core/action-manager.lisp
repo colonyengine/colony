@@ -2,7 +2,7 @@
 
 (defclass action-manager ()
   ((%action-list :reader action-list
-                 :initform (fl.dst:make-dlist :test #'eq))
+                 :initform (dll:make-dlist :test #'eq))
    (renderer :reader renderer
              :initarg :renderer)))
 
@@ -39,12 +39,12 @@
 
 (defmethod initialize-instance :after ((instance action) &key &allow-other-keys)
   (with-slots (%attrs) instance
-    (setf %attrs (au:plist->hash %attrs :test #'eq))))
+    (setf %attrs (u:plist->hash %attrs :test #'eq))))
 
 (defun insert-action (action where &key target)
   (with-accessors ((manager manager) (type action-type)) action
     (let* ((action-list (action-list manager))
-           (node (fl.dst:insert-dlist-node
+           (node (dll:insert-dlist-node
                   where action-list type action :target-key target)))
       (setf (node action) node)
       (on-action-insert action type)
@@ -52,7 +52,7 @@
 
 (defun remove-action (action)
   (with-accessors ((manager manager) (type action-type)) action
-    (fl.dst:remove-dlist-node (action-list manager) type)))
+    (dll:remove-dlist-node (action-list manager) type)))
 
 (defun replace-action (action type &rest args)
   (let ((action (apply #'reinitialize-instance action
@@ -60,11 +60,11 @@
                        :elapsed 0
                        :finished-p nil
                        args)))
-    (fl.dst:update-dlist-node-key (node action) type)))
+    (dll:update-dlist-node-key (node action) type)))
 
 (defun action-step (action)
   (with-accessors ((shape shape) (elapsed elapsed) (duration duration)) action
-    (funcall shape (au:clamp (/ elapsed duration) 0f0 1f0))))
+    (funcall shape (a:clamp (/ elapsed duration) 0f0 1f0))))
 
 (defun insert-default-actions (manager action-specs)
   (dolist (spec action-specs)
@@ -77,7 +77,7 @@
     manager))
 
 (defun process-actions (manager)
-  (loop :for (type . action) :in (fl.dst:dlist-elements (action-list manager))
+  (loop :for (type . action) :in (dll:dlist-elements (action-list manager))
         :do (on-action-update action type)
         :when (finished-p action)
           :do (on-action-finish action type)

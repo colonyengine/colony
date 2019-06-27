@@ -1,16 +1,16 @@
 (in-package #:%first-light)
 
 #+sbcl
-(au:eval-always
+(u:eval-always
   (defmacro profile (core duration)
     (let ((packages (remove-if-not
-                     (lambda (x) (au:string-contains-p "FIRST-LIGHT" x))
+                     (lambda (x) (search "FIRST-LIGHT" x))
                      (mapcar #'package-name (list-all-packages)))))
       `(progn
          (sb-profile:unprofile)
          (sb-profile:profile ,@packages)
-         (au:while (and (running-p core)
-                        (<= (total-time (context ,core)) ,duration))
+         (u:while (and (running-p core)
+                       (<= (total-time (context ,core)) ,duration))
            (iterate-main-loop ,core))
          (when (running-p core)
            (stop-engine ,core))
@@ -20,11 +20,11 @@
 
 (defgeneric prologue (context)
   (:method (context)
-    (au:noop)))
+    (u:noop)))
 
 (defgeneric epilogue (context)
   (:method (context)
-    (au:noop)))
+    (u:noop)))
 
 (defun run-prologue (core)
   "The prologue is a (defmethod prologue ((context context)) ...) method
@@ -88,7 +88,7 @@ tear-down procedure occurs when stopping the engine."
 
 (defun main-loop (core)
   (initialize-frame-time core)
-  (au:while (running-p core)
+  (u:while (running-p core)
     (iterate-main-loop core)))
 
 (defun start-engine (&key scene profile)

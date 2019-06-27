@@ -12,9 +12,9 @@
 (defmacro define-prefab-descriptor (name () &body body)
   `(progn
      (unless (fl.data:get 'prefab-descriptors)
-       (fl.data:set 'prefab-descriptors (au:dict #'eq)))
-     (setf (au:href (fl.data:get 'prefab-descriptors) ',name)
+       (fl.data:set 'prefab-descriptors (u:dict)))
+     (setf (u:href (fl.data:get 'prefab-descriptors) ',name)
            (prefab-descriptor ,@body))))
 
 (defun find-prefab-descriptor (name)
-  (au:href (fl.data:get 'prefab-descriptors) name))
+  (u:href (fl.data:get 'prefab-descriptors) name))

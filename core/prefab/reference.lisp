@@ -18,14 +18,14 @@
 
 (defun ref (id &key component-type merge-id)
   (declare (ignore id component-type merge-id))
-  (au:noop))
+  (u:noop))
 
 (defun parse-reference-path/absolute (reference)
   (with-slots (%id %actors) reference
     (ensure-path-no-trailing-slash %id)
     (ensure-path-valid %id)
     (ensure-path-not-parent %id)
-    (au:href %actors %id)))
+    (u:href %actors %id)))
 
 (defun parse-reference-path/parent (reference)
   (with-slots (%id %current-actor %actors) reference
@@ -33,18 +33,18 @@
                (let* ((node (parent node))
                       (parent-path (path node))
                       (rest (subseq path 3)))
-                 (if (and (au:string-starts-with-p rest "../")
+                 (if (and (u:string-starts-with-p rest "../")
                           (> (count #\/ parent-path) 1))
                      (find-actor rest node)
                      (values parent-path
                              rest)))))
-      (au:mvlet* ((parent sub-path (find-actor
-                                    %id (prefab-node %current-actor)))
-                  (sub-path (string-left-trim "./" sub-path)))
+      (u:mvlet ((parent sub-path (find-actor
+                                  %id (prefab-node %current-actor)))
+                (sub-path (string-left-trim "./" sub-path)))
         (ensure-path-no-trailing-slash sub-path)
         (ensure-path-valid sub-path)
         (ensure-path-not-parent sub-path)
-        (au:href %actors (make-node-path parent sub-path))))))
+        (u:href %actors (make-node-path parent sub-path))))))
 
 (defun parse-reference-path/relative (reference)
   (with-slots (%id %current-actor %actors) reference
@@ -53,7 +53,7 @@
       (ensure-path-no-trailing-slash path)
       (ensure-path-valid path)
       (ensure-path-not-parent path)
-      (au:href %actors path))))
+      (u:href %actors path))))
 
 (defun parse-reference-path (reference)
   (case (char (id reference) 0)
@@ -75,14 +75,14 @@
     (if (eq %component :self)
         %current-component
         (let* ((actor (get-reference-actor reference))
-               (type-table (au:href %components actor %component %merge-id)))
+               (type-table (u:href %components actor %component %merge-id)))
           (cond
             ((and (null %merge-id)
                   type-table
                   (= (hash-table-count type-table) 1))
-             (first (au:hash-keys type-table)))
+             (first (u:hash-keys type-table)))
             (type-table
-             (au:href type-table %merge-id))
+             (u:href type-table %merge-id))
             (t (error "Component reference ~s not found." %component)))))))
 
 (defun lookup-reference (args current-actor current-component actors components)

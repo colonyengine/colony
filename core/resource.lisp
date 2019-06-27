@@ -142,20 +142,20 @@
 
 ;; TODO
 
-(fl.data:set 'resources (au:dict #'equalp))
+(fl.data:set 'resources (u:dict #'equalp))
 
 (defun %lookup-resource (key)
-  (au:href (fl.data:get 'resources) key))
+  (u:href (fl.data:get 'resources) key))
 
 (defun make-relative-pathname (sub-path)
-  (let ((components (au:split-sequence #\. sub-path)))
+  (let ((components (split-sequence:split-sequence #\. sub-path)))
     (destructuring-bind (name &optional type) components
       (if type
           (make-pathname :name name :type type)
           (make-pathname :directory `(:relative ,name))))))
 
 (defun build-resource-path (id key sub-path)
-  (au:if-let ((base-path (%lookup-resource key)))
+  (a:if-let ((base-path (%lookup-resource key)))
     (progn
       (when (pathname-type base-path)
         (error "~s is a file resource and cannot merge the sub-path ~s."
@@ -194,13 +194,13 @@
              (t (error "A path specifier in `define-resources` must be a ~
                         string, or a list of 2 or 3 elements."))))
          (validate-core-path (path)
-           (au:when-found (key (%lookup-resource :project))
+           (u:when-found (key (%lookup-resource :project))
              (when (and (eq id :core)
                         (string= (namestring key) (namestring path)))
                (error "The :core and :project resource path specifications ~
                        must be unique."))))
          (validate-project-path (path)
-           (au:when-found (key (%lookup-resource :core))
+           (u:when-found (key (%lookup-resource :core))
              (when (and (eq id :project)
                         (string= (namestring key) (namestring path)))
                (error "The :core and :project resource path specifications ~
@@ -215,16 +215,16 @@
     (error "Identifiers in `define-resources` must be keyword symbols, but ~
             found ~s."
            id))
-  (let ((path-spec (au:ensure-list path-spec)))
+  (let ((path-spec (a:ensure-list path-spec)))
     (destructuring-bind (root &rest rest) path-spec
       (declare (ignore rest))
       (let ((key (make-resource-key id root)))
-        (setf (au:href (fl.data:get 'resources) key)
+        (setf (u:href (fl.data:get 'resources) key)
               (make-resource-path id root path-spec)))))
-  (au:noop))
+  (u:noop))
 
 (defun get-resource-project (key)
-  (let ((key (au:ensure-list key)))
+  (let ((key (a:ensure-list key)))
     (destructuring-bind (x &rest rest) key
       (declare (ignore rest))
       (if (eq x :core)
@@ -241,14 +241,15 @@
     (t id)))
 
 (defmacro define-resources ((&key project) &body body)
-  (unless project
-    (error "Project name must be specified in a `define-resources` form."))
-  `(progn
-     ,@(au:collecting
-         (collect `(fl.data:set 'user-project ,project))
-         (dolist (spec body)
-           (destructuring-bind (id path-spec) spec
-             (collect `(store-resource-path ',id ',path-spec)))))))
+  (let (resources)
+    (unless project
+      (error "Project name must be specified in a `define-resources` form."))
+    (push `(fl.data:set 'user-project ,project) resources)
+    (dolist (spec body)
+      (destructuring-bind (id path-spec) spec
+        (push `(store-resource-path ',id ',path-spec) resources)))
+    `(progn
+       ,@(nreverse resources))))
 
 ;;; Protocol
 
@@ -256,14 +257,14 @@
   (let* ((id (resolve-resource-id resource-id))
          (resources (resources (core context)))
          (project (get-resource-project id)))
-    (au:when-found (resource (au:href resources id))
+    (u:when-found (resource (u:href resources id))
       (let ((path (uiop:merge-pathnames* sub-path resource)))
-        (au:resolve-system-path project path)))))
+        (resolve-system-path project path)))))
 
 (defun print-all-resources ()
   (flet ((compare-keys (k1 k2)
-           (let* ((k1 (au:ensure-list k1))
-                  (k2 (au:ensure-list k2))
+           (let* ((k1 (a:ensure-list k1))
+                  (k2 (a:ensure-list k2))
                   (i (mismatch k1 k2)))
              (when i
                (cond
@@ -272,7 +273,7 @@
                  (t (string< (nth i k1) (nth i k2))))))))
     (let ((keys)
           (column-width 0))
-      (au:do-hash-keys (k (fl.data:get 'resources))
+      (u:do-hash-keys (k (fl.data:get 'resources))
         (push k keys)
         (when (listp k)
           (let ((key-width (length (symbol-name (cadr k)))))

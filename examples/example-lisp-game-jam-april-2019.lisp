@@ -230,9 +230,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (rotate-deadzone rotate-deadzone)
                    (boundary-cube boundary-cube))
       self
-    (au:mvlet* ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
-                                                    '(:gamepad1 :left-stick)))
-                (instant-p (zerop (fl:frame-count context))))
+    (u:mvlet ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
+                                                  '(:gamepad1 :left-stick)))
+              (instant-p (zerop (fl:frame-count context))))
 
       ;; First, we settle the notion of how the player translates around with
       ;; left stick
@@ -531,8 +531,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
        (loop :while (>= cooldown-time (/ fire-period))
              :do (decf cooldown-time (/ fire-period)))
 
-       (au:mvlet* ((rx ry (fl.input:get-gamepad-analog
-                           (fl:input-data context) '(:gamepad1 :right-stick))))
+       (u:mvlet ((rx ry (fl.input:get-gamepad-analog
+                         (fl:input-data context) '(:gamepad1 :right-stick))))
          (let* ((parent-model (fl.comp:model emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
            (unless (or (= rx ry 0.0)

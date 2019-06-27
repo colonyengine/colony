@@ -2,7 +2,9 @@
 
 (defpackage #:first-light.input
   (:nicknames #:fl.input)
-  (:local-nicknames (#:v2 #:origin.vec2))
+  (:local-nicknames (#:a #:alexandria)
+                    (#:u #:golden-utils)
+                    (#:v2 #:origin.vec2))
   (:use #:cl)
   (:export
    #:get-gamepad-analog

@@ -10,7 +10,7 @@
 (defun ensure-keyword (x)
   (etypecase x
     ((or number string symbol)
-     (au:make-keyword (format nil "~a" x)))))
+     (u:make-keyword (format nil "~a" x)))))
 
 (defun parts->string (parts &optional (filter #'identity))
   (with-output-to-string (s)

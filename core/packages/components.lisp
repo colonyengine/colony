@@ -2,7 +2,9 @@
 
 (defpackage #:first-light.components
   (:nicknames #:fl.comp)
-  (:local-nicknames (#:~ #:origin.swizzle)
+  (:local-nicknames (#:a #:alexandria)
+                    (#:u #:golden-utils)
+                    (#:~ #:origin.swizzle)
                     (#:v2 #:origin.vec2)
                     (#:v3 #:origin.vec3)
                     (#:v4 #:origin.vec4)

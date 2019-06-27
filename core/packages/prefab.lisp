@@ -2,6 +2,8 @@
 
 (defpackage #:first-light.prefab
   (:nicknames #:fl.prefab)
+  (:local-nicknames (#:a #:alexandria)
+                    (#:u #:golden-utils))
   (:use #:cl #:%first-light)
   (:export
    #:define-prefab

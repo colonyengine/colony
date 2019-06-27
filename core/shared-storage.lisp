@@ -17,7 +17,7 @@
     (ensure-nested-hash-table (shared-storage-table context)
                               (list* 'eq 'eql metadata-ht-test-fns)
                               (list* qualified-component-name namespace keys))
-    (apply #'au:href
+    (apply #'u:href
            (shared-storage-table context)
            (list* qualified-component-name namespace keys))))
 
@@ -30,7 +30,7 @@
     (ensure-nested-hash-table (shared-storage-table context)
                               (list* 'eq 'eql metadata-ht-test-fns)
                               (list* qualified-component-name namespace keys))
-    (apply #'(setf au:href)
+    (apply #'(setf u:href)
            new-value
            (shared-storage-table context)
            (list* qualified-component-name namespace keys))))
@@ -56,8 +56,8 @@ dense lexical scope."
         (let* ((lookup-binding-forms (%lookup-form-to-bindings lookup-form))
                (lookup-args (mapcar #'first lookup-binding-forms)))
           `(let ,lookup-binding-forms
-             (au:mvlet ((,lexical-var ,presentp-var (ss-href ,context
-                                                             ,@lookup-args)))
+             (u:mvlet ((,lexical-var ,presentp-var (ss-href ,context
+                                                            ,@lookup-args)))
                (unless ,presentp-var
                  (setf ,lexical-var ,cache-value-form
                        (ss-href ,context ,@lookup-args) ,lexical-var))

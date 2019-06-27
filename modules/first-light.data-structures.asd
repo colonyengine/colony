@@ -17,5 +17,4 @@
   :pathname "data-structures"
   :serial t
   :components
-  ((:file "package")
-   (:file "doubly-linked-list")))
+  ((:file "package")))

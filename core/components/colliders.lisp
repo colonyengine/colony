@@ -48,21 +48,21 @@
   (unless (visualize self)
     (return-from on-component-render))
   (with-accessors ((context context) (material material) (actor actor)) self
-    (au:when-let ((camera (active-camera context)))
+    (a:when-let ((camera (active-camera context)))
       (let ((transform (actor-component-by-type actor 'fl.comp:transform)))
         (using-material material
-            (:model (fl.comp:model transform)
-             :view (fl.comp:view camera)
-             :proj (fl.comp:projection camera)
-             :collider-local-position (center self)
-             :in-contact-p (> (num-contacts self) 0)
-             ;; NOTE: The shader computes the radius appropriately for
-             ;; visualization purposes.
-             :radius (radius self))
-          ;; Finally, draw the visualizaiton.
-          (gl:bind-vertex-array (geometry self))
-          (gl:draw-arrays-instanced :points 0 1 1)
-          (gl:bind-vertex-array 0))))))
+                        (:model (fl.comp:model transform)
+                         :view (fl.comp:view camera)
+                         :proj (fl.comp:projection camera)
+                         :collider-local-position (center self)
+                         :in-contact-p (> (num-contacts self) 0)
+                         ;; NOTE: The shader computes the radius appropriately for
+                         ;; visualization purposes.
+                         :radius (radius self))
+                        ;; Finally, draw the visualizaiton.
+                        (gl:bind-vertex-array (geometry self))
+                        (gl:draw-arrays-instanced :points 0 1 1)
+                        (gl:bind-vertex-array 0))))))
 
 ;; NOTE: We bubble the collision messages from the collider system through
 ;; ourselves to our referent (who implements this same API). This way, the
@@ -70,20 +70,20 @@
 ;; other purposes.
 (defmethod on-collision-enter ((self collider/sphere) other-collider)
   (incf (num-contacts self))
-  (au:when-let (referent (referent self))
+  (a:when-let (referent (referent self))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
     (on-collision-enter referent other-collider)))
 
 (defmethod on-collision-continue ((self collider/sphere) other-collider)
-  (au:when-let (referent (referent self))
+  (a:when-let (referent (referent self))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
     (on-collision-continue referent other-collider)))
 
 (defmethod on-collision-exit ((self collider/sphere) other-collider)
   (decf (num-contacts self))
-  (au:when-let (referent (referent self))
+  (a:when-let (referent (referent self))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
     (on-collision-continue referent other-collider)))

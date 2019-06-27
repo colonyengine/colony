@@ -16,13 +16,13 @@
               :initarg :geometry)
    (%buffer :reader buffer)
    (%sprites :reader sprites
-             :initform (au:dict #'equalp))))
+             :initform (u:dict #'equalp))))
 
 (defun make-spritesheet (context sprite)
   (with-slots (%name %spec) sprite
     (let* ((spec (find-resource context %spec))
            (spritesheet (make-instance 'spritesheet
-                                       :spec (au:safe-read-file-form spec)
+                                       :spec (u:safe-read-file-form spec)
                                        :geometry (gl:gen-vertex-array))))
       (make-spritesheet-buffer spritesheet)
       spritesheet)))
@@ -39,14 +39,14 @@
                 (when (and id x y w h)
                   (setf (aref pos i) (v2:make x y)
                         (aref size i) (v2:make w h)
-                        (au:href %sprites id) i)))
+                        (u:href %sprites id) i)))
           :finally (fl.gpu:write-buffer-path buffer-name :pos pos)
                    (fl.gpu:write-buffer-path buffer-name :size size))))
 
 (defun make-spritesheet-buffer (spritesheet)
   (with-slots (%spec %buffer) spritesheet
     (fl.gpu:bind-block :spritesheet 1)
-    (setf %buffer (fl.gpu:create-buffer (au:unique-name :spritesheet)
+    (setf %buffer (fl.gpu:create-buffer (a:make-gensym :spritesheet)
                                         :spritesheet))
     (fl.gpu:bind-buffer (fl.gpu:buffer-name %buffer) 1)
     (write-spritesheet-buffer spritesheet)))
@@ -54,7 +54,7 @@
 (defun update-sprite-index (sprite step)
   (with-slots (%index %initial-index %frames) sprite
     (let ((max (1- (+ %initial-index %frames))))
-      (setf %index (floor (au:map-domain 0 1 %initial-index max step))))))
+      (setf %index (floor (u:map-domain 0 1 %initial-index max step))))))
 
 (defun draw-sprite (sprite &optional count)
   (with-slots (%index %spritesheet) sprite
@@ -73,12 +73,12 @@
       (error "A sprite component must have a name."))
     (unless spec
       (error "A sprite component must have a spritesheet spec specified."))
-    (let ((spec (au:ensure-list spec)))
+    (let ((spec (a:ensure-list spec)))
       (with-shared-storage
           (context context)
-          ((cached-spritesheet spritesheet-present-p
-                               ('sprite :cached-spritesheet-data spec)
-                               (make-spritesheet context self)))
+        ((cached-spritesheet spritesheet-present-p
+                             ('sprite :cached-spritesheet-data spec)
+                             (make-spritesheet context self)))
         (setf spritesheet cached-spritesheet
-              index (au:href (sprites spritesheet) name)
+              index (u:href (sprites spritesheet) name)
               initial-index index)))))

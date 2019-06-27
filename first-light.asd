@@ -9,16 +9,16 @@
   :license "MIT"
   :homepage "https://github.com/hackertheory/first-light"
   :bug-tracker "https://github.com/hackertheory/first-light/issues"
-  :source-control (:git "git@github.com:hackertheory/first-light.git")
+  :source-control (:git "https://github.com/hackertheory/first-light.git")
   :encoding :utf-8
-  :long-description #.(uiop:read-file-string
-                       (uiop/pathname:subpathname *load-pathname* "README.md"))
   :depends-on (#:closer-mop
                #:defpackage-plus
+               #:doubly-linked-list
                #:cl-ppcre
                #:cl-graph
                #:cl-opengl
                #:sdl2
+               #:split-sequence
                #:verbose
                #:golden-utils
                #:origin

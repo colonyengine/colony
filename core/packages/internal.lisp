@@ -2,7 +2,9 @@
 
 (defpackage #:%first-light
   (:nicknames #:%fl)
-  (:local-nicknames (#:v3 #:origin.vec3))
+  (:local-nicknames (#:a #:alexandria)
+                    (#:u #:golden-utils)
+                    (#:v3 #:origin.vec3))
   (:use #:cl)
   (:export
    #:*core-debug*
@@ -78,4 +80,5 @@
    #:total-time
    #:ttl
    #:using-material
+   #:without-float-traps
    #:with-shared-storage))

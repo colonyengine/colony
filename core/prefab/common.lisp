@@ -10,16 +10,15 @@
    (%data :reader data
           :initarg :data)
    (%parse-tree :reader parse-tree
-                :initform (au:dict #'equalp))
+                :initform (u:dict #'equalp))
    (%root :reader root)
    (%links :reader links
-           :initform (au:dict #'eq
-                              :source->targets (au:dict #'equalp)
-                              :target->source (au:dict #'equalp)))
+           :initform (u:dict :source->targets (u:dict #'equalp)
+                             :target->source (u:dict #'equalp)))
    (%func :accessor func
           :initform (constantly nil))))
 
-(au:define-printer (prefab stream :type t)
+(u:define-printer (prefab stream :type t)
   (format stream "~a" (name prefab)))
 
 (defclass node ()
@@ -41,17 +40,17 @@
    (%components :reader components
                 :initform nil)
    (%components-table :reader components-table
-                      :initform (au:dict #'eq))
+                      :initform (u:dict))
    (%parent :reader parent
             :initarg :parent
             :initform nil)
    (%children :reader children
-              :initform (au:dict #'equalp))))
+              :initform (u:dict #'equalp))))
 
-(au:define-printer (node stream :type t)
+(u:define-printer (node stream :type t)
   (format stream "~a" (path node)))
 
-(au:eval-always
+(u:eval-always
   ;; Each component initialization argument is converted temporarily to an
   ;; instance of this class which, after we figure out which argument values
   ;; are actually valid and present due to component merge policies, we then
@@ -75,7 +74,7 @@
   (defun make-injectable-ref-value-thunk (&rest init-args)
     (apply #'make-instance 'injectable-ref-value-thunk init-args)))
 
-(au:eval-always
+(u:eval-always
   (defun split-spec (spec)
     (destructuring-bind (name &rest body) spec
       (loop :for tail :on body
@@ -85,23 +84,23 @@
             :finally (return (values name components tail))))))
 
 (defun explode-path (path)
-  (au:split-sequence #\/ path :remove-empty-subseqs t))
+  (split-sequence:split-sequence #\/ path :remove-empty-subseqs t))
 
 (defun make-node-path (parent name)
-  (let ((path (au:string-merge parent "/" name)))
+  (let ((path (u:string-merge parent "/" name)))
     (string-right-trim "/" path)))
 
 (defun make-node-path-from-parts (path-parts)
   (format nil "/~{~a~^/~}" path-parts))
 
 (defun find-library (name)
-  (au:if-found (library (au:href (fl.data:get 'prefabs) name))
-               library
-               (error "Prefab library ~s does not exist." name)))
+  (u:if-found (library (u:href (fl.data:get 'prefabs) name))
+              library
+              (error "Prefab library ~s does not exist." name)))
 
 (defun %find-prefab (name library)
   (let ((library (find-library library)))
-    (au:href library name)))
+    (u:href library name)))
 
 (defun find-prefab (name library)
   (or (%find-prefab name library)
@@ -111,7 +110,7 @@
   (let* ((name (first (explode-path path)))
          (prefab (%find-prefab name library)))
     (when prefab
-      (au:href (parse-tree prefab) path))))
+      (u:href (parse-tree prefab) path))))
 
 (defun find-node (path library)
   (or (%find-node path library)
@@ -119,7 +118,7 @@
 
 (defun map-nodes (func node)
   (funcall func node)
-  (au:do-hash-values (child (children node))
+  (u:do-hash-values (child (children node))
     (map-nodes func child)))
 
 (defun make-prefab (name library doc data)

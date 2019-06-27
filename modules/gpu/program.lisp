@@ -10,25 +10,25 @@
    (%translated-stages :reader translated-stages
                        :initform nil)
    (%source :reader source
-            :initform (au:dict #'eq))
+            :initform (u:dict))
    (%primitive :reader primitive
                :initarg :primitive)
    (%stage-specs :reader stage-specs
                  :initarg :stage-specs)
    (%attributes :reader attributes
-                :initform (au:dict #'eq))
+                :initform (u:dict))
    (%uniforms :reader uniforms
-              :initform (au:dict #'eq))
+              :initform (u:dict))
    (%blocks :reader blocks
-            :initform (au:dict #'equal))))
+            :initform (u:dict #'equal))))
 
 (defun find-program (program-name)
   (let ((programs (fl.data:get 'programs)))
-    (au:href programs program-name)))
+    (u:href programs program-name)))
 
 (defun view-source (program-name stage)
-  (au:when-let ((program (find-program program-name)))
-    (format t "~a" (au:href (source program) stage))))
+  (a:when-let ((program (find-program program-name)))
+    (format t "~a" (u:href (source program) stage))))
 
 (defun compile-stages (program)
   (let ((shaders))
@@ -76,7 +76,7 @@
 
 (defun build-shader-dictionary ()
   (let ((programs (fl.data:get 'programs)))
-    (au:maphash-keys #'build-shader-program programs)
+    (a:maphash-keys #'build-shader-program programs)
     programs))
 
 (defun store-stage-program-dependencies (program)
@@ -84,7 +84,7 @@
     (dolist (stage-spec (stage-specs program))
       (destructuring-bind (stage-type func-spec) stage-spec
         (declare (ignore stage-type))
-        (pushnew (name program) (au:href stage-fn->programs func-spec))))))
+        (pushnew (name program) (u:href stage-fn->programs func-spec))))))
 
 (defun translate-program (program)
   (with-slots (%name %version %primitive %stage-specs) program
@@ -101,7 +101,7 @@
                                 :version version
                                 :primitive primitive
                                 :stage-specs stage-specs)))
-    (setf (au:href programs name) program)
+    (setf (u:href programs name) program)
     (translate-program program)
     (store-attributes program)
     (store-uniforms program)
@@ -112,7 +112,7 @@
                          &body body)
   (let ((definitions '(fl.data:get 'shader-definitions)))
     `(progn
-       (setf (au:href ,definitions ',name)
+       (setf (u:href ,definitions ',name)
              (lambda ()
                (%make-shader-program ',name ,version ,primitive ',body)))
        (export ',name))))

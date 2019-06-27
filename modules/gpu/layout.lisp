@@ -5,7 +5,7 @@
           :initarg :type)
    (%size :accessor size)
    (%members :reader members
-             :initform (au:dict #'eq))
+             :initform (u:dict))
    (%uniform :reader uniform
              :initarg :uniform)))
 
@@ -62,10 +62,10 @@
   (dolist (part (getf data :members))
     (destructuring-bind (&key type name offset size stride &allow-other-keys)
         part
-      (au:when-let ((unpacked-type (unpack-type (layout-type layout) type))
-                    (path (ensure-keyword
-                           (format nil "~{~a~^.~}" (au:ensure-list name)))))
-        (setf (au:href (members layout) path)
+      (a:when-let ((unpacked-type (unpack-type (layout-type layout) type))
+                   (path (ensure-keyword
+                          (format nil "~{~a~^.~}" (a:ensure-list name)))))
+        (setf (u:href (members layout) path)
               (apply #'make-instance 'layout-member
                      :offset offset
                      :byte-stride (or stride size)
