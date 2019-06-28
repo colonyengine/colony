@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu.user)
+(in-package #:first-light.shader.user)
 
 (define-function starfield/frag ((color :vec4)
                                  (uv1 :vec2)
@@ -11,5 +11,5 @@
 
 
 (define-shader starfield ()
-  (:vertex (fl.gpu.texture:unlit/vert fl.gpu.lib:mesh-attrs))
+  (:vertex (fl.shader.texture:unlit/vert fl.shader:mesh-attrs))
   (:fragment (starfield/frag :vec4 :vec2)))

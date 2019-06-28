@@ -4,11 +4,11 @@
 
 (fl:define-material graph
   (:profiles (fl.materials:u-mvpt)
-   :shader fl.gpu.user:graph))
+   :shader fl.shader.user:graph))
 
 (fl:define-material 3d-graph
   (:profiles (fl.materials:u-mvpt)
-   :shader fl.gpu.user:3d-graph-1
+   :shader fl.shader.user:3d-graph-1
    :instances 1000
    :attributes (:depth :always)
    :uniforms
@@ -34,7 +34,7 @@
   (("graph" :copy "/mesh")
    (fl.comp:render :material '(3d-graph
                                3d-graph-1
-                               :shader fl.gpu.user:3d-graph-1
+                               :shader fl.shader.user:3d-graph-1
                                :instances 100000
                                :uniforms ((:size 0.5))))))
 
@@ -46,7 +46,7 @@
   (("graph" :copy "/mesh")
    (fl.comp:render :material '(3d-graph
                                3d-graph-2
-                               :shader fl.gpu.user:3d-graph-2
+                               :shader fl.shader.user:3d-graph-2
                                :instances 100000
                                :uniforms ((:size 1))))))
 

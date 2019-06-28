@@ -17,11 +17,11 @@
 
 (defmethod fl:on-component-update ((self simple-movement))
   (with-accessors ((context fl:context) (transform transform)) self
-    (au:mvlet* ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
-                                                    '(:gamepad1 :left-stick)))
-                (rx ry (fl.input:get-gamepad-analog (fl:input-data context)
-                                                    '(:gamepad1 :right-stick)))
-                (instant-p (zerop (fl:frame-count context))))
+    (u:mvlet ((lx ly (fl:get-gamepad-analog (fl:input-data context)
+                                            '(:gamepad1 :left-stick)))
+              (rx ry (fl:get-gamepad-analog (fl:input-data context)
+                                            '(:gamepad1 :right-stick)))
+              (instant-p (zerop (fl:frame-count context))))
       (let ((vec (v3:make lx ly 0)))
         (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150.0)
         (fl.comp:translate transform
@@ -68,8 +68,8 @@
 (defmethod fl:on-component-update ((self shot-emitter))
   (with-accessors ((context fl:context) (emitter-transform emitter-transform))
       self
-    (when (or (fl.input:input-enter-p (fl:input-data context) '(:gamepad1 :a))
-              (fl.input:input-enter-p (fl:input-data context) '(:mouse :left)))
+    (when (or (fl:input-enter-p (fl:input-data context) '(:gamepad1 :a))
+              (fl:input-enter-p (fl:input-data context) '(:mouse :left)))
       (let* ((parent-model (fl.comp:model emitter-transform))
              (parent-translation (m4:get-translation parent-model))
              (parent-rotation (q:from-mat4 parent-model))
@@ -87,7 +87,7 @@
              (render (fl:make-component context
                                         'render
                                         :material `(fl.materials:sprite
-                                                    ,(au:unique-name '#:sprite)
+                                                    ,(a:make-gensym '#:sprite)
                                                     :uniforms
                                                     ((:sprite.sampler sprites)))
                                         :mode :sprite)))
@@ -108,7 +108,7 @@
     (fl.comp:sprite :spec :spritesheet-data
                     :name "ship29")
     (fl.comp:render :material `(fl.materials:sprite
-                                ,(au:unique-name '#:sprite)
+                                ,(a:make-gensym '#:sprite)
                                 :uniforms ((:sprite.sampler sprites)))
                     :mode :sprite)
     ("exhaust"
@@ -117,7 +117,7 @@
                      :name "exhaust03-01"
                      :frames 8)
      (fl.comp:render :material `(fl.materials:sprite
-                                 ,(au:unique-name '#:sprite)
+                                 ,(a:make-gensym '#:sprite)
                                  :uniforms ((:sprite.sampler sprites)))
                      :mode :sprite)
      (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
@@ -131,7 +131,7 @@
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet04")
    (fl.comp:render :material `(fl.materials:sprite
-                               ,(au:unique-name '#:sprite)
+                               ,(a:make-gensym '#:sprite)
                                :uniforms ((:sprite.sampler sprites)))
                    :mode :sprite)
    (fl.comp:actions :default-actions '((:type fl.actions:rotate

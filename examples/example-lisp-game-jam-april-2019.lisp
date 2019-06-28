@@ -35,25 +35,24 @@
 ;; translucency since the rendering can happen in any order. Stencil textures
 ;; are ok though.  NOTE: We must be careful here since things that collide with
 ;; each other must actually be physically close together in the game.
-(defparameter *draw-layer* (au:dict #'eq
-                                    :starfield -100f0
-                                    :player-stable -99f0
+(defparameter *draw-layer* (u:dict :starfield -100f0
+                                   :player-stable -99f0
 
-                                    :planet -.07f0
-                                    :planet-explosion -.06f0
-                                    :asteroid -.05f0
-                                    :enemy-ship -.04f0
-                                    :enemy-explosion -.03f0
-                                    :enemy-bullet -.02f0
-                                    :player-bullet -.01f0
-                                    :player 0.00f0
-                                    :player-explosion 0.01f0
+                                   :planet -.07f0
+                                   :planet-explosion -.06f0
+                                   :asteroid -.05f0
+                                   :enemy-ship -.04f0
+                                   :enemy-explosion -.03f0
+                                   :enemy-bullet -.02f0
+                                   :player-bullet -.01f0
+                                   :player 0.00f0
+                                   :player-explosion 0.01f0
 
-                                    :sign 400f0
-                                    :camera 500f0
-                                    ))
+                                   :sign 400f0
+                                   :camera 500f0
+                                   ))
 (defun dl (draw-layer-name)
-  (au:href *draw-layer* draw-layer-name))
+  (u:href *draw-layer* draw-layer-name))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -97,7 +96,7 @@
 ;; that shader.
 (fl:define-material sprite-sheet
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.sprite:sprite
+   :shader fl.shader.sprite:sprite
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
               (:opacity 1.0)
               (:alpha-cutoff 0.1))
@@ -108,34 +107,34 @@
 
 (fl:define-material title
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.texture:unlit-texture-decal
+   :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'title)
               (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material starfield
   (:profiles (fl.materials:u-mvpt)
-   :shader fl.gpu.user:starfield
+   :shader fl.shader.user:starfield
    :uniforms ((:tex 'fl.example::starfield)
               (:mix-color (v4:one)))))
 
 (fl:define-material warning-mothership
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.texture:unlit-texture-decal
+   :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-mothership)
               (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material warning-wave
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.texture:unlit-texture-decal
+   :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-wave)
               (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material game-over
   (:profiles (fl.materials:u-mvp)
-   :shader fl.gpu.texture:unlit-texture-decal
+   :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'game-over)
               (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
@@ -293,13 +292,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (rotate-deadzone rotate-deadzone)
                    (region-cuboid region-cuboid))
       self
-    (au:mvlet* ((lx ly (fl.input:get-gamepad-analog (fl:input-data context)
-                                                    '(:gamepad1 :left-stick)))
-                (instant-p (zerop (fl:frame-count context))))
+    (u:mvlet ((lx ly (fl:get-gamepad-analog (fl:input-data context)
+                                            '(:gamepad1 :left-stick)))
+              (instant-p (zerop (fl:frame-count context))))
 
       ;; First, we settle the notion of how the player translates around with
       ;; left stick
-      (au:mvlet*
+      (u:mvlet ;; TODO: This must be mvlet*
           (;; Deal with deadzones and other bad data around the input vector.
            (vec (v3:make lx ly 0))
            (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
@@ -307,12 +306,12 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
            ;; Right trigger modifies speed. pull to lerp from full speed
            ;; to half speed.
            (ty
-            (nth-value 1 (fl.input:get-gamepad-analog (fl:input-data context)
-                                                      '(:gamepad1 :triggers))))
+            (nth-value 1 (fl:get-gamepad-analog (fl:input-data context)
+                                                '(:gamepad1 :triggers))))
            ;; Compute the actual translation vector related to our frame time!
            (vec
             (v3:scale vec
-                      (float (* (au:lerp ty max-velocity (/ max-velocity 2f0))
+                      (float (* (a:lerp ty max-velocity (/ max-velocity 2f0))
                                 (fl:frame-time context))
                              1f0)))
            ;; and ensure we clip the translation vector so we can't go out of
@@ -628,8 +627,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
        (loop :while (>= cooldown-time (/ fire-period))
              :do (decf cooldown-time (/ fire-period)))
 
-       (au:mvlet* ((rx ry (fl.input:get-gamepad-analog
-                           (fl:input-data context) '(:gamepad1 :right-stick))))
+       (u:mvlet ((rx ry (fl:get-gamepad-analog
+                         (fl:input-data context) '(:gamepad1 :right-stick))))
          (let* ((parent-model (fl.comp:model emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
            (unless (or (= rx ry 0.0)
@@ -910,10 +909,10 @@ return the lives-remaining after the life has been consumed."
       (context context)
       ((tag->actors tag->actors/present-p ('tags :db :tag->actors)
                     ;; key: tag, Value: hash table of actor -> actor
-                    (au:dict #'eq))
+                    (u:dict))
        (actor->tags actor->tags/present-p ('tags :db :actor->tags)
                     ;; Key: actor, Value: hash table of tag -> tag
-                    (au:dict #'eq)))
+                    (u:dict)))
 
     (values tag->actors actor->tags)))
 
@@ -929,17 +928,17 @@ return the lives-remaining after the life has been consumed."
   (with-accessors ((context fl:context)
                    (actor fl:actor))
       self
-    (au:mvlet ((tag->actors actor->tags (tags-refs context)))
+    (u:mvlet ((tag->actors actor->tags (tags-refs context)))
       (dolist (tag adding-tags)
         ;; Add a tag -> actor set link
-        (unless (au:href tag->actors tag)
-          (setf (au:href tag->actors tag) (au:dict #'eq)))
-        (setf (au:href tag->actors tag actor) actor)
+        (unless (u:href tag->actors tag)
+          (setf (u:href tag->actors tag) (u:dict)))
+        (setf (u:href tag->actors tag actor) actor)
 
         ;; Add an actor -> tag set link
-        (unless (au:href actor->tags actor)
-          (setf (au:href actor->tags actor) (au:dict #'eq)))
-        (setf (au:href actor->tags actor tag) tag)))))
+        (unless (u:href actor->tags actor)
+          (setf (u:href actor->tags actor) (u:dict)))
+        (setf (u:href actor->tags actor tag) tag)))))
 
 ;; public API
 (defun tags-add (self &rest tags)
@@ -954,16 +953,16 @@ must be a TAGS component."
   (with-accessors ((context fl:context)
                    (actor fl:actor))
       self
-    (au:mvlet ((tag->actors actor->tags (tags-refs context)))
+    (u:mvlet ((tag->actors actor->tags (tags-refs context)))
       (dolist (tag removing-tags)
         ;; Remove the tag -> actor set link
-        (remhash tag (au:href actor->tags actor))
-        (when (zerop (hash-table-count (au:href actor->tags actor)))
+        (remhash tag (u:href actor->tags actor))
+        (when (zerop (hash-table-count (u:href actor->tags actor)))
           (remhash actor actor->tags))
 
         ;; Remove the actor -> tag set link
-        (remhash actor (au:href tag->actors tag))
-        (when (zerop (hash-table-count (au:href tag->actors tag)))
+        (remhash actor (u:href tag->actors tag))
+        (when (zerop (hash-table-count (u:href tag->actors tag)))
           (remhash tag tag->actors))))))
 
 ;; public API
@@ -980,25 +979,23 @@ SELF instance which must be a TAGS component."
   (with-accessors ((context fl:context)
                    (actor fl:actor))
       self
-    (au:mvlet ((tag->actors actor->tags (tags-refs context)))
-      (declare (ignore tag->actors))
-      (au:href actor->tags actor query-tag))))
+    (u:mvlet ((tag->actors actor->tags (tags-refs context)))
+      (u:href actor->tags actor query-tag))))
 
 ;; public API
 (defmethod tags-has-tag-p ((self fl:actor) query-tag)
   "Return T if there is a tags component on the SELF actor and it also
 contains the QUERY-TAG."
-  (au:when-let ((tags-component (fl:actor-component-by-type self 'tags)))
+  (a:when-let ((tags-component (fl:actor-component-by-type self 'tags)))
     (tags-has-tag-p tags-component query-tag)))
 
 ;; public API
 (defun tags-find-actors-with-tag (context query-tag)
   "Return a list of actors that are tagged with the QUERY-TAG. Return
 NIL if no such list exists."
-  (au:mvlet ((tag->actors actor->tags (tags-refs context)))
-    (declare (ignore actor->tags))
-    (au:when-let ((actors (au:href tag->actors query-tag)))
-      (au:hash-keys actors))))
+  (u:mvlet ((tag->actors actor->tags (tags-refs context)))
+    (a:when-let ((actors (u:href tag->actors query-tag)))
+      (u:hash-keys actors))))
 
 (defmethod fl:on-component-attach ((self tags) actor)
   (with-accessors ((context fl:context)
@@ -1162,7 +1159,7 @@ NIL if no such list exists."
 
 
       ;; 3. We always listen for the start button so we can play a game.
-      (when (fl.input:input-enter-p (fl:input-data context) '(:gamepad1 :start))
+      (when (fl:input-enter-p (fl:input-data context) '(:gamepad1 :start))
         (setf current-level 0 ;; start at beginning of level progression
               next-state :level-spawn))
 

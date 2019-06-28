@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu.user)
+(in-package #:first-light.shader.user)
 
 (define-struct pbr-info
   (n-dot-l :float :accessor n-dot-l)
@@ -121,7 +121,7 @@
          ;; roughness is authored as perceptual roughness, as is convention
          ;; convert to material roughness by squaring the perceptual roughness.
          (alpha-roughness (* perceptual-roughness perceptual-roughness))
-         (base-color (* (fl.gpu.color:srgb->rgb
+         (base-color (* (fl.shader.color:srgb->rgb
                          (texture base-color-sampler uv1))
                         base-color-factor))
          (f0 (vec3 0.04))
@@ -184,7 +184,7 @@
          (ao (.r (texture occlusion-sampler uv1)))
          (color (mix color (* color ao) occlusion-strength))
          ;; We assume we have an emissive map, too
-         (emissive (* (.rgb (fl.gpu.color:srgb->rgb
+         (emissive (* (.rgb (fl.shader.color:srgb->rgb
                              (texture emissive-sampler uv1)))
                       emissive-factor))
          (color (+ color emissive)))

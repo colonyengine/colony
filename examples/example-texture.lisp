@@ -133,21 +133,21 @@
 ;;; Materials
 
 (fl:define-material 1d-gradient
-  (:shader fl.gpu.user:unlit-texture-1d
+  (:shader fl.shader.user:unlit-texture-1d
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 '1d-gradient)
     (:mix-color (v4:make 1 1 1 1)))))
 
 (fl:define-material 2d-wood
-  (:shader fl.gpu.texture:unlit-texture
+  (:shader fl.shader.texture:unlit-texture
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 '2d-wood)
     (:mix-color (v4:one)))))
 
 (fl:define-material 3d
-  (:shader fl.gpu.user:unlit-texture-3d
+  (:shader fl.shader.user:unlit-texture-3d
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 '3d)
@@ -158,7 +158,7 @@
              (/ (1+ (sin (* (fl:total-time context) 1.5))) 2.0))))))
 
 (fl:define-material 1d-array
-  (:shader fl.gpu.user:unlit-texture-1d-array
+  (:shader fl.shader.user:unlit-texture-1d-array
    :profiles (fl.materials:u-mvpt)
    :uniforms
    ((:tex.sampler1 '1d-array)
@@ -166,7 +166,7 @@
     (:num-layers 4))))
 
 (fl:define-material 2d-array
-  (:shader fl.gpu.user:unlit-texture-2d-array
+  (:shader fl.shader.user:unlit-texture-2d-array
    :profiles (fl.materials:u-mvpt)
    :uniforms
    ((:tex.sampler1 '2d-array)
@@ -178,7 +178,7 @@
     (:num-layers 4))))
 
 (fl:define-material 2d-sweep-input
-  (:shader fl.gpu.user:noise-2d/sweep-input
+  (:shader fl.shader.user:noise-2d/sweep-input
    :profiles (fl.materials:u-mvp)
    :uniforms
    ;; any old 2d texture here will do since we overwrite it with noise.
@@ -187,14 +187,14 @@
     (:mix-color (v4:one)))))
 
 (fl:define-material cubemap
-  (:shader fl.gpu.user:unlit-texture-cube-map
+  (:shader fl.shader.user:unlit-texture-cube-map
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemap)
     (:mix-color (v4:one)))))
 
 (fl:define-material cubemaparray
-  (:shader fl.gpu.user:unlit-texture-cube-map-array
+  (:shader fl.shader.user:unlit-texture-cube-map-array
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemaparray)
@@ -226,8 +226,8 @@
     (unless material-retrieved-p
       (setf material (fl.comp:material renderer)
             material-retrieved-p t))
-    (au:mvlet* ((context (fl:context self))
-                (x y (fl.input:get-mouse-position (fl:input-data context))))
+    (u:mvlet ((context (fl:context self))
+              (x y (fl:get-mouse-position (fl:input-data context))))
       (when (null x) (setf x (/ (fl:option context :window-width) 2.0)))
       (when (null y) (setf y (/ (fl:option context :window-height) 2.0)))
       (v2:with-components ((c channel0))
