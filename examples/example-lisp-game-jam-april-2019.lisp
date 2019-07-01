@@ -420,19 +420,30 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 (fl:define-component hit-points ()
   ((hp :default 1)
-   (invulnerability-timer :default 0)))
+   (invulnerability-timer :default 0)
+   ;; Usually we want to auto manage our hit points by referencing this
+   ;; component via a collider referent. In that case, we can allow
+   ;; invulnerability and auto-destruction. Sometimes, in the case of a planet,
+   ;; we want to manage the hit-points manually, and in those cases we turn
+   ;; those features off.
+   (allow-invulnerability :default t)
+   (allow-auto-destroy :default t)))
+
 
 (defmethod fl:on-component-update ((self hit-points))
   (with-accessors ((context fl:context)
+                   (allow-invulnerability allow-invulnerability)
                    (invulnerability-timer invulnerability-timer))
       self
-    (when (> invulnerability-timer 0)
+
+    (when (and allow-invulnerability (> invulnerability-timer 0))
       (decf invulnerability-timer (fl:frame-time context))
       (when (<= invulnerability-timer 0)
         (setf invulnerability-timer 0)))))
 
-(defmethod fl:on-collision-enter ((self hit-points) other-collider)
+(defmethod possibly-accept-damage ((self hit-points) other-collider)
   (with-accessors ((context fl:context)
+                   (allow-auto-destroy allow-auto-destroy)
                    (invulnerability-timer invulnerability-timer))
       self
     (let ((other-damage-points (fl:actor-component-by-type
@@ -441,7 +452,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
       (when (> invulnerability-timer 0)
         ;; If we're invulnerable, we cannot take damage.
-        (return-from fl:on-collision-enter nil))
+        (return-from possibly-accept-damage nil))
 
       (cond
         (other-damage-points
@@ -452,27 +463,42 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
          ;; of damage arbitrarily.
          (decf (hp self) 1)))
 
-      ;; Now, do the consequences.
       (when (<= (hp self) 0)
-        ;; Destroy my actor.
-        (fl:destroy (fl:actor self))
-        ;; And, if the actor had an explosion component, cause the explosion
-        ;; to happen
-        (let* ((actor-transform (fl:actor-component-by-type (fl:actor self)
-                                                            'fl.comp:transform))
-               (parent-model (fl.comp:model actor-transform))
-               (parent-translation (m4:get-translation parent-model))
-               (parent-rotation (q:from-mat4 parent-model))
-               (explosion (fl:actor-component-by-type (fl:actor self)
-                                                      'explosion)))
-          (when explosion
-            (make-explosion context
-                            parent-translation
-                            parent-rotation
-                            (scale explosion)
-                            :name (name explosion)
-                            :frames (frames explosion))))))))
+        ;; Currently, we can only have 0 hitpoints as the min.
+        (setf (hp self) 0)))))
 
+(defmethod possibly-auto-destroy ((self hit-points))
+  (with-accessors ((context fl:context)
+                   (allow-auto-destroy allow-auto-destroy)
+                   (invulnerability-timer invulnerability-timer))
+      self
+    (when (and allow-auto-destroy (<= (hp self) 0))
+      ;; Destroy my actor.
+      (fl:destroy (fl:actor self))
+      ;; And, if the actor had an explosion component, cause the explosion
+      ;; to happen
+      (let* ((actor-transform (fl:actor-component-by-type (fl:actor self)
+                                                          'fl.comp:transform))
+             (parent-model (fl.comp:model actor-transform))
+             (parent-translation (m4:get-translation parent-model))
+             (parent-rotation (q:from-mat4 parent-model))
+             (explosion (fl:actor-component-by-type (fl:actor self)
+                                                    'explosion)))
+        (when explosion
+          (make-explosion context
+                          parent-translation
+                          parent-rotation
+                          (scale explosion)
+                          :name (name explosion)
+                          :frames (frames explosion)))))))
+
+(defmethod fl:on-collision-enter ((self hit-points) other-collider)
+  (with-accessors ((context fl:context)
+                   (allow-auto-destroy allow-auto-destroy)
+                   (invulnerability-timer invulnerability-timer))
+      self
+    (possibly-accept-damage self other-collider)
+    (possibly-auto-destroy self)))
 
 ;; ;;;;;;;;;
 ;; Component: projectile
@@ -757,7 +783,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                  (make-projectile context
                                   origin
                                   q:+id+
-                                  :enemy-bullet
+                                  :enemy
                                   :asteroid
                                   :velocity  (ransign 50 400)
                                   ;; this direction is in world space.
@@ -1038,11 +1064,22 @@ NIL if no such list exists."
 ;;
 ;; Handles hit point management of the planet, plus animations/behavior when it
 ;; is about to be destroyed.
+;;
+;; We don't use a hit-points
 ;;;;;;;;;
 
 (fl:define-component planet ()
-  ;; TODO: Can't have nil slots, fix it so we can.
-  ((junk :default 0)))
+  ((hit-points :default nil)
+   (hit-point-warning-threshhold :default 2)))
+
+(defmethod fl:on-collision-enter ((self planet) other-collider)
+  (with-accessors ((hit-points hit-points)
+                   (hit-point-warning-threshhold hit-point-warning-threshhold))
+      self
+    (possibly-accept-damage hit-points other-collider)
+    (possibly-auto-destroy hit-points)
+    (format t "Something hit the planet!~%")
+    nil))
 
 ;; ;;;;;;;;;
 ;; Component: director
@@ -1405,19 +1442,19 @@ NIL if no such list exists."
   ("stable-holder"))
 
 (fl:define-prefab "generic-planet" (:library lgj-04/2019)
-  (planet)
+  (planet :hit-points (fl:ref :self :component 'hit-points))
   (hit-points :hp 5)
+  (explosion :name "explode03-01" :frames 15
+             :scale (v3:make 2.0 2.0 2.0))
   (fl.comp:collider/sphere :center (v3:zero)
                            :on-layer :planet
+                           :referent (fl:ref :self :component 'planet)
+                           :visualize t
                            :radius 145)
   (fl.comp:sprite :spec :spritesheet-data
                   :name "planet01")
   (fl.comp:render :material 'sprite-sheet
-                  :mode :sprite)
-  ;; This has a bug when using a single frame.
-  #++(fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
-                                          :duration 0.5
-                                          :repeat-p t))))
+                  :mode :sprite))
 
 (fl:define-prefab "generic-explosion" (:library lgj-04/2019)
   (explosion :sprite (fl:ref :self :component 'fl.comp:sprite))
