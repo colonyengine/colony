@@ -140,7 +140,9 @@
               (:max-intensity (v4:one)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Random Types we need, some will go into FL properly in a future date
+;; Random Types we need, some will go into FL properly in a future date.
+;; TODO: Especially these can be used to represent collision volumes and I
+;; should propogate the changes into the right places.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass region ()
@@ -150,23 +152,17 @@
 
 (defclass region-cuboid (region)
   ((%minx :accessor minx
-          :initarg :minx
-          :initform 0)
+          :initarg :minx)
    (%maxx :accessor maxx
-          :initarg :maxx
-          :initform 0)
+          :initarg :maxx)
    (%miny :accessor miny
-          :initarg :miny
-          :initform 0)
+          :initarg :miny)
    (%maxy :accessor maxy
-          :initarg :maxy
-          :initform 0)
+          :initarg :maxy)
    (%minz :accessor minz
-          :initarg :minz
-          :initform 0)
+          :initarg :minz)
    (%maxz :accessor maxz
-          :initarg :maxz
-          :initform 0)))
+          :initarg :maxz)))
 
 (defun make-region-cuboid (center minx maxx miny maxy minz maxz)
   (make-instance 'region-cuboid
@@ -174,6 +170,29 @@
                  :minx minx :maxx maxx
                  :miny miny :maxy maxy
                  :minz minz :maxz maxz))
+
+(defclass region-sphere (region)
+  ;; A specific type to make math faster when it is KNOWN one is using a sphere
+  ;; for something.
+  ((%radius :accessor radius
+            :initarg :radius)))
+
+(defun make-region-sphere (center radius)
+  (make-instance 'region-sphere :center center :radius radius))
+
+(defclass region-ellipsoid (region)
+  ;; positive distances of each principal axis.
+  ;; Can be used to make 2d or 3d circles, ellipses, spheres, spheroids, etc.
+  ((%x :accessor x
+       :initarg :x)
+   (%y :accessor y
+       :initarg :y)
+   (%z :accessor z
+       :initarg :z)))
+
+(defun make-region-ellipsoid (center x y z)
+  (make-instance 'region-ellipsoid :center center :x x :y y :z z))
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Utility functions some will go into FL in a future date.
