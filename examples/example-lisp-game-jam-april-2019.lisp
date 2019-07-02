@@ -168,9 +168,12 @@
 (defun make-region-cuboid (center minx maxx miny maxy minz maxz)
   (make-instance 'region-cuboid
                  :center center
-                 :minx minx :maxx maxx
-                 :miny miny :maxy maxy
-                 :minz minz :maxz maxz))
+                 :minx (float minx 1f0)
+                 :maxx (float maxx 1f0)
+                 :miny (float miny 1f0)
+                 :maxy (float maxy 1f0)
+                 :minz (float minz 1f0)
+                 :maxz (float maxz 1f0)))
 
 (defclass region-sphere (region)
   ;; A specific type to make math faster when it is KNOWN one is using a sphere
@@ -192,7 +195,10 @@
        :initarg :z)))
 
 (defun make-region-ellipsoid (center x y z)
-  (make-instance 'region-ellipsoid :center center :x x :y y :z z))
+  (make-instance 'region-ellipsoid :center center
+                                   :x (float x 1f0)
+                                   :y (float y 1f0)
+                                   :z (float z 1f0)))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
