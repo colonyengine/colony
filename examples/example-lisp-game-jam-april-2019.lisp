@@ -484,20 +484,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       (fl:destroy (fl:actor self))
       ;; And, if the actor had an explosion component, cause the explosion
       ;; to happen
-      (let* ((actor-transform (fl:actor-component-by-type (fl:actor self)
-                                                          'fl.comp:transform))
-             (parent-model (fl.comp:model actor-transform))
-             (parent-translation (m4:get-translation parent-model))
-             (parent-rotation (q:from-mat4 parent-model))
-             (explosion (fl:actor-component-by-type (fl:actor self)
-                                                    'explosion)))
-        (when explosion
-          (make-explosion context
-                          parent-translation
-                          parent-rotation
-                          (scale explosion)
-                          :name (name explosion)
-                          :frames (frames explosion)))))))
+      (possibly-make-explosion-at-actor (fl:actor self)))))
+
 
 (defmethod fl:on-collision-enter ((self hit-points) other-collider)
   (with-accessors ((context fl:context)
@@ -632,6 +620,22 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
     (fl:destroy-after-time new-explosion :ttl destroy-ttl)
 
     new-explosion))
+
+(defun possibly-make-explosion-at-actor (actor)
+  (let* ((context (fl:context actor))
+         (actor-transform (fl:actor-component-by-type actor
+                                                      'fl.comp:transform))
+         (parent-model (fl.comp:model actor-transform))
+         (parent-translation (m4:get-translation parent-model))
+         (parent-rotation (q:from-mat4 parent-model))
+         (explosion (fl:actor-component-by-type actor 'explosion)))
+    (when explosion
+      (make-explosion context
+                      parent-translation
+                      parent-rotation
+                      (scale explosion)
+                      :name (name explosion)
+                      :frames (frames explosion)))))
 
 ;; ;;;;;;;;;
 ;; Component: gun
@@ -1077,8 +1081,88 @@ NIL if no such list exists."
 
 (fl:define-component planet ()
   ((hit-points :default nil)
-   (hit-point-warning-threshhold :default 2)))
+   (hit-point-warning-threshhold :default 3)
+   (explosion-region :default (make-region-ellipsoid (v3:make 0 -100 0)
+                                                     100 100 0))
 
+   ;; timer stuff
+   (warning-explosion-period :default 4) ;; Hz
+   (warning-explosion-timer :default 0)))
+
+(defmethod fl:on-component-update ((self planet))
+  (with-accessors ((context fl:context)
+                   (hit-points hit-points)
+                   (hit-point-warning-threshhold hit-point-warning-threshhold)
+                   (explosion-region explosion-region)
+                   (warning-explosion-period warning-explosion-period)
+                   (warning-explosion-timer warning-explosion-timer))
+      self
+
+    (unless (<= (hp hit-points) hit-point-warning-threshhold)
+      (setf warning-explosion-timer 0)
+      (return-from fl:on-component-update nil))
+
+    (format t "Supposed to be doing explosion!~%")
+    (cond
+      ;; We exceeded our cooldown time, so time to fire!
+      ((>= warning-explosion-timer (/ warning-explosion-period))
+       ;; We keep track of time such that we're most accurate in time that we
+       ;; next need to fire. NOTE: Technically, this should fire this multiple
+       ;; times, but we don't.
+       (loop :while (>= warning-explosion-timer (/ warning-explosion-period))
+             :do (decf warning-explosion-timer (/ warning-explosion-period)))
+
+       ;; Now, we randomly pick a spot in the ellpsiod, convert it to
+       ;; world coordinates, then make an explosion there.
+       (flet ((zrandom (val)
+                (if (zerop val) 0f0 (float (random val) 1.0))))
+         (let* ((er explosion-region)
+                (cx (v3:x (center er)))
+                (cy (v3:y (center er)))
+                (xsign (if (zerop (random 2)) 1f0 -1f0))
+                (ysign (if (zerop (random 2)) 1f0 -1f0))
+                (actor-transform
+                  (fl:actor-component-by-type (fl:actor self)
+                                              'fl.comp:transform))
+                (parent-model (fl.comp:model actor-transform))
+                (parent-translation (m4:get-translation parent-model))
+                (local-location
+                  (v3:with-components ((p parent-translation))
+                    (v4:make (+ px cx (float (* (zrandom (x er)) xsign) 1f0))
+                             (+ py cy (float (* (zrandom (y er)) ysign) 1f0))
+                             0f0
+                             1f0)))
+                ;; Figure out where to put the explosion into world space.
+                (world-location (m4:*v4 parent-model local-location))
+                (world-location (v3:make (v4:x world-location)
+                                         (v4:y world-location)
+                                         (dl :planet-warning-explosion)))
+                (random-rotation
+                  (q:orient :local :z (float (random (* 2 pi)) 1f0)))
+                ;; for now, use the same explosions as the planet itself
+                (explosion (fl:actor-component-by-type (fl:actor self)
+                                                       'explosion)))
+
+           ;; Fix it so I don't do all the work only to discard it if there
+           ;; isn't an explosion component.
+           (when explosion
+             (format t "Making a planet explosion!~%")
+             (make-explosion context
+                             world-location
+                             random-rotation
+                             (v3:make .5 .5 1)
+                             :name (name explosion)
+                             :frames (frames explosion))))))
+      (t
+       (incf warning-explosion-timer (fl:frame-time context))))))
+
+
+;; NOTE: Instead of having just the hit-points be the referent for the planet
+;; collider, we have this component be it instead. Then we can redirect the
+;; collision to the hit-point component, and also start animations that indicate
+;; the planet is about to die when it <= the hit-point-warning-threshhold.
+;; Currently, the physics layers are set up so that only enemies can hit the
+;; planet.
 (defmethod fl:on-collision-enter ((self planet) other-collider)
   (with-accessors ((hit-points hit-points)
                    (hit-point-warning-threshhold hit-point-warning-threshhold))
@@ -1087,6 +1171,8 @@ NIL if no such list exists."
     (possibly-auto-destroy hit-points)
     (format t "Something hit the planet!~%")
     nil))
+
+
 
 ;; ;;;;;;;;;
 ;; Component: director
@@ -1452,7 +1538,7 @@ NIL if no such list exists."
   (planet :hit-points (fl:ref :self :component 'hit-points))
   (hit-points :hp 5)
   (explosion :name "explode03-01" :frames 15
-             :scale (v3:make 2.0 2.0 2.0))
+             :scale (v3:make 3.0 3.0 3.0))
   (fl.comp:collider/sphere :center (v3:zero)
                            :on-layer :planet
                            :referent (fl:ref :self :component 'planet)
