@@ -1102,7 +1102,6 @@ NIL if no such list exists."
       (setf warning-explosion-timer 0)
       (return-from fl:on-component-update nil))
 
-    (format t "Supposed to be doing explosion!~%")
     (cond
       ;; We exceeded our cooldown time, so time to fire!
       ((>= warning-explosion-timer (/ warning-explosion-period))
@@ -1146,7 +1145,6 @@ NIL if no such list exists."
            ;; Fix it so I don't do all the work only to discard it if there
            ;; isn't an explosion component.
            (when explosion
-             (format t "Making a planet explosion!~%")
              (make-explosion context
                              world-location
                              random-rotation
@@ -1169,7 +1167,6 @@ NIL if no such list exists."
       self
     (possibly-accept-damage hit-points other-collider)
     (possibly-auto-destroy hit-points)
-    (format t "Something hit the planet!~%")
     nil))
 
 
