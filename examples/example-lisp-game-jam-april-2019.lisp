@@ -38,7 +38,8 @@
 (defparameter *draw-layer* (u:dict :starfield -100f0
                                    :player-stable -99f0
 
-                                   :planet -.07f0
+                                   :planet -.08f0
+                                   :planet-warning-explosion -.07f0
                                    :planet-explosion -.06f0
                                    :asteroid -.05f0
                                    :enemy-ship -.04f0
