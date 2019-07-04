@@ -1228,10 +1228,10 @@ NIL if no such list exists."
   (incf (dead-planets level-manager)))
 
 (defun pause-asteroid-field (level-manager)
-  nil)
+  (setf (pause-p (asteroid-field level-manager)) t))
 
 (defun unpause-asteroid-field (level-manager)
-  nil)
+  (setf (pause-p (asteroid-field level-manager)) nil))
 
 (defun pause-enemy-generation (level-manager)
   nil)
