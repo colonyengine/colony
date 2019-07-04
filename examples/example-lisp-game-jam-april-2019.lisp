@@ -1088,14 +1088,15 @@ NIL if no such list exists."
    (reported-to-level-manager :default nil)
 
    ;; timer stuff
-   (warning-explosion-period :default 4) ;; Hz
+   (warning-explosion-period :default 16) ;; Hz
    (warning-explosion-timer :default 0)))
 
 ;; TODO: This is naturally a candidate for on-component-attach. However, the
 ;; on-component-attach for the tags component might not have run so our lookup
-;; here fails. This is likely fixable my making the TAGS component go into
-;; core, and then having core components run before contrib/user components.
-;; But that still might be slightly fragile. Need to think.
+;; here fails. This is likely fixable my making the TAGS component go into core,
+;; and then having core components run before contrib/user components.  But that
+;; still would not work out in compoennts in core unless TAGS was made to run
+;; even before those. Need to think a bit.
 (defun possibly-report-myself-to-level-manager (planet)
   (with-accessors ((context fl:context)
                    (level-manager level-manager)
@@ -1180,7 +1181,7 @@ NIL if no such list exists."
              (make-explosion context
                              world-location
                              random-rotation
-                             (v3:make .5 .5 1)
+                             (v3:make .25 .25 1)
                              :name (name explosion)
                              :frames (frames explosion))))))
       (t
