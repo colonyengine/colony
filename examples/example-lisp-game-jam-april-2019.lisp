@@ -1112,6 +1112,11 @@ NIL if no such list exists."
                 reported-to-level-manager t)
           (report-planet-alive (level-manager planet)))))))
 
+(defmethod fl:on-component-physics-update ((self planet))
+  ;; This might fail for a few frames until things stabilize in the creation of
+  ;; the actors and components.  We do it here so it runs at a much slower pace
+  ;; than rendering to save effort.
+  (possibly-report-myself-to-level-manager self))
 
 (defmethod fl:on-component-update ((self planet))
   (with-accessors ((context fl:context)
@@ -1122,9 +1127,6 @@ NIL if no such list exists."
                    (warning-explosion-timer warning-explosion-timer))
       self
 
-    ;; This might fail for a few frames until things stabilize in the
-    ;; creation of the actors and components.
-    (possibly-report-myself-to-level-manager self)
 
     ;; TODO: Notice here we have a conditional running of the timer, how do we
     ;; represent this generically.
