@@ -1084,10 +1084,34 @@ NIL if no such list exists."
    (hit-point-warning-threshhold :default 3)
    (explosion-region :default (make-region-ellipsoid (v3:make 0 -100 0)
                                                      100 100 0))
+   (level-manager :default nil)
+   (reported-to-level-manager :default nil)
 
    ;; timer stuff
    (warning-explosion-period :default 4) ;; Hz
    (warning-explosion-timer :default 0)))
+
+;; TODO: This is naturally a candidate for on-component-attach. However, the
+;; on-component-attach for the tags component might not have run so our lookup
+;; here fails. This is likely fixable my making the TAGS component go into
+;; core, and then having core components run before contrib/user components.
+;; But that still might be slightly fragile. Need to think.
+(defun possibly-report-myself-to-level-manager (planet)
+  (with-accessors ((context fl:context)
+                   (level-manager level-manager)
+                   (reported-to-level-manager reported-to-level-manager))
+      planet
+    ;; TODO: Maybe a change to tags API to shorten this idiomatic code?
+    (a:when-let ((actor-lvlmgr
+                  (first (tags-find-actors-with-tag context :level-manager))))
+      (let ((level-manager
+              (fl:actor-component-by-type actor-lvlmgr 'level-manager)))
+
+        (unless reported-to-level-manager
+          (setf (level-manager planet) level-manager
+                reported-to-level-manager t)
+          (report-planet-alive (level-manager planet)))))))
+
 
 (defmethod fl:on-component-update ((self planet))
   (with-accessors ((context fl:context)
@@ -1098,6 +1122,12 @@ NIL if no such list exists."
                    (warning-explosion-timer warning-explosion-timer))
       self
 
+    ;; This might fail for a few frames until things stabilize in the
+    ;; creation of the actors and components.
+    (possibly-report-myself-to-level-manager self)
+
+    ;; TODO: Notice here we have a conditional running of the timer, how do we
+    ;; represent this generically.
     (unless (<= (hp hit-points) hit-point-warning-threshhold)
       (setf warning-explosion-timer 0)
       (return-from fl:on-component-update nil))
@@ -1154,6 +1184,9 @@ NIL if no such list exists."
       (t
        (incf warning-explosion-timer (fl:frame-time context))))))
 
+(defmethod fl:on-component-destroy ((self planet))
+  (when (level-manager self)
+    (report-planet-died (level-manager self))))
 
 ;; NOTE: Instead of having just the hit-points be the referent for the planet
 ;; collider, we have this component be it instead. Then we can redirect the
@@ -1169,6 +1202,59 @@ NIL if no such list exists."
     (possibly-auto-destroy hit-points)
     nil))
 
+;; ;;;;;;;;;
+;; Component: level-manager
+;;
+;; The purpose of this component is to:
+;; A: Turn the asteroid field on and off (off meaning destroy all asteroids)
+;; B: Turn enemy generation on and off (off meanins gestroy all enemies/bullets)
+;; C: Know how many planets there are and detect game over if all gone.
+;;
+;; ;;;;;;;;;
+
+(fl:define-component level-manager ()
+  ((asteroid-field :default nil)
+   (enemy-generator :default nil)
+   (reporting-planets :default 0)
+   (dead-planets :default 0)))
+
+(defun report-planet-alive (level-manager)
+  (incf (reporting-planets level-manager)))
+
+(defun report-planet-died (level-manager)
+  (incf (dead-planets level-manager)))
+
+(defun pause-asteroid-field (level-manager)
+  nil)
+
+(defun unpause-asteroid-field (level-manager)
+  nil)
+
+(defun pause-enemy-generation (level-manager)
+  nil)
+
+(defun unpause-enemy-generation (level-manager)
+  nil)
+
+(defun destroy-all-asteroids (level-manager)
+  nil)
+
+(defun destroy-all-enemies (level-manager)
+  nil)
+
+(defun destroy-all-enemy-bullets (level-manager)
+  nil)
+
+(defun destroy-active-opponents (level-manager)
+  (destroy-all-asteroids level-manager)
+  (destroy-all-enemies level-manager)
+  (destroy-all-enemy-bullets level-manager))
+
+(defun all-planets-dead-p (level-manager)
+  ;; if we have zero planets technically none of them are dead.
+  (and (plusp (reporting-planets level-manager))
+       (= (dead-planets level-manager)
+          (reporting-planets level-manager))))
 
 
 ;; ;;;;;;;;;
@@ -1229,6 +1315,9 @@ NIL if no such list exists."
    (current-level-ref :default nil)
    ;; This is the parent of the levels when they are instantiated.
    (level-holder :default nil)
+   ;; When we spawn the level, this is the reference to the level-manager
+   ;; component for that specific level
+   (level-manager :default nil)
    ;; The stable from which we know we can get another player.
    (player-1-stable :default nil)
    ;; When we instantiate a player, this is the place it goes.
@@ -1320,6 +1409,7 @@ NIL if no such list exists."
                    (demo-level demo-level)
                    (current-level current-level)
                    (current-level-ref current-level-ref)
+                   (level-manager level-manager)
                    (level-holder level-holder)
                    (current-player-holder current-player-holder))
       self
@@ -1337,6 +1427,11 @@ NIL if no such list exists."
                   ;; this prefab description.
                   (list (nth current-level levels))
                   :parent level-holder)))
+
+    ;; find this level's level-manager and keep a reference to it
+    (let ((lvlmgr (fl:actor-component-by-type current-level-ref
+                                              'level-manager)))
+      (setf level-manager lvlmgr))
 
     :player-spawn))
 
@@ -1394,16 +1489,23 @@ NIL if no such list exists."
                    (demo-level demo-level)
                    (current-level current-level)
                    (level-holder level-holder)
+                   (level-manager level-manager)
                    (player-1-stable player-1-stable)
                    (current-player-holder current-player-holder)
                    (current-player current-player))
       self
 
-    ;; Notice if the player is dead and go to respawn.
-    (let ((player-alive-p (tags-find-actors-with-tag context :player)))
-      (if player-alive-p
-          :playing
-          :player-spawn))))
+    (cond
+      ((not (tags-find-actors-with-tag context :player))
+       :player-spawn)
+
+      ;; TODO: This condition for game over seems extremely harsh. You can get
+      ;; game over with player's left and it feels bad. Instead, the final score
+      ;; should have a multiplier based on number of planets left.
+      #++((all-planets-dead-p level-manager)
+          :game-over)
+      (t
+       :playing))))
 
 
 (defmethod process-director-state ((self director)
@@ -1418,6 +1520,12 @@ NIL if no such list exists."
                    (game-over-timer game-over-timer)
                    (current-player-holder current-player-holder))
       self
+
+    ;; If there is a player (like suppose a planet blew up), then
+    ;; destroy it, we'll let the rest of the state machine deal with it
+    ;; resetting the internal state.
+    (a:when-let ((player (first (tags-find-actors-with-tag context :player))))
+      (fl:destroy player))
 
     ;; TODO: Show a game over sign for a while.
     (unless (eq state previous-state)
@@ -1597,6 +1705,8 @@ NIL if no such list exists."
 
 
 (fl:define-prefab "demo-level" (:library lgj-04/2019)
+  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field))
+  (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/demo-level/asteroids"))
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   ("asteroids")
@@ -1608,6 +1718,8 @@ NIL if no such list exists."
 
 
 (fl:define-prefab "level-0" (:library lgj-04/2019)
+  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field))
+  (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/level-0/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
@@ -1619,6 +1731,8 @@ NIL if no such list exists."
 
 
 (fl:define-prefab "level-1" (:library lgj-04/2019)
+  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field))
+  (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/level-1/asteroids"))
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   ("asteroids")
@@ -1634,6 +1748,8 @@ NIL if no such list exists."
                    :name "planet02")))
 
 (fl:define-prefab "level-2" (:library lgj-04/2019)
+  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field))
+  (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/level-2/asteroids"))
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   ("asteroids")
