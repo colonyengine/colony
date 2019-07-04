@@ -1668,7 +1668,6 @@ sequencing."
    (fl.comp:transform
     :translate (v3:make -900 550 (dl :player-stable))))
 
-
   ("current-level"))
 
 
