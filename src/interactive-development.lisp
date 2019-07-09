@@ -30,12 +30,19 @@
                 (ecase repl-package
                   (:slynk
                    `(lambda ()
-                      ,(when (find-package "SLYNK-MREPL")
-                         `(,(a:ensure-symbol "SEND-PROMPT" "SLYNK-MREPL")
-                           (find (bt:current-thread)
-                                 (,(a:ensure-symbol "CHANNELS" repl-package))
-                                 :key #',(a:ensure-symbol "CHANNEL-THREAD"
-                                                          repl-package))))))
+                      (let ((repl (find (,(a:ensure-symbol
+                                           "CURRENT-THREAD" repl-package))
+                                        (,(a:ensure-symbol
+                                           "CHANNELS" repl-package))
+                                        :key #',(a:ensure-symbol
+                                                 "CHANNEL-THREAD"
+                                                 repl-package))))
+                        (when repl
+                          (setf (,(a:ensure-symbol "MREPL-MODE" "SLYNK-MREPL")
+                                 repl)
+                                :eval)
+                          (,(a:ensure-symbol "SEND-PROMPT" "SLYNK-MREPL")
+                           repl)))))
                   (:swank
                    (constantly nil))))
        (compile 'update-lisp-repl
