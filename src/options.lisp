@@ -18,8 +18,8 @@
 (defun load-options (core)
   (let ((user-options-path (uiop:merge-pathnames*
                             #p"first-light/first-light.conf"
-                            #+windows #p"AppData/Local/"
-                            #-windows (uiop:xdg-config-home))))
+                            (uiop:xdg-config-home))))
+    (print user-options-path)
     (when (uiop:file-exists-p user-options-path)
       (setf (%fl:meta 'options/user)
             (apply #'u:dict
