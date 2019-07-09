@@ -16,10 +16,21 @@
               :initial-scene nil))
 
 (defun load-options (core)
-  (setf (options core)
-        (u:hash-merge (%fl:meta 'options/default)
-                      (or (%fl:meta 'options/project)
-                          (u:dict)))))
+  (let ((user-options-path (uiop:merge-pathnames*
+                            #p"first-light/first-light.conf"
+                            #+windows #p"AppData/Local/"
+                            #-windows (uiop:xdg-config-home))))
+    (when (uiop:file-exists-p user-options-path)
+      (setf (%fl:meta 'options/user)
+            (apply #'u:dict
+                   (u:safe-read-file-forms
+                    user-options-path))))
+    (setf (options core)
+          (u:hash-merge (%fl:meta 'options/default)
+                        (or (%fl:meta 'options/project)
+                            (u:dict))
+                        (or (%fl:meta 'options/user)
+                            (u:dict))))))
 
 (defun option (context option-name)
   (u:href (options context) option-name))

@@ -28,6 +28,7 @@
                #:sdl2-image
                #:split-sequence
                #:static-vectors
+               #:trivial-features
                #:uiop
                #:varjo
                #:verbose)
