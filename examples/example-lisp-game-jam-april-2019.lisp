@@ -49,6 +49,7 @@
                                    :player 0.00f0
                                    :player-explosion 0.01f0
 
+                                   :time-keeper 300f0
                                    :sign 400f0
                                    :camera 500f0
                                    ))
@@ -87,6 +88,9 @@
 
 (fl:define-texture title (:texture-2d)
   (:data #((:lgj-04/2019 "title.tiff"))))
+
+(fl:define-texture white (:texture-2d fl.textures:clamp-all-edges)
+  (:data #((:lgj-04/2019 "white.tiff"))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Materials
@@ -139,6 +143,13 @@
    :uniforms ((:tex.sampler1 'game-over)
               (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
+
+(fl:define-material time-bar
+  (:profiles (fl.materials:u-mvp)
+   :shader fl.shader.texture:unlit-texture
+   :uniforms ((:tex.sampler1 'white)
+              (:mix-color (v4:make 0 1 0 1)))))
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Random Types we need, some will go into FL properly in a future date.
@@ -1206,6 +1217,85 @@ NIL if no such list exists."
     nil))
 
 ;; ;;;;;;;;;
+;; Component: time-keeper
+;;
+;; The purpose of this component is to draw the time display so the user can see
+;; it going to zero. When it reaches zero, the score is tallied, the level will
+;; be over, and you'll move to the next level. This component takes care of
+;; both keeping track of the time left in the level, and also managing the
+;; display on the screen. It also has an interface in order to determine if the
+;; time has been all used up.
+;; ;;;;;;;;;
+
+(fl:define-component time-keeper ()
+  ((pause :default t)
+   (time-max :default 30f0) ;; seconds
+   (time-left :default 0f0) ;; seconds
+   (time-bar-transform :default nil)
+   (time-bar-height-scale :default 512f0)
+   (time-bar-width :default 16f0)
+   (time-bar-renderer :default nil)
+   (time-bar-full-color :default (v4:make 0 1 0 1))
+   (time-bar-empty-color :default (v4:make 1 0 0 1))
+   ))
+
+(defmethod fl:on-component-initialize ((self time-keeper))
+  (setf (time-left self) (time-max self)))
+
+
+;; We really don't need to do this per frame.
+(defmethod fl:on-component-physics-update ((self time-keeper))
+  (with-accessors ((context fl:context)
+                   (pause pause)
+                   (time-max time-max)
+                   (time-left time-left)
+                   (time-bar-renderer time-bar-renderer)
+                   (time-bar-width time-bar-width)
+                   (time-bar-full-color time-bar-full-color)
+                   (time-bar-empty-color time-bar-empty-color)
+                   (time-bar-transform time-bar-transform)
+                   (time-bar-height-scale time-bar-height-scale))
+      self
+
+    (when pause
+      (return-from fl:on-component-physics-update nil))
+
+    ;; TODO: Bug, it seems a fast physics-update can happen before the user
+    ;; protocol is properly set up. Debug why this can be NIL in a 120Hz physics
+    ;; update period.
+    (unless time-bar-transform
+      (format t "WTF~%")
+      (return-from fl:on-component-physics-update nil))
+
+    (let ((how-far-to-empty (- 1f0 (/ time-left time-max))))
+
+      ;; Size the time bar in accordance to how much time is left.
+      (fl.comp:scale time-bar-transform
+                     (v3:make time-bar-width
+                              (a:lerp how-far-to-empty
+                                      time-bar-height-scale
+                                      0f0)
+                              1f0)
+                     :replace-p t)
+
+      ;; Color the time bar in accordance to how much time is left.
+      (let ((material (fl.comp:material time-bar-renderer)))
+        (setf (fl:mat-uniform-ref material :mix-color)
+              (v4:lerp time-bar-full-color time-bar-empty-color
+                       how-far-to-empty)))
+
+      ;; Account the time that has passed
+      ;; TODO: make a utility macro called DECF-CLAMP
+      (decf time-left (fl:delta context))
+      (when (<= time-left 0f0)
+        (setf time-left 0f0))
+
+      )))
+
+(defun time-keeper-out-of-time-p (self)
+  (zerop (time-left self)))
+
+;; ;;;;;;;;;
 ;; Component: level-manager
 ;;
 ;; The purpose of this component is to:
@@ -1216,10 +1306,20 @@ NIL if no such list exists."
 ;; ;;;;;;;;;
 
 (fl:define-component level-manager ()
-  ((asteroid-field :default nil)
+  ((time-keeper :default nil)
+   (asteroid-field :default nil)
    (enemy-generator :default nil)
    (reporting-planets :default 0)
    (dead-planets :default 0)))
+
+(defun level-out-of-time-p (level-manager)
+  (time-keeper-out-of-time-p (time-keeper level-manager)))
+
+(defun pause-time-keeper (level-manager)
+  (setf (pause (time-keeper level-manager)) t))
+
+(defun unpause-time-keeper (level-manager)
+  (setf (pause (time-keeper level-manager)) nil))
 
 (defun report-planet-alive (level-manager)
   (incf (reporting-planets level-manager)))
@@ -1498,17 +1598,46 @@ NIL if no such list exists."
                    (current-player current-player))
       self
 
+    (unless (eq state previous-state)
+      ;; When we enter this state, we must unpause the timer.
+      (unpause-time-keeper level-manager))
+
     (cond
       ((not (tags-find-actors-with-tag context :player))
+       ;; When we leave, we pause, since we don't want to penalize the player
+       ;; by removing time when they can't possibly be playing.
+       (pause-time-keeper level-manager)
        :player-spawn)
 
-      ;; TODO: This condition for game over seems extremely harsh. You can get
-      ;; game over with player's left and it feels bad. Instead, the final score
-      ;; should have a multiplier based on number of planets left.
-      #++((all-planets-dead-p level-manager)
-          :game-over)
+      ;; Yay! level complete!
+      ((level-out-of-time-p level-manager)
+       (pause-time-keeper level-manager)
+       :end-of-level)
+
+      ;; otherwise, user is continuing play.
       (t
        :playing))))
+
+(defmethod process-director-state ((self director)
+                                   (state (eql :end-of-level))
+                                   previous-state)
+  (with-accessors ((context fl:context)
+                   (levels levels)
+                   (demo-level demo-level)
+                   (current-level current-level)
+                   (level-holder level-holder)
+                   (game-over-max-wait-time game-over-max-wait-time)
+                   (game-over-timer game-over-timer)
+                   (current-player-holder current-player-holder))
+      self
+
+    ;; TODO: IMPLEMENT ME!
+
+    (unless (eq state previous-state)
+      (format t "EOF OF LEVEL REACHED!~%"))
+
+
+    :end-of-level))
 
 
 (defmethod process-director-state ((self director)
@@ -1706,11 +1835,31 @@ NIL if no such list exists."
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'starfield)))
 
+(fl:define-prefab "time-keeper" (:library lgj-04/2019)
+  ("bug-todo:implicit-transform:see-trello"
+   (fl.comp:transform :translate (v3:make 900 -512 (dl :time-keeper)))
+   (time-keeper :time-max 60f0
+                :time-bar-transform (fl:ref "time-bar-root"
+                                            :component 'fl.comp:transform)
+                :time-bar-renderer (fl:ref "time-bar-root/time-display"
+                                           :component 'fl.comp:render))
+   ("time-bar-root"
+    ;; When we scale the transform for this object, the alignment of the
+    ;; time-bar will cause it to stretch upwards from a "ground" at 0 in this
+    ;; coordinate frame.
+    ("time-display"
+     (fl.comp:transform :translate (v3:make 0 1 0))
+     (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+     ;; TODO: when 'time-bar is mis-spelled in the material,
+     ;; I don't get the debug material, why?
+     ;; TODO: I think this material is leaked when this object is destroyed.
+     (fl.comp:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-")))))))
 
 (fl:define-prefab "demo-level" (:library lgj-04/2019)
   (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field))
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/demo-level/asteroids"))
+
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   ("asteroids")
   (("title" :copy ("/title-sign" :from lgj-04/2019))
@@ -1721,11 +1870,15 @@ NIL if no such list exists."
 
 
 (fl:define-prefab "level-0" (:library lgj-04/2019)
-  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field))
+  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
+                 :time-keeper
+                 (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
+                         :component 'time-keeper))
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/level-0/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  (("time-keeper" :link ("/time-keeper" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
@@ -1734,11 +1887,15 @@ NIL if no such list exists."
 
 
 (fl:define-prefab "level-1" (:library lgj-04/2019)
-  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field))
+  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
+                 :time-keeper
+                 (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
+                         :component 'time-keeper))
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/level-1/asteroids"))
-  (("starfield" :link ("/starfield" :from lgj-04/2019)))
   ("asteroids")
+  (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  (("time-keeper" :link ("/time-keeper" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make -200 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
@@ -1751,11 +1908,15 @@ NIL if no such list exists."
                    :name "planet02")))
 
 (fl:define-prefab "level-2" (:library lgj-04/2019)
-  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field))
+  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
+                 :time-keeper
+                 (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
+                         :component 'time-keeper))
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/level-2/asteroids"))
-  (("starfield" :link ("/starfield" :from lgj-04/2019)))
   ("asteroids")
+  (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  (("time-keeper" :link ("/time-keeper" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
