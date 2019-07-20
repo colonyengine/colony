@@ -89,6 +89,9 @@
 (fl:define-texture title (:texture-2d)
   (:data #((:lgj-04/2019 "title.tiff"))))
 
+(fl:define-texture level-complete (:texture-2d)
+  (:data #((:lgj-04/2019 "level-complete.tiff"))))
+
 (fl:define-texture white (:texture-2d fl.textures:clamp-all-edges)
   (:data #((:lgj-04/2019 "white.tiff"))))
 
@@ -141,6 +144,13 @@
   (:profiles (fl.materials:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'game-over)
+              (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
+              (:max-intensity (v4:one)))))
+
+(fl:define-material level-complete
+  (:profiles (fl.materials:u-mvp)
+   :shader fl.shader.texture:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'level-complete)
               (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
@@ -1091,9 +1101,10 @@ NIL if no such list exists."
 ;;;;;;;;;
 
 (fl:define-component planet ()
-  ((hit-points :default nil)
+  ((transform :default nil)
+   (hit-points :default nil)
    (hit-point-warning-threshhold :default 3)
-   (explosion-region :default (make-region-ellipsoid (v3:make 0 -100 0)
+   (explosion-region :default (make-region-ellipsoid (v3:make 0 0 0)
                                                      100 100 0))
    (level-manager :default nil)
    (reported-to-level-manager :default nil)
@@ -1124,6 +1135,9 @@ NIL if no such list exists."
                 reported-to-level-manager t)
           (report-planet-alive (level-manager planet)))))))
 
+(defmethod fl:on-component-attach ((self planet) actor)
+  (setf (transform self) (fl:actor-component-by-type actor 'fl.comp:transform)))
+
 (defmethod fl:on-component-physics-update ((self planet))
   ;; This might fail for a few frames until things stabilize in the creation of
   ;; the actors and components.  We do it here so it runs at a much slower pace
@@ -1132,6 +1146,7 @@ NIL if no such list exists."
 
 (defmethod fl:on-component-update ((self planet))
   (with-accessors ((context fl:context)
+                   (transform transform)
                    (hit-points hit-points)
                    (hit-point-warning-threshhold hit-point-warning-threshhold)
                    (explosion-region explosion-region)
@@ -1159,24 +1174,21 @@ NIL if no such list exists."
        ;; world coordinates, then make an explosion there.
        (flet ((zrandom (val)
                 (if (zerop val) 0f0 (float (random val) 1.0))))
-         (let* ((er explosion-region)
+         (let* ((model (fl.comp:model transform))
+                (translation (m4:get-translation model))
+                (er explosion-region)
                 (cx (v3:x (center er)))
                 (cy (v3:y (center er)))
                 (xsign (if (zerop (random 2)) 1f0 -1f0))
                 (ysign (if (zerop (random 2)) 1f0 -1f0))
-                (actor-transform
-                  (fl:actor-component-by-type (fl:actor self)
-                                              'fl.comp:transform))
-                (parent-model (fl.comp:model actor-transform))
-                (parent-translation (m4:get-translation parent-model))
                 (local-location
-                  (v3:with-components ((p parent-translation))
-                    (v4:make (+ px cx (float (* (zrandom (x er)) xsign) 1f0))
-                             (+ py cy (float (* (zrandom (y er)) ysign) 1f0))
-                             0f0
-                             1f0)))
+                  (v4:make (+ cx (float (* (zrandom (x er)) xsign) 1f0))
+                           (+ cy (float (* (zrandom (y er)) ysign) 1f0))
+                           0f0
+                           1f0))
                 ;; Figure out where to put the explosion into world space.
-                (world-location (m4:*v4 parent-model local-location))
+                (world-location
+                  (fl.comp:transform-point transform local-location))
                 (world-location (v3:make (v4:x world-location)
                                          (v4:y world-location)
                                          (dl :planet-warning-explosion)))
@@ -1229,7 +1241,7 @@ NIL if no such list exists."
 
 (fl:define-component time-keeper ()
   ((pause :default t)
-   (time-max :default 30f0) ;; seconds
+   (time-max :default 10f0) ;; seconds
    (time-left :default 0f0) ;; seconds
    (time-bar-transform :default nil)
    (time-bar-height-scale :default 512f0)
@@ -1264,7 +1276,6 @@ NIL if no such list exists."
     ;; protocol is properly set up. Debug why this can be NIL in a 120Hz physics
     ;; update period.
     (unless time-bar-transform
-      (format t "WTF~%")
       (return-from fl:on-component-physics-update nil))
 
     (let ((how-far-to-empty (- 1f0 (/ time-left time-max))))
@@ -1385,7 +1396,7 @@ NIL if no such list exists."
 ;; :player-spawn -> :game-over
 ;;   |
 ;;   v
-;; :playing -> :player-spawn | :end-of-level | :quit
+;; :playing -> :player-spawn | :level-complete | :quit
 ;;   |
 ;;   v
 ;; :game-over -> :waiting-to-play | :quit
@@ -1393,7 +1404,7 @@ NIL if no such list exists."
 ;;   v
 ;; :initials-entry -> :waiting-to-play | :quit
 ;;
-;; :end-of-level -> :level-spawn | :quit
+;; :level-complete -> :level-spawn | :quit
 ;;
 ;; :quit
 ;;   |
@@ -1437,7 +1448,13 @@ NIL if no such list exists."
    ;; Timer
    ;; When we enter game over, this is how long to show the gameover sign.
    (game-over-max-wait-time :default 2)
-   (game-over-timer :default 0)))
+   (game-over-timer :default 0)
+
+   ;; Timer
+   ;; When we complete a level we show the level complete sign for a bit before
+   ;; Moving to the next level.
+   (level-complete-max-wait-time :default 3)
+   (level-complete-timer :default 0)))
 
 ;; each method returns the new state it should do for the next update.
 (defgeneric process-director-state (director state previous-state))
@@ -1475,6 +1492,11 @@ NIL if no such list exists."
       ;; When we've just transitioned to this state from not itself, it means
       ;; we need to do the work to show the demo level.
       (unless (eq state previous-state)
+        ;; 0. If there is a player (like maybe you beat the game), destroy it.
+        (a:when-let ((players (tags-find-actors-with-tag context :player)))
+          (dolist (player players)
+            (fl:destroy player)))
+
         ;; 1. Spawn the demo-level which includes the PtP sign and press play
         ;; to start.
 
@@ -1554,6 +1576,8 @@ NIL if no such list exists."
     (let ((next-state :playing)
           (player-alive-p (tags-find-actors-with-tag context :player)))
 
+      ;; TODO: If the player is alive, tell it it can move again (even if it
+      ;; already can).
       (when (not player-alive-p)
         (if (not (eq state previous-state))
             (setf player1-respawn-timer 0
@@ -1612,32 +1636,78 @@ NIL if no such list exists."
       ;; Yay! level complete!
       ((level-out-of-time-p level-manager)
        (pause-time-keeper level-manager)
-       :end-of-level)
+       :level-complete)
 
       ;; otherwise, user is continuing play.
       (t
        :playing))))
 
 (defmethod process-director-state ((self director)
-                                   (state (eql :end-of-level))
+                                   (state (eql :level-complete))
                                    previous-state)
   (with-accessors ((context fl:context)
                    (levels levels)
                    (demo-level demo-level)
                    (current-level current-level)
+                   (level-manager level-manager)
                    (level-holder level-holder)
-                   (game-over-max-wait-time game-over-max-wait-time)
-                   (game-over-timer game-over-timer)
+                   (level-complete-timer level-complete-timer)
+                   (level-complete-max-wait-time level-complete-max-wait-time)
                    (current-player-holder current-player-holder))
       self
 
-    ;; TODO: IMPLEMENT ME!
-
     (unless (eq state previous-state)
-      (format t "EOF OF LEVEL REACHED!~%"))
+      (format t "Level Complete!~%")
+      (setf level-complete-timer 0)
+
+      ;; First: turn off asteroid generator.
+      ;;
+      ;; NOTE: We never unpase it, since by definition it'll be destroyed
+      ;; and remade when we load a new (or demo) level).
+      (pause-asteroid-field level-manager)
+
+      ;; Second: Abruptly destroy all :dangerous things.
+      (let ((dangerous-actors (tags-find-actors-with-tag context :dangerous)))
+        (format t "There are ~A dangerous actors!~%" (length dangerous-actors))
+        (dolist (dangerous-actor dangerous-actors)
+          (format t "  Destroying actor ~A~%" dangerous-actor)
+          (fl:destroy dangerous-actor)))
+
+      ;; TODO: If the player is alive, tell it it can't move.
+      ;; and possibly reset it to home position.
 
 
-    :end-of-level))
+      ;; Spawn game-over sign and set to destroy in max-time seconds
+      (let ((level-complete-sign
+              (first (fl:make-prefab-instance
+                      (%fl::core context)
+                      '(("level-complete-sign" lgj-04/2019))))))
+        (fl:destroy-after-time level-complete-sign
+                               :ttl level-complete-max-wait-time)))
+
+    (cond
+      ((>= level-complete-timer level-complete-max-wait-time)
+       ;; If we reached the end of the timer, do this:
+       (cond
+         ;; TODO: We assume there is at least one non demo level.
+         ((= current-level (1- (length levels))) ;; We're on last level.
+          ;; we completed the last level of the game, YAY!, go back to
+          ;; waiting to play. (maybe stick a YOU WIN! state in here too) and
+          ;; reset our level progression.
+          (setf current-level 0)
+          ;; We reached the end of game, technically game over, but we'll just
+          ;; restart.
+          :waiting-to-play)
+         (t
+          (incf current-level)
+          ;; TODO: if the player is still alive, tell it it can move again.
+          :level-spawn)))
+
+      (t
+       ;; Keep waiting for the timer to fire.
+       (incf level-complete-timer (fl:frame-time context))
+       :level-complete))))
+
 
 
 (defmethod process-director-state ((self director)
@@ -1653,16 +1723,13 @@ NIL if no such list exists."
                    (current-player-holder current-player-holder))
       self
 
-    ;; If there is a player (like suppose a planet blew up), then
-    ;; destroy it, we'll let the rest of the state machine deal with it
-    ;; resetting the internal state.
+    ;; If there is a player then destroy it, we'll let the rest of the state
+    ;; machine deal with it resetting the internal state.
     (a:when-let ((player (first (tags-find-actors-with-tag context :player))))
       (fl:destroy player))
 
-    ;; TODO: Show a game over sign for a while.
     (unless (eq state previous-state)
       (setf game-over-timer 0)
-      ;; TODO: Spawn game-over sign and set to destroy in max-time seconds
       (let ((game-over-sign
               (first (fl:make-prefab-instance
                       (%fl::core context)
@@ -1696,12 +1763,12 @@ NIL if no such list exists."
 
 (fl:define-prefab "projectile" (:library lgj-04/2019)
   "A generic projectile that can be a bullet, or an asteroid, or whatever."
-
   (projectile :transform (fl:ref :self :component 'fl.comp:transform)
               :mover (fl:ref :self :component 'line-mover)
               :collider (fl:ref :self :component 'fl.comp:collider/sphere)
               :sprite (fl:ref :self :component 'fl.comp:sprite)
               :action (fl:ref :self :component 'fl.comp:actions))
+  (tags :tags '(:dangerous))
   (damage-points :dp 1)
   (explosion :name "explode01-01" :frames 15)
   (hit-points :hp 1)
@@ -1798,7 +1865,10 @@ NIL if no such list exists."
                                        :duration 0.5
                                        :repeat-p nil))))
 
+;; TODO: Refactor these signs into a single prefab and a sign component to
+;; manage the configuration of the prefab.
 (fl:define-prefab "warning-wave-sign" (:library lgj-04/2019)
+  "Not used yet."
   (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
                      :scale (v3:make 512 512 512))
   ("sign"
@@ -1806,6 +1876,7 @@ NIL if no such list exists."
    (fl.comp:render :material 'warning-wave)))
 
 (fl:define-prefab "warning-mothership-sign" (:library lgj-04/2019)
+  "Not used yet."
   (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
                      :scale (v3:make 512 512 512))
   ("sign"
@@ -1826,6 +1897,13 @@ NIL if no such list exists."
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'game-over)))
 
+(fl:define-prefab "level-complete-sign" (:library lgj-04/2019)
+  (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+                     :scale (v3:make 512 512 512))
+  ("sign"
+   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:render :material 'level-complete)))
+
 (fl:define-prefab "starfield" (:library lgj-04/2019)
   ("bug-todo:implicit-transform:see-trello"
    (fl.comp:transform :scale (v3:make 960 960 960)
@@ -1838,7 +1916,7 @@ NIL if no such list exists."
 (fl:define-prefab "time-keeper" (:library lgj-04/2019)
   ("bug-todo:implicit-transform:see-trello"
    (fl.comp:transform :translate (v3:make 900 -512 (dl :time-keeper)))
-   (time-keeper :time-max 60f0
+   (time-keeper :time-max 30f0
                 :time-bar-transform (fl:ref "time-bar-root"
                                             :component 'fl.comp:transform)
                 :time-bar-renderer (fl:ref "time-bar-root/time-display"
