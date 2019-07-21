@@ -1695,7 +1695,6 @@ NIL if no such list exists."
       self
 
     (unless (eq state previous-state)
-      (format t "Level Complete!~%")
       (setf level-complete-timer 0)
 
       ;; First: turn off asteroid generator.
@@ -1706,9 +1705,7 @@ NIL if no such list exists."
 
       ;; Second: Abruptly destroy all :dangerous things.
       (let ((dangerous-actors (tags-find-actors-with-tag context :dangerous)))
-        (format t "There are ~A dangerous actors!~%" (length dangerous-actors))
         (dolist (dangerous-actor dangerous-actors)
-          (format t "  Destroying actor ~A~%" dangerous-actor)
           (fl:destroy dangerous-actor)))
 
       ;; TODO: If the player is alive, tell it it can't move.
