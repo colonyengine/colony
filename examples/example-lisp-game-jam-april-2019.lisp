@@ -1984,14 +1984,13 @@ NIL if no such list exists."
                       ;; should have been preserved.
                       :scale (v3:make 512 512 512))))
 
-
 (fl:define-prefab "level-0" (:library lgj-04/2019)
   (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
                  :time-keeper
                  (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
                          :component 'time-keeper))
   (tags :tags '(:level-manager))
-  (asteroid-field :asteroid-holder (fl:ref "/level-0/asteroids"))
+  (asteroid-field :asteroid-holder (fl:ref "/level-2/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("time-keeper" :link ("/time-keeper" :from lgj-04/2019)))
@@ -1999,8 +1998,17 @@ NIL if no such list exists."
    (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
-                   :name "planet01")))
-
+                   :name "planet01"))
+  (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
+   (fl.comp:transform :translate (v3:make -200 -100 (dl :planet))
+                      :scale (v3:make 0.9 0.9 0.9))
+   (fl.comp:sprite :spec :spritesheet-data
+                   :name "planet02"))
+  (("planet-2" :link ("/generic-planet" :from lgj-04/2019))
+   (fl.comp:transform :translate (v3:make 200 -100 (dl :planet))
+                      :scale (v3:make 0.9 0.9 0.9))
+   (fl.comp:sprite :spec :spritesheet-data
+                   :name "planet03")))
 
 (fl:define-prefab "level-1" (:library lgj-04/2019)
   (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
@@ -2029,7 +2037,7 @@ NIL if no such list exists."
                  (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
                          :component 'time-keeper))
   (tags :tags '(:level-manager))
-  (asteroid-field :asteroid-holder (fl:ref "/level-2/asteroids"))
+  (asteroid-field :asteroid-holder (fl:ref "/level-0/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("time-keeper" :link ("/time-keeper" :from lgj-04/2019)))
@@ -2037,17 +2045,8 @@ NIL if no such list exists."
    (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
-                   :name "planet01"))
-  (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make -200 -100 (dl :planet))
-                      :scale (v3:make 0.9 0.9 0.9))
-   (fl.comp:sprite :spec :spritesheet-data
-                   :name "planet02"))
-  (("planet-2" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make 200 -100 (dl :planet))
-                      :scale (v3:make 0.9 0.9 0.9))
-   (fl.comp:sprite :spec :spritesheet-data
-                   :name "planet03")))
+                   :name "planet01")))
+
 
 (fl:define-prefab "protect-the-planets" (:library lgj-04/2019)
   "The top most level prefab which has the component which drives the game
