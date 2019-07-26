@@ -60,40 +60,44 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Shaders
 ;;
-;; TODO: When defining a shader in here,
-;; if I (in-package #:first-light.shader.user) and then define-shader,
-;; the export in the macro expansion seem to have no effect when I change back
-;; to the original package and define a material using the shader later in
-;; the file. Find out why.
+;; Herin we define special shaders this game needs.
+;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; WARNING!!!!
-;; Shaders must currently be written in another package, so we change packages
-;; here to author the shaders, then we change back to the example package
-;; for all code after it.
 ;;
-;; Normally, you'd put this into a different file, but I wanted the ENTIRE
-;; codebase to be in one file for examination.
+;; Shaders MUST currently be written in another package, so we change packages
+;; here to author the shaders, then we change back to the example package for
+;; all code after it. In addition, shaders, when defined in this kind of
+;; context, must be defined in an EVAL-ALWAYS form since the export embedded in
+;; the define-shader form must happen at macro expansion time to other things
+;; later like the define-material can see it.
+;;
+;; Normally, you'd put this into a different file and there the EVAL-ALWAYS is
+;; unnecessary (but it must be loaded before anything that uses that shader
+;; symbol name). However, I wanted the ENTIRE codebase to be in one file to
+;; demonstrate this is possible for a game.
 
-#++(in-package #:first-light.shader.user)
+(in-package #:first-light.shader.user)
 
-#++(define-function starfield/frag ((color :vec4)
-                                    (uv1 :vec2)
-                                    &uniform
-                                    (tex :sampler-2d)
-                                    (time :float)
-                                    (mix-color :vec4))
-     (let ((tex-color (texture tex (vec2 (.x uv1) (- (.y uv1) (/ time 50.0))))))
-       (* tex-color mix-color)))
+(u:eval-always
+  (define-function starfield/frag ((color :vec4)
+                                   (uv1 :vec2)
+                                   &uniform
+                                   (tex :sampler-2d)
+                                   (time :float)
+                                   (mix-color :vec4))
+    (let ((tex-color (texture tex (vec2 (.x uv1) (- (.y uv1) (/ time 50.0))))))
+      (* tex-color mix-color)))
 
 
-#++(define-shader starfield ()
-     (:vertex (fl.shader.texture:unlit/vert fl.shader:mesh-attrs))
-     (:fragment (starfield/frag :vec4 :vec2)))
+  (define-shader starfield ()
+    (:vertex (fl.shader.texture:unlit/vert fl.shader:mesh-attrs))
+    (:fragment (starfield/frag :vec4 :vec2))))
 
 
 ;; Back to our regularly scheduled package!
-#++(in-package #:first-light.example)
+(in-package #:first-light.example)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Textures
