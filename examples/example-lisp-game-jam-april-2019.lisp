@@ -1212,14 +1212,13 @@ NIL if no such list exists."
        ;; world coordinates, then make an explosion there.
        (flet ((zrandom (val)
                 (if (zerop val) 0f0 (float (random val) 1.0))))
-         (let* ((model (fl.comp:model transform))
-                (translation (m4:get-translation model))
-                (er explosion-region)
+         (let* ((er explosion-region)
                 (cx (v3:x (center er)))
                 (cy (v3:y (center er)))
                 (xsign (if (zerop (random 2)) 1f0 -1f0))
                 (ysign (if (zerop (random 2)) 1f0 -1f0))
                 (local-location
+                  ;; Note: In terms of the coordinate space of the planet!
                   (v4:make (+ cx (float (* (zrandom (x er)) xsign) 1f0))
                            (+ cy (float (* (zrandom (y er)) ysign) 1f0))
                            0f0
@@ -1383,18 +1382,28 @@ NIL if no such list exists."
   (setf (pause-p (asteroid-field level-manager)) nil))
 
 (defun pause-enemy-generation (level-manager)
+  ;; Not implemented yet.
+  (declare (ignore level-manager))
   nil)
 
 (defun unpause-enemy-generation (level-manager)
+  ;; Not implemented yet.
+  (declare (ignore level-manager))
   nil)
 
 (defun destroy-all-asteroids (level-manager)
+  ;; Not implemented yet.
+  (declare (ignore level-manager))
   nil)
 
 (defun destroy-all-enemies (level-manager)
+  ;; Not implemented yet.
+  (declare (ignore level-manager))
   nil)
 
 (defun destroy-all-enemy-bullets (level-manager)
+  ;; Not implemented yet.
+  (declare (ignore level-manager))
   nil)
 
 (defun destroy-active-opponents (level-manager)
