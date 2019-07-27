@@ -30,7 +30,7 @@
    #:sprite-animate)
   ;; mesh
   (:export
-   #:mesh)
+   #:static-mesh)
   ;; render
   (:export
    #:render

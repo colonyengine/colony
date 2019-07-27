@@ -46,7 +46,7 @@
    (fl.comp:transform :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local :z (- (/ pi 4)))
                       :scale (v3:make 4 4 4))
-   (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
+   (fl.comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
    (fl.comp:render :material 'damaged-helmet)))
 
 ;;; Prefab descriptors

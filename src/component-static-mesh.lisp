@@ -1,6 +1,6 @@
 (in-package #:first-light.components)
 
-(define-component mesh ()
+(define-component static-mesh ()
   ((location :default nil)
    (index :default 0)
    (data :default nil))
@@ -9,7 +9,7 @@
 (defun draw-mesh (mesh &optional count)
   (%fl:draw-static-mesh (data mesh) count))
 
-(defmethod on-component-initialize ((self mesh))
+(defmethod on-component-initialize ((self static-mesh))
   (with-accessors ((context context) (location location) (index index)
                    (data data))
       self
@@ -19,6 +19,6 @@
       (with-shared-storage
           (context context)
           ((cached-mesh mesh-present-p
-                        ('mesh :cached-mesh-data location index)
+                        ('static-mesh :cached-mesh-data location index)
                         (%fl:load-static-mesh path index)))
         (setf data cached-mesh)))))

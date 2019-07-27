@@ -107,7 +107,7 @@
    (:file "component-camera")
    (:file "component-camera-following")
    (:file "component-camera-tracking")
-   (:file "component-mesh")
+   (:file "component-static-mesh")
    (:file "component-render")
    (:file "component-sprite")
    (:file "component-collider")

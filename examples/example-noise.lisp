@@ -10,7 +10,7 @@
 
 (fl:define-prefab "noise-tile" (:library examples)
   (fl.comp:transform :scale (v3:make 90 90 0))
-  (fl.comp:mesh :location '((:core :mesh) "plane.glb")))
+  (fl.comp:static-mesh :location '((:core :mesh) "plane.glb")))
 
 (fl:define-prefab "noise" (:library examples)
   (("camera" :copy "/cameras/ortho"))

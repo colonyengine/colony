@@ -29,24 +29,24 @@
 
   (("cube-z-1" :copy "/mesh")
    (fl.comp:transform :translate (v3:make 0 0 -4))
-   (fl.comp:mesh :location '((:core :mesh) "cube.glb")))
+   (fl.comp:static-mesh :location '((:core :mesh) "cube.glb")))
 
   (("cube-z-0" :copy "/mesh")
    (fl.comp:transform :translate (v3:make 0 0 -2))
-   (fl.comp:mesh :location '((:core :mesh) "cube.glb")))
+   (fl.comp:static-mesh :location '((:core :mesh) "cube.glb")))
 
   (("cube-origin" :copy "/mesh")
    (fl.comp:transform #++ :rotate/inc #++ (q:orient :local
                                                     (v3:make -1f0 1f0 1f0) (/ pi 2)))
-   (fl.comp:mesh :location '((:core :mesh) "cube.glb")))
+   (fl.comp:static-mesh :location '((:core :mesh) "cube.glb")))
 
   (("cube-x-0" :copy "/mesh")
    (fl.comp:transform :translate (v3:make 2 0 0))
-   (fl.comp:mesh :location '((:core :mesh) "cube.glb")))
+   (fl.comp:static-mesh :location '((:core :mesh) "cube.glb")))
 
   (("cube-x-1" :copy "/mesh")
    (fl.comp:transform :translate (v3:make 4 0 0))
-   (fl.comp:mesh :location '((:core :mesh) "cube.glb"))))
+   (fl.comp:static-mesh :location '((:core :mesh) "cube.glb"))))
 
 
 ;;; Prefab descriptors

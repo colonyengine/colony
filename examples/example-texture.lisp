@@ -264,13 +264,15 @@
    (shader-sweep))
   (("cube-map" :copy "/mesh")
    (fl.comp:transform :translate (v3:make 0 -1 0)
-                      :rotate (q:orient :world :x (asin (/ (sqrt 2)))  :z (/ pi 4)))
-   (fl.comp:mesh :location '((:core :mesh) "cube.glb"))
+                      :rotate (q:orient :world
+                                        :x (asin (/ (sqrt 2)))
+                                        :z (/ pi 4)))
+   (fl.comp:static-mesh :location '((:core :mesh) "cube.glb"))
    (fl.comp:render :material 'cubemap))
   (("cube-map-array" :copy "/mesh")
    (fl.comp:transform :translate (v3:make 3 -1 0)
                       :rotate/inc (q:orient :world (v3:one) (/ pi 4)))
-   (fl.comp:mesh :location '((:core :mesh) "cube.glb"))
+   (fl.comp:static-mesh :location '((:core :mesh) "cube.glb"))
    (fl.comp:render
     :material 'cubemaparray)))
 

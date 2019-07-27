@@ -913,12 +913,12 @@ return the lives-remaining after the life has been consumed."
 
 (fl:define-prefab "warning-wave-sign" (:library lgj-04/2019)
   ("sign"
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'warning-wave)))
 
 (fl:define-prefab "warning-mothership-sign" (:library lgj-04/2019)
   ("sign"
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'warning-mothership)))
 
 (fl:define-prefab "starfield" (:library lgj-04/2019)
@@ -927,7 +927,7 @@ return the lives-remaining after the life has been consumed."
                       ;; NOTE: ortho projection, so we can put starfield way
                       ;; back.
                       :translate (v3:make 0 0 -100))
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'starfield)))
 
 

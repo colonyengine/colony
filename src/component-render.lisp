@@ -13,7 +13,7 @@
                    (material material))
       render
     (let ((instances (instances material))
-          (mesh (actor-component-by-type actor 'mesh))
+          (mesh (actor-component-by-type actor 'static-mesh))
           (sprite (actor-component-by-type actor 'sprite)))
       (setf draw-method
             (ecase mode

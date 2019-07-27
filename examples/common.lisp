@@ -58,7 +58,7 @@
                     :mode :orthographic))))
 
 (fl:define-prefab "mesh" (:library examples)
-  (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+  (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
   (fl.comp:render :material 'fl.materials:unlit-texture))
 
 ;;; Graphs
