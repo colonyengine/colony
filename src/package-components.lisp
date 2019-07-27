@@ -30,12 +30,13 @@
    #:sprite-animate)
   ;; mesh
   (:export
+   #:dynamic-mesh
    #:static-mesh)
   ;; render
   (:export
    #:render
    #:material
-   #:draw-mesh)
+   #:draw-static-mesh)
   ;; sprite
   (:export
    #:sprite

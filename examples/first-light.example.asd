@@ -11,15 +11,15 @@
   :components
   ((:file "package")
    (:file "common")
-   (:module "shaders"
-    :components
-    ((:file "damaged-helmet")
-     (:file "graph")
-     (:file "noise")
-     (:file "starfield")
-     (:file "texture")))
+   (:file "shaders/damaged-helmet")
+   (:file "shaders/dynamic-geometry")
+   (:file "shaders/graph")
+   (:file "shaders/noise")
+   (:file "shaders/starfield")
+   (:file "shaders/texture")
    (:file "example-collision")
    (:file "example-damaged-helmet")
+   (:file "example-dynamic-geometry")
    (:file "example-geometric-volumes")
    (:file "example-graph")
    (:file "example-isometric-view")

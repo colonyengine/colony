@@ -18,22 +18,20 @@
   (:vertex (fl.shader.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (graph/frag :vec2)))
 
-;;;
-
 (define-function 3d-graph/graph ((fn (function (:float) :vec3))
-                                      (pos :vec3)
-                                      (view :mat4)
-                                      (proj :mat4)
-                                      (size :float)
-                                      (min :float)
-                                      (by :float))
+                                 (pos :vec3)
+                                 (view :mat4)
+                                 (proj :mat4)
+                                 (size :float)
+                                 (min :float)
+                                 (by :float))
   (mvlet* ((input (+ min (* by (float gl-instance-id))))
            (result color (funcall fn input))
            (model (vec4 result 1))
            (pos (+ (* view model)
                    (vec4 (* pos size) 0))))
-    (values (* proj pos)
-            color)))
+          (values (* proj pos)
+                  color)))
 
 (define-function 3d-graph-1 ((i :float)
                              (time :float))
@@ -77,9 +75,9 @@
                 (3d-graph-1 i time))))
       (mvlet* ((pos color (3d-graph/graph
                            fn mesh/pos view proj size min by)))
-        (values pos
-                mesh/uv1
-                color)))))
+              (values pos
+                      mesh/uv1
+                      color)))))
 
 (define-function 3d-graph/vert2 ((mesh-attrs mesh-attrs)
                                  &uniform
@@ -95,9 +93,9 @@
                 (3d-graph-2 i time))))
       (mvlet* ((pos color (3d-graph/graph
                            fn mesh/pos view proj size min by)))
-        (values pos
-                mesh/uv1
-                color)))))
+              (values pos
+                      mesh/uv1
+                      color)))))
 
 (define-function 3d-graph/frag ((uv :vec2)
                                 (color :vec4)
