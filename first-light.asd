@@ -11,7 +11,6 @@
   :encoding :utf-8
   :depends-on (#:alexandria
                #:babel
-               #:bitio
                #:cl-graph
                #:cl-opengl
                #:cl-ppcre
@@ -48,8 +47,8 @@
    (:file "common")
    (:file "interactive-development")
    (:file "metadata")
-   (:file "parser-common")
-   (:file "parser-gltf2")
+   (:file "binary-parser")
+   (:file "geometry-static")
    (:file "uuid")
    (:file "resource")
    (:file "context")

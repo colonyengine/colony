@@ -87,26 +87,10 @@
   (:export
    #:meta)
 
-  ;; parser
-  (:export
-   #:buffer-bytes
-   #:buffer-bits
-   #:buffer-position
-   #:buffer-sequence
-   #:buffer-stream
-   #:read-bits
-   #:read-bytes
-   #:read-int-be
-   #:read-int-le
-   #:read-string
-   #:read-uint-be
-   #:read-uint-le
-   #:with-buffer-read)
-
   ;; geometry
   (:export
-   #:load-gltf
-   #:draw-func)
+   #:load-static-mesh
+   #:draw-static-mesh)
 
   ;; image
   (:export
