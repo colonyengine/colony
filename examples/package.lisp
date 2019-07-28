@@ -27,7 +27,24 @@
            #:noise
            #:sprite-1
            #:sprite-2
-           #:texture
-           ;; Scenes from PtP
-           #:lgj-04/2019
+           #:texture))
+
+
+
+(defpackage #:first-light.examples.protect-the-planets
+  (:nicknames #:fl.examples.ptp)
+  (:local-nicknames (#:a #:alexandria)
+                    (#:u #:golden-utils)
+                    (#:v2 #:origin.vec2)
+                    (#:v3 #:origin.vec3)
+                    (#:v4 #:origin.vec4)
+                    (#:m4 #:origin.mat4)
+                    (#:q #:origin.quat))
+  (:use #:cl)
+
+  ;; prefab library
+  (:export #:ptp-base)
+
+  ;; prefab descriptor for "scenes" to start.
+  (:export #:lgj-04/2019
            #:starfield-demo))

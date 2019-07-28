@@ -25,4 +25,7 @@
    (:file "example-noise")
    (:file "example-sprite")
    (:file "example-texture")
-   (:file "example-lisp-game-jam-april-2019")))
+   (:module "protect-the-planets"
+    :components
+    ((:file "common")
+     (:file "example-lisp-game-jam-april-2019")))))
