@@ -48,6 +48,7 @@
    (:file "common")
    (:file "interactive-development")
    (:file "metadata")
+   (:file "protocol")
    (:file "parser-common")
    (:file "parser-gltf2")
    (:file "uuid")
