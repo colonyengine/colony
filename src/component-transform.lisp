@@ -223,7 +223,7 @@ rotation, but not by translation. A newly allocated M:VEC3 is returned."
     (let ((zero-translation-model (m4:copy (model transform))))
       (m4:set-translation! zero-translation-model
                            zero-translation-model
-                           (v3:zero))
+                           v3:+zero+)
       (~:.xyz (m4:*v4 zero-translation-model (v4:make vx vy vz 1))))))
 
 (defun inverse-transform-vector (transform vector-vec)
@@ -235,7 +235,7 @@ returned."
     (let ((zero-translation-model (m4:copy (model transform))))
       (m4:set-translation! zero-translation-model
                            zero-translation-model
-                           (v3:zero))
+                           v3:+zero+)
       (~:.xyz (m4:*v4 (m4:invert zero-translation-model)
                       (v4:make vx vy vz 1))))))
 
@@ -249,8 +249,9 @@ returned."
     (let ((zero-translation-identity-scale-model (m4:copy (model transform))))
       (m4:set-translation! zero-translation-identity-scale-model
                            zero-translation-identity-scale-model
-                           (v3:zero))
-      ;; TODO: Just need to normalize the rotation portion, not orthonormalize it
+                           v3:+zero+)
+      ;; TODO: Just need to normalize the rotation portion, not orthonormalize
+      ;; it
       (m4:orthonormalize! zero-translation-identity-scale-model
                           zero-translation-identity-scale-model)
       (~:.xyz (m4:*v4 zero-translation-identity-scale-model
@@ -265,17 +266,16 @@ returned."
     (let ((zero-translation-identity-scale-model (m4:copy (model transform))))
       (m4:set-translation! zero-translation-identity-scale-model
                            zero-translation-identity-scale-model
-                           (v3:zero))
-      ;; TODO: Just need to normalize the rotation portion, not also
-      ;; make it ortho, but there is no math function for it. We need to
-      ;; write one.
+                           v3:+zero+)
+      ;; TODO: Just need to normalize the rotation portion, not also make it
+      ;; ortho, but there is no math function for it. We need to write one.
       (m4:orthonormalize! zero-translation-identity-scale-model
                           zero-translation-identity-scale-model)
       (~:.xyz (m4:*v4 (m4:invert zero-translation-identity-scale-model)
                       (v4:make vx vy vz 1))))))
 
-;; NOTE: These functions return the vectors that represent
-;; forward, backward, up, down, right, and left in _world space_.
+;; NOTE: These functions return the vectors that represent forward, backward,
+;; up, down, right, and left in _world space_.
 ;;
 ;; We define these axes as the directions for an object in FL:
 ;;
