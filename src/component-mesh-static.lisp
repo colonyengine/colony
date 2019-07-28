@@ -6,9 +6,6 @@
    (data :default nil))
   ((:cached-mesh-data equalp eql)))
 
-(defun draw-mesh (mesh &optional count)
-  (%fl:draw-static-mesh (data mesh) count))
-
 (defmethod on-component-initialize ((self static-mesh))
   (with-accessors ((context context) (location location) (index index)
                    (data data))

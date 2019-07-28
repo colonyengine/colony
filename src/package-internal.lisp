@@ -90,8 +90,8 @@
   ;; geometry
   (:export
    #:load-static-mesh
-   #:draw-static-mesh
-   #:dynamic-geometry)
+   #:draw-dynamic-mesh
+   #:draw-static-mesh)
 
   ;; image
   (:export

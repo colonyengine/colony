@@ -35,8 +35,7 @@
   ;; render
   (:export
    #:render
-   #:material
-   #:draw-static-mesh)
+   #:material)
   ;; sprite
   (:export
    #:sprite

@@ -2,7 +2,7 @@
 
 (define-component render ()
   ((mesh :default nil)
-   (mode :default :mesh)
+   (mode :default :static-mesh)
    (draw-method :default (constantly nil))
    (transform :default nil)
    (material :default nil
@@ -13,11 +13,17 @@
                    (material material))
       render
     (let ((instances (instances material))
-          (mesh (actor-component-by-type actor 'static-mesh))
+          (static-mesh (actor-component-by-type actor 'static-mesh))
+          (dynamic-mesh (actor-component-by-type actor 'dynamic-mesh))
           (sprite (actor-component-by-type actor 'sprite)))
       (setf draw-method
             (ecase mode
-              (:mesh (lambda () (draw-mesh mesh instances)))
+              (:static-mesh (lambda ()
+                              (%fl:draw-static-mesh
+                               (data static-mesh) instances)))
+              (:dynamic-mesh (lambda ()
+                               (%fl::draw-dynamic-mesh
+                                (geometry dynamic-mesh) instances)))
               (:sprite (lambda () (draw-sprite sprite instances))))))))
 
 (defmethod on-component-initialize ((self render))
