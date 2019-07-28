@@ -53,7 +53,7 @@
           %vertex-count vertex-count)
     (u:noop)))
 
-(defun draw-dynamic-mesh (geometry instance-count)
+(defun draw-dynamic-geometry (geometry instance-count)
   (with-slots (%primitive %vertex-count) geometry
     (%gl:draw-arrays-instanced %primitive 0 %vertex-count instance-count)))
 

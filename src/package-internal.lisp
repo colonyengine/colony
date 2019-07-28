@@ -91,9 +91,9 @@
   (:export
    #:define-geometry-layout
    #:define-geometry
-   #:draw-dynamic-mesh
-   #:draw-static-mesh
-   #:load-static-mesh
+   #:draw-dynamic-geometry
+   #:draw-static-geometry
+   #:load-static-geometry
    #:make-dynamic-geometry
    #:update-dynamic-geometry)
 

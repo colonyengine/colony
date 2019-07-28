@@ -12,23 +12,24 @@
   (with-accessors ((actor actor) (draw-method draw-method) (mode mode)
                    (material material))
       render
-    (let ((instances (instances material))
-          (static-mesh (actor-component-by-type actor 'static-mesh))
-          (dynamic-mesh (actor-component-by-type actor 'dynamic-mesh))
-          (sprite (actor-component-by-type actor 'sprite)))
+    (let ((instances (instances material)))
       (setf draw-method
             (ecase mode
               (:static-mesh
                (lambda ()
-                 (%fl:draw-static-mesh
-                  (data static-mesh) instances)))
+                 (%fl:draw-static-geometry
+                  (data (actor-component-by-type actor 'static-mesh))
+                  instances)))
               (:dynamic-mesh
                (lambda ()
-                 (%fl:draw-dynamic-mesh
-                  (geometry dynamic-mesh) instances)))
+                 (%fl:draw-dynamic-geometry
+                  (geometry (actor-component-by-type actor 'dynamic-mesh))
+                  instances)))
               (:sprite
                (lambda ()
-                 (draw-sprite sprite instances))))))))
+                 (draw-sprite
+                  (actor-component-by-type actor 'sprite)
+                  instances))))))))
 
 (defmethod on-component-initialize ((self render))
   (with-accessors ((actor actor) (transform transform)) self

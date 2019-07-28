@@ -262,7 +262,7 @@
       (make-draw-func primitive)
       primitive)))
 
-(defun load-static-mesh (path mesh-id)
+(defun load-static-geometry (path mesh-id)
   (let ((gltf (load-gltf-file path)))
     (dolist (primitive-data (find-gltf-mesh gltf mesh-id))
       (push (make-gltf-primitive gltf primitive-data) (primitives gltf)))
@@ -272,6 +272,6 @@
 (defun draw-static-primitive (primitive count)
   (funcall (draw-func primitive) count))
 
-(defun draw-static-mesh (mesh count)
+(defun draw-static-geometry (mesh count)
   (dolist (primitive (primitives mesh))
     (draw-static-primitive primitive count)))

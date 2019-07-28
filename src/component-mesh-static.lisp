@@ -17,5 +17,5 @@
           (context context)
           ((cached-mesh mesh-present-p
                         ('static-mesh :cached-mesh-data location index)
-                        (%fl:load-static-mesh path index)))
+                        (%fl:load-static-geometry path index)))
         (setf data cached-mesh)))))
