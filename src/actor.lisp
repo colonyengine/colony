@@ -152,8 +152,9 @@ reference which will be the parent of the spawning actor. It defaults to
        (lambda (x) (destroy-actor (actor x)))
        (actor-component-by-type actor 'fl.comp:transform)))))
 
-;; TODO: this should probably never be run on the @universe actor. :)
 (defun actor/disconnect (actor)
+  (when (eq (id actor) 'universe)
+    (error "Cannot disconnect the top-level universe node."))
   (let ((actor-transform (actor-component-by-type actor 'fl.comp:transform)))
     (fl.comp:transform-remove-child (fl.comp:parent actor-transform)
                                     actor-transform)))
