@@ -90,5 +90,4 @@
                      (func ,prefab) (make-factory ,prefab))
 
                (parse-prefab ,prefab)))
-
            (export ',library))))))

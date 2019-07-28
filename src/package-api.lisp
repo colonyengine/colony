@@ -42,6 +42,7 @@
    #:instances
    #:make-actor
    #:make-component
+   #:make-dynamic-geometry
    #:mat-uniform-ref
    #:on-component-attach
    #:on-component-destroy
@@ -64,6 +65,7 @@
    #:stop-engine
    #:total-time
    #:ttl
+   #:update-dynamic-geometry
    #:using-material
    #:with-shared-storage
 

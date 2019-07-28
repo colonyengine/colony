@@ -7,4 +7,4 @@
   (with-accessors ((geometry geometry)) self
     (unless geometry
       (error "A dynamic mesh must have geometry defined."))
-    (setf geometry (funcall (u:href (meta '%fl::dynamic-geometry) geometry)))))
+    (setf geometry (make-dynamic-geometry geometry))))

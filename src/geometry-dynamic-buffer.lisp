@@ -70,11 +70,3 @@
     (let ((buffer (u:href (buffer-names geometry) buffer-name)))
       (gl:bind-buffer :array-buffer buffer)
       (%gl:buffer-data :array-buffer size ptr usage))))
-
-(defun draw-dynamic-mesh (geometry primitive-count &key (first 0) count)
-  (with-slots (%primitive %vertex-count) geometry
-    (%gl:draw-arrays-instanced
-     %primitive
-     first
-     (or count %vertex-count)
-     primitive-count)))

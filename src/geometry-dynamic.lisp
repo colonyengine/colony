@@ -26,9 +26,9 @@
   (or (u:href (meta 'dynamic-geometry-layouts) layout-name)
       (error "Geometry layout ~s not found." layout-name)))
 
-(defun make-dynamic-geometry (layout-name
-                              &key (primitive :triangles) (vertex-count 0)
-                                buffer-data)
+(defun make-dynamic-geometry-thunk (layout-name
+                                    &key (primitive :triangles) (vertex-count 0)
+                                      buffer-data)
   (lambda ()
     (let ((geometry (make-instance 'dynamic-geometry
                                    :layout (find-geometry-layout layout-name)
@@ -37,9 +37,25 @@
       (gl:bind-vertex-array (id geometry))
       (make-geometry-buffers geometry)
       (configure-geometry-buffers geometry)
-      (u:do-plist (k v buffer-data)
-        (fill-geometry-buffer geometry k v))
+      (apply #'update-dynamic-geometry
+             geometry primitive vertex-count buffer-data)
       geometry)))
+
+(defun make-dynamic-geometry (name)
+  (let ((geometry (u:href (meta 'dynamic-geometry) name)))
+    (funcall geometry)))
+
+(defun update-dynamic-geometry (geometry primitive vertex-count &rest data)
+  (with-slots (%primitive %vertex-count) geometry
+    (u:do-plist (k v data)
+      (fill-geometry-buffer geometry k v))
+    (setf %primitive primitive
+          %vertex-count vertex-count)
+    (u:noop)))
+
+(defun draw-dynamic-mesh (geometry instance-count)
+  (with-slots (%primitive %vertex-count) geometry
+    (%gl:draw-arrays-instanced %primitive 0 %vertex-count instance-count)))
 
 (defmacro define-geometry-layout (name &body body)
   (a:with-gensyms (groups order)
@@ -62,7 +78,8 @@
          (unless ,geometry-table
            (setf (meta 'dynamic-geometry) (u:dict)))
          (setf (u:href ,geometry-table ',name)
-               (make-dynamic-geometry ',layout
-                                      :primitive ',primitive
-                                      :vertex-count ,vertex-count
-                                      :buffer-data ',buffers))))))
+               (make-dynamic-geometry-thunk
+                ',layout
+                :primitive ',primitive
+                :vertex-count ,vertex-count
+                :buffer-data ',buffers))))))

@@ -93,7 +93,9 @@
    #:define-geometry
    #:draw-dynamic-mesh
    #:draw-static-mesh
-   #:load-static-mesh)
+   #:load-static-mesh
+   #:make-dynamic-geometry
+   #:update-dynamic-geometry)
 
   ;; image
   (:export
