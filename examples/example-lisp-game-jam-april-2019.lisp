@@ -316,33 +316,6 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
           ;; NOTE: Allocates memory.
           (v3:make (+ mx adj-x) (+ my adj-y) (+ mz adj-z)))))))
 
-;; This and it's inverse should prolly go into origin. We currently do not use
-;; this function in this code, but it is useful in its own right.
-(defun quat->euler (quat)
-  (flet ((copysign (x y)
-           (let ((x (abs x))
-                 (sign (signum y)))
-             (if (= sign -1)
-                 (* -1 x)
-                 x))))
-
-    (q:with-components ((q quat))
-      (let* (;; Roll (x-axis)
-             (sinr_cosp (* 2.0 (+ (* qw qx) (* qy qz))))
-             (cosr_cosp (- 1.0 (* 2.0 (+ (* qx qx) (* qy qy)))))
-             (roll (atan sinr_cosp cosr_cosp))
-             ;; Pitch (y-axis)
-             (sinp (* 2.0 (- (* qw qy) (* qz qx))))
-             (pitch (if (>= (abs sinp) 1)
-                        (copysign (/ pi 2) sinp)
-                        (asin sinp)))
-             ;; Yaw (z-axis)
-             (siny_cosp (* 2.0 (+ (* qw qz) (* qx qy))))
-             (cosy_cosp (- 1.0 (* 2.0 (+ (* qy qy) (* qz qz)))))
-             (yaw (atan siny_cosp cosy_cosp)))
-
-        (v3:make roll pitch yaw)))))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
