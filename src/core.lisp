@@ -160,14 +160,13 @@ structures in CORE."
         (rcache-dispose context entry-type value)))))
 
 (defun map-scene-tree (func parent-actor &optional (level 0))
-  "Similar to FL.COMP::MAP-NODES, this instead maps over the actor starting
+  "Similar to FL.COMP:MAP-NODES, this instead maps over the actor starting
 at the PARENT-ACTOR root. Level is how far you are down in the tree and is
 useful for indention purposes. This function maps FUNC over each actor."
   (funcall func parent-actor level)
   (let ((parent-actor-transform
           (actor-component-by-type parent-actor 'fl.comp:transform)))
-    ;; TODO: Fix FL.COMP::CHILDREN (on the transform component) to be exported.
-    (dolist (child (fl.comp::children parent-actor-transform))
+    (dolist (child (fl.comp:children parent-actor-transform))
       (map-scene-tree func (actor child) (1+ level)))))
 
 (defun print-scene-tree (core)
