@@ -13,19 +13,20 @@
   (:use #:cl #:%first-light)
   ;; camera
   (:export
+   #:active-p
    #:camera
-   #:tracking-camera
+   #:compute-camera-view
+   #:find-active-camera
    #:following-camera
+   #:projection
+   #:tracking-camera
    #:transform
    #:view
-   #:projection
-   #:zoom-camera
-   #:find-active-camera
-   #:compute-camera-view)
+   #:zoom-camera)
   ;; action
   (:export
-   #:actions
    #:action
+   #:actions
    #:action-list
    #:sprite-animate)
   ;; mesh
@@ -34,49 +35,55 @@
    #:static-mesh)
   ;; render
   (:export
-   #:render
-   #:material)
+   #:draw-mesh
+   #:material
+   #:render)
   ;; sprite
   (:export
    #:sprite
    #:update-sprite-index)
   ;; transform
   (:export
+   #:children
+   #:interpolate-transforms
+   #:local
+   #:map-nodes
+   #:model
+   #:parent
    #:transform
+   #:transform-node
    #:transform-add-child
    #:transform-remove-child
-   #:model
-   #:local
    #:translate
    #:rotate
    #:scale)
   ;; various colliders
   (:export
+   #:center
    #:collider/sphere
    #:collide-p
-   #:referent
    #:on-layer
-   #:center
-   #:radius)
+   #:radius
+   #:referent)
   ;; transform
   (:export
-   #:transform
-   #:transform-add-child
-   #:transform-remove-child
-   #:model
+   #:inverse-transform-direction
+   #:inverse-transform-point
+   #:inverse-transform-vector
    #:local
-   #:translate
+   #:model
    #:rotate
    #:scale
-   #:transform-point
-   #:inverse-transform-point
-   #:transform-vector
-   #:inverse-transform-vector
-   #:transform-direction
-   #:inverse-transform-direction
-   #:transform-forward
+   #:transform
+   #:transform-add-child
    #:transform-backward
-   #:transform-up
+   #:transform-direction
    #:transform-down
+   #:transform-forward
+   #:transform-left
+   #:transform-point
+   #:transform-remove-child
    #:transform-right
-   #:transform-left))
+   #:transform-up
+   #:transform-vector
+   #:translate))

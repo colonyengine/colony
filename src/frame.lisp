@@ -79,8 +79,8 @@
                     'protocol-physics-update
                     :come-from-state-name
                     :ef-physics-update)
-      (fl.comp::map-nodes
-       (lambda (x) (fl.comp::transform-node core x))
+      (fl.comp:map-nodes
+       (lambda (x) (fl.comp:transform-node core x))
        (actor-component-by-type (scene-tree core) 'fl.comp:transform))
       (execute-flow core
                     :default

@@ -80,14 +80,7 @@ reference which will be the parent of the spawning actor. It defaults to
         (actor-transform (actor-component-by-type actor 'fl.comp:transform)))
     (cond
       ((eq parent :universe)
-       ;; TODO: This isn't exactly correct, but will work in most cases. Namely,
-       ;; it works in the scene DSL expansion since we add children before
-       ;; spawning the actors. We may be able to fix the scene dsl expansion to
-       ;; just supply the :parent keyword to spawn-actor instead and forgo the
-       ;; transform-add-child calls there. Usually, when a user calls
-       ;; SPAWN-ACTOR in their code, they will either leave :parent at default,
-       ;; or already have an actor to reference as the parent.
-       (unless (fl.comp::parent actor-transform)
+       (unless (fl.comp:parent actor-transform)
          (fl.comp:transform-add-child
           (actor-component-by-type (scene-tree core) 'fl.comp:transform)
           (actor-component-by-type actor 'fl.comp:transform))))
@@ -155,14 +148,14 @@ reference which will be the parent of the spawning actor. It defaults to
            (deregister-object-uuid actor)
            (deregister-object-id actor)))
     (when actor
-      (fl.comp::map-nodes
+      (fl.comp:map-nodes
        (lambda (x) (destroy-actor (actor x)))
        (actor-component-by-type actor 'fl.comp:transform)))))
 
 ;; TODO: this should probably never be run on the @universe actor. :)
 (defun actor/disconnect (actor)
   (let ((actor-transform (actor-component-by-type actor 'fl.comp:transform)))
-    (fl.comp:transform-remove-child (fl.comp::parent actor-transform)
+    (fl.comp:transform-remove-child (fl.comp:parent actor-transform)
                                     actor-transform)))
 
 (defun actor/destroy->released (actor)
