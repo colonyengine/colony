@@ -18,13 +18,17 @@
           (sprite (actor-component-by-type actor 'sprite)))
       (setf draw-method
             (ecase mode
-              (:static-mesh (lambda ()
-                              (%fl:draw-static-mesh
-                               (data static-mesh) instances)))
-              (:dynamic-mesh (lambda ()
-                               (%fl::draw-dynamic-mesh
-                                (geometry dynamic-mesh) instances)))
-              (:sprite (lambda () (draw-sprite sprite instances))))))))
+              (:static-mesh
+               (lambda ()
+                 (%fl:draw-static-mesh
+                  (data static-mesh) instances)))
+              (:dynamic-mesh
+               (lambda ()
+                 (%fl:draw-dynamic-mesh
+                  (geometry dynamic-mesh) instances)))
+              (:sprite
+               (lambda ()
+                 (draw-sprite sprite instances))))))))
 
 (defmethod on-component-initialize ((self render))
   (with-accessors ((actor actor) (transform transform)) self

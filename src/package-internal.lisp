@@ -89,9 +89,11 @@
 
   ;; geometry
   (:export
-   #:load-static-mesh
+   #:define-geometry-layout
+   #:define-geometry
    #:draw-dynamic-mesh
-   #:draw-static-mesh)
+   #:draw-static-mesh
+   #:load-static-mesh)
 
   ;; image
   (:export
