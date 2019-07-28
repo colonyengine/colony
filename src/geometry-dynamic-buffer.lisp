@@ -71,7 +71,7 @@
       (gl:bind-buffer :array-buffer buffer)
       (%gl:buffer-data :array-buffer size ptr usage))))
 
-(defun draw-dynamic-geometry (geometry primitive-count &key (first 0) count)
+(defun draw-dynamic-mesh (geometry primitive-count &key (first 0) count)
   (with-slots (%primitive %vertex-count) geometry
     (%gl:draw-arrays-instanced
      %primitive

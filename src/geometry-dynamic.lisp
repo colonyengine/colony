@@ -67,24 +67,24 @@
                                       :vertex-count ,vertex-count
                                       :buffer-data ',buffers))))))
 
-;; (define-geometry-layout cell
-;;   (:name1 (:format interleaved :divisor 0)
-;;           (position :type float :count 3)
-;;           (normal :type float :count 3)
-;;           (uv :type float :count 3))
-;;   (:name2 (:format interleaved :divisor 1)
-;;           (offsets :type float :count 2)
-;;           (colors :type float :count 3 :normalize t)))
+(define-geometry-layout cell
+  (:name1 (:format interleaved :divisor 0)
+          (position :type float :count 3)
+          (normal :type float :count 3)
+          (uv :type float :count 3))
+  (:name2 (:format interleaved :divisor 1)
+          (offsets :type float :count 2)
+          (colors :type float :count 3 :normalize t)))
 
-;; (define-geometry cell
-;;   :layout cell
-;;   :primitive :triangles
-;;   :vertex-count 6
-;;   :buffers
-;;   (:name1 (((0 0 0) (0 0 1) (-1 -1 0))
-;;            ((0 1 0) (0 0 1) (-1 1 0))
-;;            ((1 1 0) (0 0 1) (1 1 0))
-;;            ((0 0 0) (0 0 1) (-1 -1 0))
-;;            ((1 1 0) (0 0 1) (1 1 0))
-;;            ((1 0 0) (0 0 1) (1 -1 0)))
-;;    :name2 nil))
+(define-geometry cell
+  :layout cell
+  :primitive :triangles
+  :vertex-count 6
+  :buffers
+  (:name1 (((0 0 0) (0 0 1) (-1 -1 0))
+           ((0 1 0) (0 0 1) (-1 1 0))
+           ((1 1 0) (0 0 1) (1 1 0))
+           ((0 0 0) (0 0 1) (-1 -1 0))
+           ((1 1 0) (0 0 1) (1 1 0))
+           ((1 0 0) (0 0 1) (1 -1 0)))
+   :name2 nil))
