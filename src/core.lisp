@@ -120,30 +120,23 @@ structures in CORE."
 ;;; shared-storage for components.
 ;;; TODO: change this when the real cache code shows up.
 
-(defgeneric rcache-layout (entry-type))
-
 (defmethod rcache-layout ((entry-type symbol))
   '(eql))
 
-(defgeneric rcache-lookup (context entry-type &rest keys)
-  (:method ((entry-type symbol) context &rest keys)
-    (apply #'rcache-lookup entry-type context keys)))
+(defmethod rcache-lookup (context (entry-type symbol) &rest keys)
+  (apply #'rcache-lookup context entry-type keys))
 
-(defgeneric rcache-construct (context entry-type &rest keys)
-  (:method ((entry-type symbol) context &rest keys)
-    (apply #'rcache-construct entry-type context keys)))
+(defmethod rcache-construct (context (entry-type symbol) &rest keys)
+  (apply #'rcache-construct context entry-type keys))
 
-(defgeneric rcache-remove (context entry-type &rest keys)
-  (:method ((entry-type symbol) context &rest keys)
-    (apply #'rcache-remove entry-type context keys)))
+(defmethod rcache-remove (context (entry-type symbol) &rest keys)
+  (apply #'rcache-remove context entry-type keys))
 
-(defgeneric rcache-dispose (context entry-type removed-value)
-  (:method ((entry-type symbol) context removed-value)
-    (rcache-dispose entry-type context removed-value)))
+(defmethod rcache-dispose (context (entry-type symbol) removed-value)
+  (rcache-dispose context entry-type removed-value))
 
 ;; This might call rcache-construct if needed.
-(defmethod rcache-lookup (context (entry-type symbol)
-                          &rest keys)
+(defmethod rcache-lookup (context (entry-type symbol) &rest keys)
   (let ((core (core context)))
     (ensure-nested-hash-table (rcache core)
                               ;; NOTE: 'eq is for the rcache table itself.

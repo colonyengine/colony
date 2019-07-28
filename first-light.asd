@@ -47,6 +47,7 @@
    (:file "common")
    (:file "interactive-development")
    (:file "metadata")
+   (:file "protocol")
    (:file "binary-parser")
    (:file "geometry-static")
    (:file "geometry-dynamic-attribute")
