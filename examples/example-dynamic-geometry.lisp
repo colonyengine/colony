@@ -3,19 +3,17 @@
 ;; Dynamic geometry
 
 (fl:define-geometry-layout tile
-  (:data (:format interleaved :divisor 0)
+  (:data (:format interleaved)
          (position :type float :count 3)
          (normal :type float :count 3)
          (uv :type float :count 3)))
 
 (fl:define-geometry tile
   :layout tile
-  :primitive :triangles
-  :vertex-count 6
+  :primitive :triangle-strip
+  :vertex-count 4
   :buffers
-  (:data (((-0.5 -0.5 0) (0 0 1) (-1 -1 0))
-          ((-0.5 0.5 0) (0 0 1) (-1 1 0))
-          ((0.5 0.5 0) (0 0 1) (1 1 0))
+  (:data (((-0.5 0.5 0) (0 0 1) (-1 1 0))
           ((-0.5 -0.5 0) (0 0 1) (-1 -1 0))
           ((0.5 0.5 0) (0 0 1) (1 1 0))
           ((0.5 -0.5 0) (0 0 1) (1 -1 0)))))
