@@ -1,7 +1,7 @@
 (in-package #:first-light.components)
 
 (define-component sprite ()
-  ((%name :reader name
+  ((%name :accessor name
           :initarg :name
           :initform nil)
    (%spec :reader spec
@@ -10,7 +10,7 @@
    (%spritesheet :reader spritesheet)
    (%index :reader index)
    (%initial-index :reader initial-index)
-   (%frames :reader frames
+   (%frames :accessor frames
             :initarg :frames
             :initform 1))
   ((:cached-spritesheet-data equalp)))
