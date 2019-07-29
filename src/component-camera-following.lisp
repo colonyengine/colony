@@ -15,7 +15,7 @@
     (camera-target-actor self (target-actor self))))
 
 (defmethod on-component-update ((self following-camera))
-  (with-slots (%transform) (slave-camera self)
+  (with-slots (%transform) (slave self)
     (let* ((target-position (m4:get-translation
                              (model (target-transform self))))
            (new-camera-position (v3:+! target-position

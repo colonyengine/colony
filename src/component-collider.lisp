@@ -4,7 +4,7 @@
   (;; The collider is only ever on a single layer.
    (%on-layer :reader on-layer
               :initarg :on-layer)
-   (%center :reader center
+   (%center :accessor center
             :initarg :center
             :initform (v3:zero))
    (%radius :reader radius
