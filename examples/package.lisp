@@ -31,6 +31,7 @@
 
 
 
+;;;; This is a reasonably scoped shmup that demonstrates use of the engine.
 (defpackage #:first-light.examples.protect-the-planets
   (:nicknames #:fl.examples.ptp)
   (:local-nicknames (#:a #:alexandria)
@@ -46,5 +47,5 @@
   (:export #:ptp-base)
 
   ;; prefab descriptor for "scenes" to start.
-  (:export #:lgj-04/2019
+  (:export #:ptp
            #:starfield-demo))

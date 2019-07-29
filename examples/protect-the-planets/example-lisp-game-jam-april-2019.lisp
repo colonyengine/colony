@@ -1,5 +1,10 @@
 (in-package #:first-light.examples.protect-the-planets)
 
+;; To run this game, start your lisp repl, then:
+;;
+;; (ql:quickload :first-light.example)
+;; (fl:start-engine :scene 'fl.examples.ptp:ptp)
+
 ;; "Protect the Planets!"
 ;; by Peter Keller (psilord@cs.wisc.edu)
 ;; With significant contributions by: Michael Fiano (mail@michaelfiano.com)
@@ -555,7 +560,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                           (velocity 1000)
                           (direction :+y)
                           (prefab-name "projectile")
-                          (prefab-library 'lgj-04/2019)
+                          (prefab-library 'ptp)
                           (name "bullet01")
                           (frames 1))
   (let* ((new-projectile
@@ -626,7 +631,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 (defun make-explosion (context translation rotation scale
                        &key (destroy-ttl 2)
                          (prefab-name "generic-explosion")
-                         (prefab-library 'lgj-04/2019)
+                         (prefab-library 'ptp)
                          (name "explode01-01")
                          (frames 15))
   (let* ((new-explosion
@@ -874,7 +879,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    ;; variant. Also have it return a vector instead of a list, more useful
    ;; for indexing.
    (mockette-prefab :default (fl.prefab::prefab-descriptor
-                               ("player-ship-mockette" lgj-04/2019)))
+                               ("player-ship-mockette" ptp)))
    ;; We keep references to all of the mockettes in an array that matches their
    ;; position on the screen so we can destroy them or re-create them as the
    ;; player dies or gets 1ups.
@@ -1439,12 +1444,12 @@ NIL if no such list exists."
    (previous-game-state :default nil)
    ;; The db of levels over which the game progresses.
    (levels :default (fl.prefab::prefab-descriptor
-                      ("level-0" lgj-04/2019)
-                      ("level-1" lgj-04/2019)
-                      ("level-2" lgj-04/2019)))
+                      ("level-0" ptp)
+                      ("level-1" ptp)
+                      ("level-2" ptp)))
    ;; which level is considered the demo level.
    (demo-level :default (fl.prefab::prefab-descriptor
-                          ("demo-level" lgj-04/2019)))
+                          ("demo-level" ptp)))
    ;; Which level are we playing?
    (current-level :default 0)
    ;; The actual root instance of the actor for the current level.
@@ -1614,7 +1619,7 @@ NIL if no such list exists."
                       (let ((new-player-instance
                               (first (fl:make-prefab-instance
                                       (%fl::core context)
-                                      '(("player-ship" lgj-04/2019))
+                                      '(("player-ship" ptp))
                                       :parent current-player-holder))))
                         ;; TODO: make player respawn in same place and
                         ;; orientation as where they died.
@@ -1700,7 +1705,7 @@ NIL if no such list exists."
       (let ((level-complete-sign
               (first (fl:make-prefab-instance
                       (%fl::core context)
-                      '(("level-complete-sign" lgj-04/2019))))))
+                      '(("level-complete-sign" ptp))))))
         (fl:destroy-after-time level-complete-sign
                                :ttl level-complete-max-wait-time)))
 
@@ -1752,7 +1757,7 @@ NIL if no such list exists."
       (let ((game-over-sign
               (first (fl:make-prefab-instance
                       (%fl::core context)
-                      '(("game-over-sign" lgj-04/2019))))))
+                      '(("game-over-sign" ptp))))))
         (fl:destroy-after-time game-over-sign :ttl game-over-max-wait-time)))
 
     (cond
@@ -1780,7 +1785,7 @@ NIL if no such list exists."
 ;; Prefabs
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(fl:define-prefab "projectile" (:library lgj-04/2019)
+(fl:define-prefab "projectile" (:library ptp)
   "A generic projectile that can be a bullet, or an asteroid, or whatever."
   (projectile :transform (fl:ref :self :component 'fl.comp:transform)
               :mover (fl:ref :self :component 'line-mover)
@@ -1804,7 +1809,7 @@ NIL if no such list exists."
                                        :duration 0.5
                                        :repeat-p t))))
 
-(fl:define-prefab "player-ship" (:library lgj-04/2019)
+(fl:define-prefab "player-ship" (:library ptp)
   "The venerable Player Ship. Controls how it looks, collides, and movement."
   (tags :tags '(:player))
   (explosion :name "explode04-01" :frames 15
@@ -1843,7 +1848,7 @@ NIL if no such list exists."
                                          :repeat-p t))))))
 
 
-(fl:define-prefab "player-ship-mockette" (:library lgj-04/2019)
+(fl:define-prefab "player-ship-mockette" (:library ptp)
   "An image of the ship, but no colliders or guns."
   (fl.comp:sprite :spec :spritesheet-data
                   :name "ship26")
@@ -1851,13 +1856,13 @@ NIL if no such list exists."
                   :mode :sprite))
 
 
-(fl:define-prefab "player-stable" (:library lgj-04/2019)
+(fl:define-prefab "player-stable" (:library ptp)
   ;; TODO: Clarify when we actually need the / infront of the actor name during
   ;; use of FL:REF. Here is seems we DON'T need one, but sometimes we do!
   (player-stable :stable (fl:ref "stable-holder"))
   ("stable-holder"))
 
-(fl:define-prefab "generic-planet" (:library lgj-04/2019)
+(fl:define-prefab "generic-planet" (:library ptp)
   (planet :hit-points (fl:ref :self :component 'hit-points))
   (hit-points :hp 5)
   (explosion :name "explode03-01" :frames 15
@@ -1872,7 +1877,7 @@ NIL if no such list exists."
   (fl.comp:render :material 'sprite-sheet
                   :mode :sprite))
 
-(fl:define-prefab "generic-explosion" (:library lgj-04/2019)
+(fl:define-prefab "generic-explosion" (:library ptp)
   (explosion :sprite (fl:ref :self :component 'fl.comp:sprite))
   (fl.comp:sprite :spec :spritesheet-data
                   ;; TODO: When this is misnamed, the error is extremely obscure
@@ -1886,7 +1891,7 @@ NIL if no such list exists."
 
 ;; TODO: Refactor these signs into a single prefab and a sign component to
 ;; manage the configuration of the prefab.
-(fl:define-prefab "warning-wave-sign" (:library lgj-04/2019)
+(fl:define-prefab "warning-wave-sign" (:library ptp)
   "Not used yet."
   (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
                      :scale (v3:make 512 512 512))
@@ -1894,7 +1899,7 @@ NIL if no such list exists."
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'warning-wave)))
 
-(fl:define-prefab "warning-mothership-sign" (:library lgj-04/2019)
+(fl:define-prefab "warning-mothership-sign" (:library ptp)
   "Not used yet."
   (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
                      :scale (v3:make 512 512 512))
@@ -1902,28 +1907,28 @@ NIL if no such list exists."
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'warning-mothership)))
 
-(fl:define-prefab "title-sign" (:library lgj-04/2019)
+(fl:define-prefab "title-sign" (:library ptp)
   (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
                      :scale (v3:make 512 512 512))
   ("sign"
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'title)))
 
-(fl:define-prefab "game-over-sign" (:library lgj-04/2019)
+(fl:define-prefab "game-over-sign" (:library ptp)
   (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
                      :scale (v3:make 512 512 512))
   ("sign"
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'game-over)))
 
-(fl:define-prefab "level-complete-sign" (:library lgj-04/2019)
+(fl:define-prefab "level-complete-sign" (:library ptp)
   (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
                      :scale (v3:make 512 512 512))
   ("sign"
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'level-complete)))
 
-(fl:define-prefab "starfield" (:library lgj-04/2019)
+(fl:define-prefab "starfield" (:library ptp)
   ("bug-todo:implicit-transform:see-trello"
    (fl.comp:transform :scale (v3:make 960 960 960)
                       ;; NOTE: ortho projection, so we can put starfield way
@@ -1932,7 +1937,7 @@ NIL if no such list exists."
    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'starfield)))
 
-(fl:define-prefab "time-keeper" (:library lgj-04/2019)
+(fl:define-prefab "time-keeper" (:library ptp)
   ("bug-todo:implicit-transform:see-trello"
    (fl.comp:transform :translate (v3:make 900 -512 (dl :time-keeper)))
    (time-keeper :time-max 30f0
@@ -1952,20 +1957,20 @@ NIL if no such list exists."
      ;; TODO: I think this material is leaked when this object is destroyed.
      (fl.comp:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-")))))))
 
-(fl:define-prefab "demo-level" (:library lgj-04/2019)
+(fl:define-prefab "demo-level" (:library ptp)
   (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field))
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/demo-level/asteroids"))
 
-  (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  (("starfield" :link ("/starfield" :from ptp)))
   ("asteroids")
-  (("title" :copy ("/title-sign" :from lgj-04/2019))
+  (("title" :copy ("/title-sign" :from ptp))
    (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
                       ;; TODO: BUG: the scale in the original transform
                       ;; should have been preserved.
                       :scale (v3:make 512 512 512))))
 
-(fl:define-prefab "level-0" (:library lgj-04/2019)
+(fl:define-prefab "level-0" (:library ptp)
   (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
                  :time-keeper
                  (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
@@ -1973,25 +1978,25 @@ NIL if no such list exists."
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/level-2/asteroids"))
   ("asteroids")
-  (("starfield" :link ("/starfield" :from lgj-04/2019)))
-  (("time-keeper" :link ("/time-keeper" :from lgj-04/2019)))
-  (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
+  (("starfield" :link ("/starfield" :from ptp)))
+  (("time-keeper" :link ("/time-keeper" :from ptp)))
+  (("planet-0" :link ("/generic-planet" :from ptp))
    (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
-  (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
+  (("planet-1" :link ("/generic-planet" :from ptp))
    (fl.comp:transform :translate (v3:make -200 -100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02"))
-  (("planet-2" :link ("/generic-planet" :from lgj-04/2019))
+  (("planet-2" :link ("/generic-planet" :from ptp))
    (fl.comp:transform :translate (v3:make 200 -100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet03")))
 
-(fl:define-prefab "level-1" (:library lgj-04/2019)
+(fl:define-prefab "level-1" (:library ptp)
   (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
                  :time-keeper
                  (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
@@ -1999,20 +2004,20 @@ NIL if no such list exists."
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/level-1/asteroids"))
   ("asteroids")
-  (("starfield" :link ("/starfield" :from lgj-04/2019)))
-  (("time-keeper" :link ("/time-keeper" :from lgj-04/2019)))
-  (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
+  (("starfield" :link ("/starfield" :from ptp)))
+  (("time-keeper" :link ("/time-keeper" :from ptp)))
+  (("planet-0" :link ("/generic-planet" :from ptp))
    (fl.comp:transform :translate (v3:make -200 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
-  (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
+  (("planet-1" :link ("/generic-planet" :from ptp))
    (fl.comp:transform :translate (v3:make 200 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02")))
 
-(fl:define-prefab "level-2" (:library lgj-04/2019)
+(fl:define-prefab "level-2" (:library ptp)
   (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
                  :time-keeper
                  (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
@@ -2020,16 +2025,16 @@ NIL if no such list exists."
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (fl:ref "/level-0/asteroids"))
   ("asteroids")
-  (("starfield" :link ("/starfield" :from lgj-04/2019)))
-  (("time-keeper" :link ("/time-keeper" :from lgj-04/2019)))
-  (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
+  (("starfield" :link ("/starfield" :from ptp)))
+  (("time-keeper" :link ("/time-keeper" :from ptp)))
+  (("planet-0" :link ("/generic-planet" :from ptp))
    (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
                       :scale (v3:make 0.9 0.9 0.9))
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01")))
 
 
-(fl:define-prefab "protect-the-planets" (:library lgj-04/2019)
+(fl:define-prefab "protect-the-planets" (:library ptp)
   "The top most level prefab which has the component which drives the game
 sequencing."
   (fl.comp:transform :scale (v3:one))
@@ -2040,18 +2045,18 @@ sequencing."
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
    (fl.comp:transform :translate (v3:make 0 0 (dl :camera))))
 
-  (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
+  (("player-1-stable" :link ("/player-stable" :from ptp))
    (fl.comp:transform
     :translate (v3:make -900 550 (dl :player-stable))))
 
   ("current-level"))
 
 
-(fl:define-prefab "starfield-demo" (:library lgj-04/2019)
+(fl:define-prefab "starfield-demo" (:library ptp)
   "A simple demo scene of the starfield. Not used in the game, but for
 testing the starfield shader."
 
-  (("starfield" :link ("/starfield" :from lgj-04/2019)))
+  (("starfield" :link ("/starfield" :from ptp)))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
    (fl.comp:transform :translate (v3:make 0 0 (dl :camera)))))
@@ -2060,8 +2065,8 @@ testing the starfield shader."
 ;; Prefab descriptors for convenience
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(fl:define-prefab-descriptor lgj-04/2019 ()
-  ("protect-the-planets" lgj-04/2019))
+(fl:define-prefab-descriptor ptp ()
+  ("protect-the-planets" ptp))
 
 (fl:define-prefab-descriptor starfield-demo ()
-  ("starfield-demo" lgj-04/2019))
+  ("starfield-demo" ptp))
