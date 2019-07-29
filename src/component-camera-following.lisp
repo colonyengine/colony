@@ -1,33 +1,33 @@
 (in-package #:first-light.components)
 
 (define-component following-camera ()
-  ((slave-camera :default nil)
-   (target-actor :default nil)
-   (target-transform :default nil)
-   (offset :default (v3:zero))))
+  ((%slave :reader slave)
+   (%target-actor :accessor target-actor
+                  :initarg :target-actor)
+   (%target-transform :reader target-transform)
+   (%offset :reader offset
+            :initarg :offset
+            :initform (v3:zero))))
 
 (defmethod on-component-initialize ((self following-camera))
-  (with-accessors ((slave slave-camera) (actor actor) (target target-actor))
-      self
-    (setf slave (actor-component-by-type actor 'camera))
-    (camera-target-actor self target)))
+  (with-slots (%slave) self
+    (setf %slave (actor-component-by-type (actor self) 'camera))
+    (camera-target-actor self (target-actor self))))
 
 (defmethod on-component-update ((self following-camera))
-  (with-accessors ((view view) (transform transform)) (slave-camera self)
+  (with-slots (%transform) (slave-camera self)
     (let* ((target-position (m4:get-translation
                              (model (target-transform self))))
            (new-camera-position (v3:+! target-position
                                        target-position
                                        (offset self))))
-      (m4:set-translation! (model transform)
-                           (model transform)
+      (m4:set-translation! (model %transform)
+                           (model %transform)
                            new-camera-position)
-      (compute-camera-view (slave-camera self)))))
+      (compute-camera-view (slave self)))))
 
 (defmethod camera-target-actor ((camera following-camera) actor)
-  (with-accessors ((target-actor target-actor)
-                   (target-transform target-transform))
-      camera
-    (setf target-actor actor)
+  (with-slots (%target-transform) camera
+    (setf (target-actor camera) actor)
     (when actor
-      (setf target-transform (actor-component-by-type actor 'transform)))))
+      (setf %target-transform (actor-component-by-type actor 'transform)))))

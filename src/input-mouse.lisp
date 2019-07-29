@@ -19,7 +19,7 @@
   (input-transition-in input-data '(:button :any)))
 
 (defun on-mouse-scroll (input-data x y)
-  (let ((states (u:href (states input-data))))
+  (let ((states (states input-data)))
     (unless (zerop x)
       (setf (u:href states '(:mouse :scroll-horizontal)) x))
     (unless (zerop y)

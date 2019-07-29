@@ -1,10 +1,12 @@
 (in-package #:first-light.components)
 
 (define-component dynamic-mesh ()
-  ((geometry :default nil)))
+  ((%geometry :reader geometry
+              :initarg :geometry
+              :initform nil)))
 
 (defmethod on-component-initialize ((self dynamic-mesh))
-  (with-accessors ((geometry geometry)) self
-    (unless geometry
+  (with-slots (%geometry) self
+    (unless %geometry
       (error "A dynamic mesh must have geometry defined."))
-    (setf geometry (make-dynamic-geometry geometry))))
+    (setf %geometry (make-dynamic-geometry %geometry))))

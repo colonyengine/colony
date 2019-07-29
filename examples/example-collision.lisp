@@ -5,7 +5,9 @@
 ;; testing how destruction and colliders work together.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (fl:define-component destroy-my-actor ()
-  ((time-to-destroy :default 5)))
+  ((%time-to-destroy :accessor time-to-destroy
+                     :initarg :time-to-destroy
+                     :initform 5)))
 
 (defmethod fl:on-collision-enter ((self destroy-my-actor) other-collider)
   (v:info :fl.example
@@ -34,8 +36,11 @@
 ;; Testing getting the directions from a transform
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (fl:define-component unit-test-transform-api ()
-  ((test-type :default nil) ;; You must specify this
-   (test-performed :default (u:dict))))
+  ((%test-type :reader test-type
+               :initarg :test-type
+               :initform nil)
+   (%test-performed :reader test-performed
+                    :initform (u:dict))))
 
 (defmethod fl:on-component-physics-update ((self unit-test-transform-api))
   (ecase (test-type self)
