@@ -28,4 +28,4 @@
    (:module "protect-the-planets"
     :components
     ((:file "common")
-     (:file "example-lisp-game-jam-april-2019")))))
+     (:file "example-protect-the-planets")))))
