@@ -16,7 +16,6 @@
     ((:file "damaged-helmet")
      (:file "graph")
      (:file "noise")
-     (:file "starfield")
      (:file "texture")))
    (:file "example-collision")
    (:file "example-damaged-helmet")
@@ -26,9 +25,7 @@
    (:file "example-noise")
    (:file "example-sprite")
    (:file "example-texture")
-   ;; TODO: Disabled until PTP branch is merged in. This is because the
-   ;; define-component syntax changed and will reduce merge conflicts (:file
-   ;; "example-lisp-game-jam-april-2019")
-   ))
-
-;; broken: isometric-view
+   (:module "protect-the-planets"
+    :components
+    ((:file "common")
+     (:file "example-protect-the-planets")))))

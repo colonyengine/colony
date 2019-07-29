@@ -2,19 +2,19 @@
 
 (define-component collider/sphere ()
   (;; The collider is only ever on a single layer.
-   (%on-layer :reader on-layer
+   (%on-layer :accessor on-layer
               :initarg :on-layer)
    (%center :accessor center
             :initarg :center
             :initform (v3:zero))
-   (%radius :reader radius
+   (%radius :accessor radius
             :initarg :radius
             :initform 1.0)
    (%num-contacts :accessor num-contacts
                   :initform 0)
    ;; TODO: This block of slots are really here for debugging drawing of a
    ;; collider hack on it a bit to make it better.
-   (%visualize :reader visualize
+   (%visualize :accessor visualize
                :initarg :visualize
                :initform nil)
    ;; TODO: Put geometry into shared storage for all collider/sphere's to use.
