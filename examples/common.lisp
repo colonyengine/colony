@@ -53,12 +53,12 @@
                                         :x (- (atan (/ (sqrt 2))))
                                         :y (- (/ pi 4))))
    ("camera"
-    (fl.comp:transform :translate (v3:make 0 0 10))
+    (fl.comp:transform :translate (v3:vec 0 0 10))
     (fl.comp:camera :active-p t
                     :mode :orthographic))))
 
 (fl:define-prefab "mesh" (:library examples)
-  (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+  (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
   (fl.comp:render :material 'fl.materials:unlit-texture))
 
 ;;; Graphs

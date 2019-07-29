@@ -71,12 +71,12 @@
         (v:trace :fl.example "LEFT Vector -> ~A" left)
 
         ;; NOTE: This expects the actor to be unrotated wrt the universe.
-        (unless (and (v3:~ forward (v3:make 0 0 -1))
-                     (v3:~ backward (v3:make 0 0 1))
-                     (v3:~ up (v3:make 0 1 0))
-                     (v3:~ down (v3:make 0 -1 0))
-                     (v3:~ right (v3:make 1 0 0))
-                     (v3:~ left (v3:make -1 0 0)))
+        (unless (and (v3:~ forward (v3:vec 0 0 -1))
+                     (v3:~ backward (v3:vec 0 0 1))
+                     (v3:~ up (v3:vec 0 1 0))
+                     (v3:~ down (v3:vec 0 -1 0))
+                     (v3:~ right (v3:vec 1 0 0))
+                     (v3:~ left (v3:vec -1 0 0)))
           (error "The Transform Axis Direction API didn't match expectations!"))
         (setf (u:href (test-performed self) test-type) t)))))
 
@@ -94,8 +94,8 @@
   (let* ((actor (fl:actor self))
          (actor-transform
            (fl:actor-component-by-type actor 'fl.comp:transform))
-         (object-space-point (v3:make 1 0 0))
-         (world-space-point (v3:make 1 3 1))
+         (object-space-point (v3:vec 1 0 0))
+         (world-space-point (v3:vec 1 3 1))
          (local->world
            (fl.comp:transform-point actor-transform
                                     object-space-point))
@@ -129,8 +129,8 @@
   (let* ((actor (fl:actor self))
          (actor-transform
            (fl:actor-component-by-type actor 'fl.comp:transform))
-         (object-space-vector (v3:make 2 2 0))
-         (world-space-vector (v3:make -4 4 0))
+         (object-space-vector (v3:vec 2 2 0))
+         (world-space-vector (v3:vec -4 4 0))
          (local->world
            (fl.comp:transform-vector actor-transform
                                      object-space-vector))
@@ -166,8 +166,8 @@
            (fl:actor-component-by-type actor 'fl.comp:transform))
          ;; NOTE: these must be normalized for the test. I specified it this way
          ;; so it would be easier to see in your mind's eye.
-         (object-space-direction (v3:normalize (v3:make 1 1 0)))
-         (world-space-direction (v3:normalize (v3:make -1 1 0)))
+         (object-space-direction (v3:normalize (v3:vec 1 1 0)))
+         (world-space-direction (v3:normalize (v3:vec -1 1 0)))
          (local->world
            (fl.comp:transform-direction actor-transform
                                         object-space-direction))
@@ -205,11 +205,11 @@
   (("camera" :copy "/cameras/perspective")
    (fl.comp:camera (:policy :new-args) :zoom 6))
   ("rot-0-center"
-   (fl.comp:transform :translate (v3:make -2 0 0)
+   (fl.comp:transform :translate (v3:vec -2 0 0)
                       :rotate/inc (q:orient :local :z pi))
    ("plane-0"
-    (fl.comp:transform :translate (v3:make -2 0 0))
-    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+    (fl.comp:transform :translate (v3:vec -2 0 0))
+    (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
     (fl.comp:collider/sphere
      :display-id "Player"
      :visualize t
@@ -218,11 +218,11 @@
      :radius 1)
     (fl.comp:render :material '2d-wood)))
   ("rot-1-center"
-   (fl.comp:transform :translate (v3:make 2 0 0)
+   (fl.comp:transform :translate (v3:vec 2 0 0)
                       :rotate/inc (q:orient :local :z (- pi)))
    ("plane-1"
-    (fl.comp:transform :translate (v3:make 2 0 0))
-    (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+    (fl.comp:transform :translate (v3:vec 2 0 0))
+    (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
     (fl.comp:collider/sphere
      :display-id "Enemy"
      :visualize t
@@ -247,9 +247,9 @@ unit world vector representations of the axis directions as:
 
   ("thingy"
    ;; NOTE: The 5 0 0 is specific to the unit-test-transform-api tests.
-   (fl.comp:transform :translate (v3:make 5 0 0))
+   (fl.comp:transform :translate (v3:vec 5 0 0))
    (unit-test-transform-api :test-type :test-direction-vectors)
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)))
 
 (fl:define-prefab "collision-transform-test-1" (:library examples)
@@ -260,18 +260,18 @@ world space for a particular transform."
    (fl.comp:camera (:policy :new-args) :zoom 7))
 
   ("right"
-   (fl.comp:transform :translate (v3:make 1 0 0))
+   (fl.comp:transform :translate (v3:vec 1 0 0))
    ("up"
-    (fl.comp:transform :translate (v3:make 0 1 0))
+    (fl.comp:transform :translate (v3:vec 0 1 0))
     ("back"
-     (fl.comp:transform :translate (v3:make 0 0 1))
+     (fl.comp:transform :translate (v3:vec 0 0 1))
      ("mark"
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
       (fl.comp:transform :rotate (q:orient :local :z (/ pi 2))
                          :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
-      (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+      (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
       (fl.comp:render :material '2d-wood))))))
 
 
@@ -294,28 +294,28 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (fl.comp:camera (:policy :new-args) :zoom 7))
 
   ("left-gate"
-   (fl.comp:transform :translate (v3:make -1.15 2 -.1))
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:transform :translate (v3:vec -1.15 2 -.1))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Left-Gate"
                             :visualize t
                             :on-layer :ground))
 
   ("right-gate"
-   (fl.comp:transform :translate (v3:make 1.15 2 -.1))
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:transform :translate (v3:vec 1.15 2 -.1))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Right-Gate"
                             :visualize t
                             :on-layer :ground))
 
   ("stone"
-   (fl.comp:transform :translate (v3:make 0 5 0)
+   (fl.comp:transform :translate (v3:vec 0 5 0)
                       :scale 0.5
                       :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local (v3:one) pi)
-                      :translate/inc (v3:make 0 -2 0))
-   (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
+                      :translate/inc (v3:vec 0 -2 0))
+   (fl.comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
    (fl.comp:collider/sphere :display-id "Stone"
                             :visualize t
@@ -327,8 +327,8 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (fl.comp:render :material 'damaged-helmet))
 
   ("ground"
-   (fl.comp:transform :translate (v3:make 0 -2 0.1))
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:transform :translate (v3:vec 0 -2 0.1))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:collider/sphere :display-id "Ground"
                             :visualize t
                             :on-layer :ground
@@ -344,29 +344,29 @@ actually are. You have to view the results to see the colliders lighting up."
    (fl.comp:camera (:policy :new-args) :zoom 7))
 
   ("upper-left"
-   (fl.comp:transform :translate (v3:make -2 2 -0.1))
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:transform :translate (v3:vec -2 2 -0.1))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Upper-Left"
                             :visualize t
                             :on-layer :ground))
   ("upper-right"
-   (fl.comp:transform :translate (v3:make 2 2 -0.1))
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:transform :translate (v3:vec 2 2 -0.1))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Upper-Right"
                             :visualize t
                             :on-layer :ground))
   ("lower-left"
-   (fl.comp:transform :translate (v3:make -2 -2 -0.1))
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:transform :translate (v3:vec -2 -2 -0.1))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Lower-Left"
                             :visualize t
                             :on-layer :ground))
   ("lower-right"
-   (fl.comp:transform :translate (v3:make 2 -2 -0.1))
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:transform :translate (v3:vec 2 -2 -0.1))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material '2d-wood)
    (fl.comp:collider/sphere :display-id "Lower-Right"
                             :visualize t
@@ -377,7 +377,7 @@ actually are. You have to view the results to see the colliders lighting up."
                       :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:zero))
-   (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
+   (fl.comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :time-to-destroy 2)
    (fl.comp:collider/sphere :display-id "Stone"
                             :visualize t

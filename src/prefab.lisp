@@ -83,12 +83,11 @@
            ;; to do that, we'll just do it for all the components in this prefab
            ;; itself.
            (inject-ref-environment
-             (u:mvlet ((,data (preprocess-spec
-                               ,name ,context ,policy ,body))
-                       (,prefab (make-prefab ',name ',library ,doc ,data)))
+             (u:mvlet* ((,data (preprocess-spec
+                                ,name ,context ,policy ,body))
+                        (,prefab (make-prefab ',name ',library ,doc ,data)))
                (setf (u:href ,prefabs ',name) ,prefab
                      (func ,prefab) (make-factory ,prefab))
 
                (parse-prefab ,prefab)))
-
            (export ',library))))))

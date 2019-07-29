@@ -30,7 +30,7 @@
     (:normal-sampler 'damaged-helmet/normal)
     (:normal-scale 1.0)
     ;; NOTE: This vector points TOWARDS the light.
-    (:light-direction (v3:make 0 1 1))
+    (:light-direction (v3:vec 0 1 1))
     (:light-color (v3:one))
     (:occlusion-sampler 'damaged-helmet/ambient-occlusion)
     (:occlusion-strength 1.0)
@@ -46,7 +46,7 @@
    (fl.comp:transform :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local :z (- (/ pi 4)))
                       :scale 4)
-   (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
+   (fl.comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
    (fl.comp:render :material 'damaged-helmet)))
 
 ;;; Prefab descriptors

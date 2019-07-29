@@ -31,7 +31,8 @@
    #:sprite-animate)
   ;; mesh
   (:export
-   #:mesh)
+   #:dynamic-mesh
+   #:static-mesh)
   ;; render
   (:export
    #:draw-mesh

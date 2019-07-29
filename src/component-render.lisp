@@ -3,7 +3,7 @@
 (define-component render ()
   ((%mode :reader mode
           :initarg :mode
-          :initform :mesh)
+          :initform :static-mesh)
    (%draw-method :reader draw-method
                  :initform (constantly nil))
    (%transform :reader transform)
@@ -13,13 +13,19 @@
 
 (defun set-draw-method (render)
   (with-slots (%draw-method) render
-    (let ((instances (instances (material render))))
+    (let ((actor (actor render))
+          (instances (instances (material render))))
       (setf %draw-method
             (ecase (mode render)
-              (:mesh
+              (:static-mesh
                (lambda ()
-                 (draw-mesh
-                  (actor-component-by-type (actor render) 'mesh)
+                 (%fl:draw-static-geometry
+                  (data (actor-component-by-type actor 'static-mesh))
+                  instances)))
+              (:dynamic-mesh
+               (lambda ()
+                 (%fl:draw-dynamic-geometry
+                  (geometry (actor-component-by-type actor 'dynamic-mesh))
                   instances)))
               (:sprite
                (lambda ()

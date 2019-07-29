@@ -3,7 +3,7 @@
 (define-graph :core (:category component-dependency)
   (subdag all-unknown-types ((unknown-types)))
   (subdag actions (fl.comp:action -> fl.comp:action-list))
-  (subdag drawables (fl.comp:mesh -> fl.comp:sprite -> fl.comp:render))
+  (subdag drawables (fl.comp:static-mesh -> fl.comp:sprite -> fl.comp:render))
   (subdag core-types
           (fl.comp:transform
            -> (splice actions)

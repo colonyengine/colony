@@ -217,7 +217,7 @@
                    (fl.comp:action -> fl.comp:action-list))
 
   (execution-order drawable
-                   (fl.comp:mesh -> fl.comp:sprite -> fl.comp:render))
+                   (fl.comp:static-mesh -> fl.comp:sprite -> fl.comp:render))
 
   (execution-order core
                    (fl.comp:transform

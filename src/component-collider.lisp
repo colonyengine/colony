@@ -131,9 +131,9 @@
             ;; radius as a vector and rotate/scale (but no translate!) it by the
             ;; world matrix.
             (fist-world-radius
-              (transform-vector fist-transform (v3:make (radius fist) 0 0)))
+              (transform-vector fist-transform (v3:vec (radius fist) 0 0)))
             (face-world-radius
-              (transform-vector face-transform (v3:make (radius face) 0 0)))
+              (transform-vector face-transform (v3:vec (radius face) 0 0)))
             ;; Compute the half way point between the two colliders.
             (distance (v3:distance fist-collider-world-center
                                    face-collider-world-center)))

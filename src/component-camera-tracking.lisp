@@ -16,7 +16,7 @@
          (model (model (transform slave)))
          (eye (m4:get-translation model))
          (target (m4:get-translation (model (target-transform self))))
-         (up (v3:make 0 1 0)))
+         (up (v3:vec 0 1 0)))
     (m4:set-view! (view slave) eye target up)))
 
 (defmethod camera-target-actor ((camera tracking-camera) actor)

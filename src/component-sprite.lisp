@@ -43,8 +43,8 @@
           :for i :from 0
           :do (destructuring-bind (&key id x y w h) sprite
                 (when (and id x y w h)
-                  (setf (aref pos i) (v2:make x y)
-                        (aref size i) (v2:make w h)
+                  (setf (aref pos i) (v2:vec x y)
+                        (aref size i) (v2:vec w h)
                         (u:href %sprites id) i)))
           :finally (fl.gpu:write-buffer-path buffer-name :pos pos)
                    (fl.gpu:write-buffer-path buffer-name :size size))))

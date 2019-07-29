@@ -162,7 +162,7 @@
   (:profiles (fl.materials:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'title)
-              (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material starfield
@@ -175,35 +175,35 @@
   (:profiles (fl.materials:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-mothership)
-              (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material warning-wave
   (:profiles (fl.materials:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-wave)
-              (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material game-over
   (:profiles (fl.materials:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'game-over)
-              (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material level-complete
   (:profiles (fl.materials:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'level-complete)
-              (:min-intensity (v4:make 0f0 0f0 0f0 .5f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material time-bar
   (:profiles (fl.materials:u-mvp)
    :shader fl.shader.texture:unlit-texture
    :uniforms ((:tex.sampler1 'white)
-              (:mix-color (v4:make 0 1 0 1)))))
+              (:mix-color (v4:vec 0 1 0 1)))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -215,7 +215,7 @@
 (defclass region ()
   ((%center :accessor center
             :initarg :center
-            :initform (v3:make 0.0 0.0 0.0))))
+            :initform (v3:zero))))
 
 (defclass region-cuboid (region)
   ((%minx :accessor minx
@@ -317,7 +317,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
             (setf adj-z (- offset-maxz nz)))
 
           ;; NOTE: Allocates memory.
-          (v3:make (+ mx adj-x) (+ my adj-y) (+ mz adj-z)))))))
+          (v3:vec (+ mx adj-x) (+ my adj-y) (+ mz adj-z)))))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
@@ -349,7 +349,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    ;; The format is minx, maxx, miny, maxy, minz, maxz
    (%region-cuboid :accessor region-cuboid
                    :initarg :region-cuboid
-                   :initform (make-region-cuboid (v3:make 0.0 0.0 0.0)
+                   :initform (make-region-cuboid (v3:vec 0.0 0.0 0.0)
                                                  -900 900 -500 500 0 0))))
 
 ;; upon attaching, this component will store find the transform component
@@ -373,9 +373,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
       ;; First, we settle the notion of how the player translates around with
       ;; left stick
-      (u:mvlet ;; TODO: This must be mvlet*
+      (u:mvlet* ;; TODO: This must be mvlet*
           (;; Deal with deadzones and other bad data around the input vector.
-           (vec (v3:make lx ly 0))
+           (vec (v3:vec lx ly 0))
            (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
            (vec (if (< (v3:length vec) translate-deadzone) (v3:zero) vec))
            ;; Right trigger modifies speed. pull to lerp from full speed
@@ -400,7 +400,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
       ;; Then we settle the notion of how the player is oriented.  We're setting
       ;; a hard angle of rotation each time so we overwrite the previous value.
-      (unless (or (= lx ly 0.0) (< (v3:length (v3:make lx ly 0)) rotate-deadzone))
+      (unless (or (= lx ly 0.0) (< (v3:length (v3:vec lx ly 0)) rotate-deadzone))
         (let* ((angle (atan (- lx) ly))
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
@@ -792,7 +792,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
          (let* ((parent-model (fl.comp:model emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
            (unless (or (= rx ry 0.0)
-                       (< (v3:length (v3:make rx ry 0)) rotate-deadzone))
+                       (< (v3:length (v3:vec rx ry 0)) rotate-deadzone))
              (let* ((angle (atan (- rx) ry))
                     (angle (if (< angle 0)
                                (+ pi (- pi (abs angle)))
@@ -850,7 +850,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                              ("asteroid06-01" 16)))
    (%scale-range :accessor scale-range
                  :initarg :scale-range
-                 :initform (v2:make .75 1.25))))
+                 :initform (v2:vec 0.75 1.25))))
 
 
 (defmethod fl:on-component-update ((self asteroid-field))
@@ -889,7 +889,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                   (target
                     (fl.comp:transform-point
                      transform
-                     (v3:make (ransign 300.0) (ransign 300.0) 0.1)))
+                     (v3:vec (ransign 300.0) (ransign 300.0) 0.1)))
                   (quadrant (random 4)))
 
              ;; pick an origin point in director space and convert it to world
@@ -899,13 +899,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                     transform
                     (case quadrant
                       (0 ;; left side
-                       (v3:make -1000.0 (ransign 600.0) 0.1))
+                       (v3:vec -1000.0 (ransign 600.0) 0.1))
                       (1 ;; top side
-                       (v3:make (ransign 1000.0) 600.0 0.1))
+                       (v3:vec (ransign 1000.0) 600.0 0.1))
                       (2 ;; right side
-                       (v3:make 1000.0 (ransign 600.0) 0.1))
+                       (v3:vec 1000.0 (ransign 600.0) 0.1))
                       (3 ;; bottom side
-                       (v3:make (ransign 1000.0) -600.0 0.1)))))
+                       (v3:vec (ransign 1000.0) -600.0 0.1)))))
 
              (destructuring-bind (name frames)
                  (aref asteroid-db (random (length asteroid-db)))
@@ -922,9 +922,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                                   ;; this direction is in world space.
                                   ;; it moves from the origin to the target.
                                   :direction (v3:normalize (v3:- target origin))
-                                  :scale (v3:make uniform-scale
-                                                  uniform-scale
-                                                  uniform-scale)
+                                  :scale (v3:vec uniform-scale
+                                                 uniform-scale
+                                                 uniform-scale)
                                   :name name
                                   :frames frames
                                   :destroy-ttl 4
@@ -1009,7 +1009,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
            (transform (fl:actor-component-by-type mockette 'fl.comp:transform)))
 
       (fl.comp:translate
-       transform (v3:make (* mockette-index (* dir width-increment)) -60 0))
+       transform (v3:vec (* mockette-index (* dir width-increment)) -60 0))
 
       (setf (aref mockette-refs mockette-index) mockette))))
 
@@ -1316,16 +1316,16 @@ NIL if no such list exists."
                 (ysign (if (zerop (random 2)) 1f0 -1f0))
                 (local-location
                   ;; Note: In terms of the coordinate space of the planet!
-                  (v4:make (+ cx (float (* (zrandom (x er)) xsign) 1f0))
-                           (+ cy (float (* (zrandom (y er)) ysign) 1f0))
-                           0f0
-                           1f0))
+                  (v4:vec (+ cx (float (* (zrandom (x er)) xsign) 1f0))
+                          (+ cy (float (* (zrandom (y er)) ysign) 1f0))
+                          0f0
+                          1f0))
                 ;; Figure out where to put the explosion into world space.
                 (world-location
                   (fl.comp:transform-point transform local-location))
-                (world-location (v3:make (v4:x world-location)
-                                         (v4:y world-location)
-                                         (dl :planet-warning-explosion)))
+                (world-location (v3:vec (v4:x world-location)
+                                        (v4:y world-location)
+                                        (dl :planet-warning-explosion)))
                 (random-rotation
                   (q:orient :local :z (float (random (* 2 pi)) 1f0)))
                 ;; for now, use the same explosions as the planet itself
@@ -1338,7 +1338,7 @@ NIL if no such list exists."
              (make-explosion context
                              world-location
                              random-rotation
-                             (v3:make .25 .25 1)
+                             (v3:vec .25 .25 1)
                              :name (name explosion)
                              :frames (frames explosion))))))
       (t
@@ -1397,10 +1397,10 @@ NIL if no such list exists."
                        :initform nil)
    (%time-bar-full-color :accessor time-bar-full-color
                          :initarg :time-bar-full-color
-                         :initform (v4:make 0 1 0 1))
+                         :initform (v4:vec 0 1 0 1))
    (%time-bar-empty-color :accessor time-bar-empty-color
                           :initarg :time-bar-empty-color
-                          :initform (v4:make 1 0 0 1))))
+                          :initform (v4:vec 1 0 0 1))))
 
 (defmethod fl:on-component-initialize ((self time-keeper))
   (setf (time-left self) (time-max self)))
@@ -1433,7 +1433,7 @@ NIL if no such list exists."
 
       ;; Size the time bar in accordance to how much time is left.
       (fl.comp:scale time-bar-transform
-                     (v3:make time-bar-width
+                     (v3:vec time-bar-width
                               (a:lerp how-far-to-empty
                                       time-bar-height-scale
                                       0f0)
@@ -1993,7 +1993,7 @@ NIL if no such list exists."
   "The venerable Player Ship. Controls how it looks, collides, and movement."
   (tags :tags '(:player))
   (explosion :name "explode04-01" :frames 15
-             :scale (v3:make 2f0 2f0 2f0))
+             :scale (v3:vec 2f0 2f0 2f0))
   (damage-points :dp 1)
   (hit-points :hp 1
               ;; When the player is born, they are automatically invulnerable
@@ -2017,7 +2017,7 @@ NIL if no such list exists."
          :name "bullet01" :frames 2))
 
    ("exhaust"
-    (fl.comp:transform :translate (v3:make 0 -60 0))
+    (fl.comp:transform :translate (v3:vec 0 -60 0))
     (fl.comp:sprite :spec :spritesheet-data
                     :name "exhaust03-01"
                     :frames 8)
@@ -2046,7 +2046,7 @@ NIL if no such list exists."
   (planet :hit-points (fl:ref :self :component 'hit-points))
   (hit-points :hp 5)
   (explosion :name "explode03-01" :frames 15
-             :scale (v3:make 3f0 3f0 3f0))
+             :scale (v3:vec 3f0 3f0 3f0))
   (fl.comp:collider/sphere :center (v3:zero)
                            :on-layer :planet
                            :referent (fl:ref :self :component 'planet)
@@ -2073,39 +2073,39 @@ NIL if no such list exists."
 ;; manage the configuration of the prefab.
 (fl:define-prefab "warning-wave-sign" (:library ptp)
   "Not used yet."
-  (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+  (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'warning-wave)))
 
 (fl:define-prefab "warning-mothership-sign" (:library ptp)
   "Not used yet."
-  (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+  (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'warning-mothership)))
 
 (fl:define-prefab "title-sign" (:library ptp)
-  (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+  (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'title)))
 
 (fl:define-prefab "game-over-sign" (:library ptp)
-  (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+  (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'game-over)))
 
 (fl:define-prefab "level-complete-sign" (:library ptp)
-  (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+  (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'level-complete)))
 
 (fl:define-prefab "starfield" (:library ptp)
@@ -2113,13 +2113,13 @@ NIL if no such list exists."
    (fl.comp:transform :scale 960
                       ;; NOTE: ortho projection, so we can put starfield way
                       ;; back.
-                      :translate (v3:make 0 0 (dl :starfield)))
-   (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+                      :translate (v3:vec 0 0 (dl :starfield)))
+   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'starfield)))
 
 (fl:define-prefab "time-keeper" (:library ptp)
   ("bug-todo:implicit-transform:see-trello"
-   (fl.comp:transform :translate (v3:make 900 -512 (dl :time-keeper)))
+   (fl.comp:transform :translate (v3:vec 900 -512 (dl :time-keeper)))
    (time-keeper :time-max 30f0
                 :time-bar-transform (fl:ref "time-bar-root"
                                             :component 'fl.comp:transform)
@@ -2130,8 +2130,8 @@ NIL if no such list exists."
     ;; time-bar will cause it to stretch upwards from a "ground" at 0 in this
     ;; coordinate frame.
     ("time-display"
-     (fl.comp:transform :translate (v3:make 0 1 0))
-     (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+     (fl.comp:transform :translate (v3:vec 0 1 0))
+     (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
      ;; TODO: when 'time-bar is mis-spelled in the material,
      ;; I don't get the debug material, why?
      ;; TODO: I think this material is leaked when this object is destroyed.
@@ -2145,7 +2145,7 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   ("asteroids")
   (("title" :copy ("/title-sign" :from ptp))
-   (fl.comp:transform :translate (v3:make 0 0 (dl :sign))
+   (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
                       ;; TODO: BUG: the scale in the original transform
                       ;; should have been preserved.
                       :scale 512f0)))
@@ -2161,17 +2161,17 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
+   (fl.comp:transform :translate (v3:vec 0 100 (dl :planet))
                       :scale 0.9f0)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:make -200 -100 (dl :planet))
+   (fl.comp:transform :translate (v3:vec -200 -100 (dl :planet))
                       :scale 0.9f0)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:make 200 -100 (dl :planet))
+   (fl.comp:transform :translate (v3:vec 200 -100 (dl :planet))
                       :scale 0.9f0)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet03")))
@@ -2187,12 +2187,12 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:make -200 100 (dl :planet))
+   (fl.comp:transform :translate (v3:vec -200 100 (dl :planet))
                       :scale 0.9f0)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:make 200 100 (dl :planet))
+   (fl.comp:transform :translate (v3:vec 200 100 (dl :planet))
                       :scale 0.9f0)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02")))
@@ -2208,7 +2208,7 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:make 0 100 (dl :planet))
+   (fl.comp:transform :translate (v3:vec 0 100 (dl :planet))
                       :scale 0.9f0)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01")))
@@ -2223,11 +2223,11 @@ sequencing."
                                      :component 'player-stable))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
-   (fl.comp:transform :translate (v3:make 0 0 (dl :camera))))
+   (fl.comp:transform :translate (v3:vec 0 0 (dl :camera))))
 
   (("player-1-stable" :link ("/player-stable" :from ptp))
    (fl.comp:transform
-    :translate (v3:make -900 550 (dl :player-stable))))
+    :translate (v3:vec -900 550 (dl :player-stable))))
 
   ("current-level"))
 
@@ -2239,7 +2239,7 @@ testing the starfield shader."
   (("starfield" :link ("/starfield" :from ptp)))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
-   (fl.comp:transform :translate (v3:make 0 0 (dl :camera)))))
+   (fl.comp:transform :translate (v3:vec 0 0 (dl :camera)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefab descriptors for convenience

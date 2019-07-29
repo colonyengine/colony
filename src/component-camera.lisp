@@ -28,8 +28,8 @@
 (defun correct-camera-transform (camera)
   (when (v3:zero-p (current (translation (transform camera))))
     (let ((translation (ecase (mode camera)
-                         (:orthographic (v3:make 0 0 1))
-                         (:perspective (v3:make 0 0 50)))))
+                         (:orthographic (v3:vec 0 0 1))
+                         (:perspective (v3:vec 0 0 50)))))
       (translate (transform camera) translation)
       (v:warn :fl.comp.camera
               "Camera ~a was attached to an actor without a translation ~

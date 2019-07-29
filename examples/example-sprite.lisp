@@ -14,22 +14,22 @@
   (with-slots (%transform) self
     (setf %transform (fl:actor-component-by-type (fl:actor self) 'transform))
     (fl.comp:translate %transform
-                       (v3:make -400 0 0)
+                       (v3:vec -400 0 0)
                        :replace-p t
                        :instant-p t)))
 
 (defmethod fl:on-component-update ((self simple-movement))
-  (u:mvlet ((context (fl:context self))
-            (transform (transform self))
-            (lx ly (fl:get-gamepad-analog (fl:input-data context)
-                                          '(:gamepad1 :left-stick)))
-            (rx ry (fl:get-gamepad-analog (fl:input-data context)
-                                          '(:gamepad1 :right-stick)))
-            (instant-p (zerop (fl:frame-count context))))
-    (let ((vec (v3:make lx ly 0)))
+  (u:mvlet* ((context (fl:context self))
+             (transform (transform self))
+             (lx ly (fl:get-gamepad-analog (fl:input-data context)
+                                           '(:gamepad1 :left-stick)))
+             (rx ry (fl:get-gamepad-analog (fl:input-data context)
+                                           '(:gamepad1 :right-stick)))
+             (instant-p (zerop (fl:frame-count context))))
+    (let ((vec (v3:vec lx ly 0)))
       (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150.0)
       (fl.comp:translate transform
-                         (v3:+ (v3:make -400 0 0) vec)
+                         (v3:+ (v3:vec -400 0 0) vec)
                          :replace-p t
                          :instant-p instant-p)
       (unless (= rx ry 0.0)
@@ -117,7 +117,7 @@
                                 :uniforms ((:sprite.sampler sprites)))
                     :mode :sprite)
     ("exhaust"
-     (fl.comp:transform :translate (v3:make 0 -140 0))
+     (fl.comp:transform :translate (v3:vec 0 -140 0))
      (fl.comp:sprite :spec :spritesheet-data
                      :name "exhaust03-01"
                      :frames 8)

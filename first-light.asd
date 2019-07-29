@@ -11,7 +11,6 @@
   :encoding :utf-8
   :depends-on (#:alexandria
                #:babel
-               #:bitio
                #:cl-graph
                #:cl-opengl
                #:cl-ppcre
@@ -49,8 +48,12 @@
    (:file "interactive-development")
    (:file "metadata")
    (:file "protocol")
-   (:file "parser-common")
-   (:file "parser-gltf2")
+   (:file "binary-parser")
+   (:file "geometry-static")
+   (:file "geometry-dynamic-attribute")
+   (:file "geometry-dynamic-group")
+   (:file "geometry-dynamic-buffer")
+   (:file "geometry-dynamic")
    (:file "uuid")
    (:file "resource")
    (:file "context")
@@ -109,7 +112,8 @@
    (:file "component-camera")
    (:file "component-camera-following")
    (:file "component-camera-tracking")
-   (:file "component-mesh")
+   (:file "component-mesh-dynamic")
+   (:file "component-mesh-static")
    (:file "component-render")
    (:file "component-sprite")
    (:file "component-collider")
