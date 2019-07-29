@@ -94,10 +94,9 @@
   (with-slots (%library %name %root %parse-tree) prefab
     (labels ((%make-nodes (parent data)
                (dolist (node-spec data)
-                 (u:mvlet
-                     ((name components children (split-spec node-spec))
-                      (path id display-id options
-                            (parse-path-spec parent %library name)))
+                 (u:mvlet* ((name components children (split-spec node-spec))
+                            (path id display-id options
+                                  (parse-path-spec parent %library name)))
                    (with-slots (%id %display-id %options %components)
                        (make-node prefab path options)
                      (setf %id id

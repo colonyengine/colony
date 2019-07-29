@@ -74,8 +74,8 @@
 
 (defun make-factory (prefab)
   (lambda (core &key parent)
-    (u:mvlet ((context (context core))
-              (actors root (make-actors context prefab)))
+    (u:mvlet* ((context (context core))
+               (actors root (make-actors context prefab)))
       (make-actor-components context actors)
       (make-actor-relationships context prefab actors parent)
       (u:do-hash-values (actor actors)

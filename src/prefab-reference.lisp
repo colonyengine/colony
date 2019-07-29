@@ -38,9 +38,9 @@
                      (find-actor rest node)
                      (values parent-path
                              rest)))))
-      (u:mvlet ((parent sub-path (find-actor
-                                  %id (prefab-node %current-actor)))
-                (sub-path (string-left-trim "./" sub-path)))
+      (u:mvlet* ((parent sub-path (find-actor
+                                   %id (prefab-node %current-actor)))
+                 (sub-path (string-left-trim "./" sub-path)))
         (ensure-path-no-trailing-slash sub-path)
         (ensure-path-valid sub-path)
         (ensure-path-not-parent sub-path)
