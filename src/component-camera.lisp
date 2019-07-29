@@ -1,47 +1,58 @@
 (in-package #:first-light.components)
 
 (define-component camera ()
-  ((active-p :default nil)
-   (view :default (m4:id))
-   (projection :default (m4:id))
-   (mode :default :perspective)
-   (clip-near :default 0.1)
-   (clip-far :default 1024)
-   (fov-y :default 90)
-   (zoom :default 1)
-   (transform :default nil)))
+  ((%active-p :accessor active-p
+              :initarg :active-p
+              :initform nil)
+   (%view :reader view
+          :initform (m4:id))
+   (%projection :reader projection
+                :initform (m4:id))
+   (%mode :reader mode
+          :initarg :mode
+          :initform :perspective)
+   (%clip-near :reader clip-near
+               :initarg :clip-near
+               :initform 0.1)
+   (%clip-far :reader clip-far
+              :initarg :clip-far
+              :initform 1024)
+   (%fov-y :reader fov-y
+           :initarg :fov-y
+           :initform 90)
+   (%zoom :accessor zoom
+          :initarg :zoom
+          :initform 1)
+   (%transform :reader transform)))
 
 (defun correct-camera-transform (camera)
-  (with-accessors ((actor actor) (mode mode) (transform transform)) camera
-    (when (v3:zero-p (current (translation transform)))
-      (let ((translation (ecase mode
-                           (:orthographic (v3:make 0 0 1))
-                           (:perspective (v3:make 0 0 50)))))
-        (translate transform translation)
-        (v:warn :fl.comp.camera
-                "Camera ~a was attached to an actor without a translation ~
+  (when (v3:zero-p (current (translation (transform camera))))
+    (let ((translation (ecase (mode camera)
+                         (:orthographic (v3:make 0 0 1))
+                         (:perspective (v3:make 0 0 50)))))
+      (translate (transform camera) translation)
+      (v:warn :fl.comp.camera
+              "Camera ~a was attached to an actor without a translation ~
                  transform.~%~
                  Using a sane default value for ~(~a~): ~s."
-                (id actor) mode translation)))))
+              (id (actor camera)) (mode camera) translation))))
 
 (defmethod make-projection (camera (mode (eql :perspective)))
-  (with-accessors ((context context) (zoom zoom) (proj projection)
-                   (near clip-near) (far clip-far) (fov-y fov-y))
-      camera
-    (m4:set-projection/perspective! proj
-                                    (/ fov-y zoom)
+  (let ((context (context camera)))
+    (m4:set-projection/perspective! (projection camera)
+                                    (/ (fov-y camera) (zoom camera))
                                     (/ (option context :window-width)
                                        (option context :window-height))
-                                    near
-                                    far)))
+                                    (clip-near camera)
+                                    (clip-far camera))))
 
 (defmethod make-projection (camera (mode (eql :orthographic)))
-  (with-accessors ((context context) (zoom zoom) (proj projection)
-                   (near clip-near) (far clip-far))
-      camera
-    (let ((w (/ (option context :window-width) zoom 2))
-          (h (/ (option context :window-height) zoom 2)))
-      (m4:set-projection/orthographic! proj (- w) w (- h) h near far))))
+  (let* ((context (context camera))
+         (zoom (zoom camera))
+         (w (/ (option context :window-width) zoom 2))
+         (h (/ (option context :window-height) zoom 2)))
+    (m4:set-projection/orthographic!
+     (projection camera) (- w) w (- h) h (clip-near camera) (clip-far camera))))
 
 (defun compute-camera-view (camera)
   (when (active-p camera)
@@ -59,23 +70,20 @@
 (defun zoom-camera (display direction)
   (let* ((context (context (core display)))
          (camera (find-active-camera context)))
-    (with-accessors ((zoom zoom) (mode mode)) camera
-      (setf zoom (a:clamp (+ zoom (/ direction 2)) 1 10))
-      (make-projection mode camera))))
+    (setf (zoom camera) (a:clamp (+ (zoom camera) (/ direction 2)) 1 10))
+    (make-projection (mode camera) camera)))
 
 ;;; Component event hooks
 
 (defmethod on-component-initialize ((self camera))
-  (with-accessors ((context context) (actor actor) (mode mode)
-                   (transform transform) (fov-y fov-y))
-      self
-    (setf transform (actor-component-by-type actor 'transform)
-          fov-y (* fov-y (/ pi 180)))
+  (with-slots (%transform %fov-y) self
+    (setf %transform (actor-component-by-type (actor self) 'transform)
+          %fov-y (* %fov-y (/ pi 180)))
     (correct-camera-transform self)
-    (make-projection self mode)
-    (push self (cameras (core context)))))
+    (make-projection self (mode self))
+    (push self (cameras (core (context self))))))
 
 (defmethod on-component-destroy ((self camera))
-  (with-accessors ((context context)) self
+  (let ((context (context self)))
     (a:deletef (cameras (core context)) self)
     (setf (active-camera context) nil)))

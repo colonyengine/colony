@@ -1,28 +1,26 @@
 (in-package #:first-light.components)
 
 (define-component tracking-camera ()
-  ((slave-camera :default nil)
-   (target-actor :default nil)
-   (target-transform :default nil)))
+  ((%slave :reader slave)
+   (%target-actor :accessor target-actor
+                  :initarg :target-actor)
+   (%target-transform :reader target-transform)))
 
 (defmethod on-component-initialize ((self tracking-camera))
-  (with-accessors ((slave slave-camera) (actor actor) (target target-actor))
-      self
-    (setf slave (actor-component-by-type actor 'camera))
-    (camera-target-actor self target)))
+  (with-slots (%slave) self
+    (setf %slave (actor-component-by-type (actor self) 'camera))
+    (camera-target-actor self (target-actor self))))
 
 (defmethod on-component-update ((self tracking-camera))
-  (with-accessors ((view view) (transform transform)) (slave-camera self)
-    (let* ((model (model transform))
-           (eye (m4:get-translation model))
-           (target (m4:get-translation (model (target-transform self))))
-           (up (v3:make 0 1 0)))
-      (m4:set-view! view eye target up))))
+  (let* ((slave (slave self))
+         (model (model (transform slave)))
+         (eye (m4:get-translation model))
+         (target (m4:get-translation (model (target-transform self))))
+         (up (v3:make 0 1 0)))
+    (m4:set-view! (view slave) eye target up)))
 
 (defmethod camera-target-actor ((camera tracking-camera) actor)
-  (with-accessors ((target-actor target-actor)
-                   (target-transform target-transform))
-      camera
-    (setf target-actor actor)
+  (with-slots (%target-transform) camera
+    (setf (target-actor camera) actor)
     (when actor
-      (setf target-transform (actor-component-by-type actor 'transform)))))
+      (setf %target-transform (actor-component-by-type actor 'transform)))))

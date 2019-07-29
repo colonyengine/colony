@@ -2,17 +2,27 @@
 
 (define-component collider/sphere ()
   (;; The collider is only ever on a single layer.
-   (on-layer :default nil)
-   (center :default (v3:zero))
-   (radius :default 1.0)
-   (num-contacts :default 0)
+   (%on-layer :reader on-layer
+              :initarg :on-layer)
+   (%center :reader center
+            :initarg :center
+            :initform (v3:zero))
+   (%radius :reader radius
+            :initarg :radius
+            :initform 1.0)
+   (%num-contacts :accessor num-contacts
+                  :initform 0)
    ;; TODO: This block of slots are really here for debugging drawing of a
    ;; collider hack on it a bit to make it better.
-   (visualize :default nil)
+   (%visualize :reader visualize
+               :initarg :visualize
+               :initform nil)
    ;; TODO: Put geometry into shared storage for all collider/sphere's to use.
-   (geometry :default (gl:gen-vertex-array))
-   (material :default 'fl.materials::collider/sphere
-             :annotation (fl.annotations:material))
+   (%geometry :reader geometry
+              :initform (gl:gen-vertex-array))
+   (%material :reader material
+              :initform 'fl.materials::collider/sphere
+              :annotation (fl.annotations:material))
    ;; TODO: We do not have a difference between triggers and collisions yet.
    ;; That will come when actual physics arrives.
    ;; on-collision-enter
@@ -22,9 +32,12 @@
    ;; on-trigger-enter
    ;; on-trigger-continue
    ;; on-trigger-exit
-   (referent :default nil)))
+   (%referent :accessor referent
+              :initarg :referent
+              :initform nil)))
 
 (defmethod on-component-initialize ((self collider/sphere))
+  ;; TODO
   nil)
 
 (defmethod on-component-attach ((self collider/sphere) actor)
@@ -38,8 +51,8 @@
     (deregister-collider context self)))
 
 (defmethod on-component-destroy ((self collider/sphere))
-  (setf (referent self) nil)
-  nil)
+  (setf (referent self) nil))
+
 ;; TODO: When I implement the ability to not call protocol methods on types that
 ;; don't have them defined, ALSO create a feature that I can turn off calling
 ;; them for types that DO have them. Then I can leave this here and also not pay
@@ -47,22 +60,21 @@
 (defmethod on-component-render ((self collider/sphere))
   (unless (visualize self)
     (return-from on-component-render))
-  (with-accessors ((context context) (material material) (actor actor)) self
-    (a:when-let ((camera (active-camera context)))
-      (let ((transform (actor-component-by-type actor 'fl.comp:transform)))
-        (using-material material
-            (:model (fl.comp:model transform)
-             :view (fl.comp:view camera)
-             :proj (fl.comp:projection camera)
-             :collider-local-position (center self)
-             :in-contact-p (> (num-contacts self) 0)
-             ;; NOTE: The shader computes the radius appropriately for
-             ;; visualization purposes.
-             :radius (radius self))
-          ;; Finally, draw the visualizaiton.
-          (gl:bind-vertex-array (geometry self))
-          (gl:draw-arrays-instanced :points 0 1 1)
-          (gl:bind-vertex-array 0))))))
+  (a:when-let ((camera (active-camera (context self))))
+    (let ((transform (actor-component-by-type (actor self) 'fl.comp:transform)))
+      (using-material (material self)
+          (:model (fl.comp:model transform)
+           :view (fl.comp:view camera)
+           :proj (fl.comp:projection camera)
+           :collider-local-position (center self)
+           :in-contact-p (> (num-contacts self) 0)
+           ;; NOTE: The shader computes the radius appropriately for
+           ;; visualization purposes.
+           :radius (radius self))
+        ;; Finally, draw the visualizaiton.
+        (gl:bind-vertex-array (geometry self))
+        (gl:draw-arrays-instanced :points 0 1 1)
+        (gl:bind-vertex-array 0)))))
 
 ;; NOTE: We bubble the collision messages from the collider system through
 ;; ourselves to our referent (who implements this same API). This way, the

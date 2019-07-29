@@ -26,6 +26,9 @@
    (:file "example-noise")
    (:file "example-sprite")
    (:file "example-texture")
-   (:file "example-lisp-game-jam-april-2019")))
+   ;; TODO: Disabled until PTP branch is merged in. This is because the
+   ;; define-component syntax changed and will reduce merge conflicts (:file
+   ;; "example-lisp-game-jam-april-2019")
+   ))
 
 ;; broken: isometric-view
