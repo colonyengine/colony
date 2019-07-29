@@ -55,8 +55,7 @@
         (progn
           (dolist (shader shaders)
             (gl:attach-shader program shader))
-          (without-float-traps
-            (gl:link-program program))
+          (gl:link-program program)
           (unless (gl:get-program program :link-status)
             (error "Failed to link shader program: ~a"
                    (gl:get-program-info-log program)))

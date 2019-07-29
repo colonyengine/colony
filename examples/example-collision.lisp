@@ -5,7 +5,9 @@
 ;; testing how destruction and colliders work together.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (fl:define-component destroy-my-actor ()
-  ((time-to-destroy :default 5)))
+  ((%time-to-destroy :accessor time-to-destroy
+                     :initarg :time-to-destroy
+                     :initform 5)))
 
 (defmethod fl:on-collision-enter ((self destroy-my-actor) other-collider)
   (v:info :fl.example
@@ -34,8 +36,11 @@
 ;; Testing getting the directions from a transform
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (fl:define-component unit-test-transform-api ()
-  ((test-type :default nil) ;; You must specify this
-   (test-performed :default (u:dict))))
+  ((%test-type :reader test-type
+               :initarg :test-type
+               :initform nil)
+   (%test-performed :reader test-performed
+                    :initform (u:dict))))
 
 (defmethod fl:on-component-physics-update ((self unit-test-transform-api))
   (ecase (test-type self)
@@ -264,7 +269,7 @@ world space for a particular transform."
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
       (fl.comp:transform :rotate (q:orient :local :z (/ pi 2))
-                         :scale (v3:make 2 2 2))
+                         :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
       (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
       (fl.comp:render :material '2d-wood))))))
@@ -306,7 +311,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("stone"
    (fl.comp:transform :translate (v3:make 0 5 0)
-                      :scale (v3:make 0.5 0.5 0.5)
+                      :scale 0.5
                       :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:make 0 -2 0))
@@ -368,7 +373,7 @@ actually are. You have to view the results to see the colliders lighting up."
                             :on-layer :ground))
   ("stone"
    (fl.comp:transform :translate (v3:zero)
-                      :scale (v3:make 2 2 2)
+                      :scale 2
                       :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:zero))

@@ -81,7 +81,6 @@
    #:total-time
    #:ttl
    #:using-material
-   #:without-float-traps
    #:with-shared-storage)
 
   ;; metadata

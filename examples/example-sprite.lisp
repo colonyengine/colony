@@ -8,29 +8,33 @@
 ;;; Components
 
 (fl:define-component simple-movement ()
-  ((transform :default nil)))
+  ((%transform :reader transform)))
 
 (defmethod fl:on-component-initialize ((self simple-movement))
-  (with-accessors ((actor fl:actor) (transform transform)) self
-    (setf transform (fl:actor-component-by-type actor 'transform))
-    (fl.comp:translate transform (v3:make -400 0 0) :replace-p t :instant-p t)))
+  (with-slots (%transform) self
+    (setf %transform (fl:actor-component-by-type (fl:actor self) 'transform))
+    (fl.comp:translate %transform
+                       (v3:make -400 0 0)
+                       :replace-p t
+                       :instant-p t)))
 
 (defmethod fl:on-component-update ((self simple-movement))
-  (with-accessors ((context fl:context) (transform transform)) self
-    (u:mvlet ((lx ly (fl:get-gamepad-analog (fl:input-data context)
-                                            '(:gamepad1 :left-stick)))
-              (rx ry (fl:get-gamepad-analog (fl:input-data context)
-                                            '(:gamepad1 :right-stick)))
-              (instant-p (zerop (fl:frame-count context))))
-      (let ((vec (v3:make lx ly 0)))
-        (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150.0)
-        (fl.comp:translate transform
-                           (v3:+ (v3:make -400 0 0) vec)
-                           :replace-p t
-                           :instant-p instant-p))
+  (u:mvlet ((context (fl:context self))
+            (transform (transform self))
+            (lx ly (fl:get-gamepad-analog (fl:input-data context)
+                                          '(:gamepad1 :left-stick)))
+            (rx ry (fl:get-gamepad-analog (fl:input-data context)
+                                          '(:gamepad1 :right-stick)))
+            (instant-p (zerop (fl:frame-count context))))
+    (let ((vec (v3:make lx ly 0)))
+      (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150.0)
+      (fl.comp:translate transform
+                         (v3:+ (v3:make -400 0 0) vec)
+                         :replace-p t
+                         :instant-p instant-p)
       (unless (= rx ry 0.0)
         (let* ((angle (atan (- rx) ry))
-               (angle (if (< angle 0)
+               (angle (if (minusp angle)
                           (+ pi (- pi (abs angle)))
                           angle)))
           (fl.comp:rotate transform
@@ -39,38 +43,39 @@
                           :instant-p instant-p))))))
 
 (fl:define-component shot-mover ()
-  ((transform :default nil)
-   (velocity :default 0)))
+  ((%transform :reader transform)
+   (%velocity :reader velocity
+              :initarg :velocity
+              :initform 0)))
 
 (defmethod fl:on-component-initialize ((self shot-mover))
-  (with-accessors ((actor fl:actor) (transform transform)) self
-    (setf transform (fl:actor-component-by-type actor 'fl.comp:transform))))
+  (with-slots (%transform) self
+    (setf %transform (fl:actor-component-by-type (fl:actor self)
+                                                 'fl.comp:transform))))
 
 (defmethod fl:on-component-update ((self shot-mover))
-  (with-accessors ((context fl:context) (transform transform)
-                   (velocity velocity))
-      self
-    (fl.comp:translate
-     transform
-     (let ((a (v3:normalize (m4:rotation-axis-to-vec3
-                             (fl.comp:local transform) :y)))
-           (move-delta (float (* velocity (fl:frame-time context)) 1f0)))
-       (v3:scale a move-delta)))))
+  (fl.comp:translate
+   (transform self)
+   (let ((a (v3:normalize (m4:rotation-axis-to-vec3
+                           (fl.comp:local (transform self)) :y)))
+         (move-delta (float (* (velocity self)
+                               (fl:frame-time (fl:context self)))
+                            1f0)))
+     (v3:scale a move-delta))))
 
 (fl:define-component shot-emitter ()
-  ((emitter-transform :default nil)))
+  ((%transform :reader transform)))
 
 (defmethod fl:on-component-initialize ((self shot-emitter))
-  (with-accessors ((actor fl:actor) (emitter-transform emitter-transform)) self
-    (setf emitter-transform (fl:actor-component-by-type
-                             actor 'fl.comp:transform))))
+  (with-slots (%transform) self
+    (setf %transform (fl:actor-component-by-type
+                      (fl:actor self) 'fl.comp:transform))))
 
 (defmethod fl:on-component-update ((self shot-emitter))
-  (with-accessors ((context fl:context) (emitter-transform emitter-transform))
-      self
+  (let ((context (fl:context self)))
     (when (or (fl:input-enter-p (fl:input-data context) '(:gamepad1 :a))
               (fl:input-enter-p (fl:input-data context) '(:mouse :left)))
-      (let* ((parent-model (fl.comp:model emitter-transform))
+      (let* ((parent-model (fl.comp:model (transform self)))
              (parent-translation (m4:get-translation parent-model))
              (parent-rotation (q:from-mat4 parent-model))
              (new-actor (fl:make-actor context :display-id "Ship bullet"))
@@ -127,7 +132,7 @@
 (fl:define-prefab "sprite-2" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("plane"
-   (fl.comp:transform :scale (v3:make 2 2 2))
+   (fl.comp:transform :scale 2)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet04")
    (fl.comp:render :material `(fl.materials:sprite

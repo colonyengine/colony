@@ -1,12 +1,18 @@
 (in-package #:first-light.components)
 
 (define-component sprite ()
-  ((name :default nil)
-   (spec :default nil)
-   (spritesheet :default nil)
-   (index :default nil)
-   (initial-index :default nil)
-   (frames :default 1))
+  ((%name :accessor name
+          :initarg :name
+          :initform nil)
+   (%spec :reader spec
+          :initarg :spec
+          :initform nil)
+   (%spritesheet :reader spritesheet)
+   (%index :reader index)
+   (%initial-index :reader initial-index)
+   (%frames :accessor frames
+            :initarg :frames
+            :initform 1))
   ((:cached-spritesheet-data equalp)))
 
 (defclass spritesheet ()
@@ -65,20 +71,19 @@
       (gl:bind-vertex-array 0))))
 
 (defmethod on-component-initialize ((self sprite))
-  (with-accessors ((context context) (name name) (spec spec)
-                   (spritesheet spritesheet) (index index)
-                   (initial-index initial-index))
-      self
-    (unless name
-      (error "A sprite component must have a name."))
-    (unless spec
-      (error "A sprite component must have a spritesheet spec specified."))
-    (let ((spec (a:ensure-list spec)))
+  (with-slots (%spritesheet %index %initial-index) self
+    (let ((context (context self))
+          (name (name self))
+          (spec (a:ensure-list (spec self))))
+      (unless name
+        (error "A sprite component must have a name."))
+      (unless spec
+        (error "A sprite component must have a spritesheet spec specified."))
       (with-shared-storage
           (context context)
           ((cached-spritesheet spritesheet-present-p
                                ('sprite :cached-spritesheet-data spec)
                                (make-spritesheet context self)))
-        (setf spritesheet cached-spritesheet
-              index (u:href (sprites spritesheet) name)
-              initial-index index)))))
+        (setf %spritesheet cached-spritesheet
+              %index (u:href (sprites %spritesheet) name)
+              %initial-index %index)))))

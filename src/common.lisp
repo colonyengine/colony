@@ -96,10 +96,3 @@ UIOP/IMAGE:*IMAGE-DUMPED-P* prior to dumping."
                  path
                  (uiop:pathname-directory-pathname (uiop:argv0))))
       (asdf/system:system-relative-pathname (asdf:find-system system) path)))
-
-(defmacro without-float-traps (&body body)
-  #+sbcl
-  `(sb-int:with-float-traps-masked (:invalid :divide-by-zero)
-     ,@body)
-  #-sbcl
-  `(progn ,@body))

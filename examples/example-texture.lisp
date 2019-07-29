@@ -137,7 +137,7 @@
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 '1d-gradient)
-    (:mix-color (v4:make 1 1 1 1)))))
+    (:mix-color (v4:one)))))
 
 (fl:define-material 2d-wood
   (:shader fl.shader.texture:unlit-texture
@@ -208,35 +208,33 @@
 ;;; Components
 
 (fl:define-component shader-sweep ()
-  ((renderer :default nil)
-   (material :defualt nil)
-   (material-retrieved-p :default nil)
-   (mouse-in-window-p :default nil)
-   (channel0 :default (v2:zero))))
+  ((%renderer :reader renderer)
+   (%material :reader material)
+   (%material-retrieved-p :reader material-retrieved-p
+                          :initform nil)
+   (%channel0 :reader channel0
+              :initform (v2:zero))))
 
 (defmethod fl:on-component-initialize ((self shader-sweep))
-  (setf (renderer self) (fl:actor-component-by-type (fl:actor self) 'render)))
+  (with-slots (%renderer) self
+    (setf %renderer (fl:actor-component-by-type (fl:actor self) 'render))))
 
 (defmethod fl:on-component-update ((self shader-sweep))
-  (with-accessors ((renderer renderer) (material-copied-p material-copied-p)
-                   (material material)
-                   (material-retrieved-p material-retrieved-p)
-                   (channel0 channel0) (max-x max-x) (max-y max-y))
-      self
-    (unless material-retrieved-p
-      (setf material (fl.comp:material renderer)
-            material-retrieved-p t))
+  (with-slots (%material %material-retrieved-p) self
+    (unless %material-retrieved-p
+      (setf %material (fl.comp:material (renderer self))
+            %material-retrieved-p t))
     (u:mvlet ((context (fl:context self))
               (x y (fl:get-mouse-position (fl:input-data context))))
       (when (null x) (setf x (/ (fl:option context :window-width) 2.0)))
       (when (null y) (setf y (/ (fl:option context :window-height) 2.0)))
-      (v2:with-components ((c channel0))
+      (v2:with-components ((c (channel0 self)))
         ;; crappy, but good enough.
         (setf cx (float (/ x (fl:option context :window-width)) 1f0)
               cy (float (/ y (fl:option context :window-height)) 1f0)))
       ;; get a reference to the material itself (TODO: use MOP stuff to get
       ;; this right so I don't always have to get it here)
-      (setf (fl:mat-uniform-ref material :tex.channel0) channel0))))
+      (setf (fl:mat-uniform-ref %material :tex.channel0) (channel0 self)))))
 
 ;;; Prefabs
 
