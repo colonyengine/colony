@@ -137,7 +137,7 @@
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 '1d-gradient)
-    (:mix-color (v4:make 1 1 1 1)))))
+    (:mix-color (v4:one)))))
 
 (fl:define-material 2d-wood
   (:shader fl.shader.texture:unlit-texture

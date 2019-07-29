@@ -430,7 +430,7 @@ the repl when the game is NOT running."
     (let* ((c0 (make-component (context core) 'fl.comp:collider/sphere
                                :display-id "Ground"
                                :on-layer :ground
-                               :center (v3:make 0 0 0)
+                               :center (v3:zero)
                                :radius 1))
            (c1 (make-component (context core) 'fl.comp:collider/sphere
                                :display-id "Player"
