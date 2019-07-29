@@ -68,7 +68,7 @@
    :shader fl.shader.texture:unlit-texture
    :uniforms ((:tex.sampler1 'warning-mothership)
               (:mix-color (v4:one))
-              #++(:min-intensity (v4:make 0.1 0.1 0.1 0))
+              #++(:min-intensity (v4:vec 0.1 0.1 0.1 0))
               #++(:max-intensity (v4:one)))))
 
 (fl:define-material warning-wave
@@ -76,7 +76,7 @@
    :shader fl.shader.texture:unlit-texture
    :uniforms ((:tex.sampler1 'warning-wave)
               (:mix-color (v4:one))
-              #++(:min-intensity (v3:make 0.1 0.1 0.1 1))
+              #++(:min-intensity (v3:vec 0.1 0.1 0.1 1))
               #++(:max-intensity (v4:one)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -165,7 +165,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
             (setf adj-z (- offset-maxz nz)))
 
           ;; NOTE: Allocates memory.
-          (v3:make (+ mx adj-x) (+ my adj-y) (+ mz adj-z)))))))
+          (v3:vec (+ mx adj-x) (+ my adj-y) (+ mz adj-z)))))))
 
 (defun quat->euler (quat)
   (flet ((copysign (x y)
@@ -190,7 +190,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
              (cosy_cosp (- 1.0 (* 2.0 (+ (* qy qy) (* qz qz)))))
              (yaw (atan siny_cosp cosy_cosp)))
 
-        (v3:make roll pitch yaw)))))
+        (v3:vec roll pitch yaw)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
@@ -237,7 +237,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       ;; First, we settle the notion of how the player translates around with
       ;; left stick
       (let* (;; Dead with deadzones and other bad data around the input vector.
-             (vec (v3:make lx ly 0))
+             (vec (v3:vec lx ly 0))
              (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
              (vec (if (< (v3:length vec) translate-deadzone) (v3:zero) vec))
              ;; Compute the actual translation vector related to our frame time!
@@ -255,7 +255,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
       ;; Then we settle the notion of how the player is oriented.  We're setting
       ;; a hard angle of rotation each time so we overwrite the previous value.
-      (unless (or (= lx ly 0.0) (< (v3:length (v3:make lx ly 0)) rotate-deadzone))
+      (unless (or (= lx ly 0.0) (< (v3:length (v3:vec lx ly 0)) rotate-deadzone))
         (let* ((angle (atan (- lx) ly))
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
@@ -536,7 +536,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
          (let* ((parent-model (fl.comp:model emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
            (unless (or (= rx ry 0.0)
-                       (< (v3:length (v3:make rx ry 0)) rotate-deadzone))
+                       (< (v3:length (v3:vec rx ry 0)) rotate-deadzone))
              (let* ((angle (atan (- rx) ry))
                     (angle (if (< angle 0)
                                (+ pi (- pi (abs angle)))
@@ -574,7 +574,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                            ("asteroid04-01" 16)
                            ("asteroid05-01" 16)
                            ("asteroid06-01" 16)))
-   (scale-range :default (v2:make .75 1.25))))
+   (scale-range :default (v2:vec .75 1.25))))
 
 
 (defmethod fl:on-component-update ((self asteroid-field))
@@ -612,7 +612,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                   (target
                     (fl.comp:transform-point
                      transform
-                     (v3:make (ransign 300.0) (ransign 300.0) 0.1)))
+                     (v3:vec (ransign 300.0) (ransign 300.0) 0.1)))
                   (quadrant (random 4)))
 
              ;; pick an origin point in director space and convert it to world
@@ -622,13 +622,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                     transform
                     (case quadrant
                       (0 ;; left side
-                       (v3:make -1000.0 (ransign 600.0) 0.1))
+                       (v3:vec -1000.0 (ransign 600.0) 0.1))
                       (1 ;; top side
-                       (v3:make (ransign 1000.0) 600.0 0.1))
+                       (v3:vec (ransign 1000.0) 600.0 0.1))
                       (2 ;; right side
-                       (v3:make 1000.0 (ransign 600.0) 0.1))
+                       (v3:vec 1000.0 (ransign 600.0) 0.1))
                       (3 ;; bottom side
-                       (v3:make (ransign 1000.0) -600.0 0.1)))))
+                       (v3:vec (ransign 1000.0) -600.0 0.1)))))
 
              (destructuring-bind (name frames)
                  (aref asteroid-db (random (length asteroid-db)))
@@ -644,9 +644,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                                   ;; this direction is in world space.
                                   ;; it moves from the origin to the target.
                                   :direction (v3:normalize (v3:- target origin))
-                                  :scale (v3:make uniform-scale
-                                                  uniform-scale
-                                                  uniform-scale)
+                                  :scale (v3:vec uniform-scale
+                                                 uniform-scale
+                                                 uniform-scale)
                                   :name name
                                   :frames frames
                                   :destroy-ttl 4)))))
@@ -714,7 +714,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
            (transform (fl:actor-component-by-type mockette 'fl.comp:transform)))
 
       (fl.comp:translate
-       transform (v3:make (* mockette-index (* dir width-increment)) -60 0))
+       transform (v3:vec (* mockette-index (* dir width-increment)) -60 0))
 
       (setf (aref mockette-refs mockette-index) mockette))))
 
@@ -860,7 +860,7 @@ return the lives-remaining after the life has been consumed."
     (gun :physics-layer :player-bullet :name "bullet01" :frames 2))
 
    ("exhaust"
-    (fl.comp:transform :translate (v3:make 0 -60 0))
+    (fl.comp:transform :translate (v3:vec 0 -60 0))
     (fl.comp:sprite :spec :spritesheet-data
                     :name "exhaust03-01"
                     :frames 8)
@@ -926,7 +926,7 @@ return the lives-remaining after the life has been consumed."
    (fl.comp:transform :scale 960
                       ;; NOTE: ortho projection, so we can put starfield way
                       ;; back.
-                      :translate (v3:make 0 0 -100))
+                      :translate (v3:vec 0 0 -100))
    (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
    (fl.comp:render :material 'starfield)))
 
@@ -935,7 +935,7 @@ return the lives-remaining after the life has been consumed."
   (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make 0 100 -1)
+   (fl.comp:transform :translate (v3:vec 0 100 -1)
                       :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01")))
@@ -945,12 +945,12 @@ return the lives-remaining after the life has been consumed."
   (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make -200 100 -1)
+   (fl.comp:transform :translate (v3:vec -200 100 -1)
                       :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make 200 100 -1)
+   (fl.comp:transform :translate (v3:vec 200 100 -1)
                       :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02")))
@@ -959,17 +959,17 @@ return the lives-remaining after the life has been consumed."
   (asteroid-field)
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make 0 100 -1)
+   (fl.comp:transform :translate (v3:vec 0 100 -1)
                       :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make -200 -100 -1)
+   (fl.comp:transform :translate (v3:vec -200 -100 -1)
                       :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make 200 -100 -1)
+   (fl.comp:transform :translate (v3:vec 200 -100 -1)
                       :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet03")))
@@ -981,16 +981,16 @@ sequencing."
   (director :level-holder (fl:ref "/protect-the-planets/active-level"))
 
   #++(("WARNING" :copy ("/warning-wave-sign" :from lgj-04/2019))
-      (fl.comp:transform :translate (v3:make 0 0 10)
+      (fl.comp:transform :translate (v3:vec 0 0 10)
                          :scale 500))
 
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
-   (fl.comp:transform :translate (v3:make 0 0 500)))
+   (fl.comp:transform :translate (v3:vec 0 0 500)))
   ("active-level")
 
   ;; make reference so we know where to get players when they die/1up
   (("player-1-stable" :link ("/player-stable" :from lgj-04/2019))
-   (fl.comp:transform :translate (v3:make -900 550 -10)))
+   (fl.comp:transform :translate (v3:vec -900 550 -10)))
   (("player-ship" :link ("/player-ship" :from lgj-04/2019)))
   (("current-level" :copy ("/level-0" :from lgj-04/2019))))
 

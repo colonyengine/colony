@@ -10,7 +10,7 @@
                                          :x (- (atan (/ (sqrt 2))))
                                          :y (- (/ pi 4))))
     ("camera"
-     (fl.comp:transform :translate (v3:make 0 0 10))
+     (fl.comp:transform :translate (v3:vec 0 0 10))
      (fl.comp:camera :active-p t
                      :clip-near .1
                      :clip-far 1024
@@ -28,24 +28,24 @@
   ;; NOTE: cubes are on xz plane.
 
   (("cube-z-1" :copy "/mesh")
-   (fl.comp:transform :translate (v3:make 0 0 -4))
+   (fl.comp:transform :translate (v3:vec 0 0 -4))
    (fl.comp:static-mesh :location '((:core :mesh) "cube.glb")))
 
   (("cube-z-0" :copy "/mesh")
-   (fl.comp:transform :translate (v3:make 0 0 -2))
+   (fl.comp:transform :translate (v3:vec 0 0 -2))
    (fl.comp:static-mesh :location '((:core :mesh) "cube.glb")))
 
   (("cube-origin" :copy "/mesh")
    (fl.comp:transform #++ :rotate/inc #++ (q:orient :local
-                                                    (v3:make -1f0 1f0 1f0) (/ pi 2)))
+                                                    (v3:vec -1f0 1f0 1f0) (/ pi 2)))
    (fl.comp:static-mesh :location '((:core :mesh) "cube.glb")))
 
   (("cube-x-0" :copy "/mesh")
-   (fl.comp:transform :translate (v3:make 2 0 0))
+   (fl.comp:transform :translate (v3:vec 2 0 0))
    (fl.comp:static-mesh :location '((:core :mesh) "cube.glb")))
 
   (("cube-x-1" :copy "/mesh")
-   (fl.comp:transform :translate (v3:make 4 0 0))
+   (fl.comp:transform :translate (v3:vec 4 0 0))
    (fl.comp:static-mesh :location '((:core :mesh) "cube.glb"))))
 
 

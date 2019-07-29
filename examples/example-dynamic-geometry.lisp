@@ -30,7 +30,7 @@
   (("camera" :copy "/cameras/perspective"))
   (("plane")
    (fl.comp:transform :rotate/inc (q:orient :local :x pi)
-                      :scale (v3:make 20 20 20))
+                      :scale (v3:vec 20 20 20))
    (fl.comp:dynamic-mesh :geometry 'tile)
    (fl.comp:render :material 'dynamic-geometry
                    :mode :dynamic-mesh)))

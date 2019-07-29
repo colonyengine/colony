@@ -24,7 +24,7 @@
 (fl:define-material unlit-texture-decal-bright
   (:shader fl.shader.texture:unlit-texture-decal
    :profiles (u-mvp)
-   :uniforms ((:min-intensity (v4:make 0.1 0.1 0.1 0.1))
+   :uniforms ((:min-intensity (v4:vec 0.1 0.1 0.1 0.1))
               (:max-intensity (v4:one))
               (:tex.sampler1 'fl.textures:debug-texture))))
 
@@ -48,7 +48,7 @@
   (:shader fl.shader.visualization:collider/sphere
    :profiles (u-mvp)
    :uniforms ((:collider-local-position (v3:zero))
-              (:in-contact-color (v4:make 1 0 0 1))
-              (:not-in-contact-color (v4:make 0 1 0 0.5))
+              (:in-contact-color (v4:vec 1 0 0 1))
+              (:not-in-contact-color (v4:vec 0 1 0 0.5))
               (:in-contact-p nil)
               (:radius 0.0))))

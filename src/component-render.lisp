@@ -3,7 +3,7 @@
 (define-component render ()
   ((%mode :reader mode
           :initarg :mode
-          :initform :mesh)
+          :initform :static-mesh)
    (%draw-method :reader draw-method
                  :initform (constantly nil))
    (%transform :reader transform)

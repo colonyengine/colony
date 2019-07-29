@@ -30,7 +30,7 @@
     (:normal-sampler 'damaged-helmet/normal)
     (:normal-scale 1.0)
     ;; NOTE: This vector points TOWARDS the light.
-    (:light-direction (v3:make 0 1 1))
+    (:light-direction (v3:vec 0 1 1))
     (:light-color (v3:one))
     (:occlusion-sampler 'damaged-helmet/ambient-occlusion)
     (:occlusion-strength 1.0)

@@ -150,7 +150,7 @@
           (incremental %rotation) (q:copy rotate/inc)
           (current %scaling) (etypecase scale
                                (v3:vec (v3:copy scale))
-                               (real (v3:make scale scale scale)))
+                               (real (v3:vec scale scale scale)))
           (previous %scaling) (v3:copy (current %scaling))
           (incremental %scaling) (v3:copy scale/inc))))
 
@@ -203,7 +203,7 @@
 TRANSFORM, to world space and returns the new vector. The new vector is affected
 by scale, rotation, and translation. A newly allocated M:VEC3 is returned."
   (v3:with-components ((v point-vec))
-    (~:.xyz (m4:*v4 (model transform) (v4:make vx vy vz 1)))))
+    (~:.xyz (m4:*v4 (model transform) (v4:vec vx vy vz 1)))))
 
 (defun inverse-transform-point (transform point-vec)
   "Transform the vector in POINT-VEC, assumed to be in the world space, to the
@@ -211,7 +211,7 @@ local space of the TRANSFORM and returns the new vector. The new vector is
 affected by scale, rotation, and translation. A newly allocated M:VEC3 is
 returned."
   (v3:with-components ((v point-vec))
-    (~:.xyz (m4:*v4 (m4:invert (model transform)) (v4:make vx vy vz 1)))))
+    (~:.xyz (m4:*v4 (m4:invert (model transform)) (v4:vec vx vy vz 1)))))
 
 (defun transform-vector (transform vector-vec)
   "Transform the vector in VECTOR-VEC, assumed to be in the local space of the
@@ -220,7 +220,7 @@ rotation, but not by translation. A newly allocated M:VEC3 is returned."
   (v3:with-components ((v vector-vec))
     (let ((model (m4:copy (model transform))))
       (m4:set-translation! model model v3:+zero+)
-      (~:.xyz (m4:*v4 model (v4:make vx vy vz 1))))))
+      (~:.xyz (m4:*v4 model (v4:vec vx vy vz 1))))))
 
 (defun inverse-transform-vector (transform vector-vec)
   "Transform the vector in VECTOR-VEC, assumed to be in the world space,
@@ -230,7 +230,7 @@ returned."
   (v3:with-components ((v vector-vec))
     (let ((model (m4:copy (model transform))))
       (m4:set-translation! model model v3:+zero+)
-      (~:.xyz (m4:*v4 (m4:invert model) (v4:make vx vy vz 1))))))
+      (~:.xyz (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))
 
 (defun transform-direction (transform direction-vec)
   "Transform the vector in DIRECTION-VEC, assumed to be in the local space of
@@ -242,7 +242,7 @@ returned."
       (m4:set-translation! model model v3:+zero+)
       (m4:normalize-rotation! model model)
       (m4:orthonormalize! model model)
-      (~:.xyz (m4:*v4 model (v4:make vx vy vz 1))))))
+      (~:.xyz (m4:*v4 model (v4:vec vx vy vz 1))))))
 
 (defun inverse-transform-direction (transform direction-vec)
   "Transform the vector in DIRECTION-VEC, assumed to be in world space,
@@ -253,7 +253,7 @@ returned."
     (let ((model (m4:copy (model transform))))
       (m4:set-translation! model model v3:+zero+)
       (m4:normalize-rotation! model model)
-      (~:.xyz (m4:*v4 (m4:invert model) (v4:make vx vy vz 1))))))
+      (~:.xyz (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))
 
 ;; NOTE: These functions return the vectors that represent forward, backward,
 ;; up, down, right, and left in _world space_.
