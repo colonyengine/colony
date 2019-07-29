@@ -269,7 +269,7 @@ world space for a particular transform."
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
       (fl.comp:transform :rotate (q:orient :local :z (/ pi 2))
-                         :scale (v3:make 2 2 2))
+                         :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
       (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
       (fl.comp:render :material '2d-wood))))))
@@ -311,7 +311,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("stone"
    (fl.comp:transform :translate (v3:make 0 5 0)
-                      :scale (v3:make 0.5 0.5 0.5)
+                      :scale 0.5
                       :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:make 0 -2 0))
@@ -373,7 +373,7 @@ actually are. You have to view the results to see the colliders lighting up."
                             :on-layer :ground))
   ("stone"
    (fl.comp:transform :translate (v3:zero)
-                      :scale (v3:make 2 2 2)
+                      :scale 2
                       :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:zero))

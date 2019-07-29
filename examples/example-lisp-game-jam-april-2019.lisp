@@ -86,7 +86,7 @@
 (defclass region ()
   ((%center :accessor center
             :initarg :center
-            :initform (v3:make 0.0 0.0 0.0))))
+            :initform (v3:zero))))
 
 (defclass boundary-cube (region)
   ((%minx :accessor minx
@@ -212,7 +212,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    ;; We just hack in a boundary cube you can't go outside of. This is in the
    ;; local space of the actor to which this component is attached.
    ;; The format is minx, maxx, miny, maxy, minz, maxz
-   (boundary-cube :default (make-boundary-cube (v3:make 0.0 0.0 0.0)
+   (boundary-cube :default (make-boundary-cube (v3:zero)
                                                -900 900 -500 500 0 0))))
 
 ;; upon attaching, this component will store find the transform component
@@ -387,7 +387,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; it needs to become effective in the world.
 (defun make-projectile (context translation rotation physics-layer
                         &key
-                          (scale (v3:make 1.0 1.0 1.0))
+                          (scale (v3:one))
                           (destroy-ttl 2)
                           (velocity 1000)
                           (direction :+y)
@@ -923,7 +923,7 @@ return the lives-remaining after the life has been consumed."
 
 (fl:define-prefab "starfield" (:library lgj-04/2019)
   ("bug-todo:implicit-transform:see-trello"
-   (fl.comp:transform :scale (v3:make 960 960 960)
+   (fl.comp:transform :scale 960
                       ;; NOTE: ortho projection, so we can put starfield way
                       ;; back.
                       :translate (v3:make 0 0 -100))
@@ -936,7 +936,7 @@ return the lives-remaining after the life has been consumed."
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make 0 100 -1)
-                      :scale (v3:make 0.9 0.9 0.9))
+                      :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01")))
 
@@ -946,12 +946,12 @@ return the lives-remaining after the life has been consumed."
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make -200 100 -1)
-                      :scale (v3:make 0.9 0.9 0.9))
+                      :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make 200 100 -1)
-                      :scale (v3:make 0.9 0.9 0.9))
+                      :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02")))
 
@@ -960,29 +960,29 @@ return the lives-remaining after the life has been consumed."
   (("starfield" :link ("/starfield" :from lgj-04/2019)))
   (("planet-0" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make 0 100 -1)
-                      :scale (v3:make 0.9 0.9 0.9))
+                      :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make -200 -100 -1)
-                      :scale (v3:make 0.9 0.9 0.9))
+                      :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from lgj-04/2019))
    (fl.comp:transform :translate (v3:make 200 -100 -1)
-                      :scale (v3:make 0.9 0.9 0.9))
+                      :scale 0.9)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet03")))
 
 (fl:define-prefab "protect-the-planets" (:library lgj-04/2019)
   "The top most level prefab which has the component which drives the game
 sequencing."
-  (fl.comp:transform :scale (v3:one))
+  (fl.comp:transform :scale 1)
   (director :level-holder (fl:ref "/protect-the-planets/active-level"))
 
   #++(("WARNING" :copy ("/warning-wave-sign" :from lgj-04/2019))
       (fl.comp:transform :translate (v3:make 0 0 10)
-                         :scale (v3:make 500 500 500)))
+                         :scale 500))
 
   (("camera" :copy ("/cameras/ortho" :from fl.example::examples))
    (fl.comp:transform :translate (v3:make 0 0 500)))

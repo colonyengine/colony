@@ -132,7 +132,7 @@
 (fl:define-prefab "sprite-2" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("plane"
-   (fl.comp:transform :scale (v3:make 2 2 2))
+   (fl.comp:transform :scale 2)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet04")
    (fl.comp:render :material `(fl.materials:sprite
