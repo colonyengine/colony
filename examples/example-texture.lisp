@@ -1,4 +1,4 @@
-(in-package :first-light.example)
+(in-package #:first-light.example)
 
 ;;; Textures
 
@@ -133,44 +133,44 @@
 ;;; Materials
 
 (fl:define-material 1d-gradient
-  (:shader fl.gpu.user:unlit-texture-1d
+  (:shader fl.shader.user:unlit-texture-1d
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 '1d-gradient)
-    (:mix-color (m:vec4 1)))))
+    (:mix-color (v4:one)))))
 
 (fl:define-material 2d-wood
-  (:shader fl.gpu.texture:unlit-texture
+  (:shader fl.shader.texture:unlit-texture
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 '2d-wood)
-    (:mix-color (m:vec4 1)))))
+    (:mix-color (v4:one)))))
 
 (fl:define-material 3d
-  (:shader fl.gpu.user:unlit-texture-3d
+  (:shader fl.shader.user:unlit-texture-3d
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 '3d)
-    (:mix-color (m:vec4 1))
+    (:mix-color (v4:one))
     (:uv-z (lambda (context material)
              (declare (ignore material))
              ;; make sin in the range of 0 to 1 for texture coord.
              (/ (1+ (sin (* (fl:total-time context) 1.5))) 2.0))))))
 
 (fl:define-material 1d-array
-  (:shader fl.gpu.user:unlit-texture-1d-array
+  (:shader fl.shader.user:unlit-texture-1d-array
    :profiles (fl.materials:u-mvpt)
    :uniforms
    ((:tex.sampler1 '1d-array)
-    (:mix-color (m:vec4 1))
+    (:mix-color (v4:one))
     (:num-layers 4))))
 
 (fl:define-material 2d-array
-  (:shader fl.gpu.user:unlit-texture-2d-array
+  (:shader fl.shader.user:unlit-texture-2d-array
    :profiles (fl.materials:u-mvpt)
    :uniforms
    ((:tex.sampler1 '2d-array)
-    (:mix-color (m:vec4 1))
+    (:mix-color (v4:one))
     (:uv-z (lambda (context material)
              (declare (ignore material))
              ;; make sin in the range of 0 to 1 for texture coord.
@@ -178,27 +178,27 @@
     (:num-layers 4))))
 
 (fl:define-material 2d-sweep-input
-  (:shader fl.gpu.user:noise-2d/sweep-input
+  (:shader fl.shader.user:noise-2d/sweep-input
    :profiles (fl.materials:u-mvp)
    :uniforms
    ;; any old 2d texture here will do since we overwrite it with noise.
    ((:tex.sampler1 '2d-wood)
-    (:tex.channel0 (m:vec2))
-    (:mix-color (m:vec4 1)))))
+    (:tex.channel0 (v2:zero))
+    (:mix-color (v4:one)))))
 
 (fl:define-material cubemap
-  (:shader fl.gpu.user:unlit-texture-cube-map
+  (:shader fl.shader.user:unlit-texture-cube-map
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemap)
-    (:mix-color (m:vec4 1)))))
+    (:mix-color (v4:one)))))
 
 (fl:define-material cubemaparray
-  (:shader fl.gpu.user:unlit-texture-cube-map-array
+  (:shader fl.shader.user:unlit-texture-cube-map-array
    :profiles (fl.materials:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemaparray)
-    (:mix-color (m:vec4 1))
+    (:mix-color (v4:one))
     (:cube-layer (lambda (context material)
                    (declare (ignore material))
                    ;; make sin in the range of 0 to 1 for texture coord.
@@ -208,71 +208,73 @@
 ;;; Components
 
 (fl:define-component shader-sweep ()
-  ((renderer :default nil)
-   (material :defualt nil)
-   (material-retrieved-p :default nil)
-   (mouse-in-window-p :default nil)
-   (channel0 :default (m:vec2))))
+  ((%renderer :reader renderer)
+   (%material :reader material)
+   (%material-retrieved-p :reader material-retrieved-p
+                          :initform nil)
+   (%channel0 :reader channel0
+              :initform (v2:zero))))
 
 (defmethod fl:on-component-initialize ((self shader-sweep))
-  (setf (renderer self) (fl:actor-component-by-type (fl:actor self) 'render)))
+  (with-slots (%renderer) self
+    (setf %renderer (fl:actor-component-by-type (fl:actor self) 'render))))
 
 (defmethod fl:on-component-update ((self shader-sweep))
-  (with-accessors ((renderer renderer) (material-copied-p material-copied-p)
-                   (material material)
-                   (material-retrieved-p material-retrieved-p)
-                   (channel0 channel0) (max-x max-x) (max-y max-y))
-      self
-    (unless material-retrieved-p
-      (setf material (fl.comp:material renderer)
-            material-retrieved-p t))
-    (au:mvlet* ((context (fl:context self))
-                (x y (fl.input:get-mouse-position (fl:input-data context))))
+  (with-slots (%material %material-retrieved-p) self
+    (unless %material-retrieved-p
+      (setf %material (fl.comp:material (renderer self))
+            %material-retrieved-p t))
+    (u:mvlet* ((context (fl:context self))
+               (x y (fl:get-mouse-position (fl:input-data context))))
       (when (null x) (setf x (/ (fl:option context :window-width) 2.0)))
       (when (null y) (setf y (/ (fl:option context :window-height) 2.0)))
-      (m:with-vec2 ((c channel0))
+      (v2:with-components ((c (channel0 self)))
         ;; crappy, but good enough.
-        (setf c.x (float (/ x (fl:option context :window-width)) 1f0)
-              c.y (float (/ y (fl:option context :window-height)) 1f0)))
+        (setf cx (float (/ x (fl:option context :window-width)) 1f0)
+              cy (float (/ y (fl:option context :window-height)) 1f0)))
       ;; get a reference to the material itself (TODO: use MOP stuff to get
       ;; this right so I don't always have to get it here)
-      (setf (fl:mat-uniform-ref material :tex.channel0) channel0))))
+      (setf (fl:mat-uniform-ref %material :tex.channel0) (channel0 self)))))
 
 ;;; Prefabs
 
-(fl:define-prefab "texture" (:library examples)
+(fl:define-prefab "texture" (:library examples :policy :new-type)
   (("camera" :copy "/cameras/perspective")
    (fl.comp:camera (:policy :new-args) :zoom 6))
   (("1d-texture" :copy "/mesh")
-   (fl.comp:transform (:policy :new-type) :translate (m:vec3 -4 3 0))
-   (fl.comp:render (:policy :new-type) :material '1d-gradient))
+   (fl.comp:transform :translate (v3:vec -4 3 0))
+   (fl.comp:render :material '1d-gradient))
   (("2d-texture" :copy "/mesh")
-   (fl.comp:transform (:policy :new-type) :translate (m:vec3 -2 3 0))
-   (fl.comp:render (:policy :new-type) :material '2d-wood))
+   (fl.comp:transform :translate (v3:vec -2 3 0))
+   (fl.comp:render :material '2d-wood))
   (("3d-texture" :copy "/mesh")
-   (fl.comp:transform (:policy :new-type) :translate (m:vec3 0 3 0))
-   (fl.comp:render (:policy :new-type) :material '3d))
+   (fl.comp:transform :translate (v3:vec 0 3 0))
+   (fl.comp:render :material '3d))
   (("1d-array-texture" :copy "/mesh")
-   (fl.comp:transform (:policy :new-type) :translate (m:vec3 2 3 0))
-   (fl.comp:render (:policy :new-type) :material '1d-array))
+   (fl.comp:transform :translate (v3:vec 2 3 0))
+   (fl.comp:render :material '1d-array))
   (("2d-array-texture" :copy "/mesh")
-   (fl.comp:transform (:policy :new-type) :translate (m:vec3 4 3 0))
-   (fl.comp:render (:policy :new-type)
-                   :material '2d-array))
+   (fl.comp:transform :translate (v3:vec 4 3 0))
+   (fl.comp:render :material '2d-array))
   (("swept-input" :copy "/mesh")
-   (fl.comp:transform (:policy :new-type) :translate (m:vec3 -4 1 0))
-   (fl.comp:render (:policy :new-type) :material '2d-sweep-input)
+   (fl.comp:transform :translate (v3:vec -4 1 0))
+   (fl.comp:render :material '2d-sweep-input)
    (shader-sweep))
   (("cube-map" :copy "/mesh")
-   (fl.comp:transform (:policy :new-type)
-                      :translate (m:vec3 0 -1 0)
-                      :rotate (m:vec3 0.5))
-   (fl.comp:mesh (:policy :new-type) :location '((:core :mesh) "cube.glb"))
-   (fl.comp:render (:policy :new-type) :material 'cubemap))
+   (fl.comp:transform :translate (v3:vec 0 -1 0)
+                      :rotate (q:orient :world
+                                        :x (asin (/ (sqrt 2)))
+                                        :z (/ pi 4)))
+   (fl.comp:static-mesh :location '((:core :mesh) "cube.glb"))
+   (fl.comp:render :material 'cubemap))
   (("cube-map-array" :copy "/mesh")
-   (fl.comp:transform (:policy :new-type)
-                      :translate (m:vec3 3 -1 0)
-                      :rotate/inc (m:vec3 0.5))
-   (fl.comp:mesh (:policy :new-type) :location '((:core :mesh) "cube.glb"))
-   (fl.comp:render (:policy :new-type)
-                   :material 'cubemaparray)))
+   (fl.comp:transform :translate (v3:vec 3 -1 0)
+                      :rotate/inc (q:orient :world (v3:one) (/ pi 4)))
+   (fl.comp:static-mesh :location '((:core :mesh) "cube.glb"))
+   (fl.comp:render
+    :material 'cubemaparray)))
+
+;;; Prefab descriptors
+
+(fl:define-prefab-descriptor texture ()
+  ("texture" fl.example:examples))

@@ -1,4 +1,4 @@
-(in-package :fl.example)
+(in-package #:fl.example)
 
 ;;; Textures
 
@@ -20,18 +20,18 @@
 ;;; Materials
 
 (fl:define-material damaged-helmet
-  (:shader fl.gpu.user:damaged-helmet
+  (:shader fl.shader.user:damaged-helmet
    :profiles (fl.materials:u-mvp)
    :uniforms
-   ((:metallic-roughness-values (m:vec2 1))
+   ((:metallic-roughness-values (v2:one))
     (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)
     (:base-color-sampler 'damaged-helmet/color)
-    (:base-color-factor (m:vec4 1))
+    (:base-color-factor (v4:one))
     (:normal-sampler 'damaged-helmet/normal)
     (:normal-scale 1.0)
     ;; NOTE: This vector points TOWARDS the light.
-    (:light-direction (m:vec3 0 1 1))
-    (:light-color (m:vec3 1))
+    (:light-direction (v3:vec 0 1 1))
+    (:light-color (v3:one))
     (:occlusion-sampler 'damaged-helmet/ambient-occlusion)
     (:occlusion-strength 1.0)
     (:emissive-sampler 'damaged-helmet/emissive)
@@ -43,8 +43,13 @@
   (("camera" :copy "/cameras/perspective")
    (fl.comp:camera (:policy :new-args) :zoom 10))
   (("helmet" :copy "/mesh")
-   (fl.comp:transform :rotate (m:vec3 (/ pi 2) 0 0)
-                      :rotate/inc (m:vec3 0 0 -0.6)
-                      :scale (m:vec3 4))
-   (fl.comp:mesh :location '(:mesh "damaged-helmet.glb"))
+   (fl.comp:transform :rotate (q:orient :local :x (/ pi 2))
+                      :rotate/inc (q:orient :local :z (- (/ pi 4)))
+                      :scale 4)
+   (fl.comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
    (fl.comp:render :material 'damaged-helmet)))
+
+;;; Prefab descriptors
+
+(fl:define-prefab-descriptor damaged-helmet ()
+  ("damaged-helmet" fl.example:examples))

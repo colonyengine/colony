@@ -1,4 +1,4 @@
-(in-package :first-light.example)
+(in-package #:first-light.example)
 
 (fl:define-options ()
   :title "First-Light Examples"
@@ -6,13 +6,18 @@
   :window-height 1080
   :vsync :off
   :log-level :debug
-  :log-repl-categories '(:fl))
+  :log-repl-categories '(:fl)
+  ;; NOTE: Make physics compute faster as fast for these examples.
+  ;; This is really here because of the lisp game jam april 2019 codes.
+  :delta 1/120
+  :initial-scene 'geometric-volumes)
 
 (fl:define-resources (:project :first-light.example)
   (:project "data/project")
   (:ext (:project "ext"))
   (:mesh (:project "mesh"))
   (:texture (:project "texture"))
+  (:lgj-04/2019 (:project :texture "lisp-game-jam-04-2019"))
   (:log (:project "log"))
   (:log-debug (:project :log "debug.log"))
   (:log-error (:project :log "error.log"))
@@ -44,23 +49,22 @@
    (fl.comp:camera :active-p t
                    :mode :perspective))
   ("iso"
-   (fl.comp:transform :rotate (m:vec3 0 0 (- (/ pi 4))))
-   ("transform"
-    (fl.comp:transform :rotate (m:vec3 (- (atan (/ (sqrt 2)))) 0 0))
-    ("camera"
-     (fl.comp:transform :translate (m:vec3 0 -5 0)
-                        :rotate (m:vec3 (+ (/ pi 2)) 0 0))
-     (fl.comp:camera :active-p t
-                     :mode :orthographic)))))
+   (fl.comp:transform :rotate (q:orient :local
+                                        :x (- (atan (/ (sqrt 2))))
+                                        :y (- (/ pi 4))))
+   ("camera"
+    (fl.comp:transform :translate (v3:vec 0 0 10))
+    (fl.comp:camera :active-p t
+                    :mode :orthographic))))
 
 (fl:define-prefab "mesh" (:library examples)
-  (fl.comp:mesh :location '((:core :mesh) "plane.glb"))
+  (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
   (fl.comp:render :material 'fl.materials:unlit-texture))
 
 ;;; Graphs
 
 ;;; TODO: Fix graphs to work in user package
-(in-package :%first-light)
+(in-package #:%first-light)
 
 (fl:define-graph :fl.example
     (:category component-dependency
