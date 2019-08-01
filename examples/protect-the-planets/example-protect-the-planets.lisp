@@ -373,7 +373,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
       ;; First, we settle the notion of how the player translates around with
       ;; left stick
-      (u:mvlet* ;; TODO: This must be mvlet*
+      (u:mvlet*
           (;; Deal with deadzones and other bad data around the input vector.
            (vec (v3:vec lx ly 0))
            (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
