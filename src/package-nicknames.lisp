@@ -40,9 +40,6 @@
    (:v :first-light)
    (:comp :first-light.components))
 
-  (:first-light.annotations
-   (:v :first-light))
-
   (:first-light.components
    (:a :alexandria)
    (:u :golden-utils)

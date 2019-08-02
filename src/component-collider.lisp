@@ -22,7 +22,7 @@
               :initform (gl:gen-vertex-array))
    (%material :reader material
               :initform 'fl.materials::collider/sphere
-              :annotation (fl.annotations:material))
+              :annotation (%fl::material))
    ;; TODO: We do not have a difference between triggers and collisions yet.
    ;; That will come when actual physics arrives.
    ;; on-collision-enter

@@ -9,7 +9,7 @@
    (%transform :reader transform)
    (%material :accessor material
               :initarg :material
-              :annotation (fl.annotations:material))))
+              :annotation (%fl::material))))
 
 (defun set-draw-method (render)
   (with-slots (%draw-method) render

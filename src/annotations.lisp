@@ -1,4 +1,4 @@
-(in-package #:first-light.annotations)
+(in-package #:%first-light)
 
 ;; I designed the system such that the direction the annotation goes is the same
 ;; for reading and writing.
@@ -33,7 +33,15 @@
       (t
        mat-val))))
 
-(define-annotation material
-  ;; Often these are the same, but there are common cases where they won't be.
-  :getter %material-annotator
-  :setter %material-annotator)
+(defmacro define-annotation (name &key
+                                    (getter
+                                     '(lambda (value component)
+                                       (declare (ignore component)
+                                        value)))
+                                    (setter
+                                     '(lambda (value component)
+                                       (declare (ignore component)
+                                        value))))
+  `(register-annotation 'component ',name :initialized
+                        :getter (function ,getter)
+                        :setter (function ,setter)))

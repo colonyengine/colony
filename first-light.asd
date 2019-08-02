@@ -39,7 +39,6 @@
    (:file "package-shader")
    (:file "package-materials")
    (:file "package-textures")
-   (:file "package-annotations")
    (:file "package-components")
    (:file "package-actions")
    (:file "package-prefab")
@@ -158,6 +157,7 @@
    (:file "shader/sprite")
    (:file "shader/visualization-collider")
 
+   (:file "definition/annotations")
    (:file "definition/graphs")
    (:file "definition/flows")
    (:file "definition/texture-profiles")
