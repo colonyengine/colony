@@ -1,7 +1,7 @@
 (in-package #:first-light.example)
 
 (fl:define-options ()
-  :title "First-Light Examples"
+  :title "Virality Engine"
   :window-width 1920
   :window-height 1080
   :vsync :off

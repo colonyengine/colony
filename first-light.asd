@@ -5,9 +5,9 @@
   :maintainer ("Michael Fiano <mail@michaelfiano.com>"
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
-  :homepage "https://github.com/hackertheory/first-light"
-  :bug-tracker "https://github.com/hackertheory/first-light/issues"
-  :source-control (:git "https://github.com/hackertheory/first-light.git")
+  :homepage "https://github.com/hackertheory/virality-engine"
+  :bug-tracker "https://github.com/hackertheory/virality-engine/issues"
+  :source-control (:git "https://github.com/hackertheory/virality-engine.git")
   :encoding :utf-8
   :depends-on (#:alexandria
                #:babel
