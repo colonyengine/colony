@@ -1,4 +1,4 @@
-(in-package #:first-light.examples.protect-the-planets)
+(in-package #:virality.examples.protect-the-planets)
 
 (v:define-options ()
   :title "Protect the Planets"
@@ -14,7 +14,7 @@
   :delta 1/120
   :initial-scene 'lgj-04/2019)
 
-(v:define-resources (:project :first-light.example)
+(v:define-resources (:project :virality.examples)
   ;; TODO: Move this into new location once changing to tbe new package is done.
   (:project "protect-the-planets/data")
   (:texture (:project "texture"))
@@ -64,7 +64,7 @@
 
 (in-package #:virality.engine)
 
-(define-graph :first-light.examples.protect-the-planets
+(define-graph :virality.examples.protect-the-planets
     (:category component-dependency
      :depends-on ((:core (all-unknown-types core-types)))
      :roots (all-ordered-types))
@@ -76,7 +76,7 @@
     (:category component-package-order
      :depends-on ((:core-component-order (core-packages)))
      :roots (start-search))
-  (subdag current-project (:first-light.example))
+  (subdag current-project (:virality.examples))
   (subdag start-search
           ((splice current-project)
            -> (splice core-packages))))

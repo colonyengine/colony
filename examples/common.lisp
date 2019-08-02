@@ -1,4 +1,4 @@
-(in-package #:first-light.example)
+(in-package #:virality.examples)
 
 (v:define-options ()
   :title "Virality Engine"
@@ -12,7 +12,7 @@
   :delta 1/120
   :initial-scene 'geometric-volumes)
 
-(v:define-resources (:project :first-light.example)
+(v:define-resources (:project :virality.examples)
   (:project "data/project")
   (:ext (:project "ext"))
   (:mesh (:project "mesh"))
@@ -68,7 +68,7 @@
 
 (in-package #:virality.engine)
 
-(define-graph :first-light.example
+(define-graph :virality.examples
     (:category component-dependency
      :depends-on ((:core (all-unknown-types core-types)))
      :roots (all-ordered-types))
@@ -80,7 +80,7 @@
     (:category component-package-order
      :depends-on ((:core-component-order (core-packages)))
      :roots (start-search))
-  (subdag current-project (:comp -> :first-light.example))
+  (subdag current-project (:comp -> :virality.examples))
   (subdag start-search
           ((splice current-project)
            -> (splice core-packages))))

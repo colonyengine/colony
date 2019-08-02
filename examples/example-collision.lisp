@@ -1,4 +1,4 @@
-(in-package #:first-light.example)
+(in-package #:virality.examples)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This is not really a general purpose component. It is just here to help out

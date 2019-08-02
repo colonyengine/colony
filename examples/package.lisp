@@ -1,6 +1,6 @@
 (in-package #:cl-user)
 
-(defpackage #:first-light.example
+(defpackage #:virality.examples
   (:local-nicknames (#:a #:alexandria)
                     (#:u #:golden-utils)
                     (#:log #:verbose)
@@ -31,8 +31,7 @@
            #:texture))
 
 ;;;; This is a reasonably scoped shmup that demonstrates use of the engine.
-(defpackage #:first-light.examples.protect-the-planets
-  (:nicknames #:fl.examples.ptp)
+(defpackage #:virality.examples.protect-the-planets
   (:local-nicknames (#:a #:alexandria)
                     (#:u #:golden-utils)
                     (#:log #:verbose)

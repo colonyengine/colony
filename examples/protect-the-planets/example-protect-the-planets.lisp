@@ -1,9 +1,9 @@
-(in-package #:first-light.examples.protect-the-planets)
+(in-package #:virality.examples.protect-the-planets)
 
 ;; To run this game, start your lisp repl, then:
 ;;
-;; (ql:quickload :first-light.example)
-;; (v:start-engine :scene 'fl.examples.ptp:ptp)
+;; (ql:quickload :virality.examples)
+;; (virality.engine:start-engine :scene 'virality.examples.ptp:ptp)
 
 ;; "Protect the Planets!"
 ;; by Peter Keller (psilord@cs.wisc.edu)
@@ -101,7 +101,7 @@
 
 
 ;; Back to our regularly scheduled package!
-(in-package #:first-light.examples.protect-the-planets)
+(in-package #:virality.examples.protect-the-planets)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Textures

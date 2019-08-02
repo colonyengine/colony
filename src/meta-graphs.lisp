@@ -232,37 +232,30 @@
     (:category v:texture-resolution
      :depends-on ((v:core (core))) ;; v:core is in context of category!
      :roots (all-textures))
-
   (search-path all-textures
-               (:first-light.example -> core)))
+               (:virality.examples -> core)))
 
 (define-graph project
     (:category v:material-resolution
      :depends-on ((v:core (core)))
      :roots (all-materials))
-
   (search-path all-materials
-               (:first-light.example -> core)))
+               (:virality.examples -> core)))
 
 (define-graph project
     (:category v:component-resolution
      :depends-on ((v:core (core)))
      :roots (all-component))
-
   (search-path all-components
-               (:first-light.example.comp.*
-                -> :first-light.example
-                -> core)))
+               (-> :virality.examples -> core)))
 
 ;; component execution order
 (define-graph project
     (:category v:component-execution
      :depends-on ((v:core (all-unknown-types core)))
      :roots (start))
-
   (execution-order project ;; placeholder
                    nil)
-
   (execution-order start
                    ((splice core)
                     -> (splice project)

@@ -1,4 +1,4 @@
-(asdf:defsystem #:first-light.example
+(asdf:defsystem #:virality.examples
   :description "Virality Engine Examples"
   :author ("Michael Fiano <michael.fiano@gmail.com>"
            "Peter Keller <psilord@cs.wisc.edu>")

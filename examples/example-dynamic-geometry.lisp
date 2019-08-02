@@ -1,4 +1,4 @@
-(in-package #:first-light.example)
+(in-package #:virality.examples)
 
 ;; Dynamic geometry
 
