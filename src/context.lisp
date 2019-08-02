@@ -22,8 +22,12 @@
                        :input-data (input-data core)
                        :options (options core))))
 
-(defun total-time (context)
+;; NOTE: This function must have &rest arguments, but they are ignored. This is
+;; because this function is shared with the material protocol which must pass
+;; more than the context.
+(defun total-time (context &rest ignored)
   "Return the total time in seconds that the engine has been running."
+  (declare (ignore ignored))
   (slot-value (frame-manager (core context)) '%total-time))
 
 (defun frame-time (context)

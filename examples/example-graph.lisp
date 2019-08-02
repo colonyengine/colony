@@ -3,11 +3,11 @@
 ;;; Materials
 
 (fl:define-material graph
-  (:profiles (fl.materials:u-mvpt)
+  (:profiles (contrib.mat:u-mvpt)
    :shader fl.shader.user:graph))
 
 (fl:define-material 3d-graph
-  (:profiles (fl.materials:u-mvpt)
+  (:profiles (contrib.mat:u-mvpt)
    :shader fl.shader.user:3d-graph-1
    :instances 1000
    :attributes (:depth :always)

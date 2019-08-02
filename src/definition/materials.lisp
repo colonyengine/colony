@@ -1,4 +1,4 @@
-(in-package #:first-light.materials)
+(in-package #:virality.contrib.materials)
 
 (fl:define-material unlit-color
   (:shader fl.shader.texture:unlit-color

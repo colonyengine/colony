@@ -66,7 +66,7 @@
    #:total-time
    #:ttl
    #:update-dynamic-geometry
-   #:using-material
+   #:with-material
    #:with-shared-storage
 
    ;; input

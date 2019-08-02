@@ -15,15 +15,15 @@
 
 (defun %lookup-material (material-name core)
   "Find a material by its ID in CORE and return a gethash-like values. If the
-material isn't there, return the 'fl.materials:missing-material. The return
-value is two values, the first is a material instance, and the second is T if
-the material being looked up was actually found, or NIL if it wasn't (and the
+material isn't there, return the 'contrib.mat:missing-material. The return value
+is two values, the first is a material instance, and the second is T if the
+material being looked up was actually found, or NIL if it wasn't (and the
 missing material used)."
   (symbol-macrolet ((table (material-table (materials core))))
     (u:if-found (material (u:href table material-name))
                 material
-                (u:href table
-                        (a:ensure-symbol 'missing-material 'fl.materials)))))
+                (u:href table (a:ensure-symbol "MISSING-MATERIAL"
+                                               :contrib.mat)))))
 
 (defun %add-material (material core)
   "Add the MATERIAL by its id into CORE."
@@ -689,7 +689,7 @@ applied in an overlay manner while defining a material."
              (gl:depth-func old-depth)))
          (progn ,@body))))
 
-(defmacro using-material (material (&rest bindings) &body body)
+(defmacro with-material (material (&rest bindings) &body body)
   (a:with-gensyms (material-ref)
     `(let ((,material-ref ,material))
        (fl.gpu:with-shader (shader ,material-ref)
@@ -706,11 +706,3 @@ applied in an overlay manner while defining a material."
   (u:do-hash-values (material-func (%fl:meta 'materials))
     (%add-material (funcall material-func core) core))
   (resolve-all-materials core))
-
-;;; Helper functions
-
-(in-package #:fl.materials)
-
-(defun total-time (context material)
-  (declare (ignore material))
-  (fl:total-time context))

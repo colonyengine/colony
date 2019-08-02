@@ -27,7 +27,7 @@
                       :rotate/inc (q:orient :local (v3:one) pi)
                       :scale 6)
    (fl.comp:static-mesh :location '((:core :mesh) "cone.glb"))
-   (fl.comp:render :material 'fl.materials:unlit-texture-decal-bright)))
+   (fl.comp:render :material 'contrib.mat:unlit-texture-decal-bright)))
 
 ;;; Prefab descriptors
 

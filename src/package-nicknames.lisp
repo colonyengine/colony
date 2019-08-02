@@ -50,21 +50,14 @@
    (:v4 :origin.vec4)
    (:m4 :origin.mat4)
    (:q :origin.quat)
-   (:v :first-light))
+   (:v :first-light)
+   (:contrib.mat :virality.contrib.materials))
 
   (:first-light.gpu
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
    (:v :first-light))
-
-  (:first-light.materials
-   (:v2 :origin.vec2)
-   (:v3 :origin.vec3)
-   (:v4 :origin.vec4)
-   (:m4 :origin.mat4)
-   (:v :first-light)
-   (:contrib.tex :virality.contrib.textures))
 
   (:first-light.prefab
    (:a :alexandria)
@@ -77,11 +70,20 @@
    (:v4 :origin.vec4)
    (:v :first-light))
 
+  (:virality.contrib.materials
+   (:v2 :origin.vec2)
+   (:v3 :origin.vec3)
+   (:v4 :origin.vec4)
+   (:m4 :origin.mat4)
+   (:v :first-light)
+   (:contrib.tex :virality.contrib.textures))
+
   (:first-light.shader.swizzle
    (:a :alexandria)
    (:u :golden-utils))
 
   ;; remove later
   (:%first-light
-   (:contrib.tex :virality.contrib.textures))
+   (:contrib.tex :virality.contrib.textures)
+   (:contrib.mat :virality.contrib.materials))
   )

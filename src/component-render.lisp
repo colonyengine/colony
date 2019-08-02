@@ -40,8 +40,8 @@
 
 (defmethod on-component-render ((self render))
   (a:when-let ((camera (active-camera (context self))))
-    (using-material (material self)
-        (:model (fl.comp:model (transform self))
-         :view (fl.comp:view camera)
-         :proj (fl.comp:projection camera))
+    (with-material (material self)
+      (:model (fl.comp:model (transform self))
+       :view (fl.comp:view camera)
+       :proj (fl.comp:projection camera))
       (funcall (draw-method self)))))

@@ -1,4 +1,4 @@
-(in-package #:first-light.materials)
+(in-package #:virality.contrib.materials)
 
 (fl:define-material-profile u-model
   (:uniforms
@@ -14,7 +14,7 @@
 
 (fl:define-material-profile u-time
   (:uniforms
-   ((:time #'total-time))))
+   ((:time #'fl:total-time))))
 
 (fl:define-material-profile u-mvp
   (:uniforms
@@ -32,10 +32,10 @@
    ((:model (m4:id))
     (:view (m4:id))
     (:proj (m4:id))
-    (:time #'total-time))))
+    (:time #'fl:total-time))))
 
 (fl:define-material-profile u-vpt
   (:uniforms
    ((:view (m4:id))
     (:proj (m4:id))
-    (:time #'total-time))))
+    (:time #'fl:total-time))))

@@ -21,7 +21,7 @@
 
 (fl:define-material damaged-helmet
   (:shader fl.shader.user:damaged-helmet
-   :profiles (fl.materials:u-mvp)
+   :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:metallic-roughness-values (v2:one))
     (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)

@@ -195,7 +195,7 @@
      :depends-on nil
      :weak-roots (core))
   (search-path core
-               (:first-light.materials)))
+               (:contrib.mat)))
 
 (define-graph core
     (:category fl:component-resolution

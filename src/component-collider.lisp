@@ -21,7 +21,7 @@
    (%geometry :reader geometry
               :initform (gl:gen-vertex-array))
    (%material :reader material
-              :initform 'fl.materials::collider/sphere
+              :initform 'contrib.mat::collider/sphere
               :annotation (%fl::material))
    ;; TODO: We do not have a difference between triggers and collisions yet.
    ;; That will come when actual physics arrives.
@@ -62,15 +62,15 @@
     (return-from on-component-render))
   (a:when-let ((camera (active-camera (context self))))
     (let ((transform (actor-component-by-type (actor self) 'fl.comp:transform)))
-      (using-material (material self)
-          (:model (fl.comp:model transform)
-           :view (fl.comp:view camera)
-           :proj (fl.comp:projection camera)
-           :collider-local-position (center self)
-           :in-contact-p (> (num-contacts self) 0)
-           ;; NOTE: The shader computes the radius appropriately for
-           ;; visualization purposes.
-           :radius (radius self))
+      (with-material (material self)
+        (:model (fl.comp:model transform)
+         :view (fl.comp:view camera)
+         :proj (fl.comp:projection camera)
+         :collider-local-position (center self)
+         :in-contact-p (> (num-contacts self) 0)
+         ;; NOTE: The shader computes the radius appropriately for
+         ;; visualization purposes.
+         :radius (radius self))
         ;; Finally, draw the visualizaiton.
         (gl:bind-vertex-array (geometry self))
         (gl:draw-arrays-instanced :points 0 1 1)

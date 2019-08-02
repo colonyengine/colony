@@ -134,21 +134,21 @@
 
 (fl:define-material 1d-gradient
   (:shader fl.shader.user:unlit-texture-1d
-   :profiles (fl.materials:u-mvp)
+   :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:tex.sampler1 '1d-gradient)
     (:mix-color (v4:one)))))
 
 (fl:define-material 2d-wood
   (:shader fl.shader.texture:unlit-texture
-   :profiles (fl.materials:u-mvp)
+   :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:tex.sampler1 '2d-wood)
     (:mix-color (v4:one)))))
 
 (fl:define-material 3d
   (:shader fl.shader.user:unlit-texture-3d
-   :profiles (fl.materials:u-mvp)
+   :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:tex.sampler1 '3d)
     (:mix-color (v4:one))
@@ -159,7 +159,7 @@
 
 (fl:define-material 1d-array
   (:shader fl.shader.user:unlit-texture-1d-array
-   :profiles (fl.materials:u-mvpt)
+   :profiles (contrib.mat:u-mvpt)
    :uniforms
    ((:tex.sampler1 '1d-array)
     (:mix-color (v4:one))
@@ -167,7 +167,7 @@
 
 (fl:define-material 2d-array
   (:shader fl.shader.user:unlit-texture-2d-array
-   :profiles (fl.materials:u-mvpt)
+   :profiles (contrib.mat:u-mvpt)
    :uniforms
    ((:tex.sampler1 '2d-array)
     (:mix-color (v4:one))
@@ -179,7 +179,7 @@
 
 (fl:define-material 2d-sweep-input
   (:shader fl.shader.user:noise-2d/sweep-input
-   :profiles (fl.materials:u-mvp)
+   :profiles (contrib.mat:u-mvp)
    :uniforms
    ;; any old 2d texture here will do since we overwrite it with noise.
    ((:tex.sampler1 '2d-wood)
@@ -188,14 +188,14 @@
 
 (fl:define-material cubemap
   (:shader fl.shader.user:unlit-texture-cube-map
-   :profiles (fl.materials:u-mvp)
+   :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemap)
     (:mix-color (v4:one)))))
 
 (fl:define-material cubemaparray
   (:shader fl.shader.user:unlit-texture-cube-map-array
-   :profiles (fl.materials:u-mvp)
+   :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemaparray)
     (:mix-color (v4:one))

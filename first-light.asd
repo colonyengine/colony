@@ -37,7 +37,7 @@
   ((:file "package-internal")
    (:file "package-gpu")
    (:file "package-shader")
-   (:file "package-materials")
+   (:file "package-contrib-materials")
    (:file "package-contrib-textures")
    (:file "package-components")
    (:file "package-actions")

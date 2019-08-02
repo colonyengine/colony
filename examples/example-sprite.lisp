@@ -91,7 +91,7 @@
                                         :frames 2))
              (render (fl:make-component context
                                         'render
-                                        :material `(fl.materials:sprite
+                                        :material `(contrib.mat:sprite
                                                     ,(a:make-gensym '#:sprite)
                                                     :uniforms
                                                     ((:sprite.sampler sprites)))
@@ -112,7 +112,7 @@
    ("ship-body"
     (fl.comp:sprite :spec :spritesheet-data
                     :name "ship29")
-    (fl.comp:render :material `(fl.materials:sprite
+    (fl.comp:render :material `(contrib.mat:sprite
                                 ,(a:make-gensym '#:sprite)
                                 :uniforms ((:sprite.sampler sprites)))
                     :mode :sprite)
@@ -121,7 +121,7 @@
      (fl.comp:sprite :spec :spritesheet-data
                      :name "exhaust03-01"
                      :frames 8)
-     (fl.comp:render :material `(fl.materials:sprite
+     (fl.comp:render :material `(contrib.mat:sprite
                                  ,(a:make-gensym '#:sprite)
                                  :uniforms ((:sprite.sampler sprites)))
                      :mode :sprite)
@@ -135,7 +135,7 @@
    (fl.comp:transform :scale 2)
    (fl.comp:sprite :spec :spritesheet-data
                    :name "planet04")
-   (fl.comp:render :material `(fl.materials:sprite
+   (fl.comp:render :material `(contrib.mat:sprite
                                ,(a:make-gensym '#:sprite)
                                :uniforms ((:sprite.sampler sprites)))
                    :mode :sprite)

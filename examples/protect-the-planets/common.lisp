@@ -55,7 +55,7 @@
 
 (fl:define-prefab "mesh" (:library ptp-base)
   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-  (fl.comp:render :material 'fl.materials:unlit-texture))
+  (fl.comp:render :material 'contrib.mat:unlit-texture))
 
 ;;; Graphs
 

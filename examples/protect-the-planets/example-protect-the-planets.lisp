@@ -147,7 +147,7 @@
 ;; materials can be made for the same shader each providing diferent inputs to
 ;; that shader.
 (fl:define-material sprite-sheet
-  (:profiles (fl.materials:u-mvp)
+  (:profiles (contrib.mat:u-mvp)
    :shader fl.shader.sprite:sprite
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
               (:opacity 1.0)
@@ -158,48 +158,48 @@
              :binding-policy :manual))))
 
 (fl:define-material title
-  (:profiles (fl.materials:u-mvp)
+  (:profiles (contrib.mat:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'title)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material starfield
-  (:profiles (fl.materials:u-mvpt)
+  (:profiles (contrib.mat:u-mvpt)
    :shader fl.shader.user:starfield
    :uniforms ((:tex 'starfield)
               (:mix-color (v4:one)))))
 
 (fl:define-material warning-mothership
-  (:profiles (fl.materials:u-mvp)
+  (:profiles (contrib.mat:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-mothership)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material warning-wave
-  (:profiles (fl.materials:u-mvp)
+  (:profiles (contrib.mat:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-wave)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material game-over
-  (:profiles (fl.materials:u-mvp)
+  (:profiles (contrib.mat:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'game-over)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material level-complete
-  (:profiles (fl.materials:u-mvp)
+  (:profiles (contrib.mat:u-mvp)
    :shader fl.shader.texture:unlit-texture-decal
    :uniforms ((:tex.sampler1 'level-complete)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (fl:define-material time-bar
-  (:profiles (fl.materials:u-mvp)
+  (:profiles (contrib.mat:u-mvp)
    :shader fl.shader.texture:unlit-texture
    :uniforms ((:tex.sampler1 'white)
               (:mix-color (v4:vec 0 1 0 1)))))

@@ -21,7 +21,7 @@
 ;;; Prefabs
 
 (fl:define-material dynamic-geometry
-  (:profiles (fl.materials:u-mvp)
+  (:profiles (contrib.mat:u-mvp)
    :shader fl.shader.user:dynamic-geometry))
 
 (fl:define-prefab "dynamic-geometry" (:library examples)

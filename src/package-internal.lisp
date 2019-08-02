@@ -81,7 +81,7 @@
    #:stop-engine
    #:total-time
    #:ttl
-   #:using-material
+   #:with-material
    #:with-shared-storage)
 
   ;; metadata
