@@ -324,13 +324,13 @@
     ;; NOTE: This only happens when we finalize the class, so all
     ;; define-component expansions also expand to c2mop:ensure-finalized.
     (dolist (annotation (getf initargs :annotation))
-      (register-annotation '%fl:component annotation :forward-reference))
+      (register-annotation 'component annotation :forward-reference))
     ;; NOTE: this code is executed (num-components * num-annotations) given the
     ;; number of components...Since for each component, we rebuild this array.
     ;; However, there are probably going to not be that many annotations (<100
     ;; maybe?) so we're probably ok. Also, this expects the class to have
     ;; already been finalized (which we force in DEFINE-COMPONENT).
-    (optimize-annotations '%fl:component)
+    (optimize-annotations 'component)
     ;; NOTE: Produce the compiled optimization indexes for this slot so I can
     ;; execute them properly in slot-value-using-class for this component-type.
     (setf (annotation-indexes slotd)
@@ -339,7 +339,7 @@
                       (mapcar (lambda (annotation)
                                 (serialnum
                                  (u:href (annotations
-                                          (find-class '%fl:component))
+                                          (find-class 'component))
                                          annotation)))
                               (annotation slotd))))
 
@@ -367,17 +367,17 @@
 ;; Here we collect all the annotated slot data from a component and put it into
 ;; the COMPONENT meta-class slots.
 (defun track-annotations (component-name)
-  (setf (u:href (annotated-slots (find-class '%fl:component)) component-name)
+  (setf (u:href (annotated-slots (find-class 'component)) component-name)
         (collect-all-annotated-effective-slot-data component-name)))
 
 ;;; Stuff used to make DEFINE-COMPONENT work.
 
 (defun %collect-annotated-component-slot-forms (slots)
-  (loop :for slot :in slots
-        :for anno = (getf (cdr slot) :annotation)
+  (loop :for (name . options) :in slots
+        :for anno = (getf options :annotation)
         :when anno
           ;; We need the ACTUAL slot name, so the % prefixed one.
-          :collect `(,(first slot) ,anno)))
+          :collect `(,name ,anno)))
 
 (defmacro define-component (name super-classes &body body)
   (destructuring-bind (slots &optional shared-storage-metadata) body
@@ -390,7 +390,7 @@
     (dolist (anno-slot (%collect-annotated-component-slot-forms slots))
       (dolist (anno (second anno-slot))
         (when anno
-          (register-annotation '%fl:component anno :forward-reference))))
+          (register-annotation 'component anno :forward-reference))))
     `(progn
        ;; NOTE: We check the super classes to ensure that if COMPONENT isn't
        ;; in there, we know to add it at the beginning. All components
@@ -398,7 +398,7 @@
        ;; part. If anything, we'll have to finalize everything in the
        ;; super-classes and then check the subtypep.
        (defclass ,name (,@(if (some (lambda (super-class)
-                                      (subtypep super-class '%fl:component))
+                                      (subtypep super-class 'component))
                                     super-classes)
                               super-classes
                               (append '(component) super-classes)))
@@ -411,7 +411,7 @@
            ((class component-class)   ; the component metaclass
             (instance ,name)          ; the specific component
             (slotd component-annotated-effective-slot-definition))
-         (let ((annoarray (annotation-array (find-class '%fl:component))))
+         (let ((annoarray (annotation-array (find-class 'component))))
            (loop :with original-slot-value = (c2mop:standard-instance-access
                                               instance
                                               (c2mop:slot-definition-location
@@ -429,7 +429,7 @@
             (class component-class) ;; the component metaclass
             (instance ,name)        ;; the specific component
             (slotd component-annotated-effective-slot-definition))
-         (let ((annoarray (annotation-array (find-class '%fl:component))))
+         (let ((annoarray (annotation-array (find-class 'component))))
            (setf (c2mop:standard-instance-access
                   instance (c2mop:slot-definition-location slotd))
                  (loop :with composing-value = new-value
@@ -441,7 +441,7 @@
                        :finally (return composing-value)))))
        ;; A method to locate the metadata in the shared storage form in this
        ;; class.
-       (defmethod ,(intern (symbol-name 'shared-storage-metadata) :%fl)
+       (defmethod ,(intern "SHARED-STORAGE-METADATA" :%fl)
            ((component-name (eql ',name)) &optional namespace)
          (declare (ignore component-name))
          (let ((ss-meta ',shared-storage-metadata))
@@ -449,6 +449,14 @@
                ;; TODO: make this better/faster
                (find namespace ss-meta :key #'first)
                ss-meta))))))
+
+(defun get-computed-component-precedence-list (component-type)
+  (a:when-let ((class (find-class component-type nil)))
+    (loop :for class :in (c2mop:compute-class-precedence-list class)
+          :for name = (class-name class)
+          :until (eq name 'component)
+          :when (subtypep name 'component)
+            :collect name)))
 
 (defmacro define-annotation (name &key
                                     (getter
@@ -459,6 +467,6 @@
                                      '(lambda (value component)
                                        (declare (ignore component)
                                         value))))
-  `(register-annotation '%fl:component ',name :initialized
+  `(register-annotation 'component ',name :initialized
                         :getter (function ,getter)
                         :setter (function ,setter)))

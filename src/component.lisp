@@ -23,8 +23,6 @@
                                :initform (queues:make-queue :simple-queue)))
   (:metaclass component-class))
 
-(clear-annotations '%fl:component)
-
 (defun qualify-component (core component-type)
   "This function tries to resolve the COMPONENT-TYPE symbol into a potentially
 different packaged symbol of the same name that corresponds to a component
@@ -76,14 +74,6 @@ DEFINE-COMPONENT form."
 (defmethod initialize-instance :after ((instance component) &key)
   (register-object-uuid instance)
   (register-object-id instance))
-
-(defun get-computed-component-precedence-list (component-type)
-  (a:when-let ((class (find-class component-type nil)))
-    (loop :for class :in (c2mop:compute-class-precedence-list class)
-          :for name = (class-name class)
-          :until (eq name 'component)
-          :when (subtypep name 'component)
-            :collect name)))
 
 (defun component/preinit->init (component)
   (a:when-let ((thunk (initializer-thunk component)))
