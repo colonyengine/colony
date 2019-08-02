@@ -135,7 +135,7 @@ COME-FROM-STATE-NAME is an arbitrary symbol that indicates the previous
 flow-state name. This is often a symbolic name so execute-flow can determine how
 the flow exited. Return two values The previous state name and the current state
 name which resulted in the exiting of the flow."
-  (log:trace :fl.core.flow "Entering flow: (~a ~a ~a)"
+  (log:trace :changeme "Entering flow: (~a ~a ~a)"
              call-flow-name flow-name flow-state-name)
   (loop :with call-flow = (get-call-flow call-flow-name core)
         :with flow = (get-flow flow-name call-flow)
@@ -144,7 +144,7 @@ name which resulted in the exiting of the flow."
         :with last-state-name
         :with selections
         :with policy = :identity-policy
-        :do (log:trace :fl.core.flow "Processing flow-state: ~a, exiting: ~a"
+        :do (log:trace :changme "Processing flow-state: ~a, exiting: ~a"
                        (name flow-state) (exitingp flow-state))
             ;; Step 1: Record state transition and update to current.
             (setf last-state-name current-state-name
@@ -213,7 +213,7 @@ name which resulted in the exiting of the flow."
                         (error "EXECUTE-FLOW :type-policy is broken."))))))))
             ;; Step 5: Exit if reached exiting state.
             (when (exitingp flow-state)
-              (log:trace :fl.core.flow "Exiting flow: (~a ~a ~a)"
+              (log:trace :changeme "Exiting flow: (~a ~a ~a)"
                          call-flow-name flow-name current-state-name)
               (return-from execute-flow (values last-state-name
                                                 current-state-name)))

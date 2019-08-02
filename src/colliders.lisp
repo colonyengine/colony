@@ -151,7 +151,7 @@ had--and update all other faces too."
         ;; removing hash tables we don't need anymore.
         (dolist (face-collider face-colliders)
           (when (contact-p collider-system fist-collider face-collider)
-            (log:trace :fl.core.collider
+            (log:trace :changeme
                        "remove-all-contacts: attempting to remove ~A from contacting ~A."
                        fist-collider face-collider)
             (exit-contact collider-system fist-collider face-collider)))))))
@@ -287,7 +287,7 @@ had--and update all other faces too."
               ;; The FIST is good to go! collide it and stabilize it!
               (let ((face-layers
                       (u:href (collision-plan collider-system) fist-layer)))
-                (log:trace :fl.core.collider
+                (log:trace :changeme
                            "Checking registering fist: ~S, [~S: ~S]"
                            (fl:display-id fist) (fl.comp:on-layer fist)
                            face-layers)
@@ -295,7 +295,7 @@ had--and update all other faces too."
                   ((null face-layers)
                    ;; If no face layers to collide against AT ALL,
                    ;; automatically stabilize the fist and we're done with it.
-                   (log:trace :fl.core.collider
+                   (log:trace :changeme
                               " Stabilizing[0]: ~S" (fl:display-id fist))
                    (setf (u:href stable-colliders fist-layer fist)
                          fist))
@@ -303,7 +303,7 @@ had--and update all other faces too."
                    ;; Else, we collide the fist against each face in each
                    ;; layer.
                    (dolist (face-layer face-layers)
-                     (log:trace :fl.core.collider
+                     (log:trace :changeme
                                 " Checking contacts between layers: ~S <=> ~S"
                                 fist-layer face-layer)
                      ;; Find all the face-layer colliders to which we need to
@@ -315,7 +315,7 @@ had--and update all other faces too."
                        (unless (zerop (hash-table-count
                                        face-layer-stable-colliders))
                          (u:do-hash-keys (face face-layer-stable-colliders)
-                           (log:trace :fl.core.collider
+                           (log:trace :changeme
                                       "  compute-contact-state: [reg: ~S <-> stable: ~S]"
                                       (fl:display-id fist) (fl:display-id face))
                            (compute-contact-state collider-system fist
@@ -327,7 +327,7 @@ had--and update all other faces too."
                    ;; need be.
                    ;; NOTE: We CANNOT stabilize until AFTER the registering fist
                    ;; has been collided with all stable faces.
-                   (log:trace :fl.core.collider
+                   (log:trace :changeme
                               " Stabilizing[1]: ~S" (fl:display-id fist))
                    (setf (u:href stable-colliders fist-layer fist)
                          fist)))))))))))

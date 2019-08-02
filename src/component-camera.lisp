@@ -31,7 +31,7 @@
                          (:orthographic (v3:vec 0 0 1))
                          (:perspective (v3:vec 0 0 50)))))
       (translate (transform camera) translation)
-      (log:warn :fl.comp.camera
+      (log:warn :changeme
                 "Camera ~a was attached to an actor without a translation ~
                  transform.~%~
                  Using a sane default value for ~(~a~): ~s."

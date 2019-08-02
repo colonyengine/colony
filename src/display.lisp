@@ -24,7 +24,7 @@
                    (if (= current-value -1)
                        (try 1)
                        (log:warn
-                        :fl.core.display "Ignoring vsync option due to driver ~
+                        :changeme "Ignoring vsync option due to driver ~
                                           limitation."))))))
       (try value))))
 

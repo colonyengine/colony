@@ -13,4 +13,4 @@
 #-sbcl
 (defun deploy-binary (file-name scene-name)
   (declare (ignore file-name scene-name))
-  (log:warn :fl.core.deploy "Deployment is not supported on this platform."))
+  (log:warn :changeme "Deployment is not supported on this platform."))

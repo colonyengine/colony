@@ -10,18 +10,18 @@
                      :initform 5)))
 
 (defmethod fl:on-collision-enter ((self destroy-my-actor) other-collider)
-  (log:info :fl.example
+  (log:info :changeme
             "DESTROY-MY-ACTOR: Actor ~A entered collision with collider ~
            ~A(on actor ~A)"
             (fl:actor self) other-collider (fl:actor other-collider))
   (when (string= (fl:display-id other-collider) "Ground")
-    (log:info :fl.example
+    (log:info :changeme
               "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" ~
              object, so destroy myself!")
     (fl:destroy (fl:actor self))))
 
 (defmethod fl:on-collision-exit ((self destroy-my-actor) other-collider)
-  (log:info :fl.example
+  (log:info :changeme
             "DESTROY-MY-ACTOR: Actor ~A is exiting collision with ~
            ~A(on actor: ~A)."
             (fl:actor self) other-collider (fl:actor other-collider)))
@@ -63,12 +63,12 @@
             (right (fl.comp:transform-right actor-transform))
             (left (fl.comp:transform-left actor-transform)))
 
-        (log:trace :fl.example "FORWARD Vector -> ~A" forward)
-        (log:trace :fl.example "BACKWARD Vector -> ~A" backward)
-        (log:trace :fl.example "UP Vector -> ~A" up)
-        (log:trace :fl.example "DOWN Vector -> ~A" down)
-        (log:trace :fl.example "RIGHT Vector -> ~A" right)
-        (log:trace :fl.example "LEFT Vector -> ~A" left)
+        (log:trace :changeme "FORWARD Vector -> ~A" forward)
+        (log:trace :changeme "BACKWARD Vector -> ~A" backward)
+        (log:trace :changeme "UP Vector -> ~A" up)
+        (log:trace :changeme "DOWN Vector -> ~A" down)
+        (log:trace :changeme "RIGHT Vector -> ~A" right)
+        (log:trace :changeme "LEFT Vector -> ~A" left)
 
         ;; NOTE: This expects the actor to be unrotated wrt the universe.
         (unless (and (v3:~ forward (v3:vec 0 0 -1))
@@ -112,13 +112,13 @@
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
-           :fl.example
+           :changeme
            "FAILED: (v3:~~ local->world:~A world-space-point: ~A) -> ~A"
            local->world world-space-point result-0))
 
         (unless result-1
           (log:error
-           :fl.example
+           :changeme
            "FAILED: (v3:~~ world->local:~A object-space-point: ~A) -> ~A"
            world->local object-space-point result-1))
 
@@ -147,13 +147,13 @@
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
-           :fl.example
+           :changeme
            "FAILED: (v3:~~ local->world:~A world-space-vector: ~A) -> ~A"
            local->world world-space-vector result-0))
 
         (unless result-1
           (log:error
-           :fl.example
+           :changeme
            "FAILED: (v3:~~ world->local:~A object-space-vector: ~A) -> ~A"
            world->local object-space-vector result-1))
 
@@ -184,13 +184,13 @@
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
-           :fl.example
+           :changeme
            "FAILED: (v3:~~ local->world:~A world-space-direction: ~A) -> ~A"
            local->world world-space-direction result-0))
 
         (unless result-1
           (log:error
-           :fl.example
+           :changeme
            "FAILED: (v3:~~ world->local:~A object-space-direction: ~A) -> ~A"
            world->local object-space-direction result-1))
 
