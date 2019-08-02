@@ -63,6 +63,9 @@
 
 ;;; Graphs
 
+;; TODO: FIgure out why the graph DSL can't parse syntax based on symbol-name.
+;; The following in-package form is needed until this is fixed
+
 (in-package #:virality.engine)
 
 (define-graph :first-light.example

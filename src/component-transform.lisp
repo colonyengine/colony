@@ -1,4 +1,4 @@
-(in-package #:first-light.components)
+(in-package #:virality.components)
 
 (defclass transform-state ()
   ((%current :accessor current

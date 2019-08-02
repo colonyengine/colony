@@ -1,4 +1,4 @@
-(in-package #:first-light.components)
+(in-package #:virality.components)
 
 (v:define-component render ()
   ((%mode :reader mode

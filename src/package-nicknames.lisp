@@ -30,11 +30,11 @@
    (:v2 :origin.vec2)
    (:v3 :origin.vec3)
    (:gpu :virality.gpu)
-   (:comp :first-light.components)
+   (:comp :virality.components)
    (:contrib.tex :virality.contrib.textures)
    (:contrib.mat :virality.contrib.materials))
 
-  (:first-light.components
+  (:virality.components
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
@@ -59,7 +59,7 @@
    (:u :golden-utils)
    (:log :verbose)
    (:v :virality.engine)
-   (:comp :first-light.components))
+   (:comp :virality.components))
 
   (:virality.contrib.textures
    (:v4 :origin.vec4)
@@ -80,9 +80,8 @@
    (:v4 :origin.vec3)
    (:q :origin.quat)
    (:v :virality.engine)
-   (:comp :first-light.components))
+   (:comp :virality.components))
 
   (:first-light.shader.swizzle
    (:a :alexandria)
-   (:u :golden-utils))
-  )
+   (:u :golden-utils)))

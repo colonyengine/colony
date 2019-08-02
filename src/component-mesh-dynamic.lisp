@@ -1,4 +1,4 @@
-(in-package #:first-light.components)
+(in-package #:virality.components)
 
 (v:define-component dynamic-mesh ()
   ((%geometry :reader geometry

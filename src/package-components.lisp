@@ -1,6 +1,6 @@
 (in-package #:cl-user)
 
-(defpackage #:first-light.components
+(defpackage #:virality.components
   (:use #:cl)
   ;; camera
   (:export

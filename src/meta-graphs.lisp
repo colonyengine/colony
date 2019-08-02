@@ -201,8 +201,7 @@
     (:category v:component-resolution
      :depends-on nil
      :weak-roots (core))
-  (search-path core
-               (:first-light.components)))
+  (search-path core (:virality.components)))
 
 ;; component execution order
 (define-graph core
