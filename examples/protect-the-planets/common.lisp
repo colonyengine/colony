@@ -29,11 +29,11 @@
 
 (defun prologue (context)
   (declare (ignore context))
-  (v:trace :fl.core.engine "Running Protect-The-Planets prologue method."))
+  (log:trace :fl.core.engine "Running Protect-The-Planets prologue method."))
 
 (defun epilogue (context)
   (declare (ignore context))
-  (v:trace :fl.core.engine "Running Protect-The-Planets epilogue method."))
+  (log:trace :fl.core.engine "Running Protect-The-Planets epilogue method."))
 
 ;;; Prefabs
 

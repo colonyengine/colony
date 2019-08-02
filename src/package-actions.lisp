@@ -4,6 +4,7 @@
   (:nicknames #:fl.actions)
   (:local-nicknames (#:a #:alexandria)
                     (#:u #:golden-utils)
+                    (#:log #:verbose)
                     (#:dll #:doubly-linked-list)
                     (#:v3 #:origin.vec3)
                     (#:q #:origin.quat))

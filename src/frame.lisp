@@ -57,8 +57,8 @@
            (fps (/ %debug-count %debug-interval)))
       (when (and (>= elapsed-seconds %debug-interval)
                  (plusp fps))
-        (v:debug :fl.core.engine "Frame rate: ~,2f fps (~,3f ms/f)"
-                 fps (/ 1000 fps))
+        (log:debug :fl.core.engine "Frame rate: ~,2f fps (~,3f ms/f)"
+                   fps (/ 1000 fps))
         (setf %debug-count 0
               %debug-time now))
       (incf %debug-count))))
@@ -97,8 +97,8 @@
       (when (and interval
                  (>= (- %now %period-elapsed) interval))
         (live-coding-update)
-        (v:trace :fl.core.engine "Periodic update performed (every ~d seconds)"
-                 interval)
+        (log:trace :fl.core.engine "Periodic update performed (every ~d seconds)"
+                   interval)
         (setf %period-elapsed %now)))))
 
 (defun tick (core)

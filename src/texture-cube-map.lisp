@@ -17,7 +17,7 @@
          (first-image (aref (second (aref first-cube 0)) 0))
          ;; TODO: This is not safe, need to check all of them.
          (num-mipmaps (length (second (aref first-cube 0)))))
-    (v:trace :fl.core.texture "Loading :texture-cube-map images = ~a" images)
+    (log:trace :fl.core.texture "Loading :texture-cube-map images = ~a" images)
     ;; Check to ensure they all fit into texture memory.
     ;; TODO: Refactor out of each method into validate-mipmap-images and
     ;; generalize.

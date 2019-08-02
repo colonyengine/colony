@@ -31,11 +31,11 @@
                          (:orthographic (v3:vec 0 0 1))
                          (:perspective (v3:vec 0 0 50)))))
       (translate (transform camera) translation)
-      (v:warn :fl.comp.camera
-              "Camera ~a was attached to an actor without a translation ~
+      (log:warn :fl.comp.camera
+                "Camera ~a was attached to an actor without a translation ~
                  transform.~%~
                  Using a sane default value for ~(~a~): ~s."
-              (id (actor camera)) (mode camera) translation))))
+                (id (actor camera)) (mode camera) translation))))
 
 (defmethod make-projection (camera (mode (eql :perspective)))
   (let ((context (context camera)))

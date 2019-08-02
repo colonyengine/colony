@@ -94,8 +94,8 @@
   (:method :around (action type)
     (with-accessors ((actor actor)) (renderer (manager action))
       (call-next-method)
-      (v:trace :fl.comp.action "Action ~a finished for actor ~a."
-               type (id actor)))))
+      (log:trace :fl.comp.action "Action ~a finished for actor ~a."
+                 type (id actor)))))
 
 (defgeneric on-action-update (action type)
   (:method (action type))

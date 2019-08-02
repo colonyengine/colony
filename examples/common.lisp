@@ -33,11 +33,11 @@
 
 (defun prologue (context)
   (declare (ignore context))
-  (v:trace :fl.core.engine "Running prologue method."))
+  (log:trace :fl.core.engine "Running prologue method."))
 
 (defun epilogue (context)
   (declare (ignore context))
-  (v:trace :fl.core.engine "Running epilogue method."))
+  (log:trace :fl.core.engine "Running epilogue method."))
 
 ;;; Prefabs
 

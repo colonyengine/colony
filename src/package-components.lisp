@@ -4,6 +4,7 @@
   (:nicknames #:fl.comp)
   (:local-nicknames (#:a #:alexandria)
                     (#:u #:golden-utils)
+                    (#:log #:verbose)
                     (#:~ #:origin.swizzle)
                     (#:v2 #:origin.vec2)
                     (#:v3 #:origin.vec3)

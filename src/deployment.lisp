@@ -2,7 +2,7 @@
 
 #+sbcl
 (defun deploy-binary (file-name scene &key compress-p)
-  (v:stop v:*global-controller*)
+  (log:stop v:*global-controller*)
   (setf uiop/image:*image-dumped-p* t)
   (sb-ext:save-lisp-and-die
    file-name
@@ -13,4 +13,4 @@
 #-sbcl
 (defun deploy-binary (file-name scene-name)
   (declare (ignore file-name scene-name))
-  (v:warn :fl.core.deploy "Deployment is not supported on this platform."))
+  (log:warn :fl.core.deploy "Deployment is not supported on this platform."))

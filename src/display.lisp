@@ -23,7 +23,7 @@
                  (sdl2::sdl-rc-error ()
                    (if (= current-value -1)
                        (try 1)
-                       (v:warn
+                       (log:warn
                         :fl.core.display "Ignoring vsync option due to driver ~
                                           limitation."))))))
       (try value))))
