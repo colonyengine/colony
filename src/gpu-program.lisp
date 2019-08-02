@@ -110,7 +110,7 @@
 (defmacro define-shader (name (&key (version :430) (primitive :triangles))
                          &body body)
   (let ((definitions '(%fl:meta 'shader-definitions)))
-    `(progn
+    `(u:eval-always
        (setf (u:href ,definitions ',name)
              (lambda ()
                (%make-shader-program ',name ,version ,primitive ',body)))

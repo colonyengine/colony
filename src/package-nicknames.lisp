@@ -78,7 +78,4 @@
 
   (:first-light.shader.swizzle
    (:a :alexandria)
-   (:u :golden-utils))
-
-  (:first-light.shader.user
    (:u :golden-utils)))
