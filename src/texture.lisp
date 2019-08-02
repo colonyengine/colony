@@ -468,15 +468,14 @@ texture."
 
 (defun resolve-all-semantic-texture-descriptors (core)
   " Ensure that these aspects of texture profiles and desdcriptors are ok:
-1. The FL.TEXTURES:DEFAULT-PROFILE exists.
+1. The CONTRIB.TEX:DEFAULT-PROFILE exists.
 2. Each texture-descriptor has an updated applied-profile set of attributes.
 3. All currently known about texture descriptors have valid profile references.
 4. All images specified by paths actually exist at that path.
 5. The texture type is valid."
   (symbol-macrolet ((profiles (profiles (textures core)))
-                    (default-profile-name (a:ensure-symbol
-                                           'default-profile 'fl.textures)))
-    ;; 1. Check for fl.textures:default-profile
+                    (default-profile-name 'contrib.tex:default-profile))
+    ;; 1. Check for contrib.tex:default-profile
     (unless (u:href profiles default-profile-name)
       (error "Default-profile for texture descriptors is not defined."))
     ;; 2. For each texture-descriptor, apply all the profiles in order.

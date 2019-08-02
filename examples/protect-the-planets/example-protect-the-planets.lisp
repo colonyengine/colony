@@ -136,7 +136,7 @@
 (fl:define-texture level-complete (:texture-2d)
   (:data #((:texture "level-complete.tiff"))))
 
-(fl:define-texture white (:texture-2d fl.textures:clamp-all-edges)
+(fl:define-texture white (:texture-2d contrib.tex:clamp-all-edges)
   (:data #((:texture "white.tiff"))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

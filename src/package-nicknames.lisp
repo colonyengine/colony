@@ -63,7 +63,8 @@
    (:v3 :origin.vec3)
    (:v4 :origin.vec4)
    (:m4 :origin.mat4)
-   (:v :first-light))
+   (:v :first-light)
+   (:contrib.tex :virality.contrib.textures))
 
   (:first-light.prefab
    (:a :alexandria)
@@ -72,10 +73,15 @@
    (:v :first-light)
    (:comp :first-light.components))
 
-  (:first-light.textures
+  (:virality.contrib.textures
    (:v4 :origin.vec4)
    (:v :first-light))
 
   (:first-light.shader.swizzle
    (:a :alexandria)
-   (:u :golden-utils)))
+   (:u :golden-utils))
+
+  ;; remove later
+  (:%first-light
+   (:contrib.tex :virality.contrib.textures))
+  )

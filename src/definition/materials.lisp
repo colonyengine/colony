@@ -11,7 +11,7 @@
 (fl:define-material unlit-texture
   (:shader fl.shader.texture:unlit-texture
    :profiles (u-mvp)
-   :uniforms ((:tex.sampler1 'fl.textures:debug-texture)
+   :uniforms ((:tex.sampler1 'contrib.tex:debug-texture)
               (:mix-color (v4:one)))))
 
 (fl:define-material unlit-texture-decal
@@ -19,19 +19,19 @@
    :profiles (u-mvp)
    :uniforms ((:min-intensity (v4:zero))
               (:max-intensity (v4:one))
-              (:tex.sampler1 'fl.textures:debug-texture))))
+              (:tex.sampler1 'contrib.tex:debug-texture))))
 
 (fl:define-material unlit-texture-decal-bright
   (:shader fl.shader.texture:unlit-texture-decal
    :profiles (u-mvp)
    :uniforms ((:min-intensity (v4:vec 0.1 0.1 0.1 0.1))
               (:max-intensity (v4:one))
-              (:tex.sampler1 'fl.textures:debug-texture))))
+              (:tex.sampler1 'contrib.tex:debug-texture))))
 
 (fl:define-material sprite
   (:profiles (u-mvp)
    :shader fl.shader.sprite:sprite
-   :uniforms ((:sprite.sampler 'fl.textures:debug-texture)
+   :uniforms ((:sprite.sampler 'contrib.tex:debug-texture)
               (:opacity 1.0)
               (:alpha-cutoff 0.1))
    :blocks ((:block-name :spritesheet
@@ -42,7 +42,7 @@
 (fl:define-material missing-material
   (:shader fl.shader.texture:unlit-texture
    :profiles (u-mvp)
-   :uniforms ((:tex.sampler1 'fl.textures:debug-texture))))
+   :uniforms ((:tex.sampler1 'contrib.tex:debug-texture))))
 
 (fl:define-material collider/sphere
   (:shader fl.shader.visualization:collider/sphere

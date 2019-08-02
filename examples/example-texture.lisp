@@ -3,15 +3,15 @@
 ;;; Textures
 
 (fl:define-texture 1d-gradient
-    (:texture-1d fl.textures:clamp-all-edges)
+    (:texture-1d contrib.tex:clamp-all-edges)
   (:data #((:example-texture "texture-gradient-1d.tiff"))))
 
 (fl:define-texture 2d-wood
-    (:texture-2d fl.textures:clamp-all-edges)
+    (:texture-2d contrib.tex:clamp-all-edges)
   (:data #((:example-texture "wood.tiff"))))
 
 (fl:define-texture 3d
-    (:texture-3d fl.textures:clamp-all-edges)
+    (:texture-3d contrib.tex:clamp-all-edges)
   ;; TODO: Currently, these are the only valid origin and slices values. They
   ;; directly match the default of opengl.
   (:layout `((:origin :left-back-bottom)
@@ -34,7 +34,7 @@
            #((:3d "slice_0-mip_3.tiff")))))
 
 (fl:define-texture 1d-array
-    (:texture-1d-array fl.textures:clamp-all-edges)
+    (:texture-1d-array contrib.tex:clamp-all-edges)
   ;; If there are multiple images in each list, they are mipmaps. Since this is
   ;; a test, each mip_0 image is 8 width x 1 height
   (:data #(#((:1da "redline-mip_0.tiff")
@@ -55,7 +55,7 @@
              (:1da "whiteline-mip_3.tiff")))))
 
 (fl:define-texture 2d-array
-    (:texture-2d-array fl.textures:clamp-all-edges)
+    (:texture-2d-array contrib.tex:clamp-all-edges)
   ;; Since this is a test, each mip_0 image is 1024x1024 and has 11 mipmaps.
   (:data #(#((:2da "bluefur-mip_0.tiff")
              (:2da "bluefur-mip_1.tiff")

@@ -38,7 +38,7 @@
    (:file "package-gpu")
    (:file "package-shader")
    (:file "package-materials")
-   (:file "package-textures")
+   (:file "package-contrib-textures")
    (:file "package-components")
    (:file "package-actions")
    (:file "package-prefab")

@@ -1,7 +1,6 @@
 (in-package #:cl-user)
 
-(defpackage #:first-light.textures
-  (:nicknames #:fl.textures)
+(defpackage #:virality.contrib.textures
   (:use #:cl #:%first-light)
   ;; profiles
   (:export

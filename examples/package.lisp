@@ -11,7 +11,8 @@
                     (#:m4 #:origin.mat4)
                     (#:q #:origin.quat)
                     (#:v #:first-light)
-                    (#:comp #:first-light.components))
+                    (#:comp #:first-light.components)
+                    (#:contrib.tex #:virality.contrib.textures))
   (:use #:cl)
   (:export #:examples
            #:collision-smoke-test
@@ -40,7 +41,8 @@
                     (#:m4 #:origin.mat4)
                     (#:q #:origin.quat)
                     (#:v #:first-light)
-                    (#:comp #:first-light.components))
+                    (#:comp #:first-light.components)
+                    (#:contrib.tex #:virality.contrib.textures))
   (:use #:cl)
   (:export #:ptp-base
            #:ptp
