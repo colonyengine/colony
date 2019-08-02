@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (a:define-constant +window-event-names+
     #(nil :show :hide nil :move :resize nil :minimize :maximize :restore

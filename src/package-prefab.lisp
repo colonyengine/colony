@@ -1,7 +1,7 @@
 (in-package #:cl-user)
 
 (defpackage #:virality.prefabs
-  (:use #:cl #:%first-light)
+  (:use #:cl)
   (:export
    #:define-prefab
    #:define-prefab-descriptor

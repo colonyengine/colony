@@ -1,7 +1,7 @@
 (in-package #:cl-user)
 
 (defpackage #:virality.contrib.textures
-  (:use #:cl #:%first-light)
+  (:use #:cl)
   ;; profiles
   (:export
    #:clamp-all-edges

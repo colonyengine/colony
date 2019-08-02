@@ -1,18 +1,18 @@
 (in-package #:first-light.example)
 
-(fl:define-options ()
+(v:define-options ()
   :title "Virality Engine"
   :window-width 1920
   :window-height 1080
   :vsync :off
   :log-level :debug
-  :log-repl-categories '(:fl)
+  :log-repl-categories '(:v)
   ;; NOTE: Make physics compute faster as fast for these examples.
   ;; This is really here because of the lisp game jam april 2019 codes.
   :delta 1/120
   :initial-scene 'geometric-volumes)
 
-(fl:define-resources (:project :first-light.example)
+(v:define-resources (:project :first-light.example)
   (:project "data/project")
   (:ext (:project "ext"))
   (:mesh (:project "mesh"))
@@ -41,32 +41,31 @@
 
 ;;; Prefabs
 
-(fl:define-prefab "cameras" (:library examples)
+(v:define-prefab "cameras" (:library examples)
   ("ortho"
-   (fl.comp:camera :active-p t
-                   :mode :orthographic))
+   (comp:camera :active-p t
+                :mode :orthographic))
   ("perspective"
-   (fl.comp:camera :active-p t
-                   :mode :perspective))
+   (comp:camera :active-p t
+                :mode :perspective))
   ("iso"
-   (fl.comp:transform :rotate (q:orient :local
-                                        :x (- (atan (/ (sqrt 2))))
-                                        :y (- (/ pi 4))))
+   (comp:transform :rotate (q:orient :local
+                                     :x (- (atan (/ (sqrt 2))))
+                                     :y (- (/ pi 4))))
    ("camera"
-    (fl.comp:transform :translate (v3:vec 0 0 10))
-    (fl.comp:camera :active-p t
-                    :mode :orthographic))))
+    (comp:transform :translate (v3:vec 0 0 10))
+    (comp:camera :active-p t
+                 :mode :orthographic))))
 
-(fl:define-prefab "mesh" (:library examples)
-  (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-  (fl.comp:render :material 'contrib.mat:unlit-texture))
+(v:define-prefab "mesh" (:library examples)
+  (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+  (comp:render :material 'contrib.mat:unlit-texture))
 
 ;;; Graphs
 
-;;; TODO: Fix graphs to work in user package
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
-(fl:define-graph :fl.example
+(define-graph :first-light.example
     (:category component-dependency
      :depends-on ((:core (all-unknown-types core-types)))
      :roots (all-ordered-types))
@@ -74,11 +73,11 @@
           ((splice core-types)
            -> (splice all-unknown-types))))
 
-(fl:define-graph :fl
+(define-graph :virality.engine
     (:category component-package-order
      :depends-on ((:core-component-order (core-packages)))
      :roots (start-search))
-  (subdag current-project (:fl.example))
+  (subdag current-project (:comp -> :first-light.example))
   (subdag start-search
           ((splice current-project)
            -> (splice core-packages))))

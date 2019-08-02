@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defclass dynamic-attribute ()
   ((%name :reader name

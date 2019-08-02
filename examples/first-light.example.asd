@@ -6,7 +6,7 @@
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :version "0.1.0"
-  :depends-on (#:first-light)
+  :depends-on (#:virality.engine)
   :serial t
   :components
   ((:file "package")

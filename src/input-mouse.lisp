@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (a:define-constant +mouse-button-names+
     #(nil :left :middle :right :x1 :x2)

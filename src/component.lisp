@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defclass component (queryable)
   ((%context :reader context
@@ -42,7 +42,7 @@ superclass type all components have), or a component created by the
 DEFINE-COMPONENT form."
   (let ((search-table (component-search-table (tables core)))
         (component-type/class (find-class component-type nil))
-        (base-component-type/class (find-class '%fl:component))
+        (base-component-type/class (find-class 'component))
         (graph (u:href (analyzed-graphs core) 'component-package-order)))
     (u:when-found (pkg-symbol (u:href search-table component-type))
       (return-from qualify-component pkg-symbol))

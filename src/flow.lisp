@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defclass flow-state ()
   ((%name :accessor name
@@ -238,12 +238,12 @@ name which resulted in the exiting of the flow."
 
 (defmacro define-call-flow (name () &body body)
   (a:with-gensyms (call-flow)
-    (let ((definition '(%fl:meta 'call-flows)))
+    (let ((definition '(meta 'call-flows)))
       `(let ((,call-flow ,(parse-call-flows body)))
          (unless ,definition
-           (setf (%fl:meta 'call-flows) (u:dict)))
+           (setf (meta 'call-flows) (u:dict)))
          (setf (u:href ,definition ',name) ,call-flow)))))
 
 (defun load-call-flows (core)
-  (u:do-hash (k v (%fl:meta 'call-flows))
+  (u:do-hash (k v (meta 'call-flows))
     (setf (u:href (call-flows core) k) v)))

@@ -60,7 +60,7 @@
 
 (defmacro define-prefab (name (&key library (context 'context) policy)
                          &body body)
-  (let* ((libraries '(%fl:meta 'prefabs))
+  (let* ((libraries '(v::meta 'prefabs))
          (prefabs `(u:href ,libraries ',library)))
     (a:with-gensyms (prefab data)
       (u:mvlet ((body decls doc (a:parse-body body :documentation t)))
@@ -70,13 +70,13 @@
            (ensure-prefab-library-set ',name ',library)
            (ensure-prefab-library-symbol ',name ',library)
            (unless ,libraries
-             (setf (%fl:meta 'prefabs) (u:dict)))
+             (setf (v::meta 'prefabs) (u:dict)))
            (unless ,prefabs
              (setf ,prefabs (u:dict #'equalp)))
            ;; NOTE: This prefab-wide ref environment is accessible via a
            ;; pandoric function in the INJECTABLE-REF-VALUE-THUNK instance
            ;; created for each component initarg value. We use it later to
-           ;; adjust which actors and components are available for FL:REF when
+           ;; adjust which actors and components are available for V:REF when
            ;; forcing the argument thunk. We COULD have made an
            ;; INJECTABLE-REF-VALUE-THUNK for EACH argument value, but that would
            ;; generate more garbage than this method. So, unless we find we have

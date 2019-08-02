@@ -23,7 +23,7 @@
             :initform (u:dict #'equal))))
 
 (defun find-program (program-name)
-  (let ((programs (%fl:meta 'programs)))
+  (let ((programs (v::meta 'programs)))
     (u:href programs program-name)))
 
 (defun view-source (program-name stage)
@@ -74,12 +74,12 @@
     id))
 
 (defun build-shader-dictionary ()
-  (let ((programs (%fl:meta 'programs)))
+  (let ((programs (v::meta 'programs)))
     (a:maphash-keys #'build-shader-program programs)
     programs))
 
 (defun store-stage-program-dependencies (program)
-  (let ((stage-fn->programs (%fl:meta 'stage-fn->programs)))
+  (let ((stage-fn->programs (v::meta 'stage-fn->programs)))
     (dolist (stage-spec (stage-specs program))
       (destructuring-bind (stage-type func-spec) stage-spec
         (declare (ignore stage-type))
@@ -94,7 +94,7 @@
       (setf (slot-value program '%translated-stages) stages))))
 
 (defun %make-shader-program (name version primitive stage-specs)
-  (let ((programs (%fl:meta 'programs))
+  (let ((programs (v::meta 'programs))
         (program (make-instance 'program
                                 :name name
                                 :version version
@@ -109,7 +109,7 @@
 
 (defmacro define-shader (name (&key (version :430) (primitive :triangles))
                          &body body)
-  (let ((definitions '(%fl:meta 'shader-definitions)))
+  (let ((definitions '(v::meta 'shader-definitions)))
     `(u:eval-always
        (setf (u:href ,definitions ',name)
              (lambda ()
@@ -126,7 +126,7 @@
     (build-shader-program program-name)))
 
 (defun set-modify-hook (function)
-  (setf (%fl:meta 'modify-hook) function))
+  (setf (v::meta 'modify-hook) function))
 
 (defmacro with-shader (name &body body)
   `(unwind-protect

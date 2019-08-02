@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defclass frame-manager ()
   ((%start :reader start
@@ -79,9 +79,9 @@
                     'protocol-physics-update
                     :come-from-state-name
                     :ef-physics-update)
-      (fl.comp:map-nodes
-       (lambda (x) (fl.comp:transform-node core x))
-       (actor-component-by-type (scene-tree core) 'fl.comp:transform))
+      (comp:map-nodes
+       (lambda (x) (comp:transform-node core x))
+       (actor-component-by-type (scene-tree core) 'comp:transform))
       (execute-flow core
                     :default
                     'active-phase

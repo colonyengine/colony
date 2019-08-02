@@ -1,12 +1,94 @@
 (in-package #:cl-user)
 
-(defpackage #:%first-light
-  (:nicknames #:%fl)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:u #:golden-utils)
-                    (#:log #:verbose)
-                    (#:v2 #:origin.vec2)
-                    (#:v3 #:origin.vec3))
+(defpackage #:virality.engine
+  (:use #:cl)
+  ;; definitions
+  (:import-from #:virality.prefabs
+                #:define-prefab
+                #:define-prefab-descriptor
+                #:prefab-descriptor
+                #:make-prefab-instance
+                #:ref)
+  (:export
+   #:define-annotation
+   #:define-call-flow
+   #:define-component
+   #:define-geometry
+   #:define-geometry-layout
+   #:define-graph
+   #:define-material
+   #:define-material-profile
+   #:define-options
+   #:define-prefab
+   #:define-prefab-descriptor
+   #:define-resources
+   #:define-texture
+   #:define-texture-profile)
+
+  ;; prefab
+  (:export #:ref)
+
+  (:export
+   #:prefab-descriptor
+   #:make-prefab-instance
+   #:delta
+   #:copy-material
+   #:attrs
+   #:replace-action
+   #:repeat-p
+   #:action-step
+   #:manager
+   #:renderer
+   #:on-action-insert
+   #:on-action-finish
+   #:on-action-update
+   #:spawn-actor
+   #:make-actor
+   #:attach-component
+   #:active-camera
+   #:scene-tree
+   #:frame-manager
+   #:alpha
+   #:with-material
+   #:frame-count
+   #:frame-time
+   #:get-mouse-position
+   #:destroy-after-time
+   #:spawn-actor
+   #:attach-components
+   #:attach-multiple-components
+   #:make-actor
+   #:make-component
+   #:input-enter-p
+   #:frame-count
+   #:input-data
+   #:get-gamepad-analog
+   #:option
+   #:on-component-render
+   #:on-component-attach
+   #:on-component-detach
+   #:on-component-destroy
+   #:on-component-initialize
+   #:on-component-update
+   #:on-component-physics-update
+   #:destroy
+   #:display-id
+   #:on-collision-enter
+   #:on-collision-exit
+   #:on-collision-continue
+   #:meta
+   #:total-time
+   #:actor-component-by-type
+   #:actor-components-by-type
+   #:mat-uniform-ref
+   #:frame-time
+   #:context
+   #:id
+   #:actor
+   #:with-shared-storage))
+
+#++
+(defpackage #:virality.engine
   (:use #:cl)
   (:export
    #:*core-debug*

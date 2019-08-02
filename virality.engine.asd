@@ -1,4 +1,4 @@
-(asdf:defsystem #:first-light
+(asdf:defsystem #:virality.engine
   :description "An experimental game engine."
   :author ("Michael Fiano <mail@michaelfiano.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
@@ -34,15 +34,14 @@
   :pathname "src"
   :serial t
   :components
-  ((:file "package-internal")
-   (:file "package-gpu")
+  ((:file "package-gpu")
    (:file "package-shader")
    (:file "package-contrib-materials")
    (:file "package-contrib-textures")
    (:file "package-contrib-actions")
    (:file "package-components")
    (:file "package-prefab")
-   (:file "package-api")
+   (:file "package-internal")
    (:file "package-nicknames")
    (:file "common")
    (:file "interactive-development")

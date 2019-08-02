@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defgeneric on-collision-enter (component other-collider)
   (:method ((self component) other-collider)))

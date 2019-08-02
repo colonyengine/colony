@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defgeneric on-component-initialize (component)
   (:method ((self component))))

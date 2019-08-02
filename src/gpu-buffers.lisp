@@ -29,12 +29,12 @@
     (:buffer :ssbo)))
 
 (defun find-buffer (buffer-name)
-  (let ((buffer-table (%fl:meta 'buffers)))
+  (let ((buffer-table (v::meta 'buffers)))
     (u:href buffer-table buffer-name)))
 
 (defun create-buffer (buffer-name block-alias)
   (a:if-let ((block (find-block block-alias)))
-    (let* ((buffer-table (%fl:meta 'buffers))
+    (let* ((buffer-table (v::meta 'buffers))
            (type (block-type->buffer-type (block-type block)))
            (target (buffer-type->target type))
            (buffer (%make-buffer buffer-name target (layout block))))
@@ -57,7 +57,7 @@
   (bind-buffer buffer-name 0))
 
 (defun delete-buffer (buffer-name)
-  (let ((buffer-table (%fl:meta 'buffers))
+  (let ((buffer-table (v::meta 'buffers))
         (buffer (find-buffer buffer-name)))
     (unbind-buffer buffer-name)
     (gl:delete-buffers (list (id buffer)))

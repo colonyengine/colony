@@ -1,25 +1,25 @@
-(in-package #:fl.example)
+(in-package #:first-light.example)
 
 ;;; Textures
 
-(fl:define-texture damaged-helmet/metallic-roughness (:texture-2d)
+(v:define-texture damaged-helmet/metallic-roughness (:texture-2d)
   (:data #((:damaged-helmet-textures "metal-roughness.tiff"))))
 
-(fl:define-texture damaged-helmet/color (:texture-2d)
+(v:define-texture damaged-helmet/color (:texture-2d)
   (:data #((:damaged-helmet-textures "albedo.tiff"))))
 
-(fl:define-texture damaged-helmet/normal (:texture-2d)
+(v:define-texture damaged-helmet/normal (:texture-2d)
   (:data #((:damaged-helmet-textures "normal.tiff"))))
 
-(fl:define-texture damaged-helmet/ambient-occlusion (:texture-2d)
+(v:define-texture damaged-helmet/ambient-occlusion (:texture-2d)
   (:data #((:damaged-helmet-textures "ao.tiff"))))
 
-(fl:define-texture damaged-helmet/emissive (:texture-2d)
+(v:define-texture damaged-helmet/emissive (:texture-2d)
   (:data #((:damaged-helmet-textures "emissive.tiff"))))
 
 ;;; Materials
 
-(fl:define-material damaged-helmet
+(v:define-material damaged-helmet
   (:shader fl.shader.user:damaged-helmet
    :profiles (contrib.mat:u-mvp)
    :uniforms
@@ -39,17 +39,17 @@
 
 ;;; Prefabs
 
-(fl:define-prefab "damaged-helmet" (:library examples)
+(v:define-prefab "damaged-helmet" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (fl.comp:camera (:policy :new-args) :zoom 10))
+   (comp:camera (:policy :new-args) :zoom 10))
   (("helmet" :copy "/mesh")
-   (fl.comp:transform :rotate (q:orient :local :x (/ pi 2))
-                      :rotate/inc (q:orient :local :z (- (/ pi 4)))
-                      :scale 4)
-   (fl.comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
-   (fl.comp:render :material 'damaged-helmet)))
+   (comp:transform :rotate (q:orient :local :x (/ pi 2))
+                   :rotate/inc (q:orient :local :z (- (/ pi 4)))
+                   :scale 4)
+   (comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
+   (comp:render :material 'damaged-helmet)))
 
 ;;; Prefab descriptors
 
-(fl:define-prefab-descriptor damaged-helmet ()
+(v:define-prefab-descriptor damaged-helmet ()
   ("damaged-helmet" examples))

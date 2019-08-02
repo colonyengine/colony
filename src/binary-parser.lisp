@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defun get-string-length (buffer bytes null-terminated-p)
   (let* ((sequence (fast-io:input-buffer-vector buffer))

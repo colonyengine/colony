@@ -1,6 +1,6 @@
 (in-package #:first-light.components)
 
-(define-component following-camera ()
+(v:define-component following-camera ()
   ((%slave :reader slave)
    (%target-actor :accessor target-actor
                   :initarg :target-actor)
@@ -9,12 +9,12 @@
             :initarg :offset
             :initform (v3:zero))))
 
-(defmethod on-component-initialize ((self following-camera))
+(defmethod v:on-component-initialize ((self following-camera))
   (with-slots (%slave) self
-    (setf %slave (actor-component-by-type (actor self) 'camera))
+    (setf %slave (v:actor-component-by-type (v:actor self) 'camera))
     (camera-target-actor self (target-actor self))))
 
-(defmethod on-component-update ((self following-camera))
+(defmethod v:on-component-update ((self following-camera))
   (with-slots (%transform) (slave self)
     (let* ((target-position (m4:get-translation
                              (model (target-transform self))))
@@ -30,4 +30,4 @@
   (with-slots (%target-transform) camera
     (setf (target-actor camera) actor)
     (when actor
-      (setf %target-transform (actor-component-by-type actor 'transform)))))
+      (setf %target-transform (v:actor-component-by-type actor 'transform)))))

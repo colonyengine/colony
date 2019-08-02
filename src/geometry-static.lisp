@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (a:define-constant +attribute-locations+
     '(("POSITION" . 0)

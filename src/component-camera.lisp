@@ -1,6 +1,6 @@
 (in-package #:first-light.components)
 
-(define-component camera ()
+(v:define-component camera ()
   ((%active-p :accessor active-p
               :initarg :active-p
               :initform nil)
@@ -35,22 +35,22 @@
                 "Camera ~a was attached to an actor without a translation ~
                  transform.~%~
                  Using a sane default value for ~(~a~): ~s."
-                (id (actor camera)) (mode camera) translation))))
+                (v:id (v:actor camera)) (mode camera) translation))))
 
 (defmethod make-projection (camera (mode (eql :perspective)))
-  (let ((context (context camera)))
+  (let ((context (v:context camera)))
     (m4:set-projection/perspective! (projection camera)
                                     (/ (fov-y camera) (zoom camera))
-                                    (/ (option context :window-width)
-                                       (option context :window-height))
+                                    (/ (v:option context :window-width)
+                                       (v:option context :window-height))
                                     (clip-near camera)
                                     (clip-far camera))))
 
 (defmethod make-projection (camera (mode (eql :orthographic)))
-  (let* ((context (context camera))
+  (let* ((context (v:context camera))
          (zoom (zoom camera))
-         (w (/ (option context :window-width) zoom 2))
-         (h (/ (option context :window-height) zoom 2)))
+         (w (/ (v:option context :window-width) zoom 2))
+         (h (/ (v:option context :window-height) zoom 2)))
     (m4:set-projection/orthographic!
      (projection camera) (- w) w (- h) h (clip-near camera) (clip-far camera))))
 
@@ -63,27 +63,27 @@
       (m4:set-view! (view camera) eye target up))))
 
 (defun find-active-camera (context)
-  (dolist (camera (cameras (core context)))
+  (dolist (camera (v::cameras (v::core context)))
     (when (active-p camera)
       (return-from find-active-camera camera))))
 
 (defun zoom-camera (display direction)
-  (let* ((context (context (core display)))
+  (let* ((context (v:context (v::core display)))
          (camera (find-active-camera context)))
     (setf (zoom camera) (a:clamp (+ (zoom camera) (/ direction 2)) 1 10))
     (make-projection (mode camera) camera)))
 
 ;;; Component event hooks
 
-(defmethod on-component-initialize ((self camera))
+(defmethod v:on-component-initialize ((self camera))
   (with-slots (%transform %fov-y) self
-    (setf %transform (actor-component-by-type (actor self) 'transform)
+    (setf %transform (v:actor-component-by-type (v:actor self) 'transform)
           %fov-y (* %fov-y (/ pi 180)))
     (correct-camera-transform self)
     (make-projection self (mode self))
-    (push self (cameras (core (context self))))))
+    (push self (v::cameras (v::core (v:context self))))))
 
-(defmethod on-component-destroy ((self camera))
-  (let ((context (context self)))
-    (a:deletef (cameras (core context)) self)
-    (setf (active-camera context) nil)))
+(defmethod v:on-component-destroy ((self camera))
+  (let ((context (v:context self)))
+    (a:deletef (v::cameras (v::core context)) self)
+    (setf (v:active-camera context) nil)))

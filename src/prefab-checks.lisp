@@ -69,7 +69,7 @@
              path))))
 
 (defun ensure-path-single-transform (components path)
-  (when (> (count 'fl.comp:transform components :key #'car) 1)
+  (when (> (count 'comp:transform components :key #'car) 1)
     (error "Cannot have multiple transform components per path.~%Path: ~s."
            path)))
 
@@ -130,7 +130,7 @@
            type path)))
 
 (defun ensure-component-type-exists (type path)
-  (unless (get-computed-component-precedence-list type)
+  (unless (v::get-computed-component-precedence-list type)
     (error "Component type ~s does not exist.~%Path: ~s." type path)))
 
 (defun ensure-component-options-plist (type options path)
@@ -161,7 +161,7 @@
             keys and values.~%Path: ~s." type path)))
 
 (defun ensure-component-args-valid (type args path)
-  (loop :with valid-args = (compute-component-initargs type)
+  (loop :with valid-args = (v::compute-component-initargs type)
         :for (key nil) :on args :by #'cddr
         :unless (member key valid-args)
           :do (error "Component type ~s has an invalid argument: ~s.~%Path: ~s."

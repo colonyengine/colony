@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defclass input-data ()
   ((%gamepad-instances :reader gamepad-instances

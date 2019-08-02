@@ -1,16 +1,16 @@
 (in-package #:virality.gpu)
 
 (defun reset-program-state ()
-  (setf (%fl:meta 'programs) (u:dict)
-        (%fl:meta 'block-bindings) (u:dict :uniform (u:dict) :buffer (u:dict))
-        (%fl:meta 'block-aliases) (u:dict #'equalp)
-        (%fl:meta 'buffers) (u:dict)))
+  (setf (v::meta 'programs) (u:dict)
+        (v::meta 'block-bindings) (u:dict :uniform (u:dict) :buffer (u:dict))
+        (v::meta 'block-aliases) (u:dict #'equalp)
+        (v::meta 'buffers) (u:dict)))
 
 (defun enable-dependency-tracking ()
-  (setf (%fl:meta 'track-dependencies-p) t))
+  (setf (v::meta 'track-dependencies-p) t))
 
 (defun disable-dependency-tracking ()
-  (setf (%fl:meta 'track-dependencies-p) nil))
+  (setf (v::meta 'track-dependencies-p) nil))
 
 (defun store-source (program stage)
   (let ((source (varjo:glsl-code stage)))
@@ -21,7 +21,7 @@
 
 (defun load-shaders (modify-hook)
   (reset-program-state)
-  (u:do-hash-values (shader-factory (%fl:meta 'shader-definitions))
+  (u:do-hash-values (shader-factory (v::meta 'shader-definitions))
     (funcall shader-factory))
   (enable-dependency-tracking)
   (set-modify-hook modify-hook)
@@ -44,10 +44,10 @@
 (defmacro define-macro (name lambda-list &body body)
   `(varjo:define-vari-macro ,name ,lambda-list ,@body))
 
-(setf (%fl:meta 'track-dependencies-p) nil
-      (%fl:meta 'fn->deps) (u:dict #'equal)
-      (%fl:meta 'dep->fns) (u:dict #'equal)
-      (%fl:meta 'stage-fn->programs) (u:dict #'equal)
-      (%fl:meta 'modify-hook) (constantly nil)
-      (%fl:meta 'shader-definitions) (u:dict))
+(setf (v::meta 'track-dependencies-p) nil
+      (v::meta 'fn->deps) (u:dict #'equal)
+      (v::meta 'dep->fns) (u:dict #'equal)
+      (v::meta 'stage-fn->programs) (u:dict #'equal)
+      (v::meta 'modify-hook) (constantly nil)
+      (v::meta 'shader-definitions) (u:dict))
 (reset-program-state)

@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defclass actor (queryable)
   ((%context :reader context
@@ -75,17 +75,17 @@ on it or its components. If keyword argument :PARENT is supplied it is an actor
 reference which will be the parent of the spawning actor. It defaults to
 :universe, which means make this actor a child of the universe actor."
   (let ((core (core (context actor)))
-        (actor-transform (actor-component-by-type actor 'fl.comp:transform)))
+        (actor-transform (actor-component-by-type actor 'comp:transform)))
     (cond
       ((eq parent :universe)
-       (unless (fl.comp:parent actor-transform)
-         (fl.comp:transform-add-child
-          (actor-component-by-type (scene-tree core) 'fl.comp:transform)
-          (actor-component-by-type actor 'fl.comp:transform))))
+       (unless (comp:parent actor-transform)
+         (comp:transform-add-child
+          (actor-component-by-type (scene-tree core) 'comp:transform)
+          (actor-component-by-type actor 'comp:transform))))
       ((typep parent 'actor)
-       (fl.comp:transform-add-child
-        (actor-component-by-type parent 'fl.comp:transform)
-        (actor-component-by-type actor 'fl.comp:transform)))
+       (comp:transform-add-child
+        (actor-component-by-type parent 'comp:transform)
+        (actor-component-by-type actor 'comp:transform)))
       ((null parent)
        (u:noop))
       (t
@@ -146,16 +146,16 @@ reference which will be the parent of the spawning actor. It defaults to
            (deregister-object-uuid actor)
            (deregister-object-id actor)))
     (when actor
-      (fl.comp:map-nodes
+      (comp:map-nodes
        (lambda (x) (destroy-actor (actor x)))
-       (actor-component-by-type actor 'fl.comp:transform)))))
+       (actor-component-by-type actor 'comp:transform)))))
 
 (defun actor/disconnect (actor)
   (when (eq (id actor) 'universe)
     (error "Cannot disconnect the top-level universe node."))
-  (let ((actor-transform (actor-component-by-type actor 'fl.comp:transform)))
-    (fl.comp:transform-remove-child (fl.comp:parent actor-transform)
-                                    actor-transform)))
+  (let ((actor-transform (actor-component-by-type actor 'comp:transform)))
+    (comp:transform-remove-child (comp:parent actor-transform)
+                                 actor-transform)))
 
 (defun actor/destroy->released (actor)
   (let ((core (core (context actor))))

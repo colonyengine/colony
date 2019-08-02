@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defun enable-logging (core)
   (let ((context (context core)))

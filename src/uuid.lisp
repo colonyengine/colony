@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defstruct (uuid (:constructor %make-uuid))
   version

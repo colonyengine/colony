@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defun get-gpu-parameter (name)
   (or (handler-case (gl:get* name)

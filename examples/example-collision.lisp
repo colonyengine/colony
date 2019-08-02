@@ -4,45 +4,45 @@
 ;; This is not really a general purpose component. It is just here to help out
 ;; testing how destruction and colliders work together.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(fl:define-component destroy-my-actor ()
+(v:define-component destroy-my-actor ()
   ((%time-to-destroy :accessor time-to-destroy
                      :initarg :time-to-destroy
                      :initform 5)))
 
-(defmethod fl:on-collision-enter ((self destroy-my-actor) other-collider)
+(defmethod v:on-collision-enter ((self destroy-my-actor) other-collider)
   (log:info :changeme
             "DESTROY-MY-ACTOR: Actor ~A entered collision with collider ~
            ~A(on actor ~A)"
-            (fl:actor self) other-collider (fl:actor other-collider))
-  (when (string= (fl:display-id other-collider) "Ground")
+            (v:actor self) other-collider (v:actor other-collider))
+  (when (string= (v:display-id other-collider) "Ground")
     (log:info :changeme
               "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" ~
              object, so destroy myself!")
-    (fl:destroy (fl:actor self))))
+    (v:destroy (v:actor self))))
 
-(defmethod fl:on-collision-exit ((self destroy-my-actor) other-collider)
+(defmethod v:on-collision-exit ((self destroy-my-actor) other-collider)
   (log:info :changeme
             "DESTROY-MY-ACTOR: Actor ~A is exiting collision with ~
            ~A(on actor: ~A)."
-            (fl:actor self) other-collider (fl:actor other-collider)))
+            (v:actor self) other-collider (v:actor other-collider)))
 
-(defmethod fl:on-component-update ((self destroy-my-actor))
-  (decf (time-to-destroy self) (fl:frame-time (fl:context self)))
+(defmethod v:on-component-update ((self destroy-my-actor))
+  (decf (time-to-destroy self) (v:frame-time (v:context self)))
   (when (<= (time-to-destroy self) 0)
-    (fl:destroy (fl:actor self))))
+    (v:destroy (v:actor self))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing getting the directions from a transform
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(fl:define-component unit-test-transform-api ()
+(v:define-component unit-test-transform-api ()
   ((%test-type :reader test-type
                :initarg :test-type
                :initform nil)
    (%test-performed :reader test-performed
                     :initform (u:dict))))
 
-(defmethod fl:on-component-physics-update ((self unit-test-transform-api))
+(defmethod v:on-component-physics-update ((self unit-test-transform-api))
   (ecase (test-type self)
     (:test-direction-vectors
      (test-axis-directions self))
@@ -50,17 +50,17 @@
      (test-transform-api self))))
 
 (defun test-axis-directions (self)
-  (let* ((actor (fl:actor self))
+  (let* ((actor (v:actor self))
          (test-type (test-type self))
          (actor-transform
-           (fl:actor-component-by-type actor 'fl.comp:transform)))
+           (v:actor-component-by-type actor 'comp:transform)))
     (unless (u:href (test-performed self) test-type)
-      (let ((forward (fl.comp:transform-forward actor-transform))
-            (backward (fl.comp:transform-backward actor-transform))
-            (up (fl.comp:transform-up actor-transform))
-            (down (fl.comp:transform-down actor-transform))
-            (right (fl.comp:transform-right actor-transform))
-            (left (fl.comp:transform-left actor-transform)))
+      (let ((forward (comp:transform-forward actor-transform))
+            (backward (comp:transform-backward actor-transform))
+            (up (comp:transform-up actor-transform))
+            (down (comp:transform-down actor-transform))
+            (right (comp:transform-right actor-transform))
+            (left (comp:transform-left actor-transform)))
         (log:trace :changeme "FORWARD Vector -> ~A" forward)
         (log:trace :changeme "BACKWARD Vector -> ~A" backward)
         (log:trace :changeme "UP Vector -> ~A" up)
@@ -88,17 +88,17 @@
 
 (defun test-transform-point-api (self)
   "Test if the TRANSFORM-POINT and INVERSE-TRANSFORM-POINT work."
-  (let* ((actor (fl:actor self))
+  (let* ((actor (v:actor self))
          (actor-transform
-           (fl:actor-component-by-type actor 'fl.comp:transform))
+           (v:actor-component-by-type actor 'comp:transform))
          (object-space-point (v3:vec 1 0 0))
          (world-space-point (v3:vec 1 3 1))
          (local->world
-           (fl.comp:transform-point actor-transform
-                                    object-space-point))
+           (comp:transform-point actor-transform
+                                 object-space-point))
          (world->local
-           (fl.comp:inverse-transform-point actor-transform
-                                            world-space-point)))
+           (comp:inverse-transform-point actor-transform
+                                         world-space-point)))
 
     ;; See if transform-point and inverse-transform-point work.
     (let ((result-0
@@ -123,17 +123,17 @@
 
 (defun test-transform-vector-api (self)
   "Test if the TRANSFORM-VECTOR and INVERSE-TRANSFORM-VECTOR work."
-  (let* ((actor (fl:actor self))
+  (let* ((actor (v:actor self))
          (actor-transform
-           (fl:actor-component-by-type actor 'fl.comp:transform))
+           (v:actor-component-by-type actor 'comp:transform))
          (object-space-vector (v3:vec 2 2 0))
          (world-space-vector (v3:vec -4 4 0))
          (local->world
-           (fl.comp:transform-vector actor-transform
-                                     object-space-vector))
+           (comp:transform-vector actor-transform
+                                  object-space-vector))
          (world->local
-           (fl.comp:inverse-transform-vector actor-transform
-                                             world-space-vector)))
+           (comp:inverse-transform-vector actor-transform
+                                          world-space-vector)))
 
     ;; See if transform-point and inverse-transform-point work.
     (let ((result-0
@@ -158,18 +158,18 @@
 
 
 (defun test-transform-direction-api (self)
-  (let* ((actor (fl:actor self))
+  (let* ((actor (v:actor self))
          (actor-transform
-           (fl:actor-component-by-type actor 'fl.comp:transform))
+           (v:actor-component-by-type actor 'comp:transform))
          ;; NOTE: these must be normalized for the test. I specified it this way
          ;; so it would be easier to see in your mind's eye.
          (object-space-direction (v3:normalize (v3:vec 1 1 0)))
          (world-space-direction (v3:normalize (v3:vec -1 1 0)))
          (local->world
-           (fl.comp:transform-direction actor-transform
+           (comp:transform-direction actor-transform
                                         object-space-direction))
          (world->local
-           (fl.comp:inverse-transform-direction actor-transform
+           (comp:inverse-transform-direction actor-transform
                                                 world-space-direction)))
 
     ;; See if transform-point and inverse-transform-point work.
@@ -198,37 +198,37 @@
 ;; The test prefabs.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(fl:define-prefab "collision-smoke-test" (:library examples)
+(v:define-prefab "collision-smoke-test" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (fl.comp:camera (:policy :new-args) :zoom 6))
+   (comp:camera (:policy :new-args) :zoom 6))
   ("rot-0-center"
-   (fl.comp:transform :translate (v3:vec -2 0 0)
+   (comp:transform :translate (v3:vec -2 0 0)
                       :rotate/inc (q:orient :local :z pi))
    ("plane-0"
-    (fl.comp:transform :translate (v3:vec -2 0 0))
-    (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-    (fl.comp:collider/sphere
+    (comp:transform :translate (v3:vec -2 0 0))
+    (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+    (comp:collider/sphere
      :display-id "Player"
      :visualize t
      :on-layer :player
      :center (v3:zero)
      :radius 1)
-    (fl.comp:render :material '2d-wood)))
+    (comp:render :material '2d-wood)))
   ("rot-1-center"
-   (fl.comp:transform :translate (v3:vec 2 0 0)
+   (comp:transform :translate (v3:vec 2 0 0)
                       :rotate/inc (q:orient :local :z (- pi)))
    ("plane-1"
-    (fl.comp:transform :translate (v3:vec 2 0 0))
-    (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-    (fl.comp:collider/sphere
+    (comp:transform :translate (v3:vec 2 0 0))
+    (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+    (comp:collider/sphere
      :display-id "Enemy"
      :visualize t
      :on-layer :enemy
      :center (v3:zero)
      :radius 1)
-    (fl.comp:render :material '2d-wood))))
+    (comp:render :material '2d-wood))))
 
-(fl:define-prefab "collision-transform-test-0" (:library examples)
+(v:define-prefab "collision-transform-test-0" (:library examples)
   "This test just prints out the directions of the actor transform. Since
 the actor is at universe 0,0,0 and has no rotations, we should see the
 unit world vector representations of the axis directions as:
@@ -240,39 +240,39 @@ unit world vector representations of the axis directions as:
   left:     (-1 0 0)
 "
   (("camera" :copy "/cameras/perspective")
-   (fl.comp:camera (:policy :new-args) :zoom 7))
+   (comp:camera (:policy :new-args) :zoom 7))
 
   ("thingy"
    ;; NOTE: The 5 0 0 is specific to the unit-test-transform-api tests.
-   (fl.comp:transform :translate (v3:vec 5 0 0))
+   (comp:transform :translate (v3:vec 5 0 0))
    (unit-test-transform-api :test-type :test-direction-vectors)
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '2d-wood)))
+   (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+   (comp:render :material '2d-wood)))
 
-(fl:define-prefab "collision-transform-test-1" (:library examples)
+(v:define-prefab "collision-transform-test-1" (:library examples)
   "This test checks to see if we can move in and out of object space and
 world space for a particular transform."
 
   (("camera" :copy "/cameras/perspective")
-   (fl.comp:camera (:policy :new-args) :zoom 7))
+   (comp:camera (:policy :new-args) :zoom 7))
 
   ("right"
-   (fl.comp:transform :translate (v3:vec 1 0 0))
+   (comp:transform :translate (v3:vec 1 0 0))
    ("up"
-    (fl.comp:transform :translate (v3:vec 0 1 0))
+    (comp:transform :translate (v3:vec 0 1 0))
     ("back"
-     (fl.comp:transform :translate (v3:vec 0 0 1))
+     (comp:transform :translate (v3:vec 0 0 1))
      ("mark"
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
-      (fl.comp:transform :rotate (q:orient :local :z (/ pi 2))
+      (comp:transform :rotate (q:orient :local :z (/ pi 2))
                          :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
-      (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-      (fl.comp:render :material '2d-wood))))))
+      (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+      (comp:render :material '2d-wood))))))
 
 
-(fl:define-prefab "collision-test-0" (:library examples)
+(v:define-prefab "collision-test-0" (:library examples)
   "In this test, you should see two actors with a narrow gap between them and
 ananother actor near the bottom of the screen. These three are unmoving. The
 green spiral (if VISUALIZE defaults to T in the collider/sphere component) is a
@@ -288,108 +288,108 @@ that just spawns stone prefabs so they rain down onto the ground, which should
 be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   (("camera" :copy "/cameras/perspective")
-   (fl.comp:camera (:policy :new-args) :zoom 7))
+   (comp:camera (:policy :new-args) :zoom 7))
 
   ("left-gate"
-   (fl.comp:transform :translate (v3:vec -1.15 2 -.1))
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '2d-wood)
-   (fl.comp:collider/sphere :display-id "Left-Gate"
+   (comp:transform :translate (v3:vec -1.15 2 -.1))
+   (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:collider/sphere :display-id "Left-Gate"
                             :visualize t
                             :on-layer :ground))
 
   ("right-gate"
-   (fl.comp:transform :translate (v3:vec 1.15 2 -.1))
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '2d-wood)
-   (fl.comp:collider/sphere :display-id "Right-Gate"
+   (comp:transform :translate (v3:vec 1.15 2 -.1))
+   (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:collider/sphere :display-id "Right-Gate"
                             :visualize t
                             :on-layer :ground))
 
   ("stone"
-   (fl.comp:transform :translate (v3:vec 0 5 0)
+   (comp:transform :translate (v3:vec 0 5 0)
                       :scale 0.5
                       :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:vec 0 -2 0))
-   (fl.comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
+   (comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
-   (fl.comp:collider/sphere :display-id "Stone"
+   (comp:collider/sphere :display-id "Stone"
                             :visualize t
                             :on-layer :player
-                            :referent (fl:ref :self
+                            :referent (v:ref :self
                                               :component 'destroy-my-actor)
                             :center (v3:zero)
                             :radius 1)
-   (fl.comp:render :material 'damaged-helmet))
+   (comp:render :material 'damaged-helmet))
 
   ("ground"
-   (fl.comp:transform :translate (v3:vec 0 -2 0.1))
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:collider/sphere :display-id "Ground"
+   (comp:transform :translate (v3:vec 0 -2 0.1))
+   (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+   (comp:collider/sphere :display-id "Ground"
                             :visualize t
                             :on-layer :ground
                             :center (v3:zero)
                             :radius 1)
-   (fl.comp:render :material '2d-wood)))
+   (comp:render :material '2d-wood)))
 
-(fl:define-prefab "collision-test-1" (:library examples)
+(v:define-prefab "collision-test-1" (:library examples)
   "This test demonstrates that at frame 0 colliders that should be colliding
 actually are. You have to view the results to see the colliders lighting up."
 
   (("camera" :copy "/cameras/perspective")
-   (fl.comp:camera (:policy :new-args) :zoom 7))
+   (comp:camera (:policy :new-args) :zoom 7))
 
   ("upper-left"
-   (fl.comp:transform :translate (v3:vec -2 2 -0.1))
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '2d-wood)
-   (fl.comp:collider/sphere :display-id "Upper-Left"
+   (comp:transform :translate (v3:vec -2 2 -0.1))
+   (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:collider/sphere :display-id "Upper-Left"
                             :visualize t
                             :on-layer :ground))
   ("upper-right"
-   (fl.comp:transform :translate (v3:vec 2 2 -0.1))
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '2d-wood)
-   (fl.comp:collider/sphere :display-id "Upper-Right"
+   (comp:transform :translate (v3:vec 2 2 -0.1))
+   (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:collider/sphere :display-id "Upper-Right"
                             :visualize t
                             :on-layer :ground))
   ("lower-left"
-   (fl.comp:transform :translate (v3:vec -2 -2 -0.1))
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '2d-wood)
-   (fl.comp:collider/sphere :display-id "Lower-Left"
+   (comp:transform :translate (v3:vec -2 -2 -0.1))
+   (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:collider/sphere :display-id "Lower-Left"
                             :visualize t
                             :on-layer :ground))
   ("lower-right"
-   (fl.comp:transform :translate (v3:vec 2 -2 -0.1))
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material '2d-wood)
-   (fl.comp:collider/sphere :display-id "Lower-Right"
+   (comp:transform :translate (v3:vec 2 -2 -0.1))
+   (comp:static-mesh :location '((:core :mesh) "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:collider/sphere :display-id "Lower-Right"
                             :visualize t
                             :on-layer :ground))
   ("stone"
-   (fl.comp:transform :translate (v3:zero)
+   (comp:transform :translate (v3:zero)
                       :scale 2
                       :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:zero))
-   (fl.comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
+   (comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :time-to-destroy 2)
-   (fl.comp:collider/sphere :display-id "Stone"
+   (comp:collider/sphere :display-id "Stone"
                             :visualize t
                             :on-layer :player
                             :center (v3:zero)
                             :radius 1)
-   (fl.comp:render :material 'damaged-helmet)))
+   (comp:render :material 'damaged-helmet)))
 
 ;;; Prefab descriptors
 
-(fl:define-prefab-descriptor collision-smoke-test ()
+(v:define-prefab-descriptor collision-smoke-test ()
   ("collision-smoke-test" examples))
 
-(fl:define-prefab-descriptor collision-test-0 ()
+(v:define-prefab-descriptor collision-test-0 ()
   ("collision-test-0" examples))
 
-(fl:define-prefab-descriptor collision-test-1 ()
+(v:define-prefab-descriptor collision-test-1 ()
   ("collision-test-1" examples))

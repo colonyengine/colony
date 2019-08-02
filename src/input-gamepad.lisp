@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (a:define-constant +gamepad-axis-names+
     #((:left-stick :x) (:left-stick :y) (:right-stick :x) (:right-stick :y)

@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defun ss-href (context component-name namespace &rest keys)
   (let* ((qualified-component-name (qualify-component (core context)

@@ -55,7 +55,7 @@
   ;; instance of this class which, after we figure out which argument values
   ;; are actually valid and present due to component merge policies, we then
   ;; initialize the env and force the thunk. This is usef to implement the
-  ;; FL:REF function in the value form of the components.
+  ;; V:REF function in the value form of the components.
   (defclass injectable-ref-value-thunk ()
     (;; A lambda function wrapped around the value lexically supplying a CONTEXT
      ;; variable. This function also exists in a injection ref environment (a
@@ -64,7 +64,7 @@
      (%thunk :reader thunk
              :initarg :thunk)
      ;; Each injection ref environment has a secret back door to fill in the
-     ;; lexical variables that the FL:REF lexicaly scoped call needs to process
+     ;; lexical variables that the V:REF lexicaly scoped call needs to process
      ;; each argument.  We use this to poke in the values to the lexical closure
      ;; before evaluating the thunk.
      (%env-injection-control-func :reader env-injection-control-func
@@ -94,7 +94,7 @@
   (format nil "/~{~a~^/~}" path-parts))
 
 (defun find-library (name)
-  (u:if-found (library (u:href (%fl:meta 'prefabs) name))
+  (u:if-found (library (u:href (v::meta 'prefabs) name))
               library
               (error "Prefab library ~s does not exist." name)))
 

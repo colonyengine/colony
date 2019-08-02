@@ -1,6 +1,6 @@
 (in-package #:first-light.components)
 
-(define-component sprite ()
+(v:define-component sprite ()
   ((%name :accessor name
           :initarg :name
           :initform nil)
@@ -26,7 +26,7 @@
 
 (defun make-spritesheet (context sprite)
   (with-slots (%name %spec) sprite
-    (let* ((spec (find-resource context %spec))
+    (let* ((spec (v::find-resource context %spec))
            (spritesheet (make-instance 'spritesheet
                                        :spec (u:safe-read-file-form spec)
                                        :geometry (gl:gen-vertex-array))))
@@ -70,16 +70,16 @@
       (gl:draw-arrays-instanced :points 0 1 count)
       (gl:bind-vertex-array 0))))
 
-(defmethod on-component-initialize ((self sprite))
+(defmethod v:on-component-initialize ((self sprite))
   (with-slots (%spritesheet %index %initial-index) self
-    (let ((context (context self))
+    (let ((context (v:context self))
           (name (name self))
           (spec (a:ensure-list (spec self))))
       (unless name
         (error "A sprite component must have a name."))
       (unless spec
         (error "A sprite component must have a spritesheet spec specified."))
-      (with-shared-storage
+      (v:with-shared-storage
           (context context)
           ((cached-spritesheet spritesheet-present-p
                                ('sprite :cached-spritesheet-data spec)

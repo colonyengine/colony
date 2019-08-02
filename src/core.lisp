@@ -1,10 +1,10 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defvar *core-debug*)
 
 (defclass core ()
   ((%resources :reader resources
-               :initform (%fl:meta 'resources))
+               :initform (meta 'resources))
    (%options :accessor options)
    (%running-p :accessor running-p
                :initform t)
@@ -18,7 +18,7 @@
    (%cameras :accessor cameras
              :initform nil)
    (%input-data :reader input-data
-                :initform (fl:make-input-data))
+                :initform (make-input-data))
    (%shaders :accessor shaders)
    (%materials :accessor materials
                :initform (%make-materials-table))
@@ -95,7 +95,7 @@ structures in CORE."
 (defun make-scene-tree (core)
   (let* ((context (context core))
          (actor (make-actor context :id 'universe :display-id "Universe"))
-         (transform (make-component context 'transform :actor actor)))
+         (transform (make-component context 'comp:transform :actor actor)))
     (attach-component actor transform)
     (spawn-actor actor :parent nil)
     (execute-flow core :default
@@ -160,13 +160,13 @@ structures in CORE."
         (rcache-dispose context entry-type value)))))
 
 (defun map-scene-tree (func parent-actor &optional (level 0))
-  "Similar to FL.COMP:MAP-NODES, this instead maps over the actor starting
-at the PARENT-ACTOR root. Level is how far you are down in the tree and is
-useful for indention purposes. This function maps FUNC over each actor."
+  "Similar to COMP:MAP-NODES, this instead maps over the actor starting at the
+PARENT-ACTOR root. Level is how far you are down in the tree and is useful for
+indention purposes. This function maps FUNC over each actor."
   (funcall func parent-actor level)
   (let ((parent-actor-transform
-          (actor-component-by-type parent-actor 'fl.comp:transform)))
-    (dolist (child (fl.comp:children parent-actor-transform))
+          (actor-component-by-type parent-actor 'comp:transform)))
+    (dolist (child (comp:children parent-actor-transform))
       (map-scene-tree func (actor child) (1+ level)))))
 
 (defun print-scene-tree (core)

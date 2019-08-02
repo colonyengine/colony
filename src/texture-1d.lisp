@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defmethod load-texture-data ((texture-type (eql :texture-1d)) texture context)
   ;; TODO: This assumes no use of the general-data-descriptor or procedurally

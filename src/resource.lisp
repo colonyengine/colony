@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 ;;; DSL Input
 
@@ -142,10 +142,10 @@
 
 ;; TODO
 
-(setf (%fl:meta 'resources) (u:dict #'equalp))
+(setf (meta 'resources) (u:dict #'equalp))
 
 (defun %lookup-resource (key)
-  (u:href (%fl:meta 'resources) key))
+  (u:href (meta 'resources) key))
 
 (defun make-relative-pathname (sub-path)
   (let ((components (split-sequence:split-sequence #\. sub-path)))
@@ -219,7 +219,7 @@
     (destructuring-bind (root &rest rest) path-spec
       (declare (ignore rest))
       (let ((key (make-resource-key id root)))
-        (setf (u:href (%fl:meta 'resources) key)
+        (setf (u:href (meta 'resources) key)
               (make-resource-path id root path-spec)))))
   (u:noop))
 
@@ -228,8 +228,8 @@
     (destructuring-bind (x &rest rest) key
       (declare (ignore rest))
       (if (eq x :core)
-          :first-light
-          (%fl:meta 'user-project)))))
+          :virality.engine
+          (meta 'user-project)))))
 
 (defun resolve-resource-id (id)
   (cond
@@ -244,7 +244,7 @@
   (let (resources)
     (unless project
       (error "Project name must be specified in a `define-resources` form."))
-    (push `(setf (%fl:meta 'user-project) ,project) resources)
+    (push `(setf (meta 'user-project) ,project) resources)
     (dolist (spec body)
       (destructuring-bind (id path-spec) spec
         (push `(store-resource-path ',id ',path-spec) resources)))
@@ -273,7 +273,7 @@
                  (t (string< (nth i k1) (nth i k2))))))))
     (let ((keys)
           (column-width 0))
-      (u:do-hash-keys (k (%fl:meta 'resources))
+      (u:do-hash-keys (k (meta 'resources))
         (push k keys)
         (when (listp k)
           (let ((key-width (length (symbol-name (cadr k)))))
@@ -283,8 +283,6 @@
       (dolist (k (sort keys #'compare-keys))
         (let ((v (%lookup-resource k)))
           (format t "~&~vs ~s" column-width k (namestring v)))))))
-
-(in-package #:first-light)
 
 (define-resources (:project :first-light)
   (:core "data/core")

@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 ;; Held in core, the material database for all materials everywhere.
 (defclass materials-table ()
@@ -656,24 +656,24 @@ be executed after all the shader programs have been compiled."
   "Define a set of uniform and block shader attribute defaults that can be
 applied in an overlay manner while defining a material."
   (a:with-gensyms (profile)
-    (let ((definition '(%fl:meta 'material-profiles)))
+    (let ((definition '(meta 'material-profiles)))
       (destructuring-bind (&key uniforms blocks) body
         `(let ((,profile ,(parse-material-profile name uniforms blocks)))
            (unless ,definition
-             (setf (%fl:meta 'material-profiles) (u:dict)))
+             (setf (meta 'material-profiles) (u:dict)))
            (setf (u:href ,definition (name ,profile)) ,profile))))))
 
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
   (a:with-gensyms (func)
-    (let ((definition '(%fl:meta 'materials)))
+    (let ((definition '(meta 'materials)))
       (destructuring-bind (&key shader profiles (instances 1) attributes
                              uniforms blocks)
           body
         `(let ((,func ,(parse-material name shader instances attributes profiles
                                        uniforms blocks)))
            (unless ,definition
-             (setf (%fl:meta 'materials) (u:dict)))
+             (setf (meta 'materials) (u:dict)))
            (setf (u:href ,definition ',name) ,func)
            (export ',name))))))
 
@@ -701,8 +701,8 @@ applied in an overlay manner while defining a material."
            ,@body)))))
 
 (defun load-materials (core)
-  (u:do-hash-values (profile (%fl:meta 'material-profiles))
+  (u:do-hash-values (profile (meta 'material-profiles))
     (%add-material-profile profile core))
-  (u:do-hash-values (material-func (%fl:meta 'materials))
+  (u:do-hash-values (material-func (meta 'materials))
     (%add-material (funcall material-func core) core))
   (resolve-all-materials core))

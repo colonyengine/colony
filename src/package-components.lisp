@@ -1,8 +1,7 @@
 (in-package #:cl-user)
 
 (defpackage #:first-light.components
-  (:nicknames #:fl.comp)
-  (:use #:cl #:%first-light)
+  (:use #:cl)
   ;; camera
   (:export
    #:active-p

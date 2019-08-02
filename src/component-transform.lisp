@@ -45,7 +45,7 @@
   (declare (optimize speed))
   (q:slerp! (interpolated state) (previous state) (current state) factor))
 
-(define-component transform ()
+(v:define-component transform ()
   ((%parent :accessor parent
             :initform nil)
    (%children :accessor children
@@ -87,7 +87,7 @@
     (q:rotate! %current %current %incremental-delta)))
 
 (defun transform-node (core node)
-  (let ((delta (delta (context core))))
+  (let ((delta (v::delta (v:context core))))
     (transform-node/vector (scaling node) delta)
     (transform-node/quat (rotation node) delta)
     (transform-node/vector (translation node) delta)))
@@ -120,10 +120,10 @@
   (declare (optimize speed))
   (map-nodes
    (lambda (x)
-     (resolve-model x (%fl:alpha (%fl:frame-manager core))))
-   (actor-component-by-type (%fl:scene-tree core) 'transform)))
+     (resolve-model x (v::alpha (v::frame-manager core))))
+   (v:actor-component-by-type (v::scene-tree core) 'transform)))
 
-(defmethod make-component (context (component-type (eql 'transform)) &rest args)
+(defmethod v:make-component (context (component-type (eql 'transform)) &rest args)
   (let ((instance (make-instance component-type
                                  :type component-type
                                  :context context)))
@@ -140,8 +140,8 @@
                                     (scale (v3:one))
                                     (scale/inc (v3:zero)))
   (with-slots (%translation %rotation %scaling) instance
-    (setf (actor instance) actor
-          (state instance) :initialize
+    (setf (v:actor instance) actor
+          (v::state instance) :initialize
           (current %translation) (v3:copy translate)
           (previous %translation) (v3:copy (current %translation))
           (incremental %translation) (v3:copy translate/inc)

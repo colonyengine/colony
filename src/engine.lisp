@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 #+sbcl
 (u:eval-always
@@ -48,18 +48,18 @@ tear-down procedure occurs when stopping the engine."
     (unless (apply #'sdl2:was-init flags)
       (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
         (sdl2::check-rc (sdl2::sdl-init flags))))
-    (fl:prepare-gamepads gamepad-db)
+    (prepare-gamepads gamepad-db)
     (make-display core)))
 
 (defun shutdown-host (core)
-  (fl:shutdown-gamepads (input-data core))
+  (shutdown-gamepads (input-data core))
   (sdl2:destroy-window (window (display core)))
   (sdl2::sdl-quit))
 
 (defun load-initial-scene (core scene-name)
   (let* ((scene-name (or scene-name (option (context core) :initial-scene)))
-         (prefab-descriptor (fl:find-prefab-descriptor scene-name)))
-    (fl:make-prefab-instance core prefab-descriptor)))
+         (prefab-descriptor (virality.prefabs::find-prefab-descriptor scene-name)))
+    (make-prefab-instance core prefab-descriptor)))
 
 (defun initialize-engine (core scene-name)
   (let ((title (option (context core) :title)))
@@ -80,10 +80,10 @@ tear-down procedure occurs when stopping the engine."
 
 (defun iterate-main-loop (core)
   (with-continue-restart "First Light"
-    (fl:handle-events (input-data core))
+    (handle-events (input-data core))
     (render core)
     ;; TODO: Remove this later when possible.
-    (when (fl:input-enter-p (input-data core) '(:key :escape))
+    (when (input-enter-p (input-data core) '(:key :escape))
       (stop-engine core))))
 
 (defun main-loop (core)

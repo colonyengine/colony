@@ -1,7 +1,7 @@
 (in-package #:cl-user)
 
 (defpackage #:virality.contrib.actions
-  (:use #:cl #:%first-light)
+  (:use #:cl)
   (:export
    #:fade-in
    #:fade-out

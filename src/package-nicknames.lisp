@@ -23,13 +23,16 @@
         body)))
 
 (define-nicknames
-  (:first-light
+  (:virality.engine
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
    (:v2 :origin.vec2)
    (:v3 :origin.vec3)
-   (:comp :first-light.components))
+   (:gpu :virality.gpu)
+   (:comp :first-light.components)
+   (:contrib.tex :virality.contrib.textures)
+   (:contrib.mat :virality.contrib.materials))
 
   (:first-light.components
    (:a :alexandria)
@@ -41,7 +44,7 @@
    (:v4 :origin.vec4)
    (:m4 :origin.mat4)
    (:q :origin.quat)
-   (:v :first-light)
+   (:v :virality.engine)
    (:gpu :virality.gpu)
    (:contrib.mat :virality.contrib.materials))
 
@@ -49,25 +52,25 @@
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
-   (:v :first-light))
+   (:v :virality.engine))
 
   (:virality.prefabs
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
-   (:v :first-light)
+   (:v :virality.engine)
    (:comp :first-light.components))
 
   (:virality.contrib.textures
    (:v4 :origin.vec4)
-   (:v :first-light))
+   (:v :virality.engine))
 
   (:virality.contrib.materials
    (:v2 :origin.vec2)
    (:v3 :origin.vec3)
    (:v4 :origin.vec4)
    (:m4 :origin.mat4)
-   (:v :first-light)
+   (:v :virality.engine)
    (:contrib.tex :virality.contrib.textures))
 
   (:virality.contrib.actions
@@ -76,16 +79,10 @@
    (:log :verbose)
    (:v4 :origin.vec3)
    (:q :origin.quat)
-   (:v :first-light)
+   (:v :virality.engine)
    (:comp :first-light.components))
 
   (:first-light.shader.swizzle
    (:a :alexandria)
    (:u :golden-utils))
-
-  ;; remove later
-  (:%first-light
-   (:gpu :virality.gpu)
-   (:contrib.tex :virality.contrib.textures)
-   (:contrib.mat :virality.contrib.materials))
   )

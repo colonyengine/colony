@@ -184,21 +184,21 @@
 
 ;; The names in the first position all must be exported.
 (define-graph core
-    (:category fl:texture-resolution
+    (:category v:texture-resolution
      :depends-on nil
      :weak-roots (core))
   (search-path core
                (:contrib.tex)))
 
 (define-graph core
-    (:category fl:material-resolution
+    (:category v:material-resolution
      :depends-on nil
      :weak-roots (core))
   (search-path core
                (:contrib.mat)))
 
 (define-graph core
-    (:category fl:component-resolution
+    (:category v:component-resolution
      :depends-on nil
      :weak-roots (core))
   (search-path core
@@ -206,7 +206,7 @@
 
 ;; component execution order
 (define-graph core
-    (:category fl:component-execution
+    (:category v:component-execution
      :depends-on nil
      :weak-roots (core)) ;; if not referenced, becomes a root.
 
@@ -214,13 +214,13 @@
                    ((unknown-types))) ;; (unknown-types) is special token
 
   (execution-order actions
-                   (fl.comp:action -> fl.comp:action-list))
+                   (comp:action -> comp:action-list))
 
   (execution-order drawable
-                   (fl.comp:static-mesh -> fl.comp:sprite -> fl.comp:render))
+                   (comp:static-mesh -> comp:sprite -> comp:render))
 
   (execution-order core
-                   (fl.comp:transform
+                   (comp:transform
                     -> (splice actions)
                     -> (splice drawable))))
 
@@ -230,24 +230,24 @@
 
 ;; and now, what the user specifies in their project, one for each category
 (define-graph project
-    (:category fl:texture-resolution
-     :depends-on ((fl:core (core))) ;; fl:core is in context of category!
+    (:category v:texture-resolution
+     :depends-on ((v:core (core))) ;; v:core is in context of category!
      :roots (all-textures))
 
   (search-path all-textures
                (:first-light.example -> core)))
 
 (define-graph project
-    (:category fl:material-resolution
-     :depends-on ((fl:core (core)))
+    (:category v:material-resolution
+     :depends-on ((v:core (core)))
      :roots (all-materials))
 
   (search-path all-materials
                (:first-light.example -> core)))
 
 (define-graph project
-    (:category fl:component-resolution
-     :depends-on ((fl:core (core)))
+    (:category v:component-resolution
+     :depends-on ((v:core (core)))
      :roots (all-component))
 
   (search-path all-components
@@ -257,8 +257,8 @@
 
 ;; component execution order
 (define-graph project
-    (:category fl:component-execution
-     :depends-on ((fl:core (all-unknown-types core)))
+    (:category v:component-execution
+     :depends-on ((v:core (all-unknown-types core)))
      :roots (start))
 
   (execution-order project ;; placeholder

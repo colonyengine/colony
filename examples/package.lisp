@@ -1,7 +1,6 @@
 (in-package #:cl-user)
 
 (defpackage #:first-light.example
-  (:nicknames #:fl.example)
   (:local-nicknames (#:a #:alexandria)
                     (#:u #:golden-utils)
                     (#:log #:verbose)
@@ -10,7 +9,7 @@
                     (#:v4 #:origin.vec4)
                     (#:m4 #:origin.mat4)
                     (#:q #:origin.quat)
-                    (#:v #:first-light)
+                    (#:v #:virality.engine)
                     (#:comp #:first-light.components)
                     (#:contrib.tex #:virality.contrib.textures)
                     (#:contrib.mat #:virality.contrib.materials)
@@ -42,7 +41,7 @@
                     (#:v4 #:origin.vec4)
                     (#:m4 #:origin.mat4)
                     (#:q #:origin.quat)
-                    (#:v #:first-light)
+                    (#:v #:virality.engine)
                     (#:comp #:first-light.components)
                     (#:contrib.tex #:virality.contrib.textures)
                     (#:contrib.mat #:virality.contrib.materials)

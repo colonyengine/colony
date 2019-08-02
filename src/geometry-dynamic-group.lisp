@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defclass geometry-group ()
   ((%name :reader name
@@ -23,7 +23,7 @@
       (destructuring-bind (name (&key (format 'interleaved) (divisor 0))
                            . attrs)
           group
-        (u:mvlet ((group-type (a:format-symbol :%first-light
+        (u:mvlet ((group-type (a:format-symbol :virality.engine
                                                "GEOMETRY-GROUP/~a"
                                                format))
                   (attributes attribute-order (make-dynamic-attributes attrs)))

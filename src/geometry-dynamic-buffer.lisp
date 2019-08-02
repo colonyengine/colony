@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defgeneric get-geometry-group-buffer-names (spec group))
 
