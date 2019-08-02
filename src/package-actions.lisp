@@ -2,11 +2,6 @@
 
 (defpackage #:first-light.actions
   (:nicknames #:fl.actions)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:u #:golden-utils)
-                    (#:log #:verbose)
-                    (#:v3 #:origin.vec3)
-                    (#:q #:origin.quat))
   (:use #:cl #:%first-light)
   ;; protocol
   (:export

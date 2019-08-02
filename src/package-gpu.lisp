@@ -2,9 +2,6 @@
 
 (defpackage #:first-light.gpu
   (:nicknames #:fl.gpu)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:u #:golden-utils)
-                    (#:log #:verbose))
   (:use #:cl)
   (:export
    #:define-function

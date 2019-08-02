@@ -36,13 +36,10 @@
 
 (defpackage+ #:first-light.shader.swizzle
   (:nicknames #:fl.shader.swizzle)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:u #:golden-utils))
   (:use #:cl #:vari))
 
 (defpackage+ #:first-light.shader.user
   (:nicknames #:fl.shader.user)
-  (:local-nicknames (#:u #:golden-utils))
   (:use #:fl.shader.swizzle)
   (:inherit #:fl.shader))
 

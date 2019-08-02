@@ -44,6 +44,7 @@
    (:file "package-actions")
    (:file "package-prefab")
    (:file "package-api")
+   (:file "package-nicknames")
    (:file "common")
    (:file "interactive-development")
    (:file "metadata")
