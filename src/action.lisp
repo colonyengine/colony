@@ -1,4 +1,4 @@
-(in-package #:first-light.actions)
+(in-package #:%first-light)
 
 (defclass action-manager ()
   ((%action-list :reader action-list

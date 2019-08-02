@@ -80,7 +80,20 @@
    #:input-exit-p
    #:make-input-data
    #:prepare-gamepads
-   #:shutdown-gamepads)
+   #:shutdown-gamepads
+
+   ;; actions
+   #:on-action-insert
+   #:on-action-update
+   #:on-action-finish
+   #:insert-action
+   #:remove-action
+   #:repeat-p
+   #:replace-action
+   #:manager
+   #:renderer
+   #:action-step
+   #:attrs)
   (:inherit-from
    #:fl.prefab
    #:define-prefab

@@ -13,7 +13,8 @@
                     (#:v #:first-light)
                     (#:comp #:first-light.components)
                     (#:contrib.tex #:virality.contrib.textures)
-                    (#:contrib.mat #:virality.contrib.materials))
+                    (#:contrib.mat #:virality.contrib.materials)
+                    (#:contrib.action #:virality.contrib.actions))
   (:use #:cl)
   (:export #:examples
            #:collision-smoke-test
@@ -44,7 +45,8 @@
                     (#:v #:first-light)
                     (#:comp #:first-light.components)
                     (#:contrib.tex #:virality.contrib.textures)
-                    (#:contrib.mat #:virality.contrib.materials))
+                    (#:contrib.mat #:virality.contrib.materials)
+                    (#:contrib.action #:virality.contrib.actions))
   (:use #:cl)
   (:export #:ptp-base
            #:ptp

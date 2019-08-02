@@ -10,9 +10,9 @@
 
 (defmethod on-component-initialize ((self actions))
   (with-slots (%manager) self
-    (setf %manager (fl.actions:make-action-manager
+    (setf %manager (%fl::make-action-manager
                     (actor-component-by-type (actor self) 'render)
                     (default-actions self)))))
 
 (defmethod on-component-update ((self actions))
-  (fl.actions:process-actions (manager self)))
+  (%fl::process-actions (manager self)))

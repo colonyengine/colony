@@ -1984,7 +1984,7 @@ NIL if no such list exists."
 
   (fl.comp:render :material 'sprite-sheet
                   :mode :sprite)
-  (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+  (fl.comp:actions :default-actions '((:type contrib.action:sprite-animate
                                        :duration 0.5
                                        :repeat-p t))))
 
@@ -2022,7 +2022,7 @@ NIL if no such list exists."
                     :frames 8)
     (fl.comp:render :material 'sprite-sheet
                     :mode :sprite)
-    (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+    (fl.comp:actions :default-actions '((:type contrib.action:sprite-animate
                                          :duration 0.5
                                          :repeat-p t))))))
 
@@ -2064,7 +2064,7 @@ NIL if no such list exists."
                   :frames 15)
   (fl.comp:render :material 'sprite-sheet
                   :mode :sprite)
-  (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+  (fl.comp:actions :default-actions '((:type contrib.action:sprite-animate
                                        :duration 0.5
                                        :repeat-p nil))))
 

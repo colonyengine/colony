@@ -31,15 +31,6 @@
    (:v3 :origin.vec3)
    (:comp :first-light.components))
 
-  (:first-light.actions
-   (:a :alexandria)
-   (:u :golden-utils)
-   (:log :verbose)
-   (:v4 :origin.vec3)
-   (:q :origin.quat)
-   (:v :first-light)
-   (:comp :first-light.components))
-
   (:first-light.components
    (:a :alexandria)
    (:u :golden-utils)
@@ -78,6 +69,15 @@
    (:m4 :origin.mat4)
    (:v :first-light)
    (:contrib.tex :virality.contrib.textures))
+
+  (:virality.contrib.actions
+   (:a :alexandria)
+   (:u :golden-utils)
+   (:log :verbose)
+   (:v4 :origin.vec3)
+   (:q :origin.quat)
+   (:v :first-light)
+   (:comp :first-light.components))
 
   (:first-light.shader.swizzle
    (:a :alexandria)

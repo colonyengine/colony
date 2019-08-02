@@ -125,7 +125,7 @@
                                  ,(a:make-gensym '#:sprite)
                                  :uniforms ((:sprite.sampler sprites)))
                      :mode :sprite)
-     (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
+     (fl.comp:actions :default-actions '((:type contrib.action:sprite-animate
                                           :duration 0.5
                                           :repeat-p t)))))))
 
@@ -139,7 +139,7 @@
                                ,(a:make-gensym '#:sprite)
                                :uniforms ((:sprite.sampler sprites)))
                    :mode :sprite)
-   (fl.comp:actions :default-actions '((:type fl.actions:rotate
+   (fl.comp:actions :default-actions '((:type contrib.action:rotate
                                         :duration 4
                                         :shape origin.shaping:bounce-in
                                         :repeat-p t)))))

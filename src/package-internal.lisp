@@ -84,6 +84,20 @@
    #:with-material
    #:with-shared-storage)
 
+  ;; actions
+  (:export
+   #:on-action-insert
+   #:on-action-update
+   #:on-action-finish
+   #:insert-action
+   #:remove-action
+   #:repeat-p
+   #:replace-action
+   #:manager
+   #:renderer
+   #:action-step
+   #:attrs)
+
   ;; metadata
   (:export
    #:meta)
