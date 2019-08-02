@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu)
+(in-package #:virality.gpu)
 
 (defclass shader-block ()
   ((%id :reader id

@@ -112,7 +112,7 @@ first, and finally cleaning up."
   (let ((title (option core :title)))
     (log:info :changeme "Shutting down ~a..." title)
     (run-epilogue core)
-    (fl.gpu:unload-shaders)
+    (gpu:unload-shaders)
     (shutdown-host core)
     (setf (running-p core) nil)
     (makunbound '*core-debug*)

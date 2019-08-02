@@ -3,7 +3,7 @@
 (defpackage+ #:first-light.shader
   (:nicknames #:fl.shader)
   (:inherit-from
-   #:fl.gpu
+   #:virality.gpu
    #:define-function
    #:define-struct
    #:define-macro

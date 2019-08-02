@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu)
+(in-package #:virality.gpu)
 
 (defun stage-type (stage)
   (varjo:stage-kind stage))

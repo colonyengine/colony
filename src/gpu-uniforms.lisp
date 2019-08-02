@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu)
+(in-package #:virality.gpu)
 
 (defgeneric get-uniform-data (type parts)
   (:method (type parts)

@@ -35,7 +35,7 @@
 
 (defun write-spritesheet-buffer (spritesheet)
   (with-slots (%spec %buffer %sprites) spritesheet
-    (loop :with buffer-name = (fl.gpu:buffer-name %buffer)
+    (loop :with buffer-name = (gpu:buffer-name %buffer)
           :with count = (length %spec)
           :with pos = (make-array count)
           :with size = (make-array count)
@@ -46,15 +46,15 @@
                   (setf (aref pos i) (v2:vec x y)
                         (aref size i) (v2:vec w h)
                         (u:href %sprites id) i)))
-          :finally (fl.gpu:write-buffer-path buffer-name :pos pos)
-                   (fl.gpu:write-buffer-path buffer-name :size size))))
+          :finally (gpu:write-buffer-path buffer-name :pos pos)
+                   (gpu:write-buffer-path buffer-name :size size))))
 
 (defun make-spritesheet-buffer (spritesheet)
   (with-slots (%spec %buffer) spritesheet
-    (fl.gpu:bind-block :spritesheet 1)
-    (setf %buffer (fl.gpu:create-buffer (a:make-gensym :spritesheet)
-                                        :spritesheet))
-    (fl.gpu:bind-buffer (fl.gpu:buffer-name %buffer) 1)
+    (gpu:bind-block :spritesheet 1)
+    (setf %buffer (gpu:create-buffer (a:make-gensym :spritesheet)
+                                     :spritesheet))
+    (gpu:bind-buffer (gpu:buffer-name %buffer) 1)
     (write-spritesheet-buffer spritesheet)))
 
 (defun update-sprite-index (sprite step)
@@ -65,7 +65,7 @@
 (defun draw-sprite (sprite &optional count)
   (with-slots (%index %spritesheet) sprite
     (with-slots (%geometry) %spritesheet
-      (fl.gpu:uniform-int 'fl.shader.sprite:sprite :sprite.index %index)
+      (gpu:uniform-int 'fl.shader.sprite:sprite :sprite.index %index)
       (gl:bind-vertex-array %geometry)
       (gl:draw-arrays-instanced :points 0 1 count)
       (gl:bind-vertex-array 0))))

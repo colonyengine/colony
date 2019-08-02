@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu)
+(in-package #:virality.gpu)
 
 (defun pack-container (type)
   (etypecase type

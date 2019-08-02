@@ -51,9 +51,10 @@
    (:m4 :origin.mat4)
    (:q :origin.quat)
    (:v :first-light)
+   (:gpu :virality.gpu)
    (:contrib.mat :virality.contrib.materials))
 
-  (:first-light.gpu
+  (:virality.gpu
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
@@ -84,6 +85,7 @@
 
   ;; remove later
   (:%first-light
+   (:gpu :virality.gpu)
    (:contrib.tex :virality.contrib.textures)
    (:contrib.mat :virality.contrib.materials))
   )

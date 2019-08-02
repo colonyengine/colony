@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu)
+(in-package #:virality.gpu)
 
 (defun store-attributes (program)
   (dolist (stage (translated-stages program))

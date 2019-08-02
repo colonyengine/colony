@@ -498,18 +498,18 @@ or if it a vector of the same. Return NIL otherwise."
              (gl:active-texture unit)
              (gl:bind-texture (sampler-type->texture-type glsl-type)
                               (texid texture))
-             (fl.gpu:uniform-int shader uniform-name unit)))
+             (gpu:uniform-int shader uniform-name unit)))
          (ecase glsl-type
            (:bool (lambda (shader uniform value)
-                    (fl.gpu:uniform-int shader uniform (if value 1 0))))
-           (:int #'fl.gpu:uniform-int)
-           (:float #'fl.gpu:uniform-float)
-           (:vec2 #'fl.gpu:uniform-vec2)
-           (:vec3 #'fl.gpu:uniform-vec3)
-           (:vec4 #'fl.gpu:uniform-vec4)
-           (:mat2 #'fl.gpu:uniform-mat2)
-           (:mat3 #'fl.gpu:uniform-mat3)
-           (:mat4 #'fl.gpu:uniform-mat4))))
+                    (gpu:uniform-int shader uniform (if value 1 0))))
+           (:int #'gpu:uniform-int)
+           (:float #'gpu:uniform-float)
+           (:vec2 #'gpu:uniform-vec2)
+           (:vec3 #'gpu:uniform-vec3)
+           (:vec4 #'gpu:uniform-vec4)
+           (:mat2 #'gpu:uniform-mat2)
+           (:mat3 #'gpu:uniform-mat3)
+           (:mat4 #'gpu:uniform-mat4))))
     (cons
      (if (sampler-p (car glsl-type))
          (let* ((units
@@ -525,17 +525,17 @@ or if it a vector of the same. Return NIL otherwise."
                        (gl:bind-texture
                         (sampler-type->texture-type (car glsl-type))
                         (texid texture)))
-             (fl.gpu:uniform-int-array shader uniform-name units)))
+             (gpu:uniform-int-array shader uniform-name units)))
          (ecase (car glsl-type)
-           (:bool #'fl.gpu:uniform-int-array)
-           (:int #'fl.gpu:uniform-int-array)
-           (:float #'fl.gpu:uniform-float-array)
-           (:vec2 #'fl.gpu:uniform-vec2-array)
-           (:vec3 #'fl.gpu:uniform-vec3-array)
-           (:vec4 #'fl.gpu:uniform-vec4-array)
-           (:mat2 #'fl.gpu:uniform-mat2-array)
-           (:mat3 #'fl.gpu:uniform-mat3-array)
-           (:mat4 #'fl.gpu:uniform-mat4-array))))
+           (:bool #'gpu:uniform-int-array)
+           (:int #'gpu:uniform-int-array)
+           (:float #'gpu:uniform-float-array)
+           (:vec2 #'gpu:uniform-vec2-array)
+           (:vec3 #'gpu:uniform-vec3-array)
+           (:vec4 #'gpu:uniform-vec4-array)
+           (:mat2 #'gpu:uniform-mat2-array)
+           (:mat3 #'gpu:uniform-mat3-array)
+           (:mat4 #'gpu:uniform-mat4-array))))
     (t
      (error "Cannot determine binder function for glsl-type: ~S~%"
             glsl-type))))
@@ -557,7 +557,7 @@ or if it a vector of the same. Return NIL otherwise."
 
 (defun annotate-material-uniform (uniform-name uniform-value material
                                   shader-program)
-  (u:if-found (type-info (u:href (fl.gpu:uniforms shader-program)
+  (u:if-found (type-info (u:href (gpu:uniforms shader-program)
                                  uniform-name))
               (let ((uniform-type (u:href type-info :type)))
                 ;; 1. Find the uniform in the shader-program and get its
@@ -604,8 +604,8 @@ or if it a vector of the same. Return NIL otherwise."
   ;; 1. Validate that this material-block-value is present in the shaders in
   ;; core
   ;; TODO: 2. Create the block-name-alias, but only once.
-  (unless (fl.gpu:find-block alias-name)
-    (fl.gpu:create-block-alias (storage-type block-value)
+  (unless (gpu:find-block alias-name)
+    (gpu:create-block-alias (storage-type block-value)
                                (block-name block-value)
                                (shader material)
                                alias-name)))
@@ -692,7 +692,7 @@ applied in an overlay manner while defining a material."
 (defmacro with-material (material (&rest bindings) &body body)
   (a:with-gensyms (material-ref)
     `(let ((,material-ref ,material))
-       (fl.gpu:with-shader (shader ,material-ref)
+       (gpu:with-shader (shader ,material-ref)
          (setf ,@(loop :for (k v) :on bindings :by #'cddr
                        :collect `(mat-uniform-ref ,material-ref ,k)
                        :collect v))
