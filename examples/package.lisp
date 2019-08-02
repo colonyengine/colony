@@ -9,7 +9,9 @@
                     (#:v3 #:origin.vec3)
                     (#:v4 #:origin.vec4)
                     (#:m4 #:origin.mat4)
-                    (#:q #:origin.quat))
+                    (#:q #:origin.quat)
+                    (#:v #:first-light)
+                    (#:comp #:first-light.components))
   (:use #:cl)
   (:export #:examples
            #:collision-smoke-test
@@ -36,7 +38,9 @@
                     (#:v3 #:origin.vec3)
                     (#:v4 #:origin.vec4)
                     (#:m4 #:origin.mat4)
-                    (#:q #:origin.quat))
+                    (#:q #:origin.quat)
+                    (#:v #:first-light)
+                    (#:comp #:first-light.components))
   (:use #:cl)
   (:export #:ptp-base
            #:ptp
