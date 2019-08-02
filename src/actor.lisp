@@ -1,7 +1,9 @@
 (in-package #:%first-light)
 
 (defclass actor (queryable)
-  ((%state :accessor state
+  ((%context :reader context
+             :initarg :context)
+   (%state :accessor state
            :initarg :state
            :initform :initialize)
    (%components :reader components
@@ -13,14 +15,10 @@
                  :initform nil)
    (%ttl :accessor ttl
          :initarg :ttl
-         :initform 0)
-   (%context :reader context
-             :initarg :context)))
+         :initform 0)))
 
 (defun make-actor (context &rest args &key &allow-other-keys)
-  (let ((actor (apply #'make-instance 'actor
-                      :context context
-                      args)))
+  (let ((actor (apply #'make-instance 'actor :context context args)))
     (register-object-uuid actor)
     (register-object-id actor)
     actor))

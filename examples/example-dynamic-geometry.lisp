@@ -36,4 +36,4 @@
 ;;; Prefab descriptors
 
 (fl:define-prefab-descriptor dynamic-geometry ()
-  ("dynamic-geometry" fl.example:examples))
+  ("dynamic-geometry" examples))

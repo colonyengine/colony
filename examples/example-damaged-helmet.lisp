@@ -52,4 +52,4 @@
 ;;; Prefab descriptors
 
 (fl:define-prefab-descriptor damaged-helmet ()
-  ("damaged-helmet" fl.example:examples))
+  ("damaged-helmet" examples))

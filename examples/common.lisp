@@ -78,7 +78,7 @@
     (:category component-package-order
      :depends-on ((:core-component-order (core-packages)))
      :roots (start-search))
-  (subdag current-project (:fl.example.comp.* -> :fl.example))
+  (subdag current-project (:fl.example))
   (subdag start-search
           ((splice current-project)
            -> (splice core-packages))))

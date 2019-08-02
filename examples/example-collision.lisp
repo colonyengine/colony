@@ -54,7 +54,6 @@
          (test-type (test-type self))
          (actor-transform
            (fl:actor-component-by-type actor 'fl.comp:transform)))
-
     (unless (u:href (test-performed self) test-type)
       (let ((forward (fl.comp:transform-forward actor-transform))
             (backward (fl.comp:transform-backward actor-transform))
@@ -62,14 +61,12 @@
             (down (fl.comp:transform-down actor-transform))
             (right (fl.comp:transform-right actor-transform))
             (left (fl.comp:transform-left actor-transform)))
-
         (log:trace :changeme "FORWARD Vector -> ~A" forward)
         (log:trace :changeme "BACKWARD Vector -> ~A" backward)
         (log:trace :changeme "UP Vector -> ~A" up)
         (log:trace :changeme "DOWN Vector -> ~A" down)
         (log:trace :changeme "RIGHT Vector -> ~A" right)
         (log:trace :changeme "LEFT Vector -> ~A" left)
-
         ;; NOTE: This expects the actor to be unrotated wrt the universe.
         (unless (and (v3:~ forward (v3:vec 0 0 -1))
                      (v3:~ backward (v3:vec 0 0 1))
@@ -389,10 +386,10 @@ actually are. You have to view the results to see the colliders lighting up."
 ;;; Prefab descriptors
 
 (fl:define-prefab-descriptor collision-smoke-test ()
-  ("collision-smoke-test" fl.example:examples))
+  ("collision-smoke-test" examples))
 
 (fl:define-prefab-descriptor collision-test-0 ()
-  ("collision-test-0" fl.example:examples))
+  ("collision-test-0" examples))
 
 (fl:define-prefab-descriptor collision-test-1 ()
-  ("collision-test-1" fl.example:examples))
+  ("collision-test-1" examples))

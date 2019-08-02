@@ -110,4 +110,4 @@
 ;;; Prefab descriptors
 
 (fl:define-prefab-descriptor noise ()
-  ("noise" fl.example:examples))
+  ("noise" examples))

@@ -277,4 +277,4 @@
 ;;; Prefab descriptors
 
 (fl:define-prefab-descriptor texture ()
-  ("texture" fl.example:examples))
+  ("texture" examples))

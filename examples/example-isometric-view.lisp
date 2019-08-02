@@ -52,4 +52,4 @@
 ;;; Prefab descriptors
 
 (fl:define-prefab-descriptor isometric-view ()
-  ("isometric-view" fl.example:examples))
+  ("isometric-view" examples))

@@ -2,7 +2,7 @@
 
 (defclass action-manager ()
   ((%action-list :reader action-list
-                 :initform (dll:make-dlist :test #'eq))
+                 :initform (doubly-linked-list:make-dlist :test #'eq))
    (renderer :reader renderer
              :initarg :renderer)))
 
@@ -42,17 +42,17 @@
     (setf %attrs (u:plist->hash %attrs :test #'eq))))
 
 (defun insert-action (action where &key target)
-  (with-accessors ((manager manager) (type action-type)) action
-    (let* ((action-list (action-list manager))
-           (node (dll:insert-dlist-node
-                  where action-list type action :target-key target)))
+  (with-slots (%manager %type) action
+    (let* ((action-list (action-list %manager))
+           (node (doubly-linked-list:insert-dlist-node
+                  where action-list %type action :target-key target)))
       (setf (node action) node)
-      (on-action-insert action type)
+      (on-action-insert action %type)
       action)))
 
 (defun remove-action (action)
-  (with-accessors ((manager manager) (type action-type)) action
-    (dll:remove-dlist-node (action-list manager) type)))
+  (with-slots (%manager %type) action
+    (doubly-linked-list:remove-dlist-node (action-list %manager) %type)))
 
 (defun replace-action (action type &rest args)
   (let ((action (apply #'reinitialize-instance action
@@ -60,11 +60,11 @@
                        :elapsed 0
                        :finished-p nil
                        args)))
-    (dll:update-dlist-node-key (node action) type)))
+    (doubly-linked-list:update-dlist-node-key (node action) type)))
 
 (defun action-step (action)
-  (with-accessors ((shape shape) (elapsed elapsed) (duration duration)) action
-    (funcall shape (a:clamp (/ elapsed duration) 0f0 1f0))))
+  (with-slots (%shape %elapsed %duration) action
+    (funcall %shape (a:clamp (/ %elapsed %duration) 0f0 1f0))))
 
 (defun insert-default-actions (manager action-specs)
   (dolist (spec action-specs)
@@ -77,7 +77,8 @@
     manager))
 
 (defun process-actions (manager)
-  (loop :for (type . action) :in (dll:dlist-elements (action-list manager))
+  (loop :with list = (doubly-linked-list:dlist-elements (action-list manager))
+        :for (type . action) :in list
         :do (on-action-update action type)
         :when (finished-p action)
           :do (on-action-finish action type)
@@ -92,7 +93,7 @@
 (defgeneric on-action-finish (action type)
   (:method (action type))
   (:method :around (action type)
-    (with-accessors ((actor actor)) (renderer (manager action))
+    (let ((actor (actor (renderer (manager action)))))
       (call-next-method)
       (log:trace :changeme "Action ~a finished for actor ~a."
                  type (id actor)))))
@@ -102,8 +103,7 @@
   (:method :before (action type)
     (with-slots (%manager %elapsed %self-finishing-p %duration %finished-p)
         action
-      (with-accessors ((context context)) (renderer %manager)
-        (incf %elapsed (frame-time context))
-        (when (and (not %self-finishing-p)
-                   (>= %elapsed %duration))
-          (setf %finished-p t))))))
+      (incf %elapsed (frame-time (context (renderer %manager))))
+      (when (and (not %self-finishing-p)
+                 (>= %elapsed %duration))
+        (setf %finished-p t)))))

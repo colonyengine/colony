@@ -53,10 +53,10 @@
 ;;; Prefab descriptors
 
 (fl:define-prefab-descriptor graph ()
-  ("graph" fl.example:examples))
+  ("graph" examples))
 
 (fl:define-prefab-descriptor 3d-graph-1 ()
-  ("3d-graph-1" fl.example:examples))
+  ("3d-graph-1" examples))
 
 (fl:define-prefab-descriptor 3d-graph-2 ()
-  ("3d-graph-2" fl.example:examples))
+  ("3d-graph-2" examples))

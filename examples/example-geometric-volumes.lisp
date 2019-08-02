@@ -32,4 +32,4 @@
 ;;; Prefab descriptors
 
 (fl:define-prefab-descriptor geometric-volumes ()
-  ("geometric-volumes" fl.example:examples))
+  ("geometric-volumes" examples))

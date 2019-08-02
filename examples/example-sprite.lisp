@@ -147,7 +147,7 @@
 ;;; Prefab descriptors
 
 (fl:define-prefab-descriptor sprite-1 ()
-  ("sprite-1" fl.example:examples))
+  ("sprite-1" examples))
 
 (fl:define-prefab-descriptor sprite-2 ()
-  ("sprite-2" fl.example:examples))
+  ("sprite-2" examples))

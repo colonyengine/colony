@@ -11,12 +11,8 @@
                     (#:m4 #:origin.mat4)
                     (#:q #:origin.quat))
   (:use #:cl)
-
-  ;; prefab library
-  (:export #:examples)
-
-  ;; prefab descriptors
-  (:export #:collision-smoke-test
+  (:export #:examples
+           #:collision-smoke-test
            #:collision-test-0
            #:collision-test-1
            #:damaged-helmet
@@ -30,8 +26,6 @@
            #:sprite-2
            #:texture))
 
-
-
 ;;;; This is a reasonably scoped shmup that demonstrates use of the engine.
 (defpackage #:first-light.examples.protect-the-planets
   (:nicknames #:fl.examples.ptp)
@@ -44,10 +38,6 @@
                     (#:m4 #:origin.mat4)
                     (#:q #:origin.quat))
   (:use #:cl)
-
-  ;; prefab library
-  (:export #:ptp-base)
-
-  ;; prefab descriptor for "scenes" to start.
-  (:export #:ptp
+  (:export #:ptp-base
+           #:ptp
            #:starfield-demo))
