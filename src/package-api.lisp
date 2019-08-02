@@ -95,9 +95,10 @@
    #:action-step
    #:attrs)
   (:inherit-from
-   #:fl.prefab
+   #:virality.prefabs
    #:define-prefab
    #:define-prefab-descriptor
    #:find-prefab-descriptor
    #:make-prefab-instance
+   #:prefab-descriptor
    #:ref))

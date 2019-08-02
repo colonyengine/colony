@@ -58,8 +58,8 @@ tear-down procedure occurs when stopping the engine."
 
 (defun load-initial-scene (core scene-name)
   (let* ((scene-name (or scene-name (option (context core) :initial-scene)))
-         (prefab-descriptor (fl.prefab:find-prefab-descriptor scene-name)))
-    (fl.prefab:make-prefab-instance core prefab-descriptor)))
+         (prefab-descriptor (fl:find-prefab-descriptor scene-name)))
+    (fl:make-prefab-instance core prefab-descriptor)))
 
 (defun initialize-engine (core scene-name)
   (let ((title (option (context core) :title)))

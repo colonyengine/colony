@@ -1,4 +1,4 @@
-(in-package #:first-light.prefab)
+(in-package #:virality.prefabs)
 
 (defmacro prefab-descriptor (&body prefab-specs)
   `(list

@@ -51,7 +51,7 @@
    (:log :verbose)
    (:v :first-light))
 
-  (:first-light.prefab
+  (:virality.prefabs
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)

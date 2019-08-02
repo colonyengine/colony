@@ -968,7 +968,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    ;; for indexing.
    (%mockette-prefab :accessor mockette-prefab
                      :initarg :mockette-prefab
-                     :initform (fl.prefab::prefab-descriptor
+                     :initform (fl:prefab-descriptor
                                  ("player-ship-mockette" ptp)))
 
    ;; We keep references to all of the mockettes in an array that matches their
@@ -1592,14 +1592,14 @@ NIL if no such list exists."
    ;; The db of levels over which the game progresses.
    (%levels :accessor levels
             :initarg :levels
-            :initform (fl.prefab::prefab-descriptor
+            :initform (fl:prefab-descriptor
                         ("level-0" ptp)
                         ("level-1" ptp)
                         ("level-2" ptp)))
    ;; which level is considered the demo level.
    (%demo-level :accessor demo-level
                 :initarg :demo-level
-                :initform (fl.prefab::prefab-descriptor
+                :initform (fl:prefab-descriptor
                             ("demo-level" ptp)))
    ;; Which level are we playing?
    (%current-level :accessor current-level

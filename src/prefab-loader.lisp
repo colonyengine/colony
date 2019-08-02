@@ -1,4 +1,4 @@
-(in-package #:first-light.prefab)
+(in-package #:virality.prefabs)
 
 (defun make-actors (context prefab)
   (let ((actors (u:dict #'equalp))
