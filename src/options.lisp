@@ -1,7 +1,7 @@
 (in-package #:virality.engine)
 
 (setf (meta 'options/default)
-      (u:dict :title "First-Light Game Project"
+      (u:dict :title "Virality Engine Project"
               :window-width 800
               :window-height 450
               :delta 1/30
@@ -17,7 +17,7 @@
 
 (defun load-options (core)
   (let ((user-options-path (uiop:merge-pathnames*
-                            #p"first-light/first-light.conf"
+                            #p"virality-engine/user.conf"
                             (uiop:xdg-config-home))))
     (when (uiop:file-exists-p user-options-path)
       (setf (meta 'options/user)

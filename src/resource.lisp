@@ -38,9 +38,9 @@
 ;; identifier.
 
 ;; Another example in the above example is :core, which is a special resource
-;; identifier in first-light. This is where all of first-light's internal
-;; resources are stored; here, they are located in the "data" directory directly
-;; in the user's project working directory.
+;; identifier in Virality Engine. This is where all of Virality Engine's
+;; internal resources are stored; here, they are located in the "data" directory
+;; directly in the user's project working directory.
 
 ;; NOTE: The resource identifiers :core and :project have special semantics that
 ;; will be described progressively below.
@@ -85,15 +85,15 @@
 ;; There is also a third format for path specifications which is a list of three
 ;; elements. In this form, the second and last element behave exactly as in the
 ;; two-element format. The first element is used to disambiguate between :core
-;; and :project, the two special resource identifiers of first-light. This is
-;; because it is completely permitted to use the same keyword resource
+;; and :project, the two special resource identifiers of Virality Engine. This
+;; is because it is completely permitted to use the same keyword resource
 ;; identifier in a user's project, as one already defined internal to
-;; first-light for :core.
+;; Virality Engine for :core.
 
 ;; In the "DSL Input" example above, :debug-tex defines a resource that makes
 ;; use of the three-element path specification format. Here, we can see that
 ;; :debug-tex refers to the "debug.tiff" file located by the :texture identifier
-;; in first-light's core resource definitions, and not by resolving a
+;; in Virality Engine's core resource definitions, and not by resolving a
 ;; user-defined :texture identifier.
 
 ;; NOTE: In all three forms of path specifications, there is a string component
@@ -117,13 +117,13 @@
 ;; restriction, as it lets us easily delineate between a file or directory in
 ;; the DSL's parser, which is important when merging Common Lisp pathnames.
 
-;; IMPORTANT: first-light's :core resource path specification is not permitted
-;; to use anything other than the string format, unlike other resource path
-;; specifications. Using a list form, such as (:core (:project "data")) will not
-;; define first-light's core resources to be relative to the user's project
-;; resources. Instead, a new core resource will be defined for the user's
-;; project, since we do not enforce any restrictions on user project resource
-;; identifier naming.
+;; IMPORTANT: Virality Engine's :core resource path specification is not
+;; permitted to use anything other than the string format, unlike other resource
+;; path specifications. Using a list form, such as (:core (:project "data"))
+;; will not define Virality Engine's core resources to be relative to the user's
+;; project resources. Instead, a new core resource will be defined for the
+;; user's project, since we do not enforce any restrictions on user project
+;; resource identifier naming.
 
 ;; 3) Initialization Form
 
@@ -296,7 +296,7 @@
         (let ((v (%lookup-resource k)))
           (format t "~&~vs ~s" column-width k (namestring v)))))))
 
-(define-resources (:project :first-light)
+(define-resources (:project :virality.engine)
   (:core "data/core")
   (:ext (:core "ext"))
   (:mesh (:core "mesh"))

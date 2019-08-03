@@ -33,12 +33,12 @@
 ;; Constants
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; NOTE: Because we don't yet have mesh/sprite rendering order in first-light,
-;; or order independent transparency tools, etc yet, we'll need to define were
-;; things exist in layers perpendicular to the orthographic camera so they can
-;; be rendered in order according to the zbuffer. This also means no
+;; NOTE: Because we don't yet have mesh/sprite rendering order in Virality
+;; Engine, or order independent transparency tools, etc yet, we'll need to
+;; define were things exist in layers perpendicular to the orthographic camera
+;; so they can be rendered in order according to the zbuffer. This also means no
 ;; translucency since the rendering can happen in any order. Stencil textures
-;; are ok though.  NOTE: We must be careful here since things that collide with
+;; are ok though. NOTE: We must be careful here since things that collide with
 ;; each other must actually be physically close together in the game.
 (defparameter *draw-layer* (u:dict :starfield -100f0
                                    :player-stable -99f0

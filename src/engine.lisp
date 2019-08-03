@@ -4,7 +4,7 @@
 (u:eval-always
   (defmacro profile (core duration)
     (let ((packages (remove-if-not
-                     (lambda (x) (search "FIRST-LIGHT" x))
+                     (lambda (x) (search "VIRALITY" x))
                      (mapcar #'package-name (list-all-packages)))))
       `(progn
          (sb-profile:unprofile)
@@ -79,7 +79,7 @@ tear-down procedure occurs when stopping the engine."
     (log:info :changeme "Finished starting ~a" title)))
 
 (defun iterate-main-loop (core)
-  (with-continue-restart "First Light"
+  (with-continue-restart "Virality Engine"
     (handle-events (input-data core))
     (render core)
     ;; TODO: Remove this later when possible.
