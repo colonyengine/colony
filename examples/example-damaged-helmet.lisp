@@ -20,7 +20,7 @@
 ;;; Materials
 
 (v:define-material damaged-helmet
-  (:shader first-light.shader.user:damaged-helmet
+  (:shader shaders:damaged-helmet
    :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:metallic-roughness-values (v2:one))

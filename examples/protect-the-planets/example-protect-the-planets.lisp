@@ -83,7 +83,7 @@
 ;; symbol name). However, I wanted the ENTIRE codebase to be in one file to
 ;; demonstrate this is possible for a game.
 
-(in-package #:first-light.shader.user)
+(in-package #:virality.examples.shaders)
 
 (define-function starfield/frag ((color :vec4)
                                  (uv1 :vec2)
@@ -166,7 +166,7 @@
 
 (v:define-material starfield
   (:profiles (contrib.mat:u-mvpt)
-   :shader first-light.shader.user:starfield
+   :shader shaders:starfield
    :uniforms ((:tex 'starfield)
               (:mix-color (v4:one)))))
 

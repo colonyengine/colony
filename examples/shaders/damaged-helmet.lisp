@@ -1,4 +1,4 @@
-(in-package #:first-light.shader.user)
+(in-package #:virality.examples.shaders)
 
 (define-struct pbr-info
   (n-dot-l :float :accessor n-dot-l)

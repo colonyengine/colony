@@ -133,7 +133,7 @@
 ;;; Materials
 
 (v:define-material 1d-gradient
-  (:shader first-light.shader.user:unlit-texture-1d
+  (:shader shaders:unlit-texture-1d
    :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:tex.sampler1 '1d-gradient)
@@ -147,7 +147,7 @@
     (:mix-color (v4:one)))))
 
 (v:define-material 3d
-  (:shader first-light.shader.user:unlit-texture-3d
+  (:shader shaders:unlit-texture-3d
    :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:tex.sampler1 '3d)
@@ -158,7 +158,7 @@
              (/ (1+ (sin (* (v:total-time context) 1.5))) 2.0))))))
 
 (v:define-material 1d-array
-  (:shader first-light.shader.user:unlit-texture-1d-array
+  (:shader shaders:unlit-texture-1d-array
    :profiles (contrib.mat:u-mvpt)
    :uniforms
    ((:tex.sampler1 '1d-array)
@@ -166,7 +166,7 @@
     (:num-layers 4))))
 
 (v:define-material 2d-array
-  (:shader first-light.shader.user:unlit-texture-2d-array
+  (:shader shaders:unlit-texture-2d-array
    :profiles (contrib.mat:u-mvpt)
    :uniforms
    ((:tex.sampler1 '2d-array)
@@ -178,7 +178,7 @@
     (:num-layers 4))))
 
 (v:define-material 2d-sweep-input
-  (:shader first-light.shader.user:noise-2d/sweep-input
+  (:shader shaders:noise-2d/sweep-input
    :profiles (contrib.mat:u-mvp)
    :uniforms
    ;; any old 2d texture here will do since we overwrite it with noise.
@@ -187,14 +187,14 @@
     (:mix-color (v4:one)))))
 
 (v:define-material cubemap
-  (:shader first-light.shader.user:unlit-texture-cube-map
+  (:shader shaders:unlit-texture-cube-map
    :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemap)
     (:mix-color (v4:one)))))
 
 (v:define-material cubemaparray
-  (:shader first-light.shader.user:unlit-texture-cube-map-array
+  (:shader shaders:unlit-texture-cube-map-array
    :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemaparray)

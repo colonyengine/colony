@@ -36,9 +36,6 @@
    #:saturate
    #:map-domain))
 
-(defpackage #:first-light.shader.user
-  (:use #:first-light.shader))
-
 (defpackage #:first-light.shader.color
   (:use #:first-light.shader)
   ;; color space conversion

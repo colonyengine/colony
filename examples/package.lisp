@@ -1,5 +1,8 @@
 (in-package #:cl-user)
 
+(defpackage #:virality.examples.shaders
+  (:use #:first-light.shader))
+
 (defpackage #:virality.examples
   (:local-nicknames (#:a #:alexandria)
                     (#:u #:golden-utils)
@@ -13,7 +16,8 @@
                     (#:comp #:virality.components)
                     (#:contrib.tex #:virality.contrib.textures)
                     (#:contrib.mat #:virality.contrib.materials)
-                    (#:contrib.action #:virality.contrib.actions))
+                    (#:contrib.action #:virality.contrib.actions)
+                    (#:shaders #:virality.examples.shaders))
   (:use #:cl)
   (:export #:examples
            #:collision-smoke-test
@@ -44,7 +48,8 @@
                     (#:comp #:virality.components)
                     (#:contrib.tex #:virality.contrib.textures)
                     (#:contrib.mat #:virality.contrib.materials)
-                    (#:contrib.action #:virality.contrib.actions))
+                    (#:contrib.action #:virality.contrib.actions)
+                    (#:shaders #:virality.examples.shaders))
   (:use #:cl)
   (:export #:ptp-base
            #:ptp
