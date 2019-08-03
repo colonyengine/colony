@@ -82,6 +82,6 @@
    (:v :virality.engine)
    (:comp :virality.components))
 
-  (:first-light.shader.swizzle
+  (:first-light.shader
    (:a :alexandria)
    (:u :golden-utils)))

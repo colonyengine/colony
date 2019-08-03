@@ -15,7 +15,6 @@
                #:cl-opengl
                #:cl-ppcre
                #:closer-mop
-               #:defpackage-plus
                #:doubly-linked-list
                #:fast-io
                #:glsl-packing
