@@ -1,16 +1,16 @@
 (in-package #:virality.engine)
 
-#+sbcl
-(defun deploy-binary (file-name scene &key compress-p)
-  (log:stop v:*global-controller*)
-  (setf uiop/image:*image-dumped-p* t)
-  (sb-ext:save-lisp-and-die
-   file-name
-   :toplevel (lambda () (start-engine :scene scene))
-   :executable t
-   :compression (when compress-p 9)))
+(defvar *deployed-p*)
 
-#-sbcl
-(defun deploy-binary (file-name scene-name)
-  (declare (ignore file-name scene-name))
-  (log:warn :changeme "Deployment is not supported on this platform."))
+(defun deploy-binary (file-name scene &key compress-p)
+  #+sbcl
+  (progn
+    (setf *deployed-p* t)
+    (log:stop v:*global-controller*)
+    (sb-ext:save-lisp-and-die
+     file-name
+     :toplevel (lambda () (start-engine :scene scene))
+     :executable t
+     :compression (when compress-p 9)))
+  #-sbcl
+  (log:error :changeme "Deployment is only supported on SBCL."))

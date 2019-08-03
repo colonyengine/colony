@@ -144,6 +144,18 @@
 
 (setf (meta 'resources) (u:dict #'equalp))
 
+(defun resolve-project-path (system &optional path)
+  (if (and (boundp '*deployed-p*) *deployed-p*)
+      #+sbcl
+      (truename
+       (uiop:merge-pathnames*
+        path
+        (uiop:pathname-directory-pathname
+         (first sb-ext:*posix-argv*))))
+      #-sbcl
+      (error "Virality Engine was not deployed with SBCL.")
+      (asdf:system-relative-pathname (asdf:find-system system) path)))
+
 (defun %lookup-resource (key)
   (u:href (meta 'resources) key))
 
@@ -259,7 +271,7 @@
          (project (get-resource-project id)))
     (u:when-found (resource (u:href resources id))
       (let ((path (uiop:merge-pathnames* sub-path resource)))
-        (resolve-system-path project path)))))
+        (resolve-project-path project path)))))
 
 (defun print-all-resources ()
   (flet ((compare-keys (k1 k2)

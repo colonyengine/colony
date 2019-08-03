@@ -46,6 +46,7 @@
    (:file "common")
    (:file "interactive-development")
    (:file "metadata")
+   (:file "deployment")
    (:file "binary-parser")
    (:file "geometry-static")
    (:file "geometry-dynamic-attribute")
@@ -127,7 +128,6 @@
    (:file "prefab")
    (:file "core")
    (:file "engine")
-   (:file "deployment")
 
    (:file "shader/common")
    (:file "shader/common-swizzle")

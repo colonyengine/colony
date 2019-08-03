@@ -84,15 +84,3 @@ the test function for `HT` itself."
        (/ ms 1d6)))
   #-sbcl
   (float (/ (get-internal-real-time) internal-time-units-per-second) 1d0))
-
-(defun resolve-system-path (system &optional path)
-  "Resolve the absolute path of the filesystem where `PATH` is located, relative
-to the ASDF system, `SYSTEM`, or relative to the program location in the case of
-running a dumped Lisp image from the command line. Note: A dumped image must
-have either been created with UIOP:DUMP-IMAGE, or have manually set
-UIOP/IMAGE:*IMAGE-DUMPED-P* prior to dumping."
-  (if uiop/image:*image-dumped-p*
-      (truename (uiop/pathname:merge-pathnames*
-                 path
-                 (uiop:pathname-directory-pathname (uiop:argv0))))
-      (asdf/system:system-relative-pathname (asdf:find-system system) path)))
