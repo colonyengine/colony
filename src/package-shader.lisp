@@ -1,6 +1,6 @@
 (in-package #:cl-user)
 
-(defpackage #:first-light.shader
+(defpackage #:virality.shaders
   (:use #:cl #:vari)
   (:import-from
    #:virality.gpu
@@ -36,8 +36,8 @@
    #:saturate
    #:map-domain))
 
-(defpackage #:first-light.shader.color
-  (:use #:cl #:vari #:first-light.shader)
+(defpackage #:virality.shaders.color
+  (:use #:cl #:vari #:virality.shaders)
   ;; color space conversion
   (:export
    #:rgb->grayscale
@@ -73,13 +73,13 @@
    #:tone-map/hejl-burgess-dawson
    #:tone-map/uncharted2))
 
-(defpackage #:first-light.shader.graph
-  (:use #:cl #:vari #:first-light.shader)
+(defpackage #:virality.shaders.graph
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:graph))
 
-(defpackage #:first-light.shader.shaping
-  (:use #:cl #:vari #:first-light.shader)
+(defpackage #:virality.shaders.shaping
+  (:use #:cl #:vari #:virality.shaders)
   ;; penner
   (:export
    #:linear
@@ -150,8 +150,8 @@
    #:falloff-squared-c1
    #:falloff-squared-c2))
 
-(defpackage #:first-light.shader.hash
-  (:use #:cl #:vari #:first-light.shader)
+(defpackage #:virality.shaders.hash
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:blum-blum-shub
    #:blum-blum-shub/hq
@@ -166,8 +166,8 @@
    #:fast32-2
    #:fast32-2/4-per-corner))
 
-(defpackage #:first-light.shader.noise
-  (:use #:cl #:vari #:first-light.shader)
+(defpackage #:virality.shaders.noise
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:perlin
    #:perlin/derivs
@@ -192,8 +192,8 @@
    #:cubist
    #:stars))
 
-(defpackage #:first-light.shader.sdf
-  (:use #:cl #:vari #:first-light.shader)
+(defpackage #:virality.shaders.sdf
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:dist/box
    #:dist/circle
@@ -205,20 +205,20 @@
    #:mask/inner-border
    #:mask/outer-border))
 
-(defpackage #:first-light.shader.texture
-  (:use #:cl #:vari #:first-light.shader)
+(defpackage #:virality.shaders.texture
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:unlit-color
    #:unlit-color-decal
    #:unlit-texture
    #:unlit-texture-decal))
 
-(defpackage #:first-light.shader.sprite
-  (:use #:cl #:vari #:first-light.shader)
+(defpackage #:virality.shaders.sprite
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:sprite))
 
-(defpackage #:first-light.shader.visualization
-  (:use #:cl #:vari #:first-light.shader)
+(defpackage #:virality.shaders.visualization
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:collider/sphere))

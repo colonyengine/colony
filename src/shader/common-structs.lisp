@@ -1,4 +1,4 @@
-(in-package #:first-light.shader)
+(in-package #:virality.shaders)
 
 (define-struct mesh-attrs
   (mesh/pos :vec3)

@@ -1,4 +1,4 @@
-(in-package #:first-light.shader.noise)
+(in-package #:virality.shaders.noise)
 
 ;;;; Hermite noise
 
@@ -14,15 +14,15 @@
            (norm (inversesqrt (+ (* hash-x hash-x) (* hash-y hash-y))))
            (hash-x (* hash-x norm))
            (hash-y (* hash-y norm))
-           (out (first-light.shader.shaping:quintic-hermite
+           (out (virality.shaders.shaping:quintic-hermite
                  (.y vec) (.xy hash-x) (.zw hash-x) (.xy hash-y) (.zw hash-y)))
-           (out (* (first-light.shader.shaping:quintic-hermite
+           (out (* (virality.shaders.shaping:quintic-hermite
                     (.x vec) (.x out) (.y out) (.z out) (.w out))
                    2.2627418)))
     (map-domain out -1 1 0 1)))
 
 (define-function hermite ((point :vec2))
-  (hermite point (lambda ((x :vec2)) (first-light.shader.hash:fast32/2-per-corner x))))
+  (hermite point (lambda ((x :vec2)) (virality.shaders.hash:fast32/2-per-corner x))))
 
 ;;; 2D Hermite noise with derivatives
 
@@ -36,19 +36,19 @@
            (norm (inversesqrt (+ (* grad-x grad-x) (* grad-y grad-y))))
            (grad-x (* grad-x norm))
            (grad-y (* grad-y norm))
-           (temp-x (first-light.shader.shaping:quintic-hermite
+           (temp-x (virality.shaders.shaping:quintic-hermite
                     (.y vec) (.xy grad-x) (.zw grad-x) (.xy grad-y)
                     (.zw grad-y)))
-           (temp-y (first-light.shader.shaping:quintic-hermite
+           (temp-y (virality.shaders.shaping:quintic-hermite
                     (.x vec) (.xz grad-y) (.yw grad-y) (.xz grad-x)
                     (.yw grad-x)))
-           (noise (first-light.shader.shaping:quintic-hermite
+           (noise (virality.shaders.shaping:quintic-hermite
                    (.x vec) (.x temp-x) (.y temp-x) (.z temp-x) (.w temp-x)))
            (noise (map-domain noise -0.4419417 0.4419417 0 1))
-           (derivs (* (vec2 (first-light.shader.shaping:quintic-hermite/derivative
+           (derivs (* (vec2 (virality.shaders.shaping:quintic-hermite/derivative
                              (.x vec) (.x temp-x) (.y temp-x) (.z temp-x)
                              (.w temp-x))
-                            (first-light.shader.shaping:quintic-hermite/derivative
+                            (virality.shaders.shaping:quintic-hermite/derivative
                              (.y vec) (.x temp-y) (.y temp-y) (.z temp-y)
                              (.w temp-y)))
                       1.1313709)))
@@ -56,7 +56,7 @@
 
 (define-function hermite/derivs ((point :vec2))
   (hermite/derivs point (lambda ((x :vec2))
-                          (first-light.shader.hash:fast32/2-per-corner x))))
+                          (virality.shaders.hash:fast32/2-per-corner x))))
 
 ;;; 3D Hermite noise
 
@@ -86,22 +86,22 @@
            (grad-x1 (* hash-x1 norm1))
            (grad-y1 (* hash-y1 norm1))
            (grad-z1 (* hash-z1 norm1))
-           (ival igrad-x igrad-y (first-light.shader.shaping:quintic-hermite
+           (ival igrad-x igrad-y (virality.shaders.shaping:quintic-hermite
                                   (.z vec) grad-x0 grad-x1 grad-y0 grad-y1
                                   grad-z0 grad-z1))
-           (out (first-light.shader.shaping:quintic-hermite
+           (out (virality.shaders.shaping:quintic-hermite
                  (.y vec)
                  (vec4 (.xy ival) (.xy igrad-x))
                  (vec4 (.zw ival) (.zw igrad-x))
                  (vec4 (.xy igrad-y) 0 0)
                  (vec4 (.zw igrad-y) 0 0)))
-           (out (* (first-light.shader.shaping:quintic-hermite
+           (out (* (virality.shaders.shaping:quintic-hermite
                     (.x vec) (.x out) (.y out) (.z out) (.w out))
                    1.8475208)))
     (map-domain out -1 1 0 1)))
 
 (define-function hermite ((point :vec3))
-  (hermite point (lambda ((x :vec3)) (first-light.shader.hash:fast32/3-per-corner x))))
+  (hermite point (lambda ((x :vec3)) (virality.shaders.hash:fast32/3-per-corner x))))
 
 ;;; 3D Hermite noise with derivatives
 
@@ -132,10 +132,10 @@
            (grad-x1 (* grad-x1 norm1))
            (grad-y1 (* grad-y1 norm1))
            (grad-z1 (* grad-z1 norm1))
-           (ival-z igrad-xz igrad-yz (first-light.shader.shaping:quintic-hermite
+           (ival-z igrad-xz igrad-yz (virality.shaders.shaping:quintic-hermite
                                       (.z vec) grad-x0 grad-x1 grad-y0 grad-y1
                                       grad-z0 grad-z1))
-           (ival-y igrad-xy igrad-zy (first-light.shader.shaping:quintic-hermite
+           (ival-y igrad-xy igrad-zy (virality.shaders.shaping:quintic-hermite
                                       (.y vec)
                                       (vec4 (.xy grad-x0) (.xy grad-x1))
                                       (vec4 (.zw grad-x0) (.zw grad-x1))
@@ -143,34 +143,34 @@
                                       (vec4 (.zw grad-z0) (.zw grad-z1))
                                       (vec4 (.xy grad-y0) (.xy grad-y1))
                                       (vec4 (.zw grad-y0) (.zw grad-y1))))
-           (temp-x (first-light.shader.shaping:quintic-hermite
+           (temp-x (virality.shaders.shaping:quintic-hermite
                     (.y vec)
                     (vec4 (.xy ival-z) (.xy igrad-xz))
                     (vec4 (.zw ival-z) (.zw igrad-xz))
                     (vec4 (.xy igrad-yz) 0 0)
                     (vec4 (.zw igrad-yz) 0 0)))
-           (temp-y (first-light.shader.shaping:quintic-hermite
+           (temp-y (virality.shaders.shaping:quintic-hermite
                     (.x vec)
                     (vec4 (.xz ival-z) (.xz igrad-yz))
                     (vec4 (.yw ival-z) (.yw igrad-yz))
                     (vec4 (.xz igrad-xz) 0 0)
                     (vec4 (.yw igrad-xz) 0 0)))
-           (temp-z (first-light.shader.shaping:quintic-hermite
+           (temp-z (virality.shaders.shaping:quintic-hermite
                     (.x vec)
                     (vec4 (.xz ival-y) (.xz igrad-zy))
                     (vec4 (.yw ival-y) (.yw igrad-zy))
                     (vec4 (.xz igrad-xy) 0 0)
                     (vec4 (.yw igrad-xy) 0 0)))
-           (noise (first-light.shader.shaping:quintic-hermite
+           (noise (virality.shaders.shaping:quintic-hermite
                    (.x vec) (.x temp-x) (.y temp-x) (.z temp-x) (.w temp-x)))
            (noise (map-domain noise -0.5412659 0.5412659 0 1))
-           (derivs (* (vec3 (first-light.shader.shaping:quintic-hermite/derivative
+           (derivs (* (vec3 (virality.shaders.shaping:quintic-hermite/derivative
                              (.x vec) (.x temp-x) (.y temp-x) (.z temp-x)
                              (.w temp-x))
-                            (first-light.shader.shaping:quintic-hermite/derivative
+                            (virality.shaders.shaping:quintic-hermite/derivative
                              (.y vec) (.x temp-y) (.y temp-y) (.z temp-y)
                              (.w temp-y))
-                            (first-light.shader.shaping:quintic-hermite/derivative
+                            (virality.shaders.shaping:quintic-hermite/derivative
                              (.z vec) (.x temp-z) (.y temp-z) (.z temp-z)
                              (.w temp-z)))
                       0.92376035)))
@@ -178,4 +178,4 @@
 
 (define-function hermite/derivs ((point :vec3))
   (hermite/derivs point (lambda ((x :vec3))
-                          (first-light.shader.hash:fast32/3-per-corner x))))
+                          (virality.shaders.hash:fast32/3-per-corner x))))

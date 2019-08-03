@@ -1,4 +1,4 @@
-(in-package #:first-light.shader)
+(in-package #:virality.shaders)
 
 (u:eval-always
   (defun %swizzle/combinations (n items)

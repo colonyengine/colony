@@ -140,7 +140,7 @@
     (:mix-color (v4:one)))))
 
 (v:define-material 2d-wood
-  (:shader first-light.shader.texture:unlit-texture
+  (:shader virality.shaders.texture:unlit-texture
    :profiles (contrib.mat:u-mvp)
    :uniforms
    ((:tex.sampler1 '2d-wood)
