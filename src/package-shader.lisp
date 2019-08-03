@@ -1,9 +1,13 @@
 (in-package #:defpackage+-user-1)
 
 (defpackage+ #:first-light.shader
-  (:nicknames #:fl.shader)
-  (:inherit-from
+  (:import-from
    #:virality.gpu
+   #:define-function
+   #:define-struct
+   #:define-macro
+   #:define-shader)
+  (:export
    #:define-function
    #:define-struct
    #:define-macro
@@ -35,20 +39,17 @@
    #:map-domain))
 
 (defpackage+ #:first-light.shader.swizzle
-  (:nicknames #:fl.shader.swizzle)
   (:use #:cl #:vari))
 
 (defpackage+ #:first-light.shader.user
-  (:nicknames #:fl.shader.user)
-  (:use #:fl.shader.swizzle)
-  (:inherit #:fl.shader))
+  (:use #:first-light.shader.swizzle)
+  (:inherit #:first-light.shader))
 
 (in-package #:cl-user)
 
 (defpackage #:first-light.shader.color
-  (:nicknames #:fl.shader.color)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+  (:use #:first-light.shader
+        #:first-light.shader.swizzle)
   ;; color space conversion
   (:export
    #:rgb->grayscale
@@ -85,16 +86,14 @@
    #:tone-map/uncharted2))
 
 (defpackage #:first-light.shader.graph
-  (:nicknames #:fl.shader.graph)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+  (:use #:first-light.shader
+        #:first-light.shader.swizzle)
   (:export
    #:graph))
 
 (defpackage #:first-light.shader.shaping
-  (:nicknames #:fl.shader.shaping)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+  (:use #:first-light.shader
+        #:first-light.shader.swizzle)
   ;; penner
   (:export
    #:linear
@@ -166,9 +165,8 @@
    #:falloff-squared-c2))
 
 (defpackage #:first-light.shader.hash
-  (:nicknames #:fl.shader.hash)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+  (:use #:first-light.shader
+        #:first-light.shader.swizzle)
   (:export
    #:blum-blum-shub
    #:blum-blum-shub/hq
@@ -184,9 +182,8 @@
    #:fast32-2/4-per-corner))
 
 (defpackage #:first-light.shader.noise
-  (:nicknames #:fl.shader.noise)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+  (:use #:first-light.shader
+        #:first-light.shader.swizzle)
   (:export
    #:perlin
    #:perlin/derivs
@@ -212,9 +209,8 @@
    #:stars))
 
 (defpackage #:first-light.shader.sdf
-  (:nicknames #:fl.shader.sdf)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+  (:use #:first-light.shader
+        #:first-light.shader.swizzle)
   (:export
    #:dist/box
    #:dist/circle
@@ -227,9 +223,8 @@
    #:mask/outer-border))
 
 (defpackage #:first-light.shader.texture
-  (:nicknames #:fl.shader.texture)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+  (:use #:first-light.shader
+        #:first-light.shader.swizzle)
   (:export
    #:unlit-color
    #:unlit-color-decal
@@ -237,15 +232,13 @@
    #:unlit-texture-decal))
 
 (defpackage #:first-light.shader.sprite
-  (:nicknames #:fl.shader.sprite)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+  (:use #:first-light.shader
+        #:first-light.shader.swizzle)
   (:export
    #:sprite))
 
 (defpackage #:first-light.shader.visualization
-  (:nicknames #:fl.shader.visualization)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+  (:use #:first-light.shader
+        #:first-light.shader.swizzle)
   (:export
    #:collider/sphere))

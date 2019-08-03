@@ -9,12 +9,12 @@
   (let* ((cell (floor point))
          (vec (- point cell))
          (hash (funcall hash-fn cell))
-         (blend (fl.shader.shaping:quintic-curve vec))
+         (blend (first-light.shader.shaping:quintic-curve vec))
          (blend (vec4 blend (- 1 blend))))
     (dot hash (* (.zxzx blend) (.wwyy blend)))))
 
 (define-function value ((point :vec2))
-  (value point (lambda ((x :vec2)) (fl.shader.hash:fast32 x))))
+  (value point (lambda ((x :vec2)) (first-light.shader.hash:fast32 x))))
 
 ;;; 2D Value noise with derivatives
 
@@ -23,13 +23,13 @@
   (let* ((cell (floor point))
          (vec (- point cell))
          (hash (funcall hash-fn cell))
-         (blend (fl.shader.shaping:quintic-curve/interpolate-derivative vec))
+         (blend (first-light.shader.shaping:quintic-curve/interpolate-derivative vec))
          (out (mix (.xyxz hash) (.zwyw hash) (.yyxx blend))))
     (+ (vec3 (.x out) 0 0)
        (* (- (.yyw out) (.xxz out)) (.xzw blend)))))
 
 (define-function value/derivs ((point :vec2))
-  (value/derivs point (lambda ((x :vec2)) (fl.shader.hash:fast32 x))))
+  (value/derivs point (lambda ((x :vec2)) (first-light.shader.hash:fast32 x))))
 
 ;;; 3D Value noise
 
@@ -38,13 +38,13 @@
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (low-z high-z (funcall hash-fn cell))
-           (blend (fl.shader.shaping:quintic-curve vec))
+           (blend (first-light.shader.shaping:quintic-curve vec))
            (out (mix low-z high-z (.z blend)))
            (blend (vec4 (.xy blend) (- 1 (.xy blend)))))
     (dot out (* (.zxzx blend) (.wwyy blend)))))
 
 (define-function value ((point :vec3))
-  (value point (lambda ((x :vec3)) (fl.shader.hash:fast32 x))))
+  (value point (lambda ((x :vec3)) (first-light.shader.hash:fast32 x))))
 
 ;;; 3D Value noise with derivatives
 
@@ -53,7 +53,7 @@
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (low-z high-z (funcall hash-fn cell))
-           (blend (fl.shader.shaping:quintic-curve vec))
+           (blend (first-light.shader.shaping:quintic-curve vec))
            (temp1 (mix low-z high-z (.z blend)))
            (temp1 (mix (.xyxz temp1) (.zwyw temp1) (.yyxx blend)))
            (temp2 (mix (vec4 (.xy low-z) (.xy high-z))
@@ -62,10 +62,10 @@
            (temp2 (mix (.xz temp2) (.yw temp2) (.x blend))))
     (+ (vec4 (.x temp1) 0 0 0)
        (* (- (vec4 (.yyw temp1) (.y temp2)) (vec4 (.xxz temp1) (.x temp2)))
-          (vec4 (.x blend) (fl.shader.shaping:quintic-curve/derivative vec))))))
+          (vec4 (.x blend) (first-light.shader.shaping:quintic-curve/derivative vec))))))
 
 (define-function value/derivs ((point :vec3))
-  (value/derivs point (lambda ((x :vec3)) (fl.shader.hash:fast32 x))))
+  (value/derivs point (lambda ((x :vec3)) (first-light.shader.hash:fast32 x))))
 
 ;;; 4D Value noise
 
@@ -74,7 +74,7 @@
   (mvlet* ((cell (floor point))
            (vec (- point cell))
            (z0w0 z1w0 z0w1 z1w1 (funcall hash-fn cell))
-           (blend (fl.shader.shaping:quintic-curve vec))
+           (blend (first-light.shader.shaping:quintic-curve vec))
            (temp (+ z0w0 (* (- z0w1 z0w0) (.w blend))))
            (temp (+ temp (* (- (+ z1w0 (* (- z1w1 z1w0) (.w blend)))
                                temp)
@@ -83,7 +83,7 @@
     (dot temp (* (.zxzx blend) (.wwyy blend)))))
 
 (define-function value ((point :vec4))
-  (value point (lambda ((x :vec4)) (fl.shader.hash:fast32-2 x))))
+  (value point (lambda ((x :vec4)) (first-light.shader.hash:fast32-2 x))))
 
 ;;; 2D Value Hermite noise
 
@@ -99,13 +99,13 @@
            (hash-x (* (- hash-z 0.5) value-scale))
            (hash-y (* (- hash-x 0.5 +epsilon+) gradient-scale))
            (hash-z (* (- hash-y 0.5 +epsilon+) gradient-scale))
-           (out (fl.shader.shaping:quintic-hermite
+           (out (first-light.shader.shaping:quintic-hermite
                  (.y vec)
                  (vec4 (.xy hash-x) (.xy hash-y))
                  (vec4 (.zw hash-x) (.zw hash-y))
                  (vec4 (.xy hash-z) 0 0)
                  (vec4 (.zw hash-z) 0 0)))
-           (out (* (fl.shader.shaping:quintic-hermite
+           (out (* (first-light.shader.shaping:quintic-hermite
                     (.x vec) (.x out) (.y out) (.z out) (.w out))
                    normalization-value)))
     (map-domain out -1 1 0 1)))
@@ -115,7 +115,7 @@
                                 (gradient-scale :float)
                                 (normalization-value :float))
   (value-hermite point value-scale gradient-scale normalization-value
-                 (lambda ((x :vec2)) (fl.shader.hash:fast32/3-per-corner x))))
+                 (lambda ((x :vec2)) (first-light.shader.hash:fast32/3-per-corner x))))
 
 ;;; 3D Value Hermite noise
 
@@ -138,16 +138,16 @@
            (hash-y1 (* (- hash-y1 0.5 +epsilon+) gradient-scale))
            (hash-z1 (* (- hash-z1 0.5 +epsilon+) gradient-scale))
            (hash-w1 (* (- hash-w1 0.5 +epsilon+) gradient-scale))
-           (ival igrad-x igrad-y (fl.shader.shaping:quintic-hermite
+           (ival igrad-x igrad-y (first-light.shader.shaping:quintic-hermite
                                   (.z vec) hash-x0 hash-x1 hash-y0 hash-y1
                                   hash-z0 hash-z1 hash-w0 hash-w1))
-           (out (fl.shader.shaping:quintic-hermite
+           (out (first-light.shader.shaping:quintic-hermite
                  (.y vec)
                  (vec4 (.xy ival) (.xy igrad-x))
                  (vec4 (.zw ival) (.zw igrad-x))
                  (vec4 (.xy igrad-y) 0 0)
                  (vec4 (.zw igrad-y) 0 0)))
-           (out (* (fl.shader.shaping:quintic-hermite
+           (out (* (first-light.shader.shaping:quintic-hermite
                     (.x vec) (.x out) (.y out) (.z out) (.w out))
                    normalization-value)))
     (map-domain out -1 1 0 1)))
@@ -157,7 +157,7 @@
                                 (gradient-scale :float)
                                 (normalization-value :float))
   (value-hermite point value-scale gradient-scale normalization-value
-                 (lambda ((x :vec3)) (fl.shader.hash:fast32/4-per-corner x))))
+                 (lambda ((x :vec3)) (first-light.shader.hash:fast32/4-per-corner x))))
 
 ;;; 2D Value Perlin noise
 
@@ -176,7 +176,7 @@
                                     (* grad-y (.yyww vecs)))
                                  1.4142135)
                               blend-value))
-           (blend (fl.shader.shaping:quintic-curve (.xy vecs)))
+           (blend (first-light.shader.shaping:quintic-curve (.xy vecs)))
            (blend (vec4 blend (- 1 blend)))
            (out (dot grad-results (* (.zxzx blend) (.wwyy blend)))))
     (map-domain out -1 1 0 1)))
@@ -184,7 +184,7 @@
 (define-function value-perlin ((point :vec2)
                                (blend-value :float))
   (value-perlin point blend-value (lambda ((x :vec2))
-                                    (fl.shader.hash:fast32/3-per-corner x))))
+                                    (first-light.shader.hash:fast32/3-per-corner x))))
 
 ;;; 3D Value Perlin noise
 
@@ -222,7 +222,7 @@
                              (* (.z vec-1) grad-z1))
                           1.1547005)
                        blend-value))
-           (blend (fl.shader.shaping:quintic-curve vec))
+           (blend (first-light.shader.shaping:quintic-curve vec))
            (out (mix temp1 temp2 (.z blend)))
            (blend (vec4 (.xy blend) (- 1 (.xy blend))))
            (out (dot out (* (.zxzx blend) (.wwyy blend)))))
@@ -231,4 +231,4 @@
 (define-function value-perlin ((point :vec3)
                                (blend-value :float))
   (value-perlin point blend-value (lambda ((x :vec3))
-                                    (fl.shader.hash:fast32/4-per-corner x))))
+                                    (first-light.shader.hash:fast32/4-per-corner x))))

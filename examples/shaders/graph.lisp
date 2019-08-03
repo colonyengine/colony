@@ -6,7 +6,7 @@
   (let* ((dim (vec2 (1+ (sin time)) (+ 2 (sin time))))
          (uv (+ (* uv (- (.y dim) (.x dim)))
                 (vec2 (.x dim) -0.5))))
-    (fl.shader.graph:graph
+    (first-light.shader.graph:graph
      (lambda ((x :float))
        (* (sin (* x x x)) (sin x)))
      (* 4 uv)
@@ -15,7 +15,7 @@
      10)))
 
 (define-shader graph ()
-  (:vertex (fl.shader.texture:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (first-light.shader.texture:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (graph/frag :vec2)))
 
 (define-function 3d-graph/graph ((fn (function (:float) :vec3))
@@ -30,8 +30,8 @@
            (model (vec4 result 1))
            (pos (+ (* view model)
                    (vec4 (* pos size) 0))))
-          (values (* proj pos)
-                  color)))
+    (values (* proj pos)
+            color)))
 
 (define-function 3d-graph-1 ((i :float)
                              (time :float))
@@ -40,8 +40,8 @@
                    0 1 0
                    (sin i) 0 (cos i)))
          (pos (* m3 offset))
-         (h (* 40 (fl.shader.noise:perlin-surflet (+ (* 0.03 pos)
-                                                     (vec3 (* 0.5 time))))))
+         (h (* 40 (first-light.shader.noise:perlin-surflet (+ (* 0.03 pos)
+                                                              (vec3 (* 0.5 time))))))
          (pos (vec3 (.x pos) h (.z pos)))
          (color (mix (vec4 1 0.8 0 0)
                      (vec4 0.85)
@@ -75,9 +75,9 @@
                 (3d-graph-1 i time))))
       (mvlet* ((pos color (3d-graph/graph
                            fn mesh/pos view proj size min by)))
-              (values pos
-                      mesh/uv1
-                      color)))))
+        (values pos
+                mesh/uv1
+                color)))))
 
 (define-function 3d-graph/vert2 ((mesh-attrs mesh-attrs)
                                  &uniform
@@ -93,9 +93,9 @@
                 (3d-graph-2 i time))))
       (mvlet* ((pos color (3d-graph/graph
                            fn mesh/pos view proj size min by)))
-              (values pos
-                      mesh/uv1
-                      color)))))
+        (values pos
+                mesh/uv1
+                color)))))
 
 (define-function 3d-graph/frag ((uv :vec2)
                                 (color :vec4)
@@ -104,9 +104,9 @@
   (let ((scale 1))
     (mix (vec4 0)
          color
-         (fl.shader.sdf:mask/fill
-          (fl.shader.sdf:dist/circle (- (* uv 2 scale) (vec2 scale))
-                                     scale)))))
+         (first-light.shader.sdf:mask/fill
+          (first-light.shader.sdf:dist/circle (- (* uv 2 scale) (vec2 scale))
+                                              scale)))))
 
 (define-shader 3d-graph-1 ()
   (:vertex (3d-graph/vert1 mesh-attrs))
