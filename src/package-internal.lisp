@@ -61,7 +61,6 @@
    #:make-component
    #:input-enter-p
    #:frame-count
-   #:input-data
    #:get-gamepad-analog
    #:option
    #:on-component-render
@@ -220,5 +219,4 @@
    #:input-exit-p
    #:make-input-data
    #:prepare-gamepads
-   #:shutdown-gamepads)
-  )
+   #:shutdown-gamepads))

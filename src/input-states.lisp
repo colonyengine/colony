@@ -30,14 +30,14 @@
         (setf enter nil enabled nil exit nil)))
     (setf exiting nil)))
 
-(defun input-enter-p (input-data input)
-  (a:when-let ((state (u:href (states input-data) input)))
+(defun input-enter-p (context input)
+  (a:when-let ((state (u:href (states (input-data context)) input)))
     (input-state-enter state)))
 
-(defun input-enabled-p (input-data input)
-  (a:when-let ((state (u:href (states input-data) input)))
+(defun input-enabled-p (context input)
+  (a:when-let ((state (u:href (states (input-data context)) input)))
     (input-state-enabled state)))
 
-(defun input-exit-p (input-data input)
-  (a:when-let ((state (u:href (states input-data) input)))
+(defun input-exit-p (context input)
+  (a:when-let ((state (u:href (states (input-data context)) input)))
     (input-state-exit state)))

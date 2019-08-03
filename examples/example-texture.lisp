@@ -225,7 +225,7 @@
       (setf %material (comp:material (renderer self))
             %material-retrieved-p t))
     (u:mvlet* ((context (v:context self))
-               (x y (v:get-mouse-position (v:input-data context))))
+               (x y (v:get-mouse-position context)))
       (when (null x) (setf x (/ (v:option context :window-width) 2.0)))
       (when (null y) (setf y (/ (v:option context :window-height) 2.0)))
       (v2:with-components ((c (channel0 self)))

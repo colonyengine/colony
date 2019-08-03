@@ -366,8 +366,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (rotate-deadzone rotate-deadzone)
                    (region-cuboid region-cuboid))
       self
-    (u:mvlet ((lx ly (v:get-gamepad-analog (v:input-data context)
-                                           '(:gamepad1 :left-stick)))
+    (u:mvlet ((lx ly (v:get-gamepad-analog context '(:gamepad1 :left-stick)))
               (instant-p (zerop (v:frame-count context))))
 
       ;; First, we settle the notion of how the player translates around with
@@ -380,8 +379,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
            ;; Right trigger modifies speed. pull to lerp from full speed
            ;; to half speed.
            (ty
-            (nth-value 1 (v:get-gamepad-analog (v:input-data context)
-                                               '(:gamepad1 :triggers))))
+            (nth-value 1 (v:get-gamepad-analog context '(:gamepad1 :triggers))))
            ;; Compute the actual translation vector related to our frame time!
            (vec
             (v3:scale vec
@@ -786,8 +784,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
        (loop :while (>= cooldown-time (/ fire-period))
              :do (decf cooldown-time (/ fire-period)))
 
-       (u:mvlet ((rx ry (v:get-gamepad-analog
-                         (v:input-data context) '(:gamepad1 :right-stick))))
+       (u:mvlet ((rx ry (v:get-gamepad-analog context
+                                              '(:gamepad1 :right-stick))))
          (let* ((parent-model (comp:model emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
            (unless (or (= rx ry 0.0)
@@ -1725,7 +1723,7 @@ NIL if no such list exists."
 
 
       ;; 3. We always listen for the start button so we can play a game.
-      (when (v:input-enter-p (v:input-data context) '(:gamepad1 :start))
+      (when (v:input-enter-p context '(:gamepad1 :start))
         (setf current-level 0 ;; start at beginning of level progression
               next-state :level-spawn))
 

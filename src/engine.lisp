@@ -56,7 +56,7 @@ tear-down procedure occurs when stopping the engine."
     (make-display core)))
 
 (defun shutdown-host (core)
-  (shutdown-gamepads (input-data core))
+  (shutdown-gamepads (context core))
   (sdl2:destroy-window (window (display core)))
   (sdl2::sdl-quit))
 
@@ -84,11 +84,12 @@ tear-down procedure occurs when stopping the engine."
 
 (defun iterate-main-loop (core)
   (with-continue-restart "Virality Engine"
-    (handle-events (input-data core))
-    (render core)
-    ;; TODO: Remove this later when possible.
-    (when (input-enter-p (input-data core) '(:key :escape))
-      (stop-engine core))))
+    (let ((context (context core)))
+      (handle-events context)
+      (render core)
+      ;; TODO: Remove this later when possible.
+      (when (input-enter-p context '(:key :escape))
+        (stop-engine core)))))
 
 (defun main-loop (core)
   (initialize-frame-time core)
