@@ -1,7 +1,7 @@
 (in-package #:cl-user)
 
 (defpackage #:virality.examples.shaders
-  (:use #:first-light.shader))
+  (:use #:cl #:vari #:first-light.shader))
 
 (defpackage #:virality.examples
   (:local-nicknames (#:a #:alexandria)
