@@ -57,7 +57,7 @@
            (fps (/ %debug-count %debug-interval)))
       (when (and (>= elapsed-seconds %debug-interval)
                  (plusp fps))
-        (log:debug :changeme "Frame rate: ~,2f fps (~,3f ms/f)"
+        (log:debug :virality.engine "Frame rate: ~,2f fps (~,3f ms/f)"
                    fps (/ 1000 fps))
         (setf %debug-count 0
               %debug-time now))
@@ -97,7 +97,8 @@
       (when (and interval
                  (>= (- %now %period-elapsed) interval))
         (live-coding-update)
-        (log:trace :changeme "Periodic update performed (every ~d seconds)"
+        (log:trace :virality.engine
+                   "Periodic update performed (every ~d seconds)"
                    interval)
         (setf %period-elapsed %now)))))
 

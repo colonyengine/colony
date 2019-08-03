@@ -13,8 +13,8 @@
                             (:shape (:slices :back-to-front))))
         (current-layout (get-computed-applied-attribute texture :layout)))
     (unless (equal current-layout hardcoded-layout)
-      (error "3D Texture ~A has layout:~%  ~S~%but it can only have this as ~
-              its layout:~%~S"
+      (error "3D Texture ~a has layout:~%  ~s~%but it can only have this as ~
+              its layout:~%~s"
              (name texture) current-layout hardcoded-layout)))
   (let* ((use-mipmaps-p
            (get-computed-applied-attribute texture :use-mipmaps))
@@ -28,7 +28,7 @@
          (max-texture-3d-size (gl:get-integer :max-3d-texture-size))
          (data (get-computed-applied-attribute texture :data))
          (num-mipmaps (length data)))
-    #++(format t "Attempting to load 3d texture ~A onto GPU: immutable = ~A~%"
+    #++(format t "Attempting to load 3d texture ~a onto GPU: immutable = ~a~%"
                (name texture) immutable-p)
     ;; Load all of our images for each mipmap level, if needed.
     (let* ((all-slices (read-mipmap-images context data use-mipmaps-p :3d))
@@ -39,7 +39,7 @@
           (compute-mipmap-levels (width first-image)
                                  (height first-image)
                                  depth)
-        #++(format t "expected mipmaps: ~A expected-resolutions: ~A~%"
+        #++(format t "expected mipmaps: ~a expected-resolutions: ~a~%"
                    expected-mipmaps expected-resolutions)
         ;; TODO: Fix this call.
         #++(validate-mipmap-images images texture
@@ -78,8 +78,8 @@
                              max-texture-3d-size)
                       (error "load-texture-data[:texture-3d]: Cannot load ~
                               texture-3d mipmap because one of its size ~
-                              (width=~A, height=~A, depth=~A) is larger than ~
-                              the maximum opengl 3d texture size: ~A"
+                              (width=~a, height=~a, depth=~a) is larger than ~
+                              the maximum opengl 3d texture size: ~a"
                              mipmap-width mipmap-height mipmap-depth
                              max-texture-3d-size))
                     (dotimes (z (length (aref all-slices idx)))

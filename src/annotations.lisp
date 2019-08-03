@@ -24,7 +24,7 @@
            (when uniforms
              (unless (every (lambda (x) (= (length x) 2)) uniforms)
                (error "Material override: :uniforms entries must have a length ~
-                       of 2 ~A~%"
+                       of 2 ~a~%"
                       uniforms))
              (loop :for (uniform-name value) :in uniforms
                    :do (setf (mat-uniform-ref copy-mat uniform-name) value)))

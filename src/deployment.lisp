@@ -13,4 +13,4 @@
      :executable t
      :compression (when compress-p 9)))
   #-sbcl
-  (log:error :changeme "Deployment is only supported on SBCL."))
+  (log:error :virality.engine "Deployment is only supported on SBCL."))

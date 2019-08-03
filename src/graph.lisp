@@ -465,7 +465,7 @@ depends-on in that GDEF."
               ;; because it isn't escaped properly, stuff like . + ? | whatever
               ;; in the package name will mess things up.
               (putative-package-name-regex
-                (format nil "^~A$" putative-package-name)))
+                (format nil "^~a$" putative-package-name)))
          ;; Kind of a terrible Big-O...
          (dolist (pkg-name all-packages)
            (a:when-let* ((matched-pkg-name (ppcre:scan-to-strings

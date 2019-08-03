@@ -5,8 +5,6 @@
   :window-width 1920
   :window-height 1080
   :vsync :off
-  :log-level :debug
-  :log-repl-categories '(:v)
   ;; NOTE: Make physics compute faster as fast for these examples.
   ;; This is really here because of the lisp game jam april 2019 codes.
   :delta 1/120
@@ -30,14 +28,6 @@
   (:spritesheet (:project :texture "example-sprite/sprites.tiff"))
   (:spritesheet-data (:project "sprites.sexp"))
   (:damaged-helmet-textures (:project :texture "example-damaged-helmet")))
-
-(defun prologue (context)
-  (declare (ignore context))
-  (log:trace :changeme "Running prologue method."))
-
-(defun epilogue (context)
-  (declare (ignore context))
-  (log:trace :changeme "Running epilogue method."))
 
 ;;; Prefabs
 

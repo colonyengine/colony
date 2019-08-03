@@ -24,7 +24,7 @@
        t
        (when (eq stage-type :vertex)
          (varjo.internals:primitive-name-to-instance primitive)))
-      (error "No function found for stage ~S with signature ~S"
+      (error "No function found for stage ~s with signature ~s"
              stage-type func-spec))))
 
 (defun translate-stages (version primitive stage-specs)

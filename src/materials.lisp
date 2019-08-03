@@ -246,7 +246,7 @@ CORE. Return a list of the return values of the FUNC."
   (when (u:href (material-table (materials (core current-mat)))
                 new-mat-name)
     (if error-p
-        (error "Cannot copy the material ~A to new name ~A because the new ~
+        (error "Cannot copy the material ~a to new name ~a because the new ~
                 name already exists!"
                (id current-mat) new-mat-name)
         (return-from %deep-copy-material error-value)))
@@ -432,7 +432,7 @@ and ignores the CONTEXT and MATERIAL arguments."
                   :if inst
                     :collect inst
                   :else
-                    :do (error "Material profile name: ~S doesn't exist."
+                    :do (error "Material profile name: ~s doesn't exist."
                                po-name))))
       ;; Insert the uniforms in the profile, overwriting whatever was present
       ;; for that uniform if it existed in a previous uniform.
@@ -466,7 +466,7 @@ that is appropriate for it, such as :texture-2d-array. Do this for all sampler
 types and texture types."
   (u:if-found (texture-type (u:href +sampler-type->texture-type+ sampler-type))
               texture-type
-              (error "Unknown sampler-type: ~A~%" sampler-type)))
+              (error "Unknown sampler-type: ~a~%" sampler-type)))
 
 (defun sampler-p (glsl-type)
   "Return T if the GLSL-TYPE is a sampler like :sampler-2d or :sampler-buffer,
@@ -537,7 +537,7 @@ or if it a vector of the same. Return NIL otherwise."
            (:mat3 #'gpu:uniform-mat3-array)
            (:mat4 #'gpu:uniform-mat4-array))))
     (t
-     (error "Cannot determine binder function for glsl-type: ~S~%"
+     (error "Cannot determine binder function for glsl-type: ~s~%"
             glsl-type))))
 
 (defun execute-composition/semantic->computed (material-uniform-value)

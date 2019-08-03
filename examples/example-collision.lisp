@@ -10,20 +10,20 @@
                      :initform 5)))
 
 (defmethod v:on-collision-enter ((self destroy-my-actor) other-collider)
-  (log:info :changeme
-            "DESTROY-MY-ACTOR: Actor ~A entered collision with collider ~
-           ~A(on actor ~A)"
+  (log:info :virality.examples
+            "DESTROY-MY-ACTOR: Actor ~a entered collision with collider ~
+             ~a(on actor ~a)"
             (v:actor self) other-collider (v:actor other-collider))
   (when (string= (v:display-id other-collider) "Ground")
-    (log:info :changeme
+    (log:info :virality.examples
               "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" ~
-             object, so destroy myself!")
+               object, so destroy myself!")
     (v:destroy (v:actor self))))
 
 (defmethod v:on-collision-exit ((self destroy-my-actor) other-collider)
-  (log:info :changeme
-            "DESTROY-MY-ACTOR: Actor ~A is exiting collision with ~
-           ~A(on actor: ~A)."
+  (log:info :virality.examples
+            "DESTROY-MY-ACTOR: Actor ~a is exiting collision with ~
+             ~a(on actor: ~a)."
             (v:actor self) other-collider (v:actor other-collider)))
 
 (defmethod v:on-component-update ((self destroy-my-actor))
@@ -61,12 +61,12 @@
             (down (comp:transform-down actor-transform))
             (right (comp:transform-right actor-transform))
             (left (comp:transform-left actor-transform)))
-        (log:trace :changeme "FORWARD Vector -> ~A" forward)
-        (log:trace :changeme "BACKWARD Vector -> ~A" backward)
-        (log:trace :changeme "UP Vector -> ~A" up)
-        (log:trace :changeme "DOWN Vector -> ~A" down)
-        (log:trace :changeme "RIGHT Vector -> ~A" right)
-        (log:trace :changeme "LEFT Vector -> ~A" left)
+        (log:trace :virality.examples "FORWARD Vector -> ~a" forward)
+        (log:trace :virality.examples "BACKWARD Vector -> ~a" backward)
+        (log:trace :virality.examples "UP Vector -> ~a" up)
+        (log:trace :virality.examples "DOWN Vector -> ~a" down)
+        (log:trace :virality.examples "RIGHT Vector -> ~a" right)
+        (log:trace :virality.examples "LEFT Vector -> ~a" left)
         ;; NOTE: This expects the actor to be unrotated wrt the universe.
         (unless (and (v3:~ forward (v3:vec 0 0 -1))
                      (v3:~ backward (v3:vec 0 0 1))
@@ -109,14 +109,14 @@
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
-           :changeme
-           "FAILED: (v3:~~ local->world:~A world-space-point: ~A) -> ~A"
+           :virality.examples
+           "FAILED: (v3:~~ local->world:~a world-space-point: ~a) -> ~a"
            local->world world-space-point result-0))
 
         (unless result-1
           (log:error
-           :changeme
-           "FAILED: (v3:~~ world->local:~A object-space-point: ~A) -> ~A"
+           :virality.examples
+           "FAILED: (v3:~~ world->local:~a object-space-point: ~a) -> ~a"
            world->local object-space-point result-1))
 
         (error "TRANSFORM-POINT API Failed!")))))
@@ -144,14 +144,14 @@
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
-           :changeme
-           "FAILED: (v3:~~ local->world:~A world-space-vector: ~A) -> ~A"
+           :virality.examples
+           "FAILED: (v3:~~ local->world:~a world-space-vector: ~a) -> ~a"
            local->world world-space-vector result-0))
 
         (unless result-1
           (log:error
-           :changeme
-           "FAILED: (v3:~~ world->local:~A object-space-vector: ~A) -> ~A"
+           :virality.examples
+           "FAILED: (v3:~~ world->local:~a object-space-vector: ~a) -> ~a"
            world->local object-space-vector result-1))
 
         (error "TRANSFORM-VECTOR API Failed!")))))
@@ -167,10 +167,10 @@
          (world-space-direction (v3:normalize (v3:vec -1 1 0)))
          (local->world
            (comp:transform-direction actor-transform
-                                        object-space-direction))
+                                     object-space-direction))
          (world->local
            (comp:inverse-transform-direction actor-transform
-                                                world-space-direction)))
+                                             world-space-direction)))
 
     ;; See if transform-point and inverse-transform-point work.
     (let ((result-0
@@ -181,14 +181,14 @@
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
-           :changeme
-           "FAILED: (v3:~~ local->world:~A world-space-direction: ~A) -> ~A"
+           :virality.examples
+           "FAILED: (v3:~~ local->world:~a world-space-direction: ~a) -> ~a"
            local->world world-space-direction result-0))
 
         (unless result-1
           (log:error
-           :changeme
-           "FAILED: (v3:~~ world->local:~A object-space-direction: ~A) -> ~A"
+           :virality.examples
+           "FAILED: (v3:~~ world->local:~a object-space-direction: ~a) -> ~a"
            world->local object-space-direction result-1))
 
         (error "TRANSFORM-DIRECTION API Failed!")))))

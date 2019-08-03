@@ -177,10 +177,10 @@ indention purposes. This function maps FUNC over each actor."
        ;; NOTE: prefix-level is used for left justifying the level number to a
        ;; certian number of tens places for each actor. It makes the output
        ;; easier to read.
-       (format t "~v@<~D~> ~v,,,v<~>Actor: ~S~%"
+       (format t "~v@<~d~> ~v,,,v<~>Actor: ~s~%"
                prefix-level level level #\Space (display-id actor))
        (u:do-hash-values (component (components actor))
-         (format t " ~v,,,v<~> + (~(~A~):~(~A~)) [~S]~%"
+         (format t " ~v,,,v<~> + (~(~a~):~(~a~)) [~s]~%"
                  ;; 5 for the left justified
                  (+ prefix-level level) #\Space
                  (first

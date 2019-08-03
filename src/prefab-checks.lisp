@@ -116,11 +116,10 @@
 (defun ensure-component-not-duplicate (node type id)
   (with-slots (%path %components-table) node
     (when (u:href %components-table type id)
-      (log:debug :changeme
-                 "Duplicate component type: ~s with the same ID: ~s, and no policy ~
-              set.~%Assuming a policy of :NEW-TYPE and overwriting the old ~
-              component.~%~
-              Path: ~s."
+      (log:debug :virality.prefabs
+                 "Duplicate component type: ~s with the same ID: ~s, and no ~
+                  policy set.~%Assuming a policy of :NEW-TYPE and overwriting ~
+                  the old component.~%Path: ~s."
                  type id %path))))
 
 (defun ensure-component-type-symbol (type path)

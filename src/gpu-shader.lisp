@@ -36,7 +36,8 @@
     (translate-shader-programs programs-list)
     (build-shader-programs programs-list)
     (rebind-blocks programs-list)
-    (log:debug :changeme "Shader programs compiled: ~{~s~^, ~}" programs-list)))
+    (log:debug :virality.gpu "Shader programs compiled: ~{~s~^, ~}"
+               programs-list)))
 
 (defmacro define-struct (name &body slots)
   `(varjo:define-vari-struct ,name () ,@slots))

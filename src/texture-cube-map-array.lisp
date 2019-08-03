@@ -20,7 +20,7 @@
          ;; TODO: We assume all cube maps have the same mipmap number. I don't
          ;; know if this is a reuirements or not.
          (num-mipmaps (length (second (aref first-cube 0)))))
-    (log:trace :changeme
+    (log:trace :virality.engine
                "Loading :texture-cube-map-array images = ~a"
                images)
     ;; Figure out the ideal mipmap count from the base resolution.
@@ -37,10 +37,10 @@
       (when immutable-p
         (let ((num-mipmaps-to-generate
                 (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
-          (log:trace :changeme
-                     "tex-storage-3d: texture-type = ~A, num-mipmaps-to-generate ~
-                    = ~A, internal-format = ~A, width = ~A, height = ~A, depth ~
-                    = ~A~%"
+          (log:trace :virality.engine
+                     "tex-storage-3d: texture-type = ~a, ~
+                      num-mipmaps-to-generate = ~a, internal-format = ~a, ~
+                      width = ~a, height = ~a, depth = ~a~%"
                      texture-type
                      num-mipmaps-to-generate
                      (internal-format first-image)
@@ -64,8 +64,8 @@
                           ;; NOTE: face-idx works cause I sorted the faces
                           ;; earlier.
                           :for face-idx :by 1
-                          :do (log:trace :changeme
-                                         "inserting cube ~A face ~A[~A]~%"
+                          :do (log:trace :virality.engine
+                                         "inserting cube ~a face ~a[~a]~%"
                                          cube-idx face-signifier idx)
                               (with-slots (%width %height %internal-format
                                            %pixel-format %pixel-type %data)

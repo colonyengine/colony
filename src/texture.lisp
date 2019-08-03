@@ -213,7 +213,7 @@ local descriptor lists replaced by actual IMAGE instances of the loaded images."
            ;; Process only one cube map right now... when this works, edit it to
            ;; process many cube maps.
            (unless (equal '(:layout :six) (first cube-data))
-             (error "read-mipmap-images: :texture-cub-map, invalid :layout ~S, ~
+             (error "read-mipmap-images: :texture-cub-map, invalid :layout ~s, ~
                      it must be :six at this time."
                     (first cube-data)))
            ;; canonicalize the face name.
@@ -297,7 +297,7 @@ IMAGES vector to see if we have the expected number and resolution of mipmaps."
     ;; TODO: When dealing with procedurally generated textures, this needs to be
     ;; evolved.
     (unless (plusp num-mipmaps)
-      (error "Texture ~A specifies no images! Please specify an image!"
+      (error "Texture ~a specifies no images! Please specify an image!"
              texture-name))
     (when use-mipmaps-p
       (cond
@@ -318,10 +318,10 @@ IMAGES vector to see if we have the expected number and resolution of mipmaps."
         ;; Otherwise, something went wrong.
         ;; TODO: Should do a better error message which diagnoses what's wrong.
         (t
-         (error "Texture ~A mipmap levels are ~
-                 incorrect:~%~2Ttexture-base-level = ~A~%~2Ttexture-max-level ~
-                 = ~A~%~2Tnumber of mipmaps specified in texture ~
-                 = ~A~%~2Texpected number of mipmaps = ~A~%Probably too many ~
+         (error "Texture ~a mipmap levels are ~
+                 incorrect:~%~2Ttexture-base-level = ~a~%~2Ttexture-max-level ~
+                 = ~a~%~2Tnumber of mipmaps specified in texture ~
+                 = ~a~%~2Texpected number of mipmaps = ~a~%Probably too many ~
                  or to few specified mipmap images."
                 texture-name
                 texture-base-level
@@ -343,13 +343,13 @@ related interpolation."
           ((:nearest-mipmap-nearest :nearest-mipmap-linear)
            (warn "Down converting nearest texture min mipmap filter due to ~
                   disabled mipmaps. Please specify an override ~
-                  :texture-min-filter for texture ~A"
+                  :texture-min-filter for texture ~a"
                  texture-name)
            (setf current-tex-min-filter :nearest))
           ((:linear-mipmap-nearest :linear-mipmap-linear)
            (warn "Down converting linear texture min mipmap filter due to ~
                   disabled mipmaps. Please specify an override ~
-                  :texture-min-filter for texture ~A"
+                  :texture-min-filter for texture ~a"
                  texture-name)
            (setf current-tex-min-filter :linear)))))))
 
@@ -403,7 +403,7 @@ assign it to the computed texture descriptor slot in TEXTURE."
           (find-semantic-texture-descriptor
            (semantic-texture-name texture-name) context)))
     (unless semantic-texdesc
-      (error "Cannot load semantic texture-descriptor with unknown name: ~A"
+      (error "Cannot load semantic texture-descriptor with unknown name: ~a"
              texture-name))
     (let* ((id (gl:gen-texture))
            ;; TODO: tex-name is wrong here. It shoudl be what the material
@@ -488,7 +488,7 @@ texture."
                      (u:if-found (concrete-profile
                                   (u:href profiles profile-overlay-name))
                                  concrete-profile
-                                 (error "Texture profile ~A does not exist."
+                                 (error "Texture profile ~a does not exist."
                                         profile-overlay-name))))
              (profile-overlays
                ;; Then, if we don't see a profile-default in there, we put it
@@ -548,7 +548,7 @@ the size and types specified on the GPU."
   (typecase texture-name
     (symbol (list texture-name 0))
     (cons texture-name)
-    (t (error "Unable to canonicalize the texture name: ~A" texture-name))))
+    (t (error "Unable to canonicalize the texture name: ~a" texture-name))))
 
 ;; TODO: Maybe reifiy the semantic-name, texture-instance-name specification
 ;; into a CLOS object.

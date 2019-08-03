@@ -151,8 +151,9 @@ had--and update all other faces too."
         ;; removing hash tables we don't need anymore.
         (dolist (face-collider face-colliders)
           (when (contact-p collider-system fist-collider face-collider)
-            (log:trace :changeme
-                       "remove-all-contacts: attempting to remove ~A from contacting ~A."
+            (log:trace :virality.engine
+                       "remove-all-contacts: attempting to remove ~a from ~
+                        contacting ~a."
                        fist-collider face-collider)
             (exit-contact collider-system fist-collider face-collider)))))))
 
@@ -287,24 +288,24 @@ had--and update all other faces too."
               ;; The FIST is good to go! collide it and stabilize it!
               (let ((face-layers
                       (u:href (collision-plan collider-system) fist-layer)))
-                (log:trace :changeme
-                           "Checking registering fist: ~S, [~S: ~S]"
+                (log:trace :virality.engine
+                           "Checking registering fist: ~s, [~s: ~s]"
                            (display-id fist) (comp:on-layer fist)
                            face-layers)
                 (cond
                   ((null face-layers)
                    ;; If no face layers to collide against AT ALL,
                    ;; automatically stabilize the fist and we're done with it.
-                   (log:trace :changeme
-                              " Stabilizing[0]: ~S" (display-id fist))
+                   (log:trace :virality.engine
+                              " Stabilizing[0]: ~s" (display-id fist))
                    (setf (u:href stable-colliders fist-layer fist)
                          fist))
                   (t
                    ;; Else, we collide the fist against each face in each
                    ;; layer.
                    (dolist (face-layer face-layers)
-                     (log:trace :changeme
-                                " Checking contacts between layers: ~S <=> ~S"
+                     (log:trace :virality.engine
+                                " Checking contacts between layers: ~s <=> ~s"
                                 fist-layer face-layer)
                      ;; Find all the face-layer colliders to which we need to
                      ;; collide.
@@ -315,8 +316,9 @@ had--and update all other faces too."
                        (unless (zerop (hash-table-count
                                        face-layer-stable-colliders))
                          (u:do-hash-keys (face face-layer-stable-colliders)
-                           (log:trace :changeme
-                                      "  compute-contact-state: [reg: ~S <-> stable: ~S]"
+                           (log:trace :virality.engine
+                                      "  compute-contact-state: [reg: ~s <-> ~
+                                      stable: ~s]"
                                       (display-id fist) (display-id face))
                            (compute-contact-state collider-system fist
                                                   face)))))
@@ -327,8 +329,8 @@ had--and update all other faces too."
                    ;; need be.
                    ;; NOTE: We CANNOT stabilize until AFTER the registering fist
                    ;; has been collided with all stable faces.
-                   (log:trace :changeme
-                              " Stabilizing[1]: ~S" (display-id fist))
+                   (log:trace :virality.engine
+                              " Stabilizing[1]: ~s" (display-id fist))
                    (setf (u:href stable-colliders fist-layer fist)
                          fist)))))))))))
 

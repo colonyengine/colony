@@ -23,9 +23,9 @@
                  (sdl2::sdl-rc-error ()
                    (if (= current-value -1)
                        (try 1)
-                       (log:warn
-                        :changeme "Ignoring vsync option due to driver ~
-                                          limitation."))))))
+                       (log:warn :virality.engine
+                                 "Ignoring vsync option due to driver ~
+                                  limitation."))))))
       (try value))))
 
 (defgeneric create-window (core)

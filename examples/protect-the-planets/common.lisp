@@ -6,7 +6,6 @@
   :window-height 1080
   :vsync :off
   :log-level :debug
-  :log-repl-categories '(:v)
   ;; NOTE: Make physics compute faster for this game.
   ;;
   ;; TODO: Move into a physics specification DSL (which also does collision
@@ -26,14 +25,6 @@
   (:spritesheet (:project :sprite "sprites.tiff"))
   (:spritesheet-data (:project :sprite "sprites.sexp"))
   )
-
-(defun prologue (context)
-  (declare (ignore context))
-  (log:trace :changeme "Running Protect-The-Planets prologue method."))
-
-(defun epilogue (context)
-  (declare (ignore context))
-  (log:trace :changeme "Running Protect-The-Planets epilogue method."))
 
 ;;; Prefabs
 

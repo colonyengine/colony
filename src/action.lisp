@@ -95,7 +95,7 @@
   (:method :around (action type)
     (let ((actor (actor (renderer (manager action)))))
       (call-next-method)
-      (log:trace :changeme "Action ~a finished for actor ~a."
+      (log:trace :virality.action "Action ~a finished for actor ~a."
                  type (id actor)))))
 
 (defgeneric on-action-update (action type)

@@ -9,7 +9,7 @@
               :periodic-interval 0.25
               :debug-interval 5
               :log-repl-enabled t
-              :log-repl-categories '(:fl)
+              :log-repl-categories '(:virality)
               :log-level :debug
               :anti-alias-level 4
               :opengl-version "4.3"

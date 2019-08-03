@@ -20,8 +20,8 @@
             :for location :across data
             :do (when (> (max (height image) (width image))
                          (gl:get-integer :max-texture-size))
-                  (error "Image ~A for 1D texture ~A is to big to be loaded ~
-                          onto this card. Max resolution is ~A in either ~
+                  (error "Image ~a for 1D texture ~a is to big to be loaded ~
+                          onto this card. Max resolution is ~a in either ~
                           dimension."
                          location
                          (name texture)
