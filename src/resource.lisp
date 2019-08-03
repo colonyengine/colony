@@ -228,7 +228,7 @@
             found ~s."
            id))
   (let ((path-spec (a:ensure-list path-spec)))
-    (destructuring-bind (root &rest rest) path-spec
+    (destructuring-bind (root . rest) path-spec
       (declare (ignore rest))
       (let ((key (make-resource-key id root)))
         (setf (u:href (meta 'resources) key)
@@ -237,7 +237,7 @@
 
 (defun get-resource-project (key)
   (let ((key (a:ensure-list key)))
-    (destructuring-bind (x &rest rest) key
+    (destructuring-bind (x . rest) key
       (declare (ignore rest))
       (if (eq x :core)
           :virality.engine

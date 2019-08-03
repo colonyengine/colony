@@ -76,7 +76,7 @@
 
 (u:eval-always
   (defun split-spec (spec)
-    (destructuring-bind (name &rest body) spec
+    (destructuring-bind (name . body) spec
       (loop :for tail :on body
             :for item = (first tail)
             :while (symbolp (first item))

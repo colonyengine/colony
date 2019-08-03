@@ -4,7 +4,7 @@
   `(list
     ,@(mapcar
        (lambda (x)
-         (destructuring-bind (name library &rest args) x
+         (destructuring-bind (name library . args) x
            (let ((library (if (symbolp library) `',library library)))
              `(list ,name ,library ,@args))))
        prefab-specs)))
