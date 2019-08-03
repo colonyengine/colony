@@ -46,7 +46,8 @@
    (:q :origin.quat)
    (:v :virality.engine)
    (:gpu :virality.gpu)
-   (:contrib.mat :virality.contrib.materials))
+   (:contrib.mat :virality.contrib.materials)
+   (:shd.sprite :virality.shaders.sprite))
 
   (:virality.gpu
    (:a :alexandria)
@@ -71,7 +72,10 @@
    (:v4 :origin.vec4)
    (:m4 :origin.mat4)
    (:v :virality.engine)
-   (:contrib.tex :virality.contrib.textures))
+   (:contrib.tex :virality.contrib.textures)
+   (:shd.sprite :virality.shaders.sprite)
+   (:shd.tex :virality.shaders.texture)
+   (:shd.vis :virality.shaders.visualization))
 
   (:virality.contrib.actions
    (:a :alexandria)
@@ -84,4 +88,8 @@
 
   (:virality.shaders
    (:a :alexandria)
-   (:u :golden-utils)))
+   (:u :golden-utils))
+
+  (:virality.shaders.noise
+   (:hash :virality.shaders.hashing)
+   (:shaping :virality.shaders.shaping)))

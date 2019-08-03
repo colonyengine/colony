@@ -1,4 +1,4 @@
-(in-package #:virality.shaders.hash)
+(in-package #:virality.shaders.hashing)
 
 ;;;; Hashing functions
 ;;;; FAST32_2

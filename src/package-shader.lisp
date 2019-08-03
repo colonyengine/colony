@@ -73,7 +73,7 @@
    #:tone-map/hejl-burgess-dawson
    #:tone-map/uncharted2))
 
-(defpackage #:virality.shaders.graph
+(defpackage #:virality.shaders.graphing
   (:use #:cl #:vari #:virality.shaders)
   (:export
    #:graph))
@@ -150,7 +150,7 @@
    #:falloff-squared-c1
    #:falloff-squared-c2))
 
-(defpackage #:virality.shaders.hash
+(defpackage #:virality.shaders.hashing
   (:use #:cl #:vari #:virality.shaders)
   (:export
    #:blum-blum-shub

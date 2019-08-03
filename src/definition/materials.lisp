@@ -1,28 +1,28 @@
 (in-package #:virality.contrib.materials)
 
 (v:define-material unlit-color
-  (:shader virality.shaders.texture:unlit-color
+  (:shader shd.tex:unlit-color
    :profiles (u-mvp)))
 
 (v:define-material unlit-color-decal
-  (:shader virality.shaders.texture:unlit-color-decal
+  (:shader shd.tex:unlit-color-decal
    :profiles (u-mvp)))
 
 (v:define-material unlit-texture
-  (:shader virality.shaders.texture:unlit-texture
+  (:shader shd.tex:unlit-texture
    :profiles (u-mvp)
    :uniforms ((:tex.sampler1 'contrib.tex:debug-texture)
               (:mix-color (v4:one)))))
 
 (v:define-material unlit-texture-decal
-  (:shader virality.shaders.texture:unlit-texture-decal
+  (:shader shd.tex:unlit-texture-decal
    :profiles (u-mvp)
    :uniforms ((:min-intensity (v4:zero))
               (:max-intensity (v4:one))
               (:tex.sampler1 'contrib.tex:debug-texture))))
 
 (v:define-material unlit-texture-decal-bright
-  (:shader virality.shaders.texture:unlit-texture-decal
+  (:shader shd.tex:unlit-texture-decal
    :profiles (u-mvp)
    :uniforms ((:min-intensity (v4:vec 0.1 0.1 0.1 0.1))
               (:max-intensity (v4:one))
@@ -30,7 +30,7 @@
 
 (v:define-material sprite
   (:profiles (u-mvp)
-   :shader virality.shaders.sprite:sprite
+   :shader shd.sprite:sprite
    :uniforms ((:sprite.sampler 'contrib.tex:debug-texture)
               (:opacity 1.0)
               (:alpha-cutoff 0.1))
@@ -40,12 +40,12 @@
              :binding-policy :manual))))
 
 (v:define-material missing-material
-  (:shader virality.shaders.texture:unlit-texture
+  (:shader shd.tex:unlit-texture
    :profiles (u-mvp)
    :uniforms ((:tex.sampler1 'contrib.tex:debug-texture))))
 
 (v:define-material collider/sphere
-  (:shader virality.shaders.visualization:collider/sphere
+  (:shader shd.vis:collider/sphere
    :profiles (u-mvp)
    :uniforms ((:collider-local-position (v3:zero))
               (:in-contact-color (v4:vec 1 0 0 1))

@@ -1,6 +1,12 @@
 (in-package #:cl-user)
 
 (defpackage #:virality.examples.shaders
+  (:local-nicknames
+   (#:shd.color #:virality.shaders.color)
+   (#:shd.graph #:virality.shaders.graphing)
+   (#:shd.noise #:virality.shaders.noise)
+   (#:shd.sdf #:virality.shaders.sdf)
+   (#:shd.tex #:virality.shaders.texture))
   (:use #:cl #:vari #:virality.shaders))
 
 (defpackage #:virality.examples
@@ -17,7 +23,8 @@
                     (#:contrib.tex #:virality.contrib.textures)
                     (#:contrib.mat #:virality.contrib.materials)
                     (#:contrib.action #:virality.contrib.actions)
-                    (#:shaders #:virality.examples.shaders))
+                    (#:shd #:virality.examples.shaders)
+                    (#:shd.tex #:virality.shaders.texture))
   (:use #:cl)
   (:export #:examples
            #:collision-smoke-test
@@ -49,7 +56,9 @@
                     (#:contrib.tex #:virality.contrib.textures)
                     (#:contrib.mat #:virality.contrib.materials)
                     (#:contrib.action #:virality.contrib.actions)
-                    (#:shaders #:virality.examples.shaders))
+                    (#:shd #:virality.examples.shaders)
+                    (#:shd.sprite #:virality.shaders.sprite)
+                    (#:shd.tex #:virality.shaders.texture))
   (:use #:cl)
   (:export #:ptp-base
            #:ptp

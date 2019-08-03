@@ -22,7 +22,7 @@
 
 (v:define-material dynamic-geometry
   (:profiles (contrib.mat:u-mvp)
-   :shader shaders:dynamic-geometry))
+   :shader shd:dynamic-geometry))
 
 (v:define-prefab "dynamic-geometry" (:library examples)
   (("camera" :copy "/cameras/perspective"))

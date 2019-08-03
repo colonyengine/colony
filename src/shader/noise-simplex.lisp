@@ -81,7 +81,7 @@
 
 (define-function simplex-perlin ((point :vec2))
   (simplex-perlin point (lambda ((x :vec2))
-                          (virality.shaders.hash:fast32/2-per-corner x))))
+                          (hash:fast32/2-per-corner x))))
 
 ;;; 2D Simplex Perlin noise with derivatives
 
@@ -131,7 +131,7 @@
 
 (define-function simplex-perlin/derivs ((point :vec2))
   (simplex-perlin/derivs point (lambda ((x :vec2))
-                                 (virality.shaders.hash:fast32/2-per-corner x))))
+                                 (hash:fast32/2-per-corner x))))
 
 ;;; 3D Simplex Perlin noise
 
@@ -157,7 +157,7 @@
 
 (define-function simplex-perlin ((point :vec3))
   (simplex-perlin point (lambda ((x :vec3) (y :vec3) (z :vec3))
-                          (virality.shaders.hash:fast32/3-per-corner x y z))))
+                          (hash:fast32/3-per-corner x y z))))
 
 ;;; 3D Simplex Perlin noise with derivatives
 
@@ -197,7 +197,7 @@
 
 (define-function simplex-perlin/derivs ((point :vec3))
   (simplex-perlin/derivs point (lambda ((x :vec3) (y :vec3) (z :vec3))
-                                 (virality.shaders.hash:fast32/3-per-corner x y z))))
+                                 (hash:fast32/3-per-corner x y z))))
 
 ;;; 2D Simplex Cellular noise
 
@@ -225,7 +225,7 @@
 
 (define-function simplex-cellular ((point :vec2))
   (simplex-cellular point (lambda ((x :vec2))
-                            (virality.shaders.hash:fast32/2-per-corner x))))
+                            (hash:fast32/2-per-corner x))))
 
 ;;; 3D Simplex Cellular noise
 
@@ -257,7 +257,7 @@
 (define-function simplex-cellular ((point :vec3))
   (simplex-cellular point
                     (lambda ((x :vec3) (y :vec3) (z :vec3))
-                      (virality.shaders.hash:fast32/3-per-corner x y z))))
+                      (hash:fast32/3-per-corner x y z))))
 
 ;;; 2D Simplex Polka-dot noise
 
@@ -283,7 +283,7 @@
                                    (radius :float)
                                    (max-dimness :float))
   (simplex-polkadot point radius max-dimness (lambda ((x :vec2))
-                                               (virality.shaders.hash:fast32 x))))
+                                               (hash:fast32 x))))
 
 ;;; 3D Simplex Polka-dot noise
 
@@ -311,4 +311,4 @@
                                    (max-dimness :float))
   (simplex-polkadot point radius max-dimness
                     (lambda ((x :vec3) (y :vec3) (z :vec3))
-                      (virality.shaders.hash:fast32 x y z))))
+                      (hash:fast32 x y z))))

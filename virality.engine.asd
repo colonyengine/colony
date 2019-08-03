@@ -135,7 +135,7 @@
    (:file "shader/common-structs")
    (:file "shader/color-grading")
    (:file "shader/color-space")
-   (:file "shader/graph")
+   (:file "shader/graphing")
    (:file "shader/shaping-iq")
    (:file "shader/shaping-levin")
    (:file "shader/shaping-penner")

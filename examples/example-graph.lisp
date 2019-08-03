@@ -4,11 +4,11 @@
 
 (v:define-material graph
   (:profiles (contrib.mat:u-mvpt)
-   :shader shaders:graph))
+   :shader shd:graph))
 
 (v:define-material 3d-graph
   (:profiles (contrib.mat:u-mvpt)
-   :shader shaders:3d-graph-1
+   :shader shd:3d-graph-1
    :instances 1000
    :attributes (:depth :always)
    :uniforms
@@ -34,7 +34,7 @@
   (("graph" :copy "/mesh")
    (comp:render :material '(3d-graph
                             3d-graph-1
-                            :shader shaders:3d-graph-1
+                            :shader shd:3d-graph-1
                             :instances 100000
                             :uniforms ((:size 0.5))))))
 
@@ -46,7 +46,7 @@
   (("graph" :copy "/mesh")
    (comp:render :material '(3d-graph
                             3d-graph-2
-                            :shader shaders:3d-graph-2
+                            :shader shd:3d-graph-2
                             :instances 100000
                             :uniforms ((:size 1))))))
 

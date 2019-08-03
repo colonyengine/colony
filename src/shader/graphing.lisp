@@ -1,4 +1,4 @@
-(in-package #:virality.shaders.graph)
+(in-package #:virality.shaders.graphing)
 
 ;;;; Graphing
 ;;;; Credits:

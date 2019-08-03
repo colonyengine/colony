@@ -92,7 +92,7 @@
                                             (tex texture-2d/sweep-input)
                                             (mix-color :vec4))
   (let* ((new-uv (/ (+ (* uv1 1) (* (channel0 tex) 5)) 2.0))
-         (noise-uv (virality.shaders.noise:perlin new-uv))
+         (noise-uv (shd.noise:perlin new-uv))
          (tex-color (texture (sampler1 tex) (/ (+ uv1 noise-uv) 2.0))))
     (* tex-color mix-color)))
 
@@ -129,23 +129,23 @@
     (* tex-color mix-color)))
 
 (define-shader unlit-texture-1d ()
-  (:vertex (virality.shaders.texture:unlit/vert mesh-attrs))
+  (:vertex (shd.tex:unlit/vert mesh-attrs))
   (:fragment (unlit-texture-1d/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-3d ()
-  (:vertex (virality.shaders.texture:unlit/vert mesh-attrs))
+  (:vertex (shd.tex:unlit/vert mesh-attrs))
   (:fragment (unlit-texture-3d/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-1d-array ()
-  (:vertex (virality.shaders.texture:unlit/vert mesh-attrs))
+  (:vertex (shd.tex:unlit/vert mesh-attrs))
   (:fragment (unlit-texture-1d-array/frag :vec4 :vec2)))
 
 (define-shader noise-2d/sweep-input ()
-  (:vertex (virality.shaders.texture:unlit/vert mesh-attrs))
+  (:vertex (shd.tex:unlit/vert mesh-attrs))
   (:fragment (noise-2d/sweep-input/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-2d-array ()
-  (:vertex (virality.shaders.texture:unlit/vert mesh-attrs))
+  (:vertex (shd.tex:unlit/vert mesh-attrs))
   (:fragment (unlit-texture-2d-array/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-cube-map ()

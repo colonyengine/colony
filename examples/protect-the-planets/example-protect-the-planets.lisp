@@ -96,7 +96,7 @@
 
 
 (define-shader starfield ()
-  (:vertex (virality.shaders.texture:unlit/vert mesh-attrs))
+  (:vertex (shd.tex:unlit/vert mesh-attrs))
   (:fragment (starfield/frag :vec4 :vec2)))
 
 
@@ -148,7 +148,7 @@
 ;; that shader.
 (v:define-material sprite-sheet
   (:profiles (contrib.mat:u-mvp)
-   :shader virality.shaders.sprite:sprite
+   :shader shd.sprite:sprite
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
               (:opacity 1.0)
               (:alpha-cutoff 0.1))
@@ -159,48 +159,48 @@
 
 (v:define-material title
   (:profiles (contrib.mat:u-mvp)
-   :shader virality.shaders.texture:unlit-texture-decal
+   :shader shd.tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'title)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (v:define-material starfield
   (:profiles (contrib.mat:u-mvpt)
-   :shader shaders:starfield
+   :shader shd:starfield
    :uniforms ((:tex 'starfield)
               (:mix-color (v4:one)))))
 
 (v:define-material warning-mothership
   (:profiles (contrib.mat:u-mvp)
-   :shader virality.shaders.texture:unlit-texture-decal
+   :shader shd.tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-mothership)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (v:define-material warning-wave
   (:profiles (contrib.mat:u-mvp)
-   :shader virality.shaders.texture:unlit-texture-decal
+   :shader shd.tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-wave)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (v:define-material game-over
   (:profiles (contrib.mat:u-mvp)
-   :shader virality.shaders.texture:unlit-texture-decal
+   :shader shd.tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'game-over)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (v:define-material level-complete
   (:profiles (contrib.mat:u-mvp)
-   :shader virality.shaders.texture:unlit-texture-decal
+   :shader shd.tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'level-complete)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (v:define-material time-bar
   (:profiles (contrib.mat:u-mvp)
-   :shader virality.shaders.texture:unlit-texture
+   :shader shd.tex:unlit-texture
    :uniforms ((:tex.sampler1 'white)
               (:mix-color (v4:vec 0 1 0 1)))))
 
