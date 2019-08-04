@@ -38,7 +38,7 @@
         (sdl2:gl-set-attrs :context-major-version major-version
                            :context-minor-version minor-version
                            :context-profile-mask 1
-                           :multisamplebuffers (signum anti-alias-level)
+                           :multisamplebuffers (max 0 (signum anti-alias-level))
                            :multisamplesamples anti-alias-level))))
   (:method (core)
     (let* ((context (context core))
@@ -53,7 +53,6 @@
                                        &key &allow-other-keys)
   (let ((core (core instance)))
     (setf (slot-value core '%display) instance)
-    (gl:enable :texture-cube-map-seamless)
     (gl:enable :depth-test :blend :multisample :cull-face)
     (gl:blend-func :src-alpha :one-minus-src-alpha)
     (maybe-set-vsync (option (context core) :vsync))))
@@ -74,7 +73,7 @@
           (values 0 0 0 1)))
     (gl:clear :color-buffer :depth-buffer)))
 
-(defun render (core)
+(defun render-frame (core)
   (with-slots (%frame-manager %display %running-p) core
     (with-slots (%frame-count) %frame-manager
       (when %running-p

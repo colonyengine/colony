@@ -33,34 +33,35 @@
       (translate (transform camera) translation)
       (log:warn :virality.components
                 "Camera ~a was attached to an actor without a translation ~
-                 transform.~%~
-                 Using a sane default value for ~(~a~): ~s."
+                 transform.~%Using a sane default value for ~(~a~): ~s."
                 (v:id (v:actor camera)) (mode camera) translation))))
 
 (defmethod make-projection (camera (mode (eql :perspective)))
-  (let ((context (v:context camera)))
-    (m4:set-projection/perspective! (projection camera)
-                                    (/ (fov-y camera) (zoom camera))
-                                    (/ (v:option context :window-width)
-                                       (v:option context :window-height))
-                                    (clip-near camera)
-                                    (clip-far camera))))
+  (with-slots (%projection %fov-y %zoom %clip-near %clip-far) camera
+    (let ((context (v:context camera)))
+      (m4:set-projection/perspective! %projection
+                                      (/ %fov-y %zoom)
+                                      (/ (v:option context :window-width)
+                                         (v:option context :window-height))
+                                      %clip-near
+                                      %clip-far))))
 
 (defmethod make-projection (camera (mode (eql :orthographic)))
-  (let* ((context (v:context camera))
-         (zoom (zoom camera))
-         (w (/ (v:option context :window-width) zoom 2))
-         (h (/ (v:option context :window-height) zoom 2)))
-    (m4:set-projection/orthographic!
-     (projection camera) (- w) w (- h) h (clip-near camera) (clip-far camera))))
+  (with-slots (%projection %zoom %clip-near %clip-far) camera
+    (let* ((context (v:context camera))
+           (w (/ (v:option context :window-width) %zoom 2))
+           (h (/ (v:option context :window-height) %zoom 2)))
+      (m4:set-projection/orthographic!
+       %projection (- w) w (- h) h %clip-near %clip-far))))
 
 (defun compute-camera-view (camera)
-  (when (active-p camera)
-    (let* ((model (model (transform camera)))
-           (eye (m4:get-translation model))
-           (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3 model :z))))
-           (up (m4:rotation-axis-to-vec3 model :y)))
-      (m4:set-view! (view camera) eye target up))))
+  (with-slots (%active-p %transform %view) camera
+    (when %active-p
+      (let* ((model (model %transform))
+             (eye (m4:get-translation model))
+             (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3 model :z))))
+             (up (m4:rotation-axis-to-vec3 model :y)))
+        (m4:set-view! %view eye target up)))))
 
 (defun find-active-camera (context)
   (dolist (camera (v::cameras (v::core context)))
@@ -70,8 +71,9 @@
 (defun zoom-camera (display direction)
   (let* ((context (v:context (v::core display)))
          (camera (find-active-camera context)))
-    (setf (zoom camera) (a:clamp (+ (zoom camera) (/ direction 2)) 1 10))
-    (make-projection (mode camera) camera)))
+    (with-slots (%zoom %mode) camera
+      (setf %zoom (a:clamp (+ %zoom (/ direction 2)) 1 10))
+      (make-projection %mode camera))))
 
 ;;; Component event hooks
 

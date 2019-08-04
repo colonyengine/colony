@@ -8,6 +8,7 @@
 ;;;; https://en.wikipedia.org/wiki/CIE_1931_color_space
 
 (defconstant +gamma+ (/ 2.2))
+
 (defconstant +gamma-inverse+ 2.2)
 
 ;;; Grayscale

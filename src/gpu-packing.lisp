@@ -15,13 +15,13 @@
     (varjo:v-struct (varjo:type->type-spec type))
     (varjo:v-container
      (let ((element-type (varjo:v-element-type type)))
-       (if (or (typep element-type 'varjo:v-user-struct)
-               (typep element-type 'varjo:v-array))
-           (error "Shader blocks containing arrays of aggregates are not ~
-                   currently supported.")
-           (list* (pack-container type)
-                  (pack-type element-type)
-                  (varjo:v-dimensions type)))))))
+       (typecase element-type
+         ((or varjo:v-user-struct varjo:v-array)
+          (error "Shader blocks containing arrays of aggregates are not ~
+                   currently supported."))
+         (t (list* (pack-container type)
+                   (pack-type element-type)
+                   (varjo:v-dimensions type))))))))
 
 (defun pack-struct (struct)
   (loop :with name = (varjo:type->type-spec struct)
@@ -34,8 +34,8 @@
   (loop :with uniform = (uniform layout)
         :with name = (varjo:name uniform)
         :with layout-type = (layout-type layout)
-        :for (slot-name slot-type) :in (varjo.internals:v-slots
-                                        (varjo:v-type-of uniform))
+        :with slots = (varjo.internals:v-slots (varjo:v-type-of uniform))
+        :for (slot-name slot-type) :in slots
         :for packed-type = (pack-type slot-type)
         :collect (list slot-name packed-type) :into members
         :finally (return `(,name (:block (:packing ,layout-type) ,@members)))))
@@ -57,8 +57,7 @@
                  (:std430 (if (= count 3) 4 count))))
              (get-result (&rest args)
                (destructuring-bind (&key (dimensions '(1 1)) element-type count
-                                      type
-                                    &allow-other-keys)
+                                      type &allow-other-keys)
                    args
                  (list :dimensions dimensions
                        :element-type element-type

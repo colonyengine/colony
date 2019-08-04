@@ -24,12 +24,12 @@
     actor))
 
 (defun attach-component (actor component)
-  (detach-component actor component)
-  (enqueue-attach-event component actor)
-  (setf (actor component) actor
-        (u:href (components actor) component) component)
   (let* ((core (core (context actor)))
          (qualified-type (qualify-component core (component-type component))))
+    (detach-component actor component)
+    (enqueue-attach-event component actor)
+    (setf (actor component) actor
+          (u:href (components actor) component) component)
     (push component (u:href (components-by-type actor) qualified-type))))
 
 (defun attach-multiple-components (actor &rest components)
@@ -54,9 +54,8 @@
 
 (defun actor-components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
-  (let* ((core (core (context actor)))
-         (qualified-type (qualify-component core component-type)))
-    (u:href (components-by-type actor) qualified-type)))
+  (u:href (components-by-type actor)
+          (qualify-component (core (context actor)) component-type)))
 
 (defun actor-component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
@@ -75,10 +74,10 @@ on it or its components. If keyword argument :PARENT is supplied it is an actor
 reference which will be the parent of the spawning actor. It defaults to
 :universe, which means make this actor a child of the universe actor."
   (let ((core (core (context actor)))
-        (actor-transform (actor-component-by-type actor 'comp:transform)))
+        (transform (actor-component-by-type actor 'comp:transform)))
     (cond
       ((eq parent :universe)
-       (unless (comp:parent actor-transform)
+       (unless (comp:parent transform)
          (comp:transform-add-child
           (actor-component-by-type (scene-tree core) 'comp:transform)
           (actor-component-by-type actor 'comp:transform))))
@@ -92,28 +91,29 @@ reference which will be the parent of the spawning actor. It defaults to
        (error "Cannot parent actor ~s to unknown parent ~s" actor parent)))
     (setf (u:href (actor-preinit-db (tables core)) actor) actor)
     (u:do-hash-values (v (components actor))
-      (setf (type-table (canonicalize-component-type (component-type v)
-                                                     core)
+      (setf (type-table (canonicalize-component-type (component-type v) core)
                         (component-preinit-by-type-view (tables core)))
             v))))
 
 (defun actor/preinit->init (actor)
-  (let ((core (core (context actor))))
-    (remhash actor (actor-preinit-db (tables core)))
-    (setf (u:href (actor-init-db (tables core)) actor) actor)))
+  (let ((tables (tables (core (context actor)))))
+    (remhash actor (actor-preinit-db tables))
+    (setf (u:href (actor-init-db tables) actor) actor)))
 
 (defun actor/init->active (actor)
-  (let ((core (core (context actor))))
-    (remhash actor (actor-init-db (tables core)))
+  (let ((tables (tables (core (context actor)))))
+    (remhash actor (actor-init-db tables))
     (setf (state actor) :active
-          (u:href (actor-active-db (tables core)) actor) actor)))
+          (u:href (actor-active-db tables) actor) actor)))
 
 (defmethod destroy-after-time ((thing actor) &key (ttl 0))
   (let* ((core (core (context thing)))
          (table (actor-predestroy-view (tables core))))
     (when (eq thing (scene-tree core))
       (error "Cannot destroy the scene tree root."))
+    ;; TODO: this needs fixing because TTL is never nil
     (setf (ttl thing) (and ttl (max 0 ttl)))
+    ;; TODO: Same for this
     (if ttl
         (setf (u:href table thing) thing)
         ;; If the TTL is stopped, we want to remove the actor from the

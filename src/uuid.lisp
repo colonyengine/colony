@@ -14,8 +14,7 @@
     ,@(loop :for i :below count
             :collect `(aref ,string ,(+ offset i))
             :collect `(aref "0123456789ABCDEF"
-                            (ldb (byte 4 ,(- bits (* i 4)))
-                                 ,word)))))
+                            (ldb (byte 4 ,(- bits (* i 4))) ,word)))))
 
 (defun uuid->string (uuid)
   (declare (optimize speed))
@@ -60,9 +59,8 @@
 (defun make-uuid/v4 ()
   (declare (optimize speed)
            (inline %make-uuid))
-  (symbol-macrolet ((rand
-                      (random #.(expt 2 64)
-                              (load-time-value (make-random-state t)))))
+  (symbol-macrolet ((rand (random #.(expt 2 64)
+                                  (load-time-value (make-random-state t)))))
     (%make-uuid :version 4
                 :low (dpb #b100 (byte 3 61) rand)
                 :high (dpb 4 (byte 4 12) rand))))

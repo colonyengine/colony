@@ -12,16 +12,14 @@
    (%interpolated :accessor interpolated
                   :initarg :interpolated)))
 
-(defclass transform-state-vector (transform-state)
-  ()
+(defclass transform-state-vector (transform-state) ()
   (:default-initargs :current (v3:zero)
                      :incremental (v3:zero)
                      :incremental-delta (v3:zero)
                      :previous (v3:zero)
                      :interpolated (v3:zero)))
 
-(defclass transform-state-quaternion (transform-state)
-  ()
+(defclass transform-state-quaternion (transform-state) ()
   (:default-initargs :current (q:id)
                      :incremental (q:id)
                      :incremental-delta (q:id)
@@ -196,7 +194,7 @@
     (when instant-p
       (v3:copy! %previous %current))))
 
-;; TODO: Try and get rid of any produced garbage in the functions below.
+;;; TODO: Try and get rid of any produced garbage in the functions below.
 
 (defun transform-point (transform point-vec)
   "Transform the vector in POINT-VEC, assumed to be in the local space of the
@@ -255,12 +253,10 @@ returned."
       (m4:normalize-rotation! model model)
       (~:.xyz (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))
 
-;; NOTE: These functions return the vectors that represent forward, backward,
-;; up, down, right, and left in _world space_.
-;;
-;; We define these axes as the directions for an object:
-;;
-;; +z back, -z forward, +y up, -y down, +x right, -x left
+;;; NOTE: These functions return the vectors that represent forward, backward,
+;;; up, down, right, and left in _world space_.
+;;; We define these axes as the directions for an object:
+;;; +z back, -z forward, +y up, -y down, +x right, -x left
 
 (defun transform-forward (transform)
   "Return the forward vector (-Z axis) in world space for this TRANSFORM."

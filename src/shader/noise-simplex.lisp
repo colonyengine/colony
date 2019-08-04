@@ -3,18 +3,29 @@
 ;;;; Simplex noise
 
 (defconstant +simplex-2d/skew-factor+ (* 0.5 (1- (sqrt 3))))
+
 (defconstant +simplex-2d/unskew-factor+ (/ (- 3 (sqrt 3)) 6))
+
 (defconstant +simplex-2d/triangle-height+ (sqrt 0.5))
+
 (defconstant +simplex-2d/inverse-triangle-height+ (sqrt (/ 0.5)))
+
 (defconstant +simplex-2d/inverse-triangle-half-edge-length+
   (/ (sqrt 0.75) (sqrt 0.125)))
+
 (defconstant +simplex-2d/norm-factor+
   (/ (* 0.4082483 (expt (- 0.5 (expt 0.4082483 2)) 4) 2)))
+
 (defconstant +simplex-3d/skew-factor+ (/ 3.0))
+
 (defconstant +simplex-3d/unskew-factor+ (/ 6.0))
+
 (defconstant +simplex-3d/pyramid-height+ (sqrt 0.5))
+
 (defconstant +simplex-3d/inverse-pyramid-height+ (sqrt (/ 0.5)))
+
 (defconstant +simplex-3d/inverse-triangle-half-edge-length+ (/ 2 (sqrt 0.75)))
+
 (defconstant +simplex-3d/norm-factor+
   (/ (* 0.4330127 (expt (- 0.5 (expt 0.4330127 2)) 3) 2)))
 

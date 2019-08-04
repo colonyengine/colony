@@ -44,6 +44,7 @@
    (:file "package-nicknames")
    (:file "common")
    (:file "interactive-development")
+   (:file "debugging")
    (:file "metadata")
    (:file "deployment")
    (:file "binary-parser")

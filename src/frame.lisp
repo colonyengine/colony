@@ -34,7 +34,7 @@
 
 (defun make-frame-manager (core)
   (let ((context (context core)))
-    (setf (frame-manager core)
+    (setf (slot-value core '%frame-manager)
           (make-instance 'frame-manager
                          :vsync-p (when (eq (option context :vsync) :on) t)
                          :delta (option context :delta)
@@ -102,7 +102,7 @@
                    interval)
         (setf %period-elapsed %now)))))
 
-(defun tick (core)
+(defun frame-tick (core)
   (let ((frame-manager (frame-manager core))
         (refresh-rate (refresh-rate (display core))))
     (with-slots (%start %now %before %total-time %frame-time %pause-time
@@ -118,4 +118,4 @@
       (frame-update core)
       (frame-periodic-update core)
       (calculate-frame-rate frame-manager)
-      (values))))
+      (u:noop))))

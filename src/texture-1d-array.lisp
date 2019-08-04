@@ -58,17 +58,17 @@
             ;; Construct the entire 2d array image of these 1d image pieces.
             :do (with-slots (%width %pixel-format %pixel-type)
                     image
-                  (dotimes (l num-layers)
+                  (dotimes (i num-layers)
                     (gl:tex-sub-image-2d
                      texture-type
                      level
                      0
-                     l
+                     i
                      %width
                      1
                      %pixel-format
                      %pixel-type
-                     (data (aref (aref all-layers idx) l))))))
+                     (data (aref (aref all-layers idx) i))))))
       ;; And clean up main memory.
       (free-mipmap-images all-layers :1d-array)
       ;; Determine if opengl should generate the mipmaps.

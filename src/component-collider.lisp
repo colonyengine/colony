@@ -10,8 +10,8 @@
    (%radius :accessor radius
             :initarg :radius
             :initform 1.0)
-   (%num-contacts :accessor num-contacts
-                  :initform 0)
+   (%contact-count :accessor contact-count
+                   :initform 0)
    ;; TODO: This block of slots are really here for debugging drawing of a
    ;; collider hack on it a bit to make it better.
    (%visualize :accessor visualize
@@ -42,13 +42,11 @@
 
 (defmethod v:on-component-attach ((self collider/sphere) actor)
   (declare (ignore actor))
-  (let ((context (v:context self)))
-    (v::register-collider context self)))
+  (v::register-collider (v:context self) self))
 
 (defmethod v:on-component-detach ((self collider/sphere) actor)
   (declare (ignore actor))
-  (let ((context (v:context self)))
-    (v::deregister-collider context self)))
+  (v::deregister-collider (v:context self) self))
 
 (defmethod v:on-component-destroy ((self collider/sphere))
   (setf (referent self) nil))
@@ -60,28 +58,29 @@
 (defmethod v:on-component-render ((self collider/sphere))
   (unless (visualize self)
     (return-from v:on-component-render))
-  (a:when-let ((camera (v::active-camera (v:context self))))
-    (let ((transform (v:actor-component-by-type (v:actor self) 'transform)))
-      (v:with-material (material self)
-          (:model (model transform)
-           :view (view camera)
-           :proj (projection camera)
-           :collider-local-position (center self)
-           :in-contact-p (> (num-contacts self) 0)
-           ;; NOTE: The shader computes the radius appropriately for
-           ;; visualization purposes.
-           :radius (radius self))
-        ;; Finally, draw the visualizaiton.
-        (gl:bind-vertex-array (geometry self))
-        (gl:draw-arrays-instanced :points 0 1 1)
-        (gl:bind-vertex-array 0)))))
+  (a:when-let ((camera (v::active-camera (v:context self)))
+               (transform (v:actor-component-by-type
+                           (v:actor self) 'transform)))
+    (v:with-material (material self)
+        (:model (model transform)
+         :view (view camera)
+         :proj (projection camera)
+         :collider-local-position (center self)
+         :in-contact-p (plusp (contact-count self))
+         ;; NOTE: The shader computes the radius appropriately for
+         ;; visualization purposes.
+         :radius (radius self))
+      ;; Finally, draw the visualizaiton.
+      (gl:bind-vertex-array (geometry self))
+      (gl:draw-arrays-instanced :points 0 1 1)
+      (gl:bind-vertex-array 0))))
 
 ;; NOTE: We bubble the collision messages from the collider system through
 ;; ourselves to our referent (who implements this same API). This way, the
 ;; collider component instance can keep data about itself for visualization or
 ;; other purposes.
 (defmethod v:on-collision-enter ((self collider/sphere) other-collider)
-  (incf (num-contacts self))
+  (incf (contact-count self))
   (a:when-let (referent (referent self))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
@@ -94,7 +93,7 @@
     (v:on-collision-continue referent other-collider)))
 
 (defmethod v:on-collision-exit ((self collider/sphere) other-collider)
-  (decf (num-contacts self))
+  (decf (contact-count self))
   (a:when-let (referent (referent self))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
@@ -108,36 +107,35 @@
 
 (defmethod collide-p ((fist collider/sphere) (face collider/sphere))
   "Return T if the two collider/spheres actually collided."
-  (cond
-    ;; A test path when testing colliders outside of FL's prefabs.
-    ((not (and (v:actor fist) (v:actor face))) ;; a test case, no transform comp.
-     (let ((distance/2 (/ (v3:distance (center fist) (center face)) 2.0)))
-       (or (<= distance/2 (radius fist))
-           (<= distance/2 (radius face)))))
-    (t
-     ;; The real path through this code, which transforms the collider into
-     ;; world space appropriately.
-     (let* ((fist-transform
-              (v:actor-component-by-type (v:actor fist) 'transform))
-            (face-transform
-              (v:actor-component-by-type (v:actor face) 'transform))
-            ;; Figure out where the center for these colliders are in world
-            ;; space.
-            (fist-collider-world-center
-              (transform-point fist-transform (center fist)))
-            (face-collider-world-center
-              (transform-point face-transform (center face)))
-            ;; Figure out the size of the radius in world space. We treat the
-            ;; radius as a vector and rotate/scale (but no translate!) it by the
-            ;; world matrix.
-            (fist-world-radius
-              (transform-vector fist-transform (v3:vec (radius fist) 0 0)))
-            (face-world-radius
-              (transform-vector face-transform (v3:vec (radius face) 0 0)))
-            ;; Compute the half way point between the two colliders.
-            (distance (v3:distance fist-collider-world-center
-                                   face-collider-world-center)))
-       ;; Now, compute the collision is the common world space we converted
-       ;; everything into.
-       (<= distance (+ (v3:length fist-world-radius)
-                       (v3:length face-world-radius)))))))
+  ;; A test path when testing colliders outside of FL's prefabs.
+  ;; A test case, no transform comp.
+  (if (not (and (v:actor fist) (v:actor face)))
+      (let ((distance/2 (/ (v3:distance (center fist) (center face)) 2.0)))
+        (or (<= distance/2 (radius fist))
+            (<= distance/2 (radius face))))
+      ;; The real path through this code, which transforms the collider into
+      ;; world space appropriately.
+      (let* ((fist-transform
+               (v:actor-component-by-type (v:actor fist) 'transform))
+             (face-transform
+               (v:actor-component-by-type (v:actor face) 'transform))
+             ;; Figure out where the center for these colliders are in world
+             ;; space.
+             (fist-collider-world-center
+               (transform-point fist-transform (center fist)))
+             (face-collider-world-center
+               (transform-point face-transform (center face)))
+             ;; Figure out the size of the radius in world space. We treat the
+             ;; radius as a vector and rotate/scale (but no translate!) it by the
+             ;; world matrix.
+             (fist-world-radius
+               (transform-vector fist-transform (v3:vec (radius fist) 0 0)))
+             (face-world-radius
+               (transform-vector face-transform (v3:vec (radius face) 0 0)))
+             ;; Compute the half way point between the two colliders.
+             (distance (v3:distance fist-collider-world-center
+                                    face-collider-world-center)))
+        ;; Now, compute the collision is the common world space we converted
+        ;; everything into.
+        (<= distance (+ (v3:length fist-world-radius)
+                        (v3:length face-world-radius))))))

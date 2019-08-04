@@ -42,8 +42,7 @@
       geometry)))
 
 (defun make-dynamic-geometry (name)
-  (let ((geometry (u:href (meta 'dynamic-geometry) name)))
-    (funcall geometry)))
+  (funcall (u:href (meta 'dynamic-geometry) name)))
 
 (defun update-dynamic-geometry (geometry primitive vertex-count &rest data)
   (with-slots (%primitive %vertex-count) geometry

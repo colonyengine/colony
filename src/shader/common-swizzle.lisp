@@ -16,7 +16,7 @@
     (loop :for masks :in '((x y z w) (r g b a) (s t p q))
           :append
           (loop :with set = (subseq masks 0 size)
-                :for i from 1 :to size
+                :for i :from 1 :to size
                 :for items = (%swizzle/combinations i set)
                 :append (mapcar (lambda (x) (format nil "~{~a~}" x)) items))))
 
@@ -31,8 +31,8 @@
              (u:make-keyword
               (map 'string
                    (lambda (x)
-                     (elt "XYZW" (%swizzle/char-position
-                                  mask (position x mask))))
+                     (elt "XYZW"
+                          (%swizzle/char-position mask (position x mask))))
                    mask))))
       `(progn
          ,@(loop :for mask :in (%swizzle/component-groups 4)

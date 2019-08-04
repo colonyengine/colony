@@ -156,7 +156,7 @@
                   (loop :for i :below count
                         :for index = (* columns %element-stride i)
                         :collect (make-matrix data index)))
-              (error "Only 2x2, 3x3, and 4x4")))))))
+              (error "Only square matrices are supported.")))))))
 
 (defun %read-buffer-member (target member &optional count)
   (with-slots (%type %dimensions %count %element-stride %element-type %offset

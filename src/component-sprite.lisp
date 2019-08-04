@@ -54,6 +54,8 @@
     (gpu:bind-block :spritesheet 1)
     (setf %buffer (gpu:create-buffer (a:make-gensym :spritesheet)
                                      :spritesheet))
+    ;; TODO: Have materials automatically calculate a binding point instead of
+    ;; hard-coding.
     (gpu:bind-buffer (gpu:buffer-name %buffer) 1)
     (write-spritesheet-buffer spritesheet)))
 
@@ -71,11 +73,10 @@
       (gl:bind-vertex-array 0))))
 
 (defmethod v:on-component-initialize ((self sprite))
-  (with-slots (%spritesheet %index %initial-index) self
+  (with-slots (%name %spec %spritesheet %index %initial-index) self
     (let ((context (v:context self))
-          (name (name self))
-          (spec (a:ensure-list (spec self))))
-      (unless name
+          (spec (a:ensure-list %spec)))
+      (unless %name
         (error "A sprite component must have a name."))
       (unless spec
         (error "A sprite component must have a spritesheet spec specified."))
@@ -85,5 +86,5 @@
                                ('sprite :cached-spritesheet-data spec)
                                (make-spritesheet context self)))
         (setf %spritesheet cached-spritesheet
-              %index (u:href (sprites %spritesheet) name)
+              %index (u:href (sprites %spritesheet) %name)
               %initial-index %index)))))

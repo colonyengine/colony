@@ -6,8 +6,6 @@
    (%project-data :accessor project-data)
    (%options :reader options
              :initarg :options)
-   (%input-data :reader input-data
-                :initarg :input-data)
    (%active-camera :accessor active-camera
                    :initform nil)
    (%shared-storage-table :reader shared-storage-table
@@ -17,10 +15,7 @@
 
 (defun make-context (core)
   (setf (slot-value core '%context)
-        (make-instance 'context
-                       :core core
-                       :input-data (input-data core)
-                       :options (options core))))
+        (make-instance 'context :core core :options (options core))))
 
 ;; NOTE: This function must have &rest arguments, but they are ignored. This is
 ;; because this function is shared with the material protocol which must pass

@@ -5,6 +5,6 @@
     (setf (shaders core) (gpu:load-shaders modify-hook))))
 
 (defun generate-shader-modify-hook (core)
-  (lambda (programs)
+  (lambda (x)
     (queues:qpush (recompilation-queue core)
-                  (list :shader-recompilation programs))))
+                  (list :shader-recompilation x))))

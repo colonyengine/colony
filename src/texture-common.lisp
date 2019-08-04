@@ -67,7 +67,7 @@ mip map must have."
   (flet ((round-down (x)
            (ceiling (- x 1/2))))
     (let ((num-levels (1+ (floor (log (max width height depth) 2))))
-          (resolutions nil))
+          resolutions)
       (push (list width height depth) resolutions)
       (loop :with new-width = width
             :with new-height = height

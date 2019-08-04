@@ -16,16 +16,17 @@
       ;; Check to ensure they all fit into texture memory.
       ;; TODO: Refactor out of each method into validate-mipmap-images and
       ;; generalize.
-      (loop :for image :across images
+      (loop :with max-size = (get-gpu-parameter :max-texture-size)
+            :for image :across images
             :for location :across data
             :do (when (> (max (height image) (width image))
-                         (gl:get-integer :max-texture-size))
+                         max-size)
                   (error "Image ~a for 1D texture ~a is to big to be loaded ~
                           onto this card. Max resolution is ~a in either ~
                           dimension."
                          location
                          (name texture)
-                         (gl:get-integer :max-texture-size))))
+                         max-size)))
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
           (compute-mipmap-levels (width (aref images 0))

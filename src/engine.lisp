@@ -4,7 +4,7 @@
 (u:eval-always
   (defmacro profile (core duration)
     (let ((packages (remove-if-not
-                     (lambda (x) (search "VIRALITY" x))
+                     (lambda (x) (u:string-starts-with-p x "VIRALITY"))
                      (mapcar #'package-name (list-all-packages)))))
       `(progn
          (sb-profile:unprofile)
@@ -62,7 +62,7 @@ tear-down procedure occurs when stopping the engine."
 
 (defun load-initial-scene (core scene-name)
   (let* ((scene-name (or scene-name (option (context core) :initial-scene)))
-         (prefab-descriptor (virality.prefabs::find-prefab-descriptor scene-name)))
+         (prefab-descriptor (prefab::find-prefab-descriptor scene-name)))
     (make-prefab-instance core prefab-descriptor)))
 
 (defun initialize-engine (core scene-name)
@@ -86,7 +86,7 @@ tear-down procedure occurs when stopping the engine."
   (with-continue-restart "Virality Engine"
     (let ((context (context core)))
       (handle-events context)
-      (render core)
+      (render-frame core)
       ;; TODO: Remove this later when possible.
       (when (input-enter-p context '(:key :escape))
         (stop-engine core)))))

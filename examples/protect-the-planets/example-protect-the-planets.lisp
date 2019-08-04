@@ -894,7 +894,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
              (setf origin
                    (comp:transform-point
                     transform
-                    (case quadrant
+                    (ecase quadrant
                       (0 ;; left side
                        (v3:vec -1000.0 (ransign 600.0) 0.1))
                       (1 ;; top side

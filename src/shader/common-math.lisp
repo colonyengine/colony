@@ -3,7 +3,9 @@
 ;;; Constants
 
 (defconstant +epsilon+ 1e-7)
+
 (defconstant +pi+ (float pi 1.0f0))
+
 (defconstant +half-pi+ (/ +pi+ 2))
 
 ;;; log10

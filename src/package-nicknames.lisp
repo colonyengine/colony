@@ -31,6 +31,7 @@
    (:v3 :origin.vec3)
    (:gpu :virality.gpu)
    (:comp :virality.components)
+   (:prefab :virality.prefabs)
    (:contrib.tex :virality.contrib.textures)
    (:contrib.mat :virality.contrib.materials))
 

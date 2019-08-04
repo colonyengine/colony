@@ -5,7 +5,7 @@
   ;; NOTE: This next one might be called :depth-texture-mode in cl-opengl. Or,
   ;; :dempth-texture-mode might have been removed and replaced with this. Or,
   ;; something else entirely.
-  #++(:depth-stencil-texture-mode :depth-component) ;; note: ogl 4.3 or greater
+  (:depth-stencil-texture-mode :depth-component) ;; note: opengl 4.3 or greater
   (:texture-base-level 0)
   (:texture-border-color (v4:zero))
   (:texture-compare-func :lequal)
@@ -23,8 +23,6 @@
   (:texture-swizzle-g :green)
   (:texture-swizzle-b :blue)
   (:texture-swizzle-a :alpha)
-  ;; Don't default this one, because we already did.
-  ;;(:texture-swizzle-rgba '(:red :green :blue :alpha))
   (:texture-wrap-s :repeat)
   (:texture-wrap-t :repeat)
   (:texture-wrap-r :repeat)
@@ -33,7 +31,6 @@
   ;; If :use-mipmaps is t, and we supply mipmaps, we use the supplied ones.
   ;; If :use-mipmaps is nil, and no mipmaps are supplied, none are generated.
   ;; If :use-mipmaps is nil, and mipmaps are supplied, none are used.
-
   ;; NOTE: The images defined in the texture are exactly those that will be put
   ;; into the texture. Meaning, if base-level is 0, and max-level is 1000, and
   ;; there are 11 images defined, then the resolution of image 0 in the ordered

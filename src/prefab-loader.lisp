@@ -2,7 +2,7 @@
 
 (defun make-actors (context prefab)
   (let ((actors (u:dict #'equalp))
-        (root))
+        root)
     (u:do-hash (path node (parse-tree prefab))
       (with-slots (%name %id %display-id) node
         (let ((actor (v:make-actor context
@@ -33,9 +33,8 @@
       (u:do-hash-values (id-table actor-table)
         (u:do-hash-values (component-table id-table)
           (u:do-hash (component data component-table)
-            ;; Now, for each argument value itself, we adjust the exact
-            ;; lexical scope it closed over with enough stuff for REF to
-            ;; work.
+            ;; Now, for each argument value itself, we adjust the exact lexical
+            ;; scope it closed over with enough stuff for REF to work.
             (flet ((%init-injected-ref-environment (v)
                      (funcall (env-injection-control-func v)
                               :actors actors)
@@ -54,7 +53,6 @@
                                           ;; policy rules, etc, etc, etc
                                           (%init-injected-ref-environment v)
                                           (funcall (thunk v) context))))))
-
                 (apply #'reinitialize-instance
                        component :actor actor args)))))))))
 

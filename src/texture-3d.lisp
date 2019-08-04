@@ -25,7 +25,7 @@
          (texture-base-level
            (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
-         (max-texture-3d-size (gl:get-integer :max-3d-texture-size))
+         (max-texture-3d-size (get-gpu-parameter :max-3d-texture-size))
          (data (get-computed-applied-attribute texture :data))
          (num-mipmaps (length data)))
     #++(format t "Attempting to load 3d texture ~a onto GPU: immutable = ~a~%"
@@ -82,18 +82,18 @@
                               the maximum opengl 3d texture size: ~a"
                              mipmap-width mipmap-height mipmap-depth
                              max-texture-3d-size))
-                    (dotimes (z (length (aref all-slices idx)))
+                    (dotimes (i (length (aref all-slices idx)))
                       (gl:tex-sub-image-3d
                        texture-type
                        level
                        0
                        0
-                       z
+                       i
                        %width
                        %height
                        1
                        %pixel-format
                        %pixel-type
-                       (data (aref (aref all-slices idx) z))))))
+                       (data (aref (aref all-slices idx) i))))))
         (free-mipmap-images all-slices :3d)
         (potentially-autogenerate-mipmaps texture-type texture)))))

@@ -38,13 +38,13 @@
 ;;; Events
 
 (defun on-key-up (context key)
-  (with-slots (%input-data) context
+  (with-slots (%input-data) (core context)
     (input-transition-out %input-data (list :key key))
     (input-transition-out %input-data '(:key :any))
     (input-transition-out %input-data '(:button :any))))
 
 (defun on-key-down (context key)
-  (with-slots (%input-data) context
+  (with-slots (%input-data) (core context)
     (input-transition-in %input-data (list :key key))
     (input-transition-in %input-data '(:key :any))
     (input-transition-in %input-data '(:button :any))))

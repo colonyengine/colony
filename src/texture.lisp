@@ -28,16 +28,14 @@
 
 ;; TODO: Candidate for public API
 (defun add-semantic-texture-descriptor (texdesc core)
-  (setf (u:href (semantic-texture-descriptors (textures core))
-                (name texdesc))
+  (setf (u:href (semantic-texture-descriptors (textures core)) (name texdesc))
         texdesc))
 
 ;; TODO: Candidate for public API
 (defun add-unrealized-texture (texture context)
   "Add a TEXTURE, which only has defined an opengl texid, to core. This book
 keeps unrealized textures for the user to finalize before the game starts."
-  (setf (u:href (unrealized-procedural-textures
-                 (textures (core context)))
+  (setf (u:href (unrealized-procedural-textures (textures (core context)))
                 (name texture))
         texture))
 
@@ -46,16 +44,15 @@ keeps unrealized textures for the user to finalize before the game starts."
   "Remove the unrealized TEXTURE from the texture tables. It is assumed that you
 have just realized it by setting its opengl parameters and uploading data or
 declaring storage of some kind to the GPU."
-  (remhash (name texture) (unrealized-procedural-textures
-                           (textures (core context)))))
+  (remhash (name texture)
+           (unrealized-procedural-textures (textures (core context)))))
 
 ;; TODO: Candidate for public API
 (defun get-unrealized-textures (context)
   "Return a list of textures that are specified in materials, but haven't been
 completed (no opengl parameters set for them, or data loaded into GPU).
 NOTE: These are already in the RCACHE."
-  (u:hash-values (unrealized-procedural-textures
-                  (textures (core context)))))
+  (u:hash-values (unrealized-procedural-textures (textures (core context)))))
 
 ;; TODO: Candidate for public API.
 (defun get-procedural-texture-descriptors (context)
@@ -124,10 +121,10 @@ NOTE: These are already in the RCACHE."
       (setf (u:href (applied-attributes new-texdesc) key) (copy-thing value)))
     new-texdesc))
 
-;; The texture descriptor as read from the define-texture DSL form. This
-;; records the original values for that texture definition which may include
-;; that it is procedural or not. This texdesc is a reference to the only copy
-;; of it as read from the DSL and stored in the texture-table in core.
+;; The texture descriptor as read from the define-texture DSL form. This records
+;; the original values for that texture definition which may include that it is
+;; procedural or not. This texdesc is a reference to the only copy of it as read
+;; from the DSL and stored in the texture-table in core.
 (defclass texture ()
   ((%semantic-texdesc :reader semantic-texdesc
                       :initarg :semantic-texdesc)
@@ -180,12 +177,11 @@ NOTE: These are already in the RCACHE."
               :texture-swizzle-g :texture-swizzle-b
               :texture-swizzle-a :texture-swizzle-rgba
               :texture-wrap-s :texture-wrap-t :texture-wrap-r)))
-      (loop :for putative-parameter :in texture-parameters
-            :do (u:when-found (value (u:href applied-attributes
-                                             putative-parameter))
-                  (gl:tex-parameter texture-type
-                                    putative-parameter
-                                    value))))))
+      (dolist (putative-parameter texture-parameters)
+        (u:when-found (value (u:href applied-attributes putative-parameter))
+          (gl:tex-parameter texture-type
+                            putative-parameter
+                            value))))))
 
 ;;; TODO: These are cut into individual functions for their context. Maybe later
 ;;; I'll see about condensing them to be more concise.
@@ -218,19 +214,17 @@ local descriptor lists replaced by actual IMAGE instances of the loaded images."
                     (first cube-data)))
            ;; canonicalize the face name.
            (map 'vector
-                (lambda (face)
-                  (list (canonicalize-cube-map-face-signfier
-                         (first face))
-                        (second face)))
+                (lambda (x)
+                  (list (canonicalize-cube-map-face-signfier (first x))
+                        (second x)))
                 ;; sort the faces for loading in the right order.
                 (stable-sort
                  ;; convert vector of path-locations to image instances.
                  (map 'vector
-                      (lambda (face)
-                        (let ((face-signifier (first face))
-                              (mipmaps (second face)))
-                          (list face-signifier
-                                (funcall choice-func mipmaps))))
+                      (lambda (x)
+                        (let ((face-signifier (first x))
+                              (mipmaps (second x)))
+                          (list face-signifier (funcall choice-func mipmaps))))
                       (second cube-data))
                  #'sort-cube-map-faces-func :key #'first))))
     (if use-mipmaps-p
@@ -240,15 +234,16 @@ local descriptor lists replaced by actual IMAGE instances of the loaded images."
            (map 'vector #'read-image-contextually data))
           ((:1d-array :2d-array :3d)
            (map 'vector
-                (lambda (slices)
-                  (map 'vector #'read-image-contextually slices))
+                (lambda (x)
+                  (map 'vector #'read-image-contextually x))
                 data))
           ((:cube-map :cube-map-array)
            (map 'vector
-                (lambda (cube-data)
+                (lambda (x)
                   (process-cube-map-mipmaps
-                   cube-data
-                   (lambda (x) (map 'vector #'read-image-contextually x))))
+                   x
+                   (lambda (x)
+                     (map 'vector #'read-image-contextually x))))
                 data)))
         ;; Processing only the first image location (mipmap 0)
         (ecase kind
@@ -259,11 +254,12 @@ local descriptor lists replaced by actual IMAGE instances of the loaded images."
           ((:cube-map :cube-map-array)
            ;; TODO: Test this path.
            (map 'vector
-                (lambda (cube-data)
+                (lambda (x)
                   (process-cube-map-mipmaps
-                   cube-data
-                   (lambda (mipmaps) (map 'vector #'read-image-contextually
-                                          (vector (aref mipmaps 0))))))
+                   x
+                   (lambda (x)
+                     (map 'vector #'read-image-contextually
+                          (vector (aref x 0))))))
                 data))))))
 
 (defun free-mipmap-images (images kind)
@@ -318,11 +314,11 @@ IMAGES vector to see if we have the expected number and resolution of mipmaps."
         ;; Otherwise, something went wrong.
         ;; TODO: Should do a better error message which diagnoses what's wrong.
         (t
-         (error "Texture ~a mipmap levels are ~
-                 incorrect:~%~2Ttexture-base-level = ~a~%~2Ttexture-max-level ~
-                 = ~a~%~2Tnumber of mipmaps specified in texture ~
-                 = ~a~%~2Texpected number of mipmaps = ~a~%Probably too many ~
-                 or to few specified mipmap images."
+         (error "Texture ~a mipmap levels are incorrect:~% ~
+                 ~2Ttexture-base-level = ~a~%~2Ttexture-max-level = ~a~% ~
+                 ~2Tnumber of mipmaps specified in texture = ~a~% ~
+                 ~2Texpected number of mipmaps = ~a~%Probably too many or to ~
+                 few specified mipmap images."
                 texture-name
                 texture-base-level
                 texture-max-level
@@ -336,10 +332,11 @@ related interpolation."
   (let ((use-mipmaps-p (get-computed-applied-attribute texture :use-mipmaps))
         (texture-name (name texture)))
     (symbol-macrolet ((current-tex-min-filter
-                        (get-computed-applied-attribute texture
-                                                        :texture-min-filter)))
+                        (get-computed-applied-attribute
+                         texture
+                         :texture-min-filter)))
       (unless use-mipmaps-p
-        (case current-tex-min-filter
+        (ecase current-tex-min-filter
           ((:nearest-mipmap-nearest :nearest-mipmap-linear)
            (warn "Down converting nearest texture min mipmap filter due to ~
                   disabled mipmaps. Please specify an override ~
@@ -378,8 +375,8 @@ GPU memory."
                      (mipmaps (second face)))
                 (length mipmaps))))))
     (when (and use-mipmaps-p
-               (= num-mipmaps 1)  ;; We didn't supply any but the base image.
-               (> max-mipmaps 1)) ;; And we're expecting some to exist.
+               (= num-mipmaps 1)  ; We didn't supply any but the base image.
+               (> max-mipmaps 1)) ; And we're expecting some to exist.
       (gl:generate-mipmap texture-type))))
 
 ;; TODO: Candidate for user API.
@@ -436,8 +433,9 @@ assign it to the computed texture descriptor slot in TEXTURE."
 (defun parse-texture-profile (name body-form)
   (a:with-gensyms (texprof)
     `(let* ((,texprof (make-texture-profile :name ',name)))
-       (setf ,@(loop :for (attribute value) :in body-form :appending
-                     `((u:href (attributes ,texprof) ,attribute) ,value)))
+       (setf ,@(loop :for (attribute value) :in body-form
+                     :appending `((u:href (attributes ,texprof) ,attribute)
+                                  ,value)))
        ,texprof)))
 
 (defmacro define-texture-profile (name &body body)

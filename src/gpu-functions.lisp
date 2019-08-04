@@ -34,15 +34,13 @@
               (u:href dep-fns dep-spec spec) spec)))))
 
 (defun compute-outdated-programs (spec)
-  (let* ((programs)
-         (dep->fns (v::meta 'dep->fns))
-         (spec-fns (u:href dep->fns spec)))
-    (maphash
-     (lambda (k v)
-       (when (or (u:href spec-fns k)
-                 (equal k spec))
-         (setf programs (union v programs :test #'equal))))
-     (v::meta 'stage-fn->programs))
+  (let* ((dep->fns (v::meta 'dep->fns))
+         (spec-fns (u:href dep->fns spec))
+         (programs))
+    (u:do-hash (k v (v::meta 'stage-fn->programs))
+      (when (or (u:href spec-fns k)
+                (equal k spec))
+        (setf programs (union v programs :test #'equal))))
     programs))
 
 (defmacro define-function (name args &body body)

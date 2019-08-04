@@ -1,6 +1,8 @@
 (in-package #:virality.engine)
 
-(defgeneric rcache-layout (entry-type))
+(defgeneric rcache-layout (entry-type)
+  (:method (entry-type)
+    '(eql)))
 
 (defgeneric rcache-lookup (context entry-type &rest keys))
 

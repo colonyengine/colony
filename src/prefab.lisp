@@ -16,33 +16,29 @@
                                                  options/args)
                                 :for (key value) :on args :by #'cddr
                                 :collect key
-
                                 :collect
-                                ;; We thunk the initarg value AND the
-                                ;; environment in which it is valid into a new
-                                ;; object that we use to set up the environment
-                                ;; of the evaluating value later when we force
-                                ;; the thunk.
                                 `(make-injectable-ref-value-thunk
                                   :thunk (lambda (,context)
                                            (declare (ignorable ,context))
                                            ,value)
                                   :env-injection-control-func
-                                  ;; NOTE: lexical intercourse ensues with the
-                                  ;; INJECT-REF-ENVIRONMENT macro.
                                   (u:dlambda
-                                    (:actors (x)
-                                             (setf actor-table x))
-                                    (:components (x)
-                                                 (setf component-table x))
-                                    (:current-actor (x)
-                                                    (setf current-actor x))
-                                    (:current-component (x)
-                                                        (setf current-component
-                                                              x))))))))))
-    `(list ,@(mapcar
-              #'rec
-              (list (cons (list prefab-name :policy policy) spec))))))
+                                    (:actors
+                                     (x)
+                                     (setf actor-table x))
+                                    (:components
+                                     (x)
+                                     (setf component-table x))
+                                    (:current-actor
+                                     (x)
+                                     (setf current-actor x))
+                                    (:current-component
+                                     (x)
+                                     (setf current-component x))))))))))
+    `(list
+      ,@(mapcar
+         #'rec
+         (list (cons (list prefab-name :policy policy) spec))))))
 
 (defmacro inject-ref-environment (&body body)
   `(let (actor-table component-table current-actor current-component)
@@ -88,6 +84,5 @@
                         (,prefab (make-prefab ',name ',library ,doc ,data)))
                (setf (u:href ,prefabs ',name) ,prefab
                      (func ,prefab) (make-factory ,prefab))
-
                (parse-prefab ,prefab)))
            (export ',library))))))

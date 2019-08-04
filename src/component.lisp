@@ -15,9 +15,9 @@
    (%ttl :accessor ttl
          :initarg :ttl
          :initform 0)
-   (%initializer-thunk :accessor initializer-thunk
-                       :initarg :initializer-thunk
-                       :initform nil)
+   (%initializer :accessor initializer
+                 :initarg :initializer
+                 :initform nil)
    (%attach/detach-event-queue :accessor attach/detach-event-queue
                                :initarg :attach/detach-event-queue
                                :initform (queues:make-queue :simple-queue)))
@@ -63,12 +63,8 @@ DEFINE-COMPONENT form."
         component-type)))
 
 (defmethod make-component (context component-type &rest args)
-  (a:if-let ((qualified-type (qualify-component (core context) component-type)))
-    (let ((component (apply #'make-instance qualified-type
-                            :type qualified-type
-                            :context context
-                            args)))
-      component)
+  (a:if-let ((type (qualify-component (core context) component-type)))
+    (apply #'make-instance type :type type :context context args)
     (error "Could not qualify the component type ~s." component-type)))
 
 (defmethod initialize-instance :after ((instance component) &key)
@@ -76,27 +72,24 @@ DEFINE-COMPONENT form."
   (register-object-id instance))
 
 (defun component/preinit->init (component)
-  (a:when-let ((thunk (initializer-thunk component)))
+  (a:when-let ((thunk (initializer component)))
     (funcall thunk)
-    (setf (initializer-thunk component) nil))
+    (setf (initializer component) nil))
   (let* ((core (core (context component)))
-         (component-type (canonicalize-component-type (component-type component)
-                                                      core)))
+         (type (canonicalize-component-type (component-type component)
+                                            core)))
     (with-slots (%tables) core
-      (type-table-drop component component-type (component-preinit-by-type-view
-                                                 %tables))
-      (setf (type-table component-type (component-init-by-type-view %tables))
+      (type-table-drop component type (component-preinit-by-type-view %tables))
+      (setf (type-table type (component-init-by-type-view %tables))
             component))))
 
 (defun component/init->active (component)
   (let* ((core (core (context component)))
-         (component-type (canonicalize-component-type (component-type component)
-                                                      core)))
+         (type (canonicalize-component-type (component-type component) core)))
     (with-slots (%tables) core
-      (type-table-drop component component-type (component-init-by-type-view
-                                                 %tables))
+      (type-table-drop component type (component-init-by-type-view %tables))
       (setf (state component) :active
-            (type-table component-type (component-active-by-type-view %tables))
+            (type-table type (component-active-by-type-view %tables))
             component))))
 
 (defmethod destroy-after-time ((thing component) &key (ttl 0))
@@ -111,28 +104,25 @@ DEFINE-COMPONENT form."
 
 (defun component/init-or-active->destroy (component)
   (let* ((core (core (context component)))
-         (component-type (canonicalize-component-type (component-type component)
-                                                      core)))
+         (type (canonicalize-component-type (component-type component) core)))
     (unless (plusp (ttl component))
       (with-slots (%tables) core
         (setf (state component) :destroy
-              (type-table component-type
-                          (component-destroy-by-type-view %tables))
+              (type-table type (component-destroy-by-type-view %tables))
               component)
         (remhash component (component-predestroy-view %tables))
         (unless (type-table-drop component
-                                 component-type
+                                 type
                                  (component-active-by-type-view %tables))
           (type-table-drop component
-                           component-type
+                           type
                            (component-preinit-by-type-view %tables)))))))
 
 (defun component/destroy->released (component)
   (let* ((core (core (context component)))
-         (component-type (canonicalize-component-type
-                          (component-type component) core)))
+         (type (canonicalize-component-type (component-type component) core)))
     (type-table-drop component
-                     component-type
+                     type
                      (component-destroy-by-type-view (tables core)))
     (detach-component (actor component) component)
     (deregister-object-uuid component)

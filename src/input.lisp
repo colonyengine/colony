@@ -90,7 +90,7 @@
 
 (defun perform-input-state-tasks (context)
   (declare (optimize speed))
-  (let* ((input-data (input-data context))
+  (let* ((input-data (input-data (core context)))
          (states (states input-data)))
     (setf (u:href states '(:mouse :scroll-horizontal)) 0
           (u:href states '(:mouse :scroll-vertical)) 0)

@@ -49,7 +49,6 @@
    (%annotation-array :accessor annotation-array
                       :initarg :annotation-array
                       :initform #())
-
    ;; A database of which slots on which classes are annotated.
    ;; key: component-name, value: list of (slot-name  (initarg ..) (anno ..))
    ;; Note: I'm storing the EFFECTIVE slot data in thie db. This means that
@@ -67,34 +66,31 @@
 ;; Annotation DB API
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; called at the end of define-annotation.
-;; it'll also give back the appropriate annotation entry.
+;; called at the end of define-annotation. it'll also give back the appropriate
+;; annotation entry.
 (defun register-annotation (component-metaclass-name annotation-name state
                             &key (getter #'identity/annotation)
                               (setter #'identity/annotation))
   (let* ((db (find-class component-metaclass-name))
          (annodb (annotations db))
          (entry (u:href annodb annotation-name)))
-
     ;; first look it up.
     ;; use AU to fix this.
     (unless entry
-      (let* ((snid (prog1 (annotation-serialnum db)
-                     (incf (annotation-serialnum db)))))
+      (let ((snid (prog1 (annotation-serialnum db)
+                    (incf (annotation-serialnum db)))))
         ;; make a new generic one with defaults.
         (setf entry (make-annotation-value
-                     annotation-name snid :forward-reference))
-        (setf (u:href annodb annotation-name) entry
+                     annotation-name snid :forward-reference)
+              (u:href annodb annotation-name) entry
               (annotations-dirty-p db) t)))
-
     ;; then debate what to do based upon state.
-    (case state
+    (ecase state
       (:initialized
        (setf (state entry) state
              (setter entry) setter
              (getter entry) getter))
       (:forward-reference
-       ;; do nothing
        nil))
 
     entry))
@@ -106,16 +102,14 @@
     entry))
 
 (defun optimize-annotations (component-metaclass-name)
-  (let* ((db (find-class component-metaclass-name)))
+  (let ((db (find-class component-metaclass-name)))
     (when (annotations-dirty-p db)
       (let* ((annodb (annotations db))
              (num-annotations (hash-table-count annodb))
              (optiarray (make-array num-annotations)))
         ;; now, fill the array with the annotations at their snid spots.
-        (a:maphash-values
-         (lambda (anno)
-           (setf (aref optiarray (serialnum anno)) anno))
-         annodb)
+        (u:do-hash-values (v annodb)
+          (setf (aref optiarray (serialnum v)) v))
         ;; and replace the previous one in the db.
         (setf (annotation-array db) optiarray
               ;; and we're not dirty anymore.
@@ -181,8 +175,7 @@
 (defmethod annotated-slot-p (slot)
   nil)
 
-(defmethod annotated-slot-p
-    ((slot component-annotated-direct-slot-definition))
+(defmethod annotated-slot-p ((slot component-annotated-direct-slot-definition))
   t)
 
 (defmethod annotated-slot-p
@@ -209,7 +202,7 @@
 ;; all the slots, in the same order as supplied
 (defun dslotds-annotated-p (dslotds)
   ;; Note: dslotds are in most-specific-first order.
-  (let ((annotations ()))
+  (let (annotations)
     (dolist (dslotd dslotds)
       (when (annotated-slot-p dslotd)
         (push (annotation dslotd) annotations)))
@@ -219,7 +212,6 @@
 ;; We add knowledge of the :annotation slot and how it works across
 ;; all the direct slots contributing to the definition of the annotated
 ;; effective slots.
-;;
 ;; direct-slotds SHOULD BE most-specific-to-least-specific order.
 (defun compute-annotated-effective-slot-definition-initargs
     (class direct-slotds)
@@ -336,12 +328,11 @@
     (setf (annotation-indexes slotd)
           (make-array (length (annotation slotd))
                       :initial-contents
-                      (mapcar (lambda (annotation)
-                                (serialnum
-                                 (u:href (annotations
-                                          (find-class 'component))
-                                         annotation)))
-                              (annotation slotd))))
+                      (mapcar
+                       (lambda (x)
+                         (serialnum
+                          (u:href (annotations (find-class 'component)) x)))
+                       (annotation slotd))))
 
     slotd))
 
@@ -357,12 +348,13 @@
 ;; class. Assumes class is finalized.
 (defun collect-all-annotated-effective-slot-data (component-class-name)
   (remove-if #'null
-             (mapcar (lambda (slot)
-                       (when (annotated-slot-p slot)
-                         (list (c2mop:slot-definition-name slot)
-                               (c2mop:slot-definition-initargs slot)
-                               (annotation slot))))
-                     (c2mop::class-slots (find-class component-class-name)))))
+             (mapcar
+              (lambda (x)
+                (when (annotated-slot-p x)
+                  (list (c2mop:slot-definition-name x)
+                        (c2mop:slot-definition-initargs x)
+                        (annotation x))))
+              (c2mop::class-slots (find-class component-class-name)))))
 
 ;; Here we collect all the annotated slot data from a component and put it into
 ;; the COMPONENT meta-class slots.

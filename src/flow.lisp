@@ -5,8 +5,8 @@
           :initarg :name)
    (%policy :accessor policy
             :initarg :policy)
-   (%exitingp :accessor exitingp
-              :initarg :exitingp)
+   (%exiting-p :accessor exiting-p
+               :initarg :exiting-p)
    (%selector :accessor selector
               :initarg :selector)
    (%action :accessor action
@@ -30,11 +30,11 @@
         :collect v :into vs
         :finally (return (values bs vs))))
 
-(defun gen-reset-function (symbols values)
+(defun generate-reset-function (symbols values)
   (let* ((tmp-symbols
-           (loop :for sym :in symbols
+           (loop :for symbol :in symbols
                  :collect (a:format-symbol nil "~a-ONCE-ONLY"
-                                           (symbol-name sym))))
+                                           (symbol-name symbol))))
          (once-only-bindings (mapcar
                               (lambda (tsym value) `(,tsym ,value))
                               tmp-symbols
@@ -80,7 +80,7 @@ flow-state CLOS instance for it."
                                              name funcs))
                 (bind-syms bind-vals (binding-partition binds)))
         (ensure-matched-symbol match "flow-state")
-        (let ((reset-function (gen-reset-function bind-syms bind-vals)))
+        (let ((reset-function (generate-reset-function bind-syms bind-vals)))
           ;; Generate the instance maker for this flow-state.
           `(,name
             (let ,binds
@@ -88,7 +88,7 @@ flow-state CLOS instance for it."
               ;; order of definition.
               (make-flow-state :name ',name
                                :policy ,policy
-                               :exitingp ,(null transition)
+                               :exiting-p ,(null transition)
                                :selector ,selector
                                :action ,action
                                :transition ,transition
@@ -145,12 +145,12 @@ name which resulted in the exiting of the flow."
         :with selections
         :with policy = :identity-policy
         :do (log:trace :virality.engine "Processing flow-state: ~a, exiting: ~a"
-                       (name flow-state) (exitingp flow-state))
+                       (name flow-state) (exiting-p flow-state))
             ;; Step 1: Record state transition and update to current.
             (setf last-state-name current-state-name
                   current-state-name (name flow-state))
             ;; Step 2: Perform execution policy
-            (case (policy flow-state)
+            (ecase (policy flow-state)
               (:reset
                (funcall (reset flow-state))))
             ;; Step 3: Run Selector Function
@@ -178,8 +178,8 @@ name which resulted in the exiting of the flow."
                            (atom (funcall action item)))))
                      (act-on-type-table (type-key type-table)
                        ;; Get the hash of components for the type-key
-                       (u:when-found (component-table (type-table type-key
-                                                                  type-table))
+                       (u:when-found (component-table
+                                      (type-table type-key type-table))
                          (act-on-item component-table))))
               (ecase policy
                 ;; TODO: :type-policy is in this branch until I write the code
@@ -191,8 +191,7 @@ name which resulted in the exiting of the flow."
                      (act-on-item selections)))
                 ((:type-policy)
                  (let* ((component-dependency-graph
-                          (u:href (analyzed-graphs core)
-                                  'component-dependency))
+                          (u:href (analyzed-graphs core) 'component-dependency))
                         (annotation (annotation component-dependency-graph))
                         (dependency-type-order
                           (toposort component-dependency-graph)))
@@ -212,11 +211,12 @@ name which resulted in the exiting of the flow."
                        (t
                         (error "EXECUTE-FLOW :type-policy is broken."))))))))
             ;; Step 5: Exit if reached exiting state.
-            (when (exitingp flow-state)
+            (when (exiting-p flow-state)
               (log:trace :virality.engine "Exiting flow: (~a ~a ~a)"
                          call-flow-name flow-name current-state-name)
-              (return-from execute-flow (values last-state-name
-                                                current-state-name)))
+              (return-from execute-flow
+                (values last-state-name
+                        current-state-name)))
             ;; Step 6: Run the transition function to determine the next
             ;; flow-state. Currently, a transition can only go into the SAME
             ;; flow.

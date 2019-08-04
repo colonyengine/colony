@@ -15,8 +15,8 @@
          (num-layers (length data))
          (reshaped-layers (reshape-image-array-layout data))
          (all-layers
-           (read-mipmap-images context reshaped-layers
-                               use-mipmaps-p :2d-array))
+           (read-mipmap-images
+            context reshaped-layers use-mipmaps-p :2d-array))
          (first-image (aref (aref all-layers 0) 0))
          ;; TODO: Assert num-mipmaps is same for all layers.
          (num-mipmaps (length all-layers)))
@@ -59,19 +59,19 @@
             :do (with-slots (%width %height %internal-format %pixel-format
                              %pixel-type)
                     image
-                  (dotimes (l num-layers)
+                  (dotimes (i num-layers)
                     (gl:tex-sub-image-3d
                      texture-type
                      level
                      0
                      0
-                     l
+                     i
                      %width
                      %height
                      1
                      %pixel-format
                      %pixel-type
-                     (data (aref (aref all-layers idx) l))))))
+                     (data (aref (aref all-layers idx) i))))))
       ;; And clean up main memory.
       (free-mipmap-images all-layers :2d-array)
       ;; Determine if opengl should generate the mipmaps.

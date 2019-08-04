@@ -32,8 +32,7 @@
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-preinit-by-type-view
-                                (tables core)))))
+                               (component-preinit-by-type-view (tables core)))))
                     (action #'component/preinit->init)
                     (transition init-actors))
         ;; 2
@@ -99,7 +98,7 @@
                                core)))
                     (action
                      (lambda (core)
-                       (tick core)
+                       (frame-tick core)
                        (comp:interpolate-transforms core)))
                     (transition make-active-camera-view))
         ;; NOTE: This flow-state is invoked deep inside of TICK in the
@@ -109,18 +108,15 @@
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-active-by-type-view
-                                (tables core)))))
+                               (component-active-by-type-view (tables core)))))
                     (action #'on-component-physics-update)
                     (transition nil))
-
         ;; TODO: PHYSICS-COLLISIONS has a tentative implementation, there may be
         ;; more work here than this single state. This will compute collisions
         ;; and then inform the recipients of those collisions as desired in the
         ;; boundary regions components (yet to be written).
-        ;; NOTE: This
-        ;; flow-state is invoked deep inside of TICK, hence no transitions in
-        ;; and out.
+        ;; NOTE: This flow-state is invoked deep inside of TICK, hence no
+        ;; transitions in and out.
         (flow-state physics-collisions :reset ()
                     (selector
                      (lambda (core)
@@ -144,8 +140,7 @@
                        (let ((context (context core)))
                          (symbol-macrolet ((camera (active-camera context)))
                            (unless (and camera (comp:active-p camera))
-                             (setf camera (comp:find-active-camera
-                                           context)))
+                             (setf camera (comp:find-active-camera context)))
                            (values :identity-policy
                                    camera)))))
                     (action #'comp:compute-camera-view)
@@ -162,16 +157,14 @@
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-active-by-type-view
-                                (tables core)))))
+                               (component-active-by-type-view (tables core)))))
                     (action #'on-component-update)
                     (transition protocol-render-component))
         (flow-state protocol-render-component :reset ()
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-active-by-type-view
-                                (tables core)))))
+                               (component-active-by-type-view (tables core)))))
                     (action #'on-component-render)
                     (transition exit/active-phase))
         (flow-state exit/active-phase :reset ()
@@ -216,7 +209,6 @@
                        (if (pending-predestroy-tasks-p core)
                            prepare-predestroy-components
                            pending-destroy-tasks))))
-
         ;; 1
         (flow-state prepare-predestroy-components :reset ()
                     (selector
@@ -238,8 +230,7 @@
                     (selector
                      (lambda (core)
                        (values :identity-policy
-                               (u:hash-keys (actor-destroy-db
-                                             (tables core))))))
+                               (u:hash-keys (actor-destroy-db (tables core))))))
                     ;; NOTE: See selector for this flow-state.
                     (action #'actor/destroy-descendants)
                     (transition decrement-component-destroy-timer))
@@ -273,13 +264,10 @@
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-destroy-by-type-view
-                                (tables core)))))
+                               (component-destroy-by-type-view (tables core)))))
                     (action #'component/invoke-attach/detach-events)
                     (transition deregister-colliders))
-
         ;; 5.75 HACKISH
-        ;;
         ;; TODO: Might call on-collision-* on components that have been
         ;; detached? Might have to have a much finer grained understanding of
         ;; something that is about to be destroyed and a barrier that all the
@@ -301,8 +289,7 @@
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-destroy-by-type-view
-                                (tables core)))))
+                               (component-destroy-by-type-view (tables core)))))
                     (action #'on-component-destroy)
                     (transition disconnect-destroyed-actors))
         ;; 7
@@ -318,8 +305,7 @@
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-destroy-by-type-view
-                                (tables core)))))
+                               (component-destroy-by-type-view (tables core)))))
                     (action #'component/destroy->released)
                     (transition release-actors))
         ;; 9

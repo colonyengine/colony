@@ -17,23 +17,6 @@
    #:id
    #:with-shared-storage)
 
-  ;; definitions
-  (:export
-   #:define-annotation
-   #:define-call-flow
-   #:define-component
-   #:define-geometry
-   #:define-geometry-layout
-   #:define-graph
-   #:define-material
-   #:define-material-profile
-   #:define-options
-   #:define-prefab
-   #:define-prefab-descriptor
-   #:define-resources
-   #:define-texture
-   #:define-texture-profile)
-
   ;; actions
   (:export
    #:action-step
@@ -82,6 +65,23 @@
    #:frame-time
    #:option
    #:total-time)
+
+  ;; definitions
+  (:export
+   #:define-annotation
+   #:define-call-flow
+   #:define-component
+   #:define-geometry
+   #:define-geometry-layout
+   #:define-graph
+   #:define-material
+   #:define-material-profile
+   #:define-options
+   #:define-prefab
+   #:define-prefab-descriptor
+   #:define-resources
+   #:define-texture
+   #:define-texture-profile)
 
   ;; input
   (:export

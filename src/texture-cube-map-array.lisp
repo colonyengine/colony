@@ -11,17 +11,15 @@
          (max-mipmaps (- texture-max-level texture-base-level))
          (data (get-computed-applied-attribute texture :data))
          ;; load all of the images we may require.
-         (images (read-mipmap-images context data
-                                     use-mipmaps-p
-                                     :cube-map-array))
+         (images (read-mipmap-images
+                  context data use-mipmaps-p :cube-map-array))
          (first-cube (aref images 0))
          (first-image (aref (second (aref first-cube 0)) 0))
          ;; TODO: This is not safe, need to check all of them.
          ;; TODO: We assume all cube maps have the same mipmap number. I don't
          ;; know if this is a reuirements or not.
          (num-mipmaps (length (second (aref first-cube 0)))))
-    (log:trace :virality.engine
-               "Loading :texture-cube-map-array images = ~a"
+    (log:trace :virality.engine "Loading :texture-cube-map-array images = ~a"
                images)
     ;; Figure out the ideal mipmap count from the base resolution.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
