@@ -69,6 +69,7 @@
    (:file "protocol-component")
    (:file "protocol-rcache")
    (:file "object-query")
+   (:file "hardware-query")
    (:file "annotations")
    (:file "frame")
    (:file "display")
@@ -162,6 +163,4 @@
    (:file "definition/texture-profiles")
    (:file "definition/textures")
    (:file "definition/material-profiles")
-   (:file "definition/materials")
-
-   (:file "staging/hardware-query")))
+   (:file "definition/materials")))
