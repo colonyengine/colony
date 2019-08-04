@@ -21,15 +21,11 @@
                             (uiop:xdg-config-home))))
     (when (uiop:file-exists-p user-options-path)
       (setf (meta 'options/user)
-            (apply #'u:dict
-                   (u:safe-read-file-forms
-                    user-options-path))))
+            (apply #'u:dict (u:safe-read-file-forms user-options-path))))
     (setf (options core)
           (u:hash-merge (meta 'options/default)
-                        (or (meta 'options/project)
-                            (u:dict))
-                        (or (meta 'options/user)
-                            (u:dict))))))
+                        (or (meta 'options/project) (u:dict))
+                        (or (meta 'options/user) (u:dict))))))
 
 (defun option (context option-name)
   (u:href (options context) option-name))
