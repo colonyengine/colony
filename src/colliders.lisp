@@ -242,8 +242,8 @@ had--and update all other faces too."
       ;; colliders. No chance of duplicate invocation of protocol here.
       (a:when-let ((fists (u:href (stable-colliders collider-system) fist-layer))
                    (faces (u:href (stable-colliders collider-system) face-layer)))
-        (when (and (> (hash-table-count fists) 0)
-                   (> (hash-table-count faces) 0))
+        (when (and (plusp (hash-table-count fists))
+                   (plusp (hash-table-count faces)))
           (do-hash-keys-pairwise
               (lambda (fist face)
                 (compute-contact-state collider-system fist face))
