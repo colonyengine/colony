@@ -30,6 +30,7 @@
    (:v2 :origin.vec2)
    (:v3 :origin.vec3)
    (:gpu :virality.gpu)
+   (:img :virality.image)
    (:comp :virality.components)
    (:prefab :virality.prefabs)
    (:contrib.tex :virality.contrib.textures)
@@ -55,6 +56,9 @@
    (:u :golden-utils)
    (:log :verbose)
    (:v :virality.engine))
+
+  (:virality.image
+   (:u :golden-utils))
 
   (:virality.prefabs
    (:a :alexandria)

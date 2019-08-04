@@ -195,8 +195,8 @@ TEXTURE-TYPE into the texture memory."))
   "Read the images described in the mipmap location array DATA into main memory.
 If USE-MIPMAPS-P is true, then load all of the mipmaps, otherwise only load the
 base image, which is the first one in the array. CONTEXT is the core context
-slot value. Return a vector of image structure from the function READ-IMAGE. If
-KIND is :1d or :2d, then DATA must be an array of location descriptors like:
+slot value. Return a vector of image structure from the function IMG:READ-IMAGE.
+If KIND is :1d or :2d, then DATA must be an array of location descriptors like:
 #((:project \"a/b/c/foo.tiff\") (:local \"a/b/c/foo.tiff\")) If KIND is
 :1d-array, :2d-array, :3d, then DATA must be an array of slices of mipmap
 images: #(#((:project \"a/b/c/slice0-mip0.tiff\") (:local
@@ -204,7 +204,7 @@ images: #(#((:project \"a/b/c/slice0-mip0.tiff\") (:local
 local descriptor lists replaced by actual IMAGE instances of the loaded images."
   (flet ((read-image-contextually (loc)
            (let ((path (apply #'find-resource context (a:ensure-list loc))))
-             (read-image path)))
+             (img:read-image path)))
          (process-cube-map-mipmaps (cube-data choice-func)
            ;; Process only one cube map right now... when this works, edit it to
            ;; process many cube maps.
@@ -267,14 +267,14 @@ local descriptor lists replaced by actual IMAGE instances of the loaded images."
   (loop :for potential-image :across images
         :do (ecase kind
               ((:1d :2d)
-               (free-storage potential-image))
+               (img:free-storage potential-image))
               ((:1d-array :2d-array :3d)
                (loop :for actual-image :across potential-image
-                     :do (free-storage actual-image)))
+                     :do (img:free-storage actual-image)))
               ((:cube-map :cube-map-array)
                (loop :for face :across potential-image
                      :do (loop :for actual-image :across (second face)
-                               :do (free-storage actual-image)))))))
+                               :do (img:free-storage actual-image)))))))
 
 (defun validate-mipmap-images (images texture expected-mipmaps
                                expected-resolutions)

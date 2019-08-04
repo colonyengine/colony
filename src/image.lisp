@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.image)
 
 (defclass image ()
   ((%path :reader path

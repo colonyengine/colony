@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.image)
 
 (defun get-surface-channel-count (surface)
   (ecase (sdl2:surface-format-format surface)

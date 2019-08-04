@@ -36,8 +36,8 @@
            (depth (length (aref all-slices 0))))
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
-          (compute-mipmap-levels (width first-image)
-                                 (height first-image)
+          (compute-mipmap-levels (img:width first-image)
+                                 (img:height first-image)
                                  depth)
         #++(format t "expected mipmaps: ~a expected-resolutions: ~a~%"
                    expected-mipmaps expected-resolutions)
@@ -50,28 +50,26 @@
                 (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
           (if immutable-p
               (%gl:tex-storage-3d texture-type num-mipmaps-to-generate
-                                  (internal-format first-image)
-                                  (width first-image)
-                                  (height first-image)
+                                  (img:internal-format first-image)
+                                  (img:width first-image)
+                                  (img:height first-image)
                                   depth)
               (loop :for i :below num-mipmaps-to-generate
                     :for (mipmap-width mipmap-height mipmap-depth)
                       :in expected-resolutions
                     :do (gl:tex-image-3d texture-type (+ texture-base-level i)
-                                         (internal-format first-image)
+                                         (img:internal-format first-image)
                                          mipmap-width mipmap-height mipmap-depth
                                          0
-                                         (pixel-format first-image)
-                                         (pixel-type first-image)
+                                         (img:pixel-format first-image)
+                                         (img:pixel-type first-image)
                                          (cffi:null-pointer)))))
         ;; Load all volumetric mipmaps into the gpu.
         (loop :for idx :below (if use-mipmaps-p num-mipmaps 1)
               :for level = (+ texture-base-level idx)
               :for (mipmap-width mipmap-height mipmap-depth)
                 :in expected-resolutions
-              :do (with-slots (%width %height %internal-format %pixel-format
-                               %pixel-type)
-                      (aref (aref all-slices idx) 0)
+              :do (let ((image (aref (aref all-slices idx) 0)))
                     ;; TODO: I should move this error check to the validation
                     ;; stage above instead of being here.
                     (when (> (max mipmap-width mipmap-height mipmap-depth)
@@ -89,11 +87,11 @@
                        0
                        0
                        i
-                       %width
-                       %height
+                       (img:width image)
+                       (img:height image)
                        1
-                       %pixel-format
-                       %pixel-type
-                       (data (aref (aref all-slices idx) i))))))
+                       (img:pixel-format image)
+                       (img:pixel-type image)
+                       (img:data (aref (aref all-slices idx) i))))))
         (free-mipmap-images all-slices :3d)
         (potentially-autogenerate-mipmaps texture-type texture)))))

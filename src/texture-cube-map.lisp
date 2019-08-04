@@ -24,7 +24,7 @@
     (loop :with max-size = (get-gpu-parameter :max-texture-size)
           :for (placement mipmaps) :across first-cube
           :for image = (aref mipmaps 0)
-          :do (when (> (max (height image) (width image))
+          :do (when (> (max (img:height image) (img:width image))
                        max-size)
                 ;; TODO: print out the location of the failing image.
                 (error "An Image for texture ~a is to big to be loaded onto ~
@@ -34,7 +34,7 @@
     ;; Figure out the ideal mipmap count from the base resolution.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
         ;; TODO: This might need work with cube-maps.
-        (compute-mipmap-levels (width first-image) (height first-image))
+        (compute-mipmap-levels (img:width first-image) (img:height first-image))
       (declare (ignore expected-resolutions))
       ;; TODO: Fix this up for cube-maps
       #++(validate-mipmap-images images texture
@@ -45,35 +45,35 @@
         (let ((num-mipmaps-to-generate
                 (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
           (%gl:tex-storage-2d texture-type num-mipmaps-to-generate
-                              (internal-format first-image)
-                              (width first-image)
-                              (height first-image))))
+                              (img:internal-format first-image)
+                              (img:width first-image)
+                              (img:height first-image))))
       ;; Insert all cube faces plus mipmaps into the GPU.
       (loop :for cube :across images ;; only 1 cube available.
             :do (dotimes (idx (if use-mipmaps-p num-mipmaps 1))
                   (loop :with level = (+ texture-base-level idx)
                         :for (face-signifier mipmaps) :across cube
-                        :do (with-slots (%width %height %internal-format
-                                         %pixel-format %pixel-type %data)
-                                (aref mipmaps idx)
+                        :do (let ((image (aref mipmaps idx)))
                               (if immutable-p
-                                  (gl:tex-sub-image-2d face-signifier
-                                                       level
-                                                       0
-                                                       0
-                                                       %width
-                                                       %height
-                                                       %pixel-format
-                                                       %pixel-type
-                                                       %data)
-                                  (gl:tex-image-2d face-signifier
-                                                   level
-                                                   %internal-format
-                                                   %width
-                                                   %height
-                                                   0
-                                                   %pixel-format
-                                                   %pixel-type
-                                                   %data))))))
+                                  (gl:tex-sub-image-2d
+                                   face-signifier
+                                   level
+                                   0
+                                   0
+                                   (img:width image)
+                                   (img:height image)
+                                   (img:pixel-format image)
+                                   (img:pixel-type image)
+                                   (img:data image))
+                                  (gl:tex-image-2d
+                                   face-signifier
+                                   level
+                                   (img:internal-format image)
+                                   (img:width image)
+                                   (img:height image)
+                                   0
+                                   (img:pixel-format image)
+                                   (img:pixel-type image)
+                                   (img:data image)))))))
       (free-mipmap-images images :cube-map)
       (potentially-autogenerate-mipmaps texture-type texture))))
