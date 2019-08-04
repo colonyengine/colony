@@ -19,12 +19,12 @@
             (ecase (mode render)
               (:static-mesh
                (lambda ()
-                 (v::draw-static-geometry
+                 (geo::draw-static-geometry
                   (data (v:actor-component-by-type actor 'static-mesh))
                   instances)))
               (:dynamic-mesh
                (lambda ()
-                 (v::draw-dynamic-geometry
+                 (geo::draw-dynamic-geometry
                   (geometry (v:actor-component-by-type actor 'dynamic-mesh))
                   instances)))
               (:sprite

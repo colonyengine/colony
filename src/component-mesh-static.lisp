@@ -21,5 +21,5 @@
             (context context)
             ((cached-mesh mesh-present-p
                           ('static-mesh :cached-mesh-data location %index)
-                          (v::load-static-geometry path %index)))
+                          (geo::load-static-geometry path %index)))
           (setf %data cached-mesh))))))

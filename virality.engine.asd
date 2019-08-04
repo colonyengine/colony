@@ -39,6 +39,7 @@
    (:file "package-contrib-textures")
    (:file "package-contrib-actions")
    (:file "package-components")
+   (:file "package-geometry")
    (:file "package-image")
    (:file "package-prefab")
    (:file "package-engine")

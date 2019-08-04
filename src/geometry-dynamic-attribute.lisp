@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.geometry)
 
 (defclass dynamic-attribute ()
   ((%name :reader name
@@ -30,7 +30,7 @@
     (values attrs
             (nreverse order))))
 
-(defun get-geometry-attribute-size (attribute)
+(defun get-attribute-size (attribute)
   (with-slots (%type %count) attribute
     (* %count
        (ecase %type

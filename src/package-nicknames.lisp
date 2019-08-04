@@ -47,9 +47,15 @@
    (:m4 :origin.mat4)
    (:q :origin.quat)
    (:v :virality.engine)
+   (:geo :virality.geometry)
    (:gpu :virality.gpu)
    (:contrib.mat :virality.contrib.materials)
    (:shd.sprite :virality.shaders.sprite))
+
+  (:virality.geometry
+   (:a :alexandria)
+   (:u :golden-utils)
+   (:v :virality.engine))
 
   (:virality.gpu
    (:a :alexandria)

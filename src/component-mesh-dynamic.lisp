@@ -9,4 +9,4 @@
   (with-slots (%geometry) self
     (unless %geometry
       (error "A dynamic mesh must have geometry defined."))
-    (setf %geometry (v::make-dynamic-geometry %geometry))))
+    (setf %geometry (geo::make-dynamic-geometry %geometry))))

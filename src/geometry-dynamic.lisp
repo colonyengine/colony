@@ -1,6 +1,6 @@
-(in-package #:virality.engine)
+(in-package #:virality.geometry)
 
-(defclass dynamic-geometry-layout ()
+(defclass layout ()
   ((%name :reader name
           :initarg :name)
    (%groups :reader groups
@@ -22,8 +22,8 @@
    (%vertex-count :reader vertex-count
                   :initarg :vertex-count)))
 
-(defun find-geometry-layout (layout-name)
-  (or (u:href (meta 'dynamic-geometry-layouts) layout-name)
+(defun find-layout (layout-name)
+  (or (u:href (v::meta 'dynamic-geometry-layouts) layout-name)
       (error "Geometry layout ~s not found." layout-name)))
 
 (defun make-dynamic-geometry-thunk (layout-name
@@ -31,18 +31,18 @@
                                       buffer-data)
   (lambda ()
     (let ((geometry (make-instance 'dynamic-geometry
-                                   :layout (find-geometry-layout layout-name)
+                                   :layout (find-layout layout-name)
                                    :primitive primitive
                                    :vertex-count vertex-count)))
       (gl:bind-vertex-array (id geometry))
-      (make-geometry-buffers geometry)
-      (configure-geometry-buffers geometry)
+      (make-buffers geometry)
+      (configure-buffers geometry)
       (apply #'update-dynamic-geometry
              geometry primitive vertex-count buffer-data)
       geometry)))
 
 (defun make-dynamic-geometry (name)
-  (funcall (u:href (meta 'dynamic-geometry) name)))
+  (funcall (u:href (v::meta 'dynamic-geometry) name)))
 
 (defun update-dynamic-geometry (geometry primitive vertex-count &rest data)
   (with-slots (%primitive %vertex-count) geometry
@@ -58,24 +58,24 @@
 
 (defmacro define-geometry-layout (name &body body)
   (a:with-gensyms (groups order)
-    (let ((layouts '(meta 'dynamic-geometry-layouts)))
-      `(u:mvlet ((,groups ,order (make-geometry-groups ',body)))
+    (let ((layouts '(v::meta 'dynamic-geometry-layouts)))
+      `(u:mvlet ((,groups ,order (make-groups ',body)))
          (unless ,layouts
-           (setf (meta 'dynamic-geometry-layouts) (u:dict)))
+           (setf ,layouts (u:dict)))
          (setf (u:href ,layouts ',name)
-               (make-instance 'dynamic-geometry-layout
+               (make-instance 'layout
                               :name ',name
                               :groups ,groups
                               :group-order ,order))))))
 
 (defmacro define-geometry (name &body body)
-  (let ((geometry-table '(meta 'dynamic-geometry)))
+  (let ((geometry-table '(v::meta 'dynamic-geometry)))
     (destructuring-bind (&key layout (primitive :triangles) (vertex-count 0)
                            buffers)
         body
       `(progn
          (unless ,geometry-table
-           (setf (meta 'dynamic-geometry) (u:dict)))
+           (setf (v::meta 'dynamic-geometry) (u:dict)))
          (setf (u:href ,geometry-table ',name)
                (make-dynamic-geometry-thunk
                 ',layout

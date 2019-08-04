@@ -1,6 +1,6 @@
-(in-package #:virality.engine)
+(in-package #:virality.geometry)
 
-(defclass geometry-group ()
+(defclass group ()
   ((%name :reader name
           :initarg :name)
    (%format :reader buffer-format
@@ -12,20 +12,19 @@
    (%attribute-order :reader attribute-order
                      :initarg :attribute-order)))
 
-(defclass geometry-group/separate (geometry-group) ())
+(defclass group/separate (group) ())
 
-(defclass geometry-group/interleaved (geometry-group) ())
+(defclass group/interleaved (group) ())
 
-(defun make-geometry-groups (spec)
+(defun make-groups (spec)
   (let ((groups (u:dict))
         (order))
     (dolist (group spec)
       (destructuring-bind (name (&key (format 'interleaved) (divisor 0))
                            . attrs)
           group
-        (u:mvlet ((group-type (a:format-symbol :virality.engine
-                                               "GEOMETRY-GROUP/~a"
-                                               format))
+        (u:mvlet ((group-type (a:format-symbol
+                               :virality.geometry "GROUP/~a" format))
                   (attributes attribute-order (make-dynamic-attributes attrs)))
           (push name order)
           (setf (u:href groups name)
@@ -39,17 +38,17 @@
     (values groups
             (nreverse order))))
 
-(defgeneric get-geometry-group-buffer-count (group)
+(defgeneric get-group-buffer-count (group)
   (:method (group)
     1)
-  (:method ((group geometry-group/separate))
+  (:method ((group group/separate))
     (hash-table-count (attributes group))))
 
-(defun get-geometry-group-attribute-size (group)
+(defun get-group-attribute-size (group)
   (reduce #'+ (u:hash-values (attributes group))
-          :key #'get-geometry-attribute-size))
+          :key #'get-attribute-size))
 
-(defmethod configure-geometry-group ((group geometry-group) index buffers)
+(defmethod configure-group ((group group) index buffers)
   (with-slots (%attributes %attribute-order %divisor) group
     (loop :for attr-name :in %attribute-order
           :for attr = (u:href %attributes attr-name)
@@ -58,14 +57,13 @@
           :do (gl:bind-buffer :array-buffer buffer)
               (configure-dynamic-attribute attr i 0 0 %divisor))))
 
-(defmethod configure-geometry-group ((group geometry-group/interleaved) index
-                                     buffers)
+(defmethod configure-group ((group group/interleaved) index buffers)
   (with-slots (%attributes %attribute-order %divisor) group
     (gl:bind-buffer :array-buffer (aref buffers 0))
-    (loop :with stride = (get-geometry-group-attribute-size group)
+    (loop :with stride = (get-group-attribute-size group)
           :with offset = 0
           :for attr-name :in %attribute-order
           :for attr = (u:href %attributes attr-name)
           :for i :from index
           :do (configure-dynamic-attribute attr i stride offset %divisor)
-              (incf offset (get-geometry-attribute-size attr)))))
+              (incf offset (get-attribute-size attr)))))

@@ -2,6 +2,9 @@
 
 (defpackage #:virality.engine
   (:use #:cl)
+  (:import-from #:virality.geometry
+                #:define-geometry
+                #:define-geometry-layout)
   (:import-from #:virality.prefabs
                 #:define-prefab
                 #:define-prefab-descriptor
