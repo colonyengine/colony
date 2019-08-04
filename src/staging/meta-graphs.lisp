@@ -4,8 +4,6 @@
 ;; 3) .. N) Repeated transforming AST X to AST X+1
 ;; N+1) Production of concrete categorical class from last AST.
 
-
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Meta graph management
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -74,7 +72,6 @@
 ;; category-name as the key and the result of this function as the value.
 (defgeneric realize-metagraph-category (category definition-form-list))
 
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Toplevel AST graph forms for generic graphs that all graph categories will
 ;; use. You can derive or add more to these.
@@ -99,8 +96,6 @@
 (defclass graph-ast/depends-on (graph-ast))
 (defclass graph-ast/depform (graph-ast))
 
-
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; When the metagraphs are realized into
 ;; Concrete category types down to leaves.
@@ -122,7 +117,6 @@
 ;; Some leaf types: dags like component execution order.
 (defclass component-execution (directed-acyclic-graph-category) ())
 
-
 ;; And, some of them are cyclic
 (defclass directed-cyclic-graph-category (directed-graph-category) ())
 ;; All types of state machines, could possibly be terminal child depending
@@ -130,7 +124,6 @@
 (defclass state-machine directed-graph-category ())
 ;; Some leaf-types: Animation state machines.
 (defclass animation-machine (state-machine) ())
-
 
 ;; ;;;;;;;;;;;;;
 ;; metagraph realization protocol.
@@ -147,33 +140,6 @@
 ;;
 ;; Analysis pass
 ;; -------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Core graphs
