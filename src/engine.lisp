@@ -52,11 +52,11 @@ tear-down procedure occurs when stopping the engine."
     (unless (apply #'sdl2:was-init flags)
       (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
         (sdl2::check-rc (sdl2::sdl-init flags))))
-    (prepare-gamepads gamepad-db)
+    (in::prepare-gamepads gamepad-db)
     (make-display core)))
 
 (defun shutdown-host (core)
-  (shutdown-gamepads (context core))
+  (in::shutdown-gamepads (context core))
   (sdl2:destroy-window (window (display core)))
   (sdl2::sdl-quit))
 
@@ -85,10 +85,10 @@ tear-down procedure occurs when stopping the engine."
 (defun iterate-main-loop (core)
   (with-continue-restart "Virality Engine"
     (let ((context (context core)))
-      (handle-events context)
+      (in::handle-events context)
       (render-frame core)
       ;; TODO: Remove this later when possible.
-      (when (input-enter-p context '(:key :escape))
+      (when (in:input-enter-p context '(:key :escape))
         (stop-engine core)))))
 
 (defun main-loop (core)

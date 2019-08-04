@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.input)
 
 (a:define-constant +window-event-names+
     #(nil :show :hide nil :move :resize nil :minimize :maximize :restore

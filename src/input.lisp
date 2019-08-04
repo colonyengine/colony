@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.input)
 
 (defclass input-data ()
   ((%gamepad-instances :reader gamepad-instances
@@ -90,12 +90,12 @@
 
 (defun perform-input-state-tasks (context)
   (declare (optimize speed))
-  (let* ((input-data (input-data (core context)))
-         (states (states input-data)))
+  (let* ((data (v::input-data (v::core context)))
+         (states (states data)))
     (setf (u:href states '(:mouse :scroll-horizontal)) 0
           (u:href states '(:mouse :scroll-vertical)) 0)
-    (enable-entering input-data)
-    (disable-exiting input-data)))
+    (enable-entering data)
+    (disable-exiting data)))
 
 (defun handle-events (context)
   (declare (optimize speed))

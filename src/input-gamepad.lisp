@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.input)
 
 (a:define-constant +gamepad-axis-names+
     #((:left-stick :x) (:left-stick :y) (:right-stick :x) (:right-stick :y)
@@ -16,11 +16,11 @@
 
 ;;; Utility functions
 
-(defun get-gamepad-by-instance (input-data gamepad-instance)
-  (u:href (gamepad-instances input-data) gamepad-instance))
+(defun get-gamepad-by-instance (data gamepad-instance)
+  (u:href (gamepad-instances data) gamepad-instance))
 
-(defun generate-gamepad-id (input-data)
-  (with-slots (%gamepad-instances %detached-gamepads) input-data
+(defun generate-gamepad-id (data)
+  (with-slots (%gamepad-instances %detached-gamepads) data
     (or (pop %detached-gamepads)
         (a:format-symbol :keyword "GAMEPAD~d"
                          (1+ (hash-table-count %gamepad-instances))))))
@@ -30,7 +30,8 @@
   (enable-background-gamepad-events))
 
 (defun shutdown-gamepads (context)
-  (let ((instance-table (gamepad-instances (input-data (core context)))))
+  (let* ((data (v::input-data (v::core context)))
+         (instance-table (gamepad-instances data)))
     (u:do-hash-values (v instance-table)
       (sdl2:game-controller-close (gamepad-handle v)))
     (clrhash instance-table)))
@@ -78,68 +79,69 @@
 ;;; Events
 
 (defun on-gamepad-attach (context gamepad-index)
-  (with-slots (%input-data) (core context)
+  (let ((data (v::input-data (v::core context))))
     (when (sdl2:game-controller-p gamepad-index)
       (let* ((handle (sdl2:game-controller-open gamepad-index))
              (instance (sdl2:game-controller-instance-id handle))
-             (id (generate-gamepad-id %input-data))
+             (id (generate-gamepad-id data))
              (gamepad (make-gamepad :id id
                                     :instance instance
                                     :name (sdl2:game-controller-name handle)
                                     :handle handle)))
-        (setf (u:href (gamepad-instances %input-data) instance) gamepad
-              (u:href (gamepad-ids %input-data) id) gamepad)
-        (input-transition-in %input-data (list id :attach))))))
+        (setf (u:href (gamepad-instances data) instance) gamepad
+              (u:href (gamepad-ids data) id) gamepad)
+        (input-transition-in data (list id :attach))))))
 
 (defun on-gamepad-detach (context gamepad-instance)
-  (with-slots (%input-data) (core context)
-    (let* ((instance-table (gamepad-instances %input-data))
-           (id-table (gamepad-ids %input-data))
-           (gamepad (u:href instance-table gamepad-instance))
-           (id (gamepad-id gamepad)))
-      (sdl2:game-controller-close (gamepad-handle gamepad))
-      (a:appendf (detached-gamepads %input-data) (list id))
-      (remhash id id-table)
-      (remhash gamepad-instance instance-table)
-      (input-transition-out %input-data (list id :attach)))))
+  (let* ((data (v::input-data (v::core context)))
+         (instance-table (gamepad-instances data))
+         (id-table (gamepad-ids data))
+         (gamepad (u:href instance-table gamepad-instance))
+         (id (gamepad-id gamepad)))
+    (sdl2:game-controller-close (gamepad-handle gamepad))
+    (a:appendf (detached-gamepads data) (list id))
+    (remhash id id-table)
+    (remhash gamepad-instance instance-table)
+    (input-transition-out data (list id :attach))))
 
 (defun on-gamepad-analog-move (context gamepad-instance axis value)
-  (with-slots (%input-data) (core context)
-    (destructuring-bind (sub-device axis) axis
-      (let* ((gamepad (get-gamepad-by-instance %input-data gamepad-instance))
-             (key (list (gamepad-id gamepad) sub-device))
-             (value (normalize-gamepad-analog-value sub-device axis value)))
-        (symbol-macrolet ((state (u:href (states %input-data) key)))
-          (if (not state)
-              (setf state (make-gamepad-analog-state
-                           :x 0.0 :y 0.0 :deadzone 0.0))
-              (ecase axis
-                (:x (setf (gamepad-analog-state-x state) value))
-                (:y (setf (gamepad-analog-state-y state) value)))))))))
+  (destructuring-bind (sub-device axis) axis
+    (let* ((data (v::input-data (v::core context)))
+           (gamepad (get-gamepad-by-instance data gamepad-instance))
+           (key (list (gamepad-id gamepad) sub-device))
+           (value (normalize-gamepad-analog-value sub-device axis value)))
+      (symbol-macrolet ((state (u:href (states data) key)))
+        (if (not state)
+            (setf state (make-gamepad-analog-state :x 0.0 :y 0.0 :deadzone 0.0))
+            (ecase axis
+              (:x (setf (gamepad-analog-state-x state) value))
+              (:y (setf (gamepad-analog-state-y state) value))))))))
 
 (defun on-gamepad-button-up (context gamepad-instance button)
-  (with-slots (%input-data) (core context)
-    (let* ((gamepad (get-gamepad-by-instance %input-data gamepad-instance))
-           (id (gamepad-id gamepad)))
-      (input-transition-out %input-data (list id button))
-      (input-transition-out %input-data (list id :any))
-      (input-transition-out %input-data '(:button :any)))))
+  (let* ((data (v::input-data (v::core context)))
+         (gamepad (get-gamepad-by-instance data gamepad-instance))
+         (id (gamepad-id gamepad)))
+    (input-transition-out data (list id button))
+    (input-transition-out data (list id :any))
+    (input-transition-out data '(:button :any))))
 
 (defun on-gamepad-button-down (context gamepad-instance button)
-  (with-slots (%input-data) (core context)
-    (let* ((gamepad (get-gamepad-by-instance %input-data gamepad-instance))
-           (id (gamepad-id gamepad)))
-      (input-transition-in %input-data (list id button))
-      (input-transition-in %input-data (list id :any))
-      (input-transition-in %input-data '(:button :any)))))
+  (let* ((data (v::input-data (v::core context)))
+         (gamepad (get-gamepad-by-instance data gamepad-instance))
+         (id (gamepad-id gamepad)))
+    (input-transition-in data (list id button))
+    (input-transition-in data (list id :any))
+    (input-transition-in data '(:button :any))))
 
 ;;; User protocol
 
 (defun get-gamepad-name (context gamepad-id)
-  (let ((gamepad (u:href (gamepad-ids (input-data (core context))) gamepad-id)))
+  (let* ((data (v::input-data (v::core context)))
+         (gamepad (u:href (gamepad-ids data) gamepad-id)))
     (gamepad-name gamepad)))
 
 (defun get-gamepad-analog (context input)
-  (u:if-found (state (u:href (states (input-data (core context))) input))
-              (%get-gamepad-analog :radial-scaled state)
-              (values 0.0 0.0)))
+  (let ((data (v::input-data (v::core context))))
+    (u:if-found (state (u:href (states data) input))
+                (%get-gamepad-analog :radial-scaled state)
+                (values 0.0 0.0))))

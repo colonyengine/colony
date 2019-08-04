@@ -379,7 +379,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
            ;; Right trigger modifies speed. pull to lerp from full speed
            ;; to half speed.
            (ty
-            (nth-value 1 (v:get-gamepad-analog context '(:gamepad1 :triggers))))
+            (nth-value 1 (v:get-gamepad-analog
+                          context '(:gamepad1 :triggers))))
            ;; Compute the actual translation vector related to our frame time!
            (vec
             (v3:scale vec

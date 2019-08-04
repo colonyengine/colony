@@ -41,6 +41,7 @@
    (:file "package-components")
    (:file "package-geometry")
    (:file "package-image")
+   (:file "package-input")
    (:file "package-prefab")
    (:file "package-engine")
    (:file "package-nicknames")
