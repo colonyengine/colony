@@ -60,7 +60,7 @@
 (defmethod v:on-component-render ((self collider/sphere))
   (unless (visualize self)
     (return-from v:on-component-render))
-  (a:when-let ((camera (v:active-camera (v:context self))))
+  (a:when-let ((camera (v::active-camera (v:context self))))
     (let ((transform (v:actor-component-by-type (v:actor self) 'transform)))
       (v:with-material (material self)
           (:model (model transform)

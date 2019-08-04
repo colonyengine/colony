@@ -86,4 +86,4 @@
 (defmethod v:on-component-destroy ((self camera))
   (let ((context (v:context self)))
     (a:deletef (v::cameras (v::core context)) self)
-    (setf (v:active-camera context) nil)))
+    (setf (v::active-camera context) nil)))

@@ -39,7 +39,7 @@
     (set-draw-method self)))
 
 (defmethod v:on-component-render ((self render))
-  (a:when-let ((camera (v:active-camera (v:context self))))
+  (a:when-let ((camera (v::active-camera (v:context self))))
     (v:with-material (material self)
         (:model (model (transform self))
          :view (view camera)

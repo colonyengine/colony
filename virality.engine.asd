@@ -40,7 +40,7 @@
    (:file "package-contrib-actions")
    (:file "package-components")
    (:file "package-prefab")
-   (:file "package-internal")
+   (:file "package-engine")
    (:file "package-nicknames")
    (:file "common")
    (:file "interactive-development")
