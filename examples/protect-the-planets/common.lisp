@@ -5,13 +5,11 @@
   :window-width 1920
   :window-height 1080
   :vsync :off
-  :log-level :debug
   ;; NOTE: Make physics compute faster for this game.
   ;;
   ;; TODO: Move into a physics specification DSL (which also does collision
   ;; layers, etc, etc, etc)
-  :delta 1/120
-  :initial-scene 'lgj-04/2019)
+  :delta 1/120)
 
 (v:define-resources (:project :virality.examples)
   ;; TODO: Move this into new location once changing to tbe new package is done.
@@ -21,10 +19,8 @@
   (:log (:project "log"))
   (:log-debug (:project :log "debug.log"))
   (:log-error (:project :log "error.log"))
-
   (:spritesheet (:project :sprite "sprites.tiff"))
-  (:spritesheet-data (:project :sprite "sprites.sexp"))
-  )
+  (:spritesheet-data (:project :sprite "sprites.sexp")))
 
 ;;; Prefabs
 

@@ -1,7 +1,7 @@
 (in-package #:virality.engine)
 
 (setf (meta 'options/default)
-      (u:dict :title "Virality Engine Project"
+      (u:dict :title "Virality Engine"
               :window-width 800
               :window-height 450
               :delta 1/30
