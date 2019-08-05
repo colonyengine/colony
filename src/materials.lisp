@@ -122,7 +122,7 @@ CORE. Return a list of the return values of the FUNC."
            :force-copy (force-copy material-uniform-value)
            :computed-value nil
            :binder (binder material-uniform-value))))
-    ;; TODO: Repair the nil computed-value!
+    ;; NOTE: Repair the nil computed-value!
     (execute-composition/semantic->computed copy-mat-value)
     copy-mat-value))
 
