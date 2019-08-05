@@ -234,7 +234,7 @@
               cy (float (/ y (v:option context :window-height)) 1f0)))
       ;; get a reference to the material itself (TODO: use MOP stuff to get
       ;; this right so I don't always have to get it here)
-      (setf (v:mat-uniform-ref %material :tex.channel0) (channel0 self)))))
+      (setf (v:uniform-ref %material :tex.channel0) (channel0 self)))))
 
 ;;; Prefabs
 

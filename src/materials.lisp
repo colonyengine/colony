@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.materials)
 
 ;; Held in core, the material database for all materials everywhere.
 (defclass materials-table ()
@@ -10,7 +10,7 @@
               :initform (u:dict))))
 
 ;;; Internal Materials-table API
-(defun %make-materials-table (&rest init-args)
+(defun make-materials-table (&rest init-args)
   (apply #'make-instance 'materials-table init-args))
 
 (defun %lookup-material (material-name core)
@@ -19,7 +19,7 @@ material isn't there, return the 'contrib.mat:missing-material. The return value
 is two values, the first is a material instance, and the second is T if the
 material being looked up was actually found, or NIL if it wasn't (and the
 missing material used)."
-  (symbol-macrolet ((table (material-table (materials core))))
+  (symbol-macrolet ((table (material-table (v::materials core))))
     (u:if-found (material (u:href table material-name))
                 material
                 (u:href table
@@ -27,23 +27,23 @@ missing material used)."
 
 (defun %add-material (material core)
   "Add the MATERIAL by its id into CORE."
-  (setf (u:href (material-table (materials core)) (id material)) material))
+  (setf (u:href (material-table (v::materials core)) (id material)) material))
 
 (defun %remove-material (material core)
   "Remove the MATERIAL by its id from CORE."
-  (remhash (id material) (material-table (materials core))))
+  (remhash (id material) (material-table (v::materials core))))
 
 (defun %map-materials (func core)
   "Map the function FUNC, which expects a material, across all materials in
 CORE. Return a list of the return values of the FUNC."
   (let (results)
-    (u:do-hash-values (v (material-table (materials core)))
+    (u:do-hash-values (v (material-table (v::materials core)))
       (push (funcall func v) results))
     (nreverse results)))
 
 ;; export PUBLIC API
 (defun lookup-material (id context)
-  (%lookup-material id (core context)))
+  (%lookup-material id (v::core context)))
 
 (defclass material-value ()
   ;; This is a back reference to the material that owns this
@@ -113,7 +113,7 @@ CORE. Return a list of the return values of the FUNC."
            ;; Copier func lambda list is (semantic-value context new-mat)
            :semantic-value (funcall (copier material-uniform-value)
                                     (semantic-value material-uniform-value)
-                                    (context (core new-mat))
+                                    (v::context (core new-mat))
                                     new-mat)
            :transformer (transformer material-uniform-value)
            :copier (copier material-uniform-value)
@@ -179,7 +179,7 @@ CORE. Return a list of the return values of the FUNC."
   (apply #'make-instance 'material-profile init-args))
 
 (defun %add-material-profile (profile core)
-  (setf (u:href (profiles (materials core)) (name profile)) profile))
+  (setf (u:href (profiles (v::materials core)) (name profile)) profile))
 
 (defclass material ()
   ((%id :reader id
@@ -241,7 +241,8 @@ CORE. Return a list of the return values of the FUNC."
 
 (defun %deep-copy-material (current-mat new-mat-name
                             &key (error-p t) (error-value nil))
-  (when (u:href (material-table (materials (core current-mat))) new-mat-name)
+  (when (u:href (material-table (v::materials (core current-mat)))
+                new-mat-name)
     (if error-p
         (error "Cannot copy the material ~a to new name ~a because the new ~
                 name already exists!"
@@ -299,10 +300,9 @@ CORE. Return a list of the return values of the FUNC."
   (bind-material-uniforms mat)
   (bind-material-buffers mat))
 
-;; export PUBLIC API
 ;; TODO: these modify the semantic-buffer which then gets processed into a new
 ;; computed buffer.
-(defun mat-uniform-ref (mat uniform-var)
+(defun uniform-ref (mat uniform-var)
   (a:if-let ((material-uniform-value (u:href (uniforms mat) uniform-var)))
     (semantic-value material-uniform-value)
     (error "Material ~s does not have the referenced uniform ~s.~%~
@@ -310,10 +310,9 @@ CORE. Return a list of the return values of the FUNC."
             profile settings."
            (id mat) uniform-var)))
 
-;; export PUBLIC API
 ;; We can only set the semantic-value, which gets automatically upgraded to the
 ;; computed-value upon setting.
-(defun (setf mat-uniform-ref) (new-val mat uniform-var)
+(defun (setf uniform-ref) (new-val mat uniform-var)
   (a:if-let ((material-uniform-value (u:href (uniforms mat) uniform-var)))
     (progn
       ;; TODO: Need to do something with the old computed value since it might
@@ -357,19 +356,20 @@ corresponding in order to the input."
     (declare (ignore mat))
     (etypecase semantic-value
       ((or cons symbol)
-       (rcache-lookup context
-                      :texture
-                      (canonicalize-texture-name semantic-value)))
+       (v::rcache-lookup context
+                         :texture
+                         (v::canonicalize-texture-name semantic-value)))
       (vector
        (map 'vector
             (lambda (sv)
-              (rcache-lookup context :texture (canonicalize-texture-name sv)))
+              (v::rcache-lookup
+               context :texture (v::canonicalize-texture-name sv)))
             semantic-value)))))
 
 (defun gen-default-copy/sem->com ()
   (lambda (semantic-value context mat)
     (declare (ignore context mat))
-    (copy-thing semantic-value)))
+    (v::copy-thing semantic-value)))
 
 (defun identity/for-material-custom-functions (semval context material)
   "This is effectively IDENTITY in that it returns SEMVAL unchanged, but accepts
@@ -415,7 +415,7 @@ and ignores the CONTEXT and MATERIAL arguments."
     ;; convert the overlay names to concrete overlay instances
     (let ((concrete-profiles
             (loop :for po-name :in (profile-overlay-names mat)
-                  :for inst = (u:href (profiles (materials core)) po-name)
+                  :for inst = (u:href (profiles (v::materials core)) po-name)
                   :if inst
                     :collect inst
                   :else
@@ -451,7 +451,8 @@ available for it so BIND-UNIFORMS cannot yet be called on it."
   "Given a SAMPLER-TYPE, like :sampler-2d-array, return the kind of texture-type
 that is appropriate for it, such as :texture-2d-array. Do this for all sampler
 types and texture types."
-  (u:if-found (texture-type (u:href +sampler-type->texture-type+ sampler-type))
+  (u:if-found (texture-type (u:href v::+sampler-type->texture-type+
+                                    sampler-type))
               texture-type
               (error "Unknown sampler-type: ~a~%" sampler-type)))
 
@@ -484,7 +485,7 @@ or if it a vector of the same. Return NIL otherwise."
            (lambda (shader uniform-name texture)
              (gl:active-texture unit)
              (gl:bind-texture (sampler-type->texture-type glsl-type)
-                              (texid texture))
+                              (v::texid texture))
              (gpu:uniform-int shader uniform-name unit)))
          (ecase glsl-type
            (:bool (lambda (shader uniform value)
@@ -511,7 +512,7 @@ or if it a vector of the same. Return NIL otherwise."
                    :do (gl:active-texture unit)
                        (gl:bind-texture
                         (sampler-type->texture-type (car glsl-type))
-                        (texid texture)))
+                        (v::texid texture)))
              (gpu:uniform-int-array shader uniform-name units)))
          (ecase (car glsl-type)
            (:bool #'gpu:uniform-int-array)
@@ -532,7 +533,7 @@ or if it a vector of the same. Return NIL otherwise."
   ;; semantic-value and end with the computed-value. If the semantic-value is
   ;; actually a function, then invoke it and get the juice it produced and shove
   ;; it down the pipeline.
-  (let ((context (context (core (material material-uniform-value))))
+  (let ((context (v:context (core (material material-uniform-value))))
         (mat (material material-uniform-value))
         (sv (semantic-value material-uniform-value)))
     (loop :with value = (if (functionp sv)
@@ -602,7 +603,7 @@ or if it a vector of the same. Return NIL otherwise."
 (defun resolve-material (material-instance core)
   "Convert semantic-values to computed-values. Type check the uniforms against
 the shader program in the material."
-  (u:if-found (shader-program (u:href (shaders core)
+  (u:if-found (shader-program (u:href (v::shaders core)
                                       (shader material-instance)))
               (progn
                 (annotate-material-uniforms material-instance shader-program)
@@ -637,24 +638,24 @@ be executed after all the shader programs have been compiled."
   "Define a set of uniform and block shader attribute defaults that can be
 applied in an overlay manner while defining a material."
   (a:with-gensyms (profile)
-    (let ((definition '(meta 'material-profiles)))
+    (let ((definition '(v::meta 'material-profiles)))
       (destructuring-bind (&key uniforms blocks) body
         `(let ((,profile ,(parse-material-profile name uniforms blocks)))
            (unless ,definition
-             (setf (meta 'material-profiles) (u:dict)))
+             (setf ,definition (u:dict)))
            (setf (u:href ,definition (name ,profile)) ,profile))))))
 
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
   (a:with-gensyms (func)
-    (let ((definition '(meta 'materials)))
+    (let ((definition '(v::meta 'materials)))
       (destructuring-bind (&key shader profiles (instances 1) attributes
                              uniforms blocks)
           body
         `(let ((,func ,(parse-material name shader instances attributes profiles
                                        uniforms blocks)))
            (unless ,definition
-             (setf (meta 'materials) (u:dict)))
+             (setf ,definition (u:dict)))
            (setf (u:href ,definition ',name) ,func)
            (export ',name))))))
 
@@ -662,7 +663,7 @@ applied in an overlay manner while defining a material."
 (defmacro with-depth-function (material &body body)
   `(destructuring-bind (&key depth) (attributes ,material)
      (if depth
-         (let ((old-depth (get-gpu-parameter :depth-func)))
+         (let ((old-depth (v::get-gpu-parameter :depth-func)))
            (unwind-protect
                 (progn
                   (gl:depth-func depth)
@@ -675,15 +676,15 @@ applied in an overlay manner while defining a material."
     `(let ((,material-ref ,material))
        (gpu:with-shader (shader ,material-ref)
          (setf ,@(loop :for (k v) :on bindings :by #'cddr
-                       :collect `(mat-uniform-ref ,material-ref ,k)
+                       :collect `(uniform-ref ,material-ref ,k)
                        :collect v))
          (bind-material ,material-ref)
          (with-depth-function ,material-ref
            ,@body)))))
 
 (defun load-materials (core)
-  (u:do-hash-values (profile (meta 'material-profiles))
+  (u:do-hash-values (profile (v::meta 'material-profiles))
     (%add-material-profile profile core))
-  (u:do-hash-values (material-func (meta 'materials))
+  (u:do-hash-values (material-func (v::meta 'materials))
     (%add-material (funcall material-func core) core))
   (resolve-all-materials core))

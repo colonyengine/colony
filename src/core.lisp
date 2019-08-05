@@ -21,7 +21,7 @@
                 :initform (in::make-input-data))
    (%shaders :accessor shaders)
    (%materials :accessor materials
-               :initform (%make-materials-table))
+               :initform (mat::make-materials-table))
    (%textures :accessor textures
               :initform (%make-textures-table))
    (%context :reader context)

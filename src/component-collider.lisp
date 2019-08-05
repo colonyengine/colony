@@ -60,7 +60,7 @@
     (return-from v:on-component-render))
   (a:when-let ((camera (v::active-camera (v:context self)))
                (transform (v:component-by-type (v:actor self) 'transform)))
-    (v:with-material (material self)
+    (mat:with-material (material self)
         (:model (model transform)
          :view (view camera)
          :proj (projection camera)

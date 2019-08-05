@@ -36,6 +36,7 @@
    (:gpu :virality.gpu)
    (:img :virality.image)
    (:in :virality.input)
+   (:mat :virality.materials)
    (:prefab :virality.prefabs))
 
   (:virality.actions
@@ -73,6 +74,7 @@
    (:col :virality.colliders)
    (:geo :virality.geometry)
    (:gpu :virality.gpu)
+   (:mat :virality.materials)
    (:contrib.mat :virality.contrib.materials)
    (:shd.sprite :virality.shaders.sprite))
 
@@ -93,6 +95,7 @@
    (:m4 :origin.mat4)
    (:v :virality.engine)
    (:contrib.tex :virality.contrib.textures)
+   (:mat :virality.materials)
    (:shd.sprite :virality.shaders.sprite)
    (:shd.tex :virality.shaders.texture)
    (:shd.vis :virality.shaders.visualization))
@@ -120,6 +123,12 @@
    (:u :golden-utils)
    (:v2 :origin.vec2)
    (:v :virality.engine))
+
+  (:virality.materials
+   (:a :alexandria)
+   (:u :golden-utils)
+   (:v :virality.engine)
+   (:gpu :virality.gpu))
 
   (:virality.prefabs
    (:a :alexandria)

@@ -44,6 +44,7 @@
    (:file "package-gpu")
    (:file "package-image")
    (:file "package-input")
+   (:file "package-materials")
    (:file "package-prefab")
    (:file "package-shader")
    (:file "package-engine")

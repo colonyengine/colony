@@ -6,13 +6,13 @@
   (with-accessors ((context context)) component
     (typecase mat-val
       (symbol
-       (lookup-material mat-val context))
+       (mat::lookup-material mat-val context))
       (cons
        (destructuring-bind (base-mat-sym new-mat-sym
                             &key shader instances uniforms blocks)
            mat-val
-         (let* ((base-mat (lookup-material base-mat-sym context))
-                (copy-mat (copy-material base-mat new-mat-sym)))
+         (let* ((base-mat (mat::lookup-material base-mat-sym context))
+                (copy-mat (mat:copy-material base-mat new-mat-sym)))
            (when blocks
              (error "Material override: :blocks not implemented yet."))
            ;; First, change to the new shader
@@ -27,7 +27,7 @@
                        of 2 ~a~%"
                       uniforms))
              (loop :for (uniform-name value) :in uniforms
-                   :do (setf (mat-uniform-ref copy-mat uniform-name) value)))
+                   :do (setf (uniform-ref copy-mat uniform-name) value)))
            ;; and return the newly minted material with all the overrides.
            copy-mat)))
       (t

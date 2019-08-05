@@ -5,6 +5,7 @@
   (:mix-reexport #:virality.actors
                  #:virality.colliders
                  #:virality.geometry
+                 #:virality.materials
                  #:virality.input
                  #:virality.prefabs)
 
@@ -43,15 +44,7 @@
    #:define-call-flow
    #:define-component
    #:define-graph
-   #:define-material
-   #:define-material-profile
    #:define-options
    #:define-resources
    #:define-texture
-   #:define-texture-profile)
-
-  ;; materials
-  (:export
-   #:copy-material
-   #:mat-uniform-ref
-   #:with-material))
+   #:define-texture-profile))

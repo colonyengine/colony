@@ -1,40 +1,40 @@
 (in-package #:virality.contrib.materials)
 
-(v:define-material-profile u-model
+(mat:define-material-profile u-model
   (:uniforms
    ((:model (m4:id)))))
 
-(v:define-material-profile u-view
+(mat:define-material-profile u-view
   (:uniforms
    ((:view (m4:id)))))
 
-(v:define-material-profile u-proj
+(mat:define-material-profile u-proj
   (:uniforms
    ((:proj (m4:id)))))
 
-(v:define-material-profile u-time
+(mat:define-material-profile u-time
   (:uniforms
    ((:time #'v:total-time))))
 
-(v:define-material-profile u-mvp
+(mat:define-material-profile u-mvp
   (:uniforms
    ((:model (m4:id))
     (:view (m4:id))
     (:proj (m4:id)))))
 
-(v:define-material-profile u-vp
+(mat:define-material-profile u-vp
   (:uniforms
    ((:view (m4:id))
     (:proj (m4:id)))))
 
-(v:define-material-profile u-mvpt
+(mat:define-material-profile u-mvpt
   (:uniforms
    ((:model (m4:id))
     (:view (m4:id))
     (:proj (m4:id))
     (:time #'v:total-time))))
 
-(v:define-material-profile u-vpt
+(mat:define-material-profile u-vpt
   (:uniforms
    ((:view (m4:id))
     (:proj (m4:id))

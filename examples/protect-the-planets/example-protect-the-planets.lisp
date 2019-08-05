@@ -1428,16 +1428,16 @@ NIL if no such list exists."
 
       ;; Size the time bar in accordance to how much time is left.
       (comp:scale time-bar-transform
-                     (v3:vec time-bar-width
-                              (a:lerp how-far-to-empty
-                                      time-bar-height-scale
-                                      0f0)
-                              1f0)
-                     :replace-p t)
+                  (v3:vec time-bar-width
+                          (a:lerp how-far-to-empty
+                                  time-bar-height-scale
+                                  0f0)
+                          1f0)
+                  :replace-p t)
 
       ;; Color the time bar in accordance to how much time is left.
       (let ((material (comp:material time-bar-renderer)))
-        (setf (v:mat-uniform-ref material :mix-color)
+        (setf (v:uniform-ref material :mix-color)
               (v4:lerp time-bar-full-color time-bar-empty-color
                        how-far-to-empty)))
 
