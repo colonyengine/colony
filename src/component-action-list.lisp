@@ -10,9 +10,9 @@
 
 (defmethod v:on-component-initialize ((self actions))
   (with-slots (%manager) self
-    (setf %manager (v::make-action-manager
+    (setf %manager (action::make-action-manager
                     (v:component-by-type (v:actor self) 'render)
                     (default-actions self)))))
 
 (defmethod v:on-component-update ((self actions))
-  (v::process-actions (manager self)))
+  (action::process-actions (manager self)))

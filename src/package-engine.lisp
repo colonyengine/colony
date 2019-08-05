@@ -16,18 +16,6 @@
    #:id
    #:with-shared-storage)
 
-  ;; actions
-  (:export
-   #:action-step
-   #:attrs
-   #:manager
-   #:on-action-finish
-   #:on-action-insert
-   #:on-action-update
-   #:renderer
-   #:repeat-p
-   #:replace-action)
-
   ;; components
   (:export
    #:component-by-type

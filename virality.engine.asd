@@ -33,7 +33,8 @@
   :pathname "src"
   :serial t
   :components
-  ((:file "package-actors")
+  ((:file "package-actions")
+   (:file "package-actors")
    (:file "package-gpu")
    (:file "package-shader")
    (:file "package-colliders")

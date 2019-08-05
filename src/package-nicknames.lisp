@@ -38,6 +38,13 @@
    (:in :virality.input)
    (:prefab :virality.prefabs))
 
+  (:virality.actions
+   (:a :alexandria)
+   (:u :golden-utils)
+   (:log :verbose)
+   (:v :virality.engine)
+   (:actor :virality.actors))
+
   (:virality.actors
    (:u :golden-utils)
    (:v :virality.engine)
@@ -62,11 +69,37 @@
    (:m4 :origin.mat4)
    (:q :origin.quat)
    (:v :virality.engine)
+   (:action :virality.actions)
    (:col :virality.colliders)
    (:geo :virality.geometry)
    (:gpu :virality.gpu)
    (:contrib.mat :virality.contrib.materials)
    (:shd.sprite :virality.shaders.sprite))
+
+  (:virality.contrib.actions
+   (:a :alexandria)
+   (:u :golden-utils)
+   (:log :verbose)
+   (:v4 :origin.vec3)
+   (:q :origin.quat)
+   (:v :virality.engine)
+   (:action :virality.actions)
+   (:comp :virality.components))
+
+  (:virality.contrib.materials
+   (:v2 :origin.vec2)
+   (:v3 :origin.vec3)
+   (:v4 :origin.vec4)
+   (:m4 :origin.mat4)
+   (:v :virality.engine)
+   (:contrib.tex :virality.contrib.textures)
+   (:shd.sprite :virality.shaders.sprite)
+   (:shd.tex :virality.shaders.texture)
+   (:shd.vis :virality.shaders.visualization))
+
+  (:virality.contrib.textures
+   (:v4 :origin.vec4)
+   (:v :virality.engine))
 
   (:virality.geometry
    (:a :alexandria)
@@ -94,30 +127,6 @@
    (:log :verbose)
    (:v :virality.engine)
    (:actor :virality.actors)
-   (:comp :virality.components))
-
-  (:virality.contrib.textures
-   (:v4 :origin.vec4)
-   (:v :virality.engine))
-
-  (:virality.contrib.materials
-   (:v2 :origin.vec2)
-   (:v3 :origin.vec3)
-   (:v4 :origin.vec4)
-   (:m4 :origin.mat4)
-   (:v :virality.engine)
-   (:contrib.tex :virality.contrib.textures)
-   (:shd.sprite :virality.shaders.sprite)
-   (:shd.tex :virality.shaders.texture)
-   (:shd.vis :virality.shaders.visualization))
-
-  (:virality.contrib.actions
-   (:a :alexandria)
-   (:u :golden-utils)
-   (:log :verbose)
-   (:v4 :origin.vec3)
-   (:q :origin.quat)
-   (:v :virality.engine)
    (:comp :virality.components))
 
   (:virality.shaders

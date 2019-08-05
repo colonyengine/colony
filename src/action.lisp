@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.actions)
 
 (defclass action-manager ()
   ((%action-list :reader action-list
@@ -47,14 +47,14 @@
            (node (doubly-linked-list:insert-dlist-node
                   where action-list %type action :target-key target)))
       (setf (node action) node)
-      (on-action-insert action %type)
+      (on-insert action %type)
       action)))
 
 (defun remove-action (action)
   (with-slots (%manager %type) action
     (doubly-linked-list:remove-dlist-node (action-list %manager) %type)))
 
-(defun replace-action (action type &rest args)
+(defun replace (action type &rest args)
   (let ((action (apply #'reinitialize-instance action
                        :type type
                        :elapsed 0
@@ -62,7 +62,7 @@
                        args)))
     (doubly-linked-list:update-dlist-node-key (node action) type)))
 
-(defun action-step (action)
+(defun step (action)
   (with-slots (%shape %elapsed %duration) action
     (funcall %shape (a:clamp (/ %elapsed %duration) 0f0 1f0))))
 
@@ -79,31 +79,31 @@
 (defun process-actions (manager)
   (loop :with list = (doubly-linked-list:dlist-elements (action-list manager))
         :for (type . action) :in list
-        :do (on-action-update action type)
+        :do (on-update action type)
         :when (finished-p action)
-          :do (on-action-finish action type)
+          :do (on-finish action type)
         :when (blocking-p action)
           :do (return)))
 
 ;;; Action event hooks
 
-(defgeneric on-action-insert (action type)
+(defgeneric on-insert (action type)
   (:method (action type)))
 
-(defgeneric on-action-finish (action type)
+(defgeneric on-finish (action type)
   (:method (action type))
   (:method :around (action type)
-    (let ((actor (actor (renderer (manager action)))))
+    (let ((actor (actor:actor (renderer (manager action)))))
       (call-next-method)
       (log:trace :virality.action "Action ~a finished for actor ~a."
-                 type (id actor)))))
+                 type (v:id actor)))))
 
-(defgeneric on-action-update (action type)
+(defgeneric on-update (action type)
   (:method (action type))
   (:method :before (action type)
     (with-slots (%manager %elapsed %self-finishing-p %duration %finished-p)
         action
-      (incf %elapsed (frame-time (context (renderer %manager))))
+      (incf %elapsed (v:frame-time (v:context (renderer %manager))))
       (when (and (not %self-finishing-p)
                  (>= %elapsed %duration))
         (setf %finished-p t)))))
