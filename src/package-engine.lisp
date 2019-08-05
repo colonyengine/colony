@@ -10,10 +10,16 @@
 
   ;; common
   (:export
+   #:context
+   #:delta
    #:destroy-after-time
    #:destroy
    #:display-id
+   #:frame-count
+   #:frame-time
    #:id
+   #:option
+   #:total-time
    #:with-shared-storage)
 
   ;; components
@@ -30,15 +36,6 @@
    #:on-component-physics-update
    #:on-component-render
    #:on-component-update)
-
-  ;; context
-  (:export
-   #:context
-   #:delta
-   #:frame-count
-   #:frame-time
-   #:option
-   #:total-time)
 
   ;; definitions
   (:export
