@@ -36,6 +36,7 @@
   ((:file "package-actors")
    (:file "package-gpu")
    (:file "package-shader")
+   (:file "package-colliders")
    (:file "package-contrib-materials")
    (:file "package-contrib-textures")
    (:file "package-contrib-actions")

@@ -77,7 +77,7 @@ tear-down procedure occurs when stopping the engine."
     (load-call-flows core)
     (load-texture-descriptors core)
     (load-materials core)
-    (initialize-collider-system core)
+    (col::initialize-collider-system core)
     (make-scene-tree core)
     (load-initial-scene core scene-name)
     (log:info :virality.engine "Finished starting ~a" title)))

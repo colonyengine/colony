@@ -42,11 +42,11 @@
 
 (defmethod v:on-component-attach ((self collider/sphere) actor)
   (declare (ignore actor))
-  (v::register-collider (v:context self) self))
+  (col::register-collider (v:context self) self))
 
 (defmethod v:on-component-detach ((self collider/sphere) actor)
   (declare (ignore actor))
-  (v::deregister-collider (v:context self) self))
+  (col::deregister-collider (v:context self) self))
 
 (defmethod v:on-component-destroy ((self collider/sphere))
   (setf (referent self) nil))

@@ -3,6 +3,7 @@
 (uiop:define-package #:virality.engine
   (:use #:cl)
   (:mix-reexport #:virality.actors
+                 #:virality.colliders
                  #:virality.geometry
                  #:virality.input
                  #:virality.prefabs)
@@ -41,12 +42,6 @@
    #:on-component-physics-update
    #:on-component-render
    #:on-component-update)
-
-  ;; colliders
-  (:export
-   #:on-collision-enter
-   #:on-collision-exit
-   #:on-collision-continue)
 
   ;; context
   (:export

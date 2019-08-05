@@ -29,16 +29,25 @@
    (:log :verbose)
    (:v3 :origin.vec3)
    (:actor :virality.actors)
+   (:col :virality.colliders)
+   (:comp :virality.components)
+   (:contrib.tex :virality.contrib.textures)
+   (:contrib.mat :virality.contrib.materials)
    (:gpu :virality.gpu)
    (:img :virality.image)
    (:in :virality.input)
-   (:comp :virality.components)
-   (:prefab :virality.prefabs)
-   (:contrib.tex :virality.contrib.textures)
-   (:contrib.mat :virality.contrib.materials))
+   (:prefab :virality.prefabs))
 
   (:virality.actors
    (:u :golden-utils)
+   (:v :virality.engine)
+   (:comp :virality.components))
+
+  (:virality.colliders
+   (:a :alexandria)
+   (:u :golden-utils)
+   (:log :verbose)
+   (:v3 :origin.vec3)
    (:v :virality.engine)
    (:comp :virality.components))
 
@@ -53,6 +62,7 @@
    (:m4 :origin.mat4)
    (:q :origin.quat)
    (:v :virality.engine)
+   (:col :virality.colliders)
    (:geo :virality.geometry)
    (:gpu :virality.gpu)
    (:contrib.mat :virality.contrib.materials)
