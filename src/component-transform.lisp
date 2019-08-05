@@ -118,7 +118,7 @@
   (declare (optimize speed))
   (map-nodes
    (lambda (x)
-     (resolve-model x (v::alpha (v::frame-manager core))))
+     (resolve-model x (v::alpha (v::clock core))))
    (v:component-by-type (v::scene-tree core) 'transform)))
 
 (defmethod v:make-component (context (component-type (eql 'transform)) &rest args)

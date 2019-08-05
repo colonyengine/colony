@@ -23,16 +23,16 @@
 (defun total-time (context &rest ignored)
   "Return the total time in seconds that the engine has been running."
   (declare (ignore ignored))
-  (slot-value (frame-manager (core context)) '%total-time))
+  (slot-value (clock (core context)) '%total-time))
 
 (defun frame-time (context)
   "Return the amount of time in seconds of the last frame as a REAL."
-  (slot-value (frame-manager (core context)) '%frame-time))
+  (slot-value (clock (core context)) '%frame-time))
 
 (defun frame-count (context)
   "Return the number of frames since the engine has started."
-  (slot-value (frame-manager (core context)) '%frame-count))
+  (slot-value (clock (core context)) '%frame-count))
 
 (defun delta (context)
   "Return the physics update delta. This is :delta from the cfg file."
-  (slot-value (frame-manager (core context)) '%delta))
+  (slot-value (clock (core context)) '%delta))

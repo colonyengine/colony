@@ -74,8 +74,8 @@
     (gl:clear :color-buffer :depth-buffer)))
 
 (defun render-frame (core)
-  (with-slots (%frame-manager %display %running-p) core
-    (with-slots (%frame-count) %frame-manager
+  (with-slots (%clock %display %running-p) core
+    (with-slots (%frame-count) %clock
       (when %running-p
         (clear-screen %display)
         (execute-flow core

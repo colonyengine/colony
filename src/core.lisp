@@ -10,8 +10,8 @@
                :initform t)
    (%rcache :reader rcache
             :initform (u:dict))
-   (%frame-manager :reader frame-manager
-                   :initform nil)
+   (%clock :reader clock
+           :initform nil)
    (%display :reader display
              :initform nil)
    (%scene-tree :reader scene-tree)

@@ -70,7 +70,7 @@ tear-down procedure occurs when stopping the engine."
     (log:info :virality.engine "Starting up ~a..." title)
     (setup-live-coding)
     (enable-logging core)
-    (make-frame-manager core)
+    (make-clock core)
     (initialize-host core)
     (initialize-shaders core)
     (load-graphs core)

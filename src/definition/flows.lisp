@@ -98,7 +98,7 @@
                                core)))
                     (action
                      (lambda (core)
-                       (frame-tick core)
+                       (clock-tick core)
                        (comp:interpolate-transforms core)))
                     (transition make-active-camera-view))
         ;; NOTE: This flow-state is invoked deep inside of TICK in the

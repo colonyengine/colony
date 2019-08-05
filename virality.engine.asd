@@ -77,7 +77,7 @@
    (:file "object-query")
    (:file "hardware-query")
    (:file "annotations")
-   (:file "frame")
+   (:file "clock")
    (:file "display")
    (:file "input-keyboard")
    (:file "input-mouse")
