@@ -30,7 +30,11 @@
    (:v3 :origin.vec3)
    (:actor :virality.actors)
    (:col :virality.colliders)
-   (:comp :virality.components)
+   (:comp.camera :virality.components.camera)
+   (:comp.mesh.static :virality.components.mesh.static)
+   (:comp.render :virality.components.render)
+   (:comp.sprite :virality.components.sprite)
+   (:comp.transform :virality.components.transform)
    (:contrib.tex :virality.contrib.textures)
    (:contrib.mat :virality.contrib.materials)
    (:gpu :virality.gpu)
@@ -39,46 +43,89 @@
    (:mat :virality.materials)
    (:prefab :virality.prefabs)
    (:tex :virality.textures))
-
   (:virality.actions
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
    (:v :virality.engine)
    (:actor :virality.actors))
-
   (:virality.actors
    (:u :golden-utils)
    (:v :virality.engine)
-   (:comp :virality.components))
-
+   (:comp.transform :virality.components.transform))
   (:virality.colliders
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
    (:v3 :origin.vec3)
    (:v :virality.engine)
-   (:comp :virality.components))
-
-  (:virality.components
+   (:comp.col :virality.components.collider)
+   (:comp.transform :virality.components.transform))
+  (:virality.components.actions
+   (:v :virality.engine)
+   (:action :virality.actions)
+   (:comp.render :virality.components.render)
+   (:comp.transform :virality.components.transform))
+  (:virality.components.camera
+   (:a :alexandria)
+   (:log :verbose)
+   (:v3 :origin.vec3)
+   (:m4 :origin.mat4)
+   (:v :virality.engine)
+   (:comp.transform :virality.components.transform))
+  (:virality.components.camera.tracking
+   (:v3 :origin.vec3)
+   (:m4 :origin.mat4)
+   (:v :virality.engine)
+   (:comp.camera :virality.components.camera)
+   (:comp.transform :virality.components.transform))
+  (:virality.components.camera.following
+   (:v3 :origin.vec3)
+   (:m4 :origin.mat4)
+   (:v :virality.engine)
+   (:comp.camera :virality.components.camera)
+   (:comp.transform :virality.components.transform))
+  (:virality.components.collider
+   (:a :alexandria)
+   (:v3 :origin.vec3)
+   (:v :virality.engine)
+   (:col :virality.colliders)
+   (:comp.camera :virality.components.camera)
+   (:comp.transform :virality.components.transform)
+   (:contrib.mat :virality.contrib.materials)
+   (:mat :virality.materials))
+  (:virality.components.mesh.dynamic
+   (:v :virality.engine)
+   (:geo :virality.geometry))
+  (:virality.components.mesh.static
+   (:a :alexandria)
+   (:v :virality.engine)
+   (:geo :virality.geometry))
+  (:virality.components.render
+   (:a :alexandria)
+   (:v :virality.engine)
+   (:comp.camera :virality.components.camera)
+   (:comp.mesh.dynamic :virality.components.mesh.dynamic)
+   (:comp.mesh.static :virality.components.mesh.static)
+   (:comp.sprite :virality.components.sprite)
+   (:comp.transform :virality.components.transform)
+   (:geo :virality.geometry)
+   (:mat :virality.materials))
+  (:virality.components.sprite
    (:a :alexandria)
    (:u :golden-utils)
-   (:log :verbose)
-   (:~ :origin.swizzle)
    (:v2 :origin.vec2)
+   (:v :virality.engine)
+   (:gpu :virality.gpu)
+   (:shd.sprite :virality.shaders.sprite))
+  (:virality.components.transform
+   (:a :alexandria)
+   (:~ :origin.swizzle)
    (:v3 :origin.vec3)
    (:v4 :origin.vec4)
    (:m4 :origin.mat4)
    (:q :origin.quat)
-   (:v :virality.engine)
-   (:action :virality.actions)
-   (:col :virality.colliders)
-   (:geo :virality.geometry)
-   (:gpu :virality.gpu)
-   (:mat :virality.materials)
-   (:contrib.mat :virality.contrib.materials)
-   (:shd.sprite :virality.shaders.sprite))
-
+   (:v :virality.engine))
   (:virality.contrib.actions
    (:a :alexandria)
    (:u :golden-utils)
@@ -87,8 +134,9 @@
    (:q :origin.quat)
    (:v :virality.engine)
    (:action :virality.actions)
-   (:comp :virality.components))
-
+   (:comp.render :virality.components.render)
+   (:comp.sprite :virality.components.sprite)
+   (:comp.transform :virality.components.transform))
   (:virality.contrib.materials
    (:v2 :origin.vec2)
    (:v3 :origin.vec3)
@@ -100,60 +148,49 @@
    (:shd.sprite :virality.shaders.sprite)
    (:shd.tex :virality.shaders.texture)
    (:shd.vis :virality.shaders.visualization))
-
   (:virality.contrib.textures
    (:v4 :origin.vec4)
    (:v :virality.engine)
    (:tex :virality.textures))
-
   (:virality.geometry
    (:a :alexandria)
    (:u :golden-utils)
    (:v :virality.engine))
-
   (:virality.gpu
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
    (:v :virality.engine))
-
   (:virality.image
    (:u :golden-utils))
-
   (:virality.input
    (:a :alexandria)
    (:u :golden-utils)
    (:v2 :origin.vec2)
    (:v :virality.engine))
-
   (:virality.materials
    (:a :alexandria)
    (:u :golden-utils)
    (:v :virality.engine)
    (:gpu :virality.gpu)
    (:tex :virality.textures))
-
   (:virality.prefabs
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
    (:v :virality.engine)
    (:actor :virality.actors)
-   (:comp :virality.components))
-
+   (:comp.transform :virality.components.transform))
   (:virality.shaders
    (:a :alexandria)
    (:u :golden-utils))
-
   (:virality.shaders.noise
    (:hash :virality.shaders.hashing)
    (:shaping :virality.shaders.shaping))
-
   (:virality.textures
    (:a :alexandria)
    (:u :golden-utils)
    (:log :verbose)
    (:v :virality.engine)
    (:contrib.tex :virality.contrib.textures)
-   (:img :virality.image)
-   ))
+   (:img :virality.image)))

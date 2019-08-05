@@ -178,15 +178,11 @@
   (execution-order all-unknown-types
                    ((unknown-types))) ;; (unknown-types) is special token
 
-  (execution-order actions
-                   (comp:action -> comp:action-list))
-
   (execution-order drawable
-                   (comp:static-mesh -> comp:sprite -> comp:render))
+                   (comp.mesh.static:static-mesh -> comp.sprite:sprite -> comp.render:render))
 
   (execution-order core
-                   (comp:transform
-                    -> (splice actions)
+                   (comp.transform:transform
                     -> (splice drawable))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

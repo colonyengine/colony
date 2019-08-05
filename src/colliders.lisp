@@ -64,7 +64,7 @@
   (let* ((cs (v::collider-system (v::core context)))
          (registering-colliders (registering-colliders cs)))
     ;; Insert the request for processing.
-    (setf (u:href registering-colliders (comp:on-layer collider) collider)
+    (setf (u:href registering-colliders (comp.col:on-layer collider) collider)
           collider)))
 
 (defun deregister-collider (context collider)
@@ -72,7 +72,7 @@
   (let* ((cs (v::collider-system (v::core context)))
          (deregistering-colliders (deregistering-colliders cs)))
     ;; Insert the request for processing.
-    (setf (u:href deregistering-colliders (comp:on-layer collider) collider)
+    (setf (u:href deregistering-colliders (comp.col:on-layer collider) collider)
           collider)))
 
 ;;; Contacts are symmetric in the internal data structures.
@@ -159,7 +159,7 @@ had--and update all other faces too."
 (defun compute-contact-state (collider-system fist-collider face-collider)
   ;; 1. Compute if a collision happend.
   ;; 2. look into the contacts table and see what to do.
-  (let ((collided-p (comp:collide-p fist-collider face-collider))
+  (let ((collided-p (comp.col:collide-p fist-collider face-collider))
         (contact-p (contact-p collider-system fist-collider face-collider)))
     ;; split up into clauses this way for easier understanding. The clauses
     ;; happen in order of what I speculate will be the most common to least
@@ -284,7 +284,7 @@ had--and update all other faces too."
                       (u:href (collision-plan collider-system) fist-layer)))
                 (log:trace :virality.engine
                            "Checking registering fist: ~s, [~s: ~s]"
-                           (v:display-id fist) (comp:on-layer fist)
+                           (v:display-id fist) (comp.col:on-layer fist)
                            face-layers)
                 (cond
                   ((null face-layers)
@@ -418,44 +418,44 @@ the repl when the game is NOT running."
   (let* ((core (make-instance 'v::core))
          (context (make-instance 'v:context :core core)))
     (setf (slot-value core 'v::%context) context)
-    (let* ((c0 (v:make-component context 'comp:collider/sphere
+    (let* ((c0 (v:make-component context 'comp.col:sphere
                                  :display-id "Ground"
                                  :on-layer :ground
                                  :center (v3:zero)
                                  :radius 1))
-           (c1 (v:make-component context 'comp:collider/sphere
+           (c1 (v:make-component context 'comp.col:sphere
                                  :display-id "Player"
                                  :on-layer :player
                                  :center (v3:vec -20 5 0)
                                  :radius 1))
-           (c2 (v:make-component context 'comp:collider/sphere
+           (c2 (v:make-component context 'comp.col:sphere
                                  :display-id "Player-Bullet"
                                  :on-layer :player-bullet
                                  :center (v3:vec -10 5 0)
                                  :radius 1))
-           (c3 (v:make-component context 'comp:collider/sphere
+           (c3 (v:make-component context 'comp.col:sphere
                                  :display-id "Enemy"
                                  :on-layer :enemy
                                  :center (v3:vec 20 5 0)
                                  :radius 1))
-           (c4 (v:make-component context 'comp:collider/sphere
+           (c4 (v:make-component context 'comp.col:sphere
                                  :display-id "Enemy-Bullet"
                                  :on-layer :enemy-bullet
                                  :center (v3:vec 10 5 0)
                                  :radius 1))
-           (c5 (v:make-component context 'comp:collider/sphere
+           (c5 (v:make-component context 'comp.col:sphere
                                  :display-id "Scenery 1"
                                  :on-layer :scenery
                                  :center (v3:vec 0 5 0)
                                  :radius 1))
-           (c6 (v:make-component context 'comp:collider/sphere
+           (c6 (v:make-component context 'comp.col:sphere
                                  :display-id "Scenery 2"
                                  :on-layer :scenery
                                  :center (v3:vec 1 5 0)
                                  :radius 1)))
       ;; Set referent to the same component for
       (dolist (c (list c0 c1 c2 c3 c4 c5 c6))
-        (setf (comp:referent c) c))
+        (setf (comp.col:referent c) c))
       (initialize-collider-system core)
       (register-collider context c0)
       (register-collider context c1)
@@ -468,22 +468,22 @@ the repl when the game is NOT running."
       (compute-all-collisions (v::collider-system core))
       (format t "Collider Pass 1: enter~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (comp:center c4) (v3:vec -9 5 0))
+      (setf (comp.col:center c4) (v3:vec -9 5 0))
       (compute-all-collisions (v::collider-system core))
       (format t "Collider Pass 2: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (comp:center c4) (v3:vec -10 5 0))
+      (setf (comp.col:center c4) (v3:vec -10 5 0))
       (compute-all-collisions (v::collider-system core))
       (format t "Collider Pass 2a: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (comp:center c4) (v3:vec -11 5 0))
+      (setf (comp.col:center c4) (v3:vec -11 5 0))
       (compute-all-collisions (v::collider-system core))
       (format t "Collider Pass 2b: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (comp:center c4) (v3:vec -12 5 0))
+      (setf (comp.col:center c4) (v3:vec -12 5 0))
       (compute-all-collisions (v::collider-system core))
       (format t "Moving enemy-bullet.~%")
-      (setf (comp:center c4) (v3:vec -13 5 0))
+      (setf (comp.col:center c4) (v3:vec -13 5 0))
       (format t "Collider Pass 3: exit~%")
       (compute-all-collisions (v::collider-system core))
       (format t "Collider Pass 4: no colliding~%")

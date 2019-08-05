@@ -1,4 +1,4 @@
-(in-package #:virality.components)
+(in-package #:virality.components.sprite)
 
 (v:define-component sprite ()
   ((%name :accessor name

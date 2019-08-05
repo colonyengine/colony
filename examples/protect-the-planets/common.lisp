@@ -26,23 +26,23 @@
 
 (v:define-prefab "cameras" (:library ptp-base)
   ("ortho"
-   (comp:camera :active-p t
-                :mode :orthographic))
+   (comp.camera:camera :active-p t
+                       :mode :orthographic))
   ("perspective"
-   (comp:camera :active-p t
-                :mode :perspective))
+   (comp.camera:camera :active-p t
+                       :mode :perspective))
   ("iso"
-   (comp:transform :rotate (q:orient :local
-                                     :x (- (atan (/ (sqrt 2))))
-                                     :y (- (/ pi 4))))
+   (comp.transform:transform :rotate (q:orient :local
+                                               :x (- (atan (/ (sqrt 2))))
+                                               :y (- (/ pi 4))))
    ("camera"
-    (comp:transform :translate (v3:vec 0 0 10))
-    (comp:camera :active-p t
-                 :mode :orthographic))))
+    (comp.transform:transform :translate (v3:vec 0 0 10))
+    (comp.camera:camera :active-p t
+                        :mode :orthographic))))
 
 (v:define-prefab "mesh" (:library ptp-base)
-  (comp:static-mesh :location '((:core :mesh) "plane.glb"))
-  (comp:render :material 'contrib.mat:unlit-texture))
+  (comp.mesh.static:static-mesh :location '((:core :mesh) "plane.glb"))
+  (comp.render:render :material 'contrib.mat:unlit-texture))
 
 ;;; Graphs
 

@@ -1,4 +1,4 @@
-(in-package #:virality.components)
+(in-package #:virality.components.render)
 
 (v:define-component render ()
   ((%mode :reader mode
@@ -20,28 +20,30 @@
               (:static-mesh
                (lambda ()
                  (geo::draw-static-geometry
-                  (data (v:component-by-type actor 'static-mesh))
+                  (comp.mesh.static::data
+                   (v:component-by-type actor 'comp.mesh.static:static-mesh))
                   instances)))
               (:dynamic-mesh
                (lambda ()
                  (geo::draw-dynamic-geometry
-                  (geometry (v:component-by-type actor 'dynamic-mesh))
+                  (comp.mesh.dynamic::geometry
+                   (v:component-by-type actor 'comp.mesh.dynamic:dynamic-mesh))
                   instances)))
               (:sprite
                (lambda ()
-                 (draw-sprite
-                  (v:component-by-type (v:actor render) 'sprite)
+                 (comp.sprite::draw-sprite
+                  (v:component-by-type (v:actor render) 'comp.sprite:sprite)
                   instances))))))))
 
 (defmethod v:on-component-initialize ((self render))
   (with-slots (%transform) self
-    (setf %transform (v:component-by-type (v:actor self) 'transform))
+    (setf %transform (v:component-by-type (v:actor self) 'comp.transform:transform))
     (set-draw-method self)))
 
 (defmethod v:on-component-render ((self render))
   (a:when-let ((camera (v::active-camera (v:context self))))
     (mat:with-material (material self)
-        (:model (model (transform self))
-         :view (view camera)
-         :proj (projection camera))
+        (:model (comp.transform:model (transform self))
+         :view (comp.camera:view camera)
+         :proj (comp.camera:projection camera))
       (funcall (draw-method self)))))

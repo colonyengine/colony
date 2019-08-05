@@ -27,11 +27,11 @@
 (v:define-prefab "dynamic-geometry" (:library examples)
   (("camera" :copy "/cameras/perspective"))
   (("plane")
-   (comp:transform :rotate/inc (q:orient :local :x pi)
-                   :scale (v3:vec 20 20 20))
-   (comp:dynamic-mesh :geometry 'tile)
-   (comp:render :material 'dynamic-geometry
-                :mode :dynamic-mesh)))
+   (comp.transform:transform :rotate/inc (q:orient :local :x pi)
+                             :scale (v3:vec 20 20 20))
+   (comp.mesh.dynamic:dynamic-mesh :geometry 'tile)
+   (comp.render:render :material 'dynamic-geometry
+                       :mode :dynamic-mesh)))
 
 ;;; Prefab descriptors
 

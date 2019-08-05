@@ -1,28 +1,30 @@
 (in-package #:virality.contrib.actions)
 
 (defmethod action:on-update (action (type (eql 'rotate)))
-  (let* ((transform (comp:transform (action:renderer (action:manager action))))
+  (let* ((transform (comp.render::transform
+                     (action:renderer (action:manager action))))
          (attrs (action:attrs action))
          (angle (or (u:href attrs :angle) (* pi 2)))
          (step (u:map-domain 0 1 0 angle (action:step action))))
     (ecase (or (u:href attrs :axis) :z)
-      (:x (comp:rotate transform (q:orient :local :x step) :replace-p t))
-      (:y (comp:rotate transform (q:orient :local :y step) :replace-p t))
-      (:z (comp:rotate transform (q:orient :local :z step) :replace-p t)))))
+      (:x (comp.transform:rotate transform (q:orient :local :x step) :replace-p t))
+      (:y (comp.transform:rotate transform (q:orient :local :y step) :replace-p t))
+      (:z (comp.transform:rotate transform (q:orient :local :z step) :replace-p t)))))
 
 (defmethod action:on-finish (action (type (eql 'rotate)))
   (when (action:repeat-p action)
     (action:replace action 'rotate/reverse)))
 
 (defmethod action:on-update (action (type (eql 'rotate/reverse)))
-  (let* ((transform (comp:transform (action:renderer (action:manager action))))
+  (let* ((transform (comp.render::transform
+                     (action:renderer (action:manager action))))
          (attrs (action:attrs action))
          (angle (or (u:href attrs :angle) (* pi 2)))
          (step (- angle (u:map-domain 0 1 0 angle (action:step action)))))
     (ecase (or (u:href attrs :axis) :z)
-      (:x (comp:rotate transform (q:orient :local :x step) :replace-p t))
-      (:y (comp:rotate transform (q:orient :local :y step) :replace-p t))
-      (:z (comp:rotate transform (q:orient :local :z step) :replace-p t)))))
+      (:x (comp.transform:rotate transform (q:orient :local :x step) :replace-p t))
+      (:y (comp.transform:rotate transform (q:orient :local :y step) :replace-p t))
+      (:z (comp.transform:rotate transform (q:orient :local :z step) :replace-p t)))))
 
 (defmethod action:on-finish (action (type (eql 'rotate/reverse)))
   (when (action:repeat-p action)

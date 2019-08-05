@@ -1,4 +1,4 @@
-(in-package #:virality.components)
+(in-package #:virality.components.transform)
 
 (defclass transform-state ()
   ((%current :accessor current

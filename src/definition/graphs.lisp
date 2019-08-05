@@ -2,11 +2,9 @@
 
 (define-graph :core (:category component-dependency)
   (subdag all-unknown-types ((unknown-types)))
-  (subdag actions (comp:action -> comp:action-list))
-  (subdag drawables (comp:static-mesh -> comp:sprite -> comp:render))
+  (subdag drawables (comp.mesh.static:static-mesh -> comp.sprite:sprite -> comp.render:render))
   (subdag core-types
-          (comp:transform
-           -> (splice actions)
+          (comp.transform:transform
            -> (splice drawables))))
 
 (define-graph :core-component-order (:category component-package-order)

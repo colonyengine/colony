@@ -21,34 +21,36 @@
 (v:define-prefab "graph" (:library examples :context context)
   (("camera" :copy "/cameras/ortho"))
   (("graph" :copy "/mesh")
-   (comp:transform :scale (v3:vec (/ (v:option context :window-width) 2)
-                                  (/ (v:option context :window-height) 2)
-                                  0))
-   (comp:render :material 'graph)))
+   (comp.transform:transform :scale (v3:vec (/ (v:option context :window-width) 2)
+                                            (/ (v:option context :window-height) 2)
+                                            0))
+   (comp.render:render :material 'graph)))
 
 (v:define-prefab "3d-graph-1" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (comp:transform :translate (v3:vec 0 70 100))
-   (comp:camera (:policy :new-args) :zoom 2)
-   (comp:tracking-camera :target-actor (v:ref "/3d-graph-1/graph")))
+   (comp.transform:transform :translate (v3:vec 0 70 100))
+   (comp.camera:camera (:policy :new-args) :zoom 2)
+   (comp.camera.tracking:tracking-camera
+    :target-actor (v:ref "/3d-graph-1/graph")))
   (("graph" :copy "/mesh")
-   (comp:render :material '(3d-graph
-                            3d-graph-1
-                            :shader shd:3d-graph-1
-                            :instances 100000
-                            :uniforms ((:size 0.5))))))
+   (comp.render:render :material '(3d-graph
+                                   3d-graph-1
+                                   :shader shd:3d-graph-1
+                                   :instances 100000
+                                   :uniforms ((:size 0.5))))))
 
 (v:define-prefab "3d-graph-2" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (comp:transform :translate (v3:vec 0 50 100))
-   (comp:camera (:policy :new-args) :zoom 2)
-   (comp:tracking-camera :target-actor (v:ref "/3d-graph-2/graph")))
+   (comp.transform:transform :translate (v3:vec 0 50 100))
+   (comp.camera:camera (:policy :new-args) :zoom 2)
+   (comp.camera.tracking:tracking-camera
+    :target-actor (v:ref "/3d-graph-2/graph")))
   (("graph" :copy "/mesh")
-   (comp:render :material '(3d-graph
-                            3d-graph-2
-                            :shader shd:3d-graph-2
-                            :instances 100000
-                            :uniforms ((:size 1))))))
+   (comp.render:render :material '(3d-graph
+                                   3d-graph-2
+                                   :shader shd:3d-graph-2
+                                   :instances 100000
+                                   :uniforms ((:size 1))))))
 
 ;;; Prefab descriptors
 

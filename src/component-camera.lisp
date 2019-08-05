@@ -1,4 +1,4 @@
-(in-package #:virality.components)
+(in-package #:virality.components.camera)
 
 (v:define-component camera ()
   ((%active-p :accessor active-p
@@ -26,11 +26,11 @@
    (%transform :reader transform)))
 
 (defun correct-camera-transform (camera)
-  (when (v3:zero-p (current (translation (transform camera))))
+  (when (v3:zero-p (comp.transform::current (comp.transform::translation (transform camera))))
     (let ((translation (ecase (mode camera)
                          (:orthographic (v3:vec 0 0 1))
                          (:perspective (v3:vec 0 0 50)))))
-      (translate (transform camera) translation)
+      (comp.transform:translate (transform camera) translation)
       (log:warn :virality.components
                 "Camera ~a was attached to an actor without a translation ~
                  transform.~%Using a sane default value for ~(~a~): ~s."
@@ -57,7 +57,7 @@
 (defun compute-camera-view (camera)
   (with-slots (%active-p %transform %view) camera
     (when %active-p
-      (let* ((model (model %transform))
+      (let* ((model (comp.transform:model %transform))
              (eye (m4:get-translation model))
              (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3 model :z))))
              (up (m4:rotation-axis-to-vec3 model :y)))
@@ -79,7 +79,7 @@
 
 (defmethod v:on-component-initialize ((self camera))
   (with-slots (%transform %fov-y) self
-    (setf %transform (v:component-by-type (v:actor self) 'transform)
+    (setf %transform (v:component-by-type (v:actor self) 'comp.transform:transform)
           %fov-y (* %fov-y (/ pi 180)))
     (correct-camera-transform self)
     (make-projection self (mode self))

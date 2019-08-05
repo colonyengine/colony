@@ -26,9 +26,6 @@
    #:option
    #:total-time
    #:with-shared-storage)
-
-  ;; components
-  ;; TODO: place each component type in a separate package
   (:export
    #:attach-component
    #:attach-components

@@ -33,7 +33,8 @@
   :pathname "src"
   :serial t
   :components
-  ((:file "package-actions")
+  (
+   (:file "package-actions")
    (:file "package-actors")
    (:file "package-colliders")
    (:file "package-components")
@@ -119,7 +120,7 @@
    (:file "texture-buffer")
    (:file "materials")
    (:file "component-transform")
-   (:file "component-action-list")
+   (:file "component-actions")
    (:file "component-camera")
    (:file "component-camera-following")
    (:file "component-camera-tracking")

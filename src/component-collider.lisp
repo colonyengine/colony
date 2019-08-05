@@ -1,6 +1,6 @@
-(in-package #:virality.components)
+(in-package #:virality.components.collider)
 
-(v:define-component collider/sphere ()
+(v:define-component sphere ()
   (;; The collider is only ever on a single layer.
    (%on-layer :accessor on-layer
               :initarg :on-layer)
@@ -17,7 +17,7 @@
    (%visualize :accessor visualize
                :initarg :visualize
                :initform nil)
-   ;; TODO: Put geometry into shared storage for all collider/sphere's to use.
+   ;; TODO: Put geometry into shared storage for all sphere's to use.
    (%geometry :reader geometry
               :initform (gl:gen-vertex-array))
    (%material :reader material
@@ -36,34 +36,35 @@
               :initarg :referent
               :initform nil)))
 
-(defmethod v:on-component-initialize ((self collider/sphere))
+(defmethod v:on-component-initialize ((self sphere))
   ;; TODO
   nil)
 
-(defmethod v:on-component-attach ((self collider/sphere) actor)
+(defmethod v:on-component-attach ((self sphere) actor)
   (declare (ignore actor))
   (col::register-collider (v:context self) self))
 
-(defmethod v:on-component-detach ((self collider/sphere) actor)
+(defmethod v:on-component-detach ((self sphere) actor)
   (declare (ignore actor))
   (col::deregister-collider (v:context self) self))
 
-(defmethod v:on-component-destroy ((self collider/sphere))
+(defmethod v:on-component-destroy ((self sphere))
   (setf (referent self) nil))
 
 ;; TODO: When I implement the ability to not call protocol methods on types that
 ;; don't have them defined, ALSO create a feature that I can turn off calling
 ;; them for types that DO have them. Then I can leave this here and also not pay
 ;; the cost to render it.
-(defmethod v:on-component-render ((self collider/sphere))
+(defmethod v:on-component-render ((self sphere))
   (unless (visualize self)
     (return-from v:on-component-render))
   (a:when-let ((camera (v::active-camera (v:context self)))
-               (transform (v:component-by-type (v:actor self) 'transform)))
+               (transform (v:component-by-type (v:actor self)
+                                               'comp.transform:transform)))
     (mat:with-material (material self)
-        (:model (model transform)
-         :view (view camera)
-         :proj (projection camera)
+        (:model (comp.transform:model transform)
+         :view (comp.camera:view camera)
+         :proj (comp.camera:projection camera)
          :collider-local-position (center self)
          :in-contact-p (plusp (contact-count self))
          ;; NOTE: The shader computes the radius appropriately for
@@ -78,20 +79,20 @@
 ;; ourselves to our referent (who implements this same API). This way, the
 ;; collider component instance can keep data about itself for visualization or
 ;; other purposes.
-(defmethod v:on-collision-enter ((self collider/sphere) other-collider)
+(defmethod v:on-collision-enter ((self sphere) other-collider)
   (incf (contact-count self))
   (a:when-let (referent (referent self))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
     (v:on-collision-enter referent other-collider)))
 
-(defmethod v:on-collision-continue ((self collider/sphere) other-collider)
+(defmethod v:on-collision-continue ((self sphere) other-collider)
   (a:when-let (referent (referent self))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
     (v:on-collision-continue referent other-collider)))
 
-(defmethod v:on-collision-exit ((self collider/sphere) other-collider)
+(defmethod v:on-collision-exit ((self sphere) other-collider)
   (decf (contact-count self))
   (a:when-let (referent (referent self))
     (when (eq self referent)
@@ -104,8 +105,8 @@
 ;; collider which indicates :discrete or :continuous, and then these collider
 ;; functions should do the right thing if at all possible.
 
-(defmethod collide-p ((fist collider/sphere) (face collider/sphere))
-  "Return T if the two collider/spheres actually collided."
+(defmethod collide-p ((fist sphere) (face sphere))
+  "Return T if the two spheres actually collided."
   ;; A test path when testing colliders outside of FL's prefabs.
   ;; A test case, no transform comp.
   (if (not (and (v:actor fist) (v:actor face)))
@@ -114,21 +115,25 @@
             (<= distance/2 (radius face))))
       ;; The real path through this code, which transforms the collider into
       ;; world space appropriately.
-      (let* ((fist-transform (v:component-by-type (v:actor fist) 'transform))
-             (face-transform (v:component-by-type (v:actor face) 'transform))
+      (let* ((fist-transform (v:component-by-type (v:actor fist)
+                                                  'comp.transform:transform))
+             (face-transform (v:component-by-type (v:actor face)
+                                                  'comp.transform:transform))
              ;; Figure out where the center for these colliders are in world
              ;; space.
              (fist-collider-world-center
-               (transform-point fist-transform (center fist)))
+               (comp.transform:transform-point fist-transform (center fist)))
              (face-collider-world-center
-               (transform-point face-transform (center face)))
+               (comp.transform:transform-point face-transform (center face)))
              ;; Figure out the size of the radius in world space. We treat the
              ;; radius as a vector and rotate/scale (but no translate!) it by the
              ;; world matrix.
              (fist-world-radius
-               (transform-vector fist-transform (v3:vec (radius fist) 0 0)))
+               (comp.transform:transform-vector fist-transform
+                                                (v3:vec (radius fist) 0 0)))
              (face-world-radius
-               (transform-vector face-transform (v3:vec (radius face) 0 0)))
+               (comp.transform:transform-vector face-transform
+                                                (v3:vec (radius face) 0 0)))
              ;; Compute the half way point between the two colliders.
              (distance (v3:distance fist-collider-world-center
                                     face-collider-world-center)))

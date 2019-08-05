@@ -41,13 +41,13 @@
 
 (v:define-prefab "damaged-helmet" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (comp:camera (:policy :new-args) :zoom 10))
+   (comp.camera:camera (:policy :new-args) :zoom 10))
   (("helmet" :copy "/mesh")
-   (comp:transform :rotate (q:orient :local :x (/ pi 2))
-                   :rotate/inc (q:orient :local :z (- (/ pi 4)))
-                   :scale 4)
-   (comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
-   (comp:render :material 'damaged-helmet)))
+   (comp.transform:transform :rotate (q:orient :local :x (/ pi 2))
+                             :rotate/inc (q:orient :local :z (- (/ pi 4)))
+                             :scale 4)
+   (comp.mesh.static:static-mesh :location '(:mesh "damaged-helmet.glb"))
+   (comp.render:render :material 'damaged-helmet)))
 
 ;;; Prefab descriptors
 

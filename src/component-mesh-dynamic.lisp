@@ -1,4 +1,4 @@
-(in-package #:virality.components)
+(in-package #:virality.components.mesh.dynamic)
 
 (v:define-component dynamic-mesh ()
   ((%geometry :reader geometry
