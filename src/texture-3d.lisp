@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.textures)
 
 (defmethod load-texture-data ((texture-type (eql :texture-3d)) texture context)
   ;; Determine if loading :images or :volume
@@ -25,7 +25,7 @@
          (texture-base-level
            (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
-         (max-texture-3d-size (get-gpu-parameter :max-3d-texture-size))
+         (max-texture-3d-size (v::get-gpu-parameter :max-3d-texture-size))
          (data (get-computed-applied-attribute texture :data))
          (num-mipmaps (length data)))
     #++(format t "Attempting to load 3d texture ~a onto GPU: immutable = ~a~%"

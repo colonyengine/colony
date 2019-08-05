@@ -37,7 +37,8 @@
    (:img :virality.image)
    (:in :virality.input)
    (:mat :virality.materials)
-   (:prefab :virality.prefabs))
+   (:prefab :virality.prefabs)
+   (:tex :virality.textures))
 
   (:virality.actions
    (:a :alexandria)
@@ -102,7 +103,8 @@
 
   (:virality.contrib.textures
    (:v4 :origin.vec4)
-   (:v :virality.engine))
+   (:v :virality.engine)
+   (:tex :virality.textures))
 
   (:virality.geometry
    (:a :alexandria)
@@ -128,7 +130,8 @@
    (:a :alexandria)
    (:u :golden-utils)
    (:v :virality.engine)
-   (:gpu :virality.gpu))
+   (:gpu :virality.gpu)
+   (:tex :virality.textures))
 
   (:virality.prefabs
    (:a :alexandria)
@@ -144,4 +147,13 @@
 
   (:virality.shaders.noise
    (:hash :virality.shaders.hashing)
-   (:shaping :virality.shaders.shaping)))
+   (:shaping :virality.shaders.shaping))
+
+  (:virality.textures
+   (:a :alexandria)
+   (:u :golden-utils)
+   (:log :verbose)
+   (:v :virality.engine)
+   (:contrib.tex :virality.contrib.textures)
+   (:img :virality.image)
+   ))

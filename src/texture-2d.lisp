@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.textures)
 
 (defmethod load-texture-data ((texture-type (eql :texture-2d)) texture context)
   ;; TODO: This assumes no use of the general-data-descriptor or procedurally
@@ -16,7 +16,7 @@
       ;; Check to ensure they all fit into texture memory.
       ;; TODO: Refactor out of each method into validate-mipmap-images and
       ;; generalize.
-      (loop :with max-size = (get-gpu-parameter :max-texture-size)
+      (loop :with max-size = (v::get-gpu-parameter :max-texture-size)
             :for image :across images
             :for location :across data
             :do (when (> (max (img:height image) (img:width image))

@@ -23,7 +23,7 @@
    (%materials :accessor materials
                :initform (mat::make-materials-table))
    (%textures :accessor textures
-              :initform (%make-textures-table))
+              :initform (tex::make-textures-table))
    (%context :reader context)
    (%tables :reader tables
             :initform (make-instance 'bookkeeping-tables))

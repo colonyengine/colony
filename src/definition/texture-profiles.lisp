@@ -1,6 +1,6 @@
 (in-package #:virality.contrib.textures)
 
-(v:define-texture-profile default-profile
+(tex:define-texture-profile default-profile
   ;; texparameter stuff, opengl defaults
   ;; NOTE: This next one might be called :depth-texture-mode in cl-opengl. Or,
   ;; :dempth-texture-mode might have been removed and replaced with this. Or,
@@ -45,13 +45,13 @@
   ;; :immutable nil means the attributes can change at runtime.
   (:immutable t))
 
-(v:define-texture-profile clamp-all-edges
+(tex:define-texture-profile clamp-all-edges
   (:texture-wrap-s :clamp-to-edge)
   (:texture-wrap-t :clamp-to-edge)
   (:texture-wrap-r :clamp-to-edge))
 
 ;; TODO: Initial exploratory support for framebuffers.
-(v:define-texture-profile framebuffer
+(tex:define-texture-profile framebuffer
   (:texture-min-filter :linear)
   (:texture-mag-filter :linear)
   (:data nil))

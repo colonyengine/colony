@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.textures)
 
 (a:define-constant +sampler-type->texture-type+
     (u:dict :sampler-1d :texture-1d

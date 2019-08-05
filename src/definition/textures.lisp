@@ -1,21 +1,21 @@
 (in-package #:virality.contrib.textures)
 
-(v:define-texture framebuffer-color (:procedural framebuffer))
+(tex:define-texture framebuffer-color (:procedural framebuffer))
 
-(v:define-texture framebuffer-depth (:procedural framebuffer)
+(tex:define-texture framebuffer-depth (:procedural framebuffer)
   (:internal-format :depth-component)
   (:pixel-format :depth-component))
 
-(v:define-texture framebuffer-stencil (:procedural framebuffer)
+(tex:define-texture framebuffer-stencil (:procedural framebuffer)
   (:internal-format :stencil-index)
   (:pixel-format :stencil-index))
 
-(v:define-texture framebuffer-depth/stencil (:procedural framebuffer)
+(tex:define-texture framebuffer-depth/stencil (:procedural framebuffer)
   (:internal-format :depth24-stencil8)
   (:pixel-format :depth-stencil)
   (:data-type :unsigned-int-24-8))
 
-(v:define-texture debug-texture (:texture-2d clamp-all-edges)
+(tex:define-texture debug-texture (:texture-2d clamp-all-edges)
   ;; I can put overrides in here too specific to this texture.
   (:data #(((:core :texture) "debug-0.tiff")
            ((:core :texture) "debug-1.tiff")

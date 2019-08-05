@@ -47,6 +47,7 @@
    (:file "package-materials")
    (:file "package-prefab")
    (:file "package-shader")
+   (:file "package-textures")
    (:file "package-engine")
    (:file "package-nicknames")
    (:file "common")

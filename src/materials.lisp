@@ -358,12 +358,12 @@ corresponding in order to the input."
       ((or cons symbol)
        (v::rcache-lookup context
                          :texture
-                         (v::canonicalize-texture-name semantic-value)))
+                         (tex::canonicalize-texture-name semantic-value)))
       (vector
        (map 'vector
             (lambda (sv)
               (v::rcache-lookup
-               context :texture (v::canonicalize-texture-name sv)))
+               context :texture (tex::canonicalize-texture-name sv)))
             semantic-value)))))
 
 (defun gen-default-copy/sem->com ()
@@ -451,7 +451,7 @@ available for it so BIND-UNIFORMS cannot yet be called on it."
   "Given a SAMPLER-TYPE, like :sampler-2d-array, return the kind of texture-type
 that is appropriate for it, such as :texture-2d-array. Do this for all sampler
 types and texture types."
-  (u:if-found (texture-type (u:href v::+sampler-type->texture-type+
+  (u:if-found (texture-type (u:href tex::+sampler-type->texture-type+
                                     sampler-type))
               texture-type
               (error "Unknown sampler-type: ~a~%" sampler-type)))
@@ -485,7 +485,7 @@ or if it a vector of the same. Return NIL otherwise."
            (lambda (shader uniform-name texture)
              (gl:active-texture unit)
              (gl:bind-texture (sampler-type->texture-type glsl-type)
-                              (v::texid texture))
+                              (tex::texid texture))
              (gpu:uniform-int shader uniform-name unit)))
          (ecase glsl-type
            (:bool (lambda (shader uniform value)
@@ -512,7 +512,7 @@ or if it a vector of the same. Return NIL otherwise."
                    :do (gl:active-texture unit)
                        (gl:bind-texture
                         (sampler-type->texture-type (car glsl-type))
-                        (v::texid texture)))
+                        (tex::texid texture)))
              (gpu:uniform-int-array shader uniform-name units)))
          (ecase (car glsl-type)
            (:bool #'gpu:uniform-int-array)

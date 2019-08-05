@@ -75,7 +75,7 @@ tear-down procedure occurs when stopping the engine."
     (initialize-shaders core)
     (load-graphs core)
     (load-call-flows core)
-    (load-texture-descriptors core)
+    (tex::load-texture-descriptors core)
     (mat::load-materials core)
     (col::initialize-collider-system core)
     (make-scene-tree core)

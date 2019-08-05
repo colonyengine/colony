@@ -7,11 +7,15 @@
                  #:virality.geometry
                  #:virality.materials
                  #:virality.input
-                 #:virality.prefabs)
-
-  ;; common
+                 #:virality.prefabs
+                 #:virality.textures)
   (:export
    #:context
+   #:define-annotation
+   #:define-call-flow
+   #:define-graph
+   #:define-options
+   #:define-resources
    #:delta
    #:destroy-after-time
    #:destroy
@@ -40,11 +44,4 @@
 
   ;; definitions
   (:export
-   #:define-annotation
-   #:define-call-flow
-   #:define-component
-   #:define-graph
-   #:define-options
-   #:define-resources
-   #:define-texture
-   #:define-texture-profile))
+   #:define-component))

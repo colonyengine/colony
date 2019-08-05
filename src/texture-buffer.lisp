@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality.textures)
 
 ;;; NOTE: This code is likely to really change a lot, since texture buffer
 ;;; objects are implemented very differently than regular textures.

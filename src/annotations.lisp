@@ -17,9 +17,9 @@
              (error "Material override: :blocks not implemented yet."))
            ;; First, change to the new shader
            (when shader
-             (setf (shader copy-mat) shader))
+             (setf (mat::shader copy-mat) shader))
            (when instances
-             (setf (instances copy-mat) instances))
+             (setf (mat::instances copy-mat) instances))
            ;; Then process the initargs for the new shader.
            (when uniforms
              (unless (every (lambda (x) (= (length x) 2)) uniforms)
