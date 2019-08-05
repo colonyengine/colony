@@ -356,7 +356,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 (defmethod v:on-component-attach ((self player-movement) actor)
   (declare (ignore actor))
   (with-accessors ((actor v:actor) (transform transform)) self
-    (setf transform (v:actor-component-by-type actor 'comp:transform))))
+    (setf transform (v:component-by-type actor 'comp:transform))))
 
 
 (defmethod v:on-component-update ((self player-movement))
@@ -430,7 +430,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 (defmethod v:on-component-attach ((self line-mover) actor)
   (declare (ignore actor))
   (with-accessors ((actor v:actor) (transform transform)) self
-    (setf transform (v:actor-component-by-type actor 'comp:transform))))
+    (setf transform (v:component-by-type actor 'comp:transform))))
 
 (defmethod v:on-component-physics-update ((self line-mover))
   (with-accessors ((context v:context)
@@ -517,7 +517,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (allow-auto-destroy allow-auto-destroy)
                    (invulnerability-timer invulnerability-timer))
       self
-    (let ((other-damage-points (v:actor-component-by-type
+    (let ((other-damage-points (v:component-by-type
                                 (v:actor other-collider)
                                 'damage-points)))
 
@@ -612,9 +612,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    :parent parent)))
          ;; TODO: I'm expecting the new-projectile to have components here
          ;; without having gone through the flow. BAD!
-         (projectile-transform (v:actor-component-by-type new-projectile
-                                                          'comp:transform))
-         (projectile (v:actor-component-by-type new-projectile 'projectile)))
+         (projectile-transform (v:component-by-type new-projectile
+                                                    'comp:transform))
+         (projectile (v:component-by-type new-projectile 'projectile)))
 
     ;; Set the spatial configuration
     (setf (v3:z translation) (dl depth-layer))
@@ -686,9 +686,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (v::core context)
                    ;; TODO: prefab-descriptor is wrong here.
                    `((,prefab-name ,prefab-library)))))
-         (explosion-transform (v:actor-component-by-type new-explosion
-                                                          'comp:transform))
-         (explosion (v:actor-component-by-type new-explosion 'explosion)))
+         (explosion-transform (v:component-by-type new-explosion
+                                                   'comp:transform))
+         (explosion (v:component-by-type new-explosion 'explosion)))
 
     (setf
      ;; Configure the sprite.
@@ -696,11 +696,11 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
      (comp::frames (sprite explosion)) frames)
 
     (comp:scale explosion-transform scale
-                   :instant-p t :replace-p t)
+                :instant-p t :replace-p t)
     (comp:translate explosion-transform translation
-                       :instant-p t :replace-p t)
-    (comp:rotate explosion-transform rotation
                     :instant-p t :replace-p t)
+    (comp:rotate explosion-transform rotation
+                 :instant-p t :replace-p t)
 
     ;; By default explosions live a certain amount of time.
     (v:destroy-after-time new-explosion :ttl destroy-ttl)
@@ -709,12 +709,11 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 (defun possibly-make-explosion-at-actor (actor)
   (let* ((context (v:context actor))
-         (actor-transform (v:actor-component-by-type actor
-                                                      'comp:transform))
+         (actor-transform (v:component-by-type actor 'comp:transform))
          (parent-model (comp:model actor-transform))
          (parent-translation (m4:get-translation parent-model))
          (parent-rotation (q:from-mat4 parent-model))
-         (explosion (v:actor-component-by-type actor 'explosion)))
+         (explosion (v:component-by-type actor 'explosion)))
     (when explosion
       (make-explosion context
                       parent-translation
@@ -761,8 +760,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 (defmethod v:on-component-attach ((self gun) actor)
   (declare (ignore actor))
   (with-accessors ((actor v:actor) (emitter-transform emitter-transform)) self
-    (setf emitter-transform (v:actor-component-by-type
-                             actor 'comp:transform))))
+    (setf emitter-transform (v:component-by-type actor 'comp:transform))))
 
 (defmethod v:on-component-update ((self gun))
   (with-accessors ((context v:context)
@@ -868,7 +866,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       (return-from v:on-component-update))
 
     (let ((transform
-            (v:actor-component-by-type (v:actor self) 'comp:transform)))
+            (v:component-by-type (v:actor self) 'comp:transform)))
       (flet ((ransign (val &optional (offset 0))
                (+ (* (random (if (zerop val) 1 val))
                      (if (zerop (random 2)) 1 -1))
@@ -1004,7 +1002,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                        (v::core (v:context player-stable))
                        mockette-prefab
                        :parent stable)))
-           (transform (v:actor-component-by-type mockette 'comp:transform)))
+           (transform (v:component-by-type mockette 'comp:transform)))
 
       (comp:translate
        transform (v3:vec (* mockette-index (* dir width-increment)) -60 0))
@@ -1180,7 +1178,7 @@ SELF instance which must be a TAGS component."
 (defmethod tags-has-tag-p ((self v:actor) query-tag)
   "Return T if there is a tags component on the SELF actor and it also
 contains the QUERY-TAG."
-  (a:when-let ((tags-component (v:actor-component-by-type self 'tags)))
+  (a:when-let ((tags-component (v:component-by-type self 'tags)))
     (tags-has-tag-p tags-component query-tag)))
 
 ;; public API
@@ -1261,7 +1259,7 @@ NIL if no such list exists."
     (a:when-let ((actor-lvlmgr
                   (first (tags-find-actors-with-tag context :level-manager))))
       (let ((level-manager
-              (v:actor-component-by-type actor-lvlmgr 'level-manager)))
+              (v:component-by-type actor-lvlmgr 'level-manager)))
 
         (unless reported-to-level-manager
           (setf (level-manager planet) level-manager
@@ -1269,7 +1267,7 @@ NIL if no such list exists."
           (report-planet-alive (level-manager planet)))))))
 
 (defmethod v:on-component-attach ((self planet) actor)
-  (setf (transform self) (v:actor-component-by-type actor 'comp:transform)))
+  (setf (transform self) (v:component-by-type actor 'comp:transform)))
 
 (defmethod v:on-component-physics-update ((self planet))
   ;; This might fail for a few frames until things stabilize in the creation of
@@ -1327,8 +1325,7 @@ NIL if no such list exists."
                 (random-rotation
                   (q:orient :local :z (float (random (* 2 pi)) 1f0)))
                 ;; for now, use the same explosions as the planet itself
-                (explosion (v:actor-component-by-type (v:actor self)
-                                                       'explosion)))
+                (explosion (v:component-by-type (v:actor self) 'explosion)))
 
            ;; Fix it so I don't do all the work only to discard it if there
            ;; isn't an explosion component.
@@ -1759,8 +1756,7 @@ NIL if no such list exists."
                   :parent level-holder)))
 
     ;; find this level's level-manager and keep a reference to it
-    (let ((lvlmgr (v:actor-component-by-type current-level-ref
-                                              'level-manager)))
+    (let ((lvlmgr (v:component-by-type current-level-ref 'level-manager)))
       (setf level-manager lvlmgr))
 
     :player-spawn))

@@ -79,7 +79,7 @@
 
 (defmethod v:on-component-initialize ((self camera))
   (with-slots (%transform %fov-y) self
-    (setf %transform (v:actor-component-by-type (v:actor self) 'transform)
+    (setf %transform (v:component-by-type (v:actor self) 'transform)
           %fov-y (* %fov-y (/ pi 180)))
     (correct-camera-transform self)
     (make-projection self (mode self))

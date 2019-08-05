@@ -59,8 +59,7 @@
   (unless (visualize self)
     (return-from v:on-component-render))
   (a:when-let ((camera (v::active-camera (v:context self)))
-               (transform (v:actor-component-by-type
-                           (v:actor self) 'transform)))
+               (transform (v:component-by-type (v:actor self) 'transform)))
     (v:with-material (material self)
         (:model (model transform)
          :view (view camera)
@@ -115,10 +114,8 @@
             (<= distance/2 (radius face))))
       ;; The real path through this code, which transforms the collider into
       ;; world space appropriately.
-      (let* ((fist-transform
-               (v:actor-component-by-type (v:actor fist) 'transform))
-             (face-transform
-               (v:actor-component-by-type (v:actor face) 'transform))
+      (let* ((fist-transform (v:component-by-type (v:actor fist) 'transform))
+             (face-transform (v:component-by-type (v:actor face) 'transform))
              ;; Figure out where the center for these colliders are in world
              ;; space.
              (fist-collider-world-center

@@ -1,10 +1,7 @@
 (in-package #:virality.engine)
 
 (defclass component (queryable)
-  ((%context :reader context
-             :initarg :context
-             :initform nil)
-   (%type :reader component-type
+  ((%type :reader component-type
           :initarg :type)
    (%state :accessor state
            :initarg :state
@@ -151,6 +148,45 @@ DEFINE-COMPONENT form."
                (on-component-attach component actor))
               (:detached
                (on-component-detach component actor)))))
+
+(defun attach-component (actor component)
+  (let* ((core (core (context actor)))
+         (qualified-type (qualify-component core (component-type component))))
+    (detach-component actor component)
+    (enqueue-attach-event component actor)
+    (setf (actor component) actor
+          (u:href (actor::components actor) component) component)
+    (push component (u:href (actor::components-by-type actor) qualified-type))))
+
+(defun attach-components (actor &rest components)
+  (dolist (component components)
+    (attach-component actor component)))
+
+(defun detach-component (actor component)
+  "If COMPONENT is contained in the ACTOR. Remove it. Otherwise, do nothing."
+  (when (remhash component (actor::components actor))
+    (symbol-macrolet ((typed-components
+                        (u:href (actor::components-by-type actor)
+                                (component-type component))))
+      (enqueue-detach-event component actor)
+      (setf (actor component) nil)
+      (setf typed-components
+            (remove-if (lambda (x) (eq x component)) typed-components)))))
+
+(defun components-by-type (actor component-type)
+  "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
+  (u:href (actor::components-by-type actor)
+          (qualify-component (core (context actor)) component-type)))
+
+(defun component-by-type (actor component-type)
+  "Get the first component of type COMPONENT-TYPE for the given ACTOR.
+Returns the rest of the components as a secondary value if there are more than
+one of the same type."
+  (let* ((core (core (context actor)))
+         (qualified-type (qualify-component core component-type))
+         (components (components-by-type actor qualified-type)))
+    (values (first components)
+            (rest components))))
 
 ;;; User protocol
 

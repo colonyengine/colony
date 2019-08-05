@@ -81,7 +81,7 @@
                     :ef-physics-update)
       (comp:map-nodes
        (lambda (x) (comp:transform-node core x))
-       (actor-component-by-type (scene-tree core) 'comp:transform))
+       (component-by-type (scene-tree core) 'comp:transform))
       (execute-flow core
                     :default
                     'active-phase

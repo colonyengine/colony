@@ -28,6 +28,7 @@
    (:u :golden-utils)
    (:log :verbose)
    (:v3 :origin.vec3)
+   (:actor :virality.actors)
    (:gpu :virality.gpu)
    (:img :virality.image)
    (:in :virality.input)
@@ -35,6 +36,11 @@
    (:prefab :virality.prefabs)
    (:contrib.tex :virality.contrib.textures)
    (:contrib.mat :virality.contrib.materials))
+
+  (:virality.actors
+   (:u :golden-utils)
+   (:v :virality.engine)
+   (:comp :virality.components))
 
   (:virality.components
    (:a :alexandria)
@@ -77,6 +83,7 @@
    (:u :golden-utils)
    (:log :verbose)
    (:v :virality.engine)
+   (:actor :virality.actors)
    (:comp :virality.components))
 
   (:virality.contrib.textures

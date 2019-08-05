@@ -119,7 +119,7 @@
   (map-nodes
    (lambda (x)
      (resolve-model x (v::alpha (v::frame-manager core))))
-   (v:actor-component-by-type (v::scene-tree core) 'transform)))
+   (v:component-by-type (v::scene-tree core) 'transform)))
 
 (defmethod v:make-component (context (component-type (eql 'transform)) &rest args)
   (let ((instance (make-instance component-type

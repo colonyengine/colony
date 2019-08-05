@@ -53,7 +53,7 @@
   (let* ((actor (v:actor self))
          (test-type (test-type self))
          (actor-transform
-           (v:actor-component-by-type actor 'comp:transform)))
+           (v:component-by-type actor 'comp:transform)))
     (unless (u:href (test-performed self) test-type)
       (let ((forward (comp:transform-forward actor-transform))
             (backward (comp:transform-backward actor-transform))
@@ -90,7 +90,7 @@
   "Test if the TRANSFORM-POINT and INVERSE-TRANSFORM-POINT work."
   (let* ((actor (v:actor self))
          (actor-transform
-           (v:actor-component-by-type actor 'comp:transform))
+           (v:component-by-type actor 'comp:transform))
          (object-space-point (v3:vec 1 0 0))
          (world-space-point (v3:vec 1 3 1))
          (local->world
@@ -125,7 +125,7 @@
   "Test if the TRANSFORM-VECTOR and INVERSE-TRANSFORM-VECTOR work."
   (let* ((actor (v:actor self))
          (actor-transform
-           (v:actor-component-by-type actor 'comp:transform))
+           (v:component-by-type actor 'comp:transform))
          (object-space-vector (v3:vec 2 2 0))
          (world-space-vector (v3:vec -4 4 0))
          (local->world
@@ -160,7 +160,7 @@
 (defun test-transform-direction-api (self)
   (let* ((actor (v:actor self))
          (actor-transform
-           (v:actor-component-by-type actor 'comp:transform))
+           (v:component-by-type actor 'comp:transform))
          ;; NOTE: these must be normalized for the test. I specified it this way
          ;; so it would be easier to see in your mind's eye.
          (object-space-direction (v3:normalize (v3:vec 1 1 0)))

@@ -12,11 +12,8 @@
 
 (defmethod v:on-component-initialize ((self simple-movement))
   (with-slots (%transform) self
-    (setf %transform (v:actor-component-by-type (v:actor self) 'comp:transform))
-    (comp:translate %transform
-                       (v3:vec -400 0 0)
-                       :replace-p t
-                       :instant-p t)))
+    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))
+    (comp:translate %transform (v3:vec -400 0 0) :replace-p t :instant-p t)))
 
 (defmethod v:on-component-update ((self simple-movement))
   (u:mvlet* ((context (v:context self))
@@ -48,8 +45,7 @@
 
 (defmethod v:on-component-initialize ((self shot-mover))
   (with-slots (%transform) self
-    (setf %transform (v:actor-component-by-type (v:actor self)
-                                                'comp:transform))))
+    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))))
 
 (defmethod v:on-component-update ((self shot-mover))
   (comp:translate
@@ -66,8 +62,7 @@
 
 (defmethod v:on-component-initialize ((self shot-emitter))
   (with-slots (%transform) self
-    (setf %transform (v:actor-component-by-type
-                      (v:actor self) 'comp:transform))))
+    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))))
 
 (defmethod v:on-component-update ((self shot-emitter))
   (let ((context (v:context self)))
@@ -94,7 +89,7 @@
                                                    :uniforms
                                                    ((:sprite.sampler sprites)))
                                        :mode :sprite)))
-        (v:attach-multiple-components
+        (v:attach-components
          new-actor transform shot-mover sprite render)
         (v:spawn-actor new-actor)
         (v:destroy-after-time new-actor :ttl 2)))))

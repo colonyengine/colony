@@ -11,7 +11,7 @@
 (defmethod v:on-component-initialize ((self actions))
   (with-slots (%manager) self
     (setf %manager (v::make-action-manager
-                    (v:actor-component-by-type (v:actor self) 'render)
+                    (v:component-by-type (v:actor self) 'render)
                     (default-actions self)))))
 
 (defmethod v:on-component-update ((self actions))

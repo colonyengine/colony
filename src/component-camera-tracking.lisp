@@ -8,7 +8,7 @@
 
 (defmethod v:on-component-initialize ((self tracking-camera))
   (with-slots (%slave) self
-    (setf %slave (v:actor-component-by-type (v:actor self) 'camera))
+    (setf %slave (v:component-by-type (v:actor self) 'camera))
     (camera-target-actor self (target-actor self))))
 
 (defmethod v:on-component-update ((self tracking-camera))
@@ -23,4 +23,4 @@
   (with-slots (%target-transform) camera
     (setf (target-actor camera) actor)
     (when actor
-      (setf %target-transform (v:actor-component-by-type actor 'transform)))))
+      (setf %target-transform (v:component-by-type actor 'transform)))))

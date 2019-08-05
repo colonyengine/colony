@@ -20,22 +20,22 @@
               (:static-mesh
                (lambda ()
                  (geo::draw-static-geometry
-                  (data (v:actor-component-by-type actor 'static-mesh))
+                  (data (v:component-by-type actor 'static-mesh))
                   instances)))
               (:dynamic-mesh
                (lambda ()
                  (geo::draw-dynamic-geometry
-                  (geometry (v:actor-component-by-type actor 'dynamic-mesh))
+                  (geometry (v:component-by-type actor 'dynamic-mesh))
                   instances)))
               (:sprite
                (lambda ()
                  (draw-sprite
-                  (v:actor-component-by-type (v:actor render) 'sprite)
+                  (v:component-by-type (v:actor render) 'sprite)
                   instances))))))))
 
 (defmethod v:on-component-initialize ((self render))
   (with-slots (%transform) self
-    (setf %transform (v:actor-component-by-type (v:actor self) 'transform))
+    (setf %transform (v:component-by-type (v:actor self) 'transform))
     (set-draw-method self)))
 
 (defmethod v:on-component-render ((self render))

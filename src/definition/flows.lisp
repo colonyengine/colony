@@ -41,7 +41,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-preinit-db (tables core)))))
-                    (action #'actor/preinit->init)
+                    (action #'actor::preinit->init)
                     (transition protocol-initialize-components))
         ;; 3
         (flow-state protocol-initialize-components :reset ()
@@ -65,7 +65,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-init-db (tables core)))))
-                    (action #'actor/init->active)
+                    (action #'actor::init->active)
                     (transition while-initialize-phase))
         ;; 6
         (flow-state while-initialize-phase :reset ()
@@ -223,7 +223,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-predestroy-view (tables core)))))
-                    (action #'actor/init-or-active->destroy)
+                    (action #'actor::init-or-active->destroy)
                     (transition destroy-actor-children))
         ;; 3
         (flow-state destroy-actor-children :reset ()
@@ -232,7 +232,7 @@
                        (values :identity-policy
                                (u:hash-keys (actor-destroy-db (tables core))))))
                     ;; NOTE: See selector for this flow-state.
-                    (action #'actor/destroy-descendants)
+                    (action #'actor::destroy-descendants)
                     (transition decrement-component-destroy-timer))
         ;; 4 A
         (flow-state decrement-component-destroy-timer :reset ()
@@ -248,7 +248,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-predestroy-view (tables core)))))
-                    (action #'actor/countdown-to-destruction)
+                    (action #'actor::countdown-to-destruction)
                     (transition pending-destroy-tasks))
         ;; 5
         (flow-state pending-destroy-tasks :reset ()
@@ -298,7 +298,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-destroy-db (tables core)))))
-                    (action #'actor/disconnect)
+                    (action #'actor::disconnect)
                     (transition release-components))
         ;; 8
         (flow-state release-components :reset ()
@@ -314,7 +314,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-destroy-db (tables core)))))
-                    (action #'actor/destroy->released)
+                    (action #'actor::destroy->released)
                     (transition restart-predestroy-phase))
         ;; 10
         (flow-state restart-predestroy-phase :reset ()

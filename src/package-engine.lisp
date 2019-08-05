@@ -2,7 +2,8 @@
 
 (uiop:define-package #:virality.engine
   (:use #:cl)
-  (:mix-reexport #:virality.geometry
+  (:mix-reexport #:virality.actors
+                 #:virality.geometry
                  #:virality.input
                  #:virality.prefabs)
 
@@ -26,19 +27,12 @@
    #:repeat-p
    #:replace-action)
 
-  ;; actors
-  (:export
-   #:actor
-   #:make-actor
-   #:spawn-actor)
-
   ;; components
   (:export
-   #:actor-component-by-type
-   #:actor-components-by-type
+   #:component-by-type
+   #:components-by-type
    #:attach-component
    #:attach-components
-   #:attach-multiple-components
    #:make-component
    #:on-component-attach
    #:on-component-detach

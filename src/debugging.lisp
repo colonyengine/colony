@@ -5,7 +5,7 @@
   (labels ((map-scene-tree (func parent &optional (level 0))
              (funcall func parent level)
              (let ((parent-transform
-                     (actor-component-by-type parent 'comp:transform)))
+                     (component-by-type parent 'comp:transform)))
                (dolist (child (comp:children parent-transform))
                  (map-scene-tree func (actor child) (1+ level))))))
     (map-scene-tree
@@ -16,7 +16,7 @@
          ;; easier to read.
          (format t "~v@<~d~> ~v,,,v<~>Actor: ~s~%"
                  prefix-level level level #\Space (display-id actor))
-         (u:do-hash-values (component (components actor))
+         (u:do-hash-values (component (actor::components actor))
            (format t " ~v,,,v<~> + (~(~a~):~(~a~)) [~s]~%"
                    ;; 5 for the left justified
                    (+ prefix-level level) #\space

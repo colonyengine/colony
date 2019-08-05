@@ -217,7 +217,7 @@
 
 (defmethod v:on-component-initialize ((self shader-sweep))
   (with-slots (%renderer) self
-    (setf %renderer (v:actor-component-by-type (v:actor self) 'comp:render))))
+    (setf %renderer (v:component-by-type (v:actor self) 'comp:render))))
 
 (defmethod v:on-component-update ((self shader-sweep))
   (with-slots (%material %material-retrieved-p) self
