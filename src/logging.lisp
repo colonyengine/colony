@@ -2,8 +2,8 @@
 
 (defun enable-logging (core)
   (let ((context (context core)))
-    (unless (log:thread v:*global-controller*)
-      (log:start v:*global-controller*))
+    (unless (log:thread log:*global-controller*)
+      (log:start log:*global-controller*))
     (when (option context :log-repl-enabled)
       (setf (log:repl-level) (option context :log-level)
             (log:repl-categories) (option context :log-repl-categories)))

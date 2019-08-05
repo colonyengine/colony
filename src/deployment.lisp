@@ -6,7 +6,7 @@
   #+sbcl
   (progn
     (setf *deployed-p* t)
-    (log:stop v:*global-controller*)
+    (log:stop log:*global-controller*)
     (sb-ext:save-lisp-and-die
      file-name
      :toplevel (lambda () (start-engine :scene scene))
