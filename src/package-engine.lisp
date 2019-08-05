@@ -28,11 +28,13 @@
    #:with-shared-storage)
 
   ;; components
+  ;; TODO: place each component type in a separate package
   (:export
-   #:component-by-type
-   #:components-by-type
    #:attach-component
    #:attach-components
+   #:component-by-type
+   #:components-by-type
+   #:define-component
    #:make-component
    #:on-component-attach
    #:on-component-detach
@@ -40,8 +42,4 @@
    #:on-component-initialize
    #:on-component-physics-update
    #:on-component-render
-   #:on-component-update)
-
-  ;; definitions
-  (:export
-   #:define-component))
+   #:on-component-update))
