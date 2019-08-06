@@ -5,9 +5,9 @@
   :maintainer ("Michael Fiano <mail@michaelfiano.com>"
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
-  :homepage "https://github.com/hackertheory/virality-engine"
-  :bug-tracker "https://github.com/hackertheory/virality-engine/issues"
-  :source-control (:git "https://github.com/hackertheory/virality-engine.git")
+  :homepage "https://github.com/hackertheory/ViralityEngine"
+  :bug-tracker "https://github.com/hackertheory/ViralityEngine/issues"
+  :source-control (:git "https://github.com/hackertheory/ViralityEngine.git")
   :encoding :utf-8
   :depends-on (#:alexandria
                #:babel

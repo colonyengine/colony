@@ -17,7 +17,7 @@
 
 (defun load-options (core)
   (let ((user-options-path (uiop:merge-pathnames*
-                            #p"virality-engine/user.conf"
+                            #p"ViralityEngine/user.conf"
                             (uiop:xdg-config-home))))
     (when (uiop:file-exists-p user-options-path)
       (setf (meta 'options/user)
