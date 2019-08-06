@@ -24,8 +24,11 @@
    #:frame-time
    #:id
    #:option
+   #:start-engine
+   #:stop-engine
    #:total-time
    #:with-shared-storage)
+  ;; I'm working on these still - MF
   (:export
    #:attach-component
    #:attach-components
