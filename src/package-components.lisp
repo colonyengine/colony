@@ -62,22 +62,22 @@
 (defpackage #:virality.components.transform
   (:use #:cl)
   (:export
+   #:add-child
    #:inverse-transform-direction
    #:inverse-transform-point
    #:inverse-transform-vector
    #:local
    #:model
+   #:remove-child
    #:rotate
    #:scale
    #:transform
-   #:transform-add-child
    #:transform-backward
    #:transform-direction
    #:transform-down
    #:transform-forward
    #:transform-left
    #:transform-point
-   #:transform-remove-child
    #:transform-right
    #:transform-up
    #:transform-vector

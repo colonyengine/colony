@@ -59,11 +59,11 @@
    (%model :reader model
            :initform (m4:id))))
 
-(defun transform-add-child (parent child)
+(defun add-child (parent child)
   (pushnew child (children parent))
   (setf (parent child) parent))
 
-(defun transform-remove-child (parent child)
+(defun remove-child (parent child)
   (setf (children parent) (remove-if
                            (lambda (x)
                              (eq x child))
