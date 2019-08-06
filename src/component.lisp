@@ -20,6 +20,8 @@
                                :initform (queues:make-queue :simple-queue)))
   (:metaclass component-class))
 
+(v::clear-annotations 'component)
+
 (defun qualify-component (core component-type)
   "This function tries to resolve the COMPONENT-TYPE symbol into a potentially
 different packaged symbol of the same name that corresponds to a component
