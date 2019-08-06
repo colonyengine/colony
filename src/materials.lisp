@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.materials)
 
 ;; Held in core, the material database for all materials everywhere.
 (defclass materials-table ()
@@ -10,41 +10,39 @@
               :initform (u:dict))))
 
 ;;; Internal Materials-table API
-(defun %make-materials-table (&rest init-args)
+(defun make-materials-table (&rest init-args)
   (apply #'make-instance 'materials-table init-args))
 
 (defun %lookup-material (material-name core)
   "Find a material by its ID in CORE and return a gethash-like values. If the
-material isn't there, return the 'fl.materials:missing-material. The return
-value is two values, the first is a material instance, and the second is T if
-the material being looked up was actually found, or NIL if it wasn't (and the
+material isn't there, return the 'x/mat:missing-material. The return value is
+two values, the first is a material instance, and the second is T if the
+material being looked up was actually found, or NIL if it wasn't (and the
 missing material used)."
-  (symbol-macrolet ((table (material-table (materials core))))
+  (symbol-macrolet ((table (material-table (v::materials core))))
     (u:if-found (material (u:href table material-name))
                 material
-                (u:href table
-                        (a:ensure-symbol 'missing-material 'fl.materials)))))
+                (u:href table (a:ensure-symbol "MISSING-MATERIAL" :x/mat)))))
 
 (defun %add-material (material core)
   "Add the MATERIAL by its id into CORE."
-  (setf (u:href (material-table (materials core)) (id material))
-        material))
+  (setf (u:href (material-table (v::materials core)) (id material)) material))
 
 (defun %remove-material (material core)
   "Remove the MATERIAL by its id from CORE."
-  (remhash (id material) (material-table (materials core))))
+  (remhash (id material) (material-table (v::materials core))))
 
 (defun %map-materials (func core)
   "Map the function FUNC, which expects a material, across all materials in
 CORE. Return a list of the return values of the FUNC."
   (let (results)
-    (u:do-hash-values (v (material-table (materials core)))
+    (u:do-hash-values (v (material-table (v::materials core)))
       (push (funcall func v) results))
     (nreverse results)))
 
 ;; export PUBLIC API
 (defun lookup-material (id context)
-  (%lookup-material id (core context)))
+  (%lookup-material id (v::core context)))
 
 (defclass material-value ()
   ;; This is a back reference to the material that owns this
@@ -114,7 +112,7 @@ CORE. Return a list of the return values of the FUNC."
            ;; Copier func lambda list is (semantic-value context new-mat)
            :semantic-value (funcall (copier material-uniform-value)
                                     (semantic-value material-uniform-value)
-                                    (context (core new-mat))
+                                    (v::context (core new-mat))
                                     new-mat)
            :transformer (transformer material-uniform-value)
            :copier (copier material-uniform-value)
@@ -146,11 +144,10 @@ CORE. Return a list of the return values of the FUNC."
    ;; The buffer-name to bind with the block-alias for which this is a value.
    (%binding-buffer :accessor binding-buffer
                     :initarg :binding-buffer)
-   ;; TODO: Add in range information for range binding
-   ;; If the binding-policy is :once, then this slot represents if we did the
-   ;; binding work. Whenever this goes nil, and the policy is once, we'll rebind
-   ;; the block-alias to the binding-buffer name and set bound-once-p to T
-   ;; again.
+   ;; TODO: Add in range information for range binding. If the binding-policy is
+   ;; :once, then this slot represents if we did the binding work. Whenever this
+   ;; goes nil, and the policy is once, we'll rebind the block-alias to the
+   ;; binding-buffer name and set bound-once-p to T again.
    (%bound-once-p :accessor bound-once-p
                   :initarg :bound-once-p
                   :initform nil)))
@@ -181,7 +178,7 @@ CORE. Return a list of the return values of the FUNC."
   (apply #'make-instance 'material-profile init-args))
 
 (defun %add-material-profile (profile core)
-  (setf (u:href (profiles (materials core)) (name profile)) profile))
+  (setf (u:href (profiles (v::materials core)) (name profile)) profile))
 
 (defclass material ()
   ((%id :reader id
@@ -243,10 +240,10 @@ CORE. Return a list of the return values of the FUNC."
 
 (defun %deep-copy-material (current-mat new-mat-name
                             &key (error-p t) (error-value nil))
-  (when (u:href (material-table (materials (core current-mat)))
+  (when (u:href (material-table (v::materials (core current-mat)))
                 new-mat-name)
     (if error-p
-        (error "Cannot copy the material ~A to new name ~A because the new ~
+        (error "Cannot copy the material ~a to new name ~a because the new ~
                 name already exists!"
                (id current-mat) new-mat-name)
         (return-from %deep-copy-material error-value)))
@@ -269,52 +266,42 @@ CORE. Return a list of the return values of the FUNC."
                           :blocks new-blocks
                           :active-texture-unit new-active-texture-unit)))
     ;; Now we copy over the uniforms
-    (maphash
-     (lambda (uniform-name material-uniform-value)
-       (setf (u:href new-uniforms uniform-name)
-             (%deep-copy-material-uniform-value material-uniform-value
-                                                new-mat)))
-     (uniforms current-mat))
+    (u:do-hash (k v (uniforms current-mat))
+      (setf (u:href new-uniforms k)
+            (%deep-copy-material-uniform-value v new-mat)))
     ;; Now we copy over the blocks.
-    (maphash
-     (lambda (block-alias-name material-block-value)
-       (setf (u:href new-blocks block-alias-name)
-             (%deep-copy-material-block-value material-block-value new-mat)))
-     (blocks current-mat))
+    (u:do-hash (k v (blocks current-mat))
+      (setf (u:href new-blocks k)
+            (%deep-copy-material-block-value v new-mat)))
     ;; Finally, insert into core so everyone can see it.
     (%add-material new-mat (core new-mat))
     new-mat))
 
 (defun bind-material-uniforms (mat)
   (when mat
-    (maphash
-     (lambda (uniform-name material-uniform-value)
-       (when (functionp (semantic-value material-uniform-value))
-         (execute-composition/semantic->computed material-uniform-value))
-       (let ((shader (shader (material material-uniform-value)))
-             (cv (computed-value material-uniform-value)))
-         (funcall (binder material-uniform-value) shader uniform-name cv)))
-     (uniforms mat))))
+    (u:do-hash (k v (uniforms mat))
+      (when (functionp (semantic-value v))
+        (execute-composition/semantic->computed v))
+      (let ((shader (shader (material v)))
+            (cv (computed-value v)))
+        (funcall (binder v) shader k cv)))))
 
 (defun bind-material-buffers (mat)
   (when mat
-    (maphash
-     (lambda (block-alias-name material-block-value)
-       (declare (ignore block-alias-name material-block-value))
-       ;; TODO: we probably need to call into core buffer binding management
-       ;; services to perform the binding right here.
-       nil)
-     (blocks mat))))
+    (u:do-hash (k v (blocks mat))
+      (declare (ignore k v))
+      ;; TODO: we probably need to call into core buffer binding management
+      ;; services to perform the binding right here.
+      nil)))
 
 ;; export PUBLIC API
 (defun bind-material (mat)
   (bind-material-uniforms mat)
   (bind-material-buffers mat))
 
-;; export PUBLIC API
 ;; TODO: these modify the semantic-buffer which then gets processed into a new
 ;; computed buffer.
-(defun mat-uniform-ref (mat uniform-var)
+(defun uniform-ref (mat uniform-var)
   (a:if-let ((material-uniform-value (u:href (uniforms mat) uniform-var)))
     (semantic-value material-uniform-value)
     (error "Material ~s does not have the referenced uniform ~s.~%~
@@ -322,10 +309,9 @@ CORE. Return a list of the return values of the FUNC."
             profile settings."
            (id mat) uniform-var)))
 
-;; export PUBLIC API
 ;; We can only set the semantic-value, which gets automatically upgraded to the
 ;; computed-value upon setting.
-(defun (setf mat-uniform-ref) (new-val mat uniform-var)
+(defun (setf uniform-ref) (new-val mat uniform-var)
   (a:if-let ((material-uniform-value (u:href (uniforms mat) uniform-var)))
     (progn
       ;; TODO: Need to do something with the old computed value since it might
@@ -341,8 +327,7 @@ CORE. Return a list of the return values of the FUNC."
 ;; export PUBLIC API
 ;; This is read only, it is the computed value in the material.
 (defun mat-computed-uniform-ref (mat uniform-var)
-  (let ((material-uniform-value (u:href (uniforms mat) uniform-var)))
-    (computed-value material-uniform-value)))
+  (computed-value (u:href (uniforms mat) uniform-var)))
 
 ;; export PUBLIC API
 ;; current-mat-name must exist.
@@ -370,19 +355,20 @@ corresponding in order to the input."
     (declare (ignore mat))
     (etypecase semantic-value
       ((or cons symbol)
-       (rcache-lookup context
-                      :texture
-                      (canonicalize-texture-name semantic-value)))
+       (v::rcache-lookup context
+                         :texture
+                         (tex::canonicalize-texture-name semantic-value)))
       (vector
        (map 'vector
             (lambda (sv)
-              (rcache-lookup context :texture (canonicalize-texture-name sv)))
+              (v::rcache-lookup
+               context :texture (tex::canonicalize-texture-name sv)))
             semantic-value)))))
 
 (defun gen-default-copy/sem->com ()
   (lambda (semantic-value context mat)
     (declare (ignore context mat))
-    (copy-thing semantic-value)))
+    (v::copy-thing semantic-value)))
 
 (defun identity/for-material-custom-functions (semval context material)
   "This is effectively IDENTITY in that it returns SEMVAL unchanged, but accepts
@@ -428,11 +414,11 @@ and ignores the CONTEXT and MATERIAL arguments."
     ;; convert the overlay names to concrete overlay instances
     (let ((concrete-profiles
             (loop :for po-name :in (profile-overlay-names mat)
-                  :for inst = (u:href (profiles (materials core)) po-name)
+                  :for inst = (u:href (profiles (v::materials core)) po-name)
                   :if inst
                     :collect inst
                   :else
-                    :do (error "Material profile name: ~S doesn't exist."
+                    :do (error "Material profile name: ~s doesn't exist."
                                po-name))))
       ;; Insert the uniforms in the profile, overwriting whatever was present
       ;; for that uniform if it existed in a previous uniform.
@@ -464,9 +450,10 @@ available for it so BIND-UNIFORMS cannot yet be called on it."
   "Given a SAMPLER-TYPE, like :sampler-2d-array, return the kind of texture-type
 that is appropriate for it, such as :texture-2d-array. Do this for all sampler
 types and texture types."
-  (u:if-found (texture-type (u:href +sampler-type->texture-type+ sampler-type))
+  (u:if-found (texture-type (u:href tex::+sampler-type->texture-type+
+                                    sampler-type))
               texture-type
-              (error "Unknown sampler-type: ~A~%" sampler-type)))
+              (error "Unknown sampler-type: ~a~%" sampler-type)))
 
 (defun sampler-p (glsl-type)
   "Return T if the GLSL-TYPE is a sampler like :sampler-2d or :sampler-buffer,
@@ -497,23 +484,23 @@ or if it a vector of the same. Return NIL otherwise."
            (lambda (shader uniform-name texture)
              (gl:active-texture unit)
              (gl:bind-texture (sampler-type->texture-type glsl-type)
-                              (texid texture))
-             (fl.gpu:uniform-int shader uniform-name unit)))
+                              (tex::texid texture))
+             (gpu:uniform-int shader uniform-name unit)))
          (ecase glsl-type
            (:bool (lambda (shader uniform value)
-                    (fl.gpu:uniform-int shader uniform (if value 1 0))))
-           (:int #'fl.gpu:uniform-int)
-           (:float #'fl.gpu:uniform-float)
-           (:vec2 #'fl.gpu:uniform-vec2)
-           (:vec3 #'fl.gpu:uniform-vec3)
-           (:vec4 #'fl.gpu:uniform-vec4)
-           (:mat2 #'fl.gpu:uniform-mat2)
-           (:mat3 #'fl.gpu:uniform-mat3)
-           (:mat4 #'fl.gpu:uniform-mat4))))
+                    (gpu:uniform-int shader uniform (if value 1 0))))
+           (:int #'gpu:uniform-int)
+           (:float #'gpu:uniform-float)
+           (:vec2 #'gpu:uniform-vec2)
+           (:vec3 #'gpu:uniform-vec3)
+           (:vec4 #'gpu:uniform-vec4)
+           (:mat2 #'gpu:uniform-mat2)
+           (:mat3 #'gpu:uniform-mat3)
+           (:mat4 #'gpu:uniform-mat4))))
     (cons
      (if (sampler-p (car glsl-type))
          (let* ((units
-                  (loop :for i :from 0 :below (cdr glsl-type)
+                  (loop :for i :below (cdr glsl-type)
                         :collect (prog1 (active-texture-unit material)
                                    (incf (active-texture-unit material)))))
                 (units (coerce units 'vector)))
@@ -524,20 +511,20 @@ or if it a vector of the same. Return NIL otherwise."
                    :do (gl:active-texture unit)
                        (gl:bind-texture
                         (sampler-type->texture-type (car glsl-type))
-                        (texid texture)))
-             (fl.gpu:uniform-int-array shader uniform-name units)))
+                        (tex::texid texture)))
+             (gpu:uniform-int-array shader uniform-name units)))
          (ecase (car glsl-type)
-           (:bool #'fl.gpu:uniform-int-array)
-           (:int #'fl.gpu:uniform-int-array)
-           (:float #'fl.gpu:uniform-float-array)
-           (:vec2 #'fl.gpu:uniform-vec2-array)
-           (:vec3 #'fl.gpu:uniform-vec3-array)
-           (:vec4 #'fl.gpu:uniform-vec4-array)
-           (:mat2 #'fl.gpu:uniform-mat2-array)
-           (:mat3 #'fl.gpu:uniform-mat3-array)
-           (:mat4 #'fl.gpu:uniform-mat4-array))))
+           (:bool #'gpu:uniform-int-array)
+           (:int #'gpu:uniform-int-array)
+           (:float #'gpu:uniform-float-array)
+           (:vec2 #'gpu:uniform-vec2-array)
+           (:vec3 #'gpu:uniform-vec3-array)
+           (:vec4 #'gpu:uniform-vec4-array)
+           (:mat2 #'gpu:uniform-mat2-array)
+           (:mat3 #'gpu:uniform-mat3-array)
+           (:mat4 #'gpu:uniform-mat4-array))))
     (t
-     (error "Cannot determine binder function for glsl-type: ~S~%"
+     (error "Cannot determine binder function for glsl-type: ~s~%"
             glsl-type))))
 
 (defun execute-composition/semantic->computed (material-uniform-value)
@@ -545,7 +532,7 @@ or if it a vector of the same. Return NIL otherwise."
   ;; semantic-value and end with the computed-value. If the semantic-value is
   ;; actually a function, then invoke it and get the juice it produced and shove
   ;; it down the pipeline.
-  (let ((context (context (core (material material-uniform-value))))
+  (let ((context (v:context (core (material material-uniform-value))))
         (mat (material material-uniform-value))
         (sv (semantic-value material-uniform-value)))
     (loop :with value = (if (functionp sv)
@@ -557,7 +544,7 @@ or if it a vector of the same. Return NIL otherwise."
 
 (defun annotate-material-uniform (uniform-name uniform-value material
                                   shader-program)
-  (u:if-found (type-info (u:href (fl.gpu:uniforms shader-program)
+  (u:if-found (type-info (u:href (gpu:uniforms shader-program)
                                  uniform-name))
               (let ((uniform-type (u:href type-info :type)))
                 ;; 1. Find the uniform in the shader-program and get its
@@ -592,11 +579,8 @@ or if it a vector of the same. Return NIL otherwise."
                      (id material) uniform-name (shader material))))
 
 (defun annotate-material-uniforms (material shader-program)
-  (maphash
-   (lambda (uniform-name uniform-value)
-     (annotate-material-uniform
-      uniform-name uniform-value material shader-program))
-   (uniforms material)))
+  (u:do-hash (k v (uniforms material))
+    (annotate-material-uniform k v material shader-program)))
 
 (defun annotate-material-block (alias-name block-value material shader-program
                                 core)
@@ -604,24 +588,21 @@ or if it a vector of the same. Return NIL otherwise."
   ;; 1. Validate that this material-block-value is present in the shaders in
   ;; core
   ;; TODO: 2. Create the block-name-alias, but only once.
-  (unless (fl.gpu:find-block alias-name)
-    (fl.gpu:create-block-alias (storage-type block-value)
-                               (block-name block-value)
-                               (shader material)
-                               alias-name)))
+  (unless (gpu:find-block alias-name)
+    (gpu:create-block-alias (storage-type block-value)
+                            (block-name block-value)
+                            (shader material)
+                            alias-name)))
 
 (defun annotate-material-blocks (material shader-program core)
   ;; TODO: Ensure that all :block-alias names are unique in the material
-  (maphash
-   (lambda (alias-name block-value)
-     (annotate-material-block
-      alias-name block-value material shader-program core))
-   (blocks material)))
+  (u:do-hash (k v (blocks material))
+    (annotate-material-block k v material shader-program core)))
 
 (defun resolve-material (material-instance core)
   "Convert semantic-values to computed-values. Type check the uniforms against
 the shader program in the material."
-  (u:if-found (shader-program (u:href (shaders core)
+  (u:if-found (shader-program (u:href (v::shaders core)
                                       (shader material-instance)))
               (progn
                 (annotate-material-uniforms material-instance shader-program)
@@ -656,24 +637,24 @@ be executed after all the shader programs have been compiled."
   "Define a set of uniform and block shader attribute defaults that can be
 applied in an overlay manner while defining a material."
   (a:with-gensyms (profile)
-    (let ((definition '(%fl:meta 'material-profiles)))
+    (let ((definition '(v::meta 'material-profiles)))
       (destructuring-bind (&key uniforms blocks) body
         `(let ((,profile ,(parse-material-profile name uniforms blocks)))
            (unless ,definition
-             (setf (%fl:meta 'material-profiles) (u:dict)))
+             (setf ,definition (u:dict)))
            (setf (u:href ,definition (name ,profile)) ,profile))))))
 
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
   (a:with-gensyms (func)
-    (let ((definition '(%fl:meta 'materials)))
+    (let ((definition '(v::meta 'materials)))
       (destructuring-bind (&key shader profiles (instances 1) attributes
                              uniforms blocks)
           body
         `(let ((,func ,(parse-material name shader instances attributes profiles
                                        uniforms blocks)))
            (unless ,definition
-             (setf (%fl:meta 'materials) (u:dict)))
+             (setf ,definition (u:dict)))
            (setf (u:href ,definition ',name) ,func)
            (export ',name))))))
 
@@ -681,7 +662,7 @@ applied in an overlay manner while defining a material."
 (defmacro with-depth-function (material &body body)
   `(destructuring-bind (&key depth) (attributes ,material)
      (if depth
-         (let ((old-depth (gl:get-enum :depth-func)))
+         (let ((old-depth (v::get-gpu-parameter :depth-func)))
            (unwind-protect
                 (progn
                   (gl:depth-func depth)
@@ -689,28 +670,20 @@ applied in an overlay manner while defining a material."
              (gl:depth-func old-depth)))
          (progn ,@body))))
 
-(defmacro using-material (material (&rest bindings) &body body)
+(defmacro with-material (material (&rest bindings) &body body)
   (a:with-gensyms (material-ref)
     `(let ((,material-ref ,material))
-       (fl.gpu:with-shader (shader ,material-ref)
+       (gpu:with-shader (shader ,material-ref)
          (setf ,@(loop :for (k v) :on bindings :by #'cddr
-                       :collect `(mat-uniform-ref ,material-ref ,k)
+                       :collect `(uniform-ref ,material-ref ,k)
                        :collect v))
          (bind-material ,material-ref)
          (with-depth-function ,material-ref
            ,@body)))))
 
 (defun load-materials (core)
-  (u:do-hash-values (profile (%fl:meta 'material-profiles))
+  (u:do-hash-values (profile (v::meta 'material-profiles))
     (%add-material-profile profile core))
-  (u:do-hash-values (material-func (%fl:meta 'materials))
+  (u:do-hash-values (material-func (v::meta 'materials))
     (%add-material (funcall material-func core) core))
   (resolve-all-materials core))
-
-;;; Helper functions
-
-(in-package #:fl.materials)
-
-(defun total-time (context material)
-  (declare (ignore material))
-  (fl:total-time context))

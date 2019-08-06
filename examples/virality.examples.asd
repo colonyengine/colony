@@ -1,12 +1,16 @@
-(asdf:defsystem #:first-light.example
-  :description "Examples for first-light."
+(asdf:defsystem #:virality.examples
+  :description "Virality Engine Examples"
   :author ("Michael Fiano <michael.fiano@gmail.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
   :maintainer ("Michael Fiano <michael.fiano@gmail.com>"
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :version "0.1.0"
-  :depends-on (#:first-light)
+  :depends-on (#:alexandria
+               #:golden-utils
+               #:origin
+               #:verbose
+               #:virality.engine)
   :serial t
   :components
   ((:file "package")

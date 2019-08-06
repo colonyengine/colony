@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (define-call-flow :default ()
   (flow initialize-phase
@@ -32,8 +32,7 @@
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-preinit-by-type-view
-                                (tables core)))))
+                               (component-preinit-by-type-view (tables core)))))
                     (action #'component/preinit->init)
                     (transition init-actors))
         ;; 2
@@ -42,7 +41,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-preinit-db (tables core)))))
-                    (action #'actor/preinit->init)
+                    (action #'actor::preinit->init)
                     (transition protocol-initialize-components))
         ;; 3
         (flow-state protocol-initialize-components :reset ()
@@ -66,7 +65,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-init-db (tables core)))))
-                    (action #'actor/init->active)
+                    (action #'actor::init->active)
                     (transition while-initialize-phase))
         ;; 6
         (flow-state while-initialize-phase :reset ()
@@ -99,8 +98,8 @@
                                core)))
                     (action
                      (lambda (core)
-                       (tick core)
-                       (fl.comp:interpolate-transforms core)))
+                       (clock-tick core)
+                       (c/xform::interpolate-transforms core)))
                     (transition make-active-camera-view))
         ;; NOTE: This flow-state is invoked deep inside of TICK in the
         ;; flow-state physics loop. Its purpose is to be called every time the
@@ -109,18 +108,15 @@
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-active-by-type-view
-                                (tables core)))))
+                               (component-active-by-type-view (tables core)))))
                     (action #'on-component-physics-update)
                     (transition nil))
-
         ;; TODO: PHYSICS-COLLISIONS has a tentative implementation, there may be
         ;; more work here than this single state. This will compute collisions
         ;; and then inform the recipients of those collisions as desired in the
         ;; boundary regions components (yet to be written).
-        ;; NOTE: This
-        ;; flow-state is invoked deep inside of TICK, hence no transitions in
-        ;; and out.
+        ;; NOTE: This flow-state is invoked deep inside of TICK, hence no
+        ;; transitions in and out.
         (flow-state physics-collisions :reset ()
                     (selector
                      (lambda (core)
@@ -129,8 +125,8 @@
                     (action (lambda (core)
                               (let ((cs (collider-system core)))
                                 ;; NOTE: This order is required.
-                                (compute-stable-collisions cs)
-                                (compute-registering-collisions cs))))
+                                (col::compute-stable-collisions cs)
+                                (col::compute-registering-collisions cs))))
                     (transition nil))
         ;; TODO: Should I run flow destroy-phase just before this next
         ;; flow-state so that those actors/components aren't even drawn?
@@ -143,12 +139,12 @@
                      (lambda (core)
                        (let ((context (context core)))
                          (symbol-macrolet ((camera (active-camera context)))
-                           (unless (and camera (fl.comp:active-p camera))
-                             (setf camera (fl.comp:find-active-camera
+                           (unless (and camera (c/cam:active-p camera))
+                             (setf camera (c/cam:find-active-camera
                                            context)))
                            (values :identity-policy
                                    camera)))))
-                    (action #'fl.comp:compute-camera-view)
+                    (action #'c/cam:compute-camera-view)
                     (transition protocol-attach/detach-components))
         (flow-state protocol-attach/detach-components :reset ()
                     (selector
@@ -162,16 +158,14 @@
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-active-by-type-view
-                                (tables core)))))
+                               (component-active-by-type-view (tables core)))))
                     (action #'on-component-update)
                     (transition protocol-render-component))
         (flow-state protocol-render-component :reset ()
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-active-by-type-view
-                                (tables core)))))
+                               (component-active-by-type-view (tables core)))))
                     (action #'on-component-render)
                     (transition exit/active-phase))
         (flow-state exit/active-phase :reset ()
@@ -216,7 +210,6 @@
                        (if (pending-predestroy-tasks-p core)
                            prepare-predestroy-components
                            pending-destroy-tasks))))
-
         ;; 1
         (flow-state prepare-predestroy-components :reset ()
                     (selector
@@ -231,17 +224,16 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-predestroy-view (tables core)))))
-                    (action #'actor/init-or-active->destroy)
+                    (action #'actor::init-or-active->destroy)
                     (transition destroy-actor-children))
         ;; 3
         (flow-state destroy-actor-children :reset ()
                     (selector
                      (lambda (core)
                        (values :identity-policy
-                               (u:hash-keys (actor-destroy-db
-                                             (tables core))))))
+                               (u:hash-keys (actor-destroy-db (tables core))))))
                     ;; NOTE: See selector for this flow-state.
-                    (action #'actor/destroy-descendants)
+                    (action #'actor::destroy-descendants)
                     (transition decrement-component-destroy-timer))
         ;; 4 A
         (flow-state decrement-component-destroy-timer :reset ()
@@ -257,7 +249,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-predestroy-view (tables core)))))
-                    (action #'actor/countdown-to-destruction)
+                    (action #'actor::countdown-to-destruction)
                     (transition pending-destroy-tasks))
         ;; 5
         (flow-state pending-destroy-tasks :reset ()
@@ -273,13 +265,10 @@
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-destroy-by-type-view
-                                (tables core)))))
+                               (component-destroy-by-type-view (tables core)))))
                     (action #'component/invoke-attach/detach-events)
                     (transition deregister-colliders))
-
         ;; 5.75 HACKISH
-        ;;
         ;; TODO: Might call on-collision-* on components that have been
         ;; detached? Might have to have a much finer grained understanding of
         ;; something that is about to be destroyed and a barrier that all the
@@ -294,15 +283,14 @@
                     (action
                      (lambda (core)
                        (let ((cs (collider-system core)))
-                         (compute-deregistering-collisions cs))))
+                         (col::compute-deregistering-collisions cs))))
                     (transition protocol-destroy-component))
         ;; 6
         (flow-state protocol-destroy-component :reset ()
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-destroy-by-type-view
-                                (tables core)))))
+                               (component-destroy-by-type-view (tables core)))))
                     (action #'on-component-destroy)
                     (transition disconnect-destroyed-actors))
         ;; 7
@@ -311,15 +299,14 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-destroy-db (tables core)))))
-                    (action #'actor/disconnect)
+                    (action #'actor::disconnect)
                     (transition release-components))
         ;; 8
         (flow-state release-components :reset ()
                     (selector
                      (lambda (core)
                        (values :type-policy
-                               (component-destroy-by-type-view
-                                (tables core)))))
+                               (component-destroy-by-type-view (tables core)))))
                     (action #'component/destroy->released)
                     (transition release-actors))
         ;; 9
@@ -328,7 +315,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-destroy-db (tables core)))))
-                    (action #'actor/destroy->released)
+                    (action #'actor::destroy->released)
                     (transition restart-predestroy-phase))
         ;; 10
         (flow-state restart-predestroy-phase :reset ()

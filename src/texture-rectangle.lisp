@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.textures)
 
 (defmethod load-texture-data ((texture-type (eql :texture-rectangle))
                               texture context)

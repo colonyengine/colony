@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 ;;;; This file handles the framework for querying actors and components by the
 ;;;; different ID types, such is ID, UUID, and DISPLAY-ID.
@@ -9,7 +9,9 @@
 ;;; types. Currently, this is applied to actors and components.
 
 (defclass queryable ()
-  ((%id :reader id
+  ((%context :reader context
+             :initarg :context)
+   (%id :reader id
         :initarg :id
         :initform nil)
    (%uuid :reader uuid
@@ -35,7 +37,7 @@
     (error "Object ~s has no UUID. This is a bug and should be reported."
            object)))
 
-(defmethod register-object-id ((object actor))
+(defmethod register-object-id ((object actor:actor))
   (a:when-let ((table (actors-by-id (tables (core (context object)))))
                (id (id object)))
     (unless (u:href table id)
@@ -53,7 +55,7 @@
   (remhash (uuid object)
            (objects-by-uuid (tables (core (context object))))))
 
-(defmethod deregister-object-id ((self actor))
+(defmethod deregister-object-id ((self actor:actor))
   (a:when-let ((table (actors-by-id (tables (core (context self)))))
                (id (id self)))
     (symbol-macrolet ((actors (u:href table id)))

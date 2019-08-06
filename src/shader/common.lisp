@@ -1,4 +1,4 @@
-(in-package #:first-light.shader)
+(in-package #:virality.shaders)
 
 (define-macro mvlet* ((&rest binds) &body body)
   (cond

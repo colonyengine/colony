@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defmacro with-continue-restart (report &body body)
   `(let* ((debugger-entry-time)
@@ -13,7 +13,7 @@
      (restart-case (progn ,@body)
        (continue ()
          :report ,report
-         (with-slots (%pause-time) (frame-manager *core-debug*)
+         (with-slots (%pause-time) (clock *core-debug*)
            (when debugger-entry-time
              (setf %pause-time (- (get-time) debugger-entry-time))))))))
 

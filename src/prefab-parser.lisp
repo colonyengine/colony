@@ -1,4 +1,4 @@
-(in-package #:first-light.prefab)
+(in-package #:virality.prefabs)
 
 (defun parse-prefab (prefab)
   (let (success-p)
@@ -14,7 +14,7 @@
              (update-links prefab)
              (setf success-p t))
         (unless success-p
-          (remhash %name (u:href (%fl:meta 'prefabs) %library)))))))
+          (remhash %name (u:href (v::meta 'prefabs) %library)))))))
 
 (defun parse-copy/link (library path target options)
   (destructuring-bind (&key id (display-id target) (copy nil copy-p)
@@ -132,8 +132,8 @@
 (defun insert-missing-transforms (prefab)
   (u:do-hash (path node (parse-tree prefab))
     (with-slots (%components) node
-      (unless (find 'fl.comp:transform %components :key #'car)
-        (push '(fl.comp:transform (:policy :old-type)) %components))
+      (unless (find 'c/xform:transform %components :key #'car)
+        (push '(c/xform:transform (:policy :old-type)) %components))
       (ensure-path-single-transform %components path))))
 
 (defun collect-source-components (node)

@@ -1,4 +1,4 @@
-(in-package #:first-light.prefab)
+(in-package #:virality.prefabs)
 
 (defmacro preprocess-spec (prefab-name context policy spec)
   (labels ((rec (data)
@@ -16,33 +16,29 @@
                                                  options/args)
                                 :for (key value) :on args :by #'cddr
                                 :collect key
-
                                 :collect
-                                ;; We thunk the initarg value AND the
-                                ;; environment in which it is valid into a new
-                                ;; object that we use to set up the environment
-                                ;; of the evaluating value later when we force
-                                ;; the thunk.
                                 `(make-injectable-ref-value-thunk
                                   :thunk (lambda (,context)
                                            (declare (ignorable ,context))
                                            ,value)
                                   :env-injection-control-func
-                                  ;; NOTE: lexical intercourse ensues with the
-                                  ;; INJECT-REF-ENVIRONMENT macro.
                                   (u:dlambda
-                                    (:actors (x)
-                                             (setf actor-table x))
-                                    (:components (x)
-                                                 (setf component-table x))
-                                    (:current-actor (x)
-                                                    (setf current-actor x))
-                                    (:current-component (x)
-                                                        (setf current-component
-                                                              x))))))))))
-    `(list ,@(mapcar
-              #'rec
-              (list (cons (list prefab-name :policy policy) spec))))))
+                                    (:actors
+                                     (x)
+                                     (setf actor-table x))
+                                    (:components
+                                     (x)
+                                     (setf component-table x))
+                                    (:current-actor
+                                     (x)
+                                     (setf current-actor x))
+                                    (:current-component
+                                     (x)
+                                     (setf current-component x))))))))))
+    `(list
+      ,@(mapcar
+         #'rec
+         (list (cons (list prefab-name :policy policy) spec))))))
 
 (defmacro inject-ref-environment (&body body)
   `(let (actor-table component-table current-actor current-component)
@@ -60,7 +56,7 @@
 
 (defmacro define-prefab (name (&key library (context 'context) policy)
                          &body body)
-  (let* ((libraries '(%fl:meta 'prefabs))
+  (let* ((libraries '(v::meta 'prefabs))
          (prefabs `(u:href ,libraries ',library)))
     (a:with-gensyms (prefab data)
       (u:mvlet ((body decls doc (a:parse-body body :documentation t)))
@@ -70,13 +66,13 @@
            (ensure-prefab-library-set ',name ',library)
            (ensure-prefab-library-symbol ',name ',library)
            (unless ,libraries
-             (setf (%fl:meta 'prefabs) (u:dict)))
+             (setf (v::meta 'prefabs) (u:dict)))
            (unless ,prefabs
              (setf ,prefabs (u:dict #'equalp)))
            ;; NOTE: This prefab-wide ref environment is accessible via a
            ;; pandoric function in the INJECTABLE-REF-VALUE-THUNK instance
            ;; created for each component initarg value. We use it later to
-           ;; adjust which actors and components are available for FL:REF when
+           ;; adjust which actors and components are available for V:REF when
            ;; forcing the argument thunk. We COULD have made an
            ;; INJECTABLE-REF-VALUE-THUNK for EACH argument value, but that would
            ;; generate more garbage than this method. So, unless we find we have
@@ -88,6 +84,5 @@
                         (,prefab (make-prefab ',name ',library ,doc ,data)))
                (setf (u:href ,prefabs ',name) ,prefab
                      (func ,prefab) (make-factory ,prefab))
-
                (parse-prefab ,prefab)))
            (export ',library))))))

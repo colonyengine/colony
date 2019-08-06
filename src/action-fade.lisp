@@ -1,17 +1,19 @@
-(in-package #:first-light.actions)
+(in-package #:virality.extensions.actions)
 
-(defmethod on-action-update (action (type (eql 'fade-in)))
-  (let ((material (fl.comp:material (renderer (manager action)))))
-    (setf (mat-uniform-ref material :opacity) (action-step action))))
+(defmethod action:on-update (action (type (eql 'fade-in)))
+  (let ((material (c/render:material
+                   (action:renderer (action:manager action)))))
+    (setf (v:uniform-ref material :opacity) (action:step action))))
 
-(defmethod on-action-finish (action (type (eql 'fade-in)))
-  (when (repeat-p action)
-    (replace-action action 'fade-out)))
+(defmethod action:on-finish (action (type (eql 'fade-in)))
+  (when (action:repeat-p action)
+    (action:replace action 'fade-out)))
 
-(defmethod on-action-update (action (type (eql 'fade-out)))
-  (let ((material (fl.comp:material (renderer (manager action)))))
-    (setf (mat-uniform-ref material :opacity) (- 1 (action-step action)))))
+(defmethod action:on-update (action (type (eql 'fade-out)))
+  (let ((material (c/render:material
+                   (action:renderer (action:manager action)))))
+    (setf (v:uniform-ref material :opacity) (- 1 (action:step action)))))
 
-(defmethod on-action-finish (action (type (eql 'fade-out)))
-  (when (repeat-p action)
-    (replace-action action 'fade-in)))
+(defmethod action:on-finish (action (type (eql 'fade-out)))
+  (when (action:repeat-p action)
+    (action:replace action 'fade-in)))

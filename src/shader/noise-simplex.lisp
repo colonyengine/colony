@@ -1,20 +1,31 @@
-(in-package #:first-light.shader.noise)
+(in-package #:virality.shaders.noise)
 
 ;;;; Simplex noise
 
 (defconstant +simplex-2d/skew-factor+ (* 0.5 (1- (sqrt 3))))
+
 (defconstant +simplex-2d/unskew-factor+ (/ (- 3 (sqrt 3)) 6))
+
 (defconstant +simplex-2d/triangle-height+ (sqrt 0.5))
+
 (defconstant +simplex-2d/inverse-triangle-height+ (sqrt (/ 0.5)))
+
 (defconstant +simplex-2d/inverse-triangle-half-edge-length+
   (/ (sqrt 0.75) (sqrt 0.125)))
+
 (defconstant +simplex-2d/norm-factor+
   (/ (* 0.4082483 (expt (- 0.5 (expt 0.4082483 2)) 4) 2)))
+
 (defconstant +simplex-3d/skew-factor+ (/ 3.0))
+
 (defconstant +simplex-3d/unskew-factor+ (/ 6.0))
+
 (defconstant +simplex-3d/pyramid-height+ (sqrt 0.5))
+
 (defconstant +simplex-3d/inverse-pyramid-height+ (sqrt (/ 0.5)))
+
 (defconstant +simplex-3d/inverse-triangle-half-edge-length+ (/ 2 (sqrt 0.75)))
+
 (defconstant +simplex-3d/norm-factor+
   (/ (* 0.4330127 (expt (- 0.5 (expt 0.4330127 2)) 3) 2)))
 
@@ -81,7 +92,7 @@
 
 (define-function simplex-perlin ((point :vec2))
   (simplex-perlin point (lambda ((x :vec2))
-                          (fl.shader.hash:fast32/2-per-corner x))))
+                          (shd/hash:fast32/2-per-corner x))))
 
 ;;; 2D Simplex Perlin noise with derivatives
 
@@ -131,7 +142,7 @@
 
 (define-function simplex-perlin/derivs ((point :vec2))
   (simplex-perlin/derivs point (lambda ((x :vec2))
-                                 (fl.shader.hash:fast32/2-per-corner x))))
+                                 (shd/hash:fast32/2-per-corner x))))
 
 ;;; 3D Simplex Perlin noise
 
@@ -157,7 +168,7 @@
 
 (define-function simplex-perlin ((point :vec3))
   (simplex-perlin point (lambda ((x :vec3) (y :vec3) (z :vec3))
-                          (fl.shader.hash:fast32/3-per-corner x y z))))
+                          (shd/hash:fast32/3-per-corner x y z))))
 
 ;;; 3D Simplex Perlin noise with derivatives
 
@@ -197,7 +208,7 @@
 
 (define-function simplex-perlin/derivs ((point :vec3))
   (simplex-perlin/derivs point (lambda ((x :vec3) (y :vec3) (z :vec3))
-                                 (fl.shader.hash:fast32/3-per-corner x y z))))
+                                 (shd/hash:fast32/3-per-corner x y z))))
 
 ;;; 2D Simplex Cellular noise
 
@@ -225,7 +236,7 @@
 
 (define-function simplex-cellular ((point :vec2))
   (simplex-cellular point (lambda ((x :vec2))
-                            (fl.shader.hash:fast32/2-per-corner x))))
+                            (shd/hash:fast32/2-per-corner x))))
 
 ;;; 3D Simplex Cellular noise
 
@@ -257,7 +268,7 @@
 (define-function simplex-cellular ((point :vec3))
   (simplex-cellular point
                     (lambda ((x :vec3) (y :vec3) (z :vec3))
-                      (fl.shader.hash:fast32/3-per-corner x y z))))
+                      (shd/hash:fast32/3-per-corner x y z))))
 
 ;;; 2D Simplex Polka-dot noise
 
@@ -283,7 +294,7 @@
                                    (radius :float)
                                    (max-dimness :float))
   (simplex-polkadot point radius max-dimness (lambda ((x :vec2))
-                                               (fl.shader.hash:fast32 x))))
+                                               (shd/hash:fast32 x))))
 
 ;;; 3D Simplex Polka-dot noise
 
@@ -311,4 +322,4 @@
                                    (max-dimness :float))
   (simplex-polkadot point radius max-dimness
                     (lambda ((x :vec3) (y :vec3) (z :vec3))
-                      (fl.shader.hash:fast32 x y z))))
+                      (shd/hash:fast32 x y z))))

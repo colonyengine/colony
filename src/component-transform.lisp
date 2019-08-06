@@ -1,4 +1,4 @@
-(in-package #:first-light.components)
+(in-package #:virality.components.transform)
 
 (defclass transform-state ()
   ((%current :accessor current
@@ -12,16 +12,14 @@
    (%interpolated :accessor interpolated
                   :initarg :interpolated)))
 
-(defclass transform-state-vector (transform-state)
-  ()
+(defclass transform-state-vector (transform-state) ()
   (:default-initargs :current (v3:zero)
                      :incremental (v3:zero)
                      :incremental-delta (v3:zero)
                      :previous (v3:zero)
                      :interpolated (v3:zero)))
 
-(defclass transform-state-quaternion (transform-state)
-  ()
+(defclass transform-state-quaternion (transform-state) ()
   (:default-initargs :current (q:id)
                      :incremental (q:id)
                      :incremental-delta (q:id)
@@ -45,7 +43,7 @@
   (declare (optimize speed))
   (q:slerp! (interpolated state) (previous state) (current state) factor))
 
-(define-component transform ()
+(v:define-component transform ()
   ((%parent :accessor parent
             :initform nil)
    (%children :accessor children
@@ -87,7 +85,7 @@
     (q:rotate! %current %current %incremental-delta)))
 
 (defun transform-node (core node)
-  (let ((delta (delta (context core))))
+  (let ((delta (v::delta (v:context core))))
     (transform-node/vector (scaling node) delta)
     (transform-node/quat (rotation node) delta)
     (transform-node/vector (translation node) delta)))
@@ -120,10 +118,10 @@
   (declare (optimize speed))
   (map-nodes
    (lambda (x)
-     (resolve-model x (%fl:alpha (%fl:frame-manager core))))
-   (actor-component-by-type (%fl:scene-tree core) 'transform)))
+     (resolve-model x (v::alpha (v::clock core))))
+   (v:component-by-type (v::scene-tree core) 'transform)))
 
-(defmethod make-component (context (component-type (eql 'transform)) &rest args)
+(defmethod v:make-component (context (component-type (eql 'transform)) &rest args)
   (let ((instance (make-instance component-type
                                  :type component-type
                                  :context context)))
@@ -140,8 +138,8 @@
                                     (scale (v3:one))
                                     (scale/inc (v3:zero)))
   (with-slots (%translation %rotation %scaling) instance
-    (setf (actor instance) actor
-          (state instance) :initialize
+    (setf (v:actor instance) actor
+          (v::state instance) :initialize
           (current %translation) (v3:copy translate)
           (previous %translation) (v3:copy (current %translation))
           (incremental %translation) (v3:copy translate/inc)
@@ -196,7 +194,7 @@
     (when instant-p
       (v3:copy! %previous %current))))
 
-;; TODO: Try and get rid of any produced garbage in the functions below.
+;;; TODO: Try and get rid of any produced garbage in the functions below.
 
 (defun transform-point (transform point-vec)
   "Transform the vector in POINT-VEC, assumed to be in the local space of the
@@ -255,12 +253,10 @@ returned."
       (m4:normalize-rotation! model model)
       (~:.xyz (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))
 
-;; NOTE: These functions return the vectors that represent forward, backward,
-;; up, down, right, and left in _world space_.
-;;
-;; We define these axes as the directions for an object in FL:
-;;
-;; +z back, -z forward, +y up, -y down, +x right, -x left
+;;; NOTE: These functions return the vectors that represent forward, backward,
+;;; up, down, right, and left in _world space_.
+;;; We define these axes as the directions for an object:
+;;; +z back, -z forward, +y up, -y down, +x right, -x left
 
 (defun transform-forward (transform)
   "Return the forward vector (-Z axis) in world space for this TRANSFORM."

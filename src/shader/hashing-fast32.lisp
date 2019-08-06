@@ -1,4 +1,4 @@
-(in-package #:first-light.shader.hash)
+(in-package #:virality.shaders.hashing)
 
 ;;;; Hashing functions
 ;;;; FAST32
@@ -70,10 +70,9 @@
                         (if (< (.z v2-mask) 0.5)
                             (.z grid-cell)
                             (.z grid-cell-inc1))))
-         (mod-vals (/ (+ 635.2987 (* (vec4 (.z grid-cell)
-                                           v1z-v2z
-                                           (.z grid-cell-inc1))
-                                     48.500388)))))
+         (mod-vals (/ (+ 635.2987
+                         (* (vec4 (.z grid-cell) v1z-v2z (.z grid-cell-inc1))
+                            48.500388)))))
     (fract (* p mod-vals))))
 
 (define-function fast32/3-per-corner ((grid-cell :vec3)

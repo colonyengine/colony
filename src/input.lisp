@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.input)
 
 (defclass input-data ()
   ((%gamepad-instances :reader gamepad-instances
@@ -34,72 +34,73 @@
     `(case (sdl2:get-event-type ,event)
        ,@(nreverse events))))
 
-(defun dispatch-event (input-data event)
+(defun dispatch-event (context event)
   (event-case (event)
     (:windowevent
      (:event event-type :data1 data1 :data2 data2)
      (case (aref +window-event-names+ event-type)
-       (:show (on-window-show input-data))
-       (:hide (on-window-hide input-data))
-       (:move (on-window-move input-data :x data1 :y data2))
-       (:resize (on-window-resize input-data :width data1 :height data2))
-       (:minimize (on-window-minimize input-data))
-       (:maximize (on-window-maximize input-data))
-       (:restore (on-window-restore input-data))
-       (:mouse-focus-enter (on-window-mouse-focus-enter input-data))
-       (:mouse-focus-leave (on-window-mouse-focus-exit input-data))
-       (:keyboard-focus-enter (on-window-keyboard-focus-enter input-data))
-       (:keyboard-focus-leave (on-window-keyboard-focus-exit input-data))
-       (:close (on-window-close input-data))))
+       (:show (on-window-show context))
+       (:hide (on-window-hide context))
+       (:move (on-window-move context :x data1 :y data2))
+       (:resize (on-window-resize context :width data1 :height data2))
+       (:minimize (on-window-minimize context))
+       (:maximize (on-window-maximize context))
+       (:restore (on-window-restore context))
+       (:mouse-focus-enter (on-window-mouse-focus-enter context))
+       (:mouse-focus-leave (on-window-mouse-focus-exit context))
+       (:keyboard-focus-enter (on-window-keyboard-focus-enter context))
+       (:keyboard-focus-leave (on-window-keyboard-focus-exit context))
+       (:close (on-window-close context))))
     (:mousebuttonup
      (:button button)
-     (on-mouse-button-up input-data (aref +mouse-button-names+ button)))
+     (on-mouse-button-up context (aref +mouse-button-names+ button)))
     (:mousebuttondown
      (:button button)
-     (on-mouse-button-down input-data (aref +mouse-button-names+ button)))
+     (on-mouse-button-down context (aref +mouse-button-names+ button)))
     (:mousewheel
      (:x x :y y)
-     (on-mouse-scroll input-data x y))
+     (on-mouse-scroll context x y))
     (:mousemotion
      (:x x :y y :xrel dx :yrel dy)
-     (on-mouse-move input-data x y dx dy))
+     (on-mouse-move context x y dx dy))
     (:keyup
      (:keysym keysym)
-     (on-key-up input-data (aref +key-names+ (sdl2:scancode-value keysym))))
+     (on-key-up context (aref +key-names+ (sdl2:scancode-value keysym))))
     (:keydown
      (:keysym keysym)
-     (on-key-down input-data (aref +key-names+ (sdl2:scancode-value keysym))))
+     (on-key-down context (aref +key-names+ (sdl2:scancode-value keysym))))
     (:controllerdeviceadded
      (:which index)
-     (on-gamepad-attach input-data index))
+     (on-gamepad-attach context index))
     (:controllerdeviceremoved
      (:which gamepad-id)
-     (on-gamepad-detach input-data gamepad-id))
+     (on-gamepad-detach context gamepad-id))
     (:controlleraxismotion
      (:which gamepad-id :axis axis :value value)
      (on-gamepad-analog-move
-      input-data gamepad-id (aref +gamepad-axis-names+ axis) value))
+      context gamepad-id (aref +gamepad-axis-names+ axis) value))
     (:controllerbuttonup
      (:which gamepad-id :button button)
      (on-gamepad-button-up
-      input-data gamepad-id (aref +gamepad-button-names+ button)))
+      context gamepad-id (aref +gamepad-button-names+ button)))
     (:controllerbuttondown
      (:which gamepad-id :button button)
      (on-gamepad-button-down
-      input-data gamepad-id (aref +gamepad-button-names+ button)))))
+      context gamepad-id (aref +gamepad-button-names+ button)))))
 
-(defun perform-input-state-tasks (input-data)
+(defun perform-input-state-tasks (context)
   (declare (optimize speed))
-  (let ((states (states input-data)))
+  (let* ((data (v::input-data (v::core context)))
+         (states (states data)))
     (setf (u:href states '(:mouse :scroll-horizontal)) 0
           (u:href states '(:mouse :scroll-vertical)) 0)
-    (enable-entering input-data)
-    (disable-exiting input-data)))
+    (enable-entering data)
+    (disable-exiting data)))
 
-(defun handle-events (input-data)
+(defun handle-events (context)
   (declare (optimize speed))
-  (perform-input-state-tasks input-data)
+  (perform-input-state-tasks context)
   (loop :with event = (sdl2:new-event)
         :until (zerop (the fixnum (sdl2:next-event event :poll)))
-        :do (dispatch-event input-data event)
+        :do (dispatch-event context event)
         :finally (sdl2:free-event event)))

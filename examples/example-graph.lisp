@@ -1,14 +1,14 @@
-(in-package #:first-light.example)
+(in-package #:virality.examples)
 
 ;;; Materials
 
-(fl:define-material graph
-  (:profiles (fl.materials:u-mvpt)
-   :shader fl.shader.user:graph))
+(v:define-material graph
+  (:profiles (x/mat:u-mvpt)
+   :shader ex/shd:graph))
 
-(fl:define-material 3d-graph
-  (:profiles (fl.materials:u-mvpt)
-   :shader fl.shader.user:3d-graph-1
+(v:define-material 3d-graph
+  (:profiles (x/mat:u-mvpt)
+   :shader ex/shd:3d-graph-1
    :instances 1000
    :attributes (:depth :always)
    :uniforms
@@ -18,45 +18,46 @@
 
 ;;; Prefabs
 
-(fl:define-prefab "graph" (:library examples :context context)
+(v:define-prefab "graph" (:library examples :context context)
   (("camera" :copy "/cameras/ortho"))
   (("graph" :copy "/mesh")
-   (fl.comp:transform :scale (v3:vec (/ (fl:option context :window-width) 2)
-                                     (/ (fl:option context :window-height) 2)
+   (c/xform:transform :scale (v3:vec (/ (v:option context :window-width) 2)
+                                     (/ (v:option context :window-height) 2)
                                      0))
-   (fl.comp:render :material 'graph)))
+   (c/render:render :material 'graph)))
 
-(fl:define-prefab "3d-graph-1" (:library examples)
+(v:define-prefab "3d-graph-1" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (fl.comp:transform :translate (v3:vec 0 70 100))
-   (fl.comp:camera (:policy :new-args) :zoom 2)
-   (fl.comp:tracking-camera :target-actor (fl:ref "/3d-graph-1/graph")))
+   (c/xform:transform :translate (v3:vec 0 70 100))
+   (c/cam:camera (:policy :new-args) :zoom 2)
+   (c/tcam:tracking-camera :target-actor (v:ref "/3d-graph-1/graph")))
   (("graph" :copy "/mesh")
-   (fl.comp:render :material '(3d-graph
-                               3d-graph-1
-                               :shader fl.shader.user:3d-graph-1
-                               :instances 100000
-                               :uniforms ((:size 0.5))))))
+   (c/render:render :material '(3d-graph
+                                3d-graph-1
+                                :shader ex/shd:3d-graph-1
+                                :instances 100000
+                                :uniforms ((:size 0.5))))))
 
-(fl:define-prefab "3d-graph-2" (:library examples)
+(v:define-prefab "3d-graph-2" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (fl.comp:transform :translate (v3:vec 0 50 100))
-   (fl.comp:camera (:policy :new-args) :zoom 2)
-   (fl.comp:tracking-camera :target-actor (fl:ref "/3d-graph-2/graph")))
+   (c/xform:transform :translate (v3:vec 0 50 100))
+   (c/cam:camera (:policy :new-args) :zoom 2)
+   (c/tcam:tracking-camera
+    :target-actor (v:ref "/3d-graph-2/graph")))
   (("graph" :copy "/mesh")
-   (fl.comp:render :material '(3d-graph
-                               3d-graph-2
-                               :shader fl.shader.user:3d-graph-2
-                               :instances 100000
-                               :uniforms ((:size 1))))))
+   (c/render:render :material '(3d-graph
+                                3d-graph-2
+                                :shader ex/shd:3d-graph-2
+                                :instances 100000
+                                :uniforms ((:size 1))))))
 
 ;;; Prefab descriptors
 
-(fl:define-prefab-descriptor graph ()
-  ("graph" fl.example:examples))
+(v:define-prefab-descriptor graph ()
+  ("graph" examples))
 
-(fl:define-prefab-descriptor 3d-graph-1 ()
-  ("3d-graph-1" fl.example:examples))
+(v:define-prefab-descriptor 3d-graph-1 ()
+  ("3d-graph-1" examples))
 
-(fl:define-prefab-descriptor 3d-graph-2 ()
-  ("3d-graph-2" fl.example:examples))
+(v:define-prefab-descriptor 3d-graph-2 ()
+  ("3d-graph-2" examples))

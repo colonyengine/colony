@@ -1,27 +1,27 @@
-(in-package #:fl.example)
+(in-package #:virality.examples)
 
 ;;; Textures
 
-(fl:define-texture damaged-helmet/metallic-roughness (:texture-2d)
+(v:define-texture damaged-helmet/metallic-roughness (:texture-2d)
   (:data #((:damaged-helmet-textures "metal-roughness.tiff"))))
 
-(fl:define-texture damaged-helmet/color (:texture-2d)
+(v:define-texture damaged-helmet/color (:texture-2d)
   (:data #((:damaged-helmet-textures "albedo.tiff"))))
 
-(fl:define-texture damaged-helmet/normal (:texture-2d)
+(v:define-texture damaged-helmet/normal (:texture-2d)
   (:data #((:damaged-helmet-textures "normal.tiff"))))
 
-(fl:define-texture damaged-helmet/ambient-occlusion (:texture-2d)
+(v:define-texture damaged-helmet/ambient-occlusion (:texture-2d)
   (:data #((:damaged-helmet-textures "ao.tiff"))))
 
-(fl:define-texture damaged-helmet/emissive (:texture-2d)
+(v:define-texture damaged-helmet/emissive (:texture-2d)
   (:data #((:damaged-helmet-textures "emissive.tiff"))))
 
 ;;; Materials
 
-(fl:define-material damaged-helmet
-  (:shader fl.shader.user:damaged-helmet
-   :profiles (fl.materials:u-mvp)
+(v:define-material damaged-helmet
+  (:shader ex/shd:damaged-helmet
+   :profiles (x/mat:u-mvp)
    :uniforms
    ((:metallic-roughness-values (v2:one))
     (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)
@@ -39,17 +39,17 @@
 
 ;;; Prefabs
 
-(fl:define-prefab "damaged-helmet" (:library examples)
+(v:define-prefab "damaged-helmet" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (fl.comp:camera (:policy :new-args) :zoom 10))
+   (c/cam:camera (:policy :new-args) :zoom 10))
   (("helmet" :copy "/mesh")
-   (fl.comp:transform :rotate (q:orient :local :x (/ pi 2))
+   (c/xform:transform :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local :z (- (/ pi 4)))
                       :scale 4)
-   (fl.comp:static-mesh :location '(:mesh "damaged-helmet.glb"))
-   (fl.comp:render :material 'damaged-helmet)))
+   (c/smesh:static-mesh :location '(:mesh "damaged-helmet.glb"))
+   (c/render:render :material 'damaged-helmet)))
 
 ;;; Prefab descriptors
 
-(fl:define-prefab-descriptor damaged-helmet ()
-  ("damaged-helmet" fl.example:examples))
+(v:define-prefab-descriptor damaged-helmet ()
+  ("damaged-helmet" examples))

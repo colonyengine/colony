@@ -1,4 +1,4 @@
-(in-package #:first-light.shader.hash)
+(in-package #:virality.shaders.hashing)
 
 ;;;; Hashing functions
 ;;;; Permutation polynomial
@@ -52,10 +52,11 @@
          (coords2 (mix coords0 coords3 v2-mask))
          (hash1 (sgpp/permute
                  (sgpp/permute
-                  (+ (sgpp/permute (vec4 (.x coords0)
-                                         (.x coords1)
-                                         (.x coords2)
-                                         (.x coords3)))
+                  (+ (sgpp/permute
+                      (vec4 (.x coords0)
+                            (.x coords1)
+                            (.x coords2)
+                            (.x coords3)))
                      (vec4 (.y coords0) (.y coords1) (.y coords2) (.y coords3))
                      (vec4 (.z coords0)
                            (.z coords1)

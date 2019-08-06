@@ -1,37 +1,37 @@
-(in-package #:first-light.materials)
+(in-package #:virality.extensions.materials)
 
-(fl:define-material unlit-color
-  (:shader fl.shader.texture:unlit-color
+(mat:define-material unlit-color
+  (:shader shd/tex:unlit-color
    :profiles (u-mvp)))
 
-(fl:define-material unlit-color-decal
-  (:shader fl.shader.texture:unlit-color-decal
+(mat:define-material unlit-color-decal
+  (:shader shd/tex:unlit-color-decal
    :profiles (u-mvp)))
 
-(fl:define-material unlit-texture
-  (:shader fl.shader.texture:unlit-texture
+(mat:define-material unlit-texture
+  (:shader shd/tex:unlit-texture
    :profiles (u-mvp)
-   :uniforms ((:tex.sampler1 'fl.textures:debug-texture)
+   :uniforms ((:tex.sampler1 'x/tex:debug-texture)
               (:mix-color (v4:one)))))
 
-(fl:define-material unlit-texture-decal
-  (:shader fl.shader.texture:unlit-texture-decal
+(mat:define-material unlit-texture-decal
+  (:shader shd/tex:unlit-texture-decal
    :profiles (u-mvp)
    :uniforms ((:min-intensity (v4:zero))
               (:max-intensity (v4:one))
-              (:tex.sampler1 'fl.textures:debug-texture))))
+              (:tex.sampler1 'x/tex:debug-texture))))
 
-(fl:define-material unlit-texture-decal-bright
-  (:shader fl.shader.texture:unlit-texture-decal
+(mat:define-material unlit-texture-decal-bright
+  (:shader shd/tex:unlit-texture-decal
    :profiles (u-mvp)
    :uniforms ((:min-intensity (v4:vec 0.1 0.1 0.1 0.1))
               (:max-intensity (v4:one))
-              (:tex.sampler1 'fl.textures:debug-texture))))
+              (:tex.sampler1 'x/tex:debug-texture))))
 
-(fl:define-material sprite
+(mat:define-material sprite
   (:profiles (u-mvp)
-   :shader fl.shader.sprite:sprite
-   :uniforms ((:sprite.sampler 'fl.textures:debug-texture)
+   :shader shd/sprite:sprite
+   :uniforms ((:sprite.sampler 'x/tex:debug-texture)
               (:opacity 1.0)
               (:alpha-cutoff 0.1))
    :blocks ((:block-name :spritesheet
@@ -39,13 +39,13 @@
              :block-alias :spritesheet
              :binding-policy :manual))))
 
-(fl:define-material missing-material
-  (:shader fl.shader.texture:unlit-texture
+(mat:define-material missing-material
+  (:shader shd/tex:unlit-texture
    :profiles (u-mvp)
-   :uniforms ((:tex.sampler1 'fl.textures:debug-texture))))
+   :uniforms ((:tex.sampler1 'x/tex:debug-texture))))
 
-(fl:define-material collider/sphere
-  (:shader fl.shader.visualization:collider/sphere
+(mat:define-material collider/sphere
+  (:shader shd/vis:collider/sphere
    :profiles (u-mvp)
    :uniforms ((:collider-local-position (v3:zero))
               (:in-contact-color (v4:vec 1 0 0 1))

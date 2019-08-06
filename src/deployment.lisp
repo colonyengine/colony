@@ -1,16 +1,16 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
-#+sbcl
+(defvar *deployed-p*)
+
 (defun deploy-binary (file-name scene &key compress-p)
-  (v:stop v:*global-controller*)
-  (setf uiop/image:*image-dumped-p* t)
-  (sb-ext:save-lisp-and-die
-   file-name
-   :toplevel (lambda () (fl:start-engine :scene scene))
-   :executable t
-   :compression (when compress-p 9)))
-
-#-sbcl
-(defun deploy-binary (file-name scene-name)
-  (declare (ignore file-name scene-name))
-  (v:warn :fl.core.deploy "Deployment is not supported on this platform."))
+  #+sbcl
+  (progn
+    (setf *deployed-p* t)
+    (log:stop log:*global-controller*)
+    (sb-ext:save-lisp-and-die
+     file-name
+     :toplevel (lambda () (start :scene scene))
+     :executable t
+     :compression (when compress-p 9)))
+  #-sbcl
+  (log:error :virality.engine "Deployment is only supported on SBCL."))

@@ -1,4 +1,4 @@
-(in-package #:first-light.prefab)
+(in-package #:virality.prefabs)
 
 (defun ensure-prefab-name-string (name)
   (unless (stringp name)
@@ -69,7 +69,7 @@
              path))))
 
 (defun ensure-path-single-transform (components path)
-  (when (> (count 'fl.comp:transform components :key #'car) 1)
+  (when (> (count 'c/xform:transform components :key #'car) 1)
     (error "Cannot have multiple transform components per path.~%Path: ~s."
            path)))
 
@@ -116,12 +116,11 @@
 (defun ensure-component-not-duplicate (node type id)
   (with-slots (%path %components-table) node
     (when (u:href %components-table type id)
-      (v:debug :fl.prefab
-               "Duplicate component type: ~s with the same ID: ~s, and no policy ~
-              set.~%Assuming a policy of :NEW-TYPE and overwriting the old ~
-              component.~%~
-              Path: ~s."
-               type id %path))))
+      (log:debug :virality.prefabs
+                 "Duplicate component type: ~s with the same ID: ~s, and no ~
+                  policy set.~%Assuming a policy of :NEW-TYPE and overwriting ~
+                  the old component.~%Path: ~s."
+                 type id %path))))
 
 (defun ensure-component-type-symbol (type path)
   (unless (and (symbolp type)
@@ -130,7 +129,7 @@
            type path)))
 
 (defun ensure-component-type-exists (type path)
-  (unless (get-computed-component-precedence-list type)
+  (unless (v::get-computed-component-precedence-list type)
     (error "Component type ~s does not exist.~%Path: ~s." type path)))
 
 (defun ensure-component-options-plist (type options path)
@@ -161,7 +160,7 @@
             keys and values.~%Path: ~s." type path)))
 
 (defun ensure-component-args-valid (type args path)
-  (loop :with valid-args = (compute-component-initargs type)
+  (loop :with valid-args = (v::compute-component-initargs type)
         :for (key nil) :on args :by #'cddr
         :unless (member key valid-args)
           :do (error "Component type ~s has an invalid argument: ~s.~%Path: ~s."

@@ -4,8 +4,6 @@
 ;; 3) .. N) Repeated transforming AST X to AST X+1
 ;; N+1) Production of concrete categorical class from last AST.
 
-
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Meta graph management
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -74,7 +72,6 @@
 ;; category-name as the key and the result of this function as the value.
 (defgeneric realize-metagraph-category (category definition-form-list))
 
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Toplevel AST graph forms for generic graphs that all graph categories will
 ;; use. You can derive or add more to these.
@@ -99,8 +96,6 @@
 (defclass graph-ast/depends-on (graph-ast))
 (defclass graph-ast/depform (graph-ast))
 
-
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; When the metagraphs are realized into
 ;; Concrete category types down to leaves.
@@ -122,7 +117,6 @@
 ;; Some leaf types: dags like component execution order.
 (defclass component-execution (directed-acyclic-graph-category) ())
 
-
 ;; And, some of them are cyclic
 (defclass directed-cyclic-graph-category (directed-graph-category) ())
 ;; All types of state machines, could possibly be terminal child depending
@@ -130,7 +124,6 @@
 (defclass state-machine directed-graph-category ())
 ;; Some leaf-types: Animation state machines.
 (defclass animation-machine (state-machine) ())
-
 
 ;; ;;;;;;;;;;;;;
 ;; metagraph realization protocol.
@@ -148,33 +141,6 @@
 ;; Analysis pass
 ;; -------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Core graphs
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -184,45 +150,36 @@
 
 ;; The names in the first position all must be exported.
 (define-graph core
-    (:category fl:texture-resolution
+    (:category v:texture-resolution
      :depends-on nil
      :weak-roots (core))
-  (search-path core
-               (:first-light.textures)))
+  (search-path core (:x/tex)))
 
 (define-graph core
-    (:category fl:material-resolution
+    (:category v:material-resolution
      :depends-on nil
      :weak-roots (core))
-  (search-path core
-               (:first-light.materials)))
+  (search-path core (:x/mat)))
 
 (define-graph core
-    (:category fl:component-resolution
+    (:category v:component-resolution
      :depends-on nil
      :weak-roots (core))
-  (search-path core
-               (:first-light.components)))
+  (search-path core (:virality.components)))
 
 ;; component execution order
 (define-graph core
-    (:category fl:component-execution
+    (:category v:component-execution
      :depends-on nil
      :weak-roots (core)) ;; if not referenced, becomes a root.
-
   (execution-order all-unknown-types
                    ((unknown-types))) ;; (unknown-types) is special token
-
-  (execution-order actions
-                   (fl.comp:action -> fl.comp:action-list))
-
   (execution-order drawable
-                   (fl.comp:static-mesh -> fl.comp:sprite -> fl.comp:render))
-
-  (execution-order core
-                   (fl.comp:transform
-                    -> (splice actions)
-                    -> (splice drawable))))
+                   (c/smesh:static-mesh
+                    -> c/dmesh:dynamic-mesh
+                    -> c/sprite:sprite
+                    -> c/render:render))
+  (execution-order core (c/xform:transform -> (splice drawable))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project graphs (that use the above)
@@ -230,40 +187,33 @@
 
 ;; and now, what the user specifies in their project, one for each category
 (define-graph project
-    (:category fl:texture-resolution
-     :depends-on ((fl:core (core))) ;; fl:core is in context of category!
+    (:category v:texture-resolution
+     :depends-on ((v:core (core))) ;; v:core is in context of category!
      :roots (all-textures))
-
   (search-path all-textures
-               (:first-light.example -> core)))
+               (:virality.examples -> core)))
 
 (define-graph project
-    (:category fl:material-resolution
-     :depends-on ((fl:core (core)))
+    (:category v:material-resolution
+     :depends-on ((v:core (core)))
      :roots (all-materials))
-
   (search-path all-materials
-               (:first-light.example -> core)))
+               (:virality.examples -> core)))
 
 (define-graph project
-    (:category fl:component-resolution
-     :depends-on ((fl:core (core)))
+    (:category v:component-resolution
+     :depends-on ((v:core (core)))
      :roots (all-component))
-
   (search-path all-components
-               (:first-light.example.comp.*
-                -> :first-light.example
-                -> core)))
+               (-> :virality.examples -> core)))
 
 ;; component execution order
 (define-graph project
-    (:category fl:component-execution
-     :depends-on ((fl:core (all-unknown-types core)))
+    (:category v:component-execution
+     :depends-on ((v:core (all-unknown-types core)))
      :roots (start))
-
   (execution-order project ;; placeholder
                    nil)
-
   (execution-order start
                    ((splice core)
                     -> (splice project)

@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu)
+(in-package #:virality.gpu)
 
 (defclass program ()
   ((%id :reader id
@@ -23,26 +23,23 @@
             :initform (u:dict #'equal))))
 
 (defun find-program (program-name)
-  (let ((programs (%fl:meta 'programs)))
-    (u:href programs program-name)))
+  (u:href (v::meta 'programs) program-name))
 
 (defun view-source (program-name stage)
   (a:when-let ((program (find-program program-name)))
     (format t "~a" (u:href (source program) stage))))
 
 (defun compile-stages (program)
-  (let ((shaders))
-    (maphash
-     (lambda (k v)
-       (let* ((type (stage-type->shader-type k))
-              (shader (gl:create-shader type)))
-         (gl:shader-source shader v)
-         (gl:compile-shader shader)
-         (push shader shaders)
-         (unless (gl:get-shader shader :compile-status)
-           (error "Failed to compile ~a shader stage:~%~a~%"
-                  type (gl:get-shader-info-log shader)))))
-     (source program))
+  (let (shaders)
+    (u:do-hash (k v (source program))
+      (let* ((type (stage-type->shader-type k))
+             (shader (gl:create-shader type)))
+        (gl:shader-source shader v)
+        (gl:compile-shader shader)
+        (push shader shaders)
+        (unless (gl:get-shader shader :compile-status)
+          (error "Failed to compile ~a shader stage:~%~a~%"
+                 type (gl:get-shader-info-log shader)))))
     shaders))
 
 (defun link-program (shaders)
@@ -66,41 +63,40 @@
 
 (defun build-shader-program (name)
   (let* ((program (find-program name))
-         (shaders (compile-stages program))
-         (id (link-program shaders)))
+         (id (link-program (compile-stages program))))
     (setf (slot-value program '%id) id)
     (store-attribute-locations program)
     (store-uniform-locations program)
     id))
 
 (defun build-shader-dictionary ()
-  (let ((programs (%fl:meta 'programs)))
+  (let ((programs (v::meta 'programs)))
     (a:maphash-keys #'build-shader-program programs)
     programs))
 
 (defun store-stage-program-dependencies (program)
-  (let ((stage-fn->programs (%fl:meta 'stage-fn->programs)))
+  (let ((stage-fn->programs (v::meta 'stage-fn->programs)))
     (dolist (stage-spec (stage-specs program))
       (destructuring-bind (stage-type func-spec) stage-spec
         (declare (ignore stage-type))
         (pushnew (name program) (u:href stage-fn->programs func-spec))))))
 
 (defun translate-program (program)
-  (with-slots (%name %version %primitive %stage-specs) program
+  (with-slots (%name %version %primitive %stage-specs %translated-stages)
+      program
     (let ((stages (translate-stages %version %primitive %stage-specs)))
       (dolist (stage stages)
         (store-source program stage)
         (store-blocks program stage))
-      (setf (slot-value program '%translated-stages) stages))))
+      (setf %translated-stages stages))))
 
 (defun %make-shader-program (name version primitive stage-specs)
-  (let ((programs (%fl:meta 'programs))
-        (program (make-instance 'program
+  (let ((program (make-instance 'program
                                 :name name
                                 :version version
                                 :primitive primitive
                                 :stage-specs stage-specs)))
-    (setf (u:href programs name) program)
+    (setf (u:href (v::meta 'programs) name) program)
     (translate-program program)
     (store-attributes program)
     (store-uniforms program)
@@ -109,24 +105,22 @@
 
 (defmacro define-shader (name (&key (version :430) (primitive :triangles))
                          &body body)
-  (let ((definitions '(%fl:meta 'shader-definitions)))
-    `(progn
-       (setf (u:href ,definitions ',name)
-             (lambda ()
-               (%make-shader-program ',name ,version ,primitive ',body)))
-       (export ',name))))
+  `(u:eval-always
+     (setf (u:href (v::meta 'shader-definitions) ',name)
+           (lambda ()
+             (%make-shader-program ',name ,version ,primitive ',body)))
+     (export ',name)))
 
 (defun translate-shader-programs (program-list)
   (dolist (program-name program-list)
-    (let ((program (find-program program-name)))
-      (translate-program program))))
+    (translate-program (find-program program-name))))
 
 (defun build-shader-programs (program-list)
   (dolist (program-name program-list)
     (build-shader-program program-name)))
 
 (defun set-modify-hook (function)
-  (setf (%fl:meta 'modify-hook) function))
+  (setf (v::meta 'modify-hook) function))
 
 (defmacro with-shader (name &body body)
   `(unwind-protect

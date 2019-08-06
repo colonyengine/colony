@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu)
+(in-package #:virality.gpu)
 
 (defclass shader-block ()
   ((%id :reader id
@@ -40,7 +40,7 @@
 
 (defun create-block-alias (block-type block-id program-name block-alias)
   (let* ((program-name (name (find-program program-name)))
-         (aliases (%fl:meta 'block-aliases))
+         (aliases (v::meta 'block-aliases))
          (block (%find-block program-name block-type block-id)))
     (if (u:href aliases block-alias)
         (error "The block alias ~s is already in use." block-alias)
@@ -49,7 +49,7 @@
 (defun delete-block-alias (block-alias &key unbind-block)
   (when unbind-block
     (unbind-block block-alias))
-  (remhash block-alias (%fl:meta 'block-aliases)))
+  (remhash block-alias (v::meta 'block-aliases)))
 
 (defun store-blocks (program stage)
   (dolist (layout (collect-layouts stage))
@@ -62,11 +62,11 @@
       (error "Block ID must be a keyword symbol: ~a" block-id)))
 
 (defun find-block (block-alias)
-  (let ((aliases (%fl:meta 'block-aliases)))
+  (let ((aliases (v::meta 'block-aliases)))
     (u:href aliases block-alias)))
 
 (defun block-binding-valid-p (block binding-point)
-  (let ((bindings (%fl:meta 'block-bindings)))
+  (let ((bindings (v::meta 'block-bindings)))
     (every
      (lambda (x)
        (varjo:v-type-eq
@@ -87,7 +87,7 @@
 
 (defun bind-block (block-alias binding-point)
   "Bind a block referenced by BLOCK-ALIAS to a binding point."
-  (let* ((bindings (%fl:meta 'block-bindings))
+  (let* ((bindings (v::meta 'block-bindings))
          (block (find-block block-alias)))
     (or (block-binding-valid-p block binding-point)
         (error "Cannot bind a block to a binding point with existing blocks of ~
@@ -103,7 +103,7 @@
 (defun rebind-blocks (programs)
   "Rebind all blocks that are members of PROGRAMS."
   (flet ((rebind (block-type)
-           (let* ((bindings (%fl:meta 'block-bindings))
+           (let* ((bindings (v::meta 'block-bindings))
                   (table (u:href bindings block-type)))
              (u:do-hash-values (blocks table)
                (dolist (block blocks)
