@@ -61,6 +61,10 @@ dense lexical scope."
                        (ss-href ,context ,@lookup-args) ,var))
                ,(%generate-ss-get/set context (rest bindings) body)))))))
 
+(defgeneric shared-storage-metadata (component-name &optional namespace)
+  (:method ((component-name symbol) &optional namespace)
+    (declare (ignore namespace))))
+
 (defmacro with-shared-storage ((context-var context-form) cache-bindings
                                &body body)
   "Short Form for shared storage access."

@@ -33,7 +33,6 @@
    #:attach-component
    #:attach-components
    #:component-by-type
-   #:components-by-type
    #:define-component
    #:make-component
    #:on-component-attach
