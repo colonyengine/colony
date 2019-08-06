@@ -18,7 +18,7 @@
 (defun make-actor-components (context actors)
   (let ((components (u:dict)))
     (u:do-hash-values (actor actors)
-      (u:do-hash (type table (components-table (actor::prefab-node actor)))
+      (u:do-hash (type table (components-table (v::prefab-node actor)))
         (unless (u:href components actor)
           (setf (u:href components actor) (u:dict)))
         (u:do-hash (id data table)
@@ -60,7 +60,7 @@
   (let ((parent (or parent (v::scene-tree (v::core context))))
         (root (u:href actors (path (root prefab)))))
     (u:do-hash-values (actor actors)
-      (let ((node (actor::prefab-node actor)))
+      (let ((node (v::prefab-node actor)))
         (u:do-hash-values (child (children node))
           (c/xform:add-child
            (v:component-by-type actor 'c/xform:transform)

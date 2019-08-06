@@ -2,14 +2,15 @@
 
 (uiop:define-package #:virality.engine
   (:use #:cl)
-  (:mix-reexport #:virality.actors
-                 #:virality.colliders
-                 #:virality.geometry
-                 #:virality.materials
-                 #:virality.input
-                 #:virality.prefabs
-                 #:virality.textures)
+  (:mix-reexport
+   #:virality.colliders
+   #:virality.geometry
+   #:virality.materials
+   #:virality.input
+   #:virality.prefabs
+   #:virality.textures)
   (:export
+   #:actor
    #:context
    #:define-annotation
    #:define-call-flow
@@ -23,7 +24,9 @@
    #:frame-count
    #:frame-time
    #:id
+   #:make-actor
    #:option
+   #:spawn-actor
    #:start
    #:stop
    #:total-time

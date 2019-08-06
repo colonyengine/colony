@@ -41,7 +41,7 @@
     (error "Kernel ~s has no UUID. This is a bug and should be reported."
            kernel)))
 
-(defmethod register-kernel-id ((kernel actor:actor))
+(defmethod register-kernel-id ((kernel actor))
   (a:when-let ((table (actors-by-id (tables (core kernel))))
                (id (id kernel)))
     (unless (u:href table id)
@@ -58,7 +58,7 @@
 (defun deregister-kernel-uuid (kernel)
   (remhash (uuid kernel) (kernels-by-uuid (tables (core kernel)))))
 
-(defmethod deregister-kernel-id ((kernel actor:actor))
+(defmethod deregister-kernel-id ((kernel actor))
   (a:when-let ((table (actors-by-id (tables (core kernel))))
                (id (id kernel)))
     (symbol-macrolet ((actors (u:href table id)))

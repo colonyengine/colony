@@ -39,7 +39,7 @@
                      (values parent-path
                              rest)))))
       (u:mvlet* ((parent sub-path (find-actor
-                                   %id (actor::prefab-node %current-actor)))
+                                   %id (v::prefab-node %current-actor)))
                  (sub-path (string-left-trim "./" sub-path)))
         (ensure-path-no-trailing-slash sub-path)
         (ensure-path-valid sub-path)
@@ -48,7 +48,7 @@
 
 (defun parse-reference-path/relative (reference)
   (with-slots (%id %current-actor %actors) reference
-    (let* ((parent-path (path (actor::prefab-node %current-actor)))
+    (let* ((parent-path (path (v::prefab-node %current-actor)))
            (path (make-node-path parent-path %id)))
       (ensure-path-no-trailing-slash path)
       (ensure-path-valid path)

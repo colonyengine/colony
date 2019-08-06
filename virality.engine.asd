@@ -34,7 +34,6 @@
   :serial t
   :components
   ((:file "package-actions")
-   (:file "package-actors")
    (:file "package-colliders")
    (:file "package-components")
    (:file "package-extensions")

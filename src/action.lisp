@@ -93,7 +93,7 @@
 (defgeneric on-finish (action type)
   (:method (action type))
   (:method :around (action type)
-    (let ((actor (actor:actor (renderer (manager action)))))
+    (let ((actor (v:actor (renderer (manager action)))))
       (call-next-method)
       (log:trace :virality.action "Action ~a finished for actor ~a."
                  type (v:id actor)))))

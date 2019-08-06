@@ -25,7 +25,6 @@
       (:origin.quat :q)
       (:verbose :log)
       (:virality.actions :action)
-      (:virality.actors :actor)
       (:virality.colliders :col)
       (:virality.components.actions :c/action)
       (:virality.components.camera :c/cam)

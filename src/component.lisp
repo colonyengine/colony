@@ -14,7 +14,7 @@
                                :initform (queues:make-queue :simple-queue)))
   (:metaclass component-class))
 
-(v::clear-annotations 'component)
+(clear-annotations 'component)
 
 (defmethod initialize-instance :after ((instance component) &key)
   (register-kernel-uuid instance)
@@ -67,8 +67,8 @@ DEFINE-COMPONENT form."
     (detach-component actor component)
     (enqueue-attach-event component actor)
     (setf (actor component) actor
-          (u:href (actor::components actor) component) component)
-    (push component (u:href (actor::components-by-type actor) type))))
+          (u:href (components actor) component) component)
+    (push component (u:href (%components-by-type actor) type))))
 
 (defun attach-components (actor &rest components)
   (dolist (component components)
@@ -76,9 +76,9 @@ DEFINE-COMPONENT form."
 
 (defun detach-component (actor component)
   "If COMPONENT is contained in the ACTOR. Remove it. Otherwise, do nothing."
-  (symbol-macrolet ((components (u:href (actor::components-by-type actor)
+  (symbol-macrolet ((components (u:href (%components-by-type actor)
                                         (component-type component))))
-    (when (remhash component (actor::components actor))
+    (when (remhash component (components actor))
       (enqueue-detach-event component actor)
       (setf (actor component) nil
             components (remove-if (lambda (x) (eq x component)) components)))))
@@ -89,7 +89,7 @@ Returns the rest of the components as a secondary value if there are more than
 one of the same type."
   (let* ((core (core actor))
          (new-type (qualify-component core type))
-         (components (u:href (actor::components-by-type actor) new-type)))
+         (components (u:href (%components-by-type actor) new-type)))
     (values (first components)
             (rest components))))
 

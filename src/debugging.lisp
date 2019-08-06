@@ -16,7 +16,7 @@
          ;; easier to read.
          (format t "~v@<~d~> ~v,,,v<~>Actor: ~s~%"
                  prefix-level level level #\Space (display-id actor))
-         (u:do-hash-values (component (actor::components actor))
+         (u:do-hash-values (component (components actor))
            (format t " ~v,,,v<~> + (~(~a~):~(~a~)) [~s]~%"
                    ;; 5 for the left justified
                    (+ prefix-level level) #\space
