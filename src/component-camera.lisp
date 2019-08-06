@@ -83,9 +83,9 @@
           %fov-y (* %fov-y (/ pi 180)))
     (correct-camera-transform self)
     (make-projection self (mode self))
-    (push self (v::cameras (v::core (v:context self))))))
+    (push self (v::cameras (v::core self)))))
 
 (defmethod v:on-component-destroy ((self camera))
   (let ((context (v:context self)))
-    (a:deletef (v::cameras (v::core context)) self)
+    (a:deletef (v::cameras (v::core self)) self)
     (setf (v::active-camera context) nil)))

@@ -1,13 +1,5 @@
 (in-package #:virality.engine)
 
-(defgeneric destroy-after-time (thing &key ttl)
-  (:documentation "Takes either an ACTOR or a COMPONENT. The keyword argument
-:TTL supplied in real seconds, how long the thing has yet to live, with NIL
-meaning infinity."))
-
-(defun destroy (thing)
-  (destroy-after-time thing :ttl 0))
-
 (defun type-table (key type-table)
   (u:href type-table key))
 

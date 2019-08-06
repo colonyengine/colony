@@ -1,17 +1,11 @@
 (in-package #:virality.engine)
 
-(defclass component (queryable)
+(defclass component (kernel)
   ((%type :reader component-type
           :initarg :type)
-   (%state :accessor state
-           :initarg :state
-           :initform :initialize)
    (%actor :accessor actor
            :initarg :actor
            :initform nil)
-   (%ttl :accessor ttl
-         :initarg :ttl
-         :initform 0)
    (%initializer :accessor initializer
                  :initarg :initializer
                  :initform nil)
@@ -67,23 +61,22 @@ DEFINE-COMPONENT form."
     (error "Could not qualify the component type ~s." component-type)))
 
 (defmethod initialize-instance :after ((instance component) &key)
-  (register-object-uuid instance)
-  (register-object-id instance))
+  (register-kernel-uuid instance)
+  (register-kernel-id instance))
 
 (defun component/preinit->init (component)
   (a:when-let ((thunk (initializer component)))
     (funcall thunk)
     (setf (initializer component) nil))
-  (let* ((core (core (context component)))
-         (type (canonicalize-component-type (component-type component)
-                                            core)))
+  (let* ((core (core component))
+         (type (canonicalize-component-type (component-type component) core)))
     (with-slots (%tables) core
       (type-table-drop component type (component-preinit-by-type-view %tables))
       (setf (type-table type (component-init-by-type-view %tables))
             component))))
 
 (defun component/init->active (component)
-  (let* ((core (core (context component)))
+  (let* ((core (core component))
          (type (canonicalize-component-type (component-type component) core)))
     (with-slots (%tables) core
       (type-table-drop component type (component-init-by-type-view %tables))
@@ -91,18 +84,18 @@ DEFINE-COMPONENT form."
             (type-table type (component-active-by-type-view %tables))
             component))))
 
-(defmethod destroy-after-time ((thing component) &key (ttl 0))
-  (let* ((core (core (context thing)))
+(defmethod destroy-after-time ((kernel component) &key (ttl 0))
+  (let* ((core (core kernel))
          (table (u:href (component-predestroy-view (tables core)))))
-    (setf (ttl thing) (and ttl (max 0 ttl)))
+    (setf (ttl kernel) (and ttl (max 0 ttl)))
     (if ttl
-        (setf (u:href table thing) thing)
+        (setf (u:href table kernel) kernel)
         ;; If the TTL is stopped, we want to remove the component from the
         ;; pre-destroy view!
-        (remhash thing table))))
+        (remhash kernel table))))
 
 (defun component/init-or-active->destroy (component)
-  (let* ((core (core (context component)))
+  (let* ((core (core component))
          (type (canonicalize-component-type (component-type component) core)))
     (unless (plusp (ttl component))
       (with-slots (%tables) core
@@ -118,14 +111,14 @@ DEFINE-COMPONENT form."
                            (component-preinit-by-type-view %tables)))))))
 
 (defun component/destroy->released (component)
-  (let* ((core (core (context component)))
+  (let* ((core (core component))
          (type (canonicalize-component-type (component-type component) core)))
     (type-table-drop component
                      type
                      (component-destroy-by-type-view (tables core)))
     (detach-component (actor component) component)
-    (deregister-object-uuid component)
-    (deregister-object-id component)))
+    (deregister-kernel-uuid component)
+    (deregister-kernel-id component)))
 
 (defun component/countdown-to-destruction (component)
   (when (plusp (ttl component))
@@ -152,7 +145,7 @@ DEFINE-COMPONENT form."
                (on-component-detach component actor)))))
 
 (defun attach-component (actor component)
-  (let* ((core (core (context actor)))
+  (let* ((core (core actor))
          (qualified-type (qualify-component core (component-type component))))
     (detach-component actor component)
     (enqueue-attach-event component actor)
@@ -178,13 +171,13 @@ DEFINE-COMPONENT form."
 (defun components-by-type (actor component-type)
   "Get a list of all components of type COMPONENT-TYPE for the given ACTOR."
   (u:href (actor::components-by-type actor)
-          (qualify-component (core (context actor)) component-type)))
+          (qualify-component (core actor) component-type)))
 
 (defun component-by-type (actor component-type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.
 Returns the rest of the components as a secondary value if there are more than
 one of the same type."
-  (let* ((core (core (context actor)))
+  (let* ((core (core actor))
          (qualified-type (qualify-component core component-type))
          (components (components-by-type actor qualified-type)))
     (values (first components)

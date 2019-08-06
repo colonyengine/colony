@@ -999,7 +999,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
     (let* ((dir (ecase direction (:left -1) (:right 1)))
            (mockette (first
                       (v:make-prefab-instance
-                       (v::core (v:context player-stable))
+                       (v::core player-stable)
                        mockette-prefab
                        :parent stable)))
            (transform (v:component-by-type mockette 'c/xform:transform)))

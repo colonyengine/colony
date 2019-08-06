@@ -33,8 +33,7 @@
   :pathname "src"
   :serial t
   :components
-  (
-   (:file "package-actions")
+  ((:file "package-actions")
    (:file "package-actors")
    (:file "package-colliders")
    (:file "package-components")
@@ -75,7 +74,7 @@
    (:file "protocol-collider")
    (:file "protocol-component")
    (:file "protocol-rcache")
-   (:file "object-query")
+   (:file "kernel")
    (:file "hardware-query")
    (:file "annotations")
    (:file "clock")

@@ -64,7 +64,7 @@
                       :initform (u:dict))
    (%actors-by-id :reader actors-by-id
                   :initform (u:dict #'equalp))
-   (%objects-by-uuid :reader objects-by-uuid
+   (%kernels-by-uuid :reader kernels-by-uuid
                      :initform (u:dict #'equalp))))
 
 (defun pending-preinit-tasks-p (core)
