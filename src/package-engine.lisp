@@ -24,8 +24,8 @@
    #:frame-time
    #:id
    #:option
-   #:start-engine
-   #:stop-engine
+   #:start
+   #:stop
    #:total-time
    #:with-shared-storage)
   ;; I'm working on these still - MF

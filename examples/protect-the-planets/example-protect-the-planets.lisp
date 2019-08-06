@@ -3,7 +3,7 @@
 ;; To run this game, start your lisp repl, then:
 ;;
 ;; (ql:quickload :virality.examples)
-;; (virality.engine:start-engine :scene 'virality.examples.ptp:ptp)
+;; (virality.engine:start :scene 'virality.examples.ptp:ptp)
 
 ;; "Protect the Planets!"
 ;; by Peter Keller (psilord@cs.wisc.edu)

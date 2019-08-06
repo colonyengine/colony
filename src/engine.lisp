@@ -13,7 +13,7 @@
                        (<= (total-time (context ,core)) ,duration))
            (iterate-main-loop ,core))
          (when (running-p core)
-           (stop-engine ,core))
+           (stop ,core))
          (sb-profile:report)
          (sb-profile:unprofile)
          (sb-profile:reset)))))
@@ -89,14 +89,14 @@ tear-down procedure occurs when stopping the engine."
       (render-frame core)
       ;; TODO: Remove this later when possible.
       (when (in:input-enter-p context '(:key :escape))
-        (stop-engine core)))))
+        (stop core)))))
 
 (defun main-loop (core)
   (initialize-frame-time core)
   (u:while (running-p core)
     (iterate-main-loop core)))
 
-(defun start-engine (&key scene profile)
+(defun start (&key scene profile)
   "Start the engine. First we initialize the engine. Next we run the prologue as
 the last step, before finally starting the main game loop."
   (unwind-protect
@@ -111,7 +111,7 @@ the last step, before finally starting the main game loop."
              (main-loop core)))
     (sdl2::sdl-quit)))
 
-(defun stop-engine (core)
+(defun stop (core)
   "Stop the engine, making sure to call any user-defined epilogue function
 first, and finally cleaning up."
   (let ((title (option core :title)))

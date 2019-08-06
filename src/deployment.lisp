@@ -9,7 +9,7 @@
     (log:stop log:*global-controller*)
     (sb-ext:save-lisp-and-die
      file-name
-     :toplevel (lambda () (start-engine :scene scene))
+     :toplevel (lambda () (start :scene scene))
      :executable t
      :compression (when compress-p 9)))
   #-sbcl
