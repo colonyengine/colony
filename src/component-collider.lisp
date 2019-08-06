@@ -21,7 +21,7 @@
    (%geometry :reader geometry
               :initform (gl:gen-vertex-array))
    (%material :reader material
-              :initform 'contrib.mat::collider/sphere
+              :initform 'x/mat::collider/sphere
               :annotation (v::material))
    ;; TODO: We do not have a difference between triggers and collisions yet.
    ;; That will come when actual physics arrives.
@@ -60,11 +60,11 @@
     (return-from v:on-component-render))
   (a:when-let ((camera (v::active-camera (v:context self)))
                (transform (v:component-by-type (v:actor self)
-                                               'comp.transform:transform)))
+                                               'c/xform:transform)))
     (mat:with-material (material self)
-        (:model (comp.transform:model transform)
-         :view (comp.camera:view camera)
-         :proj (comp.camera:projection camera)
+        (:model (c/xform:model transform)
+         :view (c/cam:view camera)
+         :proj (c/cam:projection camera)
          :collider-local-position (center self)
          :in-contact-p (plusp (contact-count self))
          ;; NOTE: The shader computes the radius appropriately for
@@ -108,7 +108,7 @@
 (defmethod collide-p ((fist sphere) (face sphere))
   "Return T if the two spheres actually collided."
   ;; A test path when testing colliders outside of FL's prefabs.
-  ;; A test case, no transform comp.
+  ;; A test case, no transform component.
   (if (not (and (v:actor fist) (v:actor face)))
       (let ((distance/2 (/ (v3:distance (center fist) (center face)) 2.0)))
         (or (<= distance/2 (radius fist))
@@ -116,24 +116,24 @@
       ;; The real path through this code, which transforms the collider into
       ;; world space appropriately.
       (let* ((fist-transform (v:component-by-type (v:actor fist)
-                                                  'comp.transform:transform))
+                                                  'c/xform:transform))
              (face-transform (v:component-by-type (v:actor face)
-                                                  'comp.transform:transform))
+                                                  'c/xform:transform))
              ;; Figure out where the center for these colliders are in world
              ;; space.
              (fist-collider-world-center
-               (comp.transform:transform-point fist-transform (center fist)))
+               (c/xform:transform-point fist-transform (center fist)))
              (face-collider-world-center
-               (comp.transform:transform-point face-transform (center face)))
+               (c/xform:transform-point face-transform (center face)))
              ;; Figure out the size of the radius in world space. We treat the
              ;; radius as a vector and rotate/scale (but no translate!) it by the
              ;; world matrix.
              (fist-world-radius
-               (comp.transform:transform-vector fist-transform
-                                                (v3:vec (radius fist) 0 0)))
+               (c/xform:transform-vector fist-transform
+                                         (v3:vec (radius fist) 0 0)))
              (face-world-radius
-               (comp.transform:transform-vector face-transform
-                                                (v3:vec (radius face) 0 0)))
+               (c/xform:transform-vector face-transform
+                                         (v3:vec (radius face) 0 0)))
              ;; Compute the half way point between the two colliders.
              (distance (v3:distance fist-collider-world-center
                                     face-collider-world-center)))

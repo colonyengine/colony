@@ -153,15 +153,13 @@
     (:category v:texture-resolution
      :depends-on nil
      :weak-roots (core))
-  (search-path core
-               (:contrib.tex)))
+  (search-path core (:x/tex)))
 
 (define-graph core
     (:category v:material-resolution
      :depends-on nil
      :weak-roots (core))
-  (search-path core
-               (:contrib.mat)))
+  (search-path core (:x/mat)))
 
 (define-graph core
     (:category v:component-resolution
@@ -174,16 +172,14 @@
     (:category v:component-execution
      :depends-on nil
      :weak-roots (core)) ;; if not referenced, becomes a root.
-
   (execution-order all-unknown-types
                    ((unknown-types))) ;; (unknown-types) is special token
-
   (execution-order drawable
-                   (comp.mesh.static:static-mesh -> comp.sprite:sprite -> comp.render:render))
-
-  (execution-order core
-                   (comp.transform:transform
-                    -> (splice drawable))))
+                   (c/smesh:static-mesh
+                    -> c/dmesh:dynamic-mesh
+                    -> c/sprite:sprite
+                    -> c/render:render))
+  (execution-order core (c/xform:transform -> (splice drawable))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project graphs (that use the above)

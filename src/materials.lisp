@@ -15,15 +15,14 @@
 
 (defun %lookup-material (material-name core)
   "Find a material by its ID in CORE and return a gethash-like values. If the
-material isn't there, return the 'contrib.mat:missing-material. The return value
-is two values, the first is a material instance, and the second is T if the
+material isn't there, return the 'x/mat:missing-material. The return value is
+two values, the first is a material instance, and the second is T if the
 material being looked up was actually found, or NIL if it wasn't (and the
 missing material used)."
   (symbol-macrolet ((table (material-table (v::materials core))))
     (u:if-found (material (u:href table material-name))
                 material
-                (u:href table
-                        (a:ensure-symbol "MISSING-MATERIAL" :contrib.mat)))))
+                (u:href table (a:ensure-symbol "MISSING-MATERIAL" :x/mat)))))
 
 (defun %add-material (material core)
   "Add the MATERIAL by its id into CORE."

@@ -94,7 +94,7 @@ structures in CORE."
 (defun make-scene-tree (core)
   (let* ((context (context core))
          (actor (make-actor context :id 'universe :display-id "Universe"))
-         (transform (make-component context 'comp.transform:transform :actor actor)))
+         (transform (make-component context 'c/xform:transform :actor actor)))
     (attach-component actor transform)
     (spawn-actor actor :parent nil)
     (execute-flow core :default

@@ -18,13 +18,13 @@
          (radius (/ 2 radius))
          (vec (+ (* (.xy hash) (- radius 2))
                  (- (* vec radius) (1- radius)))))
-    (* (shaping:falloff-squared-c2 (min (dot vec vec) 1.0)) value)))
+    (* (shd/shape:falloff-squared-c2 (min (dot vec vec) 1.0)) value)))
 
 (define-function polkadot ((point :vec2)
                            (radius-low :float)
                            (radius-high :float))
   (polkadot point radius-low radius-high (lambda ((x :vec2))
-                                           (hash:fast32/cell x))))
+                                           (shd/hash:fast32/cell x))))
 
 ;;; 2D Polka-dot noise (box version)
 
@@ -42,13 +42,13 @@
          (vec (expt (+ (* (.xy hash) (- radius 2))
                        (- (* vec radius) (1- radius)))
                     (vec2 2))))
-    (* (shaping:falloff-squared-c2 (min (dot vec vec) 1.0)) value)))
+    (* (shd/shape:falloff-squared-c2 (min (dot vec vec) 1.0)) value)))
 
 (define-function polkadot-box ((point :vec2)
                                (radius-low :float)
                                (radius-high :float))
   (polkadot-box point radius-low radius-high (lambda ((x :vec2))
-                                               (hash:fast32/cell x))))
+                                               (shd/hash:fast32/cell x))))
 
 ;;; 3D Polka-dot noise
 
@@ -65,13 +65,13 @@
          (radius (/ 2 radius))
          (vec (+ (- (* vec radius) (1- radius))
                  (* (.xyz hash) (- radius 2)))))
-    (* (shaping:falloff-squared-c2 (min (dot vec vec) 1)) value)))
+    (* (shd/shape:falloff-squared-c2 (min (dot vec vec) 1)) value)))
 
 (define-function polkadot ((point :vec3)
                            (radius-low :float)
                            (radius-high :float))
   (polkadot point radius-low radius-high (lambda ((x :vec3))
-                                           (hash:fast32/cell x))))
+                                           (shd/hash:fast32/cell x))))
 
 ;;; 3D Polka-dot noise (box version)
 
@@ -89,10 +89,10 @@
          (vec (+ (- (* vec radius) (1- radius))
                  (* (.xyz hash) (- radius 2))))
          (vec (* vec vec)))
-    (* (shaping:falloff-squared-c2 (min (dot vec vec) 1)) value)))
+    (* (shd/shape:falloff-squared-c2 (min (dot vec vec) 1)) value)))
 
 (define-function polkadot-box ((point :vec3)
                                (radius-low :float)
                                (radius-high :float))
   (polkadot-box point radius-low radius-high (lambda ((x :vec3))
-                                               (hash:fast32/cell x))))
+                                               (shd/hash:fast32/cell x))))

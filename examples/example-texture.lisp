@@ -3,15 +3,15 @@
 ;;; Textures
 
 (v:define-texture 1d-gradient
-    (:texture-1d contrib.tex:clamp-all-edges)
+    (:texture-1d x/tex:clamp-all-edges)
   (:data #((:example-texture "texture-gradient-1d.tiff"))))
 
 (v:define-texture 2d-wood
-    (:texture-2d contrib.tex:clamp-all-edges)
+    (:texture-2d x/tex:clamp-all-edges)
   (:data #((:example-texture "wood.tiff"))))
 
 (v:define-texture 3d
-    (:texture-3d contrib.tex:clamp-all-edges)
+    (:texture-3d x/tex:clamp-all-edges)
   ;; TODO: Currently, these are the only valid origin and slices values. They
   ;; directly match the default of opengl.
   (:layout `((:origin :left-back-bottom)
@@ -34,7 +34,7 @@
            #((:3d "slice_0-mip_3.tiff")))))
 
 (v:define-texture 1d-array
-    (:texture-1d-array contrib.tex:clamp-all-edges)
+    (:texture-1d-array x/tex:clamp-all-edges)
   ;; If there are multiple images in each list, they are mipmaps. Since this is
   ;; a test, each mip_0 image is 8 width x 1 height
   (:data #(#((:1da "redline-mip_0.tiff")
@@ -55,7 +55,7 @@
              (:1da "whiteline-mip_3.tiff")))))
 
 (v:define-texture 2d-array
-    (:texture-2d-array contrib.tex:clamp-all-edges)
+    (:texture-2d-array x/tex:clamp-all-edges)
   ;; Since this is a test, each mip_0 image is 1024x1024 and has 11 mipmaps.
   (:data #(#((:2da "bluefur-mip_0.tiff")
              (:2da "bluefur-mip_1.tiff")
@@ -133,22 +133,22 @@
 ;;; Materials
 
 (v:define-material 1d-gradient
-  (:shader shd:unlit-texture-1d
-   :profiles (contrib.mat:u-mvp)
+  (:shader ex/shd:unlit-texture-1d
+   :profiles (x/mat:u-mvp)
    :uniforms
    ((:tex.sampler1 '1d-gradient)
     (:mix-color (v4:one)))))
 
 (v:define-material 2d-wood
-  (:shader shd.tex:unlit-texture
-   :profiles (contrib.mat:u-mvp)
+  (:shader shd/tex:unlit-texture
+   :profiles (x/mat:u-mvp)
    :uniforms
    ((:tex.sampler1 '2d-wood)
     (:mix-color (v4:one)))))
 
 (v:define-material 3d
-  (:shader shd:unlit-texture-3d
-   :profiles (contrib.mat:u-mvp)
+  (:shader ex/shd:unlit-texture-3d
+   :profiles (x/mat:u-mvp)
    :uniforms
    ((:tex.sampler1 '3d)
     (:mix-color (v4:one))
@@ -158,16 +158,16 @@
              (/ (1+ (sin (* (v:total-time context) 1.5))) 2.0))))))
 
 (v:define-material 1d-array
-  (:shader shd:unlit-texture-1d-array
-   :profiles (contrib.mat:u-mvpt)
+  (:shader ex/shd:unlit-texture-1d-array
+   :profiles (x/mat:u-mvpt)
    :uniforms
    ((:tex.sampler1 '1d-array)
     (:mix-color (v4:one))
     (:num-layers 4))))
 
 (v:define-material 2d-array
-  (:shader shd:unlit-texture-2d-array
-   :profiles (contrib.mat:u-mvpt)
+  (:shader ex/shd:unlit-texture-2d-array
+   :profiles (x/mat:u-mvpt)
    :uniforms
    ((:tex.sampler1 '2d-array)
     (:mix-color (v4:one))
@@ -178,8 +178,8 @@
     (:num-layers 4))))
 
 (v:define-material 2d-sweep-input
-  (:shader shd:noise-2d/sweep-input
-   :profiles (contrib.mat:u-mvp)
+  (:shader ex/shd:noise-2d/sweep-input
+   :profiles (x/mat:u-mvp)
    :uniforms
    ;; any old 2d texture here will do since we overwrite it with noise.
    ((:tex.sampler1 '2d-wood)
@@ -187,15 +187,15 @@
     (:mix-color (v4:one)))))
 
 (v:define-material cubemap
-  (:shader shd:unlit-texture-cube-map
-   :profiles (contrib.mat:u-mvp)
+  (:shader ex/shd:unlit-texture-cube-map
+   :profiles (x/mat:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemap)
     (:mix-color (v4:one)))))
 
 (v:define-material cubemaparray
-  (:shader shd:unlit-texture-cube-map-array
-   :profiles (contrib.mat:u-mvp)
+  (:shader ex/shd:unlit-texture-cube-map-array
+   :profiles (x/mat:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemaparray)
     (:mix-color (v4:one))
@@ -217,12 +217,12 @@
 
 (defmethod v:on-component-initialize ((self shader-sweep))
   (with-slots (%renderer) self
-    (setf %renderer (v:component-by-type (v:actor self) 'comp.render:render))))
+    (setf %renderer (v:component-by-type (v:actor self) 'c/render:render))))
 
 (defmethod v:on-component-update ((self shader-sweep))
   (with-slots (%material %material-retrieved-p) self
     (unless %material-retrieved-p
-      (setf %material (comp.render:material (renderer self))
+      (setf %material (c/render:material (renderer self))
             %material-retrieved-p t))
     (u:mvlet* ((context (v:context self))
                (x y (v:get-mouse-position context)))
@@ -240,38 +240,38 @@
 
 (v:define-prefab "texture" (:library examples :policy :new-type)
   (("camera" :copy "/cameras/perspective")
-   (comp.camera:camera (:policy :new-args) :zoom 6))
+   (c/cam:camera (:policy :new-args) :zoom 6))
   (("1d-texture" :copy "/mesh")
-   (comp.transform:transform :translate (v3:vec -4 3 0))
-   (comp.render:render :material '1d-gradient))
+   (c/xform:transform :translate (v3:vec -4 3 0))
+   (c/render:render :material '1d-gradient))
   (("2d-texture" :copy "/mesh")
-   (comp.transform:transform :translate (v3:vec -2 3 0))
-   (comp.render:render :material '2d-wood))
+   (c/xform:transform :translate (v3:vec -2 3 0))
+   (c/render:render :material '2d-wood))
   (("3d-texture" :copy "/mesh")
-   (comp.transform:transform :translate (v3:vec 0 3 0))
-   (comp.render:render :material '3d))
+   (c/xform:transform :translate (v3:vec 0 3 0))
+   (c/render:render :material '3d))
   (("1d-array-texture" :copy "/mesh")
-   (comp.transform:transform :translate (v3:vec 2 3 0))
-   (comp.render:render :material '1d-array))
+   (c/xform:transform :translate (v3:vec 2 3 0))
+   (c/render:render :material '1d-array))
   (("2d-array-texture" :copy "/mesh")
-   (comp.transform:transform :translate (v3:vec 4 3 0))
-   (comp.render:render :material '2d-array))
+   (c/xform:transform :translate (v3:vec 4 3 0))
+   (c/render:render :material '2d-array))
   (("swept-input" :copy "/mesh")
-   (comp.transform:transform :translate (v3:vec -4 1 0))
-   (comp.render:render :material '2d-sweep-input)
+   (c/xform:transform :translate (v3:vec -4 1 0))
+   (c/render:render :material '2d-sweep-input)
    (shader-sweep))
   (("cube-map" :copy "/mesh")
-   (comp.transform:transform :translate (v3:vec 0 -1 0)
-                             :rotate (q:orient :world
-                                               :x (asin (/ (sqrt 2)))
-                                               :z (/ pi 4)))
-   (comp.mesh.static:static-mesh :location '((:core :mesh) "cube.glb"))
-   (comp.render:render :material 'cubemap))
+   (c/xform:transform :translate (v3:vec 0 -1 0)
+                      :rotate (q:orient :world
+                                        :x (asin (/ (sqrt 2)))
+                                        :z (/ pi 4)))
+   (c/smesh:static-mesh :location '((:core :mesh) "cube.glb"))
+   (c/render:render :material 'cubemap))
   (("cube-map-array" :copy "/mesh")
-   (comp.transform:transform :translate (v3:vec 3 -1 0)
-                             :rotate/inc (q:orient :world (v3:one) (/ pi 4)))
-   (comp.mesh.static:static-mesh :location '((:core :mesh) "cube.glb"))
-   (comp.render:render :material 'cubemaparray)))
+   (c/xform:transform :translate (v3:vec 3 -1 0)
+                      :rotate/inc (q:orient :world (v3:one) (/ pi 4)))
+   (c/smesh:static-mesh :location '((:core :mesh) "cube.glb"))
+   (c/render:render :material 'cubemaparray)))
 
 ;;; Prefab descriptors
 

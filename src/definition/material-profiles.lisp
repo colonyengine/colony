@@ -1,4 +1,4 @@
-(in-package #:virality.contrib.materials)
+(in-package #:virality.extensions.materials)
 
 (mat:define-material-profile u-model
   (:uniforms

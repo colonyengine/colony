@@ -26,11 +26,11 @@
    (%transform :reader transform)))
 
 (defun correct-camera-transform (camera)
-  (when (v3:zero-p (comp.transform::current (comp.transform::translation (transform camera))))
+  (when (v3:zero-p (c/xform::current (c/xform::translation (transform camera))))
     (let ((translation (ecase (mode camera)
                          (:orthographic (v3:vec 0 0 1))
                          (:perspective (v3:vec 0 0 50)))))
-      (comp.transform:translate (transform camera) translation)
+      (c/xform:translate (transform camera) translation)
       (log:warn :virality.components
                 "Camera ~a was attached to an actor without a translation ~
                  transform.~%Using a sane default value for ~(~a~): ~s."
@@ -57,7 +57,7 @@
 (defun compute-camera-view (camera)
   (with-slots (%active-p %transform %view) camera
     (when %active-p
-      (let* ((model (comp.transform:model %transform))
+      (let* ((model (c/xform:model %transform))
              (eye (m4:get-translation model))
              (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3 model :z))))
              (up (m4:rotation-axis-to-vec3 model :y)))
@@ -79,7 +79,7 @@
 
 (defmethod v:on-component-initialize ((self camera))
   (with-slots (%transform %fov-y) self
-    (setf %transform (v:component-by-type (v:actor self) 'comp.transform:transform)
+    (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform)
           %fov-y (* %fov-y (/ pi 180)))
     (correct-camera-transform self)
     (make-projection self (mode self))

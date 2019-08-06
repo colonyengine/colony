@@ -62,13 +62,13 @@
     (u:do-hash-values (actor actors)
       (let ((node (actor::prefab-node actor)))
         (u:do-hash-values (child (children node))
-          (comp.transform:transform-add-child
-           (v:component-by-type actor 'comp.transform:transform)
+          (c/xform:transform-add-child
+           (v:component-by-type actor 'c/xform:transform)
            (v:component-by-type (u:href actors (path child))
-                                'comp.transform:transform)))))
-    (comp.transform:transform-add-child
-     (v:component-by-type parent 'comp.transform:transform)
-     (v:component-by-type root 'comp.transform:transform))))
+                                'c/xform:transform)))))
+    (c/xform:transform-add-child
+     (v:component-by-type parent 'c/xform:transform)
+     (v:component-by-type root 'c/xform:transform))))
 
 (defun make-factory (prefab)
   (lambda (core &key parent)

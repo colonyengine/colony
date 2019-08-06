@@ -96,7 +96,7 @@
 
 
 (define-shader starfield ()
-  (:vertex (shd.tex:unlit/vert mesh-attrs))
+  (:vertex (shd/tex:unlit/vert mesh-attrs))
   (:fragment (starfield/frag :vec4 :vec2)))
 
 
@@ -136,7 +136,7 @@
 (v:define-texture level-complete (:texture-2d)
   (:data #((:texture "level-complete.tiff"))))
 
-(v:define-texture white (:texture-2d contrib.tex:clamp-all-edges)
+(v:define-texture white (:texture-2d x/tex:clamp-all-edges)
   (:data #((:texture "white.tiff"))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -147,8 +147,8 @@
 ;; materials can be made for the same shader each providing diferent inputs to
 ;; that shader.
 (v:define-material sprite-sheet
-  (:profiles (contrib.mat:u-mvp)
-   :shader shd.sprite:sprite
+  (:profiles (x/mat:u-mvp)
+   :shader shd/sprite:sprite
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
               (:opacity 1.0)
               (:alpha-cutoff 0.1))
@@ -158,49 +158,49 @@
              :binding-policy :manual))))
 
 (v:define-material title
-  (:profiles (contrib.mat:u-mvp)
-   :shader shd.tex:unlit-texture-decal
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'title)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (v:define-material starfield
-  (:profiles (contrib.mat:u-mvpt)
-   :shader shd:starfield
+  (:profiles (x/mat:u-mvpt)
+   :shader ex/shd:starfield
    :uniforms ((:tex 'starfield)
               (:mix-color (v4:one)))))
 
 (v:define-material warning-mothership
-  (:profiles (contrib.mat:u-mvp)
-   :shader shd.tex:unlit-texture-decal
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-mothership)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (v:define-material warning-wave
-  (:profiles (contrib.mat:u-mvp)
-   :shader shd.tex:unlit-texture-decal
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-wave)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (v:define-material game-over
-  (:profiles (contrib.mat:u-mvp)
-   :shader shd.tex:unlit-texture-decal
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'game-over)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (v:define-material level-complete
-  (:profiles (contrib.mat:u-mvp)
-   :shader shd.tex:unlit-texture-decal
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'level-complete)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
 (v:define-material time-bar
-  (:profiles (contrib.mat:u-mvp)
-   :shader shd.tex:unlit-texture
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture
    :uniforms ((:tex.sampler1 'white)
               (:mix-color (v4:vec 0 1 0 1)))))
 
@@ -356,7 +356,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 (defmethod v:on-component-attach ((self player-movement) actor)
   (declare (ignore actor))
   (with-accessors ((actor v:actor) (transform transform)) self
-    (setf transform (v:component-by-type actor 'comp.transform:transform))))
+    (setf transform (v:component-by-type actor 'c/xform:transform))))
 
 
 (defmethod v:on-component-update ((self player-movement))
@@ -391,10 +391,10 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
            ;; the boundary cube we set.
            (current-translation
             ;; TODO NOTE: Prolly should fix these to be external.
-            (comp.transform::current (comp.transform::translation transform)))
+            (c/xform::current (c/xform::translation transform)))
            (vec (clip-movement-vector vec current-translation region-cuboid)))
 
-        (comp.transform:translate transform vec))
+        (c/xform:translate transform vec))
 
       ;; Then we settle the notion of how the player is oriented.  We're setting
       ;; a hard angle of rotation each time so we overwrite the previous value.
@@ -403,10 +403,10 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
                           angle)))
-          (comp.transform:rotate transform
-                                 (q:orient :local :z angle)
-                                 :replace-p t
-                                 :instant-p instant-p))))))
+          (c/xform:rotate transform
+                          (q:orient :local :z angle)
+                          :replace-p t
+                          :instant-p instant-p))))))
 
 ;; ;;;;;;;;;
 ;; Component: line-mover
@@ -430,7 +430,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 (defmethod v:on-component-attach ((self line-mover) actor)
   (declare (ignore actor))
   (with-accessors ((actor v:actor) (transform transform)) self
-    (setf transform (v:component-by-type actor 'comp.transform:transform))))
+    (setf transform (v:component-by-type actor 'c/xform:transform))))
 
 (defmethod v:on-component-physics-update ((self line-mover))
   (with-accessors ((context v:context)
@@ -441,9 +441,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
     ;; TODO: Figure out why I need this when physics is faster. It appears I
     ;; can compute a physics frame before components are attached?
     (when transform
-      (comp.transform:translate
+      (c/xform:translate
        transform
-       (let* ((local (comp.transform:local transform))
+       (let* ((local (c/xform:local transform))
               (x (m4:rotation-axis-to-vec3 local :x))
               (y (m4:rotation-axis-to-vec3 local :y))
               (z (m4:rotation-axis-to-vec3 local :z))
@@ -613,19 +613,19 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
          ;; TODO: I'm expecting the new-projectile to have components here
          ;; without having gone through the flow. BAD!
          (projectile-transform (v:component-by-type new-projectile
-                                                    'comp.transform:transform))
+                                                    'c/xform:transform))
          (projectile (v:component-by-type new-projectile 'projectile)))
 
     ;; Set the spatial configuration
     (setf (v3:z translation) (dl depth-layer))
-    (comp.transform:translate projectile-transform translation
-                              :instant-p t :replace-p t)
+    (c/xform:translate projectile-transform translation
+                       :instant-p t :replace-p t)
     ;; XXX This interface needs to take a quat here also
-    (comp.transform:rotate projectile-transform rotation
-                           :instant-p t :replace-p t)
+    (c/xform:rotate projectile-transform rotation
+                    :instant-p t :replace-p t)
     ;; And adjust the scale too.
-    (comp.transform:scale projectile-transform scale
-                          :instant-p t :replace-p t)
+    (c/xform:scale projectile-transform scale
+                   :instant-p t :replace-p t)
 
     (setf
      ;; Basic identification of the projectile
@@ -636,13 +636,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
      ;; Set what layer is the collider on?
      ;; TODO: When setting this, ensure I move the collider to the right
      ;; layer in the physics system.
-     (comp.col:on-layer (collider projectile)) physics-layer
+     (c/col:on-layer (collider projectile)) physics-layer
      ;; How fast is the projectile going?
      (velocity (mover projectile)) velocity
      ;; Tell the sprite what it should be rendering
      ;; TODO: make NAME and FRAMES public for sprite component.
-     (comp.sprite:name (sprite projectile)) name
-     (comp.sprite:frames (sprite projectile)) frames
+     (c/sprite:name (sprite projectile)) name
+     (c/sprite:frames (sprite projectile)) frames
 
      ;; and, what direction is it going in?
      (direction (mover projectile)) direction)
@@ -687,20 +687,20 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    ;; TODO: prefab-descriptor is wrong here.
                    `((,prefab-name ,prefab-library)))))
          (explosion-transform (v:component-by-type new-explosion
-                                                   'comp.transform:transform))
+                                                   'c/xform:transform))
          (explosion (v:component-by-type new-explosion 'explosion)))
 
     (setf
      ;; Configure the sprite.
-     (comp.sprite:name (sprite explosion)) name
-     (comp.sprite:frames (sprite explosion)) frames)
+     (c/sprite:name (sprite explosion)) name
+     (c/sprite:frames (sprite explosion)) frames)
 
-    (comp.transform:scale explosion-transform scale
-                :instant-p t :replace-p t)
-    (comp.transform:translate explosion-transform translation
+    (c/xform:scale explosion-transform scale
+                   :instant-p t :replace-p t)
+    (c/xform:translate explosion-transform translation
+                       :instant-p t :replace-p t)
+    (c/xform:rotate explosion-transform rotation
                     :instant-p t :replace-p t)
-    (comp.transform:rotate explosion-transform rotation
-                 :instant-p t :replace-p t)
 
     ;; By default explosions live a certain amount of time.
     (v:destroy-after-time new-explosion :ttl destroy-ttl)
@@ -709,8 +709,8 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 (defun possibly-make-explosion-at-actor (actor)
   (let* ((context (v:context actor))
-         (actor-transform (v:component-by-type actor 'comp.transform:transform))
-         (parent-model (comp.transform:model actor-transform))
+         (actor-transform (v:component-by-type actor 'c/xform:transform))
+         (parent-model (c/xform:model actor-transform))
          (parent-translation (m4:get-translation parent-model))
          (parent-rotation (q:from-mat4 parent-model))
          (explosion (v:component-by-type actor 'explosion)))
@@ -760,7 +760,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 (defmethod v:on-component-attach ((self gun) actor)
   (declare (ignore actor))
   (with-accessors ((actor v:actor) (emitter-transform emitter-transform)) self
-    (setf emitter-transform (v:component-by-type actor 'comp.transform:transform))))
+    (setf emitter-transform (v:component-by-type actor 'c/xform:transform))))
 
 (defmethod v:on-component-update ((self gun))
   (with-accessors ((context v:context)
@@ -785,7 +785,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
        (u:mvlet ((rx ry (v:get-gamepad-analog context
                                               '(:gamepad1 :right-stick))))
-         (let* ((parent-model (comp.transform:model emitter-transform))
+         (let* ((parent-model (c/xform:model emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
            (unless (or (= rx ry 0.0)
                        (< (v3:length (v3:vec rx ry 0)) rotate-deadzone))
@@ -866,7 +866,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       (return-from v:on-component-update))
 
     (let ((transform
-            (v:component-by-type (v:actor self) 'comp.transform:transform)))
+            (v:component-by-type (v:actor self) 'c/xform:transform)))
       (flet ((ransign (val &optional (offset 0))
                (+ (* (random (if (zerop val) 1 val))
                      (if (zerop (random 2)) 1 -1))
@@ -883,7 +883,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                   ;;
                   ;; TODO: abstract this to ue a boundary cube.
                   (target
-                    (comp.transform:transform-point
+                    (c/xform:transform-point
                      transform
                      (v3:vec (ransign 300.0) (ransign 300.0) 0.1)))
                   (quadrant (random 4)))
@@ -891,7 +891,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
              ;; pick an origin point in director space and convert it to world
              ;; space
              (setf origin
-                   (comp.transform:transform-point
+                   (c/xform:transform-point
                     transform
                     (ecase quadrant
                       (0 ;; left side
@@ -1002,9 +1002,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                        (v::core (v:context player-stable))
                        mockette-prefab
                        :parent stable)))
-           (transform (v:component-by-type mockette 'comp.transform:transform)))
+           (transform (v:component-by-type mockette 'c/xform:transform)))
 
-      (comp.transform:translate
+      (c/xform:translate
        transform (v3:vec (* mockette-index (* dir width-increment)) -60 0))
 
       (setf (aref mockette-refs mockette-index) mockette))))
@@ -1267,7 +1267,7 @@ NIL if no such list exists."
           (report-planet-alive (level-manager planet)))))))
 
 (defmethod v:on-component-attach ((self planet) actor)
-  (setf (transform self) (v:component-by-type actor 'comp.transform:transform)))
+  (setf (transform self) (v:component-by-type actor 'c/xform:transform)))
 
 (defmethod v:on-component-physics-update ((self planet))
   ;; This might fail for a few frames until things stabilize in the creation of
@@ -1318,7 +1318,7 @@ NIL if no such list exists."
                           1f0))
                 ;; Figure out where to put the explosion into world space.
                 (world-location
-                  (comp.transform:transform-point transform local-location))
+                  (c/xform:transform-point transform local-location))
                 (world-location (v3:vec (v4:x world-location)
                                         (v4:y world-location)
                                         (dl :planet-warning-explosion)))
@@ -1427,7 +1427,7 @@ NIL if no such list exists."
     (let ((how-far-to-empty (- 1f0 (/ time-left time-max))))
 
       ;; Size the time bar in accordance to how much time is left.
-      (comp.transform:scale time-bar-transform
+      (c/xform:scale time-bar-transform
                   (v3:vec time-bar-width
                           (a:lerp how-far-to-empty
                                   time-bar-height-scale
@@ -1436,7 +1436,7 @@ NIL if no such list exists."
                   :replace-p t)
 
       ;; Color the time bar in accordance to how much time is left.
-      (let ((material (comp.render:material time-bar-renderer)))
+      (let ((material (c/render:material time-bar-renderer)))
         (setf (v:uniform-ref material :mix-color)
               (v4:lerp time-bar-full-color time-bar-empty-color
                        how-far-to-empty)))
@@ -1961,26 +1961,26 @@ NIL if no such list exists."
 
 (v:define-prefab "projectile" (:library ptp)
   "A generic projectile that can be a bullet, or an asteroid, or whatever."
-  (projectile :transform (v:ref :self :component 'comp.transform:transform)
+  (projectile :transform (v:ref :self :component 'c/xform:transform)
               :mover (v:ref :self :component 'line-mover)
-              :collider (v:ref :self :component 'comp.col:sphere)
-              :sprite (v:ref :self :component 'comp.sprite:sprite)
-              :action (v:ref :self :component 'comp.actions:actions))
+              :collider (v:ref :self :component 'c/col:sphere)
+              :sprite (v:ref :self :component 'c/sprite:sprite)
+              :action (v:ref :self :component 'c/action:actions))
   (tags :tags '(:dangerous))
   (damage-points :dp 1)
   (explosion :name "explode01-01" :frames 15)
   (hit-points :hp 1)
   (line-mover)
-  (comp.sprite:sprite :spec :spritesheet-data)
-  (comp.col:sphere :center (v3:zero)
-                   :on-layer :enemy-bullet
-                   :referent (v:ref :self :component 'hit-points)
-                   :radius 15)
-  (comp.render:render :material 'sprite-sheet
-                      :mode :sprite)
-  (comp.actions:actions :default '((:type contrib.action:sprite-animate
-                                    :duration 0.5
-                                    :repeat-p t))))
+  (c/sprite:sprite :spec :spritesheet-data)
+  (c/col:sphere :center (v3:zero)
+                :on-layer :enemy-bullet
+                :referent (v:ref :self :component 'hit-points)
+                :radius 15)
+  (c/render:render :material 'sprite-sheet
+                   :mode :sprite)
+  (c/action:actions :default '((:type x/action:sprite-animate
+                                :duration 0.5
+                                :repeat-p t))))
 
 (v:define-prefab "player-ship" (:library ptp)
   "The venerable Player Ship. Controls how it looks, collides, and movement."
@@ -1994,38 +1994,38 @@ NIL if no such list exists."
               ;; TODO: NEED(!) to visualize this effect!
               :invulnerability-timer 1)
   (player-movement)
-  (comp.col:sphere :center (v3:zero)
-                   :on-layer :player
-                   :referent (v:ref :self :component 'hit-points)
-                   :radius 30)
+  (c/col:sphere :center (v3:zero)
+                :on-layer :player
+                :referent (v:ref :self :component 'hit-points)
+                :radius 30)
   ("ship-body"
-   (comp.sprite:sprite :spec :spritesheet-data
-                       :name "ship26")
-   (comp.render:render :material 'sprite-sheet
-                       :mode :sprite)
+   (c/sprite:sprite :spec :spritesheet-data
+                    :name "ship26")
+   (c/render:render :material 'sprite-sheet
+                    :mode :sprite)
    ("center-gun"
-    (comp.transform:transform :translate (v3:zero))
+    (c/xform:transform :translate (v3:zero))
     (gun :physics-layer :player-bullet
          :depth-layer :player-bullet
          :name "bullet01" :frames 2))
 
    ("exhaust"
-    (comp.transform:transform :translate (v3:vec 0 -60 0))
-    (comp.sprite:sprite :spec :spritesheet-data
-                        :name "exhaust03-01"
-                        :frames 8)
-    (comp.render:render :material 'sprite-sheet
-                        :mode :sprite)
-    (comp.actions:actions :default '((:type contrib.action:sprite-animate
-                                      :duration 0.5
-                                      :repeat-p t))))))
+    (c/xform:transform :translate (v3:vec 0 -60 0))
+    (c/sprite:sprite :spec :spritesheet-data
+                     :name "exhaust03-01"
+                     :frames 8)
+    (c/render:render :material 'sprite-sheet
+                     :mode :sprite)
+    (c/action:actions :default '((:type x/action:sprite-animate
+                                  :duration 0.5
+                                  :repeat-p t))))))
 
 (v:define-prefab "player-ship-mockette" (:library ptp)
   "An image of the ship, but no colliders or guns."
-  (comp.sprite:sprite :spec :spritesheet-data
-                      :name "ship26")
-  (comp.render:render :material 'sprite-sheet
-                      :mode :sprite))
+  (c/sprite:sprite :spec :spritesheet-data
+                   :name "ship26")
+  (c/render:render :material 'sprite-sheet
+                   :mode :sprite))
 
 (v:define-prefab "player-stable" (:library ptp)
   ;; TODO: Clarify when we actually need the / infront of the actor name during
@@ -2038,95 +2038,95 @@ NIL if no such list exists."
   (hit-points :hp 5)
   (explosion :name "explode03-01" :frames 15
              :scale (v3:vec 3f0 3f0 3f0))
-  (comp.col:sphere :center (v3:zero)
-                   :on-layer :planet
-                   :referent (v:ref :self :component 'planet)
-                   :visualize t
-                   :radius 145)
-  (comp.sprite:sprite :spec :spritesheet-data
-                      :name "planet01")
-  (comp.render:render :material 'sprite-sheet
-                      :mode :sprite))
+  (c/col:sphere :center (v3:zero)
+                :on-layer :planet
+                :referent (v:ref :self :component 'planet)
+                :visualize t
+                :radius 145)
+  (c/sprite:sprite :spec :spritesheet-data
+                   :name "planet01")
+  (c/render:render :material 'sprite-sheet
+                   :mode :sprite))
 
 (v:define-prefab "generic-explosion" (:library ptp)
-  (explosion :sprite (v:ref :self :component 'comp.sprite:sprite))
-  (comp.sprite:sprite :spec :spritesheet-data
-                      ;; TODO: When this is misnamed, the error is extremely obscure
-                      :name "explode01-01"
-                      :frames 15)
-  (comp.render:render :material 'sprite-sheet
-                      :mode :sprite)
-  (comp.actions:actions :default '((:type contrib.action:sprite-animate
-                                    :duration 0.5
-                                    :repeat-p nil))))
+  (explosion :sprite (v:ref :self :component 'c/sprite:sprite))
+  (c/sprite:sprite :spec :spritesheet-data
+                   ;; TODO: When this is misnamed, the error is extremely obscure
+                   :name "explode01-01"
+                   :frames 15)
+  (c/render:render :material 'sprite-sheet
+                   :mode :sprite)
+  (c/action:actions :default '((:type x/action:sprite-animate
+                                :duration 0.5
+                                :repeat-p nil))))
 
 ;; TODO: Refactor these signs into a single prefab and a sign component to
 ;; manage the configuration of the prefab.
 (v:define-prefab "warning-wave-sign" (:library ptp)
   "Not used yet."
-  (comp.transform:transform :translate (v3:vec 0 0 (dl :sign))
-                  :scale 512f0)
+  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+                     :scale 512f0)
   ("sign"
-   (comp.mesh.static:static-mesh :location '((:core :mesh) "plane.glb"))
-   (comp.render:render :material 'warning-wave)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'warning-wave)))
 
 (v:define-prefab "warning-mothership-sign" (:library ptp)
   "Not used yet."
-  (comp.transform:transform :translate (v3:vec 0 0 (dl :sign))
-                  :scale 512f0)
+  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+                     :scale 512f0)
   ("sign"
-   (comp.mesh.static:static-mesh :location '((:core :mesh) "plane.glb"))
-   (comp.render:render :material 'warning-mothership)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'warning-mothership)))
 
 (v:define-prefab "title-sign" (:library ptp)
-  (comp.transform:transform :translate (v3:vec 0 0 (dl :sign))
-                  :scale 512f0)
+  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+                     :scale 512f0)
   ("sign"
-   (comp.mesh.static:static-mesh :location '((:core :mesh) "plane.glb"))
-   (comp.render:render :material 'title)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'title)))
 
 (v:define-prefab "game-over-sign" (:library ptp)
-  (comp.transform:transform :translate (v3:vec 0 0 (dl :sign))
-                  :scale 512f0)
+  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+                     :scale 512f0)
   ("sign"
-   (comp.mesh.static:static-mesh :location '((:core :mesh) "plane.glb"))
-   (comp.render:render :material 'game-over)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'game-over)))
 
 (v:define-prefab "level-complete-sign" (:library ptp)
-  (comp.transform:transform :translate (v3:vec 0 0 (dl :sign))
-                  :scale 512f0)
+  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+                     :scale 512f0)
   ("sign"
-   (comp.mesh.static:static-mesh :location '((:core :mesh) "plane.glb"))
-   (comp.render:render :material 'level-complete)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'level-complete)))
 
 (v:define-prefab "starfield" (:library ptp)
   ("bug-todo:implicit-transform:see-trello"
-   (comp.transform:transform :scale 960
-                   ;; NOTE: ortho projection, so we can put starfield way
-                   ;; back.
-                   :translate (v3:vec 0 0 (dl :starfield)))
-   (comp.mesh.static:static-mesh :location '((:core :mesh) "plane.glb"))
-   (comp.render:render :material 'starfield)))
+   (c/xform:transform :scale 960
+                      ;; NOTE: ortho projection, so we can put starfield way
+                      ;; back.
+                      :translate (v3:vec 0 0 (dl :starfield)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'starfield)))
 
 (v:define-prefab "time-keeper" (:library ptp)
   ("bug-todo:implicit-transform:see-trello"
-   (comp.transform:transform :translate (v3:vec 900 -512 (dl :time-keeper)))
+   (c/xform:transform :translate (v3:vec 900 -512 (dl :time-keeper)))
    (time-keeper :time-max 30f0
                 :time-bar-transform (v:ref "time-bar-root"
-                                           :component 'comp.transform:transform)
+                                           :component 'c/xform:transform)
                 :time-bar-renderer (v:ref "time-bar-root/time-display"
-                                          :component 'comp.render:render))
+                                          :component 'c/render:render))
    ("time-bar-root"
     ;; When we scale the transform for this object, the alignment of the
     ;; time-bar will cause it to stretch upwards from a "ground" at 0 in this
     ;; coordinate frame.
     ("time-display"
-     (comp.transform:transform :translate (v3:vec 0 1 0))
-     (comp.mesh.static:static-mesh :location '((:core :mesh) "plane.glb"))
+     (c/xform:transform :translate (v3:vec 0 1 0))
+     (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
      ;; TODO: when 'time-bar is mis-spelled in the material,
      ;; I don't get the debug material, why?
      ;; TODO: I think this material is leaked when this object is destroyed.
-     (comp.render:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-")))))))
+     (c/render:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-")))))))
 
 (v:define-prefab "demo-level" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field))
@@ -2136,7 +2136,7 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   ("asteroids")
   (("title" :copy ("/title-sign" :from ptp))
-   (comp.transform:transform :translate (v3:vec 0 0 (dl :sign))
+   (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
                    ;; TODO: BUG: the scale in the original transform
                    ;; should have been preserved.
                    :scale 512f0)))
@@ -2152,19 +2152,19 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (comp.transform:transform :translate (v3:vec 0 100 (dl :planet))
+   (c/xform:transform :translate (v3:vec 0 100 (dl :planet))
                    :scale 0.9f0)
-   (comp.sprite:sprite :spec :spritesheet-data
+   (c/sprite:sprite :spec :spritesheet-data
                        :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
-   (comp.transform:transform :translate (v3:vec -200 -100 (dl :planet))
+   (c/xform:transform :translate (v3:vec -200 -100 (dl :planet))
                    :scale 0.9f0)
-   (comp.sprite:sprite :spec :spritesheet-data
+   (c/sprite:sprite :spec :spritesheet-data
                        :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from ptp))
-   (comp.transform:transform :translate (v3:vec 200 -100 (dl :planet))
+   (c/xform:transform :translate (v3:vec 200 -100 (dl :planet))
                    :scale 0.9f0)
-   (comp.sprite:sprite :spec :spritesheet-data
+   (c/sprite:sprite :spec :spritesheet-data
                        :name "planet03")))
 
 (v:define-prefab "level-1" (:library ptp)
@@ -2178,14 +2178,14 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (comp.transform:transform :translate (v3:vec -200 100 (dl :planet))
+   (c/xform:transform :translate (v3:vec -200 100 (dl :planet))
                    :scale 0.9f0)
-   (comp.sprite:sprite :spec :spritesheet-data
+   (c/sprite:sprite :spec :spritesheet-data
                        :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
-   (comp.transform:transform :translate (v3:vec 200 100 (dl :planet))
+   (c/xform:transform :translate (v3:vec 200 100 (dl :planet))
                    :scale 0.9f0)
-   (comp.sprite:sprite :spec :spritesheet-data
+   (c/sprite:sprite :spec :spritesheet-data
                        :name "planet02")))
 
 (v:define-prefab "level-2" (:library ptp)
@@ -2199,25 +2199,25 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (comp.transform:transform :translate (v3:vec 0 100 (dl :planet))
+   (c/xform:transform :translate (v3:vec 0 100 (dl :planet))
                    :scale 0.9f0)
-   (comp.sprite:sprite :spec :spritesheet-data
+   (c/sprite:sprite :spec :spritesheet-data
                        :name "planet01")))
 
 
 (v:define-prefab "protect-the-planets" (:library ptp)
   "The top most level prefab which has the component which drives the game
 sequencing."
-  (comp.transform:transform :scale (v3:one))
+  (c/xform:transform :scale (v3:one))
   (director :level-holder (v:ref "/protect-the-planets/current-level")
             :player-1-stable (v:ref "/protect-the-planets/player-1-stable"
                                     :component 'player-stable))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
-   (comp.transform:transform :translate (v3:vec 0 0 (dl :camera))))
+   (c/xform:transform :translate (v3:vec 0 0 (dl :camera))))
 
   (("player-1-stable" :link ("/player-stable" :from ptp))
-   (comp.transform:transform
+   (c/xform:transform
     :translate (v3:vec -900 550 (dl :player-stable))))
 
   ("current-level"))
@@ -2230,7 +2230,7 @@ testing the starfield shader."
   (("starfield" :link ("/starfield" :from ptp)))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
-   (comp.transform:transform :translate (v3:vec 0 0 (dl :camera)))))
+   (c/xform:transform :translate (v3:vec 0 0 (dl :camera)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefab descriptors for convenience

@@ -1,4 +1,4 @@
-(in-package #:virality.contrib.textures)
+(in-package #:virality.extensions.textures)
 
 (tex:define-texture framebuffer-color (:procedural framebuffer))
 

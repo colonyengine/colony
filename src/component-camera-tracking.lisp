@@ -10,17 +10,17 @@
   (with-slots (%target-transform) camera
     (setf (target-actor camera) actor)
     (when actor
-      (setf %target-transform (v:component-by-type actor 'comp.transform:transform)))))
+      (setf %target-transform (v:component-by-type actor 'c/xform:transform)))))
 
 (defmethod v:on-component-initialize ((self tracking-camera))
   (with-slots (%slave) self
-    (setf %slave (v:component-by-type (v:actor self) 'comp.camera:camera))
+    (setf %slave (v:component-by-type (v:actor self) 'c/cam:camera))
     (camera-target-actor self (target-actor self))))
 
 (defmethod v:on-component-update ((self tracking-camera))
   (let* ((slave (slave self))
-         (model (comp.transform:model (comp.camera:transform slave)))
+         (model (c/xform:model (c/cam:transform slave)))
          (eye (m4:get-translation model))
-         (target (m4:get-translation (comp.transform:model (target-transform self))))
+         (target (m4:get-translation (c/xform:model (target-transform self))))
          (up (v3:vec 0 1 0)))
-    (m4:set-view! (comp.camera:view slave) eye target up)))
+    (m4:set-view! (c/cam:view slave) eye target up)))

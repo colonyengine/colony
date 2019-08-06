@@ -28,17 +28,17 @@ on it or its components. If keyword argument :PARENT is supplied it is an actor
 reference which will be the parent of the spawning actor. It defaults to
 :universe, which means make this actor a child of the universe actor."
   (let ((core (v::core (v:context actor)))
-        (transform (v:component-by-type actor 'comp.transform:transform)))
+        (transform (v:component-by-type actor 'c/xform:transform)))
     (cond
       ((eq parent :universe)
-       (unless (comp.transform::parent transform)
-         (comp.transform:transform-add-child
-          (v:component-by-type (v::scene-tree core) 'comp.transform:transform)
-          (v:component-by-type actor 'comp.transform:transform))))
+       (unless (c/xform::parent transform)
+         (c/xform:transform-add-child
+          (v:component-by-type (v::scene-tree core) 'c/xform:transform)
+          (v:component-by-type actor 'c/xform:transform))))
       ((typep parent 'actor)
-       (comp.transform:transform-add-child
-        (v:component-by-type parent 'comp.transform:transform)
-        (v:component-by-type actor 'comp.transform:transform)))
+       (c/xform:transform-add-child
+        (v:component-by-type parent 'c/xform:transform)
+        (v:component-by-type actor 'c/xform:transform)))
       ((null parent)
        (u:noop))
       (t
@@ -101,16 +101,16 @@ reference which will be the parent of the spawning actor. It defaults to
            (v::deregister-object-uuid actor)
            (v::deregister-object-id actor)))
     (when actor
-      (comp.transform::map-nodes
+      (c/xform::map-nodes
        (lambda (x) (destroy-actor (actor x)))
-       (v:component-by-type actor 'comp.transform:transform)))))
+       (v:component-by-type actor 'c/xform:transform)))))
 
 (defun disconnect (actor)
   (when (eq (v:id actor) 'universe)
     (error "Cannot disconnect the top-level universe node."))
-  (let ((actor-transform (v:component-by-type actor 'comp.transform:transform)))
-    (comp.transform:transform-remove-child (comp.transform::parent actor-transform)
-                                           actor-transform)))
+  (let ((actor-transform (v:component-by-type actor 'c/xform:transform)))
+    (c/xform:transform-remove-child (c/xform::parent actor-transform)
+                                    actor-transform)))
 
 (defun destroy->released (actor)
   (let ((core (v::core (v:context actor))))

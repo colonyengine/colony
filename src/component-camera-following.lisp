@@ -13,21 +13,21 @@
   (with-slots (%target-transform) camera
     (setf (target-actor camera) actor)
     (when actor
-      (setf %target-transform (v:component-by-type actor 'comp.transform:transform)))))
+      (setf %target-transform (v:component-by-type actor 'c/xform:transform)))))
 
 (defmethod v:on-component-initialize ((self following-camera))
   (with-slots (%slave) self
-    (setf %slave (v:component-by-type (v:actor self) 'comp.camera:camera))
+    (setf %slave (v:component-by-type (v:actor self) 'c/cam:camera))
     (camera-target-actor self (target-actor self))))
 
 (defmethod v:on-component-update ((self following-camera))
   (with-slots (%transform) (slave self)
     (let* ((target-position (m4:get-translation
-                             (comp.transform:model (target-transform self))))
+                             (c/xform:model (target-transform self))))
            (new-camera-position (v3:+! target-position
                                        target-position
                                        (offset self))))
-      (m4:set-translation! (comp.transform:model %transform)
-                           (comp.transform:model %transform)
+      (m4:set-translation! (c/xform:model %transform)
+                           (c/xform:model %transform)
                            new-camera-position)
-      (comp.camera:compute-camera-view (slave self)))))
+      (c/cam:compute-camera-view (slave self)))))

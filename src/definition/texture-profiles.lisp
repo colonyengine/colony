@@ -1,4 +1,4 @@
-(in-package #:virality.contrib.textures)
+(in-package #:virality.extensions.textures)
 
 (tex:define-texture-profile default-profile
   ;; texparameter stuff, opengl defaults

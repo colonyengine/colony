@@ -67,7 +67,7 @@
 (defun draw-sprite (sprite &optional count)
   (with-slots (%index %spritesheet) sprite
     (with-slots (%geometry) %spritesheet
-      (gpu:uniform-int 'shd.sprite:sprite :sprite.index %index)
+      (gpu:uniform-int 'shd/sprite:sprite :sprite.index %index)
       (gl:bind-vertex-array %geometry)
       (gl:draw-arrays-instanced :points 0 1 count)
       (gl:bind-vertex-array 0))))

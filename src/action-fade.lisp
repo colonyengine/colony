@@ -1,7 +1,7 @@
-(in-package #:virality.contrib.actions)
+(in-package #:virality.extensions.actions)
 
 (defmethod action:on-update (action (type (eql 'fade-in)))
-  (let ((material (comp.render:material
+  (let ((material (c/render:material
                    (action:renderer (action:manager action)))))
     (setf (v:uniform-ref material :opacity) (action:step action))))
 
@@ -10,7 +10,7 @@
     (action:replace action 'fade-out)))
 
 (defmethod action:on-update (action (type (eql 'fade-out)))
-  (let ((material (comp.render:material
+  (let ((material (c/render:material
                    (action:renderer (action:manager action)))))
     (setf (v:uniform-ref material :opacity) (- 1 (action:step action)))))
 

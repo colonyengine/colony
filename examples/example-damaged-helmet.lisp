@@ -20,8 +20,8 @@
 ;;; Materials
 
 (v:define-material damaged-helmet
-  (:shader shd:damaged-helmet
-   :profiles (contrib.mat:u-mvp)
+  (:shader ex/shd:damaged-helmet
+   :profiles (x/mat:u-mvp)
    :uniforms
    ((:metallic-roughness-values (v2:one))
     (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)
@@ -41,13 +41,13 @@
 
 (v:define-prefab "damaged-helmet" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (comp.camera:camera (:policy :new-args) :zoom 10))
+   (c/cam:camera (:policy :new-args) :zoom 10))
   (("helmet" :copy "/mesh")
-   (comp.transform:transform :rotate (q:orient :local :x (/ pi 2))
-                             :rotate/inc (q:orient :local :z (- (/ pi 4)))
-                             :scale 4)
-   (comp.mesh.static:static-mesh :location '(:mesh "damaged-helmet.glb"))
-   (comp.render:render :material 'damaged-helmet)))
+   (c/xform:transform :rotate (q:orient :local :x (/ pi 2))
+                      :rotate/inc (q:orient :local :z (- (/ pi 4)))
+                      :scale 4)
+   (c/smesh:static-mesh :location '(:mesh "damaged-helmet.glb"))
+   (c/render:render :material 'damaged-helmet)))
 
 ;;; Prefab descriptors
 

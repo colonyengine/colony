@@ -87,9 +87,9 @@
                     'protocol-physics-update
                     :come-from-state-name
                     :ef-physics-update)
-      (comp.transform::map-nodes
-       (lambda (x) (comp.transform::transform-node core x))
-       (component-by-type (scene-tree core) 'comp.transform:transform))
+      (c/xform::map-nodes
+       (lambda (x) (c/xform::transform-node core x))
+       (component-by-type (scene-tree core) 'c/xform:transform))
       (execute-flow core
                     :default
                     'active-phase
