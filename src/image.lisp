@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.image)
 
 (defclass image ()
   ((%path :reader path

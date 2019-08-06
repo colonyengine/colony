@@ -1,71 +1,66 @@
 (in-package #:cl-user)
 
-(defpackage #:first-light.components
-  (:nicknames #:fl.comp)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:u #:golden-utils)
-                    (#:~ #:origin.swizzle)
-                    (#:v2 #:origin.vec2)
-                    (#:v3 #:origin.vec3)
-                    (#:v4 #:origin.vec4)
-                    (#:m4 #:origin.mat4)
-                    (#:q #:origin.quat))
-  (:use #:cl #:%first-light)
-  ;; camera
+(defpackage #:virality.components.actions
+  (:use #:cl)
+  (:export
+   #:actions))
+
+(defpackage #:virality.components.camera
+  (:use #:cl)
   (:export
    #:active-p
    #:camera
    #:compute-camera-view
    #:find-active-camera
-   #:following-camera
    #:projection
-   #:tracking-camera
    #:transform
    #:view
-   #:zoom-camera)
-  ;; action
+   #:zoom-camera))
+
+(defpackage #:virality.components.camera.tracking
+  (:use #:cl)
   (:export
-   #:action
-   #:actions
-   #:action-list
-   #:sprite-animate)
-  ;; mesh
+   #:tracking-camera))
+
+(defpackage #:virality.components.camera.following
+  (:use #:cl)
   (:export
-   #:dynamic-mesh
-   #:static-mesh)
-  ;; render
-  (:export
-   #:draw-mesh
-   #:material
-   #:render)
-  ;; sprite
-  (:export
-   #:sprite
-   #:update-sprite-index)
-  ;; transform
-  (:export
-   #:children
-   #:interpolate-transforms
-   #:local
-   #:map-nodes
-   #:model
-   #:parent
-   #:transform
-   #:transform-node
-   #:transform-add-child
-   #:transform-remove-child
-   #:translate
-   #:rotate
-   #:scale)
-  ;; various colliders
+   #:following-camera))
+
+(defpackage #:virality.components.collider
+  (:use #:cl)
   (:export
    #:center
-   #:collider/sphere
    #:collide-p
    #:on-layer
    #:radius
-   #:referent)
-  ;; transform
+   #:referent
+   #:sphere))
+
+(defpackage #:virality.components.mesh.dynamic
+  (:use #:cl)
+  (:export #:dynamic-mesh))
+
+(defpackage #:virality.components.mesh.static
+  (:use #:cl)
+  (:export #:static-mesh))
+
+(defpackage #:virality.components.render
+  (:use #:cl)
+  (:export
+   #:material
+   #:render))
+
+(defpackage #:virality.components.sprite
+  (:use #:cl)
+  (:export
+   #:frames
+   #:name
+   #:sprite
+   #:update-sprite-index))
+
+(defpackage #:virality.components.transform
+  (:use #:cl)
   (:export
    #:inverse-transform-direction
    #:inverse-transform-point

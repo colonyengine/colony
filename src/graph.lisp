@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defclass analyzed-graph ()
   ((%category :accessor category
@@ -246,22 +246,24 @@ null, and contains hyper edges, return values: list of hyper-edge pairs,
       v))
 
 (defun annotate-splices (val-list &rest args)
-  (mapcar (lambda (v) (apply #'annotate-splice v args)) val-list))
+  (mapcar
+   (lambda (x)
+     (apply #'annotate-splice x args))
+   val-list))
 
 (defun absorb-depforms (clg gdef depforms)
   "Traverse the depforms and add them into the clg as edges while keeping
 reference to the initial gdef associated with the depforms. Return three values:
 the cl-graph, the roots as elements, the leaves as elements."
-  (let ((roots)
-        (leaves))
+  (let (roots leaves)
     (loop :for depform :in depforms
           :for kind = (kind depform)
           :for canonical-form = (canonical-form depform)
           ;; check this when condition for validity.
           :when canonical-form
             :do (ecase kind
-                  ((:empty) nil)
-                  ((:hyperedges)
+                  (:empty nil)
+                  (:hyperedges
                    (pushnew (car (first canonical-form)) roots :test #'equalp)
                    (pushnew (cadar (last canonical-form)) leaves :test #'equalp)
                    (loop :for (from to) :in canonical-form
@@ -269,7 +271,7 @@ the cl-graph, the roots as elements, the leaves as elements."
                               clg
                               (annotate-splices from gdef)
                               (annotate-splices to gdef))))
-                  ((:vertex)
+                  (:vertex
                    ;; the :vertex for is not only the roots, but also the
                    ;; leaves.
                    (pushnew canonical-form roots :test #'equalp)
@@ -298,12 +300,8 @@ graphdef references holding real references to the named subforms."
                       ;; analyzed-depends-on object.
                       (if (eq subform-names :all)
                           ;; get all subform names in gdef
-                          (maphash
-                           (lambda (subform-name subform-instance)
-                             (setf (u:href (subforms analyzed-depends-on)
-                                           subform-name)
-                                   subform-instance))
-                           (subforms gdef-reference))
+                          (u:do-hash (k v (subforms gdef-reference))
+                            (setf (u:href (subforms analyzed-depends-on) k) v))
                           ;; find the listed subform-names (which if it is NIL,
                           ;; do nothing) in the gdef and assign them.
                           (dolist (subform-name subform-names)
@@ -465,7 +463,7 @@ depends-on in that GDEF."
               ;; because it isn't escaped properly, stuff like . + ? | whatever
               ;; in the package name will mess things up.
               (putative-package-name-regex
-                (format nil "^~A$" putative-package-name)))
+                (format nil "^~a$" putative-package-name)))
          ;; Kind of a terrible Big-O...
          (dolist (pkg-name all-packages)
            (a:when-let* ((matched-pkg-name (ppcre:scan-to-strings
@@ -494,15 +492,15 @@ return it, otherwise return the unknown-type-id symbol."
                         &body body)
   (declare (ignore category depends-on roots body))
   (a:with-gensyms (definitions)
-    `(symbol-macrolet ((,definitions (%fl:meta 'graphs)))
+    `(symbol-macrolet ((,definitions (meta 'graphs)))
        (unless ,definitions
-         (setf (%fl:meta 'graphs) (u:dict)))
+         (setf ,definitions (u:dict)))
        (setf (u:href ,definitions ',name) ',(cdr form)))))
 
 (defun load-graphs (core)
   (with-slots (%analyzed-graphs) core
     (setf %analyzed-graphs (u:dict))
-    (u:do-hash-values (graph-code (%fl:meta 'graphs))
+    (u:do-hash-values (graph-code (meta 'graphs))
       (destructuring-bind (name (&key category depends-on roots) . body)
           graph-code
         (symbol-macrolet ((graph (u:href %analyzed-graphs category)))

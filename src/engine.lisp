@@ -1,10 +1,10 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 #+sbcl
 (u:eval-always
   (defmacro profile (core duration)
     (let ((packages (remove-if-not
-                     (lambda (x) (search "FIRST-LIGHT" x))
+                     (lambda (x) (u:string-starts-with-p x "VIRALITY"))
                      (mapcar #'package-name (list-all-packages)))))
       `(progn
          (sb-profile:unprofile)
@@ -19,10 +19,14 @@
          (sb-profile:reset)))))
 
 (defgeneric prologue (context)
+  (:method :before (context)
+    (log:trace :virality.engine "Running prologue method."))
   (:method (context)
     (u:noop)))
 
 (defgeneric epilogue (context)
+  (:method :before (context)
+    (log:trace :virality.engine "Running epilogue method."))
   (:method (context)
     (u:noop)))
 
@@ -48,43 +52,44 @@ tear-down procedure occurs when stopping the engine."
     (unless (apply #'sdl2:was-init flags)
       (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
         (sdl2::check-rc (sdl2::sdl-init flags))))
-    (fl:prepare-gamepads gamepad-db)
+    (in::prepare-gamepads gamepad-db)
     (make-display core)))
 
 (defun shutdown-host (core)
-  (fl:shutdown-gamepads (input-data core))
+  (in::shutdown-gamepads (context core))
   (sdl2:destroy-window (window (display core)))
   (sdl2::sdl-quit))
 
 (defun load-initial-scene (core scene-name)
   (let* ((scene-name (or scene-name (option (context core) :initial-scene)))
-         (prefab-descriptor (fl.prefab:find-prefab-descriptor scene-name)))
-    (fl.prefab:make-prefab-instance core prefab-descriptor)))
+         (prefab-descriptor (prefab::find-prefab-descriptor scene-name)))
+    (make-prefab-instance core prefab-descriptor)))
 
 (defun initialize-engine (core scene-name)
   (let ((title (option (context core) :title)))
-    (v:info :fl.core.engine "Starting up ~a..." title)
+    (log:info :virality.engine "Starting up ~a..." title)
     (setup-live-coding)
     (enable-logging core)
-    (make-frame-manager core)
+    (make-clock core)
     (initialize-host core)
     (initialize-shaders core)
     (load-graphs core)
     (load-call-flows core)
-    (load-texture-descriptors core)
-    (load-materials core)
-    (initialize-collider-system core)
+    (tex::load-texture-descriptors core)
+    (mat::load-materials core)
+    (col::initialize-collider-system core)
     (make-scene-tree core)
     (load-initial-scene core scene-name)
-    (v:info :fl.core.engine "Finished starting ~a" title)))
+    (log:info :virality.engine "Finished starting ~a" title)))
 
 (defun iterate-main-loop (core)
-  (with-continue-restart "First Light"
-    (fl:handle-events (input-data core))
-    (render core)
-    ;; TODO: Remove this later when possible.
-    (when (fl:input-enter-p (input-data core) '(:key :escape))
-      (stop-engine core))))
+  (with-continue-restart "Virality Engine"
+    (let ((context (context core)))
+      (in::handle-events context)
+      (render-frame core)
+      ;; TODO: Remove this later when possible.
+      (when (in:input-enter-p context '(:key :escape))
+        (stop-engine core)))))
 
 (defun main-loop (core)
   (initialize-frame-time core)
@@ -110,10 +115,10 @@ the last step, before finally starting the main game loop."
   "Stop the engine, making sure to call any user-defined epilogue function
 first, and finally cleaning up."
   (let ((title (option core :title)))
-    (v:info :fl.core.engine "Shutting down ~a..." title)
+    (log:info :virality.engine "Shutting down ~a..." title)
     (run-epilogue core)
-    (fl.gpu:unload-shaders)
+    (gpu:unload-shaders)
     (shutdown-host core)
     (setf (running-p core) nil)
     (makunbound '*core-debug*)
-    (v:info :fl.core.engine "Successfully shut down ~a" title)))
+    (log:info :virality.engine "Successfully shut down ~a" title)))

@@ -1,4 +1,4 @@
-(in-package #:first-light.shader.shaping)
+(in-package #:virality.shaders.shaping)
 
 ;;;; Shaping functions
 ;;;; Various functions to modify a signal or interpolate a value non-linearly.

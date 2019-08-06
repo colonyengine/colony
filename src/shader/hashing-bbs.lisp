@@ -1,4 +1,4 @@
-(in-package #:first-light.shader.hash)
+(in-package #:virality.shaders.hashing)
 
 ;;;; Hashing functions
 ;;;; Blum Blum Shub

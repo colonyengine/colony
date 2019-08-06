@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu)
+(in-package #:virality.gpu)
 
 (defclass shader-buffer ()
   ((%id :reader id
@@ -29,12 +29,12 @@
     (:buffer :ssbo)))
 
 (defun find-buffer (buffer-name)
-  (let ((buffer-table (%fl:meta 'buffers)))
+  (let ((buffer-table (v::meta 'buffers)))
     (u:href buffer-table buffer-name)))
 
 (defun create-buffer (buffer-name block-alias)
   (a:if-let ((block (find-block block-alias)))
-    (let* ((buffer-table (%fl:meta 'buffers))
+    (let* ((buffer-table (v::meta 'buffers))
            (type (block-type->buffer-type (block-type block)))
            (target (buffer-type->target type))
            (buffer (%make-buffer buffer-name target (layout block))))
@@ -57,7 +57,7 @@
   (bind-buffer buffer-name 0))
 
 (defun delete-buffer (buffer-name)
-  (let ((buffer-table (%fl:meta 'buffers))
+  (let ((buffer-table (v::meta 'buffers))
         (buffer (find-buffer buffer-name)))
     (unbind-buffer buffer-name)
     (gl:delete-buffers (list (id buffer)))
@@ -156,7 +156,7 @@
                   (loop :for i :below count
                         :for index = (* columns %element-stride i)
                         :collect (make-matrix data index)))
-              (error "Only 2x2, 3x3, and 4x4")))))))
+              (error "Only square matrices are supported.")))))))
 
 (defun %read-buffer-member (target member &optional count)
   (with-slots (%type %dimensions %count %element-stride %element-type %offset

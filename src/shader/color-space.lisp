@@ -1,4 +1,4 @@
-(in-package #:first-light.shader.color)
+(in-package #:virality.shaders.color)
 
 ;;;; Color space conversion
 ;;;; Credits:
@@ -8,6 +8,7 @@
 ;;;; https://en.wikipedia.org/wiki/CIE_1931_color_space
 
 (defconstant +gamma+ (/ 2.2))
+
 (defconstant +gamma-inverse+ 2.2)
 
 ;;; Grayscale

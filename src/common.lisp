@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defgeneric destroy-after-time (thing &key ttl)
   (:documentation "Takes either an ACTOR or a COMPONENT. The keyword argument
@@ -72,27 +72,7 @@ the test function for `HT` itself."
               ;; NOTE: Look at function GENERATE-SHADER-MODIFY-HOOK for how we
               ;; put data into the recompilation queue that this case in the
               ;; ecase handles.
-              (:shader-recompilation (fl.gpu:recompile-shaders data))
+              (:shader-recompilation (gpu:recompile-shaders data))
               ;; NOTE: You will need a similar one for putting prefab
               ;; recompilation tasks into the recompilation queue too.
               (:prefab-recompilation 'put-your-function-here))))
-
-(defun get-time ()
-  #+sbcl
-  (u:mvlet ((s ms (sb-ext:get-time-of-day)))
-    (+ (- s (load-time-value (sb-ext:get-time-of-day)))
-       (/ ms 1d6)))
-  #-sbcl
-  (float (/ (get-internal-real-time) internal-time-units-per-second) 1d0))
-
-(defun resolve-system-path (system &optional path)
-  "Resolve the absolute path of the filesystem where `PATH` is located, relative
-to the ASDF system, `SYSTEM`, or relative to the program location in the case of
-running a dumped Lisp image from the command line. Note: A dumped image must
-have either been created with UIOP:DUMP-IMAGE, or have manually set
-UIOP/IMAGE:*IMAGE-DUMPED-P* prior to dumping."
-  (if uiop/image:*image-dumped-p*
-      (truename (uiop/pathname:merge-pathnames*
-                 path
-                 (uiop:pathname-directory-pathname (uiop:argv0))))
-      (asdf/system:system-relative-pathname (asdf:find-system system) path)))

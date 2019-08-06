@@ -1,8 +1,8 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defun ss-href (context component-name namespace &rest keys)
-  (let* ((qualified-component-name (qualify-component (core context)
-                                                      component-name))
+  (let* ((qualified-component-name (qualify-component
+                                    (core context) component-name))
          (metadata-ht-test-fns (cdr (shared-storage-metadata
                                      qualified-component-name namespace))))
     (when (null metadata-ht-test-fns)
@@ -22,8 +22,8 @@
            (list* qualified-component-name namespace keys))))
 
 (defun (setf ss-href) (new-value context component-name namespace &rest keys)
-  (let* ((qualified-component-name (qualify-component (core context)
-                                                      component-name))
+  (let* ((qualified-component-name (qualify-component
+                                    (core context) component-name))
          (metadata-ht-test-fns (cdr (shared-storage-metadata
                                      qualified-component-name namespace))))
     (assert (= (length metadata-ht-test-fns) (length keys)))
@@ -39,8 +39,8 @@
   "Convert a LOOKUP-FORM with form (a b c ... z) to a set of gensymed bindings
 like ((#:G0 a) (#:G1 b) (#:G2 c) ... (#:G26 z)) and return it."
   (mapcar
-   (lambda (element)
-     (list (gensym) element))
+   (lambda (x)
+     (list (gensym) x))
    lookup-form))
 
 (defun %generate-ss-get/set (context bindings body)
@@ -50,17 +50,15 @@ expanding with further bindings. When done, emit the body in the final and most
 dense lexical scope."
   (if (null bindings)
       `(progn ,@body)
-      (destructuring-bind (lexical-var presentp-var lookup-form
-                           cache-value-form)
+      (destructuring-bind (var present-p lookup-form cache-value-form)
           (first bindings)
         (let* ((lookup-binding-forms (%lookup-form-to-bindings lookup-form))
                (lookup-args (mapcar #'first lookup-binding-forms)))
           `(let ,lookup-binding-forms
-             (u:mvlet ((,lexical-var ,presentp-var (ss-href ,context
-                                                            ,@lookup-args)))
-               (unless ,presentp-var
-                 (setf ,lexical-var ,cache-value-form
-                       (ss-href ,context ,@lookup-args) ,lexical-var))
+             (u:mvlet ((,var ,present-p (ss-href ,context ,@lookup-args)))
+               (unless ,present-p
+                 (setf ,var ,cache-value-form
+                       (ss-href ,context ,@lookup-args) ,var))
                ,(%generate-ss-get/set context (rest bindings) body)))))))
 
 (defmacro with-shared-storage ((context-var context-form) cache-bindings

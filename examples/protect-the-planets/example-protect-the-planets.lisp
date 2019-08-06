@@ -1,9 +1,9 @@
-(in-package #:first-light.examples.protect-the-planets)
+(in-package #:virality.examples.protect-the-planets)
 
 ;; To run this game, start your lisp repl, then:
 ;;
-;; (ql:quickload :first-light.example)
-;; (fl:start-engine :scene 'fl.examples.ptp:ptp)
+;; (ql:quickload :virality.examples)
+;; (virality.engine:start-engine :scene 'virality.examples.ptp:ptp)
 
 ;; "Protect the Planets!"
 ;; by Peter Keller (psilord@cs.wisc.edu)
@@ -33,12 +33,12 @@
 ;; Constants
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; NOTE: Because we don't yet have mesh/sprite rendering order in first-light,
-;; or order independent transparency tools, etc yet, we'll need to define were
-;; things exist in layers perpendicular to the orthographic camera so they can
-;; be rendered in order according to the zbuffer. This also means no
+;; NOTE: Because we don't yet have mesh/sprite rendering order in Virality
+;; Engine, or order independent transparency tools, etc yet, we'll need to
+;; define were things exist in layers perpendicular to the orthographic camera
+;; so they can be rendered in order according to the zbuffer. This also means no
 ;; translucency since the rendering can happen in any order. Stencil textures
-;; are ok though.  NOTE: We must be careful here since things that collide with
+;; are ok though. NOTE: We must be careful here since things that collide with
 ;; each other must actually be physically close together in the game.
 (defparameter *draw-layer* (u:dict :starfield -100f0
                                    :player-stable -99f0
@@ -83,26 +83,25 @@
 ;; symbol name). However, I wanted the ENTIRE codebase to be in one file to
 ;; demonstrate this is possible for a game.
 
-(in-package #:first-light.shader.user)
+(in-package #:virality.examples.shaders)
 
-(u:eval-always
-  (define-function starfield/frag ((color :vec4)
-                                   (uv1 :vec2)
-                                   &uniform
-                                   (tex :sampler-2d)
-                                   (time :float)
-                                   (mix-color :vec4))
-    (let ((tex-color (texture tex (vec2 (.x uv1) (- (.y uv1) (/ time 50.0))))))
-      (* tex-color mix-color)))
+(define-function starfield/frag ((color :vec4)
+                                 (uv1 :vec2)
+                                 &uniform
+                                 (tex :sampler-2d)
+                                 (time :float)
+                                 (mix-color :vec4))
+  (let ((tex-color (texture tex (vec2 (.x uv1) (- (.y uv1) (/ time 50.0))))))
+    (* tex-color mix-color)))
 
 
-  (define-shader starfield ()
-    (:vertex (fl.shader.texture:unlit/vert fl.shader:mesh-attrs))
-    (:fragment (starfield/frag :vec4 :vec2))))
+(define-shader starfield ()
+  (:vertex (shd/tex:unlit/vert mesh-attrs))
+  (:fragment (starfield/frag :vec4 :vec2)))
 
 
 ;; Back to our regularly scheduled package!
-(in-package #:first-light.examples.protect-the-planets)
+(in-package #:virality.examples.protect-the-planets)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Textures
@@ -110,7 +109,7 @@
 
 ;; We only use a single sprite sheet atlas that contains all of our textures.
 ;; This one is invluded with FL
-(fl:define-texture sprite-atlas (:texture-2d)
+(v:define-texture sprite-atlas (:texture-2d)
   (:data #(:spritesheet)))
 
 ;; This background image was downloaded off the web here:
@@ -118,26 +117,26 @@
 ;; And the url for the license is 404, but the wayback machine found it:
 ;; https://web.archive.org/web/20180723233810/http://webtreats.mysitemyway.com/terms-of-use/
 ;; Which says it can be used for any purpose.
-(fl:define-texture starfield (:texture-2d)
+(v:define-texture starfield (:texture-2d)
   (:data #((:texture "starfield.tiff"))))
 
 ;; These two textures were created by Pixel_Outlaw for use in this game.
-(fl:define-texture warning-wave (:texture-2d)
+(v:define-texture warning-wave (:texture-2d)
   (:data #((:texture "warning-wave.tiff"))))
 
-(fl:define-texture warning-mothership (:texture-2d)
+(v:define-texture warning-mothership (:texture-2d)
   (:data #((:texture "warning-mothership.tiff"))))
 
-(fl:define-texture game-over (:texture-2d)
+(v:define-texture game-over (:texture-2d)
   (:data #((:texture "game-over.tiff"))))
 
-(fl:define-texture title (:texture-2d)
+(v:define-texture title (:texture-2d)
   (:data #((:texture "title.tiff"))))
 
-(fl:define-texture level-complete (:texture-2d)
+(v:define-texture level-complete (:texture-2d)
   (:data #((:texture "level-complete.tiff"))))
 
-(fl:define-texture white (:texture-2d fl.textures:clamp-all-edges)
+(v:define-texture white (:texture-2d x/tex:clamp-all-edges)
   (:data #((:texture "white.tiff"))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -147,9 +146,9 @@
 ;; A material is pre-packaged set of values for a particular shader. Different
 ;; materials can be made for the same shader each providing diferent inputs to
 ;; that shader.
-(fl:define-material sprite-sheet
-  (:profiles (fl.materials:u-mvp)
-   :shader fl.shader.sprite:sprite
+(v:define-material sprite-sheet
+  (:profiles (x/mat:u-mvp)
+   :shader shd/sprite:sprite
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
               (:opacity 1.0)
               (:alpha-cutoff 0.1))
@@ -158,50 +157,50 @@
              :block-alias :spritesheet
              :binding-policy :manual))))
 
-(fl:define-material title
-  (:profiles (fl.materials:u-mvp)
-   :shader fl.shader.texture:unlit-texture-decal
+(v:define-material title
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'title)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
-(fl:define-material starfield
-  (:profiles (fl.materials:u-mvpt)
-   :shader fl.shader.user:starfield
+(v:define-material starfield
+  (:profiles (x/mat:u-mvpt)
+   :shader ex/shd:starfield
    :uniforms ((:tex 'starfield)
               (:mix-color (v4:one)))))
 
-(fl:define-material warning-mothership
-  (:profiles (fl.materials:u-mvp)
-   :shader fl.shader.texture:unlit-texture-decal
+(v:define-material warning-mothership
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-mothership)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
-(fl:define-material warning-wave
-  (:profiles (fl.materials:u-mvp)
-   :shader fl.shader.texture:unlit-texture-decal
+(v:define-material warning-wave
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-wave)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
-(fl:define-material game-over
-  (:profiles (fl.materials:u-mvp)
-   :shader fl.shader.texture:unlit-texture-decal
+(v:define-material game-over
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'game-over)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
-(fl:define-material level-complete
-  (:profiles (fl.materials:u-mvp)
-   :shader fl.shader.texture:unlit-texture-decal
+(v:define-material level-complete
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'level-complete)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:one)))))
 
-(fl:define-material time-bar
-  (:profiles (fl.materials:u-mvp)
-   :shader fl.shader.texture:unlit-texture
+(v:define-material time-bar
+  (:profiles (x/mat:u-mvp)
+   :shader shd/tex:unlit-texture
    :uniforms ((:tex.sampler1 'white)
               (:mix-color (v4:vec 0 1 0 1)))))
 
@@ -331,7 +330,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; orient the player.
 ;; ;;;;;;;;;
 
-(fl:define-component player-movement ()
+(v:define-component player-movement ()
   ((%transform :accessor transform
                :initarg :transform
                :initform nil)
@@ -354,22 +353,21 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
 ;; upon attaching, this component will store find the transform component
 ;; on the actor to which it has been attached and keep a direct reference to it.
-(defmethod fl:on-component-attach ((self player-movement) actor)
+(defmethod v:on-component-attach ((self player-movement) actor)
   (declare (ignore actor))
-  (with-accessors ((actor fl:actor) (transform transform)) self
-    (setf transform (fl:actor-component-by-type actor 'transform))))
+  (with-accessors ((actor v:actor) (transform transform)) self
+    (setf transform (v:component-by-type actor 'c/xform:transform))))
 
 
-(defmethod fl:on-component-update ((self player-movement))
-  (with-accessors ((context fl:context) (transform transform)
+(defmethod v:on-component-update ((self player-movement))
+  (with-accessors ((context v:context) (transform transform)
                    (max-velocity max-velocity)
                    (translate-deadzone translate-deadzone)
                    (rotate-deadzone rotate-deadzone)
                    (region-cuboid region-cuboid))
       self
-    (u:mvlet ((lx ly (fl:get-gamepad-analog (fl:input-data context)
-                                            '(:gamepad1 :left-stick)))
-              (instant-p (zerop (fl:frame-count context))))
+    (u:mvlet ((lx ly (v:get-gamepad-analog context '(:gamepad1 :left-stick)))
+              (instant-p (zerop (v:frame-count context))))
 
       ;; First, we settle the notion of how the player translates around with
       ;; left stick
@@ -381,22 +379,22 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
            ;; Right trigger modifies speed. pull to lerp from full speed
            ;; to half speed.
            (ty
-            (nth-value 1 (fl:get-gamepad-analog (fl:input-data context)
-                                                '(:gamepad1 :triggers))))
+            (nth-value 1 (v:get-gamepad-analog
+                          context '(:gamepad1 :triggers))))
            ;; Compute the actual translation vector related to our frame time!
            (vec
             (v3:scale vec
                       (float (* (a:lerp ty max-velocity (/ max-velocity 2f0))
-                                (fl:frame-time context))
+                                (v:frame-time context))
                              1f0)))
            ;; and ensure we clip the translation vector so we can't go out of
            ;; the boundary cube we set.
            (current-translation
             ;; TODO NOTE: Prolly should fix these to be external.
-            (fl.comp::current (fl.comp::translation transform)))
+            (c/xform::current (c/xform::translation transform)))
            (vec (clip-movement-vector vec current-translation region-cuboid)))
 
-        (fl.comp:translate transform vec))
+        (c/xform:translate transform vec))
 
       ;; Then we settle the notion of how the player is oriented.  We're setting
       ;; a hard angle of rotation each time so we overwrite the previous value.
@@ -405,7 +403,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
                           angle)))
-          (fl.comp:rotate transform
+          (c/xform:rotate transform
                           (q:orient :local :z angle)
                           :replace-p t
                           :instant-p instant-p))))))
@@ -417,7 +415,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; not a sophisticated component. We use it to move projectiles.
 ;;;;;;;;;
 
-(fl:define-component line-mover ()
+(v:define-component line-mover ()
   ((%direction :accessor direction
                :initarg :direction
                ;; NOTE: may be :+y :-y :+x :-x :+z :-z or a vec3
@@ -429,13 +427,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
               :initarg :velocity
               :initform 0)))
 
-(defmethod fl:on-component-attach ((self line-mover) actor)
+(defmethod v:on-component-attach ((self line-mover) actor)
   (declare (ignore actor))
-  (with-accessors ((actor fl:actor) (transform transform)) self
-    (setf transform (fl:actor-component-by-type actor 'fl.comp:transform))))
+  (with-accessors ((actor v:actor) (transform transform)) self
+    (setf transform (v:component-by-type actor 'c/xform:transform))))
 
-(defmethod fl:on-component-physics-update ((self line-mover))
-  (with-accessors ((context fl:context)
+(defmethod v:on-component-physics-update ((self line-mover))
+  (with-accessors ((context v:context)
                    (transform transform)
                    (velocity velocity)
                    (direction direction))
@@ -443,9 +441,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
     ;; TODO: Figure out why I need this when physics is faster. It appears I
     ;; can compute a physics frame before components are attached?
     (when transform
-      (fl.comp:translate
+      (c/xform:translate
        transform
-       (let* ((local (fl.comp:local transform))
+       (let* ((local (c/xform:local transform))
               (x (m4:rotation-axis-to-vec3 local :x))
               (y (m4:rotation-axis-to-vec3 local :y))
               (z (m4:rotation-axis-to-vec3 local :z))
@@ -459,7 +457,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                         (:+z z)
                         (:-z (v3:negate z)))
                       direction)))
-              (move-delta (* velocity (fl:delta context))))
+              (move-delta (* velocity (v:delta context))))
          (v3:scale a move-delta))))))
 
 ;; ;;;;;;;;;
@@ -471,7 +469,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; appropriate actor that has it.
 ;; ;;;;;;;;;
 
-(fl:define-component damage-points ()
+(v:define-component damage-points ()
   ((%dp :accessor dp
         :initarg :dp
         :initform 1)))
@@ -483,7 +481,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; to zero or below.
 ;;;;;;;;;
 
-(fl:define-component hit-points ()
+(v:define-component hit-points ()
   ((%hp :accessor hp
         :initarg :hp
         :initform 1)
@@ -503,24 +501,24 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                         :initform t)))
 
 
-(defmethod fl:on-component-update ((self hit-points))
-  (with-accessors ((context fl:context)
+(defmethod v:on-component-update ((self hit-points))
+  (with-accessors ((context v:context)
                    (allow-invulnerability allow-invulnerability)
                    (invulnerability-timer invulnerability-timer))
       self
 
     (when (and allow-invulnerability (> invulnerability-timer 0))
-      (decf invulnerability-timer (fl:frame-time context))
+      (decf invulnerability-timer (v:frame-time context))
       (when (<= invulnerability-timer 0)
         (setf invulnerability-timer 0)))))
 
 (defmethod possibly-accept-damage ((self hit-points) other-collider)
-  (with-accessors ((context fl:context)
+  (with-accessors ((context v:context)
                    (allow-auto-destroy allow-auto-destroy)
                    (invulnerability-timer invulnerability-timer))
       self
-    (let ((other-damage-points (fl:actor-component-by-type
-                                (fl:actor other-collider)
+    (let ((other-damage-points (v:component-by-type
+                                (v:actor other-collider)
                                 'damage-points)))
 
       (when (> invulnerability-timer 0)
@@ -541,20 +539,20 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
         (setf (hp self) 0)))))
 
 (defmethod possibly-auto-destroy ((self hit-points))
-  (with-accessors ((context fl:context)
+  (with-accessors ((context v:context)
                    (allow-auto-destroy allow-auto-destroy)
                    (invulnerability-timer invulnerability-timer))
       self
     (when (and allow-auto-destroy (<= (hp self) 0))
       ;; Destroy my actor.
-      (fl:destroy (fl:actor self))
+      (v:destroy (v:actor self))
       ;; And, if the actor had an explosion component, cause the explosion
       ;; to happen
-      (possibly-make-explosion-at-actor (fl:actor self)))))
+      (possibly-make-explosion-at-actor (v:actor self)))))
 
 
-(defmethod fl:on-collision-enter ((self hit-points) other-collider)
-  (with-accessors ((context fl:context)
+(defmethod v:on-collision-enter ((self hit-points) other-collider)
+  (with-accessors ((context v:context)
                    (allow-auto-destroy allow-auto-destroy)
                    (invulnerability-timer invulnerability-timer))
       self
@@ -568,7 +566,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; when it spawns.
 ;;;;;;;;;
 
-(fl:define-component projectile ()
+(v:define-component projectile ()
   ((%name :accessor name
           :initarg :name
           :initform nil)
@@ -607,26 +605,26 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   (let* ((new-projectile
            ;; TODO: This API needs to take a context. prefab-descriptor prolly
            ;; needs to be a function, not a macro.
-           (first (fl:make-prefab-instance
-                   (%fl::core context)
+           (first (v:make-prefab-instance
+                   (v::core context)
                    ;; TODO: prefab-descriptor is wrong here.
                    `((,prefab-name ,prefab-library))
                    :parent parent)))
          ;; TODO: I'm expecting the new-projectile to have components here
          ;; without having gone through the flow. BAD!
-         (projectile-transform (fl:actor-component-by-type new-projectile
-                                                           'fl.comp:transform))
-         (projectile (fl:actor-component-by-type new-projectile 'projectile)))
+         (projectile-transform (v:component-by-type new-projectile
+                                                    'c/xform:transform))
+         (projectile (v:component-by-type new-projectile 'projectile)))
 
     ;; Set the spatial configuration
     (setf (v3:z translation) (dl depth-layer))
-    (fl.comp:translate projectile-transform translation
+    (c/xform:translate projectile-transform translation
                        :instant-p t :replace-p t)
     ;; XXX This interface needs to take a quat here also
-    (fl.comp:rotate projectile-transform rotation
+    (c/xform:rotate projectile-transform rotation
                     :instant-p t :replace-p t)
     ;; And adjust the scale too.
-    (fl.comp:scale projectile-transform scale
+    (c/xform:scale projectile-transform scale
                    :instant-p t :replace-p t)
 
     (setf
@@ -634,23 +632,23 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
      (name projectile) name
      (frames projectile) frames
      ;; Give the collider a cheesy name until I get rid of this name feature.
-     (fl:display-id (collider projectile)) name
+     (v:display-id (collider projectile)) name
      ;; Set what layer is the collider on?
      ;; TODO: When setting this, ensure I move the collider to the right
      ;; layer in the physics system.
-     (fl.comp:on-layer (collider projectile)) physics-layer
+     (c/col:on-layer (collider projectile)) physics-layer
      ;; How fast is the projectile going?
      (velocity (mover projectile)) velocity
      ;; Tell the sprite what it should be rendering
      ;; TODO: make NAME and FRAMES public for sprite component.
-     (fl.comp::name (sprite projectile)) name
-     (fl.comp::frames (sprite projectile)) frames
+     (c/sprite:name (sprite projectile)) name
+     (c/sprite:frames (sprite projectile)) frames
 
      ;; and, what direction is it going in?
      (direction (mover projectile)) direction)
 
     ;; By default projectiles live a certain amount of time.
-    (fl:destroy-after-time new-projectile :ttl destroy-ttl)
+    (v:destroy-after-time new-projectile :ttl destroy-ttl)
 
     new-projectile))
 
@@ -661,7 +659,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; Describe an explosion.
 ;;;;;;;;;
 
-(fl:define-component explosion ()
+(v:define-component explosion ()
   ((%sprite :accessor sprite
             :initarg :sprite
             :initform nil)
@@ -684,39 +682,38 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                          (name "explode01-01")
                          (frames 15))
   (let* ((new-explosion
-           (first (fl:make-prefab-instance
-                   (%fl::core context)
+           (first (v:make-prefab-instance
+                   (v::core context)
                    ;; TODO: prefab-descriptor is wrong here.
                    `((,prefab-name ,prefab-library)))))
-         (explosion-transform (fl:actor-component-by-type new-explosion
-                                                          'fl.comp:transform))
-         (explosion (fl:actor-component-by-type new-explosion 'explosion)))
+         (explosion-transform (v:component-by-type new-explosion
+                                                   'c/xform:transform))
+         (explosion (v:component-by-type new-explosion 'explosion)))
 
     (setf
      ;; Configure the sprite.
-     (fl.comp::name (sprite explosion)) name
-     (fl.comp::frames (sprite explosion)) frames)
+     (c/sprite:name (sprite explosion)) name
+     (c/sprite:frames (sprite explosion)) frames)
 
-    (fl.comp:scale explosion-transform scale
+    (c/xform:scale explosion-transform scale
                    :instant-p t :replace-p t)
-    (fl.comp:translate explosion-transform translation
+    (c/xform:translate explosion-transform translation
                        :instant-p t :replace-p t)
-    (fl.comp:rotate explosion-transform rotation
+    (c/xform:rotate explosion-transform rotation
                     :instant-p t :replace-p t)
 
     ;; By default explosions live a certain amount of time.
-    (fl:destroy-after-time new-explosion :ttl destroy-ttl)
+    (v:destroy-after-time new-explosion :ttl destroy-ttl)
 
     new-explosion))
 
 (defun possibly-make-explosion-at-actor (actor)
-  (let* ((context (fl:context actor))
-         (actor-transform (fl:actor-component-by-type actor
-                                                      'fl.comp:transform))
-         (parent-model (fl.comp:model actor-transform))
+  (let* ((context (v:context actor))
+         (actor-transform (v:component-by-type actor 'c/xform:transform))
+         (parent-model (c/xform:model actor-transform))
          (parent-translation (m4:get-translation parent-model))
          (parent-rotation (q:from-mat4 parent-model))
-         (explosion (fl:actor-component-by-type actor 'explosion)))
+         (explosion (v:component-by-type actor 'explosion)))
     (when explosion
       (make-explosion context
                       parent-translation
@@ -731,7 +728,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; This fires the specified projectiles
 ;;;;;;;;;
 
-(fl:define-component gun ()
+(v:define-component gun ()
   ((%emitter-transform :accessor emitter-transform
                        :initarg :emitter-transform
                        :initform nil)
@@ -760,14 +757,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
             ;; TODO: Bug, if I put 1 here, I get the WRONG sprite sometimes.
             :initform 2)))
 
-(defmethod fl:on-component-attach ((self gun) actor)
+(defmethod v:on-component-attach ((self gun) actor)
   (declare (ignore actor))
-  (with-accessors ((actor fl:actor) (emitter-transform emitter-transform)) self
-    (setf emitter-transform (fl:actor-component-by-type
-                             actor 'fl.comp:transform))))
+  (with-accessors ((actor v:actor) (emitter-transform emitter-transform)) self
+    (setf emitter-transform (v:component-by-type actor 'c/xform:transform))))
 
-(defmethod fl:on-component-update ((self gun))
-  (with-accessors ((context fl:context)
+(defmethod v:on-component-update ((self gun))
+  (with-accessors ((context v:context)
                    (rotate-deadzone rotate-deadzone)
                    (fire-period fire-period)
                    (cooldown-time cooldown-time)
@@ -787,9 +783,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
        (loop :while (>= cooldown-time (/ fire-period))
              :do (decf cooldown-time (/ fire-period)))
 
-       (u:mvlet ((rx ry (fl:get-gamepad-analog
-                         (fl:input-data context) '(:gamepad1 :right-stick))))
-         (let* ((parent-model (fl.comp:model emitter-transform))
+       (u:mvlet ((rx ry (v:get-gamepad-analog context
+                                              '(:gamepad1 :right-stick))))
+         (let* ((parent-model (c/xform:model emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
            (unless (or (= rx ry 0.0)
                        (< (v3:length (v3:vec rx ry 0)) rotate-deadzone))
@@ -809,7 +805,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 
       ;; Just accumulate more time until we know we can fire again.
       (t
-       (incf cooldown-time (fl:frame-time context))))))
+       (incf cooldown-time (v:frame-time context))))))
 
 ;; ;;;;;;;;;
 ;; Component: asteroid-field
@@ -818,7 +814,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; difficulty.
 ;;;;;;;;;
 
-(fl:define-component asteroid-field ()
+(v:define-component asteroid-field ()
   ((%pause-p :accessor pause-p
              :initarg :pause-p
              :initform nil)
@@ -853,7 +849,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                  :initform (v2:vec 0.75 1.25))))
 
 
-(defmethod fl:on-component-update ((self asteroid-field))
+(defmethod v:on-component-update ((self asteroid-field))
   (with-accessors ((spawn-period spawn-period)
                    (cooldown-time cooldown-time)
                    (asteroid-holder asteroid-holder)
@@ -861,16 +857,16 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                    (difficulty-period difficulty-period)
                    (difficulty-time difficulty-time)
                    (pause-p pause-p)
-                   (context fl:context)
+                   (context v:context)
                    (asteroid-db asteroid-db)
                    (scale-range scale-range))
       self
 
     (when pause-p
-      (return-from fl:on-component-update))
+      (return-from v:on-component-update))
 
     (let ((transform
-            (fl:actor-component-by-type (fl:actor self) 'fl.comp:transform)))
+            (v:component-by-type (v:actor self) 'c/xform:transform)))
       (flet ((ransign (val &optional (offset 0))
                (+ (* (random (if (zerop val) 1 val))
                      (if (zerop (random 2)) 1 -1))
@@ -887,7 +883,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                   ;;
                   ;; TODO: abstract this to ue a boundary cube.
                   (target
-                    (fl.comp:transform-point
+                    (c/xform:transform-point
                      transform
                      (v3:vec (ransign 300.0) (ransign 300.0) 0.1)))
                   (quadrant (random 4)))
@@ -895,9 +891,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
              ;; pick an origin point in director space and convert it to world
              ;; space
              (setf origin
-                   (fl.comp:transform-point
+                   (c/xform:transform-point
                     transform
-                    (case quadrant
+                    (ecase quadrant
                       (0 ;; left side
                        (v3:vec -1000.0 (ransign 600.0) 0.1))
                       (1 ;; top side
@@ -931,7 +927,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                                   :parent asteroid-holder)))))
 
           (t
-           (incf cooldown-time (fl:frame-time context))))
+           (incf cooldown-time (v:frame-time context))))
 
         ;; Now increase difficulty!
         (cond
@@ -942,7 +938,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
            (incf difficulty 1))
 
           (t
-           (incf difficulty-time (fl:frame-time context))))))))
+           (incf difficulty-time (v:frame-time context))))))))
 
 ;; ;;;;;;;;;
 ;; Component: player-stable
@@ -954,7 +950,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
 ;; TODO: This component will have a much different form when we're able to
 ;; enable/disable actors.
 
-(fl:define-component player-stable ()
+(v:define-component player-stable ()
   ((%max-lives :accessor max-lives
                :initarg :max-lives
                :initform 3)
@@ -969,7 +965,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
    ;; for indexing.
    (%mockette-prefab :accessor mockette-prefab
                      :initarg :mockette-prefab
-                     :initform (fl.prefab::prefab-descriptor
+                     :initform (v:prefab-descriptor
                                  ("player-ship-mockette" ptp)))
 
    ;; We keep references to all of the mockettes in an array that matches their
@@ -989,7 +985,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                      :initarg :width-increment
                      :initform 100)))
 
-(defmethod fl:on-component-initialize ((self player-stable))
+(defmethod v:on-component-initialize ((self player-stable))
   (setf (mockette-refs self)
         (make-array (max-lives self) :initial-element nil)))
 
@@ -1002,13 +998,13 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
       player-stable
     (let* ((dir (ecase direction (:left -1) (:right 1)))
            (mockette (first
-                      (fl:make-prefab-instance
-                       (%fl::core (fl:context player-stable))
+                      (v:make-prefab-instance
+                       (v::core (v:context player-stable))
                        mockette-prefab
                        :parent stable)))
-           (transform (fl:actor-component-by-type mockette 'fl.comp:transform)))
+           (transform (v:component-by-type mockette 'c/xform:transform)))
 
-      (fl.comp:translate
+      (c/xform:translate
        transform (v3:vec (* mockette-index (* dir width-increment)) -60 0))
 
       (setf (aref mockette-refs mockette-index) mockette))))
@@ -1022,11 +1018,11 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
     ;; Initialize the stable under the holder with player-remaining mockettes.
     (dotimes (life lives-remaining)
       (when (aref mockette-refs life)
-        (fl:destroy (aref mockette-refs life)))
+        (v:destroy (aref mockette-refs life)))
       (make-mockette player-stable life))))
 
 
-(defmethod fl:on-component-attach ((self player-stable) actor)
+(defmethod v:on-component-attach ((self player-stable) actor)
   (declare (ignore actor))
   (regenerate-lives self))
 
@@ -1044,7 +1040,7 @@ return the lives-remaining after the life has been consumed."
 
     ;; lives-remaining is indexed by one, but the mockettes are indexed by zero.
     (let ((mockette-index (1- lives-remaining)))
-      (fl:destroy (aref mockette-refs mockette-index))
+      (v:destroy (aref mockette-refs mockette-index))
       (setf (aref mockette-refs mockette-index) nil)
       (decf lives-remaining))
     lives-remaining))
@@ -1084,7 +1080,7 @@ return the lives-remaining after the life has been consumed."
 ;;
 ;; ;;;;;;;;;
 
-(fl:define-component tags ()
+(v:define-component tags ()
   (;; TODO: Technically, this is for initialization only.  I should rename it.
    ;; Also the tags only are present if this component is attached to something.
    ;; So, when looking for "does this component have this tag" I shouldn't just
@@ -1101,7 +1097,7 @@ return the lives-remaining after the life has been consumed."
 ;; private API (probably)
 (defun tags-refs (context)
   ;; Create the DB if not present.
-  (fl:with-shared-storage
+  (v:with-shared-storage
       (context context)
       ((tag->actors tag->actors/present-p ('tags :db :tag->actors)
                     ;; key: tag, Value: hash table of actor -> actor
@@ -1112,17 +1108,17 @@ return the lives-remaining after the life has been consumed."
 
     (values tag->actors actor->tags)))
 
-(defmethod fl:on-component-initialize ((self tags))
+(defmethod v:on-component-initialize ((self tags))
   ;; Seed the shared storage cache.
   ;; We're modifying the tags list, so copy-seq it to ensure it isn't a quoted
   ;; list.
   (setf (tags self) (copy-seq (tags self)))
-  (tags-refs (fl:context self)))
+  (tags-refs (v:context self)))
 
 ;; private API
 (defun %tags-add (self &rest adding-tags)
-  (with-accessors ((context fl:context)
-                   (actor fl:actor))
+  (with-accessors ((context v:context)
+                   (actor v:actor))
       self
     (u:mvlet ((tag->actors actor->tags (tags-refs context)))
       (dolist (tag adding-tags)
@@ -1146,8 +1142,8 @@ must be a TAGS component."
 
 ;; private API
 (defun %tags-remove (self &rest removing-tags)
-  (with-accessors ((context fl:context)
-                   (actor fl:actor))
+  (with-accessors ((context v:context)
+                   (actor v:actor))
       self
     (u:mvlet ((tag->actors actor->tags (tags-refs context)))
       (dolist (tag removing-tags)
@@ -1172,17 +1168,17 @@ SELF instance which must be a TAGS component."
 ;; public API
 (defmethod tags-has-tag-p ((self tags) query-tag)
   "Return T if the SELF tags component contains the QUERY-TAG."
-  (with-accessors ((context fl:context)
-                   (actor fl:actor))
+  (with-accessors ((context v:context)
+                   (actor v:actor))
       self
     (u:mvlet ((tag->actors actor->tags (tags-refs context)))
       (u:href actor->tags actor query-tag))))
 
 ;; public API
-(defmethod tags-has-tag-p ((self fl:actor) query-tag)
+(defmethod tags-has-tag-p ((self v:actor) query-tag)
   "Return T if there is a tags component on the SELF actor and it also
 contains the QUERY-TAG."
-  (a:when-let ((tags-component (fl:actor-component-by-type self 'tags)))
+  (a:when-let ((tags-component (v:component-by-type self 'tags)))
     (tags-has-tag-p tags-component query-tag)))
 
 ;; public API
@@ -1193,18 +1189,18 @@ NIL if no such list exists."
     (a:when-let ((actors (u:href tag->actors query-tag)))
       (u:hash-keys actors))))
 
-(defmethod fl:on-component-attach ((self tags) actor)
-  (with-accessors ((context fl:context)
-                   (actor fl:actor)
+(defmethod v:on-component-attach ((self tags) actor)
+  (with-accessors ((context v:context)
+                   (actor v:actor)
                    (tags tags))
       self
     (dolist (tag tags)
       (%tags-add self tag))))
 
-(defmethod fl:on-component-detach ((self tags) actor)
+(defmethod v:on-component-detach ((self tags) actor)
   ;; NOTE: all components are detached before they are destroyed.
-  (with-accessors ((context fl:context)
-                   (actor fl:actor)
+  (with-accessors ((context v:context)
+                   (actor v:actor)
                    (tags tags))
       self
     (dolist (tag tags)
@@ -1219,7 +1215,7 @@ NIL if no such list exists."
 ;; We don't use a hit-points
 ;;;;;;;;;
 
-(fl:define-component planet ()
+(v:define-component planet ()
   ((%transform :accessor transform
                :initarg :transform
                :initform nil)
@@ -1255,7 +1251,7 @@ NIL if no such list exists."
 ;; still would not work out in compoennts in core unless TAGS was made to run
 ;; even before those. Need to think a bit.
 (defun possibly-report-myself-to-level-manager (planet)
-  (with-accessors ((context fl:context)
+  (with-accessors ((context v:context)
                    (level-manager level-manager)
                    (reported-to-level-manager reported-to-level-manager))
       planet
@@ -1263,24 +1259,24 @@ NIL if no such list exists."
     (a:when-let ((actor-lvlmgr
                   (first (tags-find-actors-with-tag context :level-manager))))
       (let ((level-manager
-              (fl:actor-component-by-type actor-lvlmgr 'level-manager)))
+              (v:component-by-type actor-lvlmgr 'level-manager)))
 
         (unless reported-to-level-manager
           (setf (level-manager planet) level-manager
                 reported-to-level-manager t)
           (report-planet-alive (level-manager planet)))))))
 
-(defmethod fl:on-component-attach ((self planet) actor)
-  (setf (transform self) (fl:actor-component-by-type actor 'fl.comp:transform)))
+(defmethod v:on-component-attach ((self planet) actor)
+  (setf (transform self) (v:component-by-type actor 'c/xform:transform)))
 
-(defmethod fl:on-component-physics-update ((self planet))
+(defmethod v:on-component-physics-update ((self planet))
   ;; This might fail for a few frames until things stabilize in the creation of
   ;; the actors and components.  We do it here so it runs at a much slower pace
   ;; than rendering to save effort.
   (possibly-report-myself-to-level-manager self))
 
-(defmethod fl:on-component-update ((self planet))
-  (with-accessors ((context fl:context)
+(defmethod v:on-component-update ((self planet))
+  (with-accessors ((context v:context)
                    (transform transform)
                    (hit-points hit-points)
                    (hit-point-warning-threshhold hit-point-warning-threshhold)
@@ -1294,7 +1290,7 @@ NIL if no such list exists."
     ;; represent this generically.
     (unless (<= (hp hit-points) hit-point-warning-threshhold)
       (setf warning-explosion-timer 0)
-      (return-from fl:on-component-update nil))
+      (return-from v:on-component-update nil))
 
     (cond
       ;; We exceeded our cooldown time, so time to fire!
@@ -1322,15 +1318,14 @@ NIL if no such list exists."
                           1f0))
                 ;; Figure out where to put the explosion into world space.
                 (world-location
-                  (fl.comp:transform-point transform local-location))
+                  (c/xform:transform-point transform local-location))
                 (world-location (v3:vec (v4:x world-location)
                                         (v4:y world-location)
                                         (dl :planet-warning-explosion)))
                 (random-rotation
                   (q:orient :local :z (float (random (* 2 pi)) 1f0)))
                 ;; for now, use the same explosions as the planet itself
-                (explosion (fl:actor-component-by-type (fl:actor self)
-                                                       'explosion)))
+                (explosion (v:component-by-type (v:actor self) 'explosion)))
 
            ;; Fix it so I don't do all the work only to discard it if there
            ;; isn't an explosion component.
@@ -1342,9 +1337,9 @@ NIL if no such list exists."
                              :name (name explosion)
                              :frames (frames explosion))))))
       (t
-       (incf warning-explosion-timer (fl:frame-time context))))))
+       (incf warning-explosion-timer (v:frame-time context))))))
 
-(defmethod fl:on-component-destroy ((self planet))
+(defmethod v:on-component-destroy ((self planet))
   (when (level-manager self)
     (report-planet-died (level-manager self))))
 
@@ -1354,7 +1349,7 @@ NIL if no such list exists."
 ;; the planet is about to die when it <= the hit-point-warning-threshhold.
 ;; Currently, the physics layers are set up so that only enemies can hit the
 ;; planet.
-(defmethod fl:on-collision-enter ((self planet) other-collider)
+(defmethod v:on-collision-enter ((self planet) other-collider)
   (with-accessors ((hit-points hit-points)
                    (hit-point-warning-threshhold hit-point-warning-threshhold))
       self
@@ -1373,7 +1368,7 @@ NIL if no such list exists."
 ;; time has been all used up.
 ;; ;;;;;;;;;
 
-(fl:define-component time-keeper ()
+(v:define-component time-keeper ()
   ((%pause :accessor pause
            :initarg :pause
            :initform t)
@@ -1402,13 +1397,13 @@ NIL if no such list exists."
                           :initarg :time-bar-empty-color
                           :initform (v4:vec 1 0 0 1))))
 
-(defmethod fl:on-component-initialize ((self time-keeper))
+(defmethod v:on-component-initialize ((self time-keeper))
   (setf (time-left self) (time-max self)))
 
 
 ;; We really don't need to do this per frame.
-(defmethod fl:on-component-physics-update ((self time-keeper))
-  (with-accessors ((context fl:context)
+(defmethod v:on-component-physics-update ((self time-keeper))
+  (with-accessors ((context v:context)
                    (pause pause)
                    (time-max time-max)
                    (time-left time-left)
@@ -1421,34 +1416,34 @@ NIL if no such list exists."
       self
 
     (when pause
-      (return-from fl:on-component-physics-update nil))
+      (return-from v:on-component-physics-update nil))
 
     ;; TODO: Bug, it seems a fast physics-update can happen before the user
     ;; protocol is properly set up. Debug why this can be NIL in a 120Hz physics
     ;; update period.
     (unless time-bar-transform
-      (return-from fl:on-component-physics-update nil))
+      (return-from v:on-component-physics-update nil))
 
     (let ((how-far-to-empty (- 1f0 (/ time-left time-max))))
 
       ;; Size the time bar in accordance to how much time is left.
-      (fl.comp:scale time-bar-transform
-                     (v3:vec time-bar-width
-                              (a:lerp how-far-to-empty
-                                      time-bar-height-scale
-                                      0f0)
-                              1f0)
-                     :replace-p t)
+      (c/xform:scale time-bar-transform
+                  (v3:vec time-bar-width
+                          (a:lerp how-far-to-empty
+                                  time-bar-height-scale
+                                  0f0)
+                          1f0)
+                  :replace-p t)
 
       ;; Color the time bar in accordance to how much time is left.
-      (let ((material (fl.comp:material time-bar-renderer)))
-        (setf (fl:mat-uniform-ref material :mix-color)
+      (let ((material (c/render:material time-bar-renderer)))
+        (setf (v:uniform-ref material :mix-color)
               (v4:lerp time-bar-full-color time-bar-empty-color
                        how-far-to-empty)))
 
       ;; Account the time that has passed
       ;; TODO: make a utility macro called DECF-CLAMP
-      (decf time-left (fl:delta context))
+      (decf time-left (v:delta context))
       (when (<= time-left 0f0)
         (setf time-left 0f0))
 
@@ -1467,7 +1462,7 @@ NIL if no such list exists."
 ;;
 ;; ;;;;;;;;;
 
-(fl:define-component level-manager ()
+(v:define-component level-manager ()
   ((%time-keeper :accessor time-keeper
                  :initarg :time-keeper
                  :initform nil)
@@ -1583,7 +1578,7 @@ NIL if no such list exists."
 ;; <terminate>
 ;;
 
-(fl:define-component director ()
+(v:define-component director ()
   ((%current-game-state :accessor current-game-state
                         :initarg :current-game-state
                         :initform :waiting-to-play)
@@ -1593,14 +1588,14 @@ NIL if no such list exists."
    ;; The db of levels over which the game progresses.
    (%levels :accessor levels
             :initarg :levels
-            :initform (fl.prefab::prefab-descriptor
+            :initform (v:prefab-descriptor
                         ("level-0" ptp)
                         ("level-1" ptp)
                         ("level-2" ptp)))
    ;; which level is considered the demo level.
    (%demo-level :accessor demo-level
                 :initarg :demo-level
-                :initform (fl.prefab::prefab-descriptor
+                :initform (v:prefab-descriptor
                             ("demo-level" ptp)))
    ;; Which level are we playing?
    (%current-level :accessor current-level
@@ -1667,7 +1662,7 @@ NIL if no such list exists."
 (defgeneric process-director-state (director state previous-state))
 
 ;; From here, we dispatch to the state management GF.
-(defmethod fl:on-component-update ((self director))
+(defmethod v:on-component-update ((self director))
   (with-accessors ((current-game-state current-game-state)
                    (previous-game-state previous-game-state)
                    (levels levels)
@@ -1688,7 +1683,7 @@ NIL if no such list exists."
 (defmethod process-director-state ((self director)
                                    (state (eql :waiting-to-play))
                                    previous-state)
-  (with-accessors ((context fl:context)
+  (with-accessors ((context v:context)
                    (demo-level demo-level)
                    (current-level current-level)
                    (current-level-ref current-level-ref)
@@ -1702,18 +1697,18 @@ NIL if no such list exists."
         ;; 0. If there is a player (like maybe you beat the game), destroy it.
         (a:when-let ((players (tags-find-actors-with-tag context :player)))
           (dolist (player players)
-            (fl:destroy player)))
+            (v:destroy player)))
 
         ;; 1. Spawn the demo-level which includes the PtP sign and press play
         ;; to start.
 
         (when current-level-ref
           ;; Whatever was previously there, get rid of.
-          (fl:destroy current-level-ref))
+          (v:destroy current-level-ref))
 
         (setf current-level-ref
-              (first (fl:make-prefab-instance
-                      (%fl::core context)
+              (first (v:make-prefab-instance
+                      (v::core context)
                       demo-level
                       :parent level-holder)))
 
@@ -1726,7 +1721,7 @@ NIL if no such list exists."
 
 
       ;; 3. We always listen for the start button so we can play a game.
-      (when (fl:input-enter-p (fl:input-data context) '(:gamepad1 :start))
+      (when (v:input-enter-p context '(:gamepad1 :start))
         (setf current-level 0 ;; start at beginning of level progression
               next-state :level-spawn))
 
@@ -1735,7 +1730,7 @@ NIL if no such list exists."
 (defmethod process-director-state ((self director)
                                    (state (eql :level-spawn))
                                    previous-state)
-  (with-accessors ((context fl:context)
+  (with-accessors ((context v:context)
                    (current-game-state current-game-state)
                    (levels levels)
                    (demo-level demo-level)
@@ -1748,21 +1743,20 @@ NIL if no such list exists."
 
     ;; Destroy old level, if any.
     (when current-level-ref
-      (fl:destroy current-level-ref)
+      (v:destroy current-level-ref)
       (setf current-level-ref nil))
 
     ;; spawn current level requested
     (setf current-level-ref
-          (first (fl:make-prefab-instance
-                  (%fl::core context)
+          (first (v:make-prefab-instance
+                  (v::core context)
                   ;; TODO: Odd requirement for the LIST here given how I access
                   ;; this prefab description.
                   (list (nth current-level levels))
                   :parent level-holder)))
 
     ;; find this level's level-manager and keep a reference to it
-    (let ((lvlmgr (fl:actor-component-by-type current-level-ref
-                                              'level-manager)))
+    (let ((lvlmgr (v:component-by-type current-level-ref 'level-manager)))
       (setf level-manager lvlmgr))
 
     :player-spawn))
@@ -1771,7 +1765,7 @@ NIL if no such list exists."
 (defmethod process-director-state ((self director)
                                    (state (eql :player-spawn))
                                    previous-state)
-  (with-accessors ((context fl:context)
+  (with-accessors ((context v:context)
                    (current-player-holder current-player-holder)
                    (current-player current-player)
                    (player-1-stable player-1-stable)
@@ -1797,8 +1791,8 @@ NIL if no such list exists."
                       ;; out of players!
                       (setf next-state :game-over)
                       (let ((new-player-instance
-                              (first (fl:make-prefab-instance
-                                      (%fl::core context)
+                              (first (v:make-prefab-instance
+                                      (v::core context)
                                       '(("player-ship" ptp))
                                       :parent current-player-holder))))
                         ;; TODO: make player respawn in same place and
@@ -1808,7 +1802,7 @@ NIL if no such list exists."
                         ;; unchanged next-state.
                         (setf current-player new-player-instance))))
                 (progn
-                  (incf player1-respawn-timer (fl:frame-time context))
+                  (incf player1-respawn-timer (v:frame-time context))
                   (setf next-state :player-spawn)))))
 
       next-state)))
@@ -1817,7 +1811,7 @@ NIL if no such list exists."
                                    (state (eql :playing))
                                    previous-state)
 
-  (with-accessors ((context fl:context)
+  (with-accessors ((context v:context)
                    (current-game-state current-game-state)
                    (levels levels)
                    (demo-level demo-level)
@@ -1852,7 +1846,7 @@ NIL if no such list exists."
 (defmethod process-director-state ((self director)
                                    (state (eql :level-complete))
                                    previous-state)
-  (with-accessors ((context fl:context)
+  (with-accessors ((context v:context)
                    (levels levels)
                    (demo-level demo-level)
                    (current-level current-level)
@@ -1875,7 +1869,7 @@ NIL if no such list exists."
       ;; Second: Abruptly destroy all :dangerous things.
       (let ((dangerous-actors (tags-find-actors-with-tag context :dangerous)))
         (dolist (dangerous-actor dangerous-actors)
-          (fl:destroy dangerous-actor)))
+          (v:destroy dangerous-actor)))
 
       ;; TODO: If the player is alive, tell it it can't move.
       ;; and possibly reset it to home position.
@@ -1883,11 +1877,11 @@ NIL if no such list exists."
 
       ;; Spawn game-over sign and set to destroy in max-time seconds
       (let ((level-complete-sign
-              (first (fl:make-prefab-instance
-                      (%fl::core context)
+              (first (v:make-prefab-instance
+                      (v::core context)
                       '(("level-complete-sign" ptp))))))
-        (fl:destroy-after-time level-complete-sign
-                               :ttl level-complete-max-wait-time)))
+        (v:destroy-after-time level-complete-sign
+                              :ttl level-complete-max-wait-time)))
 
     (cond
       ((>= level-complete-timer level-complete-max-wait-time)
@@ -1909,7 +1903,7 @@ NIL if no such list exists."
 
       (t
        ;; Keep waiting for the timer to fire.
-       (incf level-complete-timer (fl:frame-time context))
+       (incf level-complete-timer (v:frame-time context))
        :level-complete))))
 
 
@@ -1917,7 +1911,7 @@ NIL if no such list exists."
 (defmethod process-director-state ((self director)
                                    (state (eql :game-over))
                                    previous-state)
-  (with-accessors ((context fl:context)
+  (with-accessors ((context v:context)
                    (levels levels)
                    (demo-level demo-level)
                    (current-level current-level)
@@ -1930,21 +1924,21 @@ NIL if no such list exists."
     ;; If there is a player then destroy it, we'll let the rest of the state
     ;; machine deal with it resetting the internal state.
     (a:when-let ((player (first (tags-find-actors-with-tag context :player))))
-      (fl:destroy player))
+      (v:destroy player))
 
     (unless (eq state previous-state)
       (setf game-over-timer 0)
       (let ((game-over-sign
-              (first (fl:make-prefab-instance
-                      (%fl::core context)
+              (first (v:make-prefab-instance
+                      (v::core context)
                       '(("game-over-sign" ptp))))))
-        (fl:destroy-after-time game-over-sign :ttl game-over-max-wait-time)))
+        (v:destroy-after-time game-over-sign :ttl game-over-max-wait-time)))
 
     (cond
       ((>= game-over-timer game-over-max-wait-time)
        :waiting-to-play)
       (t
-       (incf game-over-timer (fl:frame-time context))
+       (incf game-over-timer (v:frame-time context))
        :game-over))))
 
 (defmethod process-director-state ((self director)
@@ -1965,31 +1959,30 @@ NIL if no such list exists."
 ;; Prefabs
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(fl:define-prefab "projectile" (:library ptp)
+(v:define-prefab "projectile" (:library ptp)
   "A generic projectile that can be a bullet, or an asteroid, or whatever."
-  (projectile :transform (fl:ref :self :component 'fl.comp:transform)
-              :mover (fl:ref :self :component 'line-mover)
-              :collider (fl:ref :self :component 'fl.comp:collider/sphere)
-              :sprite (fl:ref :self :component 'fl.comp:sprite)
-              :action (fl:ref :self :component 'fl.comp:actions))
+  (projectile :transform (v:ref :self :component 'c/xform:transform)
+              :mover (v:ref :self :component 'line-mover)
+              :collider (v:ref :self :component 'c/col:sphere)
+              :sprite (v:ref :self :component 'c/sprite:sprite)
+              :action (v:ref :self :component 'c/action:actions))
   (tags :tags '(:dangerous))
   (damage-points :dp 1)
   (explosion :name "explode01-01" :frames 15)
   (hit-points :hp 1)
   (line-mover)
-  (fl.comp:sprite :spec :spritesheet-data)
-  (fl.comp:collider/sphere :center (v3:zero)
-                           :on-layer :enemy-bullet
-                           :referent (fl:ref :self :component 'hit-points)
-                           :radius 15)
+  (c/sprite:sprite :spec :spritesheet-data)
+  (c/col:sphere :center (v3:zero)
+                :on-layer :enemy-bullet
+                :referent (v:ref :self :component 'hit-points)
+                :radius 15)
+  (c/render:render :material 'sprite-sheet
+                   :mode :sprite)
+  (c/action:actions :default '((:type x/action:sprite-animate
+                                :duration 0.5
+                                :repeat-p t))))
 
-  (fl.comp:render :material 'sprite-sheet
-                  :mode :sprite)
-  (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
-                                       :duration 0.5
-                                       :repeat-p t))))
-
-(fl:define-prefab "player-ship" (:library ptp)
+(v:define-prefab "player-ship" (:library ptp)
   "The venerable Player Ship. Controls how it looks, collides, and movement."
   (tags :tags '(:player))
   (explosion :name "explode04-01" :frames 15
@@ -2001,252 +1994,250 @@ NIL if no such list exists."
               ;; TODO: NEED(!) to visualize this effect!
               :invulnerability-timer 1)
   (player-movement)
-  (fl.comp:collider/sphere :center (v3:zero)
-                           :on-layer :player
-                           :referent (fl:ref :self :component 'hit-points)
-                           :radius 30)
+  (c/col:sphere :center (v3:zero)
+                :on-layer :player
+                :referent (v:ref :self :component 'hit-points)
+                :radius 30)
   ("ship-body"
-   (fl.comp:sprite :spec :spritesheet-data
-                   :name "ship26")
-   (fl.comp:render :material 'sprite-sheet
-                   :mode :sprite)
+   (c/sprite:sprite :spec :spritesheet-data
+                    :name "ship26")
+   (c/render:render :material 'sprite-sheet
+                    :mode :sprite)
    ("center-gun"
-    (fl.comp:transform :translate (v3:zero))
+    (c/xform:transform :translate (v3:zero))
     (gun :physics-layer :player-bullet
          :depth-layer :player-bullet
          :name "bullet01" :frames 2))
 
    ("exhaust"
-    (fl.comp:transform :translate (v3:vec 0 -60 0))
-    (fl.comp:sprite :spec :spritesheet-data
-                    :name "exhaust03-01"
-                    :frames 8)
-    (fl.comp:render :material 'sprite-sheet
-                    :mode :sprite)
-    (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
-                                         :duration 0.5
-                                         :repeat-p t))))))
+    (c/xform:transform :translate (v3:vec 0 -60 0))
+    (c/sprite:sprite :spec :spritesheet-data
+                     :name "exhaust03-01"
+                     :frames 8)
+    (c/render:render :material 'sprite-sheet
+                     :mode :sprite)
+    (c/action:actions :default '((:type x/action:sprite-animate
+                                  :duration 0.5
+                                  :repeat-p t))))))
 
-
-(fl:define-prefab "player-ship-mockette" (:library ptp)
+(v:define-prefab "player-ship-mockette" (:library ptp)
   "An image of the ship, but no colliders or guns."
-  (fl.comp:sprite :spec :spritesheet-data
-                  :name "ship26")
-  (fl.comp:render :material 'sprite-sheet
-                  :mode :sprite))
+  (c/sprite:sprite :spec :spritesheet-data
+                   :name "ship26")
+  (c/render:render :material 'sprite-sheet
+                   :mode :sprite))
 
-
-(fl:define-prefab "player-stable" (:library ptp)
+(v:define-prefab "player-stable" (:library ptp)
   ;; TODO: Clarify when we actually need the / infront of the actor name during
-  ;; use of FL:REF. Here is seems we DON'T need one, but sometimes we do!
-  (player-stable :stable (fl:ref "stable-holder"))
+  ;; use of V:REF. Here is seems we DON'T need one, but sometimes we do!
+  (player-stable :stable (v:ref "stable-holder"))
   ("stable-holder"))
 
-(fl:define-prefab "generic-planet" (:library ptp)
-  (planet :hit-points (fl:ref :self :component 'hit-points))
+(v:define-prefab "generic-planet" (:library ptp)
+  (planet :hit-points (v:ref :self :component 'hit-points))
   (hit-points :hp 5)
   (explosion :name "explode03-01" :frames 15
              :scale (v3:vec 3f0 3f0 3f0))
-  (fl.comp:collider/sphere :center (v3:zero)
-                           :on-layer :planet
-                           :referent (fl:ref :self :component 'planet)
-                           :visualize t
-                           :radius 145)
-  (fl.comp:sprite :spec :spritesheet-data
-                  :name "planet01")
-  (fl.comp:render :material 'sprite-sheet
-                  :mode :sprite))
+  (c/col:sphere :center (v3:zero)
+                :on-layer :planet
+                :referent (v:ref :self :component 'planet)
+                :visualize t
+                :radius 145)
+  (c/sprite:sprite :spec :spritesheet-data
+                   :name "planet01")
+  (c/render:render :material 'sprite-sheet
+                   :mode :sprite))
 
-(fl:define-prefab "generic-explosion" (:library ptp)
-  (explosion :sprite (fl:ref :self :component 'fl.comp:sprite))
-  (fl.comp:sprite :spec :spritesheet-data
-                  ;; TODO: When this is misnamed, the error is extremely obscure
-                  :name "explode01-01"
-                  :frames 15)
-  (fl.comp:render :material 'sprite-sheet
-                  :mode :sprite)
-  (fl.comp:actions :default-actions '((:type fl.actions:sprite-animate
-                                       :duration 0.5
-                                       :repeat-p nil))))
+(v:define-prefab "generic-explosion" (:library ptp)
+  (explosion :sprite (v:ref :self :component 'c/sprite:sprite))
+  (c/sprite:sprite :spec :spritesheet-data
+                   ;; TODO: When this is misnamed, the error is extremely obscure
+                   :name "explode01-01"
+                   :frames 15)
+  (c/render:render :material 'sprite-sheet
+                   :mode :sprite)
+  (c/action:actions :default '((:type x/action:sprite-animate
+                                :duration 0.5
+                                :repeat-p nil))))
 
 ;; TODO: Refactor these signs into a single prefab and a sign component to
 ;; manage the configuration of the prefab.
-(fl:define-prefab "warning-wave-sign" (:library ptp)
+(v:define-prefab "warning-wave-sign" (:library ptp)
   "Not used yet."
-  (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
+  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material 'warning-wave)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'warning-wave)))
 
-(fl:define-prefab "warning-mothership-sign" (:library ptp)
+(v:define-prefab "warning-mothership-sign" (:library ptp)
   "Not used yet."
-  (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
+  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material 'warning-mothership)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'warning-mothership)))
 
-(fl:define-prefab "title-sign" (:library ptp)
-  (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
+(v:define-prefab "title-sign" (:library ptp)
+  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material 'title)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'title)))
 
-(fl:define-prefab "game-over-sign" (:library ptp)
-  (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
+(v:define-prefab "game-over-sign" (:library ptp)
+  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material 'game-over)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'game-over)))
 
-(fl:define-prefab "level-complete-sign" (:library ptp)
-  (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
+(v:define-prefab "level-complete-sign" (:library ptp)
+  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material 'level-complete)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'level-complete)))
 
-(fl:define-prefab "starfield" (:library ptp)
+(v:define-prefab "starfield" (:library ptp)
   ("bug-todo:implicit-transform:see-trello"
-   (fl.comp:transform :scale 960
+   (c/xform:transform :scale 960
                       ;; NOTE: ortho projection, so we can put starfield way
                       ;; back.
                       :translate (v3:vec 0 0 (dl :starfield)))
-   (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
-   (fl.comp:render :material 'starfield)))
+   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/render:render :material 'starfield)))
 
-(fl:define-prefab "time-keeper" (:library ptp)
+(v:define-prefab "time-keeper" (:library ptp)
   ("bug-todo:implicit-transform:see-trello"
-   (fl.comp:transform :translate (v3:vec 900 -512 (dl :time-keeper)))
+   (c/xform:transform :translate (v3:vec 900 -512 (dl :time-keeper)))
    (time-keeper :time-max 30f0
-                :time-bar-transform (fl:ref "time-bar-root"
-                                            :component 'fl.comp:transform)
-                :time-bar-renderer (fl:ref "time-bar-root/time-display"
-                                           :component 'fl.comp:render))
+                :time-bar-transform (v:ref "time-bar-root"
+                                           :component 'c/xform:transform)
+                :time-bar-renderer (v:ref "time-bar-root/time-display"
+                                          :component 'c/render:render))
    ("time-bar-root"
     ;; When we scale the transform for this object, the alignment of the
     ;; time-bar will cause it to stretch upwards from a "ground" at 0 in this
     ;; coordinate frame.
     ("time-display"
-     (fl.comp:transform :translate (v3:vec 0 1 0))
-     (fl.comp:static-mesh :location '((:core :mesh) "plane.glb"))
+     (c/xform:transform :translate (v3:vec 0 1 0))
+     (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
      ;; TODO: when 'time-bar is mis-spelled in the material,
      ;; I don't get the debug material, why?
      ;; TODO: I think this material is leaked when this object is destroyed.
-     (fl.comp:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-")))))))
+     (c/render:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-")))))))
 
-(fl:define-prefab "demo-level" (:library ptp)
-  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field))
+(v:define-prefab "demo-level" (:library ptp)
+  (level-manager :asteroid-field (v:ref :self :component 'asteroid-field))
   (tags :tags '(:level-manager))
-  (asteroid-field :asteroid-holder (fl:ref "/demo-level/asteroids"))
+  (asteroid-field :asteroid-holder (v:ref "/demo-level/asteroids"))
 
   (("starfield" :link ("/starfield" :from ptp)))
   ("asteroids")
   (("title" :copy ("/title-sign" :from ptp))
-   (fl.comp:transform :translate (v3:vec 0 0 (dl :sign))
-                      ;; TODO: BUG: the scale in the original transform
-                      ;; should have been preserved.
-                      :scale 512f0)))
+   (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+                   ;; TODO: BUG: the scale in the original transform
+                   ;; should have been preserved.
+                   :scale 512f0)))
 
-(fl:define-prefab "level-0" (:library ptp)
-  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
+(v:define-prefab "level-0" (:library ptp)
+  (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
                  :time-keeper
-                 (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
-                         :component 'time-keeper))
+                 (v:ref "time-keeper/bug-todo:implicit-transform:see-trello"
+                        :component 'time-keeper))
   (tags :tags '(:level-manager))
-  (asteroid-field :asteroid-holder (fl:ref "/level-2/asteroids"))
+  (asteroid-field :asteroid-holder (v:ref "/level-2/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:vec 0 100 (dl :planet))
-                      :scale 0.9f0)
-   (fl.comp:sprite :spec :spritesheet-data
-                   :name "planet01"))
+   (c/xform:transform :translate (v3:vec 0 100 (dl :planet))
+                   :scale 0.9f0)
+   (c/sprite:sprite :spec :spritesheet-data
+                       :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:vec -200 -100 (dl :planet))
-                      :scale 0.9f0)
-   (fl.comp:sprite :spec :spritesheet-data
-                   :name "planet02"))
+   (c/xform:transform :translate (v3:vec -200 -100 (dl :planet))
+                   :scale 0.9f0)
+   (c/sprite:sprite :spec :spritesheet-data
+                       :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:vec 200 -100 (dl :planet))
-                      :scale 0.9f0)
-   (fl.comp:sprite :spec :spritesheet-data
-                   :name "planet03")))
+   (c/xform:transform :translate (v3:vec 200 -100 (dl :planet))
+                   :scale 0.9f0)
+   (c/sprite:sprite :spec :spritesheet-data
+                       :name "planet03")))
 
-(fl:define-prefab "level-1" (:library ptp)
-  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
+(v:define-prefab "level-1" (:library ptp)
+  (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
                  :time-keeper
-                 (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
-                         :component 'time-keeper))
+                 (v:ref "time-keeper/bug-todo:implicit-transform:see-trello"
+                        :component 'time-keeper))
   (tags :tags '(:level-manager))
-  (asteroid-field :asteroid-holder (fl:ref "/level-1/asteroids"))
+  (asteroid-field :asteroid-holder (v:ref "/level-1/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:vec -200 100 (dl :planet))
-                      :scale 0.9f0)
-   (fl.comp:sprite :spec :spritesheet-data
-                   :name "planet01"))
+   (c/xform:transform :translate (v3:vec -200 100 (dl :planet))
+                   :scale 0.9f0)
+   (c/sprite:sprite :spec :spritesheet-data
+                       :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:vec 200 100 (dl :planet))
-                      :scale 0.9f0)
-   (fl.comp:sprite :spec :spritesheet-data
-                   :name "planet02")))
+   (c/xform:transform :translate (v3:vec 200 100 (dl :planet))
+                   :scale 0.9f0)
+   (c/sprite:sprite :spec :spritesheet-data
+                       :name "planet02")))
 
-(fl:define-prefab "level-2" (:library ptp)
-  (level-manager :asteroid-field (fl:ref :self :component 'asteroid-field)
+(v:define-prefab "level-2" (:library ptp)
+  (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
                  :time-keeper
-                 (fl:ref "time-keeper/bug-todo:implicit-transform:see-trello"
-                         :component 'time-keeper))
+                 (v:ref "time-keeper/bug-todo:implicit-transform:see-trello"
+                        :component 'time-keeper))
   (tags :tags '(:level-manager))
-  (asteroid-field :asteroid-holder (fl:ref "/level-0/asteroids"))
+  (asteroid-field :asteroid-holder (v:ref "/level-0/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (fl.comp:transform :translate (v3:vec 0 100 (dl :planet))
-                      :scale 0.9f0)
-   (fl.comp:sprite :spec :spritesheet-data
-                   :name "planet01")))
+   (c/xform:transform :translate (v3:vec 0 100 (dl :planet))
+                   :scale 0.9f0)
+   (c/sprite:sprite :spec :spritesheet-data
+                       :name "planet01")))
 
 
-(fl:define-prefab "protect-the-planets" (:library ptp)
+(v:define-prefab "protect-the-planets" (:library ptp)
   "The top most level prefab which has the component which drives the game
 sequencing."
-  (fl.comp:transform :scale (v3:one))
-  (director :level-holder (fl:ref "/protect-the-planets/current-level")
-            :player-1-stable (fl:ref "/protect-the-planets/player-1-stable"
-                                     :component 'player-stable))
+  (c/xform:transform :scale (v3:one))
+  (director :level-holder (v:ref "/protect-the-planets/current-level")
+            :player-1-stable (v:ref "/protect-the-planets/player-1-stable"
+                                    :component 'player-stable))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
-   (fl.comp:transform :translate (v3:vec 0 0 (dl :camera))))
+   (c/xform:transform :translate (v3:vec 0 0 (dl :camera))))
 
   (("player-1-stable" :link ("/player-stable" :from ptp))
-   (fl.comp:transform
+   (c/xform:transform
     :translate (v3:vec -900 550 (dl :player-stable))))
 
   ("current-level"))
 
 
-(fl:define-prefab "starfield-demo" (:library ptp)
+(v:define-prefab "starfield-demo" (:library ptp)
   "A simple demo scene of the starfield. Not used in the game, but for
 testing the starfield shader."
 
   (("starfield" :link ("/starfield" :from ptp)))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
-   (fl.comp:transform :translate (v3:vec 0 0 (dl :camera)))))
+   (c/xform:transform :translate (v3:vec 0 0 (dl :camera)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefab descriptors for convenience
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(fl:define-prefab-descriptor ptp ()
+(v:define-prefab-descriptor ptp ()
   ("protect-the-planets" ptp))
 
-(fl:define-prefab-descriptor starfield-demo ()
+(v:define-prefab-descriptor starfield-demo ()
   ("starfield-demo" ptp))

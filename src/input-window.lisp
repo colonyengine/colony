@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.input)
 
 (a:define-constant +window-event-names+
     #(nil :show :hide nil :move :resize nil :minimize :maximize :restore
@@ -34,38 +34,38 @@
 (defun set-window-visible (window)
   (sdl2:show-window window))
 
-(defun on-window-show (core)
-  (declare (ignore core)))
+(defun on-window-show (context)
+  (declare (ignore context)))
 
-(defun on-window-hide (core)
-  (declare (ignore core)))
+(defun on-window-hide (context)
+  (declare (ignore context)))
 
-(defun on-window-move (core &key x y)
-  (declare (ignore core x y)))
+(defun on-window-move (context &key x y)
+  (declare (ignore context x y)))
 
-(defun on-window-resize (core &key width height)
-  (declare (ignore core width height)))
+(defun on-window-resize (context &key width height)
+  (declare (ignore context width height)))
 
-(defun on-window-minimize (core)
-  (declare (ignore core)))
+(defun on-window-minimize (context)
+  (declare (ignore context)))
 
-(defun on-window-maximize (core)
-  (declare (ignore core)))
+(defun on-window-maximize (context)
+  (declare (ignore context)))
 
-(defun on-window-restore (core)
-  (declare (ignore core)))
+(defun on-window-restore (context)
+  (declare (ignore context)))
 
-(defun on-window-mouse-focus-enter (core)
-  (declare (ignore core)))
+(defun on-window-mouse-focus-enter (context)
+  (declare (ignore context)))
 
-(defun on-window-mouse-focus-exit (core)
-  (declare (ignore core)))
+(defun on-window-mouse-focus-exit (context)
+  (declare (ignore context)))
 
-(defun on-window-keyboard-focus-enter (core)
-  (declare (ignore core)))
+(defun on-window-keyboard-focus-enter (context)
+  (declare (ignore context)))
 
-(defun on-window-keyboard-focus-exit (core)
-  (declare (ignore core)))
+(defun on-window-keyboard-focus-exit (context)
+  (declare (ignore context)))
 
-(defun on-window-close (core)
-  (declare (ignore core)))
+(defun on-window-close (context)
+  (declare (ignore context)))

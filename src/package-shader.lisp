@@ -1,16 +1,18 @@
-(in-package #:defpackage+-user-1)
+(in-package #:cl-user)
 
-(defpackage+ #:first-light.shader
-  (:nicknames #:fl.shader)
-  (:inherit-from
-   #:fl.gpu
+(defpackage #:virality.shaders
+  (:use #:cl #:vari)
+  (:import-from
+   #:virality.gpu
    #:define-function
    #:define-struct
    #:define-macro
    #:define-shader)
-  (:inherit
-   #:cl
-   #:vari)
+  (:export
+   #:define-function
+   #:define-struct
+   #:define-macro
+   #:define-shader)
   ;; structs
   (:export
    #:mesh-attrs
@@ -34,24 +36,8 @@
    #:saturate
    #:map-domain))
 
-(defpackage+ #:first-light.shader.swizzle
-  (:nicknames #:fl.shader.swizzle)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:u #:golden-utils))
-  (:use #:cl #:vari))
-
-(defpackage+ #:first-light.shader.user
-  (:nicknames #:fl.shader.user)
-  (:local-nicknames (#:u #:golden-utils))
-  (:use #:fl.shader.swizzle)
-  (:inherit #:fl.shader))
-
-(in-package #:cl-user)
-
-(defpackage #:first-light.shader.color
-  (:nicknames #:fl.shader.color)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+(defpackage #:virality.shaders.color
+  (:use #:cl #:vari #:virality.shaders)
   ;; color space conversion
   (:export
    #:rgb->grayscale
@@ -87,17 +73,13 @@
    #:tone-map/hejl-burgess-dawson
    #:tone-map/uncharted2))
 
-(defpackage #:first-light.shader.graph
-  (:nicknames #:fl.shader.graph)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+(defpackage #:virality.shaders.graphing
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:graph))
 
-(defpackage #:first-light.shader.shaping
-  (:nicknames #:fl.shader.shaping)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+(defpackage #:virality.shaders.shaping
+  (:use #:cl #:vari #:virality.shaders)
   ;; penner
   (:export
    #:linear
@@ -168,10 +150,8 @@
    #:falloff-squared-c1
    #:falloff-squared-c2))
 
-(defpackage #:first-light.shader.hash
-  (:nicknames #:fl.shader.hash)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+(defpackage #:virality.shaders.hashing
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:blum-blum-shub
    #:blum-blum-shub/hq
@@ -186,10 +166,8 @@
    #:fast32-2
    #:fast32-2/4-per-corner))
 
-(defpackage #:first-light.shader.noise
-  (:nicknames #:fl.shader.noise)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+(defpackage #:virality.shaders.noise
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:perlin
    #:perlin/derivs
@@ -214,10 +192,8 @@
    #:cubist
    #:stars))
 
-(defpackage #:first-light.shader.sdf
-  (:nicknames #:fl.shader.sdf)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+(defpackage #:virality.shaders.sdf
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:dist/box
    #:dist/circle
@@ -229,26 +205,20 @@
    #:mask/inner-border
    #:mask/outer-border))
 
-(defpackage #:first-light.shader.texture
-  (:nicknames #:fl.shader.texture)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+(defpackage #:virality.shaders.texture
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:unlit-color
    #:unlit-color-decal
    #:unlit-texture
    #:unlit-texture-decal))
 
-(defpackage #:first-light.shader.sprite
-  (:nicknames #:fl.shader.sprite)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+(defpackage #:virality.shaders.sprite
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:sprite))
 
-(defpackage #:first-light.shader.visualization
-  (:nicknames #:fl.shader.visualization)
-  (:use #:fl.shader
-        #:fl.shader.swizzle)
+(defpackage #:virality.shaders.visualization
+  (:use #:cl #:vari #:virality.shaders)
   (:export
    #:collider/sphere))

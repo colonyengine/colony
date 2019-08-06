@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.engine)
 
 (defun identity/annotation (value component)
   (declare (ignore component))
@@ -49,7 +49,6 @@
    (%annotation-array :accessor annotation-array
                       :initarg :annotation-array
                       :initform #())
-
    ;; A database of which slots on which classes are annotated.
    ;; key: component-name, value: list of (slot-name  (initarg ..) (anno ..))
    ;; Note: I'm storing the EFFECTIVE slot data in thie db. This means that
@@ -67,34 +66,31 @@
 ;; Annotation DB API
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; called at the end of define-annotation.
-;; it'll also give back the appropriate annotation entry.
+;; called at the end of define-annotation. it'll also give back the appropriate
+;; annotation entry.
 (defun register-annotation (component-metaclass-name annotation-name state
                             &key (getter #'identity/annotation)
                               (setter #'identity/annotation))
   (let* ((db (find-class component-metaclass-name))
          (annodb (annotations db))
          (entry (u:href annodb annotation-name)))
-
     ;; first look it up.
     ;; use AU to fix this.
     (unless entry
-      (let* ((snid (prog1 (annotation-serialnum db)
-                     (incf (annotation-serialnum db)))))
+      (let ((snid (prog1 (annotation-serialnum db)
+                    (incf (annotation-serialnum db)))))
         ;; make a new generic one with defaults.
         (setf entry (make-annotation-value
-                     annotation-name snid :forward-reference))
-        (setf (u:href annodb annotation-name) entry
+                     annotation-name snid :forward-reference)
+              (u:href annodb annotation-name) entry
               (annotations-dirty-p db) t)))
-
     ;; then debate what to do based upon state.
-    (case state
+    (ecase state
       (:initialized
        (setf (state entry) state
              (setter entry) setter
              (getter entry) getter))
       (:forward-reference
-       ;; do nothing
        nil))
 
     entry))
@@ -106,16 +102,14 @@
     entry))
 
 (defun optimize-annotations (component-metaclass-name)
-  (let* ((db (find-class component-metaclass-name)))
+  (let ((db (find-class component-metaclass-name)))
     (when (annotations-dirty-p db)
       (let* ((annodb (annotations db))
              (num-annotations (hash-table-count annodb))
              (optiarray (make-array num-annotations)))
         ;; now, fill the array with the annotations at their snid spots.
-        (a:maphash-values
-         (lambda (anno)
-           (setf (aref optiarray (serialnum anno)) anno))
-         annodb)
+        (u:do-hash-values (v annodb)
+          (setf (aref optiarray (serialnum v)) v))
         ;; and replace the previous one in the db.
         (setf (annotation-array db) optiarray
               ;; and we're not dirty anymore.
@@ -181,8 +175,7 @@
 (defmethod annotated-slot-p (slot)
   nil)
 
-(defmethod annotated-slot-p
-    ((slot component-annotated-direct-slot-definition))
+(defmethod annotated-slot-p ((slot component-annotated-direct-slot-definition))
   t)
 
 (defmethod annotated-slot-p
@@ -209,7 +202,7 @@
 ;; all the slots, in the same order as supplied
 (defun dslotds-annotated-p (dslotds)
   ;; Note: dslotds are in most-specific-first order.
-  (let ((annotations ()))
+  (let (annotations)
     (dolist (dslotd dslotds)
       (when (annotated-slot-p dslotd)
         (push (annotation dslotd) annotations)))
@@ -219,7 +212,6 @@
 ;; We add knowledge of the :annotation slot and how it works across
 ;; all the direct slots contributing to the definition of the annotated
 ;; effective slots.
-;;
 ;; direct-slotds SHOULD BE most-specific-to-least-specific order.
 (defun compute-annotated-effective-slot-definition-initargs
     (class direct-slotds)
@@ -324,24 +316,23 @@
     ;; NOTE: This only happens when we finalize the class, so all
     ;; define-component expansions also expand to c2mop:ensure-finalized.
     (dolist (annotation (getf initargs :annotation))
-      (register-annotation '%fl:component annotation :forward-reference))
+      (register-annotation 'component annotation :forward-reference))
     ;; NOTE: this code is executed (num-components * num-annotations) given the
     ;; number of components...Since for each component, we rebuild this array.
     ;; However, there are probably going to not be that many annotations (<100
     ;; maybe?) so we're probably ok. Also, this expects the class to have
     ;; already been finalized (which we force in DEFINE-COMPONENT).
-    (optimize-annotations '%fl:component)
+    (optimize-annotations 'component)
     ;; NOTE: Produce the compiled optimization indexes for this slot so I can
     ;; execute them properly in slot-value-using-class for this component-type.
     (setf (annotation-indexes slotd)
           (make-array (length (annotation slotd))
                       :initial-contents
-                      (mapcar (lambda (annotation)
-                                (serialnum
-                                 (u:href (annotations
-                                          (find-class '%fl:component))
-                                         annotation)))
-                              (annotation slotd))))
+                      (mapcar
+                       (lambda (x)
+                         (serialnum
+                          (u:href (annotations (find-class 'component)) x)))
+                       (annotation slotd))))
 
     slotd))
 
@@ -357,27 +348,28 @@
 ;; class. Assumes class is finalized.
 (defun collect-all-annotated-effective-slot-data (component-class-name)
   (remove-if #'null
-             (mapcar (lambda (slot)
-                       (when (annotated-slot-p slot)
-                         (list (c2mop:slot-definition-name slot)
-                               (c2mop:slot-definition-initargs slot)
-                               (annotation slot))))
-                     (c2mop::class-slots (find-class component-class-name)))))
+             (mapcar
+              (lambda (x)
+                (when (annotated-slot-p x)
+                  (list (c2mop:slot-definition-name x)
+                        (c2mop:slot-definition-initargs x)
+                        (annotation x))))
+              (c2mop::class-slots (find-class component-class-name)))))
 
 ;; Here we collect all the annotated slot data from a component and put it into
 ;; the COMPONENT meta-class slots.
 (defun track-annotations (component-name)
-  (setf (u:href (annotated-slots (find-class '%fl:component)) component-name)
+  (setf (u:href (annotated-slots (find-class 'component)) component-name)
         (collect-all-annotated-effective-slot-data component-name)))
 
 ;;; Stuff used to make DEFINE-COMPONENT work.
 
 (defun %collect-annotated-component-slot-forms (slots)
-  (loop :for slot :in slots
-        :for anno = (getf (cdr slot) :annotation)
+  (loop :for (name . options) :in slots
+        :for anno = (getf options :annotation)
         :when anno
           ;; We need the ACTUAL slot name, so the % prefixed one.
-          :collect `(,(first slot) ,anno)))
+          :collect `(,name ,anno)))
 
 (defmacro define-component (name super-classes &body body)
   (destructuring-bind (slots &optional shared-storage-metadata) body
@@ -390,7 +382,7 @@
     (dolist (anno-slot (%collect-annotated-component-slot-forms slots))
       (dolist (anno (second anno-slot))
         (when anno
-          (register-annotation '%fl:component anno :forward-reference))))
+          (register-annotation 'component anno :forward-reference))))
     `(progn
        ;; NOTE: We check the super classes to ensure that if COMPONENT isn't
        ;; in there, we know to add it at the beginning. All components
@@ -398,7 +390,7 @@
        ;; part. If anything, we'll have to finalize everything in the
        ;; super-classes and then check the subtypep.
        (defclass ,name (,@(if (some (lambda (super-class)
-                                      (subtypep super-class '%fl:component))
+                                      (subtypep super-class 'component))
                                     super-classes)
                               super-classes
                               (append '(component) super-classes)))
@@ -411,7 +403,7 @@
            ((class component-class)   ; the component metaclass
             (instance ,name)          ; the specific component
             (slotd component-annotated-effective-slot-definition))
-         (let ((annoarray (annotation-array (find-class '%fl:component))))
+         (let ((annoarray (annotation-array (find-class 'component))))
            (loop :with original-slot-value = (c2mop:standard-instance-access
                                               instance
                                               (c2mop:slot-definition-location
@@ -429,7 +421,7 @@
             (class component-class) ;; the component metaclass
             (instance ,name)        ;; the specific component
             (slotd component-annotated-effective-slot-definition))
-         (let ((annoarray (annotation-array (find-class '%fl:component))))
+         (let ((annoarray (annotation-array (find-class 'component))))
            (setf (c2mop:standard-instance-access
                   instance (c2mop:slot-definition-location slotd))
                  (loop :with composing-value = new-value
@@ -441,7 +433,7 @@
                        :finally (return composing-value)))))
        ;; A method to locate the metadata in the shared storage form in this
        ;; class.
-       (defmethod ,(intern (symbol-name 'shared-storage-metadata) :%fl)
+       (defmethod ,(intern "SHARED-STORAGE-METADATA" :virality.engine)
            ((component-name (eql ',name)) &optional namespace)
          (declare (ignore component-name))
          (let ((ss-meta ',shared-storage-metadata))
@@ -450,15 +442,10 @@
                (find namespace ss-meta :key #'first)
                ss-meta))))))
 
-(defmacro define-annotation (name &key
-                                    (getter
-                                     '(lambda (value component)
-                                       (declare (ignore component)
-                                        value)))
-                                    (setter
-                                     '(lambda (value component)
-                                       (declare (ignore component)
-                                        value))))
-  `(register-annotation '%fl:component ',name :initialized
-                        :getter (function ,getter)
-                        :setter (function ,setter)))
+(defun get-computed-component-precedence-list (component-type)
+  (a:when-let ((class (find-class component-type nil)))
+    (loop :for class :in (c2mop:compute-class-precedence-list class)
+          :for name = (class-name class)
+          :until (eq name 'component)
+          :when (subtypep name 'component)
+            :collect name)))

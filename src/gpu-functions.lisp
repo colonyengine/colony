@@ -1,4 +1,4 @@
-(in-package #:first-light.gpu)
+(in-package #:virality.gpu)
 
 (defun find-gpu-function (func-spec)
   (destructuring-bind (name . types) func-spec
@@ -16,8 +16,8 @@
   (setf (u:href fn-deps spec) (u:dict #'equal)))
 
 (defun store-function-dependencies (spec dependencies)
-  (symbol-macrolet ((fn-deps (%fl:meta 'fn->deps))
-                    (dep-fns (%fl:meta 'dep->fns)))
+  (symbol-macrolet ((fn-deps (v::meta 'fn->deps))
+                    (dep-fns (v::meta 'dep->fns)))
     (when (u:href fn-deps spec)
       (u:do-hash-keys (k (u:href fn-deps spec))
         (u:when-found (dep-key (u:href dep-fns k))
@@ -34,15 +34,13 @@
               (u:href dep-fns dep-spec spec) spec)))))
 
 (defun compute-outdated-programs (spec)
-  (let* ((programs)
-         (dep->fns (%fl:meta 'dep->fns))
-         (spec-fns (u:href dep->fns spec)))
-    (maphash
-     (lambda (k v)
-       (when (or (u:href spec-fns k)
-                 (equal k spec))
-         (setf programs (union v programs :test #'equal))))
-     (%fl:meta 'stage-fn->programs))
+  (let* ((dep->fns (v::meta 'dep->fns))
+         (spec-fns (u:href dep->fns spec))
+         (programs))
+    (u:do-hash (k v (v::meta 'stage-fn->programs))
+      (when (or (u:href spec-fns k)
+                (equal k spec))
+        (setf programs (union v programs :test #'equal))))
     programs))
 
 (defmacro define-function (name args &body body)
@@ -55,14 +53,14 @@
              (let* ((,fn (varjo:add-external-function
                           ',name ',in-args ',uniforms ',body))
                     (,spec (get-function-spec ,fn)))
-               (when (%fl:meta 'track-dependencies-p)
+               (when (v::meta 'track-dependencies-p)
                  (let* ((,split-details
                           (varjo:test-translate-function-split-details
                            ',name ',in-args ',uniforms ',context ',body))
                         (,deps (varjo:used-external-functions
                                 (first ,split-details))))
                    (store-function-dependencies ,spec ,deps)
-                   (funcall (%fl:meta 'modify-hook)
+                   (funcall (v::meta 'modify-hook)
                             (compute-outdated-programs ,spec))))
                ,fn))
            (export ',name))))))

@@ -1,9 +1,6 @@
 (in-package #:cl-user)
 
-(defpackage #:first-light.gpu
-  (:nicknames #:fl.gpu)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:u #:golden-utils))
+(defpackage #:virality.gpu
   (:use #:cl)
   (:export
    #:define-function

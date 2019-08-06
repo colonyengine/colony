@@ -1,4 +1,4 @@
-(in-package #:first-light.shader.noise)
+(in-package #:virality.shaders.noise)
 
 ;;;; Cellular noise
 ;;;; Brian Sharpe https://github.com/BrianSharpe/GPU-Noise-Lib
@@ -26,7 +26,7 @@
     (* (min (.x d) (.y d)) (/ 1.125))))
 
 (define-function cellular ((point :vec2))
-  (cellular point (lambda ((x :vec2)) (fl.shader.hash:fast32/2-per-corner x))))
+  (cellular point (lambda ((x :vec2)) (shd/hash:fast32/2-per-corner x))))
 
 ;;; 2D Cellular noise with derivatives
 
@@ -55,7 +55,7 @@
 
 (define-function cellular/derivs ((point :vec2))
   (cellular/derivs point (lambda ((x :vec2))
-                           (fl.shader.hash:fast32/2-per-corner x))))
+                           (shd/hash:fast32/2-per-corner x))))
 
 ;;; 2D Cellular noise (fast version)
 
@@ -75,7 +75,7 @@
 
 (define-function cellular-fast ((point :vec2))
   (cellular-fast point (lambda ((x :vec2))
-                         (fl.shader.hash:fast32/2-per-corner x))))
+                         (shd/hash:fast32/2-per-corner x))))
 
 ;;; 3D Cellular noise
 
@@ -110,7 +110,7 @@
     (* (min (.x d1) (.y d1)) 0.75)))
 
 (define-function cellular ((point :vec3))
-  (cellular point (lambda ((x :vec3)) (fl.shader.hash:fast32/3-per-corner x))))
+  (cellular point (lambda ((x :vec3)) (shd/hash:fast32/3-per-corner x))))
 
 ;;; 3D Cellular noise with derivatives
 
@@ -164,7 +164,7 @@
 
 (define-function cellular/derivs ((point :vec3))
   (cellular/derivs point (lambda ((x :vec3))
-                           (fl.shader.hash:fast32/3-per-corner x))))
+                           (shd/hash:fast32/3-per-corner x))))
 
 ;;; 3D Cellular noise (fast version)
 
@@ -197,4 +197,4 @@
 
 (define-function cellular-fast ((point :vec3))
   (cellular-fast point (lambda ((x :vec3))
-                         (fl.shader.hash:fast32/3-per-corner x))))
+                         (shd/hash:fast32/3-per-corner x))))

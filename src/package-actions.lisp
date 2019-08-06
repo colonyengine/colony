@@ -1,23 +1,16 @@
 (in-package #:cl-user)
 
-(defpackage #:first-light.actions
-  (:nicknames #:fl.actions)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:u #:golden-utils)
-                    (#:dll #:doubly-linked-list)
-                    (#:v3 #:origin.vec3)
-                    (#:q #:origin.quat))
-  (:use #:cl #:%first-light)
-  ;; protocol
+(defpackage #:virality.actions
+  (:use #:cl)
+  (:shadow #:replace
+           #:step)
   (:export
-   #:insert-action
-   #:make-action-manager
-   #:process-actions
-   #:remove-action)
-  ;; built-in actions
-  (:export
-   #:fade-in
-   #:fade-out
-   #:rotate
-   #:rotate/reverse
-   #:sprite-animate))
+   #:attrs
+   #:manager
+   #:on-finish
+   #:on-insert
+   #:on-update
+   #:renderer
+   #:repeat-p
+   #:replace
+   #:step))

@@ -1,10 +1,10 @@
-(in-package #:first-light.actions)
+(in-package #:virality.extensions.actions)
 
-(defmethod on-action-update (action (type (eql 'sprite-animate)))
-  (a:when-let* ((actor (actor (renderer (manager action))))
-                (sprite (actor-component-by-type actor 'fl.comp:sprite)))
-    (fl.comp:update-sprite-index sprite (action-step action))))
+(defmethod action:on-update (action (type (eql 'sprite-animate)))
+  (a:when-let* ((actor (v:actor (action:renderer (action:manager action))))
+                (sprite (v:component-by-type actor 'c/sprite:sprite)))
+    (c/sprite:update-sprite-index sprite (action:step action))))
 
-(defmethod on-action-finish (action (type (eql 'sprite-animate)))
-  (when (repeat-p action)
-    (replace-action action 'sprite-animate)))
+(defmethod action:on-finish (action (type (eql 'sprite-animate)))
+  (when (action:repeat-p action)
+    (action:replace action 'sprite-animate)))

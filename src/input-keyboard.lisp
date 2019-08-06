@@ -1,4 +1,4 @@
-(in-package #:%first-light)
+(in-package #:virality.input)
 
 (a:define-constant +key-names+
     #(:unknown nil nil nil :a :b :c :d :e :f :g :h :i :j :k :l :m :n :o :p :q :r
@@ -37,12 +37,14 @@
 
 ;;; Events
 
-(defun on-key-up (input-data key)
-  (input-transition-out input-data (list :key key))
-  (input-transition-out input-data '(:key :any))
-  (input-transition-out input-data '(:button :any)))
+(defun on-key-up (context key)
+  (let ((data (v::input-data (v::core context))))
+    (input-transition-out data (list :key key))
+    (input-transition-out data '(:key :any))
+    (input-transition-out data '(:button :any))))
 
-(defun on-key-down (input-data key)
-  (input-transition-in input-data (list :key key))
-  (input-transition-in input-data '(:key :any))
-  (input-transition-in input-data '(:button :any)))
+(defun on-key-down (context key)
+  (let ((data (v::input-data (v::core context))))
+    (input-transition-in data (list :key key))
+    (input-transition-in data '(:key :any))
+    (input-transition-in data '(:button :any))))

@@ -1,13 +1,13 @@
-(asdf:defsystem #:first-light
+(asdf:defsystem #:virality.engine
   :description "An experimental game engine."
   :author ("Michael Fiano <mail@michaelfiano.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
   :maintainer ("Michael Fiano <mail@michaelfiano.com>"
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
-  :homepage "https://github.com/hackertheory/first-light"
-  :bug-tracker "https://github.com/hackertheory/first-light/issues"
-  :source-control (:git "https://github.com/hackertheory/first-light.git")
+  :homepage "https://github.com/hackertheory/virality-engine"
+  :bug-tracker "https://github.com/hackertheory/virality-engine/issues"
+  :source-control (:git "https://github.com/hackertheory/virality-engine.git")
   :encoding :utf-8
   :depends-on (#:alexandria
                #:babel
@@ -15,7 +15,6 @@
                #:cl-opengl
                #:cl-ppcre
                #:closer-mop
-               #:defpackage-plus
                #:doubly-linked-list
                #:fast-io
                #:glsl-packing
@@ -34,20 +33,27 @@
   :pathname "src"
   :serial t
   :components
-  ((:file "package-internal")
-   (:file "package-gpu")
-   (:file "package-shader")
-   (:file "package-materials")
-   (:file "package-textures")
-   (:file "package-annotations")
-   (:file "package-components")
+  (
    (:file "package-actions")
+   (:file "package-actors")
+   (:file "package-colliders")
+   (:file "package-components")
+   (:file "package-extensions")
+   (:file "package-geometry")
+   (:file "package-gpu")
+   (:file "package-image")
+   (:file "package-input")
+   (:file "package-materials")
    (:file "package-prefab")
-   (:file "package-api")
+   (:file "package-shader")
+   (:file "package-textures")
+   (:file "package-engine")
+   (:file "package-nicknames")
    (:file "common")
    (:file "interactive-development")
+   (:file "debugging")
    (:file "metadata")
-   (:file "protocol")
+   (:file "deployment")
    (:file "binary-parser")
    (:file "geometry-static")
    (:file "geometry-dynamic-attribute")
@@ -64,11 +70,15 @@
    (:file "shared-storage")
    (:file "attributes")
    (:file "actor")
-   (:file "component-mop")
+   (:file "mop-component")
    (:file "component")
+   (:file "protocol-collider")
+   (:file "protocol-component")
+   (:file "protocol-rcache")
    (:file "object-query")
+   (:file "hardware-query")
    (:file "annotations")
-   (:file "frame")
+   (:file "clock")
    (:file "display")
    (:file "input-keyboard")
    (:file "input-mouse")
@@ -108,7 +118,7 @@
    (:file "texture-buffer")
    (:file "materials")
    (:file "component-transform")
-   (:file "component-action-list")
+   (:file "component-actions")
    (:file "component-camera")
    (:file "component-camera-following")
    (:file "component-camera-tracking")
@@ -126,7 +136,6 @@
    (:file "prefab")
    (:file "core")
    (:file "engine")
-   (:file "deployment")
 
    (:file "shader/common")
    (:file "shader/common-swizzle")
@@ -135,7 +144,7 @@
    (:file "shader/common-structs")
    (:file "shader/color-grading")
    (:file "shader/color-space")
-   (:file "shader/graph")
+   (:file "shader/graphing")
    (:file "shader/shaping-iq")
    (:file "shader/shaping-levin")
    (:file "shader/shaping-penner")
@@ -155,11 +164,10 @@
    (:file "shader/sprite")
    (:file "shader/visualization-collider")
 
+   (:file "definition/annotations")
    (:file "definition/graphs")
    (:file "definition/flows")
    (:file "definition/texture-profiles")
    (:file "definition/textures")
    (:file "definition/material-profiles")
-   (:file "definition/materials")
-
-   (:file "staging/hardware-query")))
+   (:file "definition/materials")))
