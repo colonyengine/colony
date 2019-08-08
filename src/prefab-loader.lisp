@@ -84,7 +84,7 @@
   (destructuring-bind (name library &key ttl) spec
     (let* ((prefab (find-prefab name library))
            (actor (funcall (func prefab) core :parent parent)))
-      (v:destroy-after-time actor :ttl ttl)
+      (v:destroy actor :ttl ttl)
       actor)))
 
 (defun make-prefab-instance (core prefab-descriptor &key parent)

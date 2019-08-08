@@ -44,20 +44,6 @@ reference which will be the parent of the spawning actor. It defaults to
                         (component-preinit-by-type-view tables))
             v))))
 
-(defmethod destroy-after-time ((kernel actor) &key (ttl 0))
-  (let* ((core (core kernel))
-         (table (actor-predestroy-view (tables core))))
-    (when (eq (id kernel) 'universe)
-      (error "Cannot destroy the scene tree root."))
-    ;; TODO: this needs fixing because TTL is never nil
-    (setf (ttl kernel) (and ttl (max 0 ttl)))
-    ;; TODO: Same for this
-    (if ttl
-        (setf (u:href table kernel) kernel)
-        ;; If the TTL is stopped, we want to remove the actor from the
-        ;; pre-destroy view!
-        (remhash kernel table))))
-
 (defun actor/preinit->init (actor)
   (let ((tables (tables (core actor))))
     (remhash actor (actor-preinit-db tables))

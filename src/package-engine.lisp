@@ -18,7 +18,6 @@
    #:define-options
    #:define-resources
    #:delta
-   #:destroy-after-time
    #:destroy
    #:display-id
    #:frame-count

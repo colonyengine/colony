@@ -14,11 +14,11 @@
                  (package-name (symbol-package qualified-component-name))
                  "[no package: component does not exist!]")))
     (assert (= (length metadata-ht-test-fns) (length keys)))
-    (ensure-nested-hash-table (shared-storage-table context)
+    (ensure-nested-hash-table (shared-storage context)
                               (list* 'eq 'eql metadata-ht-test-fns)
                               (list* qualified-component-name namespace keys))
     (apply #'u:href
-           (shared-storage-table context)
+           (shared-storage context)
            (list* qualified-component-name namespace keys))))
 
 (defun (setf ss-href) (new-value context component-name namespace &rest keys)
@@ -27,12 +27,12 @@
          (metadata-ht-test-fns (cdr (shared-storage-metadata
                                      qualified-component-name namespace))))
     (assert (= (length metadata-ht-test-fns) (length keys)))
-    (ensure-nested-hash-table (shared-storage-table context)
+    (ensure-nested-hash-table (shared-storage context)
                               (list* 'eq 'eql metadata-ht-test-fns)
                               (list* qualified-component-name namespace keys))
     (apply #'(setf u:href)
            new-value
-           (shared-storage-table context)
+           (shared-storage context)
            (list* qualified-component-name namespace keys))))
 
 (defun %lookup-form-to-bindings (lookup-form)
@@ -70,3 +70,17 @@ dense lexical scope."
   "Short Form for shared storage access."
   `(let ((,context-var ,context-form))
      ,(%generate-ss-get/set context-var cache-bindings body)))
+
+;;; Protocol methods
+
+(defmethod %shared-storage ((context context) key)
+  (u:href (shared-storage context) key))
+
+(defmethod %shared-storage ((context context) (key component))
+  (%shared-storage context (component-type key)))
+
+(defmethod (setf %shared-storage) (value (context context) key)
+  (setf (u:href (shared-storage context) key) value))
+
+(defmethod (setf %shared-storage) (value (context context) (key component))
+  (setf (%shared-storage context (component-type key)) value))

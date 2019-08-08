@@ -18,17 +18,15 @@
          (sb-profile:unprofile)
          (sb-profile:reset)))))
 
-(defgeneric prologue (context)
-  (:method :before (context)
-    (log:trace :virality.engine "Running prologue method."))
-  (:method (context)
-    (u:noop)))
+(defmethod prologue :before ((context context))
+  (log:trace :virality.engine "Running prologue method."))
 
-(defgeneric epilogue (context)
-  (:method :before (context)
-    (log:trace :virality.engine "Running epilogue method."))
-  (:method (context)
-    (u:noop)))
+(defmethod prologue ((context context)))
+
+(defmethod epilogue :before ((context context))
+  (log:trace :virality.engine "Running epilogue method."))
+
+(defmethod epilogue ((context context)))
 
 (defun run-prologue (core)
   "The prologue is a (defmethod prologue ((context context)) ...) method
