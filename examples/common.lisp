@@ -1,6 +1,6 @@
 (in-package #:virality.examples)
 
-(v:define-options ()
+(v:define-options :virality.examples
   :window-width 1920
   :window-height 1080
   :vsync :off

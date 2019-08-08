@@ -16,7 +16,8 @@
               :initial-scene nil))
 
 (defun load-options (core)
-  (let ((user-options-path (uiop:merge-pathnames*
+  (let ((project (project core))
+        (user-options-path (uiop:merge-pathnames*
                             #p"ViralityEngine/user.conf"
                             (uiop:xdg-config-home))))
     (when (uiop:file-exists-p user-options-path)
@@ -24,11 +25,15 @@
             (apply #'u:dict (u:safe-read-file-forms user-options-path))))
     (setf (options core)
           (u:hash-merge (meta 'options/default)
-                        (or (meta 'options/project) (u:dict))
+                        (or (u:href (meta 'options/project) project) (u:dict))
                         (or (meta 'options/user) (u:dict))))))
 
 (defun option (context option-name)
   (u:href (options context) option-name))
 
-(defmacro define-options (() &body body)
-  `(setf (meta 'options/project) (u:dict ,@body)))
+(defmacro define-options (project &body body)
+  (let ((options '(meta 'options/project)))
+    `(progn
+       (unless ,options
+         (setf ,options (u:dict)))
+       (setf (u:href ,options ,project) (u:dict ,@body)))))
