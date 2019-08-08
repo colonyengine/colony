@@ -10,7 +10,7 @@
 
 (v:define-prefab "noise-tile" (:library examples)
   (c/xform:transform :scale (v3:vec 90 90 0))
-  (c/smesh:static-mesh :location '((:core :mesh) "plane.glb")))
+  (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb")))
 
 (v:define-prefab "noise" (:library examples)
   (("camera" :copy "/cameras/ortho"))

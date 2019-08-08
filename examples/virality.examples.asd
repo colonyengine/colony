@@ -32,4 +32,5 @@
    (:module "protect-the-planets"
     :components
     ((:file "common")
-     (:file "example-protect-the-planets")))))
+     (:file "protect-the-planets")))
+   (:file "examples")))

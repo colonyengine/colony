@@ -26,21 +26,21 @@
   ;; NOTE: cubes are on xz plane.
   (("cube-z-1" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 0 0 -4))
-   (c/smesh:static-mesh :location '((:core :mesh) "cube.glb")))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb")))
   (("cube-z-0" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 0 0 -2))
-   (c/smesh:static-mesh :location '((:core :mesh) "cube.glb")))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb")))
   (("cube-origin" :copy "/mesh")
    (c/xform:transform
     #++ :rotate/inc #++ (q:orient :local
                                   (v3:vec -1f0 1f0 1f0) (/ pi 2)))
-   (c/smesh:static-mesh :location '((:core :mesh) "cube.glb")))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb")))
   (("cube-x-0" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 2 0 0))
-   (c/smesh:static-mesh :location '((:core :mesh) "cube.glb")))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb")))
   (("cube-x-1" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 4 0 0))
-   (c/smesh:static-mesh :location '((:core :mesh) "cube.glb"))))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))))
 
 ;;; Prefab descriptors
 

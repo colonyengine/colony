@@ -26,7 +26,7 @@
 
 (defun make-spritesheet (context sprite)
   (with-slots (%name %spec) sprite
-    (let* ((spec (v::find-resource context %spec))
+    (let* ((spec (v::find-asset context %spec))
            (spritesheet (make-instance 'spritesheet
                                        :spec (u:safe-read-file-form spec)
                                        :geometry (gl:gen-vertex-array))))

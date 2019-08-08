@@ -4,24 +4,26 @@
   :window-width 1920
   :window-height 1080
   :vsync :off
+  :delta 1/120
   :initial-scene 'geometric-volumes)
 
-(v:define-resources (:project :virality.examples)
-  (:project "data/project")
-  (:mesh (:project "mesh"))
-  (:texture (:project "texture"))
-  (:log (:project "log"))
-  (:log-debug (:project :log "debug.log"))
-  (:log-error (:project :log "error.log"))
-  (:example-texture (:project :texture "example-texture"))
-  (:1da (:project :example-texture "1d-array"))
-  (:2da (:project :example-texture "2d-array"))
-  (:3d (:project :example-texture "3d"))
-  (:cubemap (:project :example-texture "cube-map"))
-  (:cubemaparray (:project :example-texture "cube-map-array"))
-  (:spritesheet (:project :texture "example-sprite/sprites.tiff"))
-  (:spritesheet-data (:project "sprites.sexp"))
-  (:damaged-helmet-textures (:project :texture "example-damaged-helmet")))
+(v:define-assets :virality.examples
+  :data "data"
+  :mesh ("mesh" :data)
+  :tex ("texture" :data)
+  :log "log"
+  :log-debug ("debug.log" :log)
+  :log-error ("error.log" :log)
+  :texture-example ("texture" :tex)
+  :1da ("1d-array" :texture-example)
+  :2da ("2d-array" :texture-example)
+  :3d ("3d" :texture-example)
+  :cubemap ("cube-map" :texture-example)
+  :cubemaparray ("cube-map-array" :texture-example)
+  :spritesheet ("sprite/sprites.tiff" :tex)
+  :spritesheet-data ("sprites.spec" :data)
+  :damaged-helmet-textures ("damaged-helmet" :tex)
+  :ptp-tex ("protect-the-planets" :tex))
 
 ;;; Prefabs
 
@@ -42,7 +44,7 @@
                   :mode :orthographic))))
 
 (v:define-prefab "mesh" (:library examples)
-  (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+  (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
   (c/render:render :material 'x/mat:unlit-texture))
 
 ;;; Graphs

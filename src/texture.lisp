@@ -206,8 +206,9 @@ If KIND is :1d or :2d, then DATA must be an array of location descriptors like:
 images: #(#((:project \"a/b/c/slice0-mip0.tiff\") (:local
 \"a/b/c/slice1-mip0.tiff\"))) The same vector structure is returned but with the
 local descriptor lists replaced by actual IMAGE instances of the loaded images."
-  (flet ((read-image-contextually (loc)
-           (let ((path (apply #'v::find-resource context (a:ensure-list loc))))
+  (flet ((read-image-contextually (asset)
+           (let* ((asset (a:ensure-list asset))
+                  (path (apply #'v::find-asset context asset)))
              (img:read-image path)))
          (process-cube-map-mipmaps (cube-data choice-func)
            ;; Process only one cube map right now... when this works, edit it to

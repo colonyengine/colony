@@ -46,7 +46,7 @@
    (c/xform:transform :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local :z (- (/ pi 4)))
                       :scale 4)
-   (c/smesh:static-mesh :location '(:mesh "damaged-helmet.glb"))
+   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (c/render:render :material 'damaged-helmet)))
 
 ;;; Prefab descriptors

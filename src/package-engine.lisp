@@ -13,10 +13,10 @@
    #:actor
    #:context
    #:define-annotation
+   #:define-assets
    #:define-call-flow
    #:define-graph
    #:define-options
-   #:define-resources
    #:delta
    #:destroy-after-time
    #:destroy

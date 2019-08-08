@@ -37,7 +37,7 @@ following in your REPL:
 
 ```lisp
 (ql:quickload :virality.examples)
-(virality.engine:start :scene 'virality.examples:damaged-helmet)
+(virality.examples:start "ptp")
 
 ;; ESC exits
 ```

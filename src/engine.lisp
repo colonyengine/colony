@@ -48,7 +48,7 @@ tear-down procedure occurs when stopping the engine."
 
 (defun initialize-host (core)
   (let ((flags '(:everything))
-        (gamepad-db (find-resource (context core) '(:core :gamepad-db))))
+        (gamepad-db (find-asset (context core) :virality.engine/gamepad-db)))
     (unless (apply #'sdl2:was-init flags)
       (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
         (sdl2::check-rc (sdl2::sdl-init flags))))
@@ -96,11 +96,11 @@ tear-down procedure occurs when stopping the engine."
   (u:while (running-p core)
     (iterate-main-loop core)))
 
-(defun start (&key scene profile)
+(defun start (&key project scene profile)
   "Start the engine. First we initialize the engine. Next we run the prologue as
 the last step, before finally starting the main game loop."
   (unwind-protect
-       (let ((core (make-instance 'core)))
+       (let ((core (make-instance 'core :project project)))
          (load-options core)
          (make-context core)
          (setf *core-debug* core)

@@ -2,27 +2,7 @@
 
 (defpackage #:virality.examples
   (:use #:cl)
-  (:export #:examples
-           #:collision-smoke-test
-           #:collision-test-0
-           #:collision-test-1
-           #:damaged-helmet
-           #:geometric-volumes
-           #:graph
-           #:3d-graph-1
-           #:3d-graph-2
-           #:isometric-view
-           #:noise
-           #:sprite-1
-           #:sprite-2
-           #:texture))
-
-;;;; This is a reasonably scoped shmup that demonstrates use of the engine.
-(defpackage #:virality.examples.protect-the-planets
-  (:use #:cl)
-  (:export #:ptp-base
-           #:ptp
-           #:starfield-demo))
+  (:export #:start))
 
 (defpackage #:virality.examples.shaders
   (:use #:cl #:vari #:virality.shaders))
@@ -31,5 +11,4 @@
 ;; generator
 (virality.nicknames:define-nicknames
   (:virality.examples :ex)
-  (:virality.examples.protect-the-planets :ex/ptp)
   (:virality.examples.shaders :ex/shd))

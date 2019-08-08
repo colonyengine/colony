@@ -3,8 +3,10 @@
 (defvar *core-debug*)
 
 (defclass core ()
-  ((%resources :reader resources
-               :initform (meta 'resources))
+  ((%project :reader project
+             :initarg :project)
+   (%assets :reader assets
+            :initform (meta 'assets))
    (%options :accessor options)
    (%running-p :accessor running-p
                :initform t)
@@ -102,18 +104,6 @@ structures in CORE."
                   'entry/initialize-phase
                   :come-from-state-name 'ef-make-scene-tree)
     (setf (slot-value core '%scene-tree) actor)))
-
-(defgeneric shared-storage (context key)
-  (:method (context key)
-    (u:href (shared-storage-table context) key))
-  (:method (context (key component))
-    (shared-storage context (component-type key))))
-
-(defgeneric (setf shared-storage) (value context key)
-  (:method (value context key)
-    (setf (u:href (shared-storage-table context) key) value))
-  (:method (value context (key component))
-    (setf (shared-storage context (component-type key)) value)))
 
 ;; This might call rcache-construct if needed.
 (defmethod rcache-lookup (context (entry-type symbol) &rest keys)

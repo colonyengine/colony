@@ -3,13 +3,12 @@
 (defclass context ()
   ((%core :reader core
           :initarg :core)
-   (%project-data :accessor project-data)
    (%options :reader options
              :initarg :options)
    (%active-camera :accessor active-camera
                    :initform nil)
-   (%shared-storage-table :reader shared-storage-table
-                          :initform (u:dict))
+   (%shared-storage :reader shared-storage
+                    :initform (u:dict))
    (%state :accessor state
            :initform nil)))
 

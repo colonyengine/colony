@@ -4,11 +4,11 @@
 
 (v:define-texture 1d-gradient
     (:texture-1d x/tex:clamp-all-edges)
-  (:data #((:example-texture "texture-gradient-1d.tiff"))))
+  (:data #((:texture-example "texture-gradient-1d.tiff"))))
 
 (v:define-texture 2d-wood
     (:texture-2d x/tex:clamp-all-edges)
-  (:data #((:example-texture "wood.tiff"))))
+  (:data #((:texture-example "wood.tiff"))))
 
 (v:define-texture 3d
     (:texture-3d x/tex:clamp-all-edges)
@@ -265,12 +265,12 @@
                       :rotate (q:orient :world
                                         :x (asin (/ (sqrt 2)))
                                         :z (/ pi 4)))
-   (c/smesh:static-mesh :location '((:core :mesh) "cube.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))
    (c/render:render :material 'cubemap))
   (("cube-map-array" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 3 -1 0)
                       :rotate/inc (q:orient :world (v3:one) (/ pi 4)))
-   (c/smesh:static-mesh :location '((:core :mesh) "cube.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))
    (c/render:render :material 'cubemaparray)))
 
 ;;; Prefab descriptors

@@ -206,7 +206,7 @@
                       :rotate/inc (q:orient :local :z pi))
    ("plane-0"
     (c/xform:transform :translate (v3:vec -2 0 0))
-    (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
     (c/col:sphere :display-id "Player"
                   :visualize t
                   :on-layer :player
@@ -218,7 +218,7 @@
                       :rotate/inc (q:orient :local :z (- pi)))
    ("plane-1"
     (c/xform:transform :translate (v3:vec 2 0 0))
-    (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
     (c/col:sphere :display-id "Enemy"
                   :visualize t
                   :on-layer :enemy
@@ -244,7 +244,7 @@ unit world vector representations of the axis directions as:
    ;; NOTE: The 5 0 0 is specific to the unit-test-transform-api tests.
    (c/xform:transform :translate (v3:vec 5 0 0))
    (unit-test-transform-api :test-type :test-direction-vectors)
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)))
 
 (v:define-prefab "collision-transform-test-1" (:library examples)
@@ -266,7 +266,7 @@ world space for a particular transform."
       (c/xform:transform :rotate (q:orient :local :z (/ pi 2))
                          :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
-      (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+      (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
       (c/render:render :material '2d-wood))))))
 
 
@@ -290,7 +290,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("left-gate"
    (c/xform:transform :translate (v3:vec -1.15 2 -.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Left-Gate"
                  :visualize t
@@ -298,7 +298,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("right-gate"
    (c/xform:transform :translate (v3:vec 1.15 2 -.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Right-Gate"
                  :visualize t
@@ -310,7 +310,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
                       :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:vec 0 -2 0))
-   (c/smesh:static-mesh :location '(:mesh "damaged-helmet.glb"))
+   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
    (c/col:sphere :display-id "Stone"
                  :visualize t
@@ -323,7 +323,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("ground"
    (c/xform:transform :translate (v3:vec 0 -2 0.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/col:sphere :display-id "Ground"
                  :visualize t
                  :on-layer :ground
@@ -340,28 +340,28 @@ actually are. You have to view the results to see the colliders lighting up."
 
   ("upper-left"
    (c/xform:transform :translate (v3:vec -2 2 -0.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Upper-Left"
                  :visualize t
                  :on-layer :ground))
   ("upper-right"
    (c/xform:transform :translate (v3:vec 2 2 -0.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Upper-Right"
                  :visualize t
                  :on-layer :ground))
   ("lower-left"
    (c/xform:transform :translate (v3:vec -2 -2 -0.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Lower-Left"
                  :visualize t
                  :on-layer :ground))
   ("lower-right"
    (c/xform:transform :translate (v3:vec 2 -2 -0.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Lower-Right"
                  :visualize t
@@ -372,7 +372,7 @@ actually are. You have to view the results to see the colliders lighting up."
                       :rotate (q:orient :local :x (/ pi 2))
                       :rotate/inc (q:orient :local (v3:one) pi)
                       :translate/inc (v3:zero))
-   (c/smesh:static-mesh :location '(:mesh "damaged-helmet.glb"))
+   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :time-to-destroy 2)
    (c/col:sphere :display-id "Stone"
                  :visualize t
