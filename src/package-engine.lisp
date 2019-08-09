@@ -18,7 +18,6 @@
    #:define-graph
    #:define-options
    #:delta
-   #:destroy-after-time
    #:destroy
    #:display-id
    #:frame-count

@@ -92,7 +92,7 @@
         (v:attach-components
          new-actor transform shot-mover sprite render)
         (v:spawn-actor new-actor)
-        (v:destroy-after-time new-actor :ttl 2)))))
+        (v:destroy new-actor :ttl 2)))))
 
 ;;; Prefabs
 

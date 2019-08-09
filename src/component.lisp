@@ -93,16 +93,6 @@ one of the same type."
     (values (first components)
             (rest components))))
 
-(defmethod destroy-after-time ((kernel component) &key (ttl 0))
-  (let ((table (u:href (component-predestroy-view (tables (core kernel))))))
-    ;; TODO: Fix this. TTL is never nill so this won't do what we expect.
-    (setf (ttl kernel) (and ttl (max 0 ttl)))
-    (if ttl
-        (setf (u:href table kernel) kernel)
-        ;; If the TTL is stopped, we want to remove the component from the
-        ;; pre-destroy view!
-        (remhash kernel table))))
-
 (defun component/countdown-to-destruction (component)
   (when (plusp (ttl component))
     (decf (ttl component) (frame-time (context component)))))
@@ -170,3 +160,19 @@ one of the same type."
     (detach-component (actor component) component)
     (deregister-kernel-uuid component)
     (deregister-kernel-id component)))
+
+;;; Protocol methods
+
+(defmethod on-component-initialize ((self component)))
+
+(defmethod on-component-attach ((self component) (actor actor)))
+
+(defmethod on-component-detach ((self component) (actor actor)))
+
+(defmethod on-component-physics-update ((self component)))
+
+(defmethod on-component-update ((self component)))
+
+(defmethod on-component-render ((self component)))
+
+(defmethod on-component-destroy ((self component)))

@@ -1,11 +1,9 @@
 (in-package #:virality.engine)
 
 (defclass clock ()
-  ((%start :reader start
-           :initform (get-time))
+  ((%start :initform (get-time))
    (%now :initform (get-time))
-   (%pause-time :reader pause-time
-                :initform 0)
+   (%pause-time :initform 0)
    (%before :initform 0)
    (%total-time :initform 0)
    (%delta :initarg :delta
@@ -19,11 +17,9 @@
    (%vsync-p :reader vsync-p
              :initarg :vsync-p)
    (%period-elapsed :initform (get-time))
-   (%period-interval :reader period-interval
-                     :initarg :period
+   (%period-interval :initarg :period
                      :initform nil)
-   (%debug-interval :reader debug-interval
-                    :initarg :debug-interval
+   (%debug-interval :initarg :debug-interval
                     :initform 5)
    (%debug-time :initform 0)
    (%debug-count :initform 0)))

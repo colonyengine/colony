@@ -648,7 +648,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
      (direction (mover projectile)) direction)
 
     ;; By default projectiles live a certain amount of time.
-    (v:destroy-after-time new-projectile :ttl destroy-ttl)
+    (v:destroy new-projectile :ttl destroy-ttl)
 
     new-projectile))
 
@@ -703,7 +703,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                     :instant-p t :replace-p t)
 
     ;; By default explosions live a certain amount of time.
-    (v:destroy-after-time new-explosion :ttl destroy-ttl)
+    (v:destroy new-explosion :ttl destroy-ttl)
 
     new-explosion))
 
@@ -1880,8 +1880,8 @@ NIL if no such list exists."
               (first (v:make-prefab-instance
                       (v::core context)
                       '(("level-complete-sign" ptp))))))
-        (v:destroy-after-time level-complete-sign
-                              :ttl level-complete-max-wait-time)))
+        (v:destroy level-complete-sign
+                   :ttl level-complete-max-wait-time)))
 
     (cond
       ((>= level-complete-timer level-complete-max-wait-time)
@@ -1932,7 +1932,7 @@ NIL if no such list exists."
               (first (v:make-prefab-instance
                       (v::core context)
                       '(("game-over-sign" ptp))))))
-        (v:destroy-after-time game-over-sign :ttl game-over-max-wait-time)))
+        (v:destroy game-over-sign :ttl game-over-max-wait-time)))
 
     (cond
       ((>= game-over-timer game-over-max-wait-time)

@@ -496,3 +496,11 @@ the repl when the game is NOT running."
       (deregister-collider context c5)
       (deregister-collider context c6)
       (v::collider-system core))))
+
+;;; Protocol methods
+
+(defmethod on-collision-enter ((self v::component) (other v::component)))
+
+(defmethod on-collision-continue ((self v::component) (other v::component)))
+
+(defmethod on-collision-exit ((self v::component) (other v::component)))

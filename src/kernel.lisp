@@ -106,9 +106,28 @@
                 (by-id (u:href table id)))
     (u:hash-values by-id)))
 
-(defgeneric destroy-after-time (kernel &key ttl)
-  (:documentation "The keyword argument :TTL supplied in real seconds, is how
-long the thing has yet to live, with NIL meaning infinity."))
+;;; Protocol methods
 
-(defun destroy (kernel)
-  (destroy-after-time kernel :ttl 0))
+(defmethod destroy ((kernel component) &key (ttl 0))
+  (let ((table (u:href (component-predestroy-view (tables (core kernel))))))
+    ;; TODO: Fix this. TTL is never nill so this won't do what we expect.
+    (setf (ttl kernel) (and ttl (max 0 ttl)))
+    (if ttl
+        (setf (u:href table kernel) kernel)
+        ;; If the TTL is stopped, we want to remove the component from the
+        ;; pre-destroy view!
+        (remhash kernel table))))
+
+(defmethod destroy ((kernel actor) &key (ttl 0))
+  (let* ((core (core kernel))
+         (table (actor-predestroy-view (tables core))))
+    (when (eq (id kernel) 'universe)
+      (error "Cannot destroy the scene tree root."))
+    ;; TODO: this needs fixing because TTL is never nil
+    (setf (ttl kernel) (and ttl (max 0 ttl)))
+    ;; TODO: Same for this
+    (if ttl
+        (setf (u:href table kernel) kernel)
+        ;; If the TTL is stopped, we want to remove the actor from the
+        ;; pre-destroy view!
+        (remhash kernel table))))

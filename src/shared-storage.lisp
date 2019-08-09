@@ -82,3 +82,17 @@ dense lexical scope."
   "Short Form for shared storage access."
   `(let ((,context-var ,context-form))
      ,(%generate-ss-get/set context-var cache-bindings body)))
+
+;;; Protocol methods
+
+(defmethod %shared-storage ((context context) key)
+  (u:href (shared-storage context) key))
+
+(defmethod %shared-storage ((context context) (key component))
+  (%shared-storage context (component-type key)))
+
+(defmethod (setf %shared-storage) (value (context context) key)
+  (setf (u:href (shared-storage context) key) value))
+
+(defmethod (setf %shared-storage) (value (context context) (key component))
+  (setf (%shared-storage context (component-type key)) value))

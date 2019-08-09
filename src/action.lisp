@@ -85,25 +85,24 @@
         :when (blocking-p action)
           :do (return)))
 
-;;; Action event hooks
+;;; Protocol methods
 
-(defgeneric on-insert (action type)
-  (:method (action type)))
+(defmethod on-insert (action type))
 
-(defgeneric on-finish (action type)
-  (:method (action type))
-  (:method :around (action type)
-    (let ((actor (v:actor (renderer (manager action)))))
-      (call-next-method)
-      (log:trace :virality.action "Action ~a finished for actor ~a."
-                 type (v:id actor)))))
+(defmethod on-finish (action type))
 
-(defgeneric on-update (action type)
-  (:method (action type))
-  (:method :before (action type)
-    (with-slots (%manager %elapsed %self-finishing-p %duration %finished-p)
-        action
-      (incf %elapsed (v:frame-time (v:context (renderer %manager))))
-      (when (and (not %self-finishing-p)
-                 (>= %elapsed %duration))
-        (setf %finished-p t)))))
+(defmethod on-finish :around (action type)
+  (let ((actor (v:actor (renderer (manager action)))))
+    (call-next-method)
+    (log:trace :virality.action "Action ~a finished for actor ~a."
+               type (v:id actor))))
+
+(defmethod on-update (action type))
+
+(defmethod on-update :before (action type)
+  (with-slots (%manager %elapsed %self-finishing-p %duration %finished-p)
+      action
+    (incf %elapsed (v:frame-time (v:context (renderer %manager))))
+    (when (and (not %self-finishing-p)
+               (>= %elapsed %duration))
+      (setf %finished-p t))))
