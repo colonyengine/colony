@@ -4,12 +4,11 @@
   `(let* ((debugger-entry-time)
           (previous-hook *debugger-hook*)
           (#+sbcl sb-ext:*invoke-debugger-hook*
-           #-sbcl *debugger-hook
+           #-sbcl *debugger-hook*
            (lambda (condition hook)
-             (declare (ignore hook))
              (setf debugger-entry-time (get-time))
              (when previous-hook
-               (funcall previous-hook condition previous-hook)))))
+               (funcall previous-hook condition hook)))))
      (restart-case (progn ,@body)
        (continue ()
          :report ,report
