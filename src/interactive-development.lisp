@@ -4,12 +4,11 @@
   `(let* ((debugger-entry-time)
           (previous-hook *debugger-hook*)
           (#+sbcl sb-ext:*invoke-debugger-hook*
-           #-sbcl *debugger-hook
+           #-sbcl *debugger-hook*
            (lambda (condition hook)
-             (declare (ignore hook))
              (setf debugger-entry-time (get-time))
              (when previous-hook
-               (funcall previous-hook condition previous-hook)))))
+               (funcall previous-hook condition hook)))))
      (restart-case (progn ,@body)
        (continue ()
          :report ,report
@@ -38,9 +37,6 @@
                                                  "CHANNEL-THREAD"
                                                  repl-package))))
                         (when repl
-                          (setf (,(a:ensure-symbol "MREPL-MODE" "SLYNK-MREPL")
-                                 repl)
-                                :eval)
                           (,(a:ensure-symbol "SEND-PROMPT" "SLYNK-MREPL")
                            repl)))))
                   (:swank
