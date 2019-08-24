@@ -6,7 +6,7 @@
               :window-height 450
               :delta 1/30
               :vsync :on
-              :periodic-interval 0.25
+              :period-interval 0.25
               :debug-interval 5
               :log-repl-enabled t
               :log-repl-categories '(:virality)

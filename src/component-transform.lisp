@@ -85,26 +85,26 @@
     (q:rotate! %current %current %incremental-delta)))
 
 (defun transform-node (core node)
-  (let ((delta (v::delta (v:context core))))
+  (let ((delta (float (v::clock-delta-time (v::clock core)) 1f0)))
     (transform-node/vector (scaling node) delta)
     (transform-node/quat (rotation node) delta)
     (transform-node/vector (translation node) delta)))
 
-(defun resolve-local (node alpha)
+(defun resolve-local (node factor)
   (declare (optimize speed))
   (with-slots (%local %scaling %rotation %translation) node
-    (interpolate-vector %scaling alpha)
-    (interpolate-quaternion %rotation alpha)
-    (interpolate-vector %translation alpha)
+    (interpolate-vector %scaling factor)
+    (interpolate-quaternion %rotation factor)
+    (interpolate-vector %translation factor)
     (m4:*! %local
            (m4:copy! %local (q:to-mat4 (interpolated %rotation)))
            (m4:set-scale m4:+id+ (interpolated %scaling)))
     (m4:set-translation! %local %local (interpolated %translation))))
 
-(defun resolve-model (node alpha)
+(defun resolve-model (node factor)
   (declare (optimize speed))
   (a:when-let ((parent (parent node)))
-    (resolve-local node alpha)
+    (resolve-local node factor)
     (m4:*! (model node) (model parent) (local node))))
 
 (defun map-nodes (func parent)
@@ -116,12 +116,14 @@
 
 (defun interpolate-transforms (core)
   (declare (optimize speed))
-  (map-nodes
-   (lambda (x)
-     (resolve-model x (v::alpha (v::clock core))))
-   (v:component-by-type (v::scene-tree core) 'transform)))
+  (let ((factor (float (v::clock-interpolation-factor (v::clock core)) 1f0)))
+    (map-nodes
+     (lambda (x)
+       (resolve-model x factor))
+     (v:component-by-type (v::scene-tree core) 'transform))))
 
-(defmethod v:make-component (context (component-type (eql 'transform)) &rest args)
+(defmethod v:make-component (context (component-type (eql 'transform))
+                             &rest args)
   (let ((instance (make-instance component-type
                                  :type component-type
                                  :context context)))
