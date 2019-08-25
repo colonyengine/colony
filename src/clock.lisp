@@ -84,25 +84,40 @@
   (symbol-macrolet ((accumulator (clock-accumulator clock))
                     (delta (clock-delta-time clock)))
     (incf accumulator (clock-frame-time clock))
-    (u:while (>= accumulator delta)
-      (execute-flow core
-                    :default
-                    'active-phase
-                    'protocol-physics-update
-                    :come-from-state-name
-                    :ef-physics-update)
-      (c/xform::map-nodes
-       (lambda (x) (c/xform::transform-node core x))
-       (component-by-type (scene-tree core) 'c/xform:transform))
-      (execute-flow core
-                    :default
-                    'active-phase
-                    'physics-collisions
-                    :come-from-state-name
-                    :ef-physics-collisions)
-      (decf accumulator delta))
-    (setf (clock-interpolation-factor clock) (/ accumulator delta))
-    nil))
+
+    (flet ((do-physics-update ()
+             (execute-flow core
+                           :default
+                           'active-phase
+                           'protocol-physics-update
+                           :come-from-state-name
+                           :ef-physics-update)
+             (c/xform::map-nodes
+              (lambda (x) (c/xform::transform-node core x))
+              (component-by-type (scene-tree core) 'c/xform:transform))
+             (execute-flow core
+                           :default
+                           'active-phase
+                           'physics-collisions
+                           :come-from-state-name
+                           :ef-physics-collisions)
+             ;; TODO: Prevent an error in SBCL from producing a WARNING when
+             ;; returning multiple values here. This needs more investigation.
+             nil))
+
+      ;; NOTE: On the _very first frame_, execute physics to give us something
+      ;; to interpolate properly in the world BEFORE we accumulate to the first
+      ;; delta amount of physics time.
+      (when (< (clock-frame-count clock) 1d0)
+        (do-physics-update))
+
+      ;; Then if enough time had passed, run physics.
+      (u:while (>= accumulator delta)
+        (do-physics-update)
+        (decf accumulator delta))
+
+      (setf (clock-interpolation-factor clock) (/ accumulator delta))
+      nil)))
 
 (declaim (ftype (function (clock) null) clock-periodic-update))
 (defun clock-periodic-update (clock)
