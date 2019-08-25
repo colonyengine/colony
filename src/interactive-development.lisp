@@ -12,9 +12,9 @@
      (restart-case (progn ,@body)
        (continue ()
          :report ,report
-         (with-slots (%pause-time) (clock *core-debug*)
-           (when debugger-entry-time
-             (setf %pause-time (- (get-time) debugger-entry-time))))))))
+         (when debugger-entry-time
+           (setf (clock-pause-time (clock *core-debug*))
+                 (- (get-time) debugger-entry-time)))))))
 
 (defun compile-live-coding-functions ()
   (let ((repl-package (find-if #'find-package '(:slynk :swank))))

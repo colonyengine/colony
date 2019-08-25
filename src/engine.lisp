@@ -90,7 +90,7 @@ tear-down procedure occurs when stopping the engine."
         (stop core)))))
 
 (defun main-loop (core)
-  (initialize-frame-time core)
+  (initialize-frame-time (clock core))
   (u:while (running-p core)
     (iterate-main-loop core)))
 
