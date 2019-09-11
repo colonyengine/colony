@@ -104,6 +104,73 @@
   (:vertex (shd/tex:unlit/vert-nil mesh-attrs))
   (:fragment (art2/frag)))
 
+;;; Art 3
+;;; A variation of Art 2 modified by Peter Keller
+;;; Adds some distortion to the torus radius to give it more of an organic look,
+;;; and other tweaks.
+
+(define-function art3/frag (&uniform
+                            (res :vec2)
+                            (time :float))
+  (let* ((rtime (* time 0.10))
+         (uv (* (/ (- (.xy gl-frag-coord) (* res 0.5)) (.y res))
+                (mat2 (cos rtime) (- (sin rtime)) (sin rtime) (cos rtime))))
+         (ray-origin (vec3 0 0 -1))
+         (look-at (mix (vec3 0) (vec3 -1 0 -1) (sin (+ (* time 0.05) 0.05))))
+         (zoom (mix 0.2 0.3 (+ (* (sin (* time .25)) 0.5) 0.5)))
+         (forward (normalize (- look-at ray-origin)))
+         (right (normalize (cross (vec3 0 1 0) forward)))
+         (up (cross forward right))
+         (center (+ ray-origin (* forward zoom)))
+         (intersection (+ (* (.x uv) right)
+                          (* (.y uv) up)
+                          center))
+         (ray-direction (normalize (- intersection ray-origin)))
+         (distance-surface 0.0)
+         (distance-origin 0.0)
+         (point (vec3 0))
+         (p (* .4 (shd/noise:perlin (* uv 4))))
+         (radius (mix 0.6 0.9 (* (sin (* p 4))
+                                 (cos (* p 2))))))
+
+    (dotimes (i 1000)
+      (setf point (+ (* ray-direction distance-origin)
+                     ray-origin)
+            distance-surface (- (- (length (vec2 (1- (length (.xz point)))
+                                                 (.y point)))
+                                   radius)))
+      (when (art2/check-ray distance-surface)
+        (break))
+      (incf distance-origin distance-surface))
+
+    (let ((color (vec3 0)))
+      (when (art2/check-ray distance-surface)
+        (let* ((x (+ (atan (.x point) (- (.z point))) (* time 0.4)))
+               (y (atan (1- (length (.xz point))) (.y point)))
+               (ripples (+ (* (sin (* (+ (* y 60) (- (* x 20))) 3)) 0.5) 0.5))
+               (waves (sin (+ (* x 2) (+ (- (* y 6)) (* time 5)))))
+               (bands (sin (+ (* x 30) (* y 50))))
+               (b1 (smoothstep -0.2 0.2 bands))
+               (b2 (smoothstep -0.2 0.2 (- bands 0.5)))
+               (noise (vec3 (+ (* 0.4 (shd/noise:perlin (* (vec2 x y) 10)))
+                               (* 0.7 (shd/noise:cellular (* (vec2 x y) 50)))
+                               (* 0.3 (shd/noise:perlin-surflet
+                                       (* (vec2 x y) 200))))))
+               (noise (shd/color:color-filter noise
+                                              (vec3 (sin x) (sin y) 0.5)
+                                              1))
+               (blend (+ (max (* b1 (- 1 b2)) (* ripples b2 waves))
+                         (* waves 0.5 b2)))
+               (blend (mix blend
+                           (- 1 blend)
+                           (smoothstep -0.5 0.5 (sin (+ (* x 2) time))))))
+          (setf color (mix (vec3 blend) noise 0.5))))
+      (vec4 color 1))))
+
+(define-shader art3 ()
+  (:vertex (shd/tex:unlit/vert-nil mesh-attrs))
+  (:fragment (art3/frag)))
+
 ;;; Art 4
 ;;; A somewhat kaleidoscope-like effect with lots of knobs and whistles as
 ;;; uniforms. Intended to be used with other functions, such as mixing with a
