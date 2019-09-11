@@ -35,3 +35,8 @@
 (defun delta (context)
   "Return the physics update delta. This is :delta from the cfg file."
   (float (clock-delta-time (clock (core context))) 1f0))
+
+(defun screen-resolution (context &rest ignored)
+  (declare (ignore ignored))
+  (v2:vec (option context :window-width)
+          (option context :window-height)))

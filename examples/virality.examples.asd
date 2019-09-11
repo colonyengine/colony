@@ -15,6 +15,7 @@
   :components
   ((:file "package")
    (:file "common")
+   (:file "shaders/playground")
    (:file "shaders/damaged-helmet")
    (:file "shaders/dynamic-geometry")
    (:file "shaders/graph")
@@ -27,6 +28,7 @@
    (:file "example-graph")
    (:file "example-isometric-view")
    (:file "example-noise")
+   (:file "example-playground")
    (:file "example-sprite")
    (:file "example-texture")
    (:module "protect-the-planets"

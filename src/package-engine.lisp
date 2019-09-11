@@ -25,6 +25,7 @@
    #:id
    #:make-actor
    #:option
+   #:screen-resolution
    #:spawn-actor
    #:start
    #:stop

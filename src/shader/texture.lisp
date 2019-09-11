@@ -14,6 +14,14 @@
             mesh/color
             mesh/uv1)))
 
+(define-function unlit/vert-nil ((mesh-attrs mesh-attrs)
+                                 &uniform
+                                 (model :mat4)
+                                 (view :mat4)
+                                 (proj :mat4))
+  (with-slots (mesh/pos mesh/uv1) mesh-attrs
+    (values (* proj view model (vec4 mesh/pos 1)))))
+
 (define-function unlit/vert-only-uv1 ((mesh-attrs mesh-attrs)
                                       &uniform
                                       (model :mat4)
