@@ -4,15 +4,15 @@
 
 (v:define-material art1
   (:profiles (x/mat:u-mvptr)
-   :shader ex/shd::art1))
+   :shader ex/shd:art1))
 
 (v:define-material art2
   (:profiles (x/mat:u-mvptr)
-   :shader ex/shd::art2))
+   :shader ex/shd:art2))
 
 (v:define-material art3
   (:profiles (x/mat:u-mvptr)
-   :shader ex/shd::art3))
+   :shader ex/shd:art3))
 
 (v:define-material art4
   (:profiles (x/mat:u-mvptr)
@@ -22,13 +22,13 @@
               (:colorize nil)
               (:outline nil)
               (:detail 0.8))
-   :shader ex/shd::art4))
+   :shader ex/shd:art4))
 
 ;;; Prefabs
 
 (v:define-prefab "art1" (:library examples :context context)
   (("camera" :copy "/cameras/ortho"))
-  (("graph" :copy "/mesh")
+  (("screen" :copy "/mesh")
    (c/xform:transform :scale (v3:vec (/ (v:option context :window-width) 2)
                                      (/ (v:option context :window-height) 2)
                                      0))
@@ -36,7 +36,7 @@
 
 (v:define-prefab "art2" (:library examples :context context)
   (("camera" :copy "/cameras/ortho"))
-  (("graph" :copy "/mesh")
+  (("screen" :copy "/mesh")
    (c/xform:transform :scale (v3:vec (/ (v:option context :window-width) 2)
                                      (/ (v:option context :window-height) 2)
                                      0))
@@ -44,7 +44,7 @@
 
 (v:define-prefab "art3" (:library examples :context context)
   (("camera" :copy "/cameras/ortho"))
-  (("graph" :copy "/mesh")
+  (("screen" :copy "/mesh")
    (c/xform:transform :scale (v3:vec (/ (v:option context :window-width) 2)
                                      (/ (v:option context :window-height) 2)
                                      0))
@@ -52,7 +52,7 @@
 
 (v:define-prefab "art4" (:library examples :context context)
   (("camera" :copy "/cameras/ortho"))
-  (("graph" :copy "/mesh")
+  (("screen" :copy "/mesh")
    (c/xform:transform :scale (v3:vec (/ (v:option context :window-width) 2)
                                      (/ (v:option context :window-height) 2)
                                      0))

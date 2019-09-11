@@ -178,7 +178,7 @@
 
 (define-function art4/hash ((p :vec2))
   (let* ((p (fract (vec3 (* p (vec2 385.18692 958.5519))
-                         (* (+ (.x p) (.y p)) 534.3851011))))
+                         (* (+ (.x p) (.y p)) 534.3851))))
          (p (+ p (dot p (+ p 42.4112)))))
     (fract p)))
 
