@@ -1,7 +1,5 @@
 (in-package #:virality.engine)
 
-(defvar *core-debug*)
-
 (defclass core ()
   ((%resources :reader resources
                :initform (meta 'resources))

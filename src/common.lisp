@@ -1,5 +1,7 @@
 (in-package #:virality.engine)
 
+(defvar *core-debug*)
+
 (defun type-table (key type-table)
   (u:href type-table key))
 
