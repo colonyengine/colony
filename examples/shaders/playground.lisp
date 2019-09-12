@@ -316,7 +316,7 @@
          (uv2 (/ (.xy gl-frag-coord) (.xy res)))
          (time (* time 0.24))
          (rain-amount (+ (* (sin (* time 0.05)) 0.3) 0.7))
-         (blur (mix 2 6.5 rain-amount))
+         (blur (mix 3 7.5 rain-amount))
          (uv (* uv 0.7))
          (uv2 (+ (* (- uv2 0.5) 0.9) 0.5))
          (layer1 (* (smoothstep -0.5 1.0 rain-amount) 2.0))
@@ -327,7 +327,8 @@
          (cx (.x (art5/drops (+ uv e) time layer1 layer2 layer3)))
          (cy (.x (art5/drops (+ uv (.yx e)) time layer1 layer2 layer3)))
          (n (vec2 (- cx (.x c)) (- cy (.x c))))
-         (focus (mix (- blur (.y c)) 2.0 (smoothstep 0.1 0.2 (.x c)))))
+         (focus (mix (- blur (.y c)) 2.0 (smoothstep 0.1 0.2 (.x c))))
+         (uv2 (vec2 (.x uv2) (- (.y uv2)))))
     (vec4 (.rgb (texture-lod sampler (+ uv2 n) focus)) 1)))
 
 (define-shader art5 ()
