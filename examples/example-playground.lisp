@@ -1,5 +1,10 @@
 (in-package #:virality.examples)
 
+;;; Textures
+
+(v:define-texture art5/texture (:texture-2d)
+  (:data #((:playground-tex "city.tiff"))))
+
 ;;; Materials
 
 (v:define-material art1
@@ -23,6 +28,11 @@
               (:outline nil)
               (:detail 0.8))
    :shader ex/shd:art4))
+
+(v:define-material art5
+  (:profiles (x/mat:u-mvptr)
+   :uniforms ((:sampler 'art5/texture))
+   :shader ex/shd:art5))
 
 ;;; Prefabs
 
@@ -58,6 +68,14 @@
                                      0))
    (c/render:render :material 'art4)))
 
+(v:define-prefab "art5" (:library examples :context context)
+  (("camera" :copy "/cameras/ortho"))
+  (("screen" :copy "/mesh")
+   (c/xform:transform :scale (v3:vec (/ (v:option context :window-width) 2)
+                                     (/ (v:option context :window-height) 2)
+                                     0))
+   (c/render:render :material 'art5)))
+
 ;;; Prefab descriptors
 
 (v:define-prefab-descriptor art1 ()
@@ -71,3 +89,6 @@
 
 (v:define-prefab-descriptor art4 ()
   ("art4" examples))
+
+(v:define-prefab-descriptor art5 ()
+  ("art5" examples))

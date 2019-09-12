@@ -19,6 +19,7 @@
   (:3d (:project :example-texture "3d"))
   (:cubemap (:project :example-texture "cube-map"))
   (:cubemaparray (:project :example-texture "cube-map-array"))
+  (:playground-tex (:project :texture "example-playground"))
   (:spritesheet (:project :texture "example-sprite/sprites.tiff"))
   (:spritesheet-data (:project "sprites.sexp"))
   (:damaged-helmet-textures (:project :texture "example-damaged-helmet")))
