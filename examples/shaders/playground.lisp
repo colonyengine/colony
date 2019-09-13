@@ -1,8 +1,7 @@
 (in-package #:virality.examples.shaders)
 
 ;;; Art 1
-;;; WIP: A Truchet effect across a quad grid.
-;;; TODO: This needs fixing to make the mask UV seamlessly tile.
+;;; A Truchet effect across a quad grid.
 
 (define-function art1/hash ((p :vec2))
   (let* ((p (fract (* p (vec2 385.18692 958.5519))))
@@ -24,7 +23,10 @@
          (width 0.2)
          (angle (atan (.x circle-uv) (.y circle-uv)))
          (mask (smoothstep 0.01 -0.01 (- (abs (- dist 0.5)) width)))
-         (mask-uv (vec2 (fract (/ angle +half-pi+))
+         (mask-uv (vec2 (* (- (abs (fract (- (/ (* angle checker) +half-pi+)
+                                             (* time 0.3))))
+                              0.5)
+                           2.0)
                         (* (abs (- (/ (- dist (- 0.5 width)) (* width 2))
                                    0.5))
                            2)))
