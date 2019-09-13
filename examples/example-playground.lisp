@@ -31,7 +31,8 @@
 
 (v:define-material art5
   (:profiles (x/mat:u-mvptr)
-   :uniforms ((:sampler 'art5/texture))
+   :uniforms ((:blur 7.5)
+              (:sampler 'art5/texture))
    :shader ex/shd:art5))
 
 ;;; Prefabs
