@@ -1,16 +1,16 @@
 (in-package #:virality.image)
 
-(defun get-surface-channel-count (surface)
-  (ecase (sdl2:surface-format-format surface)
-    ((:index8)
+(defmethod get-image-channel-count ((loader (eql :sdl2-image)) image)
+  (ecase (sdl2:surface-format-format image)
+    (:index8
      1)
     ((:rgb24 :bgr24 :rgb888 :bgr888)
      3)
     ((:argb8888 :rgba8888 :abgr8888 :bgra8888 :rgba32 :argb32 :bgra32 :abgr32)
      4)))
 
-(defun get-surface-pixel-format (surface)
-  (ecase (sdl2:surface-format-format surface)
+(defmethod get-image-pixel-format ((loader (eql :sdl2-image)) image)
+  (ecase (sdl2:surface-format-format image)
     (:index8 :red)
     ((:rgb24 :rgb888)
      :rgb)
@@ -22,24 +22,22 @@
      :bgra)))
 
 (defmethod %read-image ((loader (eql :sdl2-image)) path)
-  (let* ((surface (sdl2-image:load-image path))
-         (pixel-format (get-surface-pixel-format surface))
-         (width (sdl2:surface-width surface))
-         (height (sdl2:surface-height surface))
-         (channels (get-surface-channel-count surface)))
-    (make-image :path path
-                :type (get-image-extension-keyword path)
-                :surface surface
-                :width width
-                :height height
-                :channels channels
-                :pixel-format pixel-format
-                :internal-format (get-internal-format pixel-format)
-                :data (sdl2:surface-pixels surface))))
+  (let* ((raw-data (sdl2-image:load-image path))
+         (pixel-format (get-image-pixel-format loader raw-data))
+         (width (sdl2:surface-width raw-data))
+         (height (sdl2:surface-height raw-data))
+         (channels (get-image-channel-count loader raw-data)))
+    (make-instance 'image
+                   :path path
+                   :type (get-image-extension-keyword path)
+                   :raw-data raw-data
+                   :width width
+                   :height height
+                   :channels channels
+                   :pixel-format pixel-format
+                   :internal-format (get-internal-format pixel-format)
+                   :data (sdl2:surface-pixels raw-data))))
 
 (defmethod %free-storage ((loader (eql :sdl2-image)) image)
-  (with-slots (%surface %data) image
-    (sdl2:free-surface %surface)
-    (setf %surface nil
-          %data nil)
-    (u:noop)))
+  (with-slots (%raw-data %data) image
+    (sdl2:free-surface %raw-data)))

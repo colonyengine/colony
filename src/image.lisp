@@ -5,8 +5,8 @@
           :initarg :path)
    (%type :reader image-type
           :initarg :type)
-   (%surface :reader surface
-             :initarg :surface)
+   (%raw-data :reader raw-data
+              :initarg :raw-data)
    (%width :reader width
            :initarg :width)
    (%height :reader height
@@ -23,24 +23,34 @@
    (%data :reader data
           :initarg :data)))
 
-(defun make-image (&rest init-args)
-  (apply #'make-instance 'image init-args))
+;;; Generic functions all loaders should implement
+
+(defgeneric get-image-channel-count (loader image))
+
+(defgeneric get-image-pixel-format (loader image))
+
+(defgeneric %read-image (loader path))
+
+(defgeneric %free-storage (loader image)
+  (:method (loader image))
+  (:method :after (loader image)
+    (with-slots (%raw-data %data) image
+      (setf %raw-data nil
+            %data nil)
+      (u:noop))))
+
+;;; Internals
 
 (defun get-image-extension-keyword (path)
   (u:make-keyword (string-upcase (pathname-type path))))
 
 (defun get-loader-type (path)
-  (let ((extension (get-image-extension-keyword path)))
-    (ecase extension
-      ((:tga :bmp :pbm :pgm :ppm :xpm :xcf :pcx :gif :jpg :jpeg :tif :tiff :lbm
-        :iff :png)
-       :sdl2-image))))
-
-(defmethod get-pixel-size ((image image))
-  (ecase (pixel-format image)
-    (:red 1)
-    ((:rgb :bgr) 3)
-    ((:rgba :bgra) 4)))
+  (ecase (get-image-extension-keyword path)
+    (:png
+     :pngload)
+    ((:tga :bmp :pbm :pgm :ppm :xpm :xcf :pcx :gif :jpg :jpeg :tif :tiff :lbm
+      :iff)
+     :sdl2-image)))
 
 (defun get-internal-format (pixel-format)
   (ecase pixel-format
@@ -48,7 +58,7 @@
     ((:rgb :bgr) :rgb8)
     ((:rgba :bgra) :rgba8)))
 
-(defgeneric %read-image (loader path))
+;;; Engine API
 
 (defun read-image (path)
   (%read-image (get-loader-type path) path))

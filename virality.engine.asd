@@ -21,6 +21,7 @@
                #:golden-utils
                #:jsown
                #:origin
+               #:pngload
                #:queues.simple-cqueue
                #:sdl2
                #:sdl2-image
@@ -101,6 +102,7 @@
    (:file "gpu-blocks")
    (:file "gpu-buffers")
    (:file "image")
+   (:file "image-pngload")
    (:file "image-sdl2")
    (:file "texture-common")
    (:file "texture")
