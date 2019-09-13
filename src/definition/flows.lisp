@@ -357,7 +357,9 @@
                      (lambda (core)
                        (values :identity-policy
                                core)))
-                    (action #'recompile-queued-items)
+                    (action (lambda (core)
+                              (pop-queue core :recompile-shader
+                                         #'gpu:recompile-shaders)))
                     (transition initialize-phase))
         (flow-state initialize-phase :reset ()
                     (selector

@@ -31,9 +31,7 @@
                      :initform nil)
    (%analyzed-graphs :reader analyzed-graphs
                      :initform (u:dict #'equalp))
-   (%recompilation-queue :reader recompilation-queue
-                         :initarg :recompilation-queue
-                         :initform (queues:make-queue :simple-cqueue))))
+   (%thread-pool :reader thread-pool)))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table

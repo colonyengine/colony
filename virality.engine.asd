@@ -20,6 +20,7 @@
                #:glsl-packing
                #:golden-utils
                #:jsown
+               #:lparallel
                #:origin
                #:pngload
                #:queues.simple-cqueue
@@ -49,6 +50,7 @@
    (:file "package-engine")
    (:file "package-nicknames")
    (:file "common")
+   (:file "threading")
    (:file "interactive-development")
    (:file "debugging")
    (:file "metadata")
