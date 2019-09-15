@@ -33,6 +33,10 @@
         texdesc))
 
 ;; TODO: Candidate for public API
+(defun remove-semantic-texture-descriptor (texdesc core)
+  (remhash texdesc (semantic-texture-descriptors (v::textures core))))
+
+;; TODO: Candidate for public API
 (defun add-unrealized-texture (texture context)
   "Add a TEXTURE, which only has defined an opengl texid, to core. This book
 keeps unrealized textures for the user to finalize before the game starts."
@@ -151,6 +155,9 @@ NOTE: These are already in the RCACHE."
    ;; The allocated opengl texture id.
    (%texid :reader texid
            :initarg :texid)))
+
+(u:define-printer (texture stream :type t)
+  (format stream "id: ~s" (texid texture)))
 
 (defun get-semantic-applied-attribute (texture attribute-name)
   (u:href (applied-attributes (semantic-texdesc texture)) attribute-name))
@@ -458,33 +465,30 @@ texture."
    (list
     :texture-recompilation
     (lambda (core)
-      (let* ((old-name (name old-descriptor))
-             (old-texture (v::rcache-peek
-                           (v::context core)
-                           :texture (canonicalize-texture-name
-                                     old-name))))
-        (add-semantic-texture-descriptor new-descriptor core)
-        (setf (semantic-texdesc old-texture) new-descriptor)
-        (resolve-semantic-texture-descriptor
-         core
-         (semantic-texdesc old-texture))
-        (generate-computed-texture-descriptor old-texture)
-        (gl:bind-texture (texture-type (computed-texdesc old-texture))
-                         (texid old-texture))
-        (set-opengl-texture-parameters old-texture))))))
+      (if old-descriptor
+          (let* ((old-name (canonicalize-texture-name (name old-descriptor)))
+                 (old-texture (v::rcache-peek
+                               (v::context core)
+                               :texture old-name)))
+            (remove-semantic-texture-descriptor old-descriptor core)
+            (add-semantic-texture-descriptor new-descriptor core)
+            (setf (semantic-texdesc old-texture) new-descriptor)
+            (resolve-semantic-texture-descriptor
+             core
+             (semantic-texdesc old-texture))
+            (generate-computed-texture-descriptor old-texture)
+            (gl:bind-texture (texture-type (computed-texdesc old-texture))
+                             (texid old-texture))
+            (set-opengl-texture-parameters old-texture))
+          (let ((new-name (canonicalize-texture-name (name new-descriptor))))
+            (add-semantic-texture-descriptor new-descriptor core)
+            (resolve-semantic-texture-descriptor core new-descriptor)
+            (v::rcache-lookup context :texture new-name)))))))
 
 (defun update-texture/interactively (old-descriptor new-descriptor)
   (when (boundp 'v::*core-debug*)
-    (let ((context (v:context v::*core-debug*))
-          (old-name (name old-descriptor))
-          (new-name (name new-descriptor)))
-      (u:mvlet ((old-texture found-p
-                             (v::rcache-peek
-                              context
-                              :texture (canonicalize-texture-name old-name))))
-        (if found-p
-            (update-texture context old-descriptor new-descriptor)
-            (v::rcache-construct context :texture new-name))))))
+    (let ((context (v:context v::*core-debug*)))
+      (update-texture context old-descriptor new-descriptor))))
 
 (defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
   "Construct a semantic TEXTURE-DESCRIPTOR. "

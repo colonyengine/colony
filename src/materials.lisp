@@ -670,15 +670,6 @@ applied in an overlay manner while defining a material."
             old-shader new-shader
             old-uniforms new-uniforms))))
 
-;; (defun update-material/interactively (name func)
-;;   (when (boundp 'v::*core-debug*)
-;;     (u:mvlet ((old-material found-p (%lookup-material name v::*core-debug*)))
-;;       (let ((new-material (funcall func v::*core-debug*)))
-;;         (resolve-material new-material v::*core-debug*)
-;;         (if found-p
-;;             (update-material old-material new-material)
-;;             (%add-material new-material v::*core-debug*))))))
-
 (defun update-material/interactively (name func)
   (when (boundp 'v::*core-debug*)
     (queues:qpush

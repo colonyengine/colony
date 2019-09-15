@@ -71,5 +71,4 @@
         ;; TODO: For procedural textures, this needs evolution.
         (free-mipmap-images images :2d)
         ;; Determine if opengl should generate the mipmaps.
-        (print texture)
         (potentially-autogenerate-mipmaps texture-type texture)))))

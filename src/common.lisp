@@ -66,10 +66,6 @@ the test function for `HT` itself."
               ;; NOTE: Look at function GENERATE-SHADER-MODIFY-HOOK for how we
               ;; put data into the recompilation queue that this case in the
               ;; ecase handles.
-              (:material-recompilation
-               (progn
-                 (print data)
-                 (funcall data core)))
               ;; NOTE: You will need a similar one for putting prefab
               ;; recompilation tasks into the recompilation queue too.
               (:shader-recompilation (gpu:recompile-shaders data))
