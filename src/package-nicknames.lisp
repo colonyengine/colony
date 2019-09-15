@@ -48,6 +48,7 @@
       (:virality.prefabs :prefab)
       (:virality.shaders :shd)
       (:virality.shaders.color :shd/color)
+      (:virality.shaders.effects :shd/fx)
       (:virality.shaders.graphing :shd/graph)
       (:virality.shaders.hashing :shd/hash)
       (:virality.shaders.noise :shd/noise)

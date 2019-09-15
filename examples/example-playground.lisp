@@ -35,7 +35,7 @@
               (:speed 0.24)
               (:zoom 0.75)
               (:sampler 'art5/texture))
-   :shader ex/shd:art5))
+   :shader shd/fx:window-rain))
 
 ;;; Prefabs
 

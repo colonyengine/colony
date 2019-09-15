@@ -161,6 +161,7 @@
    (:file "shader/sdf-2d")
    (:file "shader/texture")
    (:file "shader/sprite")
+   (:file "shader/effects-window-rain")
    (:file "shader/visualization-collider")
 
    (:file "definition/annotations")
