@@ -130,7 +130,7 @@ NOTE: These are already in the RCACHE."
 ;; procedural or not. This texdesc is a reference to the only copy of it as read
 ;; from the DSL and stored in the texture-table in core.
 (defclass texture ()
-  ((%semantic-texdesc :reader semantic-texdesc
+  ((%semantic-texdesc :accessor semantic-texdesc
                       :initarg :semantic-texdesc)
    ;; The texture descriptor as finally computed from the semantic texture
    ;; descriptor before we load/procedurally create the texture data or storage
@@ -452,21 +452,103 @@ texture."
            (setf ,definition (u:dict)))
          (setf (u:href ,definition (name ,profile)) ,profile)))))
 
+(defun update-texture (context old-descriptor new-descriptor)
+  (queues:qpush
+   (v::recompilation-queue (v::core context))
+   (list
+    :texture-recompilation
+    (lambda (core)
+      (let* ((old-name (name old-descriptor))
+             (old-texture (v::rcache-peek
+                           (v::context core)
+                           :texture (canonicalize-texture-name
+                                     old-name))))
+        (add-semantic-texture-descriptor new-descriptor core)
+        (setf (semantic-texdesc old-texture) new-descriptor)
+        (resolve-semantic-texture-descriptor
+         core
+         (semantic-texdesc old-texture))
+        (generate-computed-texture-descriptor old-texture)
+        (gl:bind-texture (texture-type (computed-texdesc old-texture))
+                         (texid old-texture))
+        (set-opengl-texture-parameters old-texture))))))
+
+(defun update-texture/interactively (old-descriptor new-descriptor)
+  (when (boundp 'v::*core-debug*)
+    (let ((context (v:context v::*core-debug*))
+          (old-name (name old-descriptor))
+          (new-name (name new-descriptor)))
+      (u:mvlet ((old-texture found-p
+                             (v::rcache-peek
+                              context
+                              :texture (canonicalize-texture-name old-name))))
+        (if found-p
+            (update-texture context old-descriptor new-descriptor)
+            (v::rcache-construct context :texture new-name))))))
+
 (defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
   "Construct a semantic TEXTURE-DESCRIPTOR. "
-  (a:with-gensyms (desc)
+  (a:with-gensyms (desc-lookup old-desc new-desc)
     (let ((definition '(v::meta 'textures)))
-      `(let ((,desc (make-texture-descriptor
-                     :name ',name
-                     :texture-type ',textype
-                     :profile-overlay-names ',profile-overlay-names)))
-         ;; Record the parameters we'll overlay on the profile at use time.
-         (setf ,@(loop :for (key value) :in body
-                       :append `((u:href (attributes ,desc) ,key) ,value)))
+      `(symbol-macrolet ((,desc-lookup (u:href ,definition ',name)))
          (unless ,definition
            (setf ,definition (u:dict)))
-         (setf (u:href ,definition ',name) ,desc)
-         (export ',name)))))
+         (let ((,new-desc (make-texture-descriptor
+                           :name ',name
+                           :texture-type ',textype
+                           :profile-overlay-names ',profile-overlay-names))
+               (,old-desc ,desc-lookup))
+           ;; Record the parameters we'll overlay on the profile at use time.
+           (setf ,@(loop :for (key value) :in body
+                         :append `((u:href (attributes ,new-desc) ,key)
+                                   ,value)))
+           (setf ,desc-lookup ,new-desc)
+           (update-texture/interactively ,old-desc ,new-desc)
+           (export ',name))))))
+
+(defun resolve-semantic-texture-descriptor (core texture-descriptor)
+  (symbol-macrolet ((profiles (profiles (v::textures core)))
+                    (default-profile-name 'x/tex:default-profile))
+    ;; 1. Check for x/tex:default-profile
+    (unless (u:href profiles default-profile-name)
+      (error "Default-profile for texture descriptors is not defined."))
+    ;; 2. For each texture-descriptor, apply all the profiles in order.
+    ;; 3. Check that the specified profiles are valid.
+    ;; TODO: 4
+    ;; TODO: 5
+    (let* ((profile-overlays
+             ;; First, gather the specified profile-overlays
+             (loop :for profile-overlay-name :in (profile-overlay-names
+                                                  texture-descriptor)
+                   :collect
+                   (u:if-found (concrete-profile
+                                (u:href profiles profile-overlay-name))
+                               concrete-profile
+                               (error "Texture profile ~a does not exist."
+                                      profile-overlay-name))))
+           (attributes (attributes texture-descriptor))
+           (applied-attributes (applied-attributes texture-descriptor))
+           (profile-overlays
+             ;; Then, if we don't see a profile-default in there, we put it
+             ;; first automatically.
+             (if (member default-profile-name (profile-overlay-names
+                                               texture-descriptor))
+                 profile-overlays
+                 (list* (u:href profiles default-profile-name)
+                        profile-overlays))))
+      ;; Now, overlay them left to right into the applied-attributes table in
+      ;; texdesc.
+      (dolist (profile-overlay profile-overlays)
+        (maphash
+         (lambda (key value)
+           (setf (u:href applied-attributes key)
+                 value))
+         (attributes profile-overlay)))
+      ;; And finally fold in the texdesc attributes last
+      (maphash
+       (lambda (key value)
+         (setf (u:href applied-attributes key) value))
+       attributes))))
 
 (defun resolve-all-semantic-texture-descriptors (core)
   " Ensure that these aspects of texture profiles and desdcriptors are ok:
@@ -475,46 +557,8 @@ texture."
 3. All currently known about texture descriptors have valid profile references.
 4. All images specified by paths actually exist at that path.
 5. The texture type is valid."
-  (symbol-macrolet ((profiles (profiles (v::textures core)))
-                    (default-profile-name 'x/tex:default-profile))
-    ;; 1. Check for x/tex:default-profile
-    (unless (u:href profiles default-profile-name)
-      (error "Default-profile for texture descriptors is not defined."))
-    ;; 2. For each texture-descriptor, apply all the profiles in order.
-    ;; 3. Check that the specified profiles are valid.
-    (u:do-hash-values (v (semantic-texture-descriptors (v::textures core)))
-      (let* ((profile-overlays
-               ;; First, gather the specified profile-overlays
-               (loop :for profile-overlay-name :in (profile-overlay-names v)
-                     :collect
-                     (u:if-found (concrete-profile
-                                  (u:href profiles profile-overlay-name))
-                                 concrete-profile
-                                 (error "Texture profile ~a does not exist."
-                                        profile-overlay-name))))
-             (profile-overlays
-               ;; Then, if we don't see a profile-default in there, we put it
-               ;; first automatically.
-               (if (member default-profile-name (profile-overlay-names v))
-                   profile-overlays
-                   (list* (u:href profiles default-profile-name)
-                          profile-overlays))))
-        ;; Now, overlay them left to right into the applied-attributes table in
-        ;; texdesc.
-        (dolist (profile-overlay profile-overlays)
-          (maphash
-           (lambda (key value)
-             (setf (u:href (applied-attributes v) key) value))
-           (attributes profile-overlay)))
-        ;; And finally fold in the texdesc attributes last
-        (maphash
-         (lambda (key value)
-           (setf (u:href (applied-attributes v) key) value))
-         (attributes v)))
-      (semantic-texture-descriptors (v::textures core)))
-    ;; TODO: 4
-    ;; TODO: 5
-    nil))
+  (u:do-hash-values (v (semantic-texture-descriptors (v::textures core)))
+    (resolve-semantic-texture-descriptor core v)))
 
 ;; public API
 (defun general-data-format-descriptor (&key width height depth internal-format

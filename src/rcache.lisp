@@ -5,6 +5,14 @@
 (defmethod rcache-layout (entry-type)
   '(eql))
 
+(defmethod rcache-peek (context (entry-type symbol) &rest keys)
+  (with-slots (%rcache) (core context)
+    (ensure-nested-hash-table %rcache
+                              ;; NOTE: 'eq is for the rcache table itself.
+                              (list* 'eq (rcache-layout entry-type))
+                              (list* entry-type keys))
+    (apply #'u:href %rcache (list* entry-type keys))))
+
 ;; This might call rcache-construct if needed.
 (defmethod rcache-lookup (context (entry-type symbol) &rest keys)
   (with-slots (%rcache) (core context)

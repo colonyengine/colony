@@ -670,14 +670,28 @@ applied in an overlay manner while defining a material."
             old-shader new-shader
             old-uniforms new-uniforms))))
 
+;; (defun update-material/interactively (name func)
+;;   (when (boundp 'v::*core-debug*)
+;;     (u:mvlet ((old-material found-p (%lookup-material name v::*core-debug*)))
+;;       (let ((new-material (funcall func v::*core-debug*)))
+;;         (resolve-material new-material v::*core-debug*)
+;;         (if found-p
+;;             (update-material old-material new-material)
+;;             (%add-material new-material v::*core-debug*))))))
+
 (defun update-material/interactively (name func)
   (when (boundp 'v::*core-debug*)
-    (u:mvlet ((old-material found-p (%lookup-material name v::*core-debug*)))
-      (let ((new-material (funcall func v::*core-debug*)))
-        (resolve-material new-material v::*core-debug*)
-        (if found-p
-            (update-material old-material new-material)
-            (%add-material new-material v::*core-debug*))))))
+    (queues:qpush
+     (v::recompilation-queue v::*core-debug*)
+     (list
+      :material-recompilation
+      (lambda (core)
+        (u:mvlet ((old-material found-p (%lookup-material name core))
+                  (new-material (funcall func core)))
+          (resolve-material new-material core)
+          (if found-p
+              (update-material old-material new-material)
+              (%add-material new-material core))))))))
 
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...

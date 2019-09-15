@@ -3,6 +3,9 @@
 ;;; Textures
 
 (v:define-texture art5/texture (:texture-2d)
+  (:texture-swizzle-r :green)
+  (:texture-swizzle-g :red)
+  (:texture-min-filter :linear)
   (:data #((:playground-tex "city.tiff"))))
 
 ;;; Materials
@@ -24,14 +27,14 @@
    :uniforms ((:zoom 0.85)
               (:speed 1)
               (:strength 0.7)
-              (:colorize nil)
+              (:colorize )
               (:outline nil)
               (:detail 0.8))
    :shader ex/shd:art4))
 
 (v:define-material art5
   (:profiles (x/mat:u-mvptr)
-   :uniforms ((:blur 7.5)
+   :uniforms ((:blur2 7.5)
               (:sampler 'art5/texture))
    :shader ex/shd:art5))
 

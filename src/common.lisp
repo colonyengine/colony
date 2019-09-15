@@ -62,11 +62,16 @@ the test function for `HT` itself."
   (loop :with queue = (recompilation-queue core)
         :for ((kind data) found-p) = (multiple-value-list (queues:qpop queue))
         :while found-p
-        :do (ecase kind
+        :do (case kind
               ;; NOTE: Look at function GENERATE-SHADER-MODIFY-HOOK for how we
               ;; put data into the recompilation queue that this case in the
               ;; ecase handles.
-              (:shader-recompilation (gpu:recompile-shaders data))
+              (:material-recompilation
+               (progn
+                 (print data)
+                 (funcall data core)))
               ;; NOTE: You will need a similar one for putting prefab
               ;; recompilation tasks into the recompilation queue too.
-              (:prefab-recompilation 'put-your-function-here))))
+              (:shader-recompilation (gpu:recompile-shaders data))
+              (:prefab-recompilation 'put-your-function-here)
+              (t (funcall data core)))))

@@ -44,6 +44,8 @@ long the thing has yet to live, with NIL meaning infinity."))
 
 (defgeneric rcache-layout (entry-type))
 
+(defgeneric rcache-peek (context entry-type &rest keys))
+
 (defgeneric rcache-lookup (context entry-type &rest keys))
 
 (defgeneric rcache-construct (context entry-type &rest keys))
