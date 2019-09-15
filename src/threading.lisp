@@ -30,13 +30,13 @@
 
 (defun get-job-results (core purpose)
   (let ((channel (ensure-channel core purpose)))
-    (lparallel:try-receive-result channel)))
+    (lparallel:receive-result channel)))
 
 (defun push-queue (core purpose data)
   (let ((queue (ensure-queue core purpose)))
     (lparallel.queue:push-queue data queue)))
 
-(defun pop-queue (core purpose &optional func)
+(defun pop-queue (core purpose)
   "Pops an item off of the queue designated by `PURPOSE`.
 If the queue is not empty, return two values: the result, and T. If `FUNC` is
 supplied, return the result of applying `FUNC` to the result for the first
@@ -44,8 +44,5 @@ return value."
   (let ((queue (ensure-queue core purpose)))
     (unless (lparallel.queue:queue-empty-p queue)
       (let ((result (lparallel.queue:pop-queue queue)))
-        (values
-         (if func
-             (funcall func result)
-             result)
-         t)))))
+        (values result
+                t)))))

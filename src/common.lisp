@@ -55,3 +55,15 @@ the test function for `HT` itself."
   (if (typep thing 'sequence)
       (map-into (copy-seq thing) #'copy-thing thing)
       thing))
+
+;;; Recompilation queue
+
+(defun recompile-queued-items (core)
+  (loop :for ((kind data) found-p) = (multiple-value-list
+                                      (pop-queue core :live-recompile))
+        :while found-p
+        :do (ecase kind
+              (:shader
+               (gpu:recompile-shaders data))
+              ((:texture :material)
+               (funcall data core)))))
