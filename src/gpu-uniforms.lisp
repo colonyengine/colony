@@ -20,21 +20,34 @@
         :append (get-uniform-data element-type (cons i parts))))
 
 (defun store-uniforms (program)
-  (flet ((%get-uniforms (stage)
-           (loop :for uniform :in (varjo:uniform-variables stage)
-                 :for type = (varjo:v-type-of uniform)
-                 :unless (or (has-qualifier-p uniform :ubo)
-                             (has-qualifier-p uniform :ssbo))
-                   :append (get-uniform-data type
-                                             (list (varjo:name uniform))))))
-    (dolist (stage (translated-stages program))
-      (loop :for (parts type-spec) :in (%get-uniforms stage)
-            :for id = (ensure-keyword (parts->string parts))
-            :do (setf (u:href (uniforms program) id)
-                      (u:dict :name (parts->string
-                                     parts
-                                     #'varjo.internals:safe-glsl-name-string)
-                              :type type-spec))))))
+  (labels ((%get-stage-uniforms (stage)
+             (loop :for uniform :in (varjo:uniform-variables stage)
+                   :for type = (varjo:v-type-of uniform)
+                   :unless (or (has-qualifier-p uniform :ubo)
+                               (has-qualifier-p uniform :ssbo))
+                     :append (get-uniform-data
+                              type
+                              (list (varjo:name uniform)))))
+           (%get-program-uniforms (program)
+             (let (uniforms)
+               (dolist (stage (translated-stages program))
+                 (loop :for (parts type-spec) :in (%get-stage-uniforms stage)
+                       :do (push (list (ensure-keyword (parts->string parts))
+                                       (parts->string
+                                        parts
+                                        #'varjo.internals:safe-glsl-name-string)
+                                       type-spec)
+                                 uniforms)))
+               uniforms)))
+    (let ((uniforms (%get-program-uniforms program)))
+      (dolist (uniform uniforms)
+        (destructuring-bind (id name type) uniform
+          (setf (u:href (uniforms program) id)
+                (u:dict :name name
+                        :type type))))
+      (u:do-hash-keys (k (uniforms program))
+        (unless (find k uniforms :key #'car)
+          (remhash k (uniforms program)))))))
 
 (defun store-uniform-locations (program)
   (let ((id (id program)))
