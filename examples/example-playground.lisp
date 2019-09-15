@@ -32,8 +32,10 @@
 (v:define-material art5
   (:profiles (x/mat:u-mvptr)
    :uniforms ((:blur 7.5)
+              (:speed 0.24)
+              (:zoom 0.75)
               (:sampler 'art5/texture))
-   :shader ex/shd:art5))
+   :shader shd/fx:window-rain))
 
 ;;; Prefabs
 
