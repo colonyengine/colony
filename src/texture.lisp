@@ -461,10 +461,11 @@ texture."
          (setf (u:href ,definition (name ,profile)) ,profile)))))
 
 (defun update-texture (context old-descriptor new-descriptor)
-  (queues:qpush
-   (v::recompilation-queue (v::core context))
+  (v::push-queue
+   (v::core context)
+   :live-recompile
    (list
-    :texture-recompilation
+    :texture
     (lambda (core)
       (if old-descriptor
           (let* ((old-name (canonicalize-texture-name (name old-descriptor)))

@@ -672,10 +672,11 @@ applied in an overlay manner while defining a material."
 
 (defun update-material/interactively (name func)
   (when (boundp 'v::*core-debug*)
-    (queues:qpush
-     (v::recompilation-queue v::*core-debug*)
+    (v::push-queue
+     v::*core-debug*
+     :live-recompile
      (list
-      :material-recompilation
+      :material
       (lambda (core)
         (u:mvlet ((old-material found-p (%lookup-material name core))
                   (new-material (funcall func core)))

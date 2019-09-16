@@ -6,5 +6,6 @@
 
 (defun generate-shader-modify-hook (core)
   (lambda (x)
-    (queues:qpush (recompilation-queue core)
-                  (list :shader-recompilation x))))
+    (push-queue core
+                :live-recompile
+                (list :shader x))))

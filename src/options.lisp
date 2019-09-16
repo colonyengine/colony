@@ -13,7 +13,8 @@
               :log-level :debug
               :anti-alias-level 4
               :opengl-version "4.3"
-              :initial-scene nil))
+              :initial-scene nil
+              :threads 4))
 
 (defun load-options (core)
   (let ((project (project core))
