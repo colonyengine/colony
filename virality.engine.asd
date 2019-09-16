@@ -17,7 +17,6 @@
                #:closer-mop
                #:doubly-linked-list
                #:fast-io
-               #:glsl-packing
                #:golden-utils
                #:jsown
                #:lparallel
@@ -26,11 +25,12 @@
                #:queues.simple-cqueue
                #:sdl2
                #:sdl2-image
+               #:shadow
                #:split-sequence
                #:static-vectors
                #:trivial-features
                #:uiop
-               #:varjo
+               #:umbra
                #:verbose)
   :pathname "src"
   :serial t
@@ -92,17 +92,6 @@
    (:file "action-fade")
    (:file "action-rotate")
    (:file "action-sprite-animate")
-   (:file "gpu-shader")
-   (:file "gpu-common")
-   (:file "gpu-functions")
-   (:file "gpu-stages")
-   (:file "gpu-program")
-   (:file "gpu-packing")
-   (:file "gpu-attributes")
-   (:file "gpu-uniforms")
-   (:file "gpu-layout")
-   (:file "gpu-blocks")
-   (:file "gpu-buffers")
    (:file "image")
    (:file "image-pngload")
    (:file "image-sdl2")
@@ -138,32 +127,7 @@
    (:file "core")
    (:file "engine")
 
-   (:file "shader/common")
-   (:file "shader/common-swizzle")
-   (:file "shader/common-vari")
-   (:file "shader/common-math")
-   (:file "shader/common-structs")
-   (:file "shader/color-grading")
-   (:file "shader/color-space")
-   (:file "shader/graphing")
-   (:file "shader/shaping-iq")
-   (:file "shader/shaping-levin")
-   (:file "shader/shaping-penner")
-   (:file "shader/shaping-misc")
-   (:file "shader/hashing-bbs")
-   (:file "shader/hashing-fast32")
-   (:file "shader/hashing-fast32-2")
-   (:file "shader/noise-cellular")
-   (:file "shader/noise-hermite")
-   (:file "shader/noise-perlin")
-   (:file "shader/noise-polkadot")
-   (:file "shader/noise-simplex")
-   (:file "shader/noise-value")
-   (:file "shader/noise-misc")
-   (:file "shader/sdf-2d")
    (:file "shader/texture")
-   (:file "shader/sprite")
-   (:file "shader/effects-window-rain")
    (:file "shader/visualization-collider")
 
    (:file "definition/annotations")

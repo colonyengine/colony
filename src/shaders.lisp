@@ -5,7 +5,4 @@
     (setf (shaders core) (gpu:load-shaders modify-hook))))
 
 (defun generate-shader-modify-hook (core)
-  (lambda (x)
-    (push-queue core
-                :live-recompile
-                (list :shader x))))
+  (lambda (x) (push-queue core :live-recompile (list :shader x))))

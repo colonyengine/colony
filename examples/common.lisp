@@ -3,7 +3,7 @@
 (v:define-options :virality.examples
   :window-width 1280
   :window-height 720
-  :vsync :on
+  :vsync :off
   :initial-scene 'geometric-volumes)
 
 (v:define-assets :virality.examples
