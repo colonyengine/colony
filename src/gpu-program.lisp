@@ -66,6 +66,7 @@
          (id (link-program (compile-stages program))))
     (setf (slot-value program '%id) id)
     (store-attribute-locations program)
+    (store-uniforms program)
     (store-uniform-locations program)
     id))
 

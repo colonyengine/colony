@@ -73,10 +73,70 @@
    #:tone-map/hejl-burgess-dawson
    #:tone-map/uncharted2))
 
+(defpackage #:virality.shaders.effects
+  (:use #:cl #:vari #:virality.shaders)
+  (:export
+   #:window-rain))
+
 (defpackage #:virality.shaders.graphing
   (:use #:cl #:vari #:virality.shaders)
   (:export
    #:graph))
+
+(defpackage #:virality.shaders.hashing
+  (:use #:cl #:vari #:virality.shaders)
+  (:export
+   #:blum-blum-shub
+   #:blum-blum-shub/hq
+   #:sgpp
+   #:sgpp/2-per-corner
+   #:sgpp/3-per-corner
+   #:fast32
+   #:fast32/2-per-corner
+   #:fast32/3-per-corner
+   #:fast32/4-per-corner
+   #:fast32/cell
+   #:fast32-2
+   #:fast32-2/4-per-corner))
+
+(defpackage #:virality.shaders.noise
+  (:use #:cl #:vari #:virality.shaders)
+  (:export
+   #:perlin
+   #:perlin/derivs
+   #:perlin-surflet
+   #:perlin-surflet/derivs
+   #:perlin-improved
+   #:cellular
+   #:cellular/derivs
+   #:cellular-fast
+   #:polkadot
+   #:polkadot-box
+   #:hermite
+   #:hermite/derivs
+   #:simplex-perlin
+   #:simplex-perlin/derivs
+   #:simplex-cellular
+   #:simplex-polkadot
+   #:value
+   #:value/derivs
+   #:value-perlin
+   #:value-hermite
+   #:cubist
+   #:stars))
+
+(defpackage #:virality.shaders.sdf
+  (:use #:cl #:vari #:virality.shaders)
+  (:export
+   #:dist/box
+   #:dist/circle
+   #:dist/line
+   #:dist/pie
+   #:dist/semi-circle
+   #:dist/triangle
+   #:mask/fill
+   #:mask/inner-border
+   #:mask/outer-border))
 
 (defpackage #:virality.shaders.shaping
   (:use #:cl #:vari #:virality.shaders)
@@ -149,61 +209,6 @@
    #:quintic-hermite/derivative
    #:falloff-squared-c1
    #:falloff-squared-c2))
-
-(defpackage #:virality.shaders.hashing
-  (:use #:cl #:vari #:virality.shaders)
-  (:export
-   #:blum-blum-shub
-   #:blum-blum-shub/hq
-   #:sgpp
-   #:sgpp/2-per-corner
-   #:sgpp/3-per-corner
-   #:fast32
-   #:fast32/2-per-corner
-   #:fast32/3-per-corner
-   #:fast32/4-per-corner
-   #:fast32/cell
-   #:fast32-2
-   #:fast32-2/4-per-corner))
-
-(defpackage #:virality.shaders.noise
-  (:use #:cl #:vari #:virality.shaders)
-  (:export
-   #:perlin
-   #:perlin/derivs
-   #:perlin-surflet
-   #:perlin-surflet/derivs
-   #:perlin-improved
-   #:cellular
-   #:cellular/derivs
-   #:cellular-fast
-   #:polkadot
-   #:polkadot-box
-   #:hermite
-   #:hermite/derivs
-   #:simplex-perlin
-   #:simplex-perlin/derivs
-   #:simplex-cellular
-   #:simplex-polkadot
-   #:value
-   #:value/derivs
-   #:value-perlin
-   #:value-hermite
-   #:cubist
-   #:stars))
-
-(defpackage #:virality.shaders.sdf
-  (:use #:cl #:vari #:virality.shaders)
-  (:export
-   #:dist/box
-   #:dist/circle
-   #:dist/line
-   #:dist/pie
-   #:dist/semi-circle
-   #:dist/triangle
-   #:mask/fill
-   #:mask/inner-border
-   #:mask/outer-border))
 
 (defpackage #:virality.shaders.texture
   (:use #:cl #:vari #:virality.shaders)

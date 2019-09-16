@@ -72,9 +72,10 @@
         path)))
 
 (defun make-asset-path (table path-spec)
-  (destructuring-bind (sub-path &optional key) (a:ensure-list path-spec)
+  (destructuring-bind (sub-path &optional key)
+      (reverse (a:ensure-list path-spec))
     (check-asset-key-exists table key path-spec)
-    (u:mvlet ((base-path (u:href table key))
+    (u:mvlet ((base-path (print (u:href table key)))
               (name type (split-asset-path (string-trim "/" sub-path))))
       (check-asset-path-file-base-path base-path sub-path)
       (uiop:merge-pathnames*
@@ -101,7 +102,7 @@
 
 (define-assets :virality.engine
   :data "data"
-  :mesh ("mesh" :data)
-  :texture ("texture" :data)
-  :gamepad-db ("gamepad-db.txt" :data)
-  :debug-tex ("debug.tiff" :texture))
+  :mesh (:data "mesh")
+  :texture (:data "texture")
+  :gamepad-db (:data "gamepad-db.txt")
+  :debug-tex (:texture "debug.tiff"))

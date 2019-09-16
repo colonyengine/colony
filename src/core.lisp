@@ -1,7 +1,5 @@
 (in-package #:virality.engine)
 
-(defvar *core-debug*)
-
 (defclass core ()
   ((%project :reader project
              :initarg :project)

@@ -21,6 +21,7 @@
                #:golden-utils
                #:jsown
                #:origin
+               #:pngload
                #:queues.simple-cqueue
                #:sdl2
                #:sdl2-image
@@ -62,6 +63,7 @@
    (:file "uuid")
    (:file "asset")
    (:file "rcache")
+   (:file "clock")
    (:file "context")
    (:file "options")
    (:file "logging")
@@ -75,7 +77,6 @@
    (:file "kernel")
    (:file "hardware-query")
    (:file "annotations")
-   (:file "clock")
    (:file "display")
    (:file "input-keyboard")
    (:file "input-mouse")
@@ -101,6 +102,7 @@
    (:file "gpu-blocks")
    (:file "gpu-buffers")
    (:file "image")
+   (:file "image-pngload")
    (:file "image-sdl2")
    (:file "texture-common")
    (:file "texture")
@@ -159,6 +161,7 @@
    (:file "shader/sdf-2d")
    (:file "shader/texture")
    (:file "shader/sprite")
+   (:file "shader/effects-window-rain")
    (:file "shader/visualization-collider")
 
    (:file "definition/annotations")

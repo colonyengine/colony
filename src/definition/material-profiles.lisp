@@ -34,6 +34,14 @@
     (:proj (m4:id))
     (:time #'v:total-time))))
 
+(mat:define-material-profile u-mvptr
+  (:uniforms
+   ((:model (m4:id))
+    (:view (m4:id))
+    (:proj (m4:id))
+    (:time #'v:total-time)
+    (:res #'v:screen-resolution))))
+
 (mat:define-material-profile u-vpt
   (:uniforms
    ((:view (m4:id))

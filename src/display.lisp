@@ -6,7 +6,9 @@
    (%window :reader window
             :initarg :window)
    (%refresh-rate :reader refresh-rate
-                  :initarg :refresh-rate)))
+                  :initarg :refresh-rate)
+   (%vsync-p :reader vsync-p
+             :initarg :vsync-p)))
 
 (defun parse-opengl-version (version)
   (values-list (mapcar #'parse-integer
@@ -59,11 +61,13 @@
 
 (defun make-display (core)
   (let ((window (create-window core))
-        (refresh-rate (nth-value 3 (sdl2:get-current-display-mode 0))))
+        (refresh-rate (float (nth-value 3 (sdl2:get-current-display-mode 0))
+                             1d0)))
     (make-instance 'display
                    :core core
                    :window window
-                   :refresh-rate refresh-rate)))
+                   :refresh-rate refresh-rate
+                   :vsync-p (eq (option (context core) :vsync) :on))))
 
 (defmethod clear-screen ((display display))
   (let ((core (core display)))
@@ -75,13 +79,12 @@
 
 (defun render-frame (core)
   (with-slots (%clock %display %running-p) core
-    (with-slots (%frame-count) %clock
-      (when %running-p
-        (clear-screen %display)
-        (execute-flow core
-                      :default
-                      'perform-one-frame
-                      'entry/perform-one-frame
-                      :come-from-state-name :ef)
-        (sdl2:gl-swap-window (window %display))
-        (incf %frame-count)))))
+    (when %running-p
+      (clear-screen %display)
+      (execute-flow core
+                    :default
+                    'perform-one-frame
+                    'entry/perform-one-frame
+                    :come-from-state-name :ef)
+      (sdl2:gl-swap-window (window %display))
+      (incf (clock-frame-count %clock)))))

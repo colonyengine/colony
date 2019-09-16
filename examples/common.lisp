@@ -1,29 +1,29 @@
 (in-package #:virality.examples)
 
 (v:define-options :virality.examples
-  :window-width 1920
-  :window-height 1080
-  :vsync :off
-  :delta 1/120
+  :window-width 1280
+  :window-height 720
+  :vsync :on
   :initial-scene 'geometric-volumes)
 
 (v:define-assets :virality.examples
   :data "data"
-  :mesh ("mesh" :data)
-  :tex ("texture" :data)
+  :mesh (:data "mesh")
+  :tex (:data "texture")
   :log "log"
-  :log-debug ("debug.log" :log)
-  :log-error ("error.log" :log)
-  :texture-example ("texture" :tex)
-  :1da ("1d-array" :texture-example)
-  :2da ("2d-array" :texture-example)
-  :3d ("3d" :texture-example)
-  :cubemap ("cube-map" :texture-example)
-  :cubemaparray ("cube-map-array" :texture-example)
-  :spritesheet ("sprite/sprites.tiff" :tex)
-  :spritesheet-data ("sprites.spec" :data)
-  :damaged-helmet-textures ("damaged-helmet" :tex)
-  :ptp-tex ("protect-the-planets" :tex))
+  :log-debug (:log "debug.log")
+  :log-error (:log "error.log")
+  :texture-example (:tex "texture")
+  :1da (:texture-example "1d-array")
+  :2da (:texture-example "2d-array")
+  :3d (:texture-example "3d")
+  :cubemap (:texture-example "cube-map")
+  :cubemaparray (:texture-example "cube-map-array")
+  :playground-tex (:tex "example-playground")
+  :spritesheet (:tex "sprite/sprites.tiff")
+  :spritesheet-data (:data "sprites.spec")
+  :damaged-helmet-textures (:tex "damaged-helmet")
+  :ptp-tex (:tex "protect-the-planets"))
 
 ;;; Prefabs
 
