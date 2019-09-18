@@ -137,6 +137,18 @@
                                  :shape origin.shaping:bounce-in
                                  :repeat-p t)))))
 
+(v:define-prefab "sprite-3" (:library examples)
+  (("camera" :copy "/cameras/ortho"))
+  ("plane"
+   (c/xform:transform :scale 2
+                      :rotate/inc (q:orient :local :z pi))
+   (c/sprite:sprite :spec :spritesheet-data
+                    :name "planet04")
+   (c/render:render :material `(x/mat:sprite
+                                ,(a:make-gensym '#:sprite)
+                                :uniforms ((:sprite.sampler sprites)))
+                    :mode :sprite)))
+
 ;;; Prefab descriptors
 
 (v:define-prefab-descriptor sprite-1 ()
@@ -144,3 +156,6 @@
 
 (v:define-prefab-descriptor sprite-2 ()
   ("sprite-2" examples))
+
+(v:define-prefab-descriptor sprite-3 ()
+  ("sprite-3" examples))
