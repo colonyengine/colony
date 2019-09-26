@@ -153,7 +153,7 @@ NOTE: These are already in the RCACHE."
    (%name :reader name
           :initarg :name)
    ;; The allocated opengl texture id.
-   (%texid :reader texid
+   (%texid :accessor texid
            :initarg :texid)))
 
 (u:define-printer (texture stream :type t)
@@ -405,15 +405,41 @@ assign it to the computed texture descriptor slot in TEXTURE."
   (setf (computed-texdesc texture)
         (copy-texture-descriptor (semantic-texdesc texture))))
 
+;; TODO 1. make missing texture and missing material not recompiliable.
+
+(defun find-debug-texture (core)
+  (let* ((texture-name (canonicalize-texture-name 'x/tex:debug-texture))
+         (texture (v::rcache-peek (v::context core) :texture texture-name)))
+    (unless texture
+      (error "FIND-DEBUG-TEXTURE: It is impossible that the debug-texture doesn't not exist. Fixme."))
+    texture))
+
+(defun unload-texture (context texture)
+  (gl:delete-texture (texid texture))
+  (let ((debug-texture (find-debug-texture (v::core context))))
+    (setf (texid texture) (texid debug-texture))))
+
+(defun refresh-texture (context texture texture-name)
+  ;; Unload the current texid and shove back into a new texid whatever the
+  ;; new texture descriptor for the texture-name indicates.
+  (with-accessors ((texid texid)) texture
+    (unload-texture context texture)
+    (let((semantic-texdesc
+           (find-semantic-texture-descriptor
+            (semantic-texture-name texture-name) context))
+         (id (gl:gen-texture)))
+      (setf (semantic-texdesc texture) semantic-texdesc
+            texid id)
+      (upload-texture context texture))))
+
 (defun load-texture (context texture-name)
-  ;; If we're calling this, it is because we didn't find a texture instance with
-  ;; the given texture-name in the rcache.
-  (let ((semantic-texdesc
-          (find-semantic-texture-descriptor
-           (semantic-texture-name texture-name) context)))
-    (unless semantic-texdesc
-      (error "Cannot load semantic texture-descriptor with unknown name: ~a"
-             texture-name))
+  "Return a TEXTURE instance that represents the loading of the images required
+for TEXTURE-NAME from disk (or elsewhere) and the uploading of it to the GPU.
+If TEXTURE-NAME does not resolve to a known semantic texture descriptor then
+return the TEXTURE instance for the debug-texture."
+  (a:if-let ((semantic-texdesc
+              (find-semantic-texture-descriptor
+               (semantic-texture-name texture-name) context)))
     (let* ((id (gl:gen-texture))
            ;; TODO: tex-name is wrong here. It shoudl be what the material
            ;; believed it to be or the canonicalname of it if only a symbol.
@@ -421,26 +447,34 @@ assign it to the computed texture descriptor slot in TEXTURE."
                                    :name texture-name
                                    :semantic-texdesc semantic-texdesc
                                    :texid id)))
-      (cond
-        ;; Non procedural textures have their semantic texdescs automatically
-        ;; converted to computed-texdesc and their information is loaded
-        ;; immediately onto the GPU.
-        ((not (procedural-texture-p texture))
-         (generate-computed-texture-descriptor texture)
-         (with-accessors ((computed-texdesc computed-texdesc)) texture
-           (gl:bind-texture (texture-type computed-texdesc) id)
-           (set-opengl-texture-parameters texture)
-           (load-texture-data (texture-type computed-texdesc) texture context)))
-        ;; Procedural textures are completely left alone EXCEPT for the texid
-        ;; assigned above. It is up to the user to define all the opengl
-        ;; parameters and GPU data for this texture.
-        (t
-         (add-unrealized-texture texture context)
-         ;; TODO: Possibly record a note that someone asked for this specific
-         ;; texture name, so in the prologue function, the gamedev can know the
-         ;; entire set they need to create that is eagerly going to be used.
-         nil))
-      texture)))
+      (values (upload-texture context texture) t))
+
+    (values (v::rcache-lookup
+             context :texture
+             (canonicalize-texture-name 'x/tex:debug-texture))
+            nil)))
+
+(defun upload-texture (context texture)
+  (cond
+    ;; Non procedural textures have their semantic texdescs automatically
+    ;; converted to computed-texdesc and their information is loaded
+    ;; immediately onto the GPU.
+    ((not (procedural-texture-p texture))
+     (generate-computed-texture-descriptor texture)
+     (with-accessors ((computed-texdesc computed-texdesc)) texture
+       (gl:bind-texture (texture-type computed-texdesc) (texid texture))
+       (set-opengl-texture-parameters texture)
+       (load-texture-data (texture-type computed-texdesc) texture context)))
+    ;; Procedural textures are completely left alone EXCEPT for the texid
+    ;; assigned above. It is up to the user to define all the opengl
+    ;; parameters and GPU data for this texture.
+    (t
+     (add-unrealized-texture texture context)
+     ;; TODO: Possibly record a note that someone asked for this specific
+     ;; texture name, so in the prologue function, the gamedev can know the
+     ;; entire set they need to create that is eagerly going to be used.
+     nil))
+  texture)
 
 (defun parse-texture-profile (name body-form)
   (a:with-gensyms (texprof)
@@ -473,15 +507,11 @@ texture."
                                (v::context core)
                                :texture old-name)))
             (remove-semantic-texture-descriptor old-descriptor core)
+            ;; NOTE: Can't refactor the two lines below cause it needs the
+            ;; remove-semantic-texture-descriptor to have been called.
             (add-semantic-texture-descriptor new-descriptor core)
-            (setf (semantic-texdesc old-texture) new-descriptor)
-            (resolve-semantic-texture-descriptor
-             core
-             (semantic-texdesc old-texture))
-            (generate-computed-texture-descriptor old-texture)
-            (gl:bind-texture (texture-type (computed-texdesc old-texture))
-                             (texid old-texture))
-            (set-opengl-texture-parameters old-texture))
+            (resolve-semantic-texture-descriptor core new-descriptor)
+            (refresh-texture context old-texture old-name))
           (let ((new-name (canonicalize-texture-name (name new-descriptor))))
             (add-semantic-texture-descriptor new-descriptor core)
             (resolve-semantic-texture-descriptor core new-descriptor)
