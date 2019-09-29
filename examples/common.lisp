@@ -4,6 +4,7 @@
   :window-width 1280
   :window-height 720
   :vsync :on
+  :delta 1/120
   :initial-scene 'geometric-volumes)
 
 (v:define-assets :virality.examples
