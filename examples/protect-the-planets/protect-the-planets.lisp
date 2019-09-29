@@ -762,7 +762,7 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
   (with-accessors ((actor v:actor) (emitter-transform emitter-transform)) self
     (setf emitter-transform (v:component-by-type actor 'c/xform:transform))))
 
-(defmethod v:on-component-update ((self gun))
+(defmethod v:on-component-physics-update ((self gun))
   (with-accessors ((context v:context)
                    (rotate-deadzone rotate-deadzone)
                    (fire-period fire-period)
@@ -803,9 +803,9 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
                                 :name (name self)
                                 :frames (frames self)))))))
 
-      ;; Just accumulate more time until we know we can fire again.
+      ;; Just accumulate more physics time until we know we can fire again.
       (t
-       (incf cooldown-time (v:frame-time context))))))
+       (incf cooldown-time (v:delta context))))))
 
 ;; ;;;;;;;;;
 ;; Component: asteroid-field
