@@ -1,118 +1,118 @@
 (in-package #:virality.examples.shaders)
 
-(define-function noise/frag ((uv :vec2)
-                             &uniform
-                             (time :float))
+(defun noise/frag ((uv :vec2)
+                   &uniforms
+                   (time :float))
   (vec4 uv time 1))
 
-(define-function noise/perlin-3d/frag ((uv :vec2)
-                                       &uniform
-                                       (time :float))
+(defun noise/perlin-3d/frag ((uv :vec2)
+                             &uniforms
+                             (time :float))
   (let ((noise (vec3 (shd/noise:perlin (vec3 (* 10 uv) time)))))
     (vec4 noise 1)))
 
-(define-function noise/perlin-surflet-3d/frag ((uv :vec2)
-                                               &uniform
-                                               (time :float))
+(defun noise/perlin-surflet-3d/frag ((uv :vec2)
+                                     &uniforms
+                                     (time :float))
   (let ((noise (vec3 (shd/noise:perlin-surflet (vec3 (* 10 uv) time)))))
     (vec4 noise 1)))
 
-(define-function noise/perlin-improved-3d/frag ((uv :vec2)
-                                                &uniform
-                                                (time :float))
+(defun noise/perlin-improved-3d/frag ((uv :vec2)
+                                      &uniforms
+                                      (time :float))
   (let ((noise (vec3 (shd/noise:perlin-improved (vec3 (* 10 uv) time)))))
     (vec4 noise 1)))
 
-(define-function noise/perlin-4d/frag ((uv :vec2)
-                                       &uniform
-                                       (time :float))
+(defun noise/perlin-4d/frag ((uv :vec2)
+                             &uniforms
+                             (time :float))
   (let ((noise (vec3 (shd/noise:perlin (vec4 (* 10 uv) time (/ time 2))))))
     (vec4 noise 1)))
 
-(define-function noise/cellular-3d/frag ((uv :vec2)
-                                         &uniform
-                                         (time :float))
+(defun noise/cellular-3d/frag ((uv :vec2)
+                               &uniforms
+                               (time :float))
   (let ((noise (vec3 (shd/noise:cellular (vec3 (* 10 uv) time)))))
     (vec4 noise 1)))
 
-(define-function noise/cellular-fast-3d/frag ((uv :vec2)
-                                              &uniform
-                                              (time :float))
+(defun noise/cellular-fast-3d/frag ((uv :vec2)
+                                    &uniforms
+                                    (time :float))
   (let ((noise (vec3 (shd/noise:cellular-fast (vec3 (* 10 uv) time)))))
     (vec4 noise 1)))
 
-(define-function noise/hermite-3d/frag ((uv :vec2)
-                                        &uniform
-                                        (time :float))
+(defun noise/hermite-3d/frag ((uv :vec2)
+                              &uniforms
+                              (time :float))
   (let ((noise (vec3 (shd/noise:hermite (vec3 (* 10 uv) time)))))
     (vec4 noise 1)))
 
-(define-function noise/simplex-perlin-3d/frag ((uv :vec2)
-                                               &uniform
-                                               (time :float))
+(defun noise/simplex-perlin-3d/frag ((uv :vec2)
+                                     &uniforms
+                                     (time :float))
   (let ((noise (vec3 (shd/noise:simplex-perlin (vec3 (* 10 uv) time)))))
     (vec4 noise 1)))
 
-(define-function noise/simplex-cellular-3d/frag ((uv :vec2)
-                                                 &uniform
-                                                 (time :float))
+(defun noise/simplex-cellular-3d/frag ((uv :vec2)
+                                       &uniforms
+                                       (time :float))
   (let ((noise (vec3 (shd/noise:simplex-cellular (vec3 (* 10 uv) time)))))
     (vec4 noise 1)))
 
-(define-function noise/simplex-polkadot-3d/frag ((uv :vec2)
-                                                 &uniform
-                                                 (time :float))
+(defun noise/simplex-polkadot-3d/frag ((uv :vec2)
+                                       &uniforms
+                                       (time :float))
   (let ((noise (vec3 (shd/noise:simplex-polkadot
                       (vec3 (* 10 uv) time) 1.0 1.0))))
     (vec4 noise 1)))
 
-(define-function noise/value-3d/frag ((uv :vec2)
-                                      &uniform
-                                      (time :float))
+(defun noise/value-3d/frag ((uv :vec2)
+                            &uniforms
+                            (time :float))
   (let ((noise (vec3 (shd/noise:value (vec3 (* 10 uv) time)))))
     (vec4 noise 1)))
 
-(define-function noise/value-4d/frag ((uv :vec2)
-                                      &uniform
-                                      (time :float))
+(defun noise/value-4d/frag ((uv :vec2)
+                            &uniforms
+                            (time :float))
   (let ((noise (vec3 (shd/noise:value (vec4 (* 10 uv) time (/ time 2))))))
     (vec4 noise 1)))
 
-(define-function noise/hermite-3d/frag ((uv :vec2)
-                                        &uniform
-                                        (time :float))
+(defun noise/hermite-3d/frag ((uv :vec2)
+                              &uniforms
+                              (time :float))
   (let ((noise (vec3 (shd/noise:hermite (vec3 (* 10 uv) time)))))
     (vec4 noise 1)))
 
-(define-function noise/value-hermite-3d/frag ((uv :vec2)
-                                              &uniform
-                                              (time :float))
+(defun noise/value-hermite-3d/frag ((uv :vec2)
+                                    &uniforms
+                                    (time :float))
   (let ((noise (vec3 (shd/noise:value-hermite
                       (vec3 (* 10 uv) time) 0.5 0.5 1.0))))
     (vec4 noise 1)))
 
-(define-function noise/value-perlin-3d/frag ((uv :vec2)
-                                             &uniform
-                                             (time :float))
+(defun noise/value-perlin-3d/frag ((uv :vec2)
+                                   &uniforms
+                                   (time :float))
   (let ((noise (vec3 (shd/noise:value-perlin (vec3 (* 10 uv) time) 0.5))))
     (vec4 noise 1)))
 
-(define-function noise/polkadot-3d/frag ((uv :vec2)
-                                         &uniform
-                                         (time :float))
+(defun noise/polkadot-3d/frag ((uv :vec2)
+                               &uniforms
+                               (time :float))
   (let ((noise (vec3 (shd/noise:polkadot (vec3 (* 10 uv) time) 0.0 1.0))))
     (vec4 noise 1)))
 
-(define-function noise/polkadot-box-3d/frag ((uv :vec2)
-                                             &uniform
-                                             (time :float))
+(defun noise/polkadot-box-3d/frag ((uv :vec2)
+                                   &uniforms
+                                   (time :float))
   (let ((noise (vec3 (shd/noise:polkadot-box
                       (vec3 (* 10 uv) time) 0.0 1.0))))
     (vec4 noise 1)))
 
-(define-function noise/cubist-3d/frag ((uv :vec2)
-                                       &uniform
-                                       (time :float))
+(defun noise/cubist-3d/frag ((uv :vec2)
+                             &uniforms
+                             (time :float))
   (let ((noise (vec3 (shd/noise:cubist (vec3 (* 10 uv) time) (vec2 0 1.0)))))
     (vec4 noise 1)))
 

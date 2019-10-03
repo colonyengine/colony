@@ -85,12 +85,12 @@
 
 (in-package #:virality.examples.shaders)
 
-(define-function starfield/frag ((color :vec4)
-                                 (uv1 :vec2)
-                                 &uniform
-                                 (tex :sampler-2d)
-                                 (time :float)
-                                 (mix-color :vec4))
+(defun starfield/frag ((color :vec4)
+                       (uv1 :vec2)
+                       &uniforms
+                       (tex :sampler-2d)
+                       (time :float)
+                       (mix-color :vec4))
   (let ((tex-color (texture tex (vec2 (.x uv1) (- (.y uv1) (/ time 50.0))))))
     (* tex-color mix-color)))
 
@@ -1428,12 +1428,12 @@ NIL if no such list exists."
 
       ;; Size the time bar in accordance to how much time is left.
       (c/xform:scale time-bar-transform
-                  (v3:vec time-bar-width
-                          (a:lerp how-far-to-empty
-                                  time-bar-height-scale
-                                  0f0)
-                          1f0)
-                  :replace-p t)
+                     (v3:vec time-bar-width
+                             (a:lerp how-far-to-empty
+                                     time-bar-height-scale
+                                     0f0)
+                             1f0)
+                     :replace-p t)
 
       ;; Color the time bar in accordance to how much time is left.
       (let ((material (c/render:material time-bar-renderer)))
@@ -2137,9 +2137,9 @@ NIL if no such list exists."
   ("asteroids")
   (("title" :copy ("/title-sign" :from ptp))
    (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
-                   ;; TODO: BUG: the scale in the original transform
-                   ;; should have been preserved.
-                   :scale 512f0)))
+                      ;; TODO: BUG: the scale in the original transform
+                      ;; should have been preserved.
+                      :scale 512f0)))
 
 (v:define-prefab "level-0" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
@@ -2153,19 +2153,19 @@ NIL if no such list exists."
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
    (c/xform:transform :translate (v3:vec 0 100 (dl :planet))
-                   :scale 0.9f0)
+                      :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
-                       :name "planet01"))
+                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
    (c/xform:transform :translate (v3:vec -200 -100 (dl :planet))
-                   :scale 0.9f0)
+                      :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
-                       :name "planet02"))
+                    :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from ptp))
    (c/xform:transform :translate (v3:vec 200 -100 (dl :planet))
-                   :scale 0.9f0)
+                      :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
-                       :name "planet03")))
+                    :name "planet03")))
 
 (v:define-prefab "level-1" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
@@ -2179,14 +2179,14 @@ NIL if no such list exists."
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
    (c/xform:transform :translate (v3:vec -200 100 (dl :planet))
-                   :scale 0.9f0)
+                      :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
-                       :name "planet01"))
+                    :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
    (c/xform:transform :translate (v3:vec 200 100 (dl :planet))
-                   :scale 0.9f0)
+                      :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
-                       :name "planet02")))
+                    :name "planet02")))
 
 (v:define-prefab "level-2" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
@@ -2200,9 +2200,9 @@ NIL if no such list exists."
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
    (c/xform:transform :translate (v3:vec 0 100 (dl :planet))
-                   :scale 0.9f0)
+                      :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
-                       :name "planet01")))
+                    :name "planet01")))
 
 
 (v:define-prefab "protect-the-planets" (:library ptp)

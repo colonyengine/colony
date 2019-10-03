@@ -1,8 +1,8 @@
 (in-package #:virality.examples.shaders)
 
-(define-function graph/frag ((uv :vec2)
-                             &uniform
-                             (time :float))
+(defun graph/frag ((uv :vec2)
+                   &uniforms
+                   (time :float))
   (let* ((dim (vec2 (1+ (sin time)) (+ 2 (sin time))))
          (uv (+ (* uv (- (.y dim) (.x dim)))
                 (vec2 (.x dim) -0.5))))
@@ -18,13 +18,13 @@
   (:vertex (shd/tex:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (graph/frag :vec2)))
 
-(define-function 3d-graph/graph ((fn (function (:float) :vec3))
-                                 (pos :vec3)
-                                 (view :mat4)
-                                 (proj :mat4)
-                                 (size :float)
-                                 (min :float)
-                                 (by :float))
+(defun 3d-graph/graph ((fn (function (:float) :vec3))
+                       (pos :vec3)
+                       (view :mat4)
+                       (proj :mat4)
+                       (size :float)
+                       (min :float)
+                       (by :float))
   (mvlet* ((input (+ min (* by (float gl-instance-id))))
            (result color (funcall fn input))
            (model (vec4 result 1))
@@ -33,8 +33,8 @@
     (values (* proj pos)
             color)))
 
-(define-function 3d-graph-1 ((i :float)
-                             (time :float))
+(defun 3d-graph-1 ((i :float)
+                   (time :float))
   (let* ((offset (vec3 0 0 (* i 0.002)))
          (m3 (mat3 (cos i) 0 (- (sin i))
                    0 1 0
@@ -48,8 +48,8 @@
                      h)))
     (values pos color)))
 
-(define-function 3d-graph-2 ((i :float)
-                             (time :float))
+(defun 3d-graph-2 ((i :float)
+                   (time :float))
   (let* ((dist (* i 0.02))
          (h (* 5 (sin (* 0.005 (+ i (* 400 time))))))
          (offset (vec3 0 h dist))
@@ -61,15 +61,15 @@
          (color (vec4 0 0.6 0.85 1)))
     (values pos color)))
 
-(define-function 3d-graph/vert1 ((mesh-attrs mesh-attrs)
-                                 &uniform
-                                 (model :mat4)
-                                 (view :mat4)
-                                 (proj :mat4)
-                                 (size :float)
-                                 (min :float)
-                                 (by :float)
-                                 (time :float))
+(defun 3d-graph/vert1 ((mesh-attrs mesh-attrs)
+                       &uniforms
+                       (model :mat4)
+                       (view :mat4)
+                       (proj :mat4)
+                       (size :float)
+                       (min :float)
+                       (by :float)
+                       (time :float))
   (with-slots (mesh/pos mesh/uv1) mesh-attrs
     (let ((fn (lambda ((i :float))
                 (3d-graph-1 i time))))
@@ -79,15 +79,15 @@
                 mesh/uv1
                 color)))))
 
-(define-function 3d-graph/vert2 ((mesh-attrs mesh-attrs)
-                                 &uniform
-                                 (model :mat4)
-                                 (view :mat4)
-                                 (proj :mat4)
-                                 (size :float)
-                                 (min :float)
-                                 (by :float)
-                                 (time :float))
+(defun 3d-graph/vert2 ((mesh-attrs mesh-attrs)
+                       &uniforms
+                       (model :mat4)
+                       (view :mat4)
+                       (proj :mat4)
+                       (size :float)
+                       (min :float)
+                       (by :float)
+                       (time :float))
   (with-slots (mesh/pos mesh/uv1) mesh-attrs
     (let ((fn (lambda ((i :float))
                 (3d-graph-2 i time))))
@@ -97,10 +97,10 @@
                 mesh/uv1
                 color)))))
 
-(define-function 3d-graph/frag ((uv :vec2)
-                                (color :vec4)
-                                &uniform
-                                (time :float))
+(defun 3d-graph/frag ((uv :vec2)
+                      (color :vec4)
+                      &uniforms
+                      (time :float))
   (let ((scale 1))
     (mix (vec4 0)
          color

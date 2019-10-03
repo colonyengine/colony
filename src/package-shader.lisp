@@ -1,7 +1,7 @@
 (in-package #:cl-user)
 
 (defpackage #:virality.shaders.texture
-  (:use #:cl #:vari #:umbra.common)
+  (:use #:shadow.glsl #:umbra.common)
   (:export
    #:unlit-color
    #:unlit-color-decal
@@ -9,6 +9,6 @@
    #:unlit-texture-decal))
 
 (defpackage #:virality.shaders.visualization
-  (:use #:cl #:vari #:umbra.common)
+  (:use #:shadow.glsl #:umbra.common)
   (:export
    #:collider/sphere))
