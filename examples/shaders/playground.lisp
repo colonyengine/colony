@@ -3,14 +3,14 @@
 ;;; Art 1
 ;;; A Truchet effect across a quad grid.
 
-(define-function art1/hash ((p :vec2))
+(defun art1/hash ((p :vec2))
   (let* ((p (fract (* p (vec2 385.18692 958.5519))))
          (p (+ p (dot p (+ p 42.4112)))))
     (fract (* (.x p) (.y p)))))
 
-(define-function art1/frag (&uniform
-                            (res :vec2)
-                            (time :float))
+(defun art1/frag (&uniforms
+                  (res :vec2)
+                  (time :float))
   (let* ((scale 4)
          (uv (* (/ (- (.xy gl-frag-coord) (* res 0.5)) (.y res)) scale))
          (cell-id (floor uv))
@@ -43,12 +43,12 @@
 ;;; Trippy effect that navigates erratically around the inside of a surreal
 ;;; toroidal disco-like world.
 
-(define-function art2/check-ray ((distance :float))
+(defun art2/check-ray ((distance :float))
   (< distance 1e-3))
 
-(define-function art2/frag (&uniform
-                            (res :vec2)
-                            (time :float))
+(defun art2/frag (&uniforms
+                  (res :vec2)
+                  (time :float))
   (let* ((rtime (* time 0.5))
          (uv (* (/ (- (.xy gl-frag-coord) (* res 0.5)) (.y res))
                 (mat2 (cos rtime) (- (sin rtime)) (sin rtime) (cos rtime))))
@@ -111,9 +111,9 @@
 ;;; Adds some distortion to the torus radius to give it more of an organic look,
 ;;; and other tweaks.
 
-(define-function art3/frag (&uniform
-                            (res :vec2)
-                            (time :float))
+(defun art3/frag (&uniforms
+                  (res :vec2)
+                  (time :float))
   (let* ((rtime (* time 0.10))
          (uv (* (/ (- (.xy gl-frag-coord) (* res 0.5)) (.y res))
                 (mat2 (cos rtime) (- (sin rtime)) (sin rtime) (cos rtime))))
@@ -178,30 +178,30 @@
 ;;; uniforms. Intended to be used with other functions, such as mixing with a
 ;;; noise or texture pattern.
 
-(define-function art4/hash ((p :vec2))
+(defun art4/hash ((p :vec2))
   (let* ((p (fract (vec3 (* p (vec2 385.18692 958.5519))
                          (* (+ (.x p) (.y p)) 534.3851))))
          (p (+ p (dot p (+ p 42.4112)))))
     (fract p)))
 
-(define-function art4/xor ((a :float) (b :float))
+(defun art4/xor ((a :float) (b :float))
   (+ (* a (- 1 b)) (* b (- 1 a))))
 
-(define-function art4/frag (&uniform
-                            (res :vec2)
-                            (time :float)
-                            ;; size of circles - [0, 1]
-                            (zoom :float)
-                            ;; multiplier for ripple speed - [-inf, inf]
-                            (speed :float)
-                            ;; strength of the overall effect - [0, 1]
-                            (strength :float)
-                            ;; randomly color each circle instead of monochrome
-                            (colorize :bool)
-                            ;; render circle outlines instead of filled
-                            (outline :bool)
-                            ;; amount of focus/detail - [0, 1]
-                            (detail :float))
+(defun art4/frag (&uniforms
+                  (res :vec2)
+                  (time :float)
+                  ;; size of circles - [0, 1]
+                  (zoom :float)
+                  ;; multiplier for ripple speed - [-inf, inf]
+                  (speed :float)
+                  ;; strength of the overall effect - [0, 1]
+                  (strength :float)
+                  ;; randomly color each circle instead of monochrome
+                  (colorize :bool)
+                  ;; render circle outlines instead of filled
+                  (outline :bool)
+                  ;; amount of focus/detail - [0, 1]
+                  (detail :float))
   (let* ((angle (/ (float pi) 4))
          (s (sin angle))
          (c (cos angle))
