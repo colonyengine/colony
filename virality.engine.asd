@@ -40,7 +40,6 @@
    (:file "package-components")
    (:file "package-extensions")
    (:file "package-geometry")
-   (:file "package-gpu")
    (:file "package-image")
    (:file "package-input")
    (:file "package-materials")
