@@ -36,6 +36,7 @@
   :serial t
   :components
   ((:file "package-actions")
+   (:file "package-region")
    (:file "package-colliders")
    (:file "package-components")
    (:file "package-extensions")
@@ -86,6 +87,7 @@
    (:file "input-states")
    (:file "input")
    (:file "shaders")
+   (:file "region")
    (:file "colliders")
    (:file "action")
    (:file "action-fade")

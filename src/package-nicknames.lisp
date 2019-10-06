@@ -56,7 +56,8 @@
       (:umbra.sprite :shd/sprite)
       (:virality.shaders.texture :shd/tex)
       (:virality.shaders.visualization :shd/vis)
-      (:virality.textures :tex))))
+      (:virality.textures :tex)
+      (:virality.region :reg))))
 
 (macrolet ((define-nicknames/internal ()
              `(progn
