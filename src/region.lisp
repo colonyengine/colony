@@ -7,17 +7,23 @@
 
 (defclass region-cuboid (region)
   ((%minx :accessor minx
-          :initarg :minx)
+          :initarg :minx
+          :initform -1f0)
    (%maxx :accessor maxx
-          :initarg :maxx)
+          :initarg :maxx
+          :initform 1f0)
    (%miny :accessor miny
-          :initarg :miny)
+          :initarg :miny
+          :initform -1f0)
    (%maxy :accessor maxy
-          :initarg :maxy)
+          :initarg :maxy
+          :initform 1f0)
    (%minz :accessor minz
-          :initarg :minz)
+          :initarg :minz
+          :initform -1f0)
    (%maxz :accessor maxz
-          :initarg :maxz)))
+          :initarg :maxz
+          :initform 1f0)))
 
 (defun make-region-cuboid (center minx maxx miny maxy minz maxz)
   (make-instance 'region-cuboid
@@ -33,20 +39,25 @@
   ;; A specific type to make math faster when it is KNOWN one is using a sphere
   ;; for something.
   ((%radius :accessor radius
-            :initarg :radius)))
+            :initarg :radius
+            :initform 1f0)))
 
 (defun make-region-sphere (center radius)
-  (make-instance 'region-sphere :center center :radius radius))
+  (make-instance 'region-sphere :center center
+                                :radius (float radius 1f0)))
 
 (defclass region-ellipsoid (region)
   ;; positive distances of each principal axis.
   ;; Can be used to make 2d or 3d circles, ellipses, spheres, spheroids, etc.
   ((%x :accessor x
-       :initarg :x)
+       :initarg :x
+       :initform 1f0)
    (%y :accessor y
-       :initarg :y)
+       :initarg :y
+       :initform 1f0)
    (%z :accessor z
-       :initarg :z)))
+       :initarg :z
+       :initform 1f0)))
 
 (defun make-region-ellipsoid (center x y z)
   (make-instance 'region-ellipsoid :center center
