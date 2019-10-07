@@ -30,10 +30,8 @@
 (defpackage #:virality.components.collider
   (:use #:cl)
   (:export
-   #:center
    #:collide-p
    #:on-layer
-   #:radius
    #:referent
    #:sphere))
 
