@@ -1,15 +1,9 @@
 (in-package #:virality.components.collider)
 
-(v:define-component sphere ()
+(v:define-component sphere (reg:region-sphere)
   (;; The collider is only ever on a single layer.
    (%on-layer :accessor on-layer
               :initarg :on-layer)
-   (%center :accessor center
-            :initarg :center
-            :initform (v3:zero))
-   (%radius :accessor radius
-            :initarg :radius
-            :initform 1.0)
    (%contact-count :accessor contact-count
                    :initform 0)
    ;; TODO: This block of slots are really here for debugging drawing of a
@@ -65,11 +59,11 @@
         (:model (c/xform:model transform)
          :view (c/cam:view camera)
          :proj (c/cam:projection camera)
-         :collider-local-position (center self)
+         :collider-local-position (reg:center self)
          :in-contact-p (plusp (contact-count self))
          ;; NOTE: The shader computes the radius appropriately for
          ;; visualization purposes.
-         :radius (radius self))
+         :radius (reg:radius self))
       ;; Finally, draw the visualizaiton.
       (gl:bind-vertex-array (geometry self))
       (gl:draw-arrays-instanced :points 0 1 1)
@@ -110,9 +104,10 @@
   ;; A test path when testing colliders outside of FL's prefabs.
   ;; A test case, no transform component.
   (if (not (and (v:actor fist) (v:actor face)))
-      (let ((distance/2 (/ (v3:distance (center fist) (center face)) 2.0)))
-        (or (<= distance/2 (radius fist))
-            (<= distance/2 (radius face))))
+      (let ((distance/2 (/ (v3:distance (reg:center fist)
+                                        (reg:center face)) 2.0)))
+        (or (<= distance/2 (reg:radius fist))
+            (<= distance/2 (reg:radius face))))
       ;; The real path through this code, which transforms the collider into
       ;; world space appropriately.
       (let* ((fist-transform (v:component-by-type (v:actor fist)
@@ -122,18 +117,18 @@
              ;; Figure out where the center for these colliders are in world
              ;; space.
              (fist-collider-world-center
-               (c/xform:transform-point fist-transform (center fist)))
+               (c/xform:transform-point fist-transform (reg:center fist)))
              (face-collider-world-center
-               (c/xform:transform-point face-transform (center face)))
+               (c/xform:transform-point face-transform (reg:center face)))
              ;; Figure out the size of the radius in world space. We treat the
              ;; radius as a vector and rotate/scale (but no translate!) it by the
              ;; world matrix.
              (fist-world-radius
                (c/xform:transform-vector fist-transform
-                                         (v3:vec (radius fist) 0 0)))
+                                         (v3:vec (reg:radius fist) 0 0)))
              (face-world-radius
                (c/xform:transform-vector face-transform
-                                         (v3:vec (radius face) 0 0)))
+                                         (v3:vec (reg:radius face) 0 0)))
              ;; Compute the half way point between the two colliders.
              (distance (v3:distance fist-collider-world-center
                                     face-collider-world-center)))
