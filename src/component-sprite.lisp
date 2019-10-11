@@ -51,6 +51,8 @@
 
 (defun make-spritesheet-buffer (spritesheet)
   (with-slots (%spec %buffer) spritesheet
+    ;; TODO: This 1 is hardcoded because virality doesn't have an allocation
+    ;; system for these integers.
     (gpu:bind-block :spritesheet 1)
     (setf %buffer (gpu:create-buffer (a:make-gensym :spritesheet)
                                      :spritesheet))
