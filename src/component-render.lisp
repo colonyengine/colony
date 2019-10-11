@@ -16,7 +16,7 @@
     (let ((actor (v:actor render))
           (instances (mat::instances (material render))))
       (setf %draw-method
-            (ecase (mode render)
+            (case (mode render)
               (:static-mesh
                (lambda ()
                  (geo::draw-static-geometry
@@ -33,7 +33,26 @@
                (lambda ()
                  (c/sprite::draw-sprite
                   (v:component-by-type (v:actor render) 'c/sprite:sprite)
-                  instances))))))))
+                  instances)))
+              (otherwise
+               ;; TODO: Sort of a debugging interface so I can replace above
+               ;; components with ones specific to a project, or do a similar
+               ;; analoge with an arbitrary component defined in a game without
+               ;; having to add a new type here.
+               ;;
+               ;; This means to abstract away what the render has to do to
+               ;; render something prolly needs more thought and refactoring.
+               ;; For now it is a hack to help me be able to write a different
+               ;; 'sprite' component than the one in Virality. If this isn't
+               ;; here, then I'll call c/sprite:draw-sprite instead of the
+               ;; correct one for my own sprite component.
+               (destructuring-bind (extended-mode component &rest args)
+                   (mode render)
+                 (ecase extended-mode
+                   (:explicit
+                    (let ((draw-function (first args)))
+                      (lambda ()
+                        (funcall draw-function component instances))))))))))))
 
 (defmethod v:on-component-initialize ((self render))
   (with-slots (%transform) self
