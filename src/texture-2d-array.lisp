@@ -47,7 +47,7 @@
               (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
         (if immutable-p
             (%gl:tex-storage-3d texture-type
-                                num-mipmaps-to-generateA
+                                num-mipmaps-to-generate
                                 ;; TODO: Ensure that all images loaded to the
                                 ;; texture array are the same internal-format.
                                 ;; TODO: Ensure the internal-format is actually
