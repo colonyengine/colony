@@ -47,6 +47,7 @@
    (:file "package-prefab")
    (:file "package-shader")
    (:file "package-textures")
+   (:file "package-models")
    (:file "package-engine")
    (:file "package-nicknames")
    (:file "common")
@@ -125,6 +126,7 @@
    (:file "prefab-reference")
    (:file "prefab-descriptor")
    (:file "prefab")
+   (:file "model")
    (:file "core")
    (:file "engine")
 

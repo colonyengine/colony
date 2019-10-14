@@ -57,7 +57,8 @@
       (:virality.shaders.texture :shd/tex)
       (:virality.shaders.visualization :shd/vis)
       (:virality.textures :tex)
-      (:virality.region :reg))))
+      (:virality.region :reg)
+      (:virality.models :mod))))
 
 (macrolet ((define-nicknames/internal ()
              `(progn
