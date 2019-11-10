@@ -22,6 +22,9 @@
    (%component-type :accessor component-type
                     :initarg :component-type)))
 
+(defun make-gltf-indicies (&rest args)
+  (apply #'make-instance 'gltf-indicies args))
+
 (defclass gltf-values ()
   (;; An integer, cannot reference a ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target
    (%buffer-view :accessor buffer-view
@@ -37,6 +40,9 @@
    (%component-type :accessor component-type
                     :initarg :component-type)))
 
+(defun make-gltf-values (&rest args)
+  (apply #'make-instance 'gltf-values args))
+
 (defclass gltf-sparse ()
   (;; An integer
    (%entity-count :accessor entity-count
@@ -48,6 +54,9 @@
    ;; An array of gltf-values instances
    (%vals :accessor vals
           :initarg :vals)))
+
+(defun make-gltf-sparse (args)
+  (apply #'make-instance 'gltf-sparse args))
 
 
 (defclass gltf-accessor ()
@@ -96,6 +105,10 @@
    ;; A gltf-sparse instance
    (%sparse :accessor sparse
             :initarg :sparse)))
+
+(defun make-gltf-accessor (&rest args)
+  (apply #'make-instance 'gltf-accessor args))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Animations
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -108,6 +121,9 @@
    (%path :accessor path
           :initarg :path)))
 
+(defun make-gltf-target (&rest args)
+  (apply #'make-instance 'gltf-target args))
+
 (defclass gltf-channel ()
   (;; An integer
    (%sampler :accessor sampler
@@ -116,6 +132,9 @@
    ;; A gltf-target instance
    (%target :accessor target
             :initarg :target)))
+
+(defun make-gltf-channel (&rest args)
+  (apply #'make-instance 'gltf-channel args))
 
 (defclass gltf-animation-sampler ()
   (;; An integer
@@ -131,6 +150,9 @@
             :initarg :output
             :initform 0)))
 
+(defun make-gltf-animation-sampler (&rest args)
+  (apply #'make-instance 'gltf-animation-sampler args))
+
 (defclass gltf-animation ()
   (;; An array of gltf-channel instances
    (%channels :accessor channels
@@ -138,6 +160,9 @@
    ;; An array of gltf-sampler instances
    (%samplers :accessor samplers
               :initarg samplers)))
+
+(defun make-gltf-animation (&rest args)
+  (apply #'make-instance 'gltf-animation args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Asset (glTF identification)
@@ -157,6 +182,9 @@
    (%min-version :accessor min-version
                  :initarg :min-version)))
 
+(defun make-gltf-asset (&rest args)
+  (apply #'make-instance 'gltf-asset args))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Buffers
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -172,6 +200,9 @@
    (%name :accessor name
           :initarg :name
           :initform "")))
+
+(defun make-gltf-buffer (&rest args)
+  (apply #'make-instance 'gltf-buffer args))
 
 (defclass gltf-buffer-view ()
   (;; an integer
@@ -194,6 +225,9 @@
           :initarg :name
           :initform "")))
 
+(defun make-gltf-buffer-view (&rest args)
+  (apply #'make-instance 'gltf-buffer-view args))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Cameras
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -212,6 +246,9 @@
    (%z-near :accessor z-near
             :initarg :z-near)))
 
+(defun make-gltf-orthographic (&rest args)
+  (apply #'make-instance 'gltf-orthographic args))
+
 (defclass gltf-perspective ()
   (;; a number
    (%aspect-ratio :accessor aspect-ratio
@@ -226,6 +263,9 @@
    (%z-near :accessor z-near
             :initarg :z-near)))
 
+(defun make-gltf-perspective (&rest args)
+  (apply #'make-instance 'gltf-perspective args))
+
 (defclass gltf-camera ()
   (;; a gltf-orthographic instance OR null
    (%orthographic :accessor orthographic
@@ -239,6 +279,9 @@
    ;; a string
    (%name :accessor name
           :initarg :name)))
+
+(defun make-gltf-camera (&rest args)
+  (apply #'make-instance 'gltf-camera args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Root glTF object (TODO: probably move to bottom)
@@ -297,6 +340,9 @@
    (%textures :accessor textures
               :initarg :textures)))
 
+(defun make-gltf (&rest args)
+  (apply #'make-instance 'gltf args))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Images
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -317,6 +363,9 @@
    (%name :accessor name
           :initarg :name)))
 
+(defun make-gltf-image (&rest args)
+  (apply #'make-instance 'gltf-image args))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Materials
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -334,6 +383,9 @@
            :initarg :scale
            :initform 1f0)))
 
+(defun make-gltf-normal-texture-info (&rest args)
+  (apply #'make-instance 'gltf-normal-texture-info args))
+
 (defclass gltf-occlusion-texture-info ()
   (;; an integer >= 0
    (%index :accessor index
@@ -346,6 +398,9 @@
    (%strength :accessor strength
               :initarg :strength
               :initform 1f0)))
+
+(defun make-gltf-occlusion-texture-info (&rest args)
+  (apply #'make-instance 'gltf-occlusion-texture-info args))
 
 (defclass gltf-pbr-metallic-roughness ()
   (;; an array of 4 numbers
@@ -366,6 +421,9 @@
    ;; a gltf-texture-info instance
    (%metallic-roughness-texture :accessor metallic-roughness-texture
                                 :initarg :metallic-roughness-texture)))
+
+(defun make-gltf-pbr-metallic-roughness (&rest args)
+  (apply #'make-instance 'gltf-pbr-metallic-roughness args))
 
 (defclass gltf-material ()
   (;; a string
@@ -402,6 +460,9 @@
    (%double-sided :accessor double-sided
                   :initarg :double-sided
                   :initform nil)))
+
+(defun make-gltf-material (&rest args)
+  (apply #'make-instance 'gltf-material args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Meshes
@@ -441,6 +502,9 @@
    (%targets :accessor targets
              :initarg :targets)))
 
+(defun make-gltf-primitive (&rest args)
+  (apply #'make-instance 'gltf-primitive args))
+
 (defclass gltf-mesh ()
   (;; an array of gltf-primitive instances
    (%primitives :accessor primitives
@@ -451,6 +515,9 @@
    ;; a string
    (%name :accessor name
           :initarg :name)))
+
+(defun make-gltf-mesh (&rest args)
+  (apply #'make-instance 'gltf-mesh args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Nodes in the spatial hierarchy
@@ -497,6 +564,9 @@
    (%name :accessor name
           :initarg :name)))
 
+(defun make-gltf-node (&rest args)
+  (apply #'make-instance 'gltf-node args))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Samplers
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -534,6 +604,9 @@
    (%name :accessor name
           :initarg :name)))
 
+(defun make-gltf-sampler (&rest args)
+  (apply #'make-instance 'gltf-sampler args))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Scenes
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -545,6 +618,9 @@
    ;; a string
    (%name :accessor name
           :initarg :name)))
+
+(defun make-gltf-scene (&rest args)
+  (apply #'make-instance 'gltf-scene args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Skin
@@ -564,6 +640,9 @@
    (%name :accessor name
           :initarg :name)))
 
+(defun make-gltf-skin (&rest args)
+  (apply #'make-instance 'gltf-skin args))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Textures
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -579,6 +658,9 @@
    (%name :accessor name
           :initarg :name)))
 
+(defun make-gltf-texture (&rest args)
+  (apply #'make-instance 'gltf-texture args))
+
 (defclass gltf-texture-info ()
   (;; an integer
    (%index :accessor index
@@ -587,6 +669,9 @@
    (%tex-coord :accessor tex-coord
                :initarg :tex-coord
                :initform 0)))
+
+(defun make-gltf-texture-info (&rest args)
+  (apply #'make-instance 'gltf-texture-info args))
 
 
 (in-package #:virality.geometry)
