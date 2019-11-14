@@ -2,6 +2,8 @@
 
 ;;;; Extensions are not yet supported in this model.
 
+;; Begin glTF data types.
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Accessors
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -674,6 +676,109 @@
   (apply #'make-instance 'gltf-texture-info args))
 
 
+;; End glTF data types.
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Data types to handle the loading of the glTF/glb file.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass glb-header ()
+  ((%magic :accessor header-magic
+           :initarg :header-magic
+           :initform #x46546C67)
+   (%version :accessor header-version
+             :initarg :hreader-version
+             :initform 2)
+   (%length :accessor header-length
+            :initarg :header-length)))
+
+(defclass glb-chunk ()
+  ((%length :accessor chunk-length
+            :initarg :chunk-length)
+   (%type :accessor chunk-type
+          :initarg :chunk-type)
+   (%data :accessor chunk-data
+          :initarg :chunk-data)))
+
+(defclass glib-container ()
+  ((%header :accessor header
+            :initarg :header)
+   (%chunks :accessor chunks
+            :initarg :chunks)))
+
+
+;; NOTE: If using the extension is not good enough in practice, then we can
+;; open the file and dig around in it looking for how to distinguish it.
+(defun determine-gltf-file-type (path)
+  "Look at the extension of the file. Return :gltf, :glb, or :unknown.
+Need more code to determine type via contents."
+  (let* ((path-len (length path))
+         (gltf-pos (search ".gltf" path :from-end t))
+         (glb-pos (search ".glb" path :from-end t)))
+
+    (when gltf-pos
+      ;; ".gltf" at end of path
+      (when (= (- path-len gltf-pos) 5)
+        (return-from determine-gltf-file-type :gltf)))
+
+    (when glb-pos
+      ;; ".glb" at end of path
+      (when (= (- path-len glb-pos) 4)
+        (return-from determine-gltf-file-type :glb)))
+
+    ;; It might or might not be....
+    :unknown))
+
+(defun %load-gltf (inbuf)
+  ;; TODO: This is terrible code, fix later.
+  (let* ((size (* 1024 64))
+         (file-strings
+           (loop :with lines = nil
+                 :with done = nil
+                 :for line = (make-array size
+                                         :element-type '(unsigned-byte 8)
+                                         :initial-element 0)
+                 :until done
+                 :do (let ((nread (fast-io:fast-read-sequence line inbuf)))
+                       (push line lines)
+                       (when (< nread size)
+                         (setf done t)))
+                 :finally (return (nreverse lines))))
+         (json-string
+           (coerce (map 'vector #'code-char
+                        (apply #'concatenate 'vector file-strings))
+                   'string))
+         (json (jsown:parse json-string)))
+
+    (format t "json form is: ~S~%" json)
+    nil))
+
+(defun %load-glb (inbuf)
+  nil)
+
+
+(defun load-gltf-file (path &optional search-paths)
+  (let ((file-type (determine-gltf-file-type path)))
+    (when (eq file-type :unknown)
+      (error "Cannot LOAD-GLTF-FILE something that doesn't appear to be a .gltf or .glb file by extension! Errant path was: ~S"
+             path))
+
+    (u:with-binary-input (in path)
+      (let* ((inbuf (fast-io:make-input-buffer :stream in)))
+        (ecase file-type
+          (:gltf (%load-gltf inbuf))
+          (:glb (%load-glb inbuf)))))))
+
+
+
+
+
+
+
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (in-package #:virality.geometry)
 
 (defclass gltf ()
