@@ -2,13 +2,59 @@
 
 ;;;; Extensions are not yet supported in this model.
 
+;;;; Additional generic functions for the glTF data types
+;;;; style can be :human or :json and transmits recursively
+;;;; to the children of that thing
+(defgeneric emit (style gltf-instance &key stream indent))
+
+;;;; Convenience functions for glTF data representation and outputting.
+
+(defun component-type-value->component-type-symbol (component-type-value)
+  (ecase component-type-value
+    (5120 :byte)
+    (5121 :unsigned-byte)
+    (5122 :short)
+    (5123 :unsigned-short)
+    (5125 :unsigned-int)
+    (5126 :float)))
+
+(defun component-type-symbol->component-type-value (sym)
+  (ecase sym
+    (:byte 5120)
+    (:unsigned-byte 5121)
+    (:short 5122)
+    (:unsigned-short 5123)
+    (:unsigned-int 5125)
+    (:float 5126)))
+
+(defun primitive-mode-value->primitive-mode-symbol (primitive-mode-value)
+  (ecase primitive-mode-value
+    (0 :points)
+    (1 :lines)
+    (2 :line-loop)
+    (3 :line-strip)
+    (4 :triangles)
+    (5 :triangle-strip)
+    (6 :triangle-fan)))
+
+(defun primitive-mode-symbol->primitive-mode-value (primitive-mode-symbol)
+  (ecase primitive-mode-symbol
+    (:points 0)
+    (:lines 1)
+    (:line-loop 2)
+    (:line-strip 3)
+    (:triangles 4)
+    (:triangle-strip 5)
+    (:triangle-fan 6)))
+
 ;; Begin glTF data types.
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Accessors
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass gltf-indicies ()
+
+(defclass gltf-indices ()
   (;; An integer, cannot reference a ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target
    (%buffer-view :accessor buffer-view
                  :initarg :buffer-view)
@@ -16,16 +62,17 @@
    (%byte-offset :accessor byte-offset
                  :initarg :byte-offset
                  :initform 0)
+   ;; An integer
    ;; One of:
    ;;
    ;; 5121 UNSIGNED_BYTE
    ;; 5123 UNSIGNED_SHORT
    ;; 5125 UNSIGNED_INT
+   ;;
+   ;; NOTE: we always store the symbol equivalent of the above values in this
+   ;; slot.
    (%component-type :accessor component-type
                     :initarg :component-type)))
-
-(defun make-gltf-indicies (&rest args)
-  (apply #'make-instance 'gltf-indicies args))
 
 (defclass gltf-values ()
   (;; An integer, cannot reference a ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target
@@ -33,33 +80,19 @@
                  :initarg :buffer-view)
    (%byte-offset :accessor byte-offset
                  :initarg :byte-offset
-                 :initform 0)
-   ;; One of:
-   ;;
-   ;; 5121 UNSIGNED_BYTE
-   ;; 5123 UNSIGNED_SHORT
-   ;; 5125 UNSIGNED_INT
-   (%component-type :accessor component-type
-                    :initarg :component-type)))
-
-(defun make-gltf-values (&rest args)
-  (apply #'make-instance 'gltf-values args))
+                 :initform 0)))
 
 (defclass gltf-sparse ()
   (;; An integer
-   (%entity-count :accessor entity-count
-                  :initarg :entity-count
-                  :initform 1)
-   ;; An array of gltf-indicies instances
-   (%indicies :accessor indicies
-              :initarg :indicies)
+   (%count :accessor sparse-count
+           :initarg :sparse-count
+           :initform 1)
+   ;; An array of gltf-indices instances
+   (%indices :accessor indices
+             :initarg :indices)
    ;; An array of gltf-values instances
-   (%vals :accessor vals
-          :initarg :vals)))
-
-(defun make-gltf-sparse (args)
-  (apply #'make-instance 'gltf-sparse args))
-
+   (%values :accessor sparse-values
+            :initarg :sparse-values)))
 
 (defclass gltf-accessor ()
   (;; An integer
@@ -84,9 +117,9 @@
                 :initarg :normalized
                 :initform nil)
    ;; An integer
-   (%attribute-count :accessor attribute-count
-                     :initarg :attribute-count
-                     :initform 1)
+   (%count :accessor attribute-count
+           :initarg :attribute-count
+           :initform 1)
    ;; One of:
    ;;
    ;; "SCALAR"
@@ -96,20 +129,17 @@
    ;; "MAT2"
    ;; "MAT3"
    ;; "MAT4"
-   (%attribute-type :accessor attribute-type
-                    :initarg :attribute-type)
+   (%type :accessor attribute-type
+          :initarg :attribute-type)
    ;; An instance of the correct type as denoted in ATTRIBUTE-TYPE
-   (%max-val :accessor max-val
-             :initarg :max-val)
+   (%max :accessor max-value
+         :initarg :max-value)
    ;; An instance of the correct type as denoted in ATTRIBUTE-TYPE
-   (%min-val :accessor min-val
-             :initarg :min-val)
+   (%min :accessor min-value
+         :initarg :min-value)
    ;; A gltf-sparse instance
    (%sparse :accessor sparse
             :initarg :sparse)))
-
-(defun make-gltf-accessor (&rest args)
-  (apply #'make-instance 'gltf-accessor args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Animations
@@ -123,9 +153,6 @@
    (%path :accessor path
           :initarg :path)))
 
-(defun make-gltf-target (&rest args)
-  (apply #'make-instance 'gltf-target args))
-
 (defclass gltf-channel ()
   (;; An integer
    (%sampler :accessor sampler
@@ -134,9 +161,6 @@
    ;; A gltf-target instance
    (%target :accessor target
             :initarg :target)))
-
-(defun make-gltf-channel (&rest args)
-  (apply #'make-instance 'gltf-channel args))
 
 (defclass gltf-animation-sampler ()
   (;; An integer
@@ -152,9 +176,6 @@
             :initarg :output
             :initform 0)))
 
-(defun make-gltf-animation-sampler (&rest args)
-  (apply #'make-instance 'gltf-animation-sampler args))
-
 (defclass gltf-animation ()
   (;; An array of gltf-channel instances
    (%channels :accessor channels
@@ -163,8 +184,6 @@
    (%samplers :accessor samplers
               :initarg samplers)))
 
-(defun make-gltf-animation (&rest args)
-  (apply #'make-instance 'gltf-animation args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Asset (glTF identification)
@@ -184,8 +203,6 @@
    (%min-version :accessor min-version
                  :initarg :min-version)))
 
-(defun make-gltf-asset (&rest args)
-  (apply #'make-instance 'gltf-asset args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Buffers
@@ -202,9 +219,6 @@
    (%name :accessor name
           :initarg :name
           :initform "")))
-
-(defun make-gltf-buffer (&rest args)
-  (apply #'make-instance 'gltf-buffer args))
 
 (defclass gltf-buffer-view ()
   (;; an integer
@@ -227,9 +241,6 @@
           :initarg :name
           :initform "")))
 
-(defun make-gltf-buffer-view (&rest args)
-  (apply #'make-instance 'gltf-buffer-view args))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Cameras
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -248,9 +259,6 @@
    (%z-near :accessor z-near
             :initarg :z-near)))
 
-(defun make-gltf-orthographic (&rest args)
-  (apply #'make-instance 'gltf-orthographic args))
-
 (defclass gltf-perspective ()
   (;; a number
    (%aspect-ratio :accessor aspect-ratio
@@ -265,9 +273,6 @@
    (%z-near :accessor z-near
             :initarg :z-near)))
 
-(defun make-gltf-perspective (&rest args)
-  (apply #'make-instance 'gltf-perspective args))
-
 (defclass gltf-camera ()
   (;; a gltf-orthographic instance OR null
    (%orthographic :accessor orthographic
@@ -281,9 +286,6 @@
    ;; a string
    (%name :accessor name
           :initarg :name)))
-
-(defun make-gltf-camera (&rest args)
-  (apply #'make-instance 'gltf-camera args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Root glTF object (TODO: probably move to bottom)
@@ -342,9 +344,6 @@
    (%textures :accessor textures
               :initarg :textures)))
 
-(defun make-gltf (&rest args)
-  (apply #'make-instance 'gltf args))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Images
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -365,9 +364,6 @@
    (%name :accessor name
           :initarg :name)))
 
-(defun make-gltf-image (&rest args)
-  (apply #'make-instance 'gltf-image args))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Materials
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -385,9 +381,6 @@
            :initarg :scale
            :initform 1f0)))
 
-(defun make-gltf-normal-texture-info (&rest args)
-  (apply #'make-instance 'gltf-normal-texture-info args))
-
 (defclass gltf-occlusion-texture-info ()
   (;; an integer >= 0
    (%index :accessor index
@@ -400,9 +393,6 @@
    (%strength :accessor strength
               :initarg :strength
               :initform 1f0)))
-
-(defun make-gltf-occlusion-texture-info (&rest args)
-  (apply #'make-instance 'gltf-occlusion-texture-info args))
 
 (defclass gltf-pbr-metallic-roughness ()
   (;; an array of 4 numbers
@@ -423,9 +413,6 @@
    ;; a gltf-texture-info instance
    (%metallic-roughness-texture :accessor metallic-roughness-texture
                                 :initarg :metallic-roughness-texture)))
-
-(defun make-gltf-pbr-metallic-roughness (&rest args)
-  (apply #'make-instance 'gltf-pbr-metallic-roughness args))
 
 (defclass gltf-material ()
   (;; a string
@@ -463,9 +450,6 @@
                   :initarg :double-sided
                   :initform nil)))
 
-(defun make-gltf-material (&rest args)
-  (apply #'make-instance 'gltf-material args))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Meshes
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -478,8 +462,8 @@
                 :initarg :attributes
                 :initform (u:dict #'equalp))
    ;; an integer
-   (%indicies :accessor indicies
-              :initarg :indicies)
+   (%indices :accessor indices
+             :initarg :indices)
    ;; an integer
    (%material :accessor material
               :initarg :material)
@@ -504,9 +488,6 @@
    (%targets :accessor targets
              :initarg :targets)))
 
-(defun make-gltf-primitive (&rest args)
-  (apply #'make-instance 'gltf-primitive args))
-
 (defclass gltf-mesh ()
   (;; an array of gltf-primitive instances
    (%primitives :accessor primitives
@@ -517,9 +498,6 @@
    ;; a string
    (%name :accessor name
           :initarg :name)))
-
-(defun make-gltf-mesh (&rest args)
-  (apply #'make-instance 'gltf-mesh args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Nodes in the spatial hierarchy
@@ -566,9 +544,6 @@
    (%name :accessor name
           :initarg :name)))
 
-(defun make-gltf-node (&rest args)
-  (apply #'make-instance 'gltf-node args))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Samplers
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -606,9 +581,6 @@
    (%name :accessor name
           :initarg :name)))
 
-(defun make-gltf-sampler (&rest args)
-  (apply #'make-instance 'gltf-sampler args))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Scenes
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -620,9 +592,6 @@
    ;; a string
    (%name :accessor name
           :initarg :name)))
-
-(defun make-gltf-scene (&rest args)
-  (apply #'make-instance 'gltf-scene args))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Skin
@@ -642,9 +611,6 @@
    (%name :accessor name
           :initarg :name)))
 
-(defun make-gltf-skin (&rest args)
-  (apply #'make-instance 'gltf-skin args))
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Textures
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -660,9 +626,6 @@
    (%name :accessor name
           :initarg :name)))
 
-(defun make-gltf-texture (&rest args)
-  (apply #'make-instance 'gltf-texture args))
-
 (defclass gltf-texture-info ()
   (;; an integer
    (%index :accessor index
@@ -672,11 +635,154 @@
                :initarg :tex-coord
                :initform 0)))
 
-(defun make-gltf-texture-info (&rest args)
+;; End glTF data types.
+
+;; maker functions
+
+(defun make-indices (&rest args)
+  (apply #'make-instance 'gltf-indices args))
+
+(defun make-values (&rest args)
+  (apply #'make-instance 'gltf-values args))
+
+(defun make-sparse (args)
+  (apply #'make-instance 'gltf-sparse args))
+
+(defun make-accessor (&rest args)
+  (apply #'make-instance 'gltf-accessor args))
+
+(defun make-target (&rest args)
+  (apply #'make-instance 'gltf-target args))
+
+(defun make-channel (&rest args)
+  (apply #'make-instance 'gltf-channel args))
+
+(defun make-animation-sampler (&rest args)
+  (apply #'make-instance 'gltf-animation-sampler args))
+
+(defun make-animation (&rest args)
+  (apply #'make-instance 'gltf-animation args))
+
+(defun make-asset (&rest args)
+  (apply #'make-instance 'gltf-asset args))
+
+(defun make-buffer (&rest args)
+  (apply #'make-instance 'gltf-buffer args))
+
+(defun make-buffer-view (&rest args)
+  (apply #'make-instance 'gltf-buffer-view args))
+
+(defun make-orthographic (&rest args)
+  (apply #'make-instance 'gltf-orthographic args))
+
+(defun make-perspective (&rest args)
+  (apply #'make-instance 'gltf-perspective args))
+
+(defun make-camera (&rest args)
+  (apply #'make-instance 'gltf-camera args))
+
+(defun make-gltf (&rest args)
+  (apply #'make-instance 'gltf args))
+
+(defun make-image (&rest args)
+  (apply #'make-instance 'gltf-image args))
+
+(defun make-normal-texture-info (&rest args)
+  (apply #'make-instance 'gltf-normal-texture-info args))
+
+(defun make-occlusion-texture-info (&rest args)
+  (apply #'make-instance 'gltf-occlusion-texture-info args))
+
+(defun make-pbr-metallic-roughness (&rest args)
+  (apply #'make-instance 'gltf-pbr-metallic-roughness args))
+
+(defun make-material (&rest args)
+  (apply #'make-instance 'gltf-material args))
+
+(defun make-primitive (&rest args)
+  (apply #'make-instance 'gltf-primitive args))
+
+(defun make-mesh (&rest args)
+  (apply #'make-instance 'gltf-mesh args))
+
+(defun make-node (&rest args)
+  (apply #'make-instance 'gltf-node args))
+
+(defun make-sampler (&rest args)
+  (apply #'make-instance 'gltf-sampler args))
+
+(defun make-scene (&rest args)
+  (apply #'make-instance 'gltf-scene args))
+
+(defun make-skin (&rest args)
+  (apply #'make-instance 'gltf-skin args))
+
+(defun make-texture (&rest args)
+  (apply #'make-instance 'gltf-texture args))
+
+(defun make-texture-info (&rest args)
   (apply #'make-instance 'gltf-texture-info args))
 
+;; Parsing code to convert json objects to clos objects.
 
-;; End glTF data types.
+(defun parse/error (gltf-type field &rest args)
+  (let ((fmt (first args))
+        (rest-args (rest args)))
+    (error "glTF: Parse error [type: ~S json field: ~S]~A"
+           gltf-type field
+           (if fmt
+               (apply #'format nil (concatenate 'string ": " fmt) rest-args)
+               ""))))
+
+(defun parse-indices (obj)
+  (u:mvlet ((buffer-view bv-p (jsown:val-safe obj "bufferView"))
+            (byte-offset bo-p (jsown:val-safe obj "byteOffset"))
+            (component-type ct-p (jsown:val-safe obj "componentType")))
+
+    (assert (and bv-p ct-p))
+
+    (make-indices
+     :buffer-view buffer-view
+     :byte-offset (if bo-p byte-offset 0)
+     :component-type
+     (component-type-value->component-type-symbol component-type))))
+
+(defun parse-values (obj)
+  (u:mvlet ((buffer-view bv-p (jsown:val-safe obj "bufferView"))
+            (byte-offset bo-p (jsown:val-safe obj "byteOffset")))
+
+    (assert bv-p)
+
+    (make-values
+     :buffer-view buffer-view
+     :byte-offset (if bo-p byte-offset 0))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun test/parse-indices (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (jsown:val
+               (jsown:val
+                (nth 1 (jsown:val j "accessors")) "sparse") "indices"))
+         (inst (virality.file.gltf::parse-indices obj)))
+    (describe inst)))
+
+(defun test/parse-values (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (jsown:val
+               (jsown:val
+                (nth 1 (jsown:val j "accessors")) "sparse") "values"))
+         (inst (virality.file.gltf::parse-values obj)))
+    (describe inst)))
+
+(defun test/parse ()
+  (let ((sample-sparse-accessor-file
+          "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf"))
+    (test/parse-indices sample-sparse-accessor-file)
+    (test/parse-values sample-sparse-accessor-file)))
+
+
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -708,28 +814,6 @@
             :initarg :chunks)))
 
 
-;; NOTE: If using the extension is not good enough in practice, then we can
-;; open the file and dig around in it looking for how to distinguish it.
-(defun determine-gltf-file-type (path)
-  "Look at the extension of the file. Return :gltf, :glb, or :unknown.
-Need more code to determine type via contents."
-  (let* ((path-len (length path))
-         (gltf-pos (search ".gltf" path :from-end t))
-         (glb-pos (search ".glb" path :from-end t)))
-
-    (when gltf-pos
-      ;; ".gltf" at end of path
-      (when (= (- path-len gltf-pos) 5)
-        (return-from determine-gltf-file-type :gltf)))
-
-    (when glb-pos
-      ;; ".glb" at end of path
-      (when (= (- path-len glb-pos) 4)
-        (return-from determine-gltf-file-type :glb)))
-
-    ;; It might or might not be....
-    :unknown))
-
 (defun %load-gltf (inbuf)
   ;; TODO: This is terrible code, fix later.
   (let* ((size (* 1024 64))
@@ -751,24 +835,25 @@ Need more code to determine type via contents."
                    'string))
          (json (jsown:parse json-string)))
 
-    (format t "json form is: ~S~%" json)
-    nil))
+    ;;(format t "json form is: ~S~%" json)
+    json))
 
 (defun %load-glb (inbuf)
   nil)
 
 
 (defun load-gltf-file (path &optional search-paths)
-  (let ((file-type (determine-gltf-file-type path)))
-    (when (eq file-type :unknown)
-      (error "Cannot LOAD-GLTF-FILE something that doesn't appear to be a .gltf or .glb file by extension! Errant path was: ~S"
-             path))
-
+  (let ((file-type (pathname-type path)))
     (u:with-binary-input (in path)
       (let* ((inbuf (fast-io:make-input-buffer :stream in)))
-        (ecase file-type
-          (:gltf (%load-gltf inbuf))
-          (:glb (%load-glb inbuf)))))))
+        (cond
+          ((string= file-type "gltf")
+           (%load-gltf inbuf))
+          ((string= file-type "glb")
+           (%load-glb inbuf))
+          (t
+           (error "Illegal glTF file (~A) with path extension: ~S"
+                  path file-type)))))))
 
 
 
