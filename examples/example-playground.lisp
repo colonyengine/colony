@@ -39,7 +39,43 @@
 
 (v:define-material art6
   (:profiles (x/mat:u-mvptr)
-   :shader ex/shd:art6))
+   :shader ex/shd:art6
+   :uniforms ((:mouse (v2:zero)))))
+
+;;; Components
+(v:define-component mouse-shader-input ()
+  ((%renderer :reader renderer)
+   (%material :accessor material
+              :initarg :material)
+   (%material-retrieved-p :reader material-retrieved-p
+                          :initform nil)
+   (%mouse :reader mouse
+           :initform (v2:zero))))
+
+(defmethod v:on-component-initialize ((self mouse-shader-input))
+  (with-slots (%renderer) self
+    (setf %renderer (v:component-by-type (v:actor self) 'c/render:render))))
+
+
+(defmethod v:on-component-update ((self mouse-shader-input))
+  (with-slots (%material %material-retrieved-p) self
+    (unless %material-retrieved-p
+      (setf %material (c/render:material (renderer self))
+            %material-retrieved-p t))
+
+    (u:mvlet* ((context (v:context self))
+               (x y (v:get-mouse-position context))
+               (lmb-p (v:input-enabled-p context '(:mouse :left))))
+      (when (null x) (setf x (/ (v:option context :window-width) 2.0)))
+      (when (null y) (setf y (/ (v:option context :window-height) 2.0)))
+
+      (when lmb-p
+        (v2:with-components ((m (mouse self)))
+          ;; crappy, but good enough.
+          (setf mx (float (/ x (v:option context :window-width)) 1f0)
+                my (float (/ y (v:option context :window-height)) 1f0)))
+        (setf (v:uniform-ref %material :mouse) (mouse self))))))
+
 
 ;;; Prefabs
 
@@ -86,6 +122,7 @@
 (v:define-prefab "art6" (:library examples :context context)
   (("camera" :copy "/cameras/ortho"))
   (("screen" :copy "/mesh")
+   (mouse-shader-input)
    (c/xform:transform :scale (v3:vec (/ (v:option context :window-width) 2)
                                      (/ (v:option context :window-height) 2)
                                      0))
