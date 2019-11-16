@@ -37,6 +37,10 @@
               (:sampler 'art5/texture))
    :shader shd/fx:window-rain))
 
+(v:define-material art6
+  (:profiles (x/mat:u-mvptr)
+   :shader ex/shd:art6))
+
 ;;; Prefabs
 
 (v:define-prefab "art1" (:library examples :context context)
@@ -79,6 +83,14 @@
                                      0))
    (c/render:render :material 'art5)))
 
+(v:define-prefab "art6" (:library examples :context context)
+  (("camera" :copy "/cameras/ortho"))
+  (("screen" :copy "/mesh")
+   (c/xform:transform :scale (v3:vec (/ (v:option context :window-width) 2)
+                                     (/ (v:option context :window-height) 2)
+                                     0))
+   (c/render:render :material 'art6)))
+
 ;;; Prefab descriptors
 
 (v:define-prefab-descriptor art1 ()
@@ -95,3 +107,6 @@
 
 (v:define-prefab-descriptor art5 ()
   ("art5" examples))
+
+(v:define-prefab-descriptor art6 ()
+  ("art6" examples))
