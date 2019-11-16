@@ -18,14 +18,34 @@
     (5125 :unsigned-int)
     (5126 :float)))
 
-(defun component-type-symbol->component-type-value (sym)
-  (ecase sym
+(defun component-type-symbol->component-type-value (component-type-symbol)
+  (ecase component-type-symbol
     (:byte 5120)
     (:unsigned-byte 5121)
     (:short 5122)
     (:unsigned-short 5123)
     (:unsigned-int 5125)
     (:float 5126)))
+
+(defun attribute-type-value->attribute-type-symbol (attribute-type-value)
+  (let* ((db `(("SCALAR" . :scalar)
+               ("VEC2" . :vec2)
+               ("VEC3" . :vec3)
+               ("VEC4" . :vec4)
+               ("MAT2" . :mat2)
+               ("MAT3" . :mat3)
+               ("MAT4" . :mat4))))
+    (cdr (assoc attribute-type-value db :test #'string=))))
+
+(defun attribute-type-symbol->attribute-type-value (attribute-type-symbol)
+  (let* ((db `((:scalar . "SCALAR")
+               (:vec2 . "VEC2")
+               (:vec3 . "VEC3")
+               (:vec4 . "VEC4")
+               (:mat2 . "MAT2")
+               (:mat3 . "MAT3")
+               (:mat4 . "MAT4"))))
+    (cdr (assoc attribute-type-symbol db :test #'eq))))
 
 (defun primitive-mode-value->primitive-mode-symbol (primitive-mode-value)
   (ecase primitive-mode-value
@@ -87,10 +107,10 @@
    (%count :accessor sparse-count
            :initarg :sparse-count
            :initform 1)
-   ;; An array of gltf-indices instances
+   ;; An instance of gltf-indices (which point to a buffer of indices)
    (%indices :accessor indices
              :initarg :indices)
-   ;; An array of gltf-values instances
+   ;; An instance of gltf-values (which point to a buffer of values)
    (%values :accessor sparse-values
             :initarg :sparse-values)))
 
@@ -645,7 +665,7 @@
 (defun make-values (&rest args)
   (apply #'make-instance 'gltf-values args))
 
-(defun make-sparse (args)
+(defun make-sparse (&rest args)
   (apply #'make-instance 'gltf-sparse args))
 
 (defun make-accessor (&rest args)
@@ -723,7 +743,9 @@
 (defun make-texture-info (&rest args)
   (apply #'make-instance 'gltf-texture-info args))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parsing code to convert json objects to clos objects.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse/error (gltf-type field &rest args)
   (let ((fmt (first args))
@@ -732,14 +754,20 @@
            gltf-type field
            (if fmt
                (apply #'format nil (concatenate 'string ": " fmt) rest-args)
-               ""))))
+               ": Field probably non-existent."))))
 
-(defun parse-indices (obj)
-  (u:mvlet ((buffer-view bv-p (jsown:val-safe obj "bufferView"))
-            (byte-offset bo-p (jsown:val-safe obj "byteOffset"))
-            (component-type ct-p (jsown:val-safe obj "componentType")))
+(defun parse/assert (value gltf-type field &rest args)
+  (unless value
+    (apply #'parse/error gltf-type field args)))
 
-    (assert (and bv-p ct-p))
+
+(defun parse-indices (jobj)
+  (u:mvlet ((buffer-view bv-p (jsown:val-safe jobj "bufferView"))
+            (byte-offset bo-p (jsown:val-safe jobj "byteOffset"))
+            (component-type ct-p (jsown:val-safe jobj "componentType")))
+
+    (parse/assert bv-p 'gltf-indices "bufferView")
+    (parse/assert ct-p 'gltf-indices "componentType")
 
     (make-indices
      :buffer-view buffer-view
@@ -747,15 +775,59 @@
      :component-type
      (component-type-value->component-type-symbol component-type))))
 
-(defun parse-values (obj)
-  (u:mvlet ((buffer-view bv-p (jsown:val-safe obj "bufferView"))
-            (byte-offset bo-p (jsown:val-safe obj "byteOffset")))
+(defun parse-values (jobj)
+  (u:mvlet ((buffer-view bv-p (jsown:val-safe jobj "bufferView"))
+            (byte-offset bo-p (jsown:val-safe jobj "byteOffset")))
 
-    (assert bv-p)
+    (parse/assert bv-p 'gltf-values "bufferView")
 
     (make-values
      :buffer-view buffer-view
      :byte-offset (if bo-p byte-offset 0))))
+
+(defun parse-sparse (jobj)
+  (u:mvlet ((sparse-count sc-p (jsown:val-safe jobj "count"))
+            (jobj-indices ind-p (jsown:val-safe jobj "indices"))
+            (jobj-values val-p (jsown:val-safe jobj "values")))
+
+    (parse/assert sc-p 'gltf-sparse "count")
+    (parse/assert ind-p 'gltf-sparse "indices")
+    (parse/assert val-p 'gltf-sparse "values")
+
+    (make-sparse
+     :sparse-count sparse-count
+     :indices (parse-indices jobj-indices)
+     :sparse-values (parse-values jobj-values))))
+
+(defun parse-accessor (jobj)
+  (u:mvlet ((buffer-view (jsown:val-safe jobj "bufferView"))
+            (byte-offset bo-p (jsown:val-safe jobj "byteOffset"))
+            (component-type ct-p (jsown:val-safe jobj "componentType"))
+            (normalized-p (jsown:val-safe jobj "normalized"))
+            (attribute-count ac-p (jsown:val-safe jobj "count"))
+            (attribute-type at-p (jsown:val-safe jobj "type"))
+            (max-value (jsown:val-safe jobj "max"))
+            (min-value (jsown:val-safe jobj "min"))
+            (jobj-sparse (jsown:val-safe jobj "sparse"))
+            (name (jsown:val-safe jobj "name")))
+
+    (parse/assert ct-p 'gltf-accessor "componentType")
+    (parse/assert ac-p 'gltf-accessor "count")
+    (parse/assert at-p 'gltf-accessor "type")
+
+    (make-accessor
+     :buffer-view buffer-view
+     :byte-offset (if bo-p byte-offset 0)
+     :component-type
+     (component-type-value->component-type-symbol component-type)
+     :normalized normalized-p
+     :attribute-count attribute-count
+     :attribute-type
+     (attribute-type-value->attribute-type-symbol attribute-type)
+     :max-value (coerce max-value 'vector)
+     :min-value (coerce min-value 'vector)
+     :sparse (parse-sparse jobj-sparse)
+     :name name)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -776,11 +848,28 @@
          (inst (virality.file.gltf::parse-values obj)))
     (describe inst)))
 
+(defun test/parse-sparse (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (jsown:val
+               (nth 1 (jsown:val j "accessors")) "sparse"))
+         (inst (virality.file.gltf::parse-sparse obj)))
+    (describe inst)))
+
+(defun test/parse-accessor (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 1 (jsown:val j "accessors")))
+         (inst (virality.file.gltf::parse-accessor obj)))
+    (describe inst)))
+
 (defun test/parse ()
   (let ((sample-sparse-accessor-file
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf"))
     (test/parse-indices sample-sparse-accessor-file)
-    (test/parse-values sample-sparse-accessor-file)))
+    (test/parse-values sample-sparse-accessor-file)
+    (test/parse-sparse sample-sparse-accessor-file)
+    (test/parse-accessor sample-sparse-accessor-file)
+
+    ))
 
 
 
