@@ -233,7 +233,10 @@
               :initarg :channels)
    ;; An array of gltf-sampler instances
    (%samplers :accessor samplers
-              :initarg samplers)))
+              :initarg :samplers)
+   ;; A string
+   (%name :accessor name
+          :initarg :name)))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -904,6 +907,19 @@
          :linear)
      :output output)))
 
+(defun parse-animation (jobj)
+  (u:mvlet ((channels ch-p (jsown:val-safe jobj "channels"))
+            (samplers sa-p (jsown:val-safe jobj "samplers"))
+            (name (jsown:val-safe jobj "output")))
+
+    (parse/assert ch-p 'gltf-snimation "channels")
+    (parse/assert sa-p 'gltf-snimation-sampler "samplers")
+
+    (make-animation
+     :channels (map 'vector #'parse-channel channels)
+     :samplers (map 'vector #'parse-animation-sampler samplers)
+     :name name)))
+
 
 
 
@@ -972,6 +988,12 @@
          (inst (virality.file.gltf::parse-animation-sampler obj)))
     (describe inst)))
 
+(defun test/parse-animation (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 0 (jsown:val j "animations")))
+         (inst (virality.file.gltf::parse-animation obj)))
+    (describe inst)))
+
 (defun test/parse ()
   (let ((sample-sparse-accessor-file
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf")
@@ -986,6 +1008,7 @@
     (test/parse-target box-animated-file)
     (test/parse-channel box-animated-file)
     (test/parse-animation-sampler box-animated-file)
+    (test/parse-animation box-animated-file)
 
     ))
 
