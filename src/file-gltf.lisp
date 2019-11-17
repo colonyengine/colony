@@ -75,6 +75,18 @@
                (:cubic-spline . "CUBICSPLINE"))))
     (cdr (assoc animsampler-interp-symbol db :test #'eq))))
 
+(defun buffer-view-target-value->buffer-view-target-symbol
+    (buffer-view-target-value)
+  (ecase buffer-view-target-value
+    (34962 :array-buffer)
+    (34963 :element-array-buffer)))
+
+(defun buffer-view-target-symbol->buffer-view-target-interp-value
+    (buffer-view-target-symbol)
+  (ecase buffer-view-target-symbol
+    (:array-buffer 34962)
+    (:element-array-buffer 34963)))
+
 (defun primitive-mode-value->primitive-mode-symbol (primitive-mode-value)
   (ecase primitive-mode-value
     (0 :points)
@@ -913,13 +925,72 @@
             (name (jsown:val-safe jobj "output")))
 
     (parse/assert ch-p 'gltf-snimation "channels")
-    (parse/assert sa-p 'gltf-snimation-sampler "samplers")
+    (parse/assert sa-p 'gltf-snimation "samplers")
 
     (make-animation
      :channels (map 'vector #'parse-channel channels)
      :samplers (map 'vector #'parse-animation-sampler samplers)
      :name name)))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-asset
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun parse-asset (jobj)
+  (u:mvlet ((copyright (jsown:val-safe jobj "copyright"))
+            (generator (jsown:val-safe jobj "generator"))
+            (version vers-p (jsown:val-safe jobj "version"))
+            (min-version (jsown:val-safe jobj "minVersion")))
+
+    (parse/assert vers-p 'gltf-asset "values")
+
+    (make-asset
+     :copyright copyright
+     :generator generator
+     :version version
+     :min-version min-version)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse buffer concepts
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun parse-buffer (jobj)
+  (u:mvlet ((uri (jsown:val-safe jobj "uri"))
+            (byte-length bl-p(jsown:val-safe jobj "byteLength"))
+            (name (jsown:val-safe jobj "name")))
+
+    (parse/assert bl-p 'gltf-buffer "byteLength")
+
+    (make-buffer
+     ;; TODO: Don't process the uri, we'll do that later when we want to
+     ;; realize the buffer's actual contents into memory.
+     :uri uri
+     :byte-length byte-length
+     :name name)))
+
+(defun parse-buffer-view (jobj)
+  (u:mvlet ((buffer buf-p (jsown:val-safe jobj "buffer"))
+            (byte-offset bo-p (jsown:val-safe jobj "byteOffset"))
+            (byte-length bl-p (jsown:val-safe jobj "byteLength"))
+            (byte-stride (jsown:val-safe jobj "byteStride"))
+            (target (jsown:val-safe jobj "target"))
+            (name (jsown:val-safe jobj "name")))
+
+    (parse/assert buf-p 'gltf-buffer-view "buffer")
+    (parse/assert bl-p 'gltf-buffer-view "byteLength")
+
+    (make-buffer-view
+     :buffer buffer
+     :byte-offset (if bo-p byte-offset 0)
+     :byte-length byte-length
+     :byte-stride byte-stride
+     :target (buffer-view-target-value->buffer-view-target-symbol target)
+     :name name)))
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse camera concepts
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -994,6 +1065,24 @@
          (inst (virality.file.gltf::parse-animation obj)))
     (describe inst)))
 
+(defun test/parse-asset (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (jsown:val j "asset"))
+         (inst (virality.file.gltf::parse-asset obj)))
+    (describe inst)))
+
+(defun test/parse-buffer (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 0 (jsown:val j "buffers")))
+         (inst (virality.file.gltf::parse-buffer obj)))
+    (describe inst)))
+
+(defun test/parse-buffer-view (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 1 (jsown:val j "bufferViews")))
+         (inst (virality.file.gltf::parse-buffer-view obj)))
+    (describe inst)))
+
 (defun test/parse ()
   (let ((sample-sparse-accessor-file
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf")
@@ -1009,6 +1098,11 @@
     (test/parse-channel box-animated-file)
     (test/parse-animation-sampler box-animated-file)
     (test/parse-animation box-animated-file)
+
+    (test/parse-asset box-animated-file)
+    (test/parse-buffer box-animated-file)
+
+    (test/parse-buffer-view box-animated-file)
 
     ))
 
