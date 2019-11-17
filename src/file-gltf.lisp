@@ -47,6 +47,34 @@
                (:mat4 . "MAT4"))))
     (cdr (assoc attribute-type-symbol db :test #'eq))))
 
+(defun target-path-value->target-path-symbol (target-path-value)
+  (let* ((db `(("translation" . :translation)
+               ("rotation" . :rotation)
+               ("scale" . :scale)
+               ("weights" . :weights))))
+    (cdr (assoc target-path-value db :test #'string=))))
+
+(defun target-path-symbol->target-path-value (target-path-symbol)
+  (let* ((db `((:translation . "translation")
+               (:rotation . "rotation")
+               (:scale . "scale")
+               (:weights . "weights"))))
+    (cdr (assoc target-path-symbol db :test #'eq))))
+
+(defun animsampler-interp-value->animsampler-interp-symbol
+    (animsampler-interp-value)
+  (let* ((db `(("LINEAR" . :linear)
+               ("STEP" . :step)
+               ("CUBICSPLINE" . :cubic-spline))))
+    (cdr (assoc animsampler-interp-value db :test #'string=))))
+
+(defun animsampler-interp-symbol->animsampler-interp-value
+    (animsampler-interp-symbol)
+  (let* ((db `((:linear . "LINEAR")
+               (:step . "STEP")
+               (:cubic-spline . "CUBICSPLINE"))))
+    (cdr (assoc animsampler-interp-symbol db :test #'eq))))
+
 (defun primitive-mode-value->primitive-mode-symbol (primitive-mode-value)
   (ecase primitive-mode-value
     (0 :points)
@@ -159,7 +187,10 @@
          :initarg :min-value)
    ;; A gltf-sparse instance
    (%sparse :accessor sparse
-            :initarg :sparse)))
+            :initarg :sparse)
+   ;; A string
+   (%name :accessor name
+          :initarg :name)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Animations
@@ -747,6 +778,10 @@
 ;; Parsing code to convert json objects to clos objects.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-accessor
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun parse/error (gltf-type field &rest args)
   (let ((fmt (first args))
         (rest-args (rest args)))
@@ -806,8 +841,8 @@
             (normalized-p (jsown:val-safe jobj "normalized"))
             (attribute-count ac-p (jsown:val-safe jobj "count"))
             (attribute-type at-p (jsown:val-safe jobj "type"))
-            (max-value (jsown:val-safe jobj "max"))
-            (min-value (jsown:val-safe jobj "min"))
+            (max-value (coerce (jsown:val-safe jobj "max") 'vector))
+            (min-value (coerce (jsown:val-safe jobj "min") 'vector))
             (jobj-sparse (jsown:val-safe jobj "sparse"))
             (name (jsown:val-safe jobj "name")))
 
@@ -824,13 +859,57 @@
      :attribute-count attribute-count
      :attribute-type
      (attribute-type-value->attribute-type-symbol attribute-type)
-     :max-value (coerce max-value 'vector)
-     :min-value (coerce min-value 'vector)
+     :max-value max-value
+     :min-value min-value
      :sparse (parse-sparse jobj-sparse)
      :name name)))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-animation
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun parse-target (jobj)
+  (u:mvlet ((node (jsown:val-safe jobj "node"))
+            (path path-p (jsown:val-safe jobj "path")))
+
+    (parse/assert path-p 'gltf-target "path")
+
+    (make-target :node node
+                 :path
+                 (target-path-value->target-path-symbol path))))
+
+(defun parse-channel (jobj)
+  (u:mvlet ((sampler sam-p (jsown:val-safe jobj "sampler"))
+            (jobj-target ta-p (jsown:val-safe jobj "target")))
+
+    (parse/assert sam-p 'gltf-channel "sampler")
+    (parse/assert ta-p 'gltf-channel "target")
+
+    (make-channel :sampler sampler
+                  :target (parse-target jobj-target))))
+
+(defun parse-animation-sampler (jobj)
+  (u:mvlet ((input in-p (jsown:val-safe jobj "input"))
+            (interp interp-p (jsown:val-safe jobj "interpolation"))
+            (output out-p (jsown:val-safe jobj "output")))
+
+    (parse/assert in-p 'gltf-snimation-sampler "input")
+    (parse/assert out-p 'gltf-snimation-sampler "output")
+
+    (make-animation-sampler
+     :input input
+     :interpolation
+     (if interp
+         (animsampler-interp-value->animsampler-interp-symbol interp)
+         :linear)
+     :output output)))
+
+
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Test code.
 
 (defun test/parse-indices (file)
   (let* ((j (virality.file.gltf::load-gltf-file file))
@@ -861,13 +940,52 @@
          (inst (virality.file.gltf::parse-accessor obj)))
     (describe inst)))
 
+(defun test/parse-target (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (jsown:val-safe
+            (nth 0
+                 (jsown:val-safe
+                  (nth 0 (jsown:val j "animations"))
+                  "channels"))
+            "target"))
+         (inst (virality.file.gltf::parse-target obj)))
+    (describe inst)))
+
+(defun test/parse-channel (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (nth 0
+                (jsown:val-safe
+                 (nth 0 (jsown:val j "animations"))
+                 "channels")))
+         (inst (virality.file.gltf::parse-channel obj)))
+    (describe inst)))
+
+(defun test/parse-animation-sampler (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (nth 0
+                (jsown:val-safe
+                 (nth 0 (jsown:val j "animations"))
+                 "samplers")))
+         (inst (virality.file.gltf::parse-animation-sampler obj)))
+    (describe inst)))
+
 (defun test/parse ()
   (let ((sample-sparse-accessor-file
-          "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf"))
+          "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf")
+        (box-animated-file
+          "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf"))
+
     (test/parse-indices sample-sparse-accessor-file)
     (test/parse-values sample-sparse-accessor-file)
     (test/parse-sparse sample-sparse-accessor-file)
     (test/parse-accessor sample-sparse-accessor-file)
+
+    (test/parse-target box-animated-file)
+    (test/parse-channel box-animated-file)
+    (test/parse-animation-sampler box-animated-file)
 
     ))
 
