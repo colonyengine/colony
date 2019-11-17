@@ -31,7 +31,9 @@
                #:trivial-features
                #:uiop
                #:umbra
-               #:verbose)
+               #:verbose
+	       #:quri
+	       #:cl-base64)
   :pathname "src"
   :serial t
   :components
