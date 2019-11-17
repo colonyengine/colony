@@ -239,7 +239,7 @@
                      (time-shift :float))
   (let* ((x (+ (* (dot direction position) frequency)
                (* time-shift speed)))
-         (wave (exp (- (sin x) 1.0)))
+         (wave (exp (- (sin x) 1)))
          (dx (* wave (cos x))))
     (vec2 wave (- dx))))
 
@@ -274,8 +274,8 @@
          (h-upper depth)
          (h-lower 0.0)
          (dir (normalize (- end start))))
-    (dotimes (i 318)
-      (let ((h (- (* (art6/get-waves (* (.xz pos) 0.1) 13 time)
+    (dotimes (i 320)
+      (let ((h (- (* (art6/get-waves (* (.xz pos) 0.1) 12 time)
                      depth)
                   depth)))
         (when (> (+ h 0.01) (.y pos))
@@ -334,7 +334,6 @@
                       0.05)))))
     (when (< (.x res) 400)
       (return proj))
-
     (* (art6/rotmat (vec3 0 -1 0)
                     (* 3.0 (- (* (.x mouse) 2) 1.0)))
        (art6/rotmat (vec3 1 0 0)
@@ -354,45 +353,30 @@
                         (sun-dir :vec3))
   (setf (.y sun-dir) (max (.y sun-dir) -0.07))
   (let* ((st (/ (+ (.y ray-dir) 0.1)))
-         (st2 (/ (1+ (* (.y sun-dir) 11))))
-         (ray-sun-dt (pow (abs (dot sun-dir ray-dir)) 2))
-         (sun-dt (pow (max 0.0 (dot sun-dir ray-dir)) 8))
+         (st2 (/ (1+ (* (.y sun-dir) 11.0))))
+         (ray-sun-dt (pow (abs (dot sun-dir ray-dir)) 2.0))
+         (sun-dt (pow (max 0.0 (dot sun-dir ray-dir)) 8.0))
          (mymie (* sun-dt st 0.2))
          (sun-color (mix (vec3 1)
                          (max (vec3 0)
                               (- (vec3 1) (/ (vec3 5.5 13 22.4) 22.4)))
                          st2))
-         (blue-sky (/ (vec3 5.5 13 22.4)
-                      (* 22.4 sun-color)))
+         (blue-sky (* (/ (vec3 5.5 13 22.4) 22.4) sun-color))
          (blue-sky2 (max (vec3 0)
                          (- blue-sky
                             (* (vec3 5.5 13 22.4)
                                0.002
                                (+ st (* -6 (.y sun-dir) (.y sun-dir))))))))
-    (setf blue-sky2 (* blue-sky2 st (+ 0.24 (* ray-sun-dt 0.24))))
+    (setf blue-sky2 (* blue-sky2 (* st (+ 0.24 (* ray-sun-dt 0.24)))))
     (+ (* blue-sky2 (1+ (pow (- 1 (.y ray-dir)) 3)))
        (* mymie sun-color))))
 
 (defun art6/get-atm ((ray :vec3))
-  (art6/atmosphere ray (* (normalize (vec3 1)) 0.5)))
+  (* (art6/atmosphere ray (normalize (vec3 1))) 0.5))
 
 (defun art6/sun ((ray :vec3))
   (let ((sd (normalize (vec3 1))))
     (* (pow (max 0 (dot ray sd)) 528) 110)))
-
-(defun art6/tonemap ((color :vec3))
-  (let* ((m1 (mat3 0.59719 0.07600 0.02840
-                   0.35458 0.90834 0.13383
-                   0.04823 0.01566 0.83777))
-         (m2 1.60475 -0.10208 -0.00327
-             -0.53108  1.10813 -0.07276
-             -0.07367 -0.00605 1.07602)
-         (v (* m1 color))
-         (a (- (* v (+ v 0.0245786))
-               0.000090537))
-         (b (+ (* v (+ (* v 0.983729) 0.4329510))
-               0.238081)))
-    (pow (clamp (* m2 (/ a b)) 0 1) (vec3 (/ 2.2)))))
 
 (defun art6/frag (&uniforms
                   (res :vec2)
@@ -408,8 +392,9 @@
          (lo-hit (art6/intersect-plane orig ray w-floor (vec3 0 1 0)))
          (hi-pos (+ orig (* ray hi-hit))))
     (if (>= (.y ray) -0.01)
-        (let ((c (art6/tonemap
-                  (+ (* (art6/get-atm ray) 2) (art6/sun ray)))))
+        (let ((c (umbra.color:tone-map/aces
+                  (+ (* (art6/get-atm ray) 2) (art6/sun ray))
+                  0)))
           (vec4 c 1))
         (let* ((lo-pos (+ orig (* ray lo-hit)))
                (dist (art6/raymarch-water orig hi-pos lo-pos water-depth time))
@@ -420,9 +405,12 @@
                (r (reflect ray n))
                (fresnel (+ 0.04 (* 0.96 (pow (- 1.0 (max 0 (dot (- n) ray)))
                                              5.0))))
-               (c (art6/tonemap
-                   (+ (* fresnel (art6/get-atm r) 2)
-                      (* fresnel (art6/sun r))))))
+               (c (umbra.color:set-gamma
+                   (umbra.color:tone-map/aces
+                    (+ (* fresnel (art6/get-atm r) 2)
+                       (* fresnel (art6/sun r)))
+                    -1)
+                   2.2)))
           (vec4 c 1)))))
 
 (define-shader art6 ()
