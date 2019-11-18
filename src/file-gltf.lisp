@@ -87,6 +87,39 @@
     (:array-buffer 34962)
     (:element-array-buffer 34963)))
 
+(defun camera-type-value->camera-type-symbol (camera-type-value)
+  (let* ((db `(("perspective" . :perspective)
+               ("orthographic" . :orthographic))))
+    (cdr (assoc camera-type-value db :test #'string=))))
+
+(defun camera-type-symbol->camera-type-value (camera-type-symbol)
+  (let* ((db `((:perspective . "perspective")
+               (:orthographic . "orthographic"))))
+    (cdr (assoc camera-type-symbol db :test #'eq))))
+
+(defun image-mime-type-value->image-mime-type-symbol (image-mime-type-value)
+  (let* ((db `(("image/jpeg" . :image/jpeg)
+               ("image/png" . :image/png))))
+    (cdr (assoc image-mime-type-value db :test #'string=))))
+
+(defun image-mime-type-symbol->image-mime-type-value (image-mime-type-symbol)
+  (let* ((db `((:image/jpeg . "image/jpeg")
+               (:image/png . "image/png"))))
+    (cdr (assoc image-mime-type-symbol db :test #'eq))))
+
+(defun alpha-mode-value->alpha-mode-symbol (alpha-mode-value)
+  (let* ((db `(("OPAQUE" . :opaque)
+               ("MASK" . :mask)
+               ("BLEND" . :blend))))
+    (cdr (assoc alpha-mode-value db :test #'string=))))
+
+(defun alpha-mode-symbol->alpha-mode-value (alpha-mode-symbol)
+  (let* ((db `((:opaque . "OPAQUE")
+               (:mask . "MASK")
+               (:blend . "BLEND"))))
+    (cdr (assoc alpha-mode-symbol db :test #'eq))))
+
+
 (defun primitive-mode-value->primitive-mode-symbol (primitive-mode-value)
   (ecase primitive-mode-value
     (0 :points)
@@ -317,7 +350,7 @@
            :initarg :x-mag)
    ;; a number
    (%y-mag :accessor y-mag
-           :initarg y-mag)
+           :initarg :y-mag)
    ;; a number
    (%z-far :accessor z-far
            :initarg :z-far)
@@ -347,8 +380,8 @@
    (%perspective :accessor perspective
                  :initarg :perspective)
    ;; a string [changed from 'type' to 'camera-type']
-   (%camera-type :accessor camera-type
-                 :initarg :camera-type)
+   (%type :accessor camera-type
+          :initarg :camera-type)
    ;; a string
    (%name :accessor name
           :initarg :name)))
@@ -467,7 +500,8 @@
                        :initform (vector 1f0 1f0 1f0 1f0))
    ;; a gltf-texture-info instance
    (%base-color-texture :accessor base-color-texture
-                        :initarg :base-color-texture)
+                        :initarg :base-color-texture
+                        :initform nil)
    ;; a number >= 0 AND <= 1
    (%metallic-factor :accessor metallic-factor
                      :initarg :metallic-factor
@@ -478,7 +512,8 @@
                       :initform 1f0)
    ;; a gltf-texture-info instance
    (%metallic-roughness-texture :accessor metallic-roughness-texture
-                                :initarg :metallic-roughness-texture)))
+                                :initarg :metallic-roughness-texture
+                                :initform nil)))
 
 (defclass gltf-material ()
   (;; a string
@@ -992,6 +1027,190 @@
 ;; Parse camera concepts
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defun parse-orthographic (jobj)
+  (u:mvlet ((x-mag x-mag-p (jsown:val-safe jobj "xmag"))
+            (y-mag y-mag-p (jsown:val-safe jobj "ymag"))
+            (z-far z-far-p (jsown:val-safe jobj "zfar"))
+            (z-near z-near-p (jsown:val-safe jobj "znear")))
+
+    (parse/assert x-mag-p 'gltf-orthographic "xmag")
+    (parse/assert y-mag-p 'gltf-orthographic "ymag")
+    (parse/assert z-far-p 'gltf-orthographic "zfar")
+    (parse/assert z-near-p 'gltf-orthographic "znear")
+
+    (make-orthographic
+     :x-mag x-mag
+     :y-mag y-mag
+     :z-far z-far
+     :z-near z-near)))
+
+(defun parse-perspective (jobj)
+  (u:mvlet ((aspect-ratio (jsown:val-safe jobj "aspectRatio"))
+            (y-fov y-fov-p (jsown:val-safe jobj "yfov"))
+            (z-far (jsown:val-safe jobj "zfar"))
+            (z-near z-near-p (jsown:val-safe jobj "znear")))
+
+    (parse/assert y-fov-p 'gltf-perspective "yfov")
+    (parse/assert z-near-p 'gltf-perspective "znear")
+
+    (make-perspective
+     :aspect-ratio aspect-ratio
+     :y-fov y-fov
+     :z-far z-far
+     :z-near z-near)))
+
+(defun parse-camera (jobj)
+  (u:mvlet ((jobj-orthographic ortho-p (jsown:val-safe jobj "orthographic"))
+            (jobj-perspective persp-p (jsown:val-safe jobj "perspective"))
+            (camera-type ct-p (jsown:val-safe jobj "type"))
+            (name (jsown:val-safe jobj "name")))
+
+    (parse/assert ct-p 'gltf-camera "type")
+    ;; if either ortho-p or persp-p is defined, then only one must be.
+    ;; ortho or persp must be defined, but not both.
+    (when (or ortho-p persp-p)
+      (parse/assert (not (and ortho-p persp-p))
+                    'gltf-camera "orthographic | perspective"
+                    "Only one of these must be defined if any are."))
+
+    (make-camera
+     :camera-type (camera-type-value->camera-type-symbol camera-type)
+     :orthographic (when ortho-p (parse-orthographic jobj-orthographic))
+     :perspective (when persp-p (parse-perspective jobj-perspective))
+     :name name)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse image concepts
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun parse-image (jobj)
+  (u:mvlet ((uri (jsown:val-safe jobj "uri"))
+            (mime-type (jsown:val-safe jobj "mimeType"))
+            (buffer-view (jsown:val-safe jobj "buffer-view"))
+            (name (jsown:val-safe jobj "name")))
+
+    (make-image
+     ;; TODO: We handle these URI's later for loading or converting them
+     ;; the byte arrays.
+     :uri uri
+     :mime-type (image-mime-type-value->image-mime-type-symbol mime-type)
+     :buffer-view buffer-view
+     :name name)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse material (and some texture) concepts
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun parse-normal-texture-info (jobj)
+  (u:mvlet ((index ind-p (jsown:val-safe jobj "index"))
+            (tex-coord tc-p (jsown:val-safe jobj "texCoord"))
+            (scale sc-p (jsown:val-safe jobj "scale")))
+
+    (parse/assert ind-p 'gltf-normal-texture-info "index")
+
+    (make-normal-texture-info
+     :index index
+     :tex-coord (if tc-p tex-coord 0)
+     :scale (if sc-p scale 1f0))))
+
+(defun parse-occlusion-texture-info (jobj)
+  (u:mvlet ((index ind-p (jsown:val-safe jobj "index"))
+            (tex-coord tc-p (jsown:val-safe jobj "texCoord"))
+            (strength st-p (jsown:val-safe jobj "strength")))
+
+    (parse/assert ind-p 'gltf-occlusion-texture-info "index")
+
+    (make-occlusion-texture-info
+     :index index
+     :tex-coord (if tc-p tex-coord 0)
+     :strength (if st-p strength 1f0))))
+
+(defun parse-texture-info (jobj)
+  (u:mvlet ((index ind-p (jsown:val-safe jobj "index"))
+            (tex-coord tc-p (jsown:val-safe jobj "texCoord")))
+
+    (parse/assert ind-p 'gltf-texture-info "index")
+
+    (make-texture-info
+     :index index
+     :tex-coord (if tc-p tex-coord 0))))
+
+(defun parse-pbr-metallic-roughness (jobj)
+  (u:mvlet ((base-color-factor bcf-p (jsown:val-safe jobj "baseColorFactor"))
+            (jobj-base-color-texture bct-p
+                                     (jsown:val-safe jobj "baseColorTexture"))
+            (metallic-factor mf-p (jsown:val-safe jobj "metallicFactor"))
+            (roughness-factor rf-p (jsown:val-safe jobj "roughnessFactor"))
+            (jobj-metallic-roughness-texture mrt-p
+                                             (jsown:val-safe
+                                              jobj
+                                              "metallicRoughnessTexture")))
+
+    (make-pbr-metallic-roughness
+     :base-color-factor (if bcf-p
+                            (coerce base-color-factor 'vector)
+                            (vector 1 1 1 1))
+     :base-color-texture (when bct-p
+                           (parse-texture-info jobj-base-color-texture))
+     :metallic-factor (if mf-p metallic-factor 1f0)
+     :roughness-factor (if rf-p roughness-factor 1f0)
+     :metallic-roughness-texture
+     (if mrt-p (parse-texture-info jobj-metallic-roughness-texture)))))
+
+
+(defun parse-material (jobj)
+  (u:mvlet ((name (jsown:val-safe jobj "name"))
+            (jobj-pbr-metallic-roughness pbrmr-p
+                                         (jsown:val-safe
+                                          jobj
+                                          "pbrMetallicRoughness"))
+            (jobj-normal-texture nt-p
+                                 (jsown:val-safe jobj "normalTexture"))
+            (jobj-occlusion-texture ot-p
+                                    (jsown:val-safe jobj "occlusionTexture"))
+            (jobj-emissive-texture et-p
+                                   (jsown:val-safe jobj "emissiveTexture"))
+            (emissive-factor ef-p (jsown:val-safe jobj "emissiveFactor"))
+            (alpha-mode am-p (jsown:val-safe jobj "alphaMode"))
+            (alpha-cutoff ac-p (jsown:val-safe jobj "alphaCutoff"))
+            (double-sided (jsown:val-safe jobj "doubleSided")))
+
+    (make-material
+     :name name
+     :pbr-metallic-roughness
+     (if pbrmr-p
+         (parse-pbr-metallic-roughness jobj-pbr-metallic-roughness)
+         (make-pbr-metallic-roughness))
+     :normal-texture
+     (when nt-p (parse-normal-texture-info jobj-normal-texture))
+     :occlusion-texture
+     (when ot-p (parse-occlusion-texture-info jobj-occlusion-texture))
+     :emissive-texture
+     (when et-p (parse-texture-info jobj-emissive-texture))
+     :emissive-factor (if ef-p
+                          (coerce emissive-factor 'vector)
+                          (vector 0f0 0f0 0f0))
+     :alpha-mode (if am-p
+                     (alpha-mode-value->alpha-mode-symbol alpha-mode)
+                     :opaque)
+     :alpha-cutoff (if ac-p alpha-cutoff .5f0)
+     :double-sided double-sided)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1083,11 +1302,89 @@
          (inst (virality.file.gltf::parse-buffer-view obj)))
     (describe inst)))
 
+(defun test/parse-orthographic (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (jsown:val
+            (nth 1 (jsown:val j "cameras"))
+            "orthographic"))
+         (inst (virality.file.gltf::parse-orthographic obj)))
+    (describe inst)))
+
+(defun test/parse-perspective (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (jsown:val
+            (nth 0 (jsown:val j "cameras"))
+            "perspective"))
+         (inst (virality.file.gltf::parse-perspective obj)))
+    (describe inst)))
+
+(defun test/parse-camera (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (nth 0 (jsown:val j "cameras")))
+         (inst (virality.file.gltf::parse-camera obj)))
+    (describe inst)))
+
+(defun test/parse-image (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (nth 0 (jsown:val j "images")))
+         (inst (virality.file.gltf::parse-image obj)))
+    (describe inst)))
+
+(defun test/parse-normal-texture-info (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (jsown:val
+            (nth 0 (jsown:val j "materials"))
+            "normalTexture"))
+         (inst (virality.file.gltf::parse-normal-texture-info obj)))
+    (describe inst)))
+
+(defun test/parse-occlusion-texture-info (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (jsown:val
+            (nth 0 (jsown:val j "materials"))
+            "occlusionTexture"))
+         (inst (virality.file.gltf::parse-occlusion-texture-info obj)))
+    (describe inst)))
+
+(defun test/parse-texture-info (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (jsown:val
+            (jsown:val
+             (nth 0 (jsown:val j "materials"))
+             "pbrMetallicRoughness")
+            "baseColorTexture"))
+         (inst (virality.file.gltf::parse-texture-info obj)))
+    (describe inst)))
+
+(defun test/parse-pbr-metallic-roughness (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (jsown:val
+            (nth 0 (jsown:val j "materials"))
+            "pbrMetallicRoughness"))
+         (inst (virality.file.gltf::parse-pbr-metallic-roughness obj)))
+    (describe inst)))
+
+(defun test/parse-material (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 0 (jsown:val j "materials")))
+         (inst (virality.file.gltf::parse-material obj)))
+    (describe inst)))
+
 (defun test/parse ()
   (let ((sample-sparse-accessor-file
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf")
         (box-animated-file
-          "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf"))
+          "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf")
+        (cameras-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/Cameras/glTF/Cameras.gltf")
+        (images-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf"))
 
     (test/parse-indices sample-sparse-accessor-file)
     (test/parse-values sample-sparse-accessor-file)
@@ -1103,6 +1400,19 @@
     (test/parse-buffer box-animated-file)
 
     (test/parse-buffer-view box-animated-file)
+
+    (test/parse-orthographic cameras-file)
+    (test/parse-perspective cameras-file)
+    (test/parse-camera cameras-file)
+
+    (test/parse-image images-file)
+
+    (test/parse-normal-texture-info images-file)
+    (test/parse-occlusion-texture-info images-file)
+    (test/parse-texture-info images-file)
+    (test/parse-pbr-metallic-roughness images-file)
+    (test/parse-material images-file)
+
 
     ))
 
