@@ -140,6 +140,30 @@
     (:triangle-strip 5)
     (:triangle-fan 6)))
 
+(defun primitive-target-value-valid-p (primitive-target-value)
+  (let ((default-values '("POSITION" "NORMAL" "TANGENT")))
+    (and (stringp primitive-target-value)
+         (or (some (lambda (s) (string= s primitive-target-value))
+                   default-values)
+             (and (> (length primitive-target-value) 0)
+                  (eql (aref primitive-target-value 0) #\_))))))
+
+(defun primitive-target-value->primitive-target-symbol (primitive-target-value)
+  (unless (primitive-target-value-valid-p primitive-target-value)
+    (error "primitive-target-value->primitive-target-symbol: The only valid values are NORMAL, POSITION, TANGENT, and any string of all capital letters starting with _. The value ~S is illegal: " primitive-target-value))
+
+  (intern (string-upcase primitive-target-value) "KEYWORD"))
+
+(defun primitive-target-symbol->primitive-target-value (primitive-target-symbol)
+  (let ((primitive-target-value (symbol-name primitive-target-symbol)))
+    (unless (primitive-target-value-valid-p primitive-target-value)
+      (error "primitive-target-symbol->primitive-target-value: The only valid symbols are :NORMAL, :POSITION, :TANGENT, and any keyword symbol starting with _. The symbol ~S is illegal: " primitive-target-symbol))
+    primitive-target-value))
+
+
+
+
+
 ;; Begin glTF data types.
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -582,9 +606,9 @@
           :initform 4)
    ;; an array of hash tables:
    ;; the key is one of:
-   ;; "POSITION",
-   ;; "NORMAL",
-   ;; "TANGENT"
+   ;; :position,
+   ;; :normal,
+   ;; :tangent"
    ;; The value is: (integer) an accessor index to the vertex displacement data
    (%targets :accessor targets
              :initarg :targets)))
@@ -1197,7 +1221,16 @@
      :double-sided double-sided)))
 
 
+(defun parse-primitive (jobj)
+  (u:mvlet ((jobj-attributes (jsown:val-safe jobj "attributes"))
+            (indices (jsown:val-safe jobj "indices"))
+            (material (jsown:val-safe jobj "material"))
+            (mode mode-p (jsown:val-safe jobj "mode"))
+            (jobj-targets (jsown:val-safe jobj "targets")))
 
+    ;; TODO: Keep going! understand morph targets too.
+
+    nil))
 
 
 
