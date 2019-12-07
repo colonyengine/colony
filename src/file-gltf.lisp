@@ -1278,6 +1278,9 @@ allowable inputs below and what is returned.
      :alpha-cutoff (if ac-p alpha-cutoff .5f0)
      :double-sided double-sided)))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse mesh concepts
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-primitive (jobj)
   (u:mvlet ((jobj-attributes (jsown:val-safe jobj "attributes"))
@@ -1285,6 +1288,8 @@ allowable inputs below and what is returned.
             (material (jsown:val-safe jobj "material"))
             (mode mode-p (jsown:val-safe jobj "mode"))
             (jobj-targets (jsown:val-safe jobj "targets")))
+
+    (parse/assert jobj-attributes 'gltf-primitive "attributes")
 
     (let ((primitive
             (make-primitive
@@ -1299,9 +1304,15 @@ allowable inputs below and what is returned.
             :do (let ((attr-name
                         (primitive-attribute-value->primitive-attribute-name
                          %attr-name)))
+                  (parse/assert
+                   (member attr-name '(:position :normal :tangent))
+                   'gltf-primitive 'targets
+                   "Bad attribute value for a primitive morph target: ~S"
+                   attr-name)
+
                   (setf (u:href (attributes primitive) attr-name) index)))
 
-      ;; Parse the morph target array
+      ;; Parse the morph target array of attribute hash tables.
       (when jobj-targets
         (flet ((morph-target->hash-table (morph-target)
                  (loop
@@ -1320,6 +1331,22 @@ allowable inputs below and what is returned.
                           (morph-target->hash-table morph-target)))))
 
       primitive)))
+
+(defun parse-mesh (jobj)
+  (u:mvlet ((jobj-primitives (jsown:val-safe jobj "primitives"))
+            (jobj-weights (jsown:val-safe jobj "weights"))
+            (name (jsown:val-safe jobj "name")))
+
+    (parse/assert jobj-primitives 'gltf-mesh "primitives")
+
+    (make-mesh
+     :primitives (map 'vector #'parse-primitive jobj-primitives)
+     :weights (when jobj-weights
+                (map 'vector (lambda (v) (float v 1f0)) jobj-weights))
+     :name name)))
+
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1494,6 +1521,12 @@ allowable inputs below and what is returned.
          (inst (virality.file.gltf::parse-primitive obj)))
     (describe inst)))
 
+(defun test/parse-mesh (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 0 (jsown:val j "meshes")))
+         (inst (virality.file.gltf::parse-mesh obj)))
+    (describe inst)))
+
 (defun test/parse ()
   (let ((sample-sparse-accessor-file
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf")
@@ -1532,6 +1565,7 @@ allowable inputs below and what is returned.
     (test/parse-material images-file)
 
     (test/parse-primitive simple-morph)
+    (test/parse-mesh simple-morph)
 
     ))
 
