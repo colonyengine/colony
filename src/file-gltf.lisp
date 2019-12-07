@@ -1286,12 +1286,6 @@ allowable inputs below and what is returned.
             (mode mode-p (jsown:val-safe jobj "mode"))
             (jobj-targets (jsown:val-safe jobj "targets")))
 
-    (format t "------------------------------------------------------------~%")
-    (format t "Parsing primitive: ~S~%" jobj)
-    (format t "Attributes: ~S~%" jobj-attributes)
-    (format t "Targets: ~S~%" jobj-targets)
-    (format t "------------------------------------------------------------~%")
-
     (let ((primitive
             (make-primitive
              :indices indices
@@ -1305,20 +1299,17 @@ allowable inputs below and what is returned.
             :do (let ((attr-name
                         (primitive-attribute-value->primitive-attribute-name
                          %attr-name)))
-                  (format t "Processing attr-name: ~S : ~S~%" attr-name index)
                   (setf (u:href (attributes primitive) attr-name) index)))
 
       ;; Parse the morph target array
       (when jobj-targets
         (flet ((morph-target->hash-table (morph-target)
-                 (format t "Processing morph-target: ~S~%" morph-target)
                  (loop
                    :with db = (u:dict #'equal)
                    :for (%attr-name . index) :in (rest morph-target)
                    :do (let ((attr-name
                                (primitive-attribute-value->primitive-attribute-name
                                 %attr-name)))
-                         (format t "Storing morph-target key/value: ~S : ~S~%" attr-name index)
                          (setf (u:href db attr-name) index))
                    :finally (return db))))
 
