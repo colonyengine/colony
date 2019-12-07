@@ -1575,7 +1575,7 @@ allowable inputs below and what is returned.
                  :with done = nil
                  :for line = (make-array size
                                          :element-type '(unsigned-byte 8)
-                                         :initial-element 0)
+                                         :initial-element (char-code #\Space))
                  :until done
                  :do (let ((nread (fast-io:fast-read-sequence line inbuf)))
                        (push line lines)
@@ -1583,11 +1583,17 @@ allowable inputs below and what is returned.
                          (setf done t)))
                  :finally (return (nreverse lines))))
          (json-string
-           (coerce (map 'vector #'code-char
-                        (apply #'concatenate 'vector file-strings))
-                   'string))
+           (string-trim " "
+                        (coerce (map 'vector #'code-char
+                                     (apply #'concatenate 'vector file-strings))
+                                'string)))
+         ;; jsown apparently has a bug in parsing when these two characters are
+         ;; directly in the string, so we remove them.
+         (json-string (remove #\Return json-string))
+         (json-string (remove #\Linefeed json-string))
          (json (jsown:parse json-string)))
 
+    ;;(format t "json-string form is: ~S~%" json-string)
     ;;(format t "json form is: ~S~%" json)
     json))
 
