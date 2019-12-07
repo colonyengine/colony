@@ -119,6 +119,64 @@
                (:blend . "BLEND"))))
     (cdr (assoc alpha-mode-symbol db :test #'eq))))
 
+;; TODO: This might be a more useful utility function for general use
+(defun attribute-value->attribute-name (str)
+  (flet ((keywordify (s) (intern (string-upcase s) "KEYWORD")))
+    (cl-ppcre:register-groups-bind
+        ((#'keywordify name) (#'parse-integer index))
+        ("^((?:(?:[A-Za-z]+)|(?:[_][A-Za-z]+))+)(?:[_]([0-9]+))?$" str)
+      (if index
+          (cons name index)
+          name))))
+
+;; TODO: This might be a more useful utility function for general use
+(defun attribute-name->attribute-value (val)
+  (etypecase val
+    (symbol (symbol-name val))
+    (cons (destructuring-bind (sym . index) val
+            (concatenate 'string
+                         (symbol-name sym) "_" (write-to-string index))))))
+
+(defun primitive-attribute-value->primitive-attribute-name
+    (primitive-attribute-value)
+  "A PRIMITIVE-ATTRIBUTE-VALUE can be in one of a few formats, we describe the
+allowable inputs below and what is returned.
+
+  \"POSITION\"       -> :position
+  \"TEXCOORD_0\"     -> (:texcoord . 0)
+  \"FUNNY_THING\"    -> :funny_thing
+  \"FUNNY_THING_0\"  -> (:funny_thing . 0)
+  \"_TEMPERATURE\"   -> :_temperature
+  \"_TEMPERATURE_0\" -> (:_temperature . 0)
+  \"_FUNNY_THING\"   -> :_funny_thing
+  \"_FUNNY_THING_0\" -> (:_funny_thing . 0)
+
+  All of the below result in an ERROR being signaled.
+  \"\"
+  \"[_A-Za-z]*_\"
+  \".*__.*\"
+"
+  (unless (stringp primitive-attribute-value)
+    (error "primitive-attribute-value->primitive-attribute-name: PRIMITIVE-ATTRIBUTE-VALUE must be a string!"))
+
+  (let* ((primitive-attribute-value (string-trim " " primitive-attribute-value))
+         (pav-length (length primitive-attribute-value)))
+    (unless (> pav-length 0)
+      (error "primitive-attribute-value->primitive-attribute-name: PRIMITIVE-ATTRIBUTE-VALUE must be a string of greater than zero length"))
+
+    (when (eql (aref primitive-attribute-value (1- pav-length)) #\_)
+      (error "primitive-attribute-value->primitive-attribute-name: missing index number on priitive value: ~A. It should have integer characters at the end."
+             primitive-attribute-value))
+
+    (attribute-value->attribute-name primitive-attribute-value)))
+
+(defun primitive-attribute-name->primitive-attribute-value
+    (primitive-attribute-name)
+
+  ;; TODO: Do some type checks.
+
+  (attribute-name->attribute-value primitive-attribute-name))
+
 
 (defun primitive-mode-value->primitive-mode-symbol (primitive-mode-value)
   (ecase primitive-mode-value
@@ -585,7 +643,7 @@
    ;; value: (integer) index to accessor containing data of associated attribute
    (%attributes :accessor attributes
                 :initarg :attributes
-                :initform (u:dict #'equalp))
+                :initform (u:dict #'equal))
    ;; an integer
    (%indices :accessor indices
              :initarg :indices)
@@ -1228,23 +1286,49 @@
             (mode mode-p (jsown:val-safe jobj "mode"))
             (jobj-targets (jsown:val-safe jobj "targets")))
 
-    ;; TODO: Keep going! understand morph targets too.
+    (format t "------------------------------------------------------------~%")
+    (format t "Parsing primitive: ~S~%" jobj)
+    (format t "Attributes: ~S~%" jobj-attributes)
+    (format t "Targets: ~S~%" jobj-targets)
+    (format t "------------------------------------------------------------~%")
 
-    nil))
+    (let ((primitive
+            (make-primitive
+             :indices indices
+             :material material
+             :mode (if mode-p
+                       (primitive-mode-value->primitive-mode-symbol mode)
+                       :triangles))))
 
+      ;; Parse the attribute hash
+      (loop :for (%attr-name . index) :in (rest jobj-attributes)
+            :do (let ((attr-name
+                        (primitive-attribute-value->primitive-attribute-name
+                         %attr-name)))
+                  (format t "Processing attr-name: ~S : ~S~%" attr-name index)
+                  (setf (u:href (attributes primitive) attr-name) index)))
 
+      ;; Parse the morph target array
+      (when jobj-targets
+        (flet ((morph-target->hash-table (morph-target)
+                 (format t "Processing morph-target: ~S~%" morph-target)
+                 (loop
+                   :with db = (u:dict #'equal)
+                   :for (%attr-name . index) :in (rest morph-target)
+                   :do (let ((attr-name
+                               (primitive-attribute-value->primitive-attribute-name
+                                %attr-name)))
+                         (format t "Storing morph-target key/value: ~S : ~S~%" attr-name index)
+                         (setf (u:href db attr-name) index))
+                   :finally (return db))))
 
+          (setf (targets primitive) (make-array (length jobj-targets)))
+          (loop :for morph-target :in jobj-targets
+                :for idx :below (length (targets primitive))
+                :do (setf (aref (targets primitive) idx)
+                          (morph-target->hash-table morph-target)))))
 
-
-
-
-
-
-
-
-
-
-
+      primitive)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1411,13 +1495,23 @@
          (inst (virality.file.gltf::parse-material obj)))
     (describe inst)))
 
+(defun test/parse-primitive (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj
+           (nth 0 (jsown:val (nth 0 (jsown:val j "meshes"))
+                             "primitives")))
+         (inst (virality.file.gltf::parse-primitive obj)))
+    (describe inst)))
+
 (defun test/parse ()
   (let ((sample-sparse-accessor-file
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf")
         (box-animated-file
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf")
         (cameras-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/Cameras/glTF/Cameras.gltf")
-        (images-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf"))
+        (images-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf")
+        (simple-morph "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleMorph/glTF/SimpleMorph.gltf"))
+
 
     (test/parse-indices sample-sparse-accessor-file)
     (test/parse-values sample-sparse-accessor-file)
@@ -1446,6 +1540,7 @@
     (test/parse-pbr-metallic-roughness images-file)
     (test/parse-material images-file)
 
+    (test/parse-primitive simple-morph)
 
     ))
 
