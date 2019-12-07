@@ -1304,11 +1304,6 @@ allowable inputs below and what is returned.
             :do (let ((attr-name
                         (primitive-attribute-value->primitive-attribute-name
                          %attr-name)))
-                  (parse/assert
-                   (member attr-name '(:position :normal :tangent))
-                   'gltf-primitive 'targets
-                   "Bad attribute value for a primitive morph target: ~S"
-                   attr-name)
 
                   (setf (u:href (attributes primitive) attr-name) index)))
 
@@ -1321,6 +1316,11 @@ allowable inputs below and what is returned.
                    :do (let ((attr-name
                                (primitive-attribute-value->primitive-attribute-name
                                 %attr-name)))
+			 (parse/assert
+			  (member attr-name '(:position :normal :tangent))
+			  'gltf-primitive 'targets
+			  "Bad attribute value for a primitive morph target: ~S"
+                   attr-name)
                          (setf (u:href db attr-name) index))
                    :finally (return db))))
 
