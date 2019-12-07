@@ -1534,7 +1534,7 @@ allowable inputs below and what is returned.
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf")
         (cameras-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/Cameras/glTF/Cameras.gltf")
         (images-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf")
-        (simple-morph "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleMorph/glTF/SimpleMorph.gltf"))
+        (morph-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf"))
 
 
     (test/parse-indices sample-sparse-accessor-file)
@@ -1564,8 +1564,8 @@ allowable inputs below and what is returned.
     (test/parse-pbr-metallic-roughness images-file)
     (test/parse-material images-file)
 
-    (test/parse-primitive simple-morph)
-    (test/parse-mesh simple-morph)
+    (test/parse-primitive morph-file)
+    (test/parse-mesh morph-file)
 
     ))
 
