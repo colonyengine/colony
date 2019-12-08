@@ -226,41 +226,55 @@
   (remove-broken-links prefab)
   (update-links-recursively prefab))
 
-(defgeneric merge-component (policy node type id args)
-  (:method ((policy null) node type id args)
-    (ensure-component-not-duplicate node type id)
-    (merge-component :new-type node type id args))
-  (:method :around (policy node type id args)
-    (let ((table (components-table node)))
-      (setf (u:href table type id) (call-next-method)))))
+(defgeneric merge-component (policy node type id args))
+
+;; new-type: replace previous type completely
+;; old-type: no matter what, throw out the new type and keep the old one.
+;; new-args: Intersecting initargs resolve to new ones, new initargs are taken.
+;; old-args: Intersecting initargs resolve to old ones, new initargs are taken.
+
+;; change names to:
+
+;; new-type -> overwrite-type
+;; old-type -> previous-type
+;; new-args -> overlay-args
+;; old-args -> previous-args
 
 (defmethod merge-component ((policy (eql :new-type)) node type id args)
-  (list :merge-id id :policy policy :args args))
+  (let ((table (components-table node)))
+    (setf (u:href table type id)
+          (list :merge-id id :policy policy :args args))))
 
 (defmethod merge-component ((policy (eql :old-type)) node type id args)
-  (u:unless-found (components (u:href (components-table node) type id))
-    (list :merge-id id :policy policy :args args)))
+  (let ((table (components-table node)))
+    (u:unless-found (components (u:href table type id))
+      (setf (u:href table type id)
+            (list :merge-id id :policy policy :args args)))))
 
 (defmethod merge-component ((policy (eql :new-args)) node type id args)
-  (let* ((old-args (u:plist->hash
-                    (getf (u:href (components-table node) type id) :args)))
+  (let* ((table (components-table node))
+         (old-args (u:plist->hash
+                    (getf (u:href table type id) :args)))
          (new-args (u:hash->plist
                     (u:hash-merge old-args (u:plist->hash args)))))
-    (list :merge-id id :policy policy :args new-args)))
+    (setf (u:href table type id)
+          (list :merge-id id :policy policy :args new-args))))
 
 (defmethod merge-component ((policy (eql :old-args)) node type id args)
-  (let* ((old-args (u:plist->hash
-                    (getf (u:href (components-table node) type id) :args)))
+  (let* ((table (components-table node))
+         (old-args (u:plist->hash
+                    (getf (u:href table type id) :args)))
          (new-args (u:hash->plist
                     (u:hash-merge (u:plist->hash args) old-args))))
-    (list :merge-id id :policy policy :args new-args)))
+    (setf (u:href table type id)
+          (list :merge-id id :policy policy :args new-args))))
 
 (defun make-component-table (prefab)
   (u:do-hash-values (node (parse-tree prefab))
     (dolist (component (components node))
       (destructuring-bind (type (&key merge-id policy) . args)
           component
-        (let ((policy (or policy (get-node-option node :policy))))
+        (let ((policy (or policy (get-node-option node :policy) :new-args)))
           (unless (u:href (components-table node) type)
             (setf (u:href (components-table node) type) (u:dict #'equalp)))
           (merge-component policy node type merge-id args))))))
