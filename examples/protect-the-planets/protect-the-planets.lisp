@@ -150,8 +150,7 @@
   (:profiles (x/mat:u-mvp)
    :shader shd/sprite:sprite
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
-              (:opacity 1.0)
-              (:alpha-cutoff 0.1))
+              (:opacity 1.0))
    :blocks ((:block-name :spritesheet
              :storage-type :buffer
              :block-alias :spritesheet
@@ -1988,33 +1987,31 @@ NIL if no such list exists."
    (c/render:render :material 'level-complete)))
 
 (v:define-prefab "starfield" (:library ptp)
-  ("bug-todo:implicit-transform:see-trello"
-   (c/xform:transform :scale 960
-                      ;; NOTE: ortho projection, so we can put starfield way
-                      ;; back.
-                      :translate (v3:vec 0 0 (dl :starfield)))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
-   (c/render:render :material 'starfield)))
+  (c/xform:transform :scale 960
+                     ;; NOTE: ortho projection, so we can put starfield way
+                     ;; back.
+                     :translate (v3:vec 0 0 (dl :starfield)))
+  (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+  (c/render:render :material 'starfield))
 
 (v:define-prefab "time-keeper" (:library ptp)
-  ("bug-todo:implicit-transform:see-trello"
-   (c/xform:transform :translate (v3:vec 900 -512 (dl :time-keeper)))
-   (time-keeper :time-max 30f0
-                :time-bar-transform (v:ref "time-bar-root"
-                                           :component 'c/xform:transform)
-                :time-bar-renderer (v:ref "time-bar-root/time-display"
-                                          :component 'c/render:render))
-   ("time-bar-root"
-    ;; When we scale the transform for this object, the alignment of the
-    ;; time-bar will cause it to stretch upwards from a "ground" at 0 in this
-    ;; coordinate frame.
-    ("time-display"
-     (c/xform:transform :translate (v3:vec 0 1 0))
-     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
-     ;; TODO: when 'time-bar is mis-spelled in the material,
-     ;; I don't get the debug material, why?
-     ;; TODO: I think this material is leaked when this object is destroyed.
-     (c/render:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-")))))))
+  (c/xform:transform :translate (v3:vec 900 -512 (dl :time-keeper)))
+  (time-keeper :time-max 30f0
+               :time-bar-transform (v:ref "time-bar-root"
+                                          :component 'c/xform:transform)
+               :time-bar-renderer (v:ref "time-bar-root/time-display"
+                                         :component 'c/render:render))
+  ("time-bar-root"
+   ;; When we scale the transform for this object, the alignment of the
+   ;; time-bar will cause it to stretch upwards from a "ground" at 0 in this
+   ;; coordinate frame.
+   ("time-display"
+    (c/xform:transform :translate (v3:vec 0 1 0))
+    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+    ;; TODO: when 'time-bar is mis-spelled in the material,
+    ;; I don't get the debug material, why?
+    ;; TODO: I think this material is leaked when this object is destroyed.
+    (c/render:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-"))))))
 
 (v:define-prefab "demo-level" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field))
@@ -2024,21 +2021,18 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   ("asteroids")
   (("title" :copy ("/title-sign" :from ptp))
-   (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
-                      ;; TODO: BUG: the scale in the original transform
-                      ;; should have been preserved.
-                      :scale 512f0)))
+   (c/xform:transform :translate (v3:vec 0 0 (dl :sign)))))
 
 (v:define-prefab "level-0" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
                  :time-keeper
-                 (v:ref "time-keeper/bug-todo:implicit-transform:see-trello"
-                        :component 'time-keeper))
+                 (v:ref "time-keeper" :component 'time-keeper))
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (v:ref "/level-2/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from ptp)))
-  (("time-keeper" :link ("/time-keeper" :from ptp)))
+  (("time-keeper" :link ("/time-keeper" :from ptp))
+   (time-keeper :time-max 20f0))
   (("planet-0" :link ("/generic-planet" :from ptp))
    (c/xform:transform :translate (v3:vec 0 100 (dl :planet))
                       :scale 0.9f0)
@@ -2058,8 +2052,7 @@ NIL if no such list exists."
 (v:define-prefab "level-1" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
                  :time-keeper
-                 (v:ref "time-keeper/bug-todo:implicit-transform:see-trello"
-                        :component 'time-keeper))
+                 (v:ref "time-keeper" :component 'time-keeper))
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (v:ref "/level-1/asteroids"))
   ("asteroids")
@@ -2079,13 +2072,13 @@ NIL if no such list exists."
 (v:define-prefab "level-2" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
                  :time-keeper
-                 (v:ref "time-keeper/bug-todo:implicit-transform:see-trello"
-                        :component 'time-keeper))
+                 (v:ref "time-keeper" :component 'time-keeper))
   (tags :tags '(:level-manager))
   (asteroid-field :asteroid-holder (v:ref "/level-0/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from ptp)))
-  (("time-keeper" :link ("/time-keeper" :from ptp)))
+  (("time-keeper" :link ("/time-keeper" :from ptp))
+   (time-keeper :time-max 40f0))
   (("planet-0" :link ("/generic-planet" :from ptp))
    (c/xform:transform :translate (v3:vec 0 100 (dl :planet))
                       :scale 0.9f0)
