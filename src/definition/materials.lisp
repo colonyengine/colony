@@ -32,8 +32,7 @@
   (:profiles (u-mvp)
    :shader shd/sprite:sprite
    :uniforms ((:sprite.sampler 'x/tex:debug-texture)
-              (:opacity 1.0)
-              (:alpha-cutoff 0.1))
+              (:opacity 1.0))
    :blocks ((:block-name :spritesheet
              :storage-type :buffer
              :block-alias :spritesheet

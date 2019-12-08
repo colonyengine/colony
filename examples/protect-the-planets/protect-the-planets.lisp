@@ -150,8 +150,7 @@
   (:profiles (x/mat:u-mvp)
    :shader shd/sprite:sprite
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
-              (:opacity 1.0)
-              (:alpha-cutoff 0.1))
+              (:opacity 1.0))
    :blocks ((:block-name :spritesheet
              :storage-type :buffer
              :block-alias :spritesheet
