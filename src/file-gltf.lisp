@@ -1346,6 +1346,50 @@ allowable inputs below and what is returned.
      :name name)))
 
 
+(defun parse-node (jobj)
+  (u:mvlet ((camera (jsown:val-safe jobj "camera"))
+            (children children-p (jsown:val-safe jobj "children"))
+            (skin (jsown:val-safe jobj "skin"))
+            (matrix matrix-p (jsown:val-safe jobj "matrix"))
+            (mesh (jsown:val-safe jobj "mesh"))
+	    (rotation rotation-p (jsown:val-safe jobj "rotation"))
+	    (scale scale-p (jsown:val-safe jobj "scale"))
+	    (translation translation-p (jsown:val-safe jobj "translation"))
+	    (weights weights-p (jsown:val-safe jobj "weights"))
+	    (name (jsown:val-safe jobj "name")))
+
+    (parse/assert
+     (or (and matrix-p (not (or rotation-p scale-p translation-p)))
+	 (and (or rotation-p scale-p translation-p) (not matrix-p))
+	 (not (or matrix-p rotation-p scale-p translation-p)))
+     'gltf-node
+     "<matrix | rotation | scale | translation>"
+     "Failed constraints of EITHER matrix-p or TRS.")
+
+    (make-node
+     :camera camera
+     :children (when children-p (coerce children 'vector))
+     :skin skin
+     :matrix (if matrix-p
+		 (coerce matrix 'vector)
+		 ;; column-major
+		 ;; NOTE: But, not specfied as being colum or row vector order.
+		 (vector 1f0 0f0 0f0 0f0
+			 0f0 1f0 0f0 0f0
+			 0f0 0f0 1f0 0f0
+			 0f0 0f0 0f0 1f0))
+     :mesh mesh
+     :rotation (if rotation-p
+		   (coerce rotation 'vector)
+		   ;; <x, y, z, w> quaternion
+		   (vector 0f0 0f0 0f0 1f0))
+
+     ;; TODO: keep going!!!
+     )))
+
+
+
+
 
 
 
