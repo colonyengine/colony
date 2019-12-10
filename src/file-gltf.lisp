@@ -1467,9 +1467,11 @@ allowable inputs below and what is returned.
 
     (make-sampler
      :mag-filter
-     (sampler-mag-filter-value->sampler-mag-filter-symbol mag-filter)
+     (when mag-filter
+       (sampler-mag-filter-value->sampler-mag-filter-symbol mag-filter))
      :min-filter
-     (sampler-min-filter-value->sampler-min-filter-symbol min-filter)
+     (when min-filter
+       (sampler-min-filter-value->sampler-min-filter-symbol min-filter))
      :wrap-s
      (if wrap-s-p
          (sampler-wrap-mode-value->sampler-wrap-mode-symbol wrap-s)
@@ -1561,8 +1563,14 @@ allowable inputs below and what is returned.
                (map 'vector #'parse-mesh meshes))
      :nodes (when nodes
               (map 'vector #'parse-node nodes))
-     :samplers (when samplers
-                 (map 'vector #'parse-sampler samplers))
+     :samplers
+     ;; NOTE: remove any empty sampler objects
+     ;; The examples have them although it doesn't appear to
+     ;; be legal in the spec. Then ensure if nothing left I act as if
+     ;; there are no samplers at all.
+     (let ((samplers (remove '(:OBJ) samplers :test #'equal)))
+       (when (> (length  samplers) 0)
+         (map 'vector #'parse-sampler samplers)))
      :scene scene
      :scenes (when scenes
                (map 'vector #'parse-scene scenes))
@@ -1841,26 +1849,6 @@ allowable inputs below and what is returned.
 
     ))
 
-(defun test/load-gltf-files
-    (&optional (examples-dir
-                "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/"))
-
-  ;; Grab all .glTF files from the examples-dir
-  (let* ((gltf-files nil))
-    (u:map-files (pathname examples-dir)
-                 (lambda (file)
-                   (push file gltf-files))
-                 :test (lambda (n)
-                         (string= (pathname-type n) "gltf")))
-    ;; make it in the same order we found it while recursing
-    (setf gltf-files (nreverse gltf-files))
-
-    (dolist (gltf-file gltf-files)
-      (format t "Attempting to load .gltf file: ~S~%" gltf-file)
-      ;; TODO: FIXME
-      #++(format t "~S~%" (load-gltf-file gltf-file)))
-
-    (format t "Processed ~A gltf files.~%" (length gltf-files))))
 
 
 
@@ -1894,29 +1882,36 @@ allowable inputs below and what is returned.
    (%chunks :accessor chunks
             :initarg :chunks)))
 
+;; golden-utils has a file->string, but I haven't checked if it is faster or
+;; slower than this.
+(defun fast/file->string (path)
+  (u:with-binary-input (in path)
+    (let* ((inbuf (fast-io:make-input-buffer :stream in))
+           (size (* 1024 64))
+           (file-strings
+             (loop :with lines = nil
+                   :with done = nil
+                   :for line = (make-array size
+                                           :element-type '(unsigned-byte 8)
+                                           :initial-element (char-code #\Space))
+                   :until done
+                   :do (let ((nread (fast-io:fast-read-sequence line inbuf)))
+                         (push line lines)
+                         (when (< nread size)
+                           (setf done t)))
+                   :finally (return (nreverse lines))))
+           (the-string
+             (string-trim " " (coerce
+                               (map 'vector #'code-char
+                                    (apply #'concatenate 'vector file-strings))
+                               'string))))
+      the-string)))
 
-(defun %load-gltf (inbuf)
-  ;; TODO: This is terrible code, fix later.
-  (let* ((size (* 1024 64))
-         (file-strings
-           (loop :with lines = nil
-                 :with done = nil
-                 :for line = (make-array size
-                                         :element-type '(unsigned-byte 8)
-                                         :initial-element (char-code #\Space))
-                 :until done
-                 :do (let ((nread (fast-io:fast-read-sequence line inbuf)))
-                       (push line lines)
-                       (when (< nread size)
-                         (setf done t)))
-                 :finally (return (nreverse lines))))
-         (json-string
-           (string-trim " "
-                        (coerce (map 'vector #'code-char
-                                     (apply #'concatenate 'vector file-strings))
-                                'string)))
+
+(defun %load-gltf (path)
+  (let* ((json-string (fast/file->string path))
          ;; jsown apparently has a bug in parsing when these two characters are
-         ;; directly in the string, so we remove them.
+         ;; directly in the string, so to be sure we remove them.
          (json-string (remove #\Return json-string))
          (json-string (remove #\Linefeed json-string))
          (json (jsown:parse json-string)))
@@ -1925,26 +1920,50 @@ allowable inputs below and what is returned.
     ;;(format t "json form is: ~S~%" json)
     json))
 
-(defun %load-glb (inbuf)
+(defun %load-glb (path)
+  (declare (ignore path))
   nil)
 
 
+;; not done.
 (defun load-gltf-file (path &optional search-paths)
+  (declare (ignore search-paths))
   (let ((file-type (pathname-type path)))
-    (u:with-binary-input (in path)
-      (let* ((inbuf (fast-io:make-input-buffer :stream in)))
-        (cond
-          ((string= file-type "gltf")
-           (%load-gltf inbuf))
-          ((string= file-type "glb")
-           (%load-glb inbuf))
-          (t
-           (error "Illegal glTF file (~A) with path extension: ~S"
-                  path file-type)))))))
+    (cond
+      ((string= file-type "gltf")
+       (parse-gltf (%load-gltf path)))
+      ((string= file-type "glb")
+       (%load-glb path))
+      (t
+       (error "Illegal glTF file (~A) with path extension: ~S"
+              path file-type)))))
 
 
 
 
+(defun test/load-gltf-files
+    (&optional (examples-dir
+                "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/"))
+
+  ;; Grab all .glTF files from the examples-dir
+  (let* ((gltf-files nil))
+    (u:map-files (pathname examples-dir)
+                 (lambda (file)
+                   (push file gltf-files))
+                 :test (lambda (n)
+                         (string= (pathname-type n) "gltf")))
+    ;; make it in the same order we found it while recursing
+    (setf gltf-files (nreverse gltf-files))
+
+    ;; Try just one
+    ;;(format t "~S~%" (load-gltf-file (first gltf-files)))
+
+    ;; Try them all
+    (dolist (gltf-file gltf-files)
+      (format t "Attempting to load .gltf file: ~S~%" gltf-file)
+      (format t "~S~%" (load-gltf-file gltf-file)))
+
+    (format t "Processed ~A gltf files.~%" (length gltf-files))))
 
 
 
