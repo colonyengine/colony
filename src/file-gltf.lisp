@@ -1882,34 +1882,8 @@ allowable inputs below and what is returned.
    (%chunks :accessor chunks
             :initarg :chunks)))
 
-;; golden-utils has a file->string, but I haven't checked if it is faster or
-;; slower than this.
-(defun fast/file->string (path)
-  (u:with-binary-input (in path)
-    (let* ((inbuf (fast-io:make-input-buffer :stream in))
-           (size (* 1024 64))
-           (file-strings
-             (loop :with lines = nil
-                   :with done = nil
-                   :for line = (make-array size
-                                           :element-type '(unsigned-byte 8)
-                                           :initial-element (char-code #\Space))
-                   :until done
-                   :do (let ((nread (fast-io:fast-read-sequence line inbuf)))
-                         (push line lines)
-                         (when (< nread size)
-                           (setf done t)))
-                   :finally (return (nreverse lines))))
-           (the-string
-             (string-trim " " (coerce
-                               (map 'vector #'code-char
-                                    (apply #'concatenate 'vector file-strings))
-                               'string))))
-      the-string)))
-
-
 (defun %load-gltf (path)
-  (let* ((json-string (fast/file->string path))
+  (let* ((json-string (u:file->string path))
          ;; jsown apparently has a bug in parsing when these two characters are
          ;; directly in the string, so to be sure we remove them.
          (json-string (remove #\Return json-string))
