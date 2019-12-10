@@ -177,7 +177,6 @@ allowable inputs below and what is returned.
 
   (attribute-name->attribute-value primitive-attribute-name))
 
-
 (defun primitive-mode-value->primitive-mode-symbol (primitive-mode-value)
   (ecase primitive-mode-value
     (0 :points)
@@ -219,6 +218,46 @@ allowable inputs below and what is returned.
     primitive-target-value))
 
 
+(defun sampler-mag-filter-value->sampler-mag-filter-symbol (mag-filter-value)
+  (ecase mag-filter-value
+    (9728 :nearest)
+    (9729 :linear)))
+
+(defun sampler-mag-filter-symbol->sampler-mag-filter-value (mag-filter-symbol)
+  (ecase mag-filter-symbol
+    (:nearest 9728)
+    (:linear 9729)))
+
+(defun sampler-min-filter-value->sampler-min-filter-symbol (min-filter-value)
+  (ecase min-filter-value
+    (9728 :nearest)
+    (9729 :linear)
+    (9984 :nearest-mipmap-nearest)
+    (9985 :linear-mipmap-nearest)
+    (9986 :nearest-mipmap-linear)
+    (9987 :linear-mipmap-linear)))
+
+(defun sampler-min-filter-symbol->sampler-min-filter-value (min-filter-symbol)
+  (ecase min-filter-symbol
+    (:nearest 9728)
+    (:linear 9729)
+    (:nearest-mipmap-nearest 9984)
+    (:linear-mipmap-nearest 9985)
+    (:nearest-mipmap-linear 9986)
+    (:linear-mipmap-linear 9987)))
+
+
+(defun sampler-wrap-mode-value->sampler-wrap-mode-symbol (wrap-mode-value)
+  (ecase wrap-mode-value
+    (33071 :clamp-to-edge)
+    (33648 :mirrored-repeat)
+    (10497 :repeat)))
+
+(defun sampler-wrap-mode-symbol->sampler-wrap-mode-value (wrap-mode-symbol)
+  (ecase wrap-mode-symbol
+    (:clamp-to-edge 33071)
+    (:mirrored-repeat 33648)
+    (:repeat 10497)))
 
 
 
@@ -718,7 +757,7 @@ allowable inputs below and what is returned.
            :initform (vector 1f0 1f0 1f0))
    ;; an array of 3 numbers
    (%translation :accessor translation
-                 :initarg :scale
+                 :initarg :translation
                  :initform (vector 0f0 0f0 0f0))
    ;; an array of number
    (%weights :accessor weights
@@ -1316,11 +1355,11 @@ allowable inputs below and what is returned.
                    :do (let ((attr-name
                                (primitive-attribute-value->primitive-attribute-name
                                 %attr-name)))
-			 (parse/assert
-			  (member attr-name '(:position :normal :tangent))
-			  'gltf-primitive 'targets
-			  "Bad attribute value for a primitive morph target: ~S"
-                   attr-name)
+                         (parse/assert
+                          (member attr-name '(:position :normal :tangent))
+                          'gltf-primitive 'targets
+                          "Bad attribute value for a primitive morph target: ~S"
+                          attr-name)
                          (setf (u:href db attr-name) index))
                    :finally (return db))))
 
@@ -1346,47 +1385,128 @@ allowable inputs below and what is returned.
      :name name)))
 
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse scene tree concepts
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun parse-node (jobj)
   (u:mvlet ((camera (jsown:val-safe jobj "camera"))
             (children children-p (jsown:val-safe jobj "children"))
             (skin (jsown:val-safe jobj "skin"))
             (matrix matrix-p (jsown:val-safe jobj "matrix"))
             (mesh (jsown:val-safe jobj "mesh"))
-	    (rotation rotation-p (jsown:val-safe jobj "rotation"))
-	    (scale scale-p (jsown:val-safe jobj "scale"))
-	    (translation translation-p (jsown:val-safe jobj "translation"))
-	    (weights weights-p (jsown:val-safe jobj "weights"))
-	    (name (jsown:val-safe jobj "name")))
+            (rotation rotation-p (jsown:val-safe jobj "rotation"))
+            (scale scale-p (jsown:val-safe jobj "scale"))
+            (translation translation-p (jsown:val-safe jobj "translation"))
+            (weights weights-p (jsown:val-safe jobj "weights"))
+            (name (jsown:val-safe jobj "name")))
 
     (parse/assert
      (or (and matrix-p (not (or rotation-p scale-p translation-p)))
-	 (and (or rotation-p scale-p translation-p) (not matrix-p))
-	 (not (or matrix-p rotation-p scale-p translation-p)))
+         (and (or rotation-p scale-p translation-p) (not matrix-p))
+         (not (or matrix-p rotation-p scale-p translation-p)))
      'gltf-node
      "<matrix | rotation | scale | translation>"
      "Failed constraints of EITHER matrix-p or TRS.")
+
+    ;; TODO: gltf's node either defines matrix OR (rotation scale translation)
+    ;; [and matrix cannot be defined when this node is the target of an
+    ;; animation].  However, defaults are assigned for everything if it isn't
+    ;; there (according to the docs), so, how do I know what was actually
+    ;; defined?  Probably add a new slot in here to let the user know which set
+    ;; was actually defined.
 
     (make-node
      :camera camera
      :children (when children-p (coerce children 'vector))
      :skin skin
      :matrix (if matrix-p
-		 (coerce matrix 'vector)
-		 ;; column-major
-		 ;; NOTE: But, not specfied as being colum or row vector order.
-		 (vector 1f0 0f0 0f0 0f0
-			 0f0 1f0 0f0 0f0
-			 0f0 0f0 1f0 0f0
-			 0f0 0f0 0f0 1f0))
+                 (coerce matrix 'vector)
+                 ;; column-major storage.
+                 ;; NOTE: But, not specfied as being column or row vectors.
+                 ;; I think I can assume column vectors, however.
+                 (vector 1f0 0f0 0f0 0f0
+                         0f0 1f0 0f0 0f0
+                         0f0 0f0 1f0 0f0
+                         0f0 0f0 0f0 1f0))
      :mesh mesh
      :rotation (if rotation-p
-		   (coerce rotation 'vector)
-		   ;; <x, y, z, w> quaternion
-		   (vector 0f0 0f0 0f0 1f0))
+                   (coerce rotation 'vector)
+                   ;; <x, y, z, w> quaternion
+                   (vector 0f0 0f0 0f0 1f0))
 
-     ;; TODO: keep going!!!
+     :scale (if scale-p
+                (coerce scale 'vector)
+                (vector 1f0 1f0 1f0))
+     :translation (if translation-p
+                      (coerce translation 'vector)
+                      (vector 0f0 0f0 0f0))
+     :weights (when weights-p (coerce weights 'vector))
+     :name name
      )))
 
+(defun parse-scene (jobj)
+  (u:mvlet ((nodes nodes-p (jsown:val-safe jobj "nodes"))
+            (name (jsown:val-safe jobj "name")))
+
+    (make-scene
+     :nodes (when nodes-p (coerce nodes 'vector))
+     :name name)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse mesh texture sampler concepts
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun parse-sampler (jobj)
+  (u:mvlet ((mag-filter (jsown:val-safe jobj "magFilter"))
+            (min-filter (jsown:val-safe jobj "minFilter"))
+            (wrap-s wrap-s-p (jsown:val-safe jobj "wrapS"))
+            (wrap-t wrap-t-p (jsown:val-safe jobj "wrapT"))
+            (name (jsown:val-safe jobj "name")))
+
+    (make-sampler
+     :mag-filter
+     (sampler-mag-filter-value->sampler-mag-filter-symbol mag-filter)
+     :min-filter
+     (sampler-min-filter-value->sampler-min-filter-symbol min-filter)
+     :wrap-s
+     (if wrap-s-p
+         (sampler-wrap-mode-value->sampler-wrap-mode-symbol wrap-s)
+         :repeat)
+     :wrap-t
+     (if wrap-t-p
+         (sampler-wrap-mode-value->sampler-wrap-mode-symbol wrap-t)
+         :repeat)
+     :name name)))
+
+(defun parse-texture (jobj)
+  (u:mvlet ((sampler (jsown:val-safe jobj "sampler"))
+            (source (jsown:val-safe jobj "source"))
+            (name (jsown:val-safe jobj "name")))
+
+    (make-texture
+     :sampler sampler
+     :source source
+     :name name)))
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse skin concepts
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun parse-skin (jobj)
+  (u:mvlet ((inverse-bind-matrices (jsown:val-safe jobj "inverseBindMatrices"))
+            (skeleton (jsown:val-safe jobj "skeleton"))
+            (joints joints-p (jsown:val-safe jobj "joints"))
+            (name (jsown:val-safe jobj "name")))
+
+    (parse/assert joints-p 'gltf-skin "joints")
+
+    (make-skin
+     :inverse-bind-matricies inverse-bind-matrices
+     :skeleton skeleton
+     :joints (coerce joints 'vector)
+     :name name)))
 
 
 
@@ -1571,6 +1691,36 @@ allowable inputs below and what is returned.
          (inst (virality.file.gltf::parse-mesh obj)))
     (describe inst)))
 
+(defun test/parse-node (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 0 (jsown:val j "nodes")))
+         (inst (virality.file.gltf::parse-node obj)))
+    (describe inst)))
+
+(defun test/parse-sampler (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 0 (jsown:val j "samplers")))
+         (inst (virality.file.gltf::parse-sampler obj)))
+    (describe inst)))
+
+(defun test/parse-scene (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 0 (jsown:val j "scenes")))
+         (inst (virality.file.gltf::parse-scene obj)))
+    (describe inst)))
+
+(defun test/parse-skin (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 0 (jsown:val j "skins")))
+         (inst (virality.file.gltf::parse-skin obj)))
+    (describe inst)))
+
+(defun test/parse-texture (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (obj (nth 0 (jsown:val j "textures")))
+         (inst (virality.file.gltf::parse-texture obj)))
+    (describe inst)))
+
 (defun test/parse ()
   (let ((sample-sparse-accessor-file
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf")
@@ -1578,7 +1728,9 @@ allowable inputs below and what is returned.
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf")
         (cameras-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/Cameras/glTF/Cameras.gltf")
         (images-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf")
-        (morph-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf"))
+        (morph-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf")
+        (nodes-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/CesiumMilkTruck/glTF/CesiumMilkTruck.gltf")
+        (skin-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/CesiumMan/glTF/CesiumMan.gltf"))
 
 
     (test/parse-indices sample-sparse-accessor-file)
@@ -1610,6 +1762,13 @@ allowable inputs below and what is returned.
 
     (test/parse-primitive morph-file)
     (test/parse-mesh morph-file)
+
+    (test/parse-node nodes-file)
+    (test/parse-sampler nodes-file)
+    (test/parse-scene nodes-file)
+
+    (test/parse-skin skin-file)
+    (test/parse-texture skin-file)
 
     ))
 
