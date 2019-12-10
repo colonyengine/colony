@@ -1884,10 +1884,13 @@ allowable inputs below and what is returned.
 
 (defun %load-gltf (path)
   (let* ((json-string (u:file->string path))
-         ;; jsown apparently has a bug in parsing when these two characters are
-         ;; directly in the string, so to be sure we remove them.
-         (json-string (remove #\Return json-string))
-         (json-string (remove #\Linefeed json-string))
+         ;; jsown apparently has a bug in parsing (as in it will produce the
+         ;; WRONG output, not crash) when these two characters are directly in
+         ;; the string, so to be sure change them to spaces.
+         (json-string (nsubstitute-if #\Space (lambda (c)
+                                                (or (eql c #\Return)
+                                                    (eql c #\Linefeed)))
+                                      json-string))
          (json (jsown:parse json-string)))
 
     ;;(format t "json-string form is: ~S~%" json-string)
