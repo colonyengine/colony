@@ -1012,8 +1012,8 @@ allowable inputs below and what is returned.
             (normalized-p (jsown:val-safe jobj "normalized"))
             (attribute-count ac-p (jsown:val-safe jobj "count"))
             (attribute-type at-p (jsown:val-safe jobj "type"))
-            (max-value (coerce (jsown:val-safe jobj "max") 'vector))
-            (min-value (coerce (jsown:val-safe jobj "min") 'vector))
+            (max-value max-p (jsown:val-safe jobj "max"))
+            (min-value min-p (jsown:val-safe jobj "min"))
             (jobj-sparse (jsown:val-safe jobj "sparse"))
             (name (jsown:val-safe jobj "name")))
 
@@ -1030,8 +1030,8 @@ allowable inputs below and what is returned.
      :attribute-count attribute-count
      :attribute-type
      (attribute-type-value->attribute-type-symbol attribute-type)
-     :max-value max-value
-     :min-value min-value
+     :max-value (when max-p (coerce max-value 'vector))
+     :min-value (when min-p (coerce min-value 'vector))
      :sparse (when jobj-sparse (parse-sparse jobj-sparse))
      :name name)))
 
@@ -1141,7 +1141,7 @@ allowable inputs below and what is returned.
      :byte-length byte-length
      :byte-stride byte-stride
      :target (when target-p
-	       (buffer-view-target-value->buffer-view-target-symbol target))
+               (buffer-view-target-value->buffer-view-target-symbol target))
      :name name)))
 
 
@@ -1543,7 +1543,7 @@ allowable inputs below and what is returned.
      :extensions-required (when ext-req-p
                             (coerce extensions-required 'vector))
      :accessors (when accessors
-		  (map 'vector #'parse-accessor accessors))
+                  (map 'vector #'parse-accessor accessors))
      :animations (when animations
                    (map 'vector #'parse-animation animations))
      :asset (parse-asset asset)
