@@ -1032,7 +1032,7 @@ allowable inputs below and what is returned.
      (attribute-type-value->attribute-type-symbol attribute-type)
      :max-value max-value
      :min-value min-value
-     :sparse (parse-sparse jobj-sparse)
+     :sparse (when jobj-sparse (parse-sparse jobj-sparse))
      :name name)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1129,7 +1129,7 @@ allowable inputs below and what is returned.
             (byte-offset bo-p (jsown:val-safe jobj "byteOffset"))
             (byte-length bl-p (jsown:val-safe jobj "byteLength"))
             (byte-stride (jsown:val-safe jobj "byteStride"))
-            (target (jsown:val-safe jobj "target"))
+            (target target-p (jsown:val-safe jobj "target"))
             (name (jsown:val-safe jobj "name")))
 
     (parse/assert buf-p 'gltf-buffer-view "buffer")
@@ -1140,7 +1140,8 @@ allowable inputs below and what is returned.
      :byte-offset (if bo-p byte-offset 0)
      :byte-length byte-length
      :byte-stride byte-stride
-     :target (buffer-view-target-value->buffer-view-target-symbol target)
+     :target (when target-p
+	       (buffer-view-target-value->buffer-view-target-symbol target))
      :name name)))
 
 
@@ -1509,6 +1510,67 @@ allowable inputs below and what is returned.
      :name name)))
 
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse the root gltf object, finally.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun parse-gltf (jobj)
+  (u:mvlet ((extensions-used ext-used-p
+                             (jsown:val-safe jobj "extensionsUsed"))
+            (extensions-required ext-req-p
+                                 (jsown:val-safe jobj "extensionsRequired"))
+            (accessors (jsown:val-safe jobj "accessors"))
+            (animations (jsown:val-safe jobj "animations"))
+            (asset asset-p (jsown:val-safe jobj "asset"))
+            (buffers (jsown:val-safe jobj "buffers"))
+            (buffer-views (jsown:val-safe jobj "bufferViews"))
+            (cameras (jsown:val-safe jobj "cameras"))
+            (images (jsown:val-safe jobj "images"))
+            (materials (jsown:val-safe jobj "materials"))
+            (meshes (jsown:val-safe jobj "meshes"))
+            (nodes (jsown:val-safe jobj "nodes"))
+            (samplers (jsown:val-safe jobj "samplers"))
+            (scene (jsown:val-safe jobj "scene"))
+            (scenes (jsown:val-safe jobj "scenes"))
+            (skins (jsown:val-safe jobj "skins"))
+            (textures (jsown:val-safe jobj "textures")))
+
+    (parse/assert asset-p 'gltf "asset")
+
+    (make-gltf
+     :extensions-used (when ext-used-p
+                        (coerce extensions-used 'vector))
+     :extensions-required (when ext-req-p
+                            (coerce extensions-required 'vector))
+     :accessors (when accessors
+		  (map 'vector #'parse-accessor accessors))
+     :animations (when animations
+                   (map 'vector #'parse-animation animations))
+     :asset (parse-asset asset)
+     :buffers (when buffers
+                (map 'vector #'parse-buffer buffers))
+     :buffer-views (when buffer-views
+                     (map 'vector #'parse-buffer-view buffer-views))
+     :cameras (when cameras
+                (map 'vector #'parse-camera cameras))
+     :images (when images
+               (map 'vector #'parse-image images))
+     :materials (when materials
+                  (map 'vector #'parse-material materials))
+     :meshes (when meshes
+               (map 'vector #'parse-mesh meshes))
+     :nodes (when nodes
+              (map 'vector #'parse-node nodes))
+     :samplers (when samplers
+                 (map 'vector #'parse-sampler samplers))
+     :scene scene
+     :scenes (when scenes
+               (map 'vector #'parse-scene scenes))
+     :skins (when skins
+              (map 'vector #'parse-skin skins))
+     :textures (when textures
+                 (map 'vector #'parse-texture textures)))))
+
 
 
 
@@ -1721,6 +1783,11 @@ allowable inputs below and what is returned.
          (inst (virality.file.gltf::parse-texture obj)))
     (describe inst)))
 
+(defun test/parse-gltf (file)
+  (let* ((j (virality.file.gltf::load-gltf-file file))
+         (inst (virality.file.gltf::parse-gltf j)))
+    (describe inst)))
+
 (defun test/parse ()
   (let ((sample-sparse-accessor-file
           "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf")
@@ -1769,6 +1836,8 @@ allowable inputs below and what is returned.
 
     (test/parse-skin skin-file)
     (test/parse-texture skin-file)
+
+    (test/parse-gltf skin-file)
 
     ))
 
