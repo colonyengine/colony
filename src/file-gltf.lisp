@@ -1883,19 +1883,17 @@ allowable inputs below and what is returned.
             :initarg :chunks)))
 
 (defun %load-gltf (path)
-  (let* ((json-string (u:file->string path))
-         ;; jsown apparently has a bug in parsing when these characters are
-         ;; directly in the string, so to be sure change them to spaces.
-         (json-string (nsubstitute-if #\Space (lambda (c)
-                                                (or (char= c #\Return)
-                                                    (char= c #\Newline)
-                                                    (char= c #\Linefeed)))
-                                      json-string))
-         (json (jsown:parse json-string)))
-
-    ;;(format t "json-string form is: ~S~%" json-string)
-    ;;(format t "json form is: ~S~%" json)
-    json))
+  (let* ((json-string (u:file->string path)))
+    ;; jsown has problems parsing strings with these three characters in it.
+    ;; As in it will produce WRONG answers and not crash which is incredibly
+    ;; hard to debug!
+    (loop :for i :below (length json-string)
+          :for c = (aref json-string i)
+          :do (when (or (char= c #\Return)
+                        (char= c #\Newline)
+                        (char= c #\Linefeed))
+                (setf (aref json-string i) #\Space)))
+    (jsown:parse json-string)))
 
 (defun %load-glb (path)
   (declare (ignore path))
