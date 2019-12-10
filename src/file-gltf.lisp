@@ -1841,6 +1841,28 @@ allowable inputs below and what is returned.
 
     ))
 
+(defun test/load-gltf-files
+    (&optional (examples-dir
+                "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/"))
+
+  ;; Grab all .glTF files from the examples-dir
+  (let* ((gltf-files nil))
+    (u:map-files (pathname examples-dir)
+                 (lambda (file)
+                   (push file gltf-files))
+                 :test (lambda (n)
+                         (string= (pathname-type n) "gltf")))
+    ;; make it in the same order we found it while recursing
+    (setf gltf-files (nreverse gltf-files))
+
+    (dolist (gltf-file gltf-files)
+      (format t "Attempting to load .gltf file: ~S~%" gltf-file)
+      ;; TODO: FIXME
+      #++(format t "~S~%" (load-gltf-file gltf-file)))
+
+    (format t "Processed ~A gltf files.~%" (length gltf-files))))
+
+
 
 
 
