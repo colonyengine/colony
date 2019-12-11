@@ -1884,14 +1884,14 @@ allowable inputs below and what is returned.
 
 (defun %load-gltf (path)
   (let* ((json-string (u:file->string path)))
-    ;; jsown has problems parsing strings with these three characters in it.
-    ;; As in it will produce WRONG answers and not crash which is incredibly
-    ;; hard to debug!
+    ;; jsown has problems parsing strings with #\Return characters in it.  As in
+    ;; it will produce WRONG answers and not crash which is incredibly hard to
+    ;; debug! [Note, we once had all three #\Return #\Newline and #\Linefeed
+    ;; here. I hope sometime in the future after 3 days of debugging and
+    ;; cursing, we don't find we need to put the other two back again. :) ]
     (loop :for i :below (length json-string)
           :for c = (aref json-string i)
-          :do (when (or (char= c #\Return)
-                        (char= c #\Newline)
-                        (char= c #\Linefeed))
+          :do (when (char= c #\Return)
                 (setf (aref json-string i) #\Space)))
     (jsown:parse json-string)))
 
