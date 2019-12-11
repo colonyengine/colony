@@ -1534,12 +1534,9 @@ allowable inputs below and what is returned.
      :name name)))
 
 (defun parse-samplers (samplers)
-  ;; NOTE: remove any empty sampler objects The examples have them although it
-  ;; doesn't appear to be legal in the spec. Then ensure if nothing left I act
-  ;; as if there are no samplers at all.
-  (let ((samplers (remove '(:OBJ) samplers :test #'equal)))
-    (when (> (length  samplers) 0)
-      (map 'vector #'parse-sampler samplers))))
+  (when samplers
+    (map 'vector #'parse-sampler samplers)))
+
 
 (defun parse-texture (jobj)
   (u:mvlet ((sampler (jsown:val-safe jobj "sampler"))
