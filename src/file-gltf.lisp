@@ -950,6 +950,18 @@ allowable inputs below and what is returned.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse extensions (not fully supported yet)
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun parse-extensions-used (extensions-used)
+  (when extensions-used
+    (coerce extensions-used 'vector)))
+
+(defun parse-extensions-required (extensions-required)
+  (when extensions-required
+    (coerce extensions-required 'vector)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse gltf-accessor
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1035,6 +1047,10 @@ allowable inputs below and what is returned.
      :sparse (when jobj-sparse (parse-sparse jobj-sparse))
      :name name)))
 
+(defun parse-accessors (accessors)
+  (when accessors
+    (map 'vector #'parse-accessor accessors)))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse gltf-animation
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1088,6 +1104,10 @@ allowable inputs below and what is returned.
      :samplers (map 'vector #'parse-animation-sampler samplers)
      :name name)))
 
+(defun parse-animations (animations)
+  (when animations
+    (map 'vector #'parse-animation animations)))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse gltf-asset
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1124,6 +1144,10 @@ allowable inputs below and what is returned.
      :byte-length byte-length
      :name name)))
 
+(defun parse-buffers (buffers)
+  (when buffers
+    (map 'vector #'parse-buffer buffers)))
+
 (defun parse-buffer-view (jobj)
   (u:mvlet ((buffer buf-p (jsown:val-safe jobj "buffer"))
             (byte-offset bo-p (jsown:val-safe jobj "byteOffset"))
@@ -1144,6 +1168,9 @@ allowable inputs below and what is returned.
                (buffer-view-target-value->buffer-view-target-symbol target))
      :name name)))
 
+(defun parse-buffer-views (buffer-views)
+  (when buffer-views
+    (map 'vector #'parse-buffer-view buffer-views)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse camera concepts
@@ -1201,6 +1228,10 @@ allowable inputs below and what is returned.
      :perspective (when persp-p (parse-perspective jobj-perspective))
      :name name)))
 
+(defun parse-cameras (cameras)
+  (when cameras
+    (map 'vector #'parse-camera cameras)))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse image concepts
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1218,6 +1249,10 @@ allowable inputs below and what is returned.
      :mime-type (image-mime-type-value->image-mime-type-symbol mime-type)
      :buffer-view buffer-view
      :name name)))
+
+(defun parse-images (images)
+  (when images
+    (map 'vector #'parse-image images)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse material (and some texture) concepts
@@ -1318,6 +1353,10 @@ allowable inputs below and what is returned.
      :alpha-cutoff (if ac-p alpha-cutoff .5f0)
      :double-sided double-sided)))
 
+(defun parse-materials (materials)
+  (when materials
+    (map 'vector #'parse-material materials)))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse mesh concepts
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1385,6 +1424,9 @@ allowable inputs below and what is returned.
                 (map 'vector (lambda (v) (float v 1f0)) jobj-weights))
      :name name)))
 
+(defun parse-meshes (meshes)
+  (when meshes
+    (map 'vector #'parse-mesh meshes)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse scene tree concepts
@@ -1446,6 +1488,10 @@ allowable inputs below and what is returned.
      :name name
      )))
 
+(defun parse-nodes (nodes)
+  (when nodes
+    (map 'vector #'parse-node nodes)))
+
 (defun parse-scene (jobj)
   (u:mvlet ((nodes nodes-p (jsown:val-safe jobj "nodes"))
             (name (jsown:val-safe jobj "name")))
@@ -1453,6 +1499,11 @@ allowable inputs below and what is returned.
     (make-scene
      :nodes (when nodes-p (coerce nodes 'vector))
      :name name)))
+
+(defun parse-scenes (scenes)
+  (when scenes
+    (map 'vector #'parse-scene scenes)))
+
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse mesh texture sampler concepts
@@ -1482,6 +1533,14 @@ allowable inputs below and what is returned.
          :repeat)
      :name name)))
 
+(defun parse-samplers (samplers)
+  ;; NOTE: remove any empty sampler objects The examples have them although it
+  ;; doesn't appear to be legal in the spec. Then ensure if nothing left I act
+  ;; as if there are no samplers at all.
+  (let ((samplers (remove '(:OBJ) samplers :test #'equal)))
+    (when (> (length  samplers) 0)
+      (map 'vector #'parse-sampler samplers))))
+
 (defun parse-texture (jobj)
   (u:mvlet ((sampler (jsown:val-safe jobj "sampler"))
             (source (jsown:val-safe jobj "source"))
@@ -1492,6 +1551,9 @@ allowable inputs below and what is returned.
      :source source
      :name name)))
 
+(defun parse-textures (textures)
+  (when textures
+    (map 'vector #'parse-texture textures)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse skin concepts
@@ -1511,6 +1573,9 @@ allowable inputs below and what is returned.
      :joints (coerce joints 'vector)
      :name name)))
 
+(defun parse-skins (skins)
+  (when skins
+    (map 'vector #'parse-skin skins)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse the root gltf object, finally.
@@ -1541,46 +1606,24 @@ allowable inputs below and what is returned.
 
     (make-gltf
      :extensions-used (when ext-used-p
-                        (coerce extensions-used 'vector))
+                        (parse-extensions-used extensions-used))
      :extensions-required (when ext-req-p
-                            (coerce extensions-required 'vector))
-     :accessors (when accessors
-                  (map 'vector #'parse-accessor accessors))
-     :animations (when animations
-                   (map 'vector #'parse-animation animations))
+                            (parse-extensions-required extensions-required))
+     :accessors (parse-accessors accessors)
+     :animations (parse-animations animations)
      :asset (parse-asset asset)
-     :buffers (when buffers
-                (map 'vector #'parse-buffer buffers))
-     :buffer-views (when buffer-views
-                     (map 'vector #'parse-buffer-view buffer-views))
-     :cameras (when cameras
-                (map 'vector #'parse-camera cameras))
-     :images (when images
-               (map 'vector #'parse-image images))
-     :materials (when materials
-                  (map 'vector #'parse-material materials))
-     :meshes (when meshes
-               (map 'vector #'parse-mesh meshes))
-     :nodes (when nodes
-              (map 'vector #'parse-node nodes))
-     :samplers
-     ;; NOTE: remove any empty sampler objects
-     ;; The examples have them although it doesn't appear to
-     ;; be legal in the spec. Then ensure if nothing left I act as if
-     ;; there are no samplers at all.
-     (let ((samplers (remove '(:OBJ) samplers :test #'equal)))
-       (when (> (length  samplers) 0)
-         (map 'vector #'parse-sampler samplers)))
+     :buffers (parse-buffers buffers)
+     :buffer-views (parse-buffer-views buffer-views)
+     :cameras (parse-cameras cameras)
+     :images (parse-images images)
+     :materials (parse-materials materials)
+     :meshes (parse-meshes meshes)
+     :nodes (parse-nodes nodes)
+     :samplers (parse-samplers samplers)
      :scene scene
-     :scenes (when scenes
-               (map 'vector #'parse-scene scenes))
-     :skins (when skins
-              (map 'vector #'parse-skin skins))
-     :textures (when textures
-                 (map 'vector #'parse-texture textures)))))
-
-
-
+     :scenes (parse-scenes scenes)
+     :skins (parse-skins skins)
+     :textures (parse-textures textures))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
