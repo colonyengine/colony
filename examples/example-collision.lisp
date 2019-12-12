@@ -203,7 +203,7 @@
    (c/cam:camera (:policy :new-args) :zoom 6))
   ("rot-0-center"
    (c/xform:transform :translate (v3:vec -2 0 0)
-                      :rotate/inc (q:orient :local :z pi))
+                      :rotate/inc (c/xform:angular-velocity :z pi))
    ("plane-0"
     (c/xform:transform :translate (v3:vec -2 0 0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
@@ -215,7 +215,7 @@
     (c/render:render :material '2d-wood)))
   ("rot-1-center"
    (c/xform:transform :translate (v3:vec 2 0 0)
-                      :rotate/inc (q:orient :local :z (- pi)))
+                      :rotate/inc (c/xform:angular-velocity :z (- pi)))
    ("plane-1"
     (c/xform:transform :translate (v3:vec 2 0 0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
@@ -308,7 +308,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (c/xform:transform :translate (v3:vec 0 5 0)
                       :scale 0.5
                       :rotate (q:orient :local :x (/ pi 2))
-                      :rotate/inc (q:orient :local (v3:one) pi)
+                      :rotate/inc (c/xform:angular-velocity (v3:one) pi)
                       :translate/inc (v3:vec 0 -2 0))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
@@ -370,7 +370,7 @@ actually are. You have to view the results to see the colliders lighting up."
    (c/xform:transform :translate (v3:zero)
                       :scale 2
                       :rotate (q:orient :local :x (/ pi 2))
-                      :rotate/inc (q:orient :local (v3:one) pi)
+                      :rotate/inc (c/xform:angular-velocity (v3:one) pi)
                       :translate/inc (v3:zero))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :time-to-destroy 2)

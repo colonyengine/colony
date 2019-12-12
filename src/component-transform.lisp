@@ -21,8 +21,8 @@
 
 (defclass transform-state-quaternion (transform-state) ()
   (:default-initargs :current (q:id)
-                     :incremental (q:id)
-                     :incremental-delta (q:id)
+                     :incremental (v3:zero) ;; whole angular-velocity vector
+                     :incremental-delta (q:id) ;; quaternion of ang-vel * dt
                      :previous (q:id)
                      :interpolated (q:id)))
 
@@ -81,7 +81,7 @@
   (declare (optimize speed))
   (with-slots (%previous %current %incremental-delta %incremental) state
     (q:copy! %previous %current)
-    (q:slerp! %incremental-delta q:+id+ %incremental delta)
+    (angular-velocity->rotation! %incremental-delta %incremental delta)
     (q:rotate! %current %current %incremental-delta)))
 
 (defun transform-node (core node)
@@ -136,7 +136,7 @@
                                     (translate (v3:zero))
                                     (translate/inc (v3:zero))
                                     (rotate (q:id))
-                                    (rotate/inc (q:id))
+                                    (rotate/inc (v3:zero)) ;; angular-velocity
                                     (scale (v3:one))
                                     (scale/inc (v3:zero)))
   (with-slots (%translation %rotation %scaling) instance
@@ -147,7 +147,7 @@
           (incremental %translation) (v3:copy translate/inc)
           (current %rotation) (q:copy rotate)
           (previous %rotation) (q:copy (current %rotation))
-          (incremental %rotation) (q:copy rotate/inc)
+          (incremental %rotation) (v3:copy rotate/inc)
           (current %scaling) (etypecase scale
                                (v3:vec (v3:copy scale))
                                (real (v3:vec scale scale scale)))
@@ -283,3 +283,42 @@ returned."
 (defun transform-left (transform)
   "Return the left vector (+X axis) in world space for this TRANSFORM."
   (v3:negate (m4:rotation-axis-to-vec3 (model transform) :x)))
+
+;;;; NOTE: This API is a candidate to go into the origin math library.
+;;;; It is pretty plausible that it exists here too if not there.
+
+(defun angular-velocity! (out axis radians-per-second)
+  (v3:with-components ((o out) (a axis))
+    (case axis
+      (:x (psetf ox 1f0 oy 0f0 oz 0f0))
+      (:y (psetf ox 0f0 oy 1f0 oz 0f0))
+      (:z (psetf ox 0f0 oy 0f0 oz 1f0))
+      (t
+       (v3:normalize! out axis)))
+    (v3:scale! out out (float radians-per-second 1f0))))
+
+(defun angular-velocity (axis radians-per-second)
+  "AXIS is a vector of any length or :x, :y, :z, for each of the positive local
+axis, RATE is in radians/second. Return an angular velocity vector following the
+right hand rule whose direction is parallel to AXIS and magnitude is RATE."
+  (angular-velocity! (v3:zero) axis radians-per-second))
+
+(defun angular-velocity->rotation! (out angular-velocity dt)
+  ;; TODO: Needs optimization. The assembly looks bad. Some GENERIC-? are in
+  ;; there.
+  (let ((dt (float dt 1f0)))
+    (declare (single-float dt))
+    (q:with-components ((o out))
+      (v3:with-components ((av angular-velocity))
+        (v3:with-elements ((nav 0f0 0f0 0f0))
+          (v3::%normalize navx navy navz avx avy avz)
+          (q::%from-axis-angle ow ox oy oz navx navy navz
+                               (* dt (v3::length angular-velocity)))
+          (q:normalize! out out))))))
+
+(defun angular-velocity->rotation (angular-velocity dt)
+  "ANGULAR-VELOCITY is a vec3 angular velocity vector whose magnitude represents
+radians/second rotation about its vector. DT is an amount of time. Return a
+normalized quaternion that represents the angular velocity rotation in DT amount
+of time."
+  (angular-velocity->rotation! (q:id) angular-velocity dt))

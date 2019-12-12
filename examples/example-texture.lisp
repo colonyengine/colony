@@ -269,7 +269,7 @@
    (c/render:render :material 'cubemap))
   (("cube-map-array" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 3 -1 0)
-                      :rotate/inc (q:orient :world (v3:one) (/ pi 4)))
+                      :rotate/inc (c/xform:angular-velocity (v3:one) pi))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))
    (c/render:render :material 'cubemaparray)))
 
