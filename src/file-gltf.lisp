@@ -1923,16 +1923,19 @@ allowable inputs below and what is returned.
             :initarg :chunks)))
 
 (defun %load-gltf (path)
-  (let* ((json-string (u:file->string path)))
+  (declare (optimize speed))
+  (let ((json-string (u:file->string path)))
+    (declare (simple-string json-string))
     ;; jsown has problems parsing strings with #\Return characters in it.  As in
     ;; it will produce WRONG answers and not crash which is incredibly hard to
     ;; debug! [Note, we once had all three #\Return #\Newline and #\Linefeed
     ;; here. I hope sometime in the future after 3 days of debugging and
     ;; cursing, we don't find we need to put the other two back again. :) ]
     (loop :for i :below (length json-string)
-          :for c = (aref json-string i)
-          :do (when (char= c #\Return)
-                (setf (aref json-string i) #\Space)))
+          :for c :of-type character = (aref json-string i)
+          :when (char= c #\Return)
+            :do (locally (declare (optimize (safety 0)))
+                  (setf (aref json-string i) #\Space)))
     (jsown:parse json-string)))
 
 (defun %load-glb (path)
