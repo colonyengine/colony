@@ -2,12 +2,20 @@
 
 ;;;; Extensions are not yet supported in this model.
 
+;;;; I didn't try and cram the parse and typechecking codes into
+;;;; generic functions because the congruence or type selection doesn't
+;;;; work out well.
+
 ;;;; Additional generic functions for the glTF data types
 ;;;; style can be :human or :json and transmits recursively
 ;;;; to the children of that thing
 (defgeneric emit (style gltf-instance &key stream indent))
 
+(defgeneric typecheck (gltf-instance &key &allow-other-keys))
+
 ;;;; Convenience functions for glTF data representation and outputting.
+(defun is-aligned-p (value alignment)
+  (zerop (mod value alignment)))
 
 (defun component-type-value->component-type-symbol (component-type-value)
   (ecase component-type-value
@@ -26,6 +34,25 @@
     (:unsigned-short 5123)
     (:unsigned-int 5125)
     (:float 5126)))
+
+(defun component-type-size (component-type-symbol)
+  "Return the size in bytes for the COMPONENT-TYPE-SYMBOL."
+  (ecase component-type-symbol
+    (:byte 1)
+    (:unsigned-byte 1)
+    (:short 2)
+    (:unsigned-short 2)
+    (:unsigned-int 4)
+    (:float 4)))
+
+(defun attribute-type-count (attribute-type-symbol)
+  (ecase attribute-type-symbol
+    (:scalar 1)
+    (:vec2 2)
+    (:vec3 3)
+    ((:vec4 :mat2) 4)
+    (:mat3 9)
+    (:mat4 16)))
 
 (defun attribute-type-value->attribute-type-symbol (attribute-type-value)
   (let* ((db `(("SCALAR" . :scalar)
@@ -945,6 +972,46 @@ allowable inputs below and what is returned.
 (defun make-texture-info (&rest args)
   (apply #'make-instance 'gltf-texture-info args))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Simple error handling.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defun parse/error (gltf-type field &rest args)
+  (let ((fmt (first args))
+        (rest-args (rest args)))
+    (error "glTF: Parse error [type: ~S json field: ~S]~A"
+           gltf-type field
+           (if fmt
+               (apply #'format nil (concatenate 'string ": " fmt "~%")
+                      rest-args)
+               ": Field probably non-existent."))))
+
+(defun parse/assert (value gltf-type field &rest args)
+  (if value
+      t
+      (apply #'parse/error gltf-type field args)))
+
+
+(defun typecheck/error (gltf-type fmt &rest args)
+  (let ((rest-args (rest args)))
+    (error "glTF: Type error [type: ~S]~A"
+           gltf-type
+           (apply #'format nil (concatenate 'string ": " fmt "~%")
+                  rest-args))))
+
+(defun typecheck/assert (gltf-obj value fmt &rest args)
+  (if value
+      t
+      (apply #'typecheck/error (class-name (class-of gltf-obj)) fmt args)))
+
+(defmacro typecheck/assert-group (gltf-obj &body forms)
+  (a:with-gensyms (obj)
+    (let ((body (loop :for (val fmt . args) :in forms
+                      :collect `(typecheck/assert ,obj ,val ,fmt ,@args))))
+      `(let ((,obj ,gltf-obj))
+         ,@body))))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parsing code to convert json objects to clos objects.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -962,22 +1029,8 @@ allowable inputs below and what is returned.
     (coerce extensions-required 'vector)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; Parse gltf-accessor
+;; gltf-indices
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defun parse/error (gltf-type field &rest args)
-  (let ((fmt (first args))
-        (rest-args (rest args)))
-    (error "glTF: Parse error [type: ~S json field: ~S]~A"
-           gltf-type field
-           (if fmt
-               (apply #'format nil (concatenate 'string ": " fmt) rest-args)
-               ": Field probably non-existent."))))
-
-(defun parse/assert (value gltf-type field &rest args)
-  (unless value
-    (apply #'parse/error gltf-type field args)))
-
 
 (defun parse-indices (jobj)
   (u:mvlet ((buffer-view bv-p (jsown:val-safe jobj "bufferView"))
@@ -993,6 +1046,34 @@ allowable inputs below and what is returned.
      :component-type
      (component-type-value->component-type-symbol component-type))))
 
+(defmethod typecheck ((obj gltf-indices) &key buffer-views)
+  (with-accessors ((buffer-view buffer-view) (byte-offset byte-offset)
+                   (component-type component-type))
+      obj
+
+    ;; TODO: check byte-offset alignment
+
+    (symbol-macrolet ((ref-buffer-view (aref buffer-views buffer-view)))
+      (typecheck/assert-group obj
+        ((integerp buffer-view)
+         "slot BUFFER-VIEW must be an integer!")
+        ((>= buffer-view 0)
+         "slot BUFFER-VIEW must be >= 0!")
+        ((null (target ref-buffer-view))
+         "slot BUFFER-VIEW references real buffer-view object with illegal TARGET value")
+        ((integerp byte-offset)
+         "slot BYTE-OFFSET must be an integer!")
+        ((>= byte-offset 0)
+         "slot BYTE-OFFSET must be >= 0!")
+        ((integerp component-type)
+         "slot COMPONENT-TYPE must be an integer!")
+        ((member component-type '(:unsigned-byte :unsigned-short :unsigned-int))
+         "slot COMPONENT-TYPE is [~(~S~)] but must be one of: :unsigned-byte :unsigned-short or :unsigned-int!" component-type)))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; gltf-values
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun parse-values (jobj)
   (u:mvlet ((buffer-view bv-p (jsown:val-safe jobj "bufferView"))
             (byte-offset bo-p (jsown:val-safe jobj "byteOffset")))
@@ -1002,6 +1083,29 @@ allowable inputs below and what is returned.
     (make-values
      :buffer-view buffer-view
      :byte-offset (if bo-p byte-offset 0))))
+
+(defmethod typecheck ((obj gltf-values) &key buffer-views)
+  (with-accessors ((buffer-view buffer-view) (byte-offset byte-offset))
+      obj
+
+    ;; TODO: check byte-offset alignment
+
+    (symbol-macrolet ((ref-buffer-view (aref buffer-views buffer-view)))
+      (typecheck/assert-group obj
+        ((integerp buffer-view)
+         "slot BUFFER-VIEW must be an integer!")
+        ((>= buffer-view 0)
+         "slot BUFFER-VIEW must be >= 0!")
+        ((null (target ref-buffer-view))
+         "slot BUFFER-VIEW references real buffer-view object with illegal TARGET value")
+        ((integerp byte-offset)
+         "slot BYTE-OFFSET must be an integer!")
+        ((>= byte-offset 0)
+         "slot BYTE-OFFSET must be >= 0!")))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; gltf-sparse
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-sparse (jobj)
   (u:mvlet ((sparse-count sc-p (jsown:val-safe jobj "count"))
@@ -1016,6 +1120,36 @@ allowable inputs below and what is returned.
      :sparse-count sparse-count
      :indices (parse-indices jobj-indices)
      :sparse-values (parse-values jobj-values))))
+
+(defmethod typecheck ((obj gltf-sparse) &key accessor)
+  (with-accessors ((sparse-count sparse-count)
+                   (indices indices)
+                   (sparse-values sparse-values))
+      obj
+
+    ;; TODO: check indices, component-types, etc
+
+    (typecheck/assert-group obj
+      ((integerp sparse-count)
+       "slot SPARSE-COUNT must be an integer!")
+      ((>= sparse-count 1)
+       "slot SPARSE-COUNT must be >= 1!")
+      ((= sparse-count (length indices))
+       "length of INDICIES is not COUNT!")
+      ((= sparse-count (length sparse-values))
+       "length of SPARSE-VALUES is not COUNT!"))
+
+    (loop :for indices-obj :across (indices obj)
+          :do (typecheck indices-obj :buffer-views (buffer-views accessor)))
+
+    (loop :for values-obj :across (sparse-values obj)
+          :do (typecheck values-obj :buffer-views (buffer-views accessor)))))
+
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; gltf-accessor
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-accessor (jobj)
   (u:mvlet ((buffer-view (jsown:val-safe jobj "bufferView"))
@@ -1046,6 +1180,11 @@ allowable inputs below and what is returned.
      :min-value (when min-p (coerce min-value 'vector))
      :sparse (when jobj-sparse (parse-sparse jobj-sparse))
      :name name)))
+
+(defmethod typecheck ((obj gltf-accessor) &key buffer-views)
+  (declare (ignore obj buffer-views))
+  ;; TODO: Implement me.
+  t)
 
 (defun parse-accessors (accessors)
   (when accessors
