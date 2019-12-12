@@ -141,7 +141,7 @@
   (("camera" :copy "/cameras/ortho"))
   ("plane"
    (c/xform:transform :scale 2
-                      :rotate/inc (q:orient :local :z pi))
+                      :rotate/inc (c/xform:angular-velocity :z pi))
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet04")
    (c/render:render :material `(x/mat:sprite

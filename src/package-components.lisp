@@ -79,4 +79,11 @@
    #:transform-right
    #:transform-up
    #:transform-vector
-   #:translate))
+   #:translate
+   ;; NOTE: These next ones should prolly go into origin, but it is also
+   ;; logical that they can stay here too.
+   #:angular-velocity!
+   #:angular-velocity
+   #:angular-velocity->rotation!
+   #:angular-velocity->rotation
+   ))

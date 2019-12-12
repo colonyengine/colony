@@ -27,7 +27,7 @@
 (v:define-prefab "dynamic-geometry" (:library examples)
   (("camera" :copy "/cameras/perspective"))
   (("plane")
-   (c/xform:transform :rotate/inc (q:orient :local :x pi)
+   (c/xform:transform :rotate/inc (c/xform:angular-velocity :x pi)
                       :scale (v3:vec 20 20 20))
    (c/dmesh:dynamic-mesh :geometry 'tile)
    (c/render:render :material 'dynamic-geometry

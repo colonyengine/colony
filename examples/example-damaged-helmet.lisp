@@ -44,7 +44,7 @@
    (c/cam:camera (:policy :new-args) :zoom 10))
   (("helmet" :copy "/mesh")
    (c/xform:transform :rotate (q:orient :local :x (/ pi 2))
-                      :rotate/inc (q:orient :local :z (- (/ pi 6)))
+                      :rotate/inc (c/xform:angular-velocity :z (- (* pi 1/6)))
                       :scale 4)
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (c/render:render :material 'damaged-helmet)))
