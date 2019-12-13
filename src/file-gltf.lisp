@@ -1065,10 +1065,10 @@ allowable inputs below and what is returned.
          "slot BYTE-OFFSET must be an integer!")
         ((>= byte-offset 0)
          "slot BYTE-OFFSET must be >= 0!")
-        ((integerp component-type)
-         "slot COMPONENT-TYPE must be an integer!")
         ((member component-type '(:unsigned-byte :unsigned-short :unsigned-int))
-         "slot COMPONENT-TYPE is [~(~S~)] but must be one of: :unsigned-byte :unsigned-short or :unsigned-int!" component-type)))))
+         "slot COMPONENT-TYPE is [~(~S~)] but must be one of: :unsigned-byte :unsigned-short or :unsigned-int!" component-type))))
+
+  t)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; gltf-values
@@ -1101,7 +1101,9 @@ allowable inputs below and what is returned.
         ((integerp byte-offset)
          "slot BYTE-OFFSET must be an integer!")
         ((>= byte-offset 0)
-         "slot BYTE-OFFSET must be >= 0!")))))
+         "slot BYTE-OFFSET must be >= 0!"))))
+
+  t)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; gltf-sparse
@@ -1121,31 +1123,26 @@ allowable inputs below and what is returned.
      :indices (parse-indices jobj-indices)
      :sparse-values (parse-values jobj-values))))
 
-(defmethod typecheck ((obj gltf-sparse) &key accessor)
+(defmethod typecheck ((obj gltf-sparse) &key accessor buffer-views)
+  (declare (ignore accessor)) ;; TODO: Not implemented yet.
   (with-accessors ((sparse-count sparse-count)
                    (indices indices)
                    (sparse-values sparse-values))
       obj
 
-    ;; TODO: check indices, component-types, etc
+    ;; TODO: requires checking of actual data to be complete.
 
     (typecheck/assert-group obj
       ((integerp sparse-count)
        "slot SPARSE-COUNT must be an integer!")
       ((>= sparse-count 1)
-       "slot SPARSE-COUNT must be >= 1!")
-      ((= sparse-count (length indices))
-       "length of INDICIES is not COUNT!")
-      ((= sparse-count (length sparse-values))
-       "length of SPARSE-VALUES is not COUNT!"))
+       "slot SPARSE-COUNT must be >= 1!"))
 
-    (loop :for indices-obj :across (indices obj)
-          :do (typecheck indices-obj :buffer-views (buffer-views accessor)))
+    (typecheck indices :buffer-views buffer-views)
 
-    (loop :for values-obj :across (sparse-values obj)
-          :do (typecheck values-obj :buffer-views (buffer-views accessor)))))
+    (typecheck sparse-values :buffer-views buffer-views)
 
-
+    t))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; gltf-accessor
@@ -1182,16 +1179,104 @@ allowable inputs below and what is returned.
      :name name)))
 
 (defmethod typecheck ((obj gltf-accessor) &key buffer-views)
-  (declare (ignore obj buffer-views))
-  ;; TODO: Implement me.
-  t)
+  (with-accessors ((buffer-view buffer-view)
+                   (byte-offset byte-offset)
+                   (component-type component-type)
+                   (normalized normalized)
+                   (attribute-count attribute-count)
+                   (attribute-type attribute-type)
+                   (max-value max-value)
+                   (min-value min-value)
+                   (sparse sparse)
+                   (name name))
+      obj
+
+    (unless (null buffer-view)
+      (typecheck/assert-group obj
+        ((integerp buffer-view) "slot BUFFER-VIEW is not an integer!")
+        ((>= buffer-view 0) "slot BUFFER-VIEW must be >= 0!")))
+
+    (unless (null byte-offset)
+      (typecheck/assert-group obj
+        ((integerp byte-offset) "slot BYTE-OFFSET is not an integer!")
+        ((>= byte-offset 0) "slot BYTE-OFFSET must be >= 0!")
+        ((is-aligned-p byte-offset (component-type-size component-type))
+         "slot BYTE-OFFSET is not aligned according to component type: ~(~S~)~"
+         component-type)))
+
+    (let ((valid-domain '(:byte :unsigned-byte :short :unsigned-short
+                          :unsigned-int :float)))
+      (typecheck/assert-group obj
+        ((symbolp component-type) "slot COMPONENT-TYPE is not a symbol!")
+        ((member component-type valid-domain)
+         "slot COMPONENT-TYPE [~(~S~)] is not a member of its valid domain: ~(~S~)!"
+         component-type valid-domain)))
+
+    ;; TODO: Must be present only when accessor contains vertex attributes, or
+    ;; animation output data.
+    (when normalized
+      (typecheck/assert-group obj
+        ((member normalized '(t nil))
+         "slot NORMALIZED must be either T or NIL!")))
+
+    (typecheck/assert-group obj
+      ((integerp attribute-count)
+       "slot ATTRIBUTE-COUNT is not an integer!")
+      ((>= attribute-count 1)
+       "slot ATTRIBUTE-COUNT must be >= 1!"))
+
+    (let ((valid-domain '(:scalar :vec2 :vec3 :vec4 :mat2 :mat3 :mat4)))
+      (typecheck/assert-group obj
+        ((symbolp attribute-type) "slot ATTRIBUTE-TYPE is not a symbol!")
+        ((member attribute-type valid-domain)
+         "slot ATTRIBUTE-TYPE [~(~S~)] is not a member of its valid domain: ~(~S~)!"
+         attribute-type valid-domain)))
+
+    ;; TODO: Must check actual data to confirm it is valid--but lazy i/o.
+    ;; TODO: Need to check with sparse substitution applied.
+    (when max-value
+      (let ((valid-lengths '(1 2 3 4 9 16)))
+        (typecheck/assert-group obj
+          ((vectorp max-value)
+           "slot MAX-VALUE must be a vector!")
+          ((member (length max-value) valid-lengths :test #'=)
+           "slot MAX-VALUE is of length ~A, but needs to be one of length: ~A!"
+           (length max-value) valid-lengths)
+          ((and min-value (vectorp min-value)
+                (= (length max-value) (length min-value)))
+           "slot MAX-VALUE must have the same length as slow MIN-VALUE!"))))
+
+    ;; TODO: Must check actual data to confirm it is valid--but lazy i/o.
+    ;; TODO: Need to check with sparse substitution applied.
+    (when min-value
+      (let ((valid-lengths '(1 2 3 4 9 16)))
+        (typecheck/assert-group obj
+          ((vectorp min-value)
+           "slot MIN-VALUE must be a vector!")
+          ((member (length min-value) valid-lengths :test #'=)
+           "slot MIN-VALUE is of length ~A, but needs to be one of length: ~A!"
+           (length min-value) valid-lengths)
+          ((and max-value (vectorp max-value)
+                (= (length min-value) (length max-value)))
+           "slot MIN-VALUE must have the same length as slow MAX-VALUE!"))))
+
+    (when sparse
+      (typecheck sparse :accessor obj :buffer-views buffer-views))
+
+    (when name
+      (typecheck/assert-group obj
+        ((stringp name)
+         "slot NAME must be a string!")))
+
+    t))
+
 
 (defun parse-accessors (accessors)
   (when accessors
     (map 'vector #'parse-accessor accessors)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; Parse gltf-animation
+;; Parse gltf-target
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-target (jobj)
@@ -1204,6 +1289,10 @@ allowable inputs below and what is returned.
                  :path
                  (target-path-value->target-path-symbol path))))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-channel
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun parse-channel (jobj)
   (u:mvlet ((sampler sam-p (jsown:val-safe jobj "sampler"))
             (jobj-target ta-p (jsown:val-safe jobj "target")))
@@ -1213,6 +1302,10 @@ allowable inputs below and what is returned.
 
     (make-channel :sampler sampler
                   :target (parse-target jobj-target))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-animation-sampler
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-animation-sampler (jobj)
   (u:mvlet ((input in-p (jsown:val-safe jobj "input"))
@@ -1229,6 +1322,10 @@ allowable inputs below and what is returned.
          (animsampler-interp-value->animsampler-interp-symbol interp)
          :linear)
      :output output)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-animation
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-animation (jobj)
   (u:mvlet ((channels ch-p (jsown:val-safe jobj "channels"))
@@ -1266,7 +1363,7 @@ allowable inputs below and what is returned.
      :min-version min-version)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; Parse buffer concepts
+;; Parse gltf-buffer
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-buffer (jobj)
@@ -1286,6 +1383,10 @@ allowable inputs below and what is returned.
 (defun parse-buffers (buffers)
   (when buffers
     (map 'vector #'parse-buffer buffers)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-buffer;view
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-buffer-view (jobj)
   (u:mvlet ((buffer buf-p (jsown:val-safe jobj "buffer"))
@@ -1312,7 +1413,7 @@ allowable inputs below and what is returned.
     (map 'vector #'parse-buffer-view buffer-views)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; Parse camera concepts
+;; Parse gltf-orthographic
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-orthographic (jobj)
@@ -1332,6 +1433,10 @@ allowable inputs below and what is returned.
      :z-far z-far
      :z-near z-near)))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-perspective
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun parse-perspective (jobj)
   (u:mvlet ((aspect-ratio (jsown:val-safe jobj "aspectRatio"))
             (y-fov y-fov-p (jsown:val-safe jobj "yfov"))
@@ -1346,6 +1451,10 @@ allowable inputs below and what is returned.
      :y-fov y-fov
      :z-far z-far
      :z-near z-near)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-camera
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-camera (jobj)
   (u:mvlet ((jobj-orthographic ortho-p (jsown:val-safe jobj "orthographic"))
@@ -1372,7 +1481,7 @@ allowable inputs below and what is returned.
     (map 'vector #'parse-camera cameras)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; Parse image concepts
+;; Parse gltf-image
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-image (jobj)
@@ -1394,7 +1503,7 @@ allowable inputs below and what is returned.
     (map 'vector #'parse-image images)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; Parse material (and some texture) concepts
+;; Parse gltf-normal-texture-info
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-normal-texture-info (jobj)
@@ -1409,6 +1518,10 @@ allowable inputs below and what is returned.
      :tex-coord (if tc-p tex-coord 0)
      :scale (if sc-p scale 1f0))))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-occlusion-texture-info
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun parse-occlusion-texture-info (jobj)
   (u:mvlet ((index ind-p (jsown:val-safe jobj "index"))
             (tex-coord tc-p (jsown:val-safe jobj "texCoord"))
@@ -1421,6 +1534,10 @@ allowable inputs below and what is returned.
      :tex-coord (if tc-p tex-coord 0)
      :strength (if st-p strength 1f0))))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-texture-info
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun parse-texture-info (jobj)
   (u:mvlet ((index ind-p (jsown:val-safe jobj "index"))
             (tex-coord tc-p (jsown:val-safe jobj "texCoord")))
@@ -1430,6 +1547,10 @@ allowable inputs below and what is returned.
     (make-texture-info
      :index index
      :tex-coord (if tc-p tex-coord 0))))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-pbr-metallic-roughness
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-pbr-metallic-roughness (jobj)
   (u:mvlet ((base-color-factor bcf-p (jsown:val-safe jobj "baseColorFactor"))
@@ -1453,6 +1574,9 @@ allowable inputs below and what is returned.
      :metallic-roughness-texture
      (if mrt-p (parse-texture-info jobj-metallic-roughness-texture)))))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-material
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-material (jobj)
   (u:mvlet ((name (jsown:val-safe jobj "name"))
@@ -1497,7 +1621,7 @@ allowable inputs below and what is returned.
     (map 'vector #'parse-material materials)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; Parse mesh concepts
+;; Parse gltf-primitive
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-primitive (jobj)
@@ -1550,6 +1674,10 @@ allowable inputs below and what is returned.
 
       primitive)))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-mesh
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun parse-mesh (jobj)
   (u:mvlet ((jobj-primitives (jsown:val-safe jobj "primitives"))
             (jobj-weights (jsown:val-safe jobj "weights"))
@@ -1568,7 +1696,7 @@ allowable inputs below and what is returned.
     (map 'vector #'parse-mesh meshes)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; Parse scene tree concepts
+;; Parse gltf-node
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-node (jobj)
@@ -1631,6 +1759,10 @@ allowable inputs below and what is returned.
   (when nodes
     (map 'vector #'parse-node nodes)))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-scene
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+
 (defun parse-scene (jobj)
   (u:mvlet ((nodes nodes-p (jsown:val-safe jobj "nodes"))
             (name (jsown:val-safe jobj "name")))
@@ -1643,9 +1775,8 @@ allowable inputs below and what is returned.
   (when scenes
     (map 'vector #'parse-scene scenes)))
 
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; Parse mesh texture sampler concepts
+;; Parse gltf-sampler
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-sampler (jobj)
@@ -1676,6 +1807,9 @@ allowable inputs below and what is returned.
   (when samplers
     (map 'vector #'parse-sampler samplers)))
 
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse gltf-texture
+;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-texture (jobj)
   (u:mvlet ((sampler (jsown:val-safe jobj "sampler"))
@@ -1692,7 +1826,7 @@ allowable inputs below and what is returned.
     (map 'vector #'parse-texture textures)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; Parse skin concepts
+;; Parse gltf-skin
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun parse-skin (jobj)
@@ -1744,7 +1878,8 @@ allowable inputs below and what is returned.
      :extensions-used (when ext-used-p
                         (parse-extensions-used extensions-used))
      :extensions-required (when ext-req-p
-                            (parse-extensions-required extensions-required))
+                            (parse-extensions-required
+                             extensions-required))
      :accessors (parse-accessors accessors)
      :animations (parse-animations animations)
      :asset (parse-asset asset)
@@ -1762,8 +1897,25 @@ allowable inputs below and what is returned.
      :textures (parse-textures textures))))
 
 
+(defmethod typecheck ((obj gltf) &key)
+  (with-accessors ((accessors accessors)
+                   (buffer-views buffer-views))
+      obj
+
+    (loop :for accessor :across accessors
+          :do (typecheck accessor :buffer-views buffer-views))))
+
+
+
+
+
+
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Test code.
+;; Test code. (move to other file...)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun test/parse-indices (file)
   (let* ((j (virality.file.gltf::load-gltf-file file))
@@ -2088,7 +2240,9 @@ allowable inputs below and what is returned.
   (let ((file-type (pathname-type path)))
     (cond
       ((string= file-type "gltf")
-       (parse-gltf (%load-gltf path)))
+       (let ((gltf (parse-gltf (%load-gltf path))))
+         (typecheck gltf)
+         gltf))
       ((string= file-type "glb")
        (%load-glb path))
       (t
