@@ -13,10 +13,10 @@
   :primitive :triangle-strip
   :vertex-count 4
   :buffers
-  (:data (((-0.5 0.5 0) (0 0 1) (-1 1 0))
-          ((-0.5 -0.5 0) (0 0 1) (-1 -1 0))
-          ((0.5 0.5 0) (0 0 1) (1 1 0))
-          ((0.5 -0.5 0) (0 0 1) (1 -1 0)))))
+  (:data (((-0.5f0 0.5f0 0f0) (0f0 0f0 1f0) (-1f0 1f0 0f0))
+          ((-0.5f0 -0.5f0 0f0) (0f0 0f0 1f0) (-1f0 -1f0 0f0))
+          ((0.5f0 0.5f0 0f0) (0f0 0f0 1f0) (1f0 1f0 0f0))
+          ((0.5f0 -0.5f0 0f0) (0f0 0f0 1f0) (1f0 -1f0 0f0)))))
 
 ;;; Prefabs
 
@@ -27,8 +27,8 @@
 (v:define-prefab "dynamic-geometry" (:library examples)
   (("camera" :copy "/cameras/perspective"))
   (("plane")
-   (c/xform:transform :rotate/inc (c/xform:angular-velocity :x pi)
-                      :scale (v3:vec 20 20 20))
+   (c/xform:transform :rotate/inc (p:angular-velocity :x (float pi 1f0))
+                      :scale (v3:vec 20f0 20f0 20f0))
    (c/dmesh:dynamic-mesh :geometry 'tile)
    (c/render:render :material 'dynamic-geometry
                     :mode :dynamic-mesh)))

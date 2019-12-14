@@ -7,7 +7,7 @@
 (v:define-component destroy-my-actor ()
   ((%time-to-destroy :accessor time-to-destroy
                      :initarg :time-to-destroy
-                     :initform 5)))
+                     :initform 5f0)))
 
 (defmethod v:on-collision-enter ((self destroy-my-actor) other-collider)
   (log:info :virality.examples
@@ -68,12 +68,12 @@
         (log:trace :virality.examples "RIGHT Vector -> ~a" right)
         (log:trace :virality.examples "LEFT Vector -> ~a" left)
         ;; NOTE: This expects the actor to be unrotated wrt the universe.
-        (unless (and (v3:~ forward (v3:vec 0 0 -1))
-                     (v3:~ backward (v3:vec 0 0 1))
-                     (v3:~ up (v3:vec 0 1 0))
-                     (v3:~ down (v3:vec 0 -1 0))
-                     (v3:~ right (v3:vec 1 0 0))
-                     (v3:~ left (v3:vec -1 0 0)))
+        (unless (and (v3:~ forward (v3:vec 0f0 0f0 -1f0))
+                     (v3:~ backward (v3:vec 0f0 0f0 1f0))
+                     (v3:~ up (v3:vec 0f0 1f0 0f0))
+                     (v3:~ down (v3:vec 0f0 -1f0 0f0))
+                     (v3:~ right (v3:vec 1f0 0f0 0f0))
+                     (v3:~ left (v3:vec -1f0 0f0 0f0)))
           (error "The Transform Axis Direction API didn't match expectations!"))
         (setf (u:href (test-performed self) test-type) t)))))
 
@@ -91,8 +91,8 @@
   (let* ((actor (v:actor self))
          (actor-transform
            (v:component-by-type actor 'c/xform:transform))
-         (object-space-point (v3:vec 1 0 0))
-         (world-space-point (v3:vec 1 3 1))
+         (object-space-point (v3:vec 1f0 0f0 0f0))
+         (world-space-point (v3:vec 1f0 3f0 1f0))
          (local->world
            (c/xform:transform-point actor-transform
                                     object-space-point))
@@ -126,8 +126,8 @@
   (let* ((actor (v:actor self))
          (actor-transform
            (v:component-by-type actor 'c/xform:transform))
-         (object-space-vector (v3:vec 2 2 0))
-         (world-space-vector (v3:vec -4 4 0))
+         (object-space-vector (v3:vec 2f0 2f0 0f0))
+         (world-space-vector (v3:vec -4f0 4f0 0f0))
          (local->world
            (c/xform:transform-vector actor-transform
                                      object-space-vector))
@@ -163,14 +163,14 @@
            (v:component-by-type actor 'c/xform:transform))
          ;; NOTE: these must be normalized for the test. I specified it this way
          ;; so it would be easier to see in your mind's eye.
-         (object-space-direction (v3:normalize (v3:vec 1 1 0)))
-         (world-space-direction (v3:normalize (v3:vec -1 1 0)))
+         (object-space-direction (v3:normalize (v3:vec 1f0 1f0 0f0)))
+         (world-space-direction (v3:normalize (v3:vec -1f0 1f0 0f0)))
          (local->world
            (c/xform:transform-direction actor-transform
-                                               object-space-direction))
+                                        object-space-direction))
          (world->local
            (c/xform:inverse-transform-direction actor-transform
-                                                       world-space-direction)))
+                                                world-space-direction)))
 
     ;; See if transform-point and inverse-transform-point work.
     (let ((result-0
@@ -200,30 +200,30 @@
 
 (v:define-prefab "collision-smoke-test" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 6))
+   (c/cam:camera (:policy :new-args) :zoom 6f0))
   ("rot-0-center"
-   (c/xform:transform :translate (v3:vec -2 0 0)
-                      :rotate/inc (c/xform:angular-velocity :z pi))
+   (c/xform:transform :translate (v3:vec -2f0 0f0 0f0)
+                      :rotate/inc (p:angular-velocity :z (float pi 1f0)))
    ("plane-0"
-    (c/xform:transform :translate (v3:vec -2 0 0))
+    (c/xform:transform :translate (v3:vec -2f0 0f0 0f0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
     (c/col:sphere :display-id "Player"
                   :visualize t
                   :on-layer :player
                   :center (v3:zero)
-                  :radius 1)
+                  :radius 1f0)
     (c/render:render :material '2d-wood)))
   ("rot-1-center"
-   (c/xform:transform :translate (v3:vec 2 0 0)
-                      :rotate/inc (c/xform:angular-velocity :z (- pi)))
+   (c/xform:transform :translate (v3:vec 2f0 0f0 0f0)
+                      :rotate/inc (p:angular-velocity :z (float (- pi) 1f0)))
    ("plane-1"
-    (c/xform:transform :translate (v3:vec 2 0 0))
+    (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
     (c/col:sphere :display-id "Enemy"
                   :visualize t
                   :on-layer :enemy
                   :center (v3:zero)
-                  :radius 1)
+                  :radius 1f0)
     (c/render:render :material '2d-wood))))
 
 (v:define-prefab "collision-transform-test-0" (:library examples)
@@ -238,11 +238,11 @@ unit world vector representations of the axis directions as:
   left:     (-1 0 0)
 "
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7))
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
 
   ("thingy"
    ;; NOTE: The 5 0 0 is specific to the unit-test-transform-api tests.
-   (c/xform:transform :translate (v3:vec 5 0 0))
+   (c/xform:transform :translate (v3:vec 5f0 0f0 0f0))
    (unit-test-transform-api :test-type :test-direction-vectors)
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)))
@@ -252,18 +252,18 @@ unit world vector representations of the axis directions as:
 world space for a particular transform."
 
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7))
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
 
   ("right"
-   (c/xform:transform :translate (v3:vec 1 0 0))
+   (c/xform:transform :translate (v3:vec 1f0 0f0 0f0))
    ("up"
-    (c/xform:transform :translate (v3:vec 0 1 0))
+    (c/xform:transform :translate (v3:vec 0f0 1f0 0f0))
     ("back"
-     (c/xform:transform :translate (v3:vec 0 0 1))
+     (c/xform:transform :translate (v3:vec 0f0 0f0 1f0))
      ("mark"
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
-      (c/xform:transform :rotate (q:orient :local :z (/ pi 2))
+      (c/xform:transform :rotate (q:orient :local :z (float (/ pi 2f0) 1.0))
                          :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
       (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
@@ -286,10 +286,10 @@ that just spawns stone prefabs so they rain down onto the ground, which should
 be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7))
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
 
   ("left-gate"
-   (c/xform:transform :translate (v3:vec -1.15 2 -.1))
+   (c/xform:transform :translate (v3:vec -1.15f0 2f0 -.1f0))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Left-Gate"
@@ -297,7 +297,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
                  :on-layer :ground))
 
   ("right-gate"
-   (c/xform:transform :translate (v3:vec 1.15 2 -.1))
+   (c/xform:transform :translate (v3:vec 1.15f0 2f0 -.1f0))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Right-Gate"
@@ -305,11 +305,12 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
                  :on-layer :ground))
 
   ("stone"
-   (c/xform:transform :translate (v3:vec 0 5 0)
-                      :scale 0.5
-                      :rotate (q:orient :local :x (/ pi 2))
-                      :rotate/inc (c/xform:angular-velocity (v3:one) pi)
-                      :translate/inc (v3:vec 0 -2 0))
+   (c/xform:transform :translate (v3:vec 0f0 5f0 0f0)
+                      :scale 0.5f0
+                      :rotate (q:orient :local :x (float (/ pi 2f0) 1f0))
+                      :rotate/inc (p:angular-velocity (v3:one)
+                                                      (float pi 1.0))
+                      :translate/inc (v3:vec 0f0 -2f0 0f0))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
    (c/col:sphere :display-id "Stone"
@@ -318,17 +319,17 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
                  :referent (v:ref :self
                                   :component 'destroy-my-actor)
                  :center (v3:zero)
-                 :radius 1)
+                 :radius 1f0)
    (c/render:render :material 'damaged-helmet))
 
   ("ground"
-   (c/xform:transform :translate (v3:vec 0 -2 0.1))
+   (c/xform:transform :translate (v3:vec 0f0 -2f0 0.1f0))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/col:sphere :display-id "Ground"
                  :visualize t
                  :on-layer :ground
                  :center (v3:zero)
-                 :radius 1)
+                 :radius 1f0)
    (c/render:render :material '2d-wood)))
 
 (v:define-prefab "collision-test-1" (:library examples)
@@ -336,31 +337,31 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 actually are. You have to view the results to see the colliders lighting up."
 
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7))
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
 
   ("upper-left"
-   (c/xform:transform :translate (v3:vec -2 2 -0.1))
+   (c/xform:transform :translate (v3:vec -2f0 2f0 -0.1f0))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Upper-Left"
                  :visualize t
                  :on-layer :ground))
   ("upper-right"
-   (c/xform:transform :translate (v3:vec 2 2 -0.1))
+   (c/xform:transform :translate (v3:vec 2f0 2f0 -0.1f0))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Upper-Right"
                  :visualize t
                  :on-layer :ground))
   ("lower-left"
-   (c/xform:transform :translate (v3:vec -2 -2 -0.1))
+   (c/xform:transform :translate (v3:vec -2f0 -2f0 -0.1f0))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Lower-Left"
                  :visualize t
                  :on-layer :ground))
   ("lower-right"
-   (c/xform:transform :translate (v3:vec 2 -2 -0.1))
+   (c/xform:transform :translate (v3:vec 2f0 -2f0 -0.1f0))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Lower-Right"
@@ -368,17 +369,18 @@ actually are. You have to view the results to see the colliders lighting up."
                  :on-layer :ground))
   ("stone"
    (c/xform:transform :translate (v3:zero)
-                      :scale 2
-                      :rotate (q:orient :local :x (/ pi 2))
-                      :rotate/inc (c/xform:angular-velocity (v3:one) pi)
+                      :scale 2f0
+                      :rotate (q:orient :local :x (float (/ pi 2) 1.0))
+                      :rotate/inc (p:angular-velocity (v3:one)
+                                                      (float pi 1.0))
                       :translate/inc (v3:zero))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
-   (destroy-my-actor :time-to-destroy 2)
+   (destroy-my-actor :time-to-destroy 2f0)
    (c/col:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :player
                  :center (v3:zero)
-                 :radius 1)
+                 :radius 1f0)
    (c/render:render :material 'damaged-helmet)))
 
 ;;; Prefab descriptors

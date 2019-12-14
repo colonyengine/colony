@@ -11,10 +11,10 @@
                  :mode :perspective))
   ("iso"
    (c/xform:transform :rotate (q:orient :local
-                                        :x (- (atan (/ (sqrt 2))))
-                                        :y (- (/ pi 4))))
+                                        :x (float (- (atan (/ (sqrt 2)))) 1f0)
+                                        :y (float (- (/ pi 4)) 1f0)))
    ("camera"
-    (c/xform:transform :translate (v3:vec 0 0 10))
+    (c/xform:transform :translate (v3:vec 0f0 0f0 10f0))
     (c/cam:camera :active-p t
                   :mode :orthographic))))
 

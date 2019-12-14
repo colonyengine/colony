@@ -91,7 +91,7 @@
                        (tex :sampler-2d)
                        (time :float)
                        (mix-color :vec4))
-  (let ((tex-color (texture tex (vec2 (.x uv1) (- (.y uv1) (/ time 50.0))))))
+  (let ((tex-color (texture tex (vec2 (.x uv1) (- (.y uv1) (/ time 50f0))))))
     (* tex-color mix-color)))
 
 
@@ -201,7 +201,7 @@
   (:profiles (x/mat:u-mvp)
    :shader shd/tex:unlit-texture
    :uniforms ((:tex.sampler1 'white)
-              (:mix-color (v4:vec 0 1 0 1)))))
+              (:mix-color (v4:vec 0f0 1f0 0f0 1f0)))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -222,20 +222,21 @@
                :initform nil)
    (%max-velocity :accessor max-velocity
                   :initarg :max-velocity
-                  :initform 1500)
+                  :initform 1500f0)
    (%translate-deadzone :accessor translate-deadzone
                         :initarg :translate-deadzone
-                        :initform .1)
+                        :initform .1f0)
    (%rotate-deadzone :accessor rotate-deadzone
                      :initarg :rotate-deadzone
-                     :initform .1)
+                     :initform .1f0)
    ;; We just hack in a boundary cube you can't go outside of. This is in the
    ;; local space of the actor to which this component is attached.
    ;; The format is minx, maxx, miny, maxy, minz, maxz
    (%region-cuboid :accessor region-cuboid
                    :initarg :region-cuboid
-                   :initform (reg:make-region-cuboid (v3:vec 0.0 0.0 0.0)
-                                                     -900 900 -500 500 0 0))))
+                   :initform (reg:make-region-cuboid
+                              (v3:vec 0f0 0f0 0f0)
+                              -900f0 900f0 -500f0 500f0 0f0 0f0))))
 
 ;; upon attaching, this component will store find the transform component
 ;; on the actor to which it has been attached and keep a direct reference to it.
@@ -259,7 +260,7 @@
       ;; left stick
       (u:mvlet*
           (;; Deal with deadzones and other bad data around the input vector.
-           (vec (v3:vec lx ly 0))
+           (vec (v3:vec lx ly 0f0))
            (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
            (vec (if (< (v3:length vec) translate-deadzone) (v3:zero) vec))
            ;; Right trigger modifies speed. pull to lerp from full speed
@@ -285,11 +286,13 @@
 
       ;; Then we settle the notion of how the player is oriented.  We're setting
       ;; a hard angle of rotation each time so we overwrite the previous value.
-      (unless (or (= lx ly 0.0) (< (v3:length (v3:vec lx ly 0)) rotate-deadzone))
+      (unless (or (= lx ly 0f0)
+                  (< (v3:length (v3:vec lx ly 0f0)) rotate-deadzone))
         (let* ((angle (atan (- lx) ly))
                (angle (if (< angle 0)
                           (+ pi (- pi (abs angle)))
-                          angle)))
+                          angle))
+               (angle (float angle 1f0)))
           (c/xform:rotate transform
                           (q:orient :local :z angle)
                           :replace-p t
@@ -312,7 +315,7 @@
                :initform nil)
    (%velocity :accessor velocity
               :initarg :velocity
-              :initform 0)))
+              :initform 0f0)))
 
 (defmethod v:on-component-attach ((self line-mover) actor)
   (declare (ignore actor))
@@ -394,10 +397,10 @@
                    (invulnerability-timer invulnerability-timer))
       self
 
-    (when (and allow-invulnerability (> invulnerability-timer 0))
+    (when (and allow-invulnerability (> invulnerability-timer 0f0))
       (decf invulnerability-timer (v:frame-time context))
-      (when (<= invulnerability-timer 0)
-        (setf invulnerability-timer 0)))))
+      (when (<= invulnerability-timer 0f0)
+        (setf invulnerability-timer 0f0)))))
 
 (defmethod possibly-accept-damage ((self hit-points) other-collider)
   (with-accessors ((context v:context)
@@ -482,8 +485,8 @@
                         &key
                           (parent nil)
                           (scale (v3:one))
-                          (destroy-ttl 2)
-                          (velocity 1000)
+                          (destroy-ttl 2f0)
+                          (velocity 1000f0)
                           (direction :+y)
                           (prefab-name "projectile")
                           (prefab-library 'ptp)
@@ -563,7 +566,7 @@
 ;; NOTE: No physics layers for this since they don't even participate in the
 ;; collisions.
 (defun make-explosion (context translation rotation scale
-                       &key (destroy-ttl 2)
+                       &key (destroy-ttl 2f0)
                          (prefab-name "generic-explosion")
                          (prefab-library 'ptp)
                          (name "explode01-01")
@@ -627,14 +630,14 @@
                  :initform nil)
    (%rotate-deadzone :accessor rotate-deadzone
                      :initarg :rotate-deadzone
-                     :initform .1)
+                     :initform .1f0)
    (%fire-period :accessor fire-period
                  :initarg :fire-period
-                 :initform 25) ;; hz
+                 :initform 25f0) ;; hz
    ;; Keeps track of how much time passed since we fired last.
    (%cooldown-time :accessor cooldown-time
                    :initarg :cooldown-time
-                   :initform 0)
+                   :initform 0f0)
    ;; name and frames of projectile to fire.
    (%name :accessor name
           :initarg :name
@@ -674,19 +677,20 @@
                                               '(:gamepad1 :right-stick))))
          (let* ((parent-model (c/xform:model emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
-           (unless (or (= rx ry 0.0)
-                       (< (v3:length (v3:vec rx ry 0)) rotate-deadzone))
+           (unless (or (= rx ry 0f0)
+                       (< (v3:length (v3:vec rx ry 0f0)) rotate-deadzone))
              (let* ((angle (atan (- rx) ry))
-                    (angle (if (< angle 0)
+                    (angle (if (< angle 0f0)
                                (+ pi (- pi (abs angle)))
-                               angle)))
+                               angle))
+                    (angle (float angle 1f0)))
                ;; The rotation we use is indicated by the right stick vector.
                (make-projectile context
                                 parent-translation
                                 (q:orient :local :z angle)
                                 (physics-layer self)
                                 depth-layer
-                                :velocity 2000
+                                :velocity 2000f0
                                 :name (name self)
                                 :frames (frames self)))))))
 
@@ -710,7 +714,7 @@
                   :initform 1) ;; Hz
    (%cooldown-time :accessor cooldown-time
                    :initarg :cooldown-time
-                   :initform 0)
+                   :initform 0f0)
    (%asteroid-holder :accessor asteroid-holder
                      :initarg :asteroid-holder
                      :initform nil)
@@ -719,10 +723,10 @@
                :initform 1)
    (%difficulty-period :accessor difficulty-period
                        :initarg :difficulty-period
-                       :initform 1/10) ;; Hz
+                       :initform (float 1/10 1f0)) ;; Hz
    (%difficulty-time :accessor difficulty-time
                      :initarg :difficulty-time
-                     :initform 0)
+                     :initform 0f0)
    (%asteroid-db :accessor asteroid-db
                  :initarg :asteroid-db
                  :initform #(("asteroid01-01" 16)
@@ -733,7 +737,7 @@
                              ("asteroid06-01" 16)))
    (%scale-range :accessor scale-range
                  :initarg :scale-range
-                 :initform (v2:vec 0.75 1.25))))
+                 :initform (v2:vec 0.75f0 1.25f0))))
 
 
 (defmethod v:on-component-update ((self asteroid-field))
@@ -755,9 +759,9 @@
     (let ((transform
             (v:component-by-type (v:actor self) 'c/xform:transform)))
       (flet ((ransign (val &optional (offset 0))
-               (+ (* (random (if (zerop val) 1 val))
-                     (if (zerop (random 2)) 1 -1))
-                  offset)))
+               (float (+ (* (random (if (zerop val) 1 val))
+                            (if (zerop (random 2)) 1 -1))
+                         offset) 1f0)))
         (cond
           ((>= cooldown-time (/ (* spawn-period difficulty)))
            (loop :while (>= cooldown-time (/ (* spawn-period difficulty)))
@@ -772,7 +776,7 @@
                   (target
                     (c/xform:transform-point
                      transform
-                     (v3:vec (ransign 300.0) (ransign 300.0) 0.1)))
+                     (v3:vec (ransign 300f0) (ransign 300f0) 0.1f0)))
                   (quadrant (random 4)))
 
              ;; pick an origin point in director space and convert it to world
@@ -782,13 +786,13 @@
                     transform
                     (ecase quadrant
                       (0 ;; left side
-                       (v3:vec -1000.0 (ransign 600.0) 0.1))
+                       (v3:vec -1000f0 (ransign 600f0) 0.1f0))
                       (1 ;; top side
-                       (v3:vec (ransign 1000.0) 600.0 0.1))
+                       (v3:vec (ransign 1000f0) 600f0 0.1f0))
                       (2 ;; right side
-                       (v3:vec 1000.0 (ransign 600.0) 0.1))
+                       (v3:vec 1000f0 (ransign 600f0) 0.1f0))
                       (3 ;; bottom side
-                       (v3:vec (ransign 1000.0) -600.0 0.1)))))
+                       (v3:vec (ransign 1000f0) -600f0 0.1f0)))))
 
              (destructuring-bind (name frames)
                  (aref asteroid-db (random (length asteroid-db)))
@@ -801,7 +805,7 @@
                                   q:+id+
                                   :enemy
                                   :asteroid
-                                  :velocity  (ransign 50 400)
+                                  :velocity  (ransign 50f0 400f0)
                                   ;; this direction is in world space.
                                   ;; it moves from the origin to the target.
                                   :direction (v3:normalize (v3:- target origin))
@@ -810,7 +814,7 @@
                                                  uniform-scale)
                                   :name name
                                   :frames frames
-                                  :destroy-ttl 4
+                                  :destroy-ttl 4f0
                                   :parent asteroid-holder)))))
 
           (t
@@ -883,7 +887,7 @@
                    (direction direction)
                    (stable stable))
       player-stable
-    (let* ((dir (ecase direction (:left -1) (:right 1)))
+    (let* ((dir (ecase direction (:left -1f0) (:right 1f0)))
            (mockette (first
                       (v:make-prefab-instance
                        (v::core player-stable)
@@ -892,7 +896,7 @@
            (transform (v:component-by-type mockette 'c/xform:transform)))
 
       (c/xform:translate
-       transform (v3:vec (* mockette-index (* dir width-increment)) -60 0))
+       transform (v3:vec (* mockette-index (* dir width-increment)) -60f0 0f0))
 
       (setf (aref mockette-refs mockette-index) mockette))))
 
@@ -1115,7 +1119,7 @@ NIL if no such list exists."
    (%explosion-region :accessor explosion-region
                       :initarg :explosion-region
                       :initform (reg:make-region-ellipsoid (v3:zero)
-                                                           100 100 0))
+                                                           100f0 100f0 0f0))
    (%level-manager :accessor level-manager
                    :initarg :level-manager
                    :initform nil)
@@ -1126,10 +1130,10 @@ NIL if no such list exists."
    ;; timer stuff
    (%warning-explosion-period :accessor warning-explosion-period
                               :initarg :warning-explosion-period
-                              :initform 16) ;; Hz
+                              :initform 16f0) ;; Hz
    (%warning-explosion-timer :accessor warning-explosion-timer
                              :initarg :warning-explosion-timer
-                             :initform 0)))
+                             :initform 0f0)))
 
 ;; TODO: This is naturally a candidate for on-component-attach. However, the
 ;; on-component-attach for the tags component might not have run so our lookup
@@ -1176,7 +1180,7 @@ NIL if no such list exists."
     ;; TODO: Notice here we have a conditional running of the timer, how do we
     ;; represent this generically.
     (unless (<= (hp hit-points) hit-point-warning-threshhold)
-      (setf warning-explosion-timer 0)
+      (setf warning-explosion-timer 0f0)
       (return-from v:on-component-update nil))
 
     (cond
@@ -1220,7 +1224,7 @@ NIL if no such list exists."
              (make-explosion context
                              world-location
                              random-rotation
-                             (v3:vec .25 .25 1)
+                             (v3:vec .25f0 .25f0 1f0)
                              :name (name explosion)
                              :frames (frames explosion))))))
       (t
@@ -1279,10 +1283,10 @@ NIL if no such list exists."
                        :initform nil)
    (%time-bar-full-color :accessor time-bar-full-color
                          :initarg :time-bar-full-color
-                         :initform (v4:vec 0 1 0 1))
+                         :initform (v4:vec 0f0 1f0 0f0 1f0))
    (%time-bar-empty-color :accessor time-bar-empty-color
                           :initarg :time-bar-empty-color
-                          :initform (v4:vec 1 0 0 1))))
+                          :initform (v4:vec 1f0 0f0 0f0 1f0))))
 
 (defmethod v:on-component-initialize ((self time-keeper))
   (setf (time-left self) (time-max self)))
@@ -1521,7 +1525,7 @@ NIL if no such list exists."
                                   :initform .5f0) ;; seconds
    (%player1-respawn-timer :accessor player1-respawn-timer
                            :initarg :player1-respawn-timer
-                           :initform 0)
+                           :initform 0f0)
    (%player1-waiting-for-respawn :accessor player1-waiting-for-respawn
                                  :initarg :player1-waiting-for-respawn
                                  :initform nil)
@@ -1530,20 +1534,20 @@ NIL if no such list exists."
    ;; When we enter game over, this is how long to show the gameover sign.
    (%game-over-max-wait-time :accessor game-over-max-wait-time
                              :initarg :game-over-max-wait-time
-                             :initform 2) ;; seconds
+                             :initform 2f0) ;; seconds
    (%game-over-timer :accessor game-over-timer
                      :initarg :game-over-timer
-                     :initform 0)
+                     :initform 0f0)
 
    ;; Timer
    ;; When we complete a level we show the level complete sign for a bit before
    ;; Moving to the next level.
    (%level-complete-max-wait-time :accessor level-complete-max-wait-time
                                   :initarg :level-complete-max-wait-time
-                                  :initform 3) ;; seconds
+                                  :initform 3f0) ;; seconds
    (%level-complete-timer :accessor level-complete-timer
                           :initarg :level-complete-timer
-                          :initform 0)))
+                          :initform 0f0)))
 
 ;; each method returns the new state it should do for the next update.
 (defgeneric process-director-state (director state previous-state))
@@ -1668,7 +1672,7 @@ NIL if no such list exists."
       ;; already can).
       (when (not player-alive-p)
         (if (not (eq state previous-state))
-            (setf player1-respawn-timer 0
+            (setf player1-respawn-timer 0f0
                   next-state :player-spawn)
             (if (>= player1-respawn-timer player-respawn-max-wait-time)
                 ;; We're waiting for respawn, and the time has come.
@@ -1745,7 +1749,7 @@ NIL if no such list exists."
       self
 
     (unless (eq state previous-state)
-      (setf level-complete-timer 0)
+      (setf level-complete-timer 0f0)
 
       ;; First: turn off asteroid generator.
       ;;
@@ -1814,7 +1818,7 @@ NIL if no such list exists."
       (v:destroy player))
 
     (unless (eq state previous-state)
-      (setf game-over-timer 0)
+      (setf game-over-timer 0f0)
       (let ((game-over-sign
               (first (v:make-prefab-instance
                       (v::core context)
@@ -1866,7 +1870,7 @@ NIL if no such list exists."
   (c/render:render :material 'sprite-sheet
                    :mode :sprite)
   (c/action:actions :default '((:type x/action:sprite-animate
-                                :duration 0.5
+                                :duration 0.5f0
                                 :repeat-p t))))
 
 (v:define-prefab "player-ship" (:library ptp)
@@ -1879,12 +1883,12 @@ NIL if no such list exists."
               ;; When the player is born, they are automatically invulnerable
               ;; for 1 second.
               ;; TODO: NEED(!) to visualize this effect!
-              :invulnerability-timer 1)
+              :invulnerability-timer 1f0)
   (player-movement)
   (c/col:sphere :center (v3:zero)
                 :on-layer :player
                 :referent (v:ref :self :component 'hit-points)
-                :radius 30)
+                :radius 30f0)
   ("ship-body"
    (c/sprite:sprite :spec :spritesheet-data
                     :name "ship26")
@@ -1897,14 +1901,14 @@ NIL if no such list exists."
          :name "bullet01" :frames 2))
 
    ("exhaust"
-    (c/xform:transform :translate (v3:vec 0 -60 0))
+    (c/xform:transform :translate (v3:vec 0f0 -60f0 0f0))
     (c/sprite:sprite :spec :spritesheet-data
                      :name "exhaust03-01"
                      :frames 8)
     (c/render:render :material 'sprite-sheet
                      :mode :sprite)
     (c/action:actions :default '((:type x/action:sprite-animate
-                                  :duration 0.5
+                                  :duration 0.5f0
                                   :repeat-p t))))))
 
 (v:define-prefab "player-ship-mockette" (:library ptp)
@@ -1929,7 +1933,7 @@ NIL if no such list exists."
                 :on-layer :planet
                 :referent (v:ref :self :component 'planet)
                 :visualize t
-                :radius 145)
+                :radius 145f0)
   (c/sprite:sprite :spec :spritesheet-data
                    :name "planet01")
   (c/render:render :material 'sprite-sheet
@@ -1944,14 +1948,14 @@ NIL if no such list exists."
   (c/render:render :material 'sprite-sheet
                    :mode :sprite)
   (c/action:actions :default '((:type x/action:sprite-animate
-                                :duration 0.5
+                                :duration 0.5f0
                                 :repeat-p nil))))
 
 ;; TODO: Refactor these signs into a single prefab and a sign component to
 ;; manage the configuration of the prefab.
 (v:define-prefab "warning-wave-sign" (:library ptp)
   "Not used yet."
-  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+  (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                      :scale 512f0)
   ("sign"
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
@@ -1959,43 +1963,43 @@ NIL if no such list exists."
 
 (v:define-prefab "warning-mothership-sign" (:library ptp)
   "Not used yet."
-  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+  (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                      :scale 512f0)
   ("sign"
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material 'warning-mothership)))
 
 (v:define-prefab "title-sign" (:library ptp)
-  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+  (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                      :scale 512f0)
   ("sign"
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material 'title)))
 
 (v:define-prefab "game-over-sign" (:library ptp)
-  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+  (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                      :scale 512f0)
   ("sign"
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material 'game-over)))
 
 (v:define-prefab "level-complete-sign" (:library ptp)
-  (c/xform:transform :translate (v3:vec 0 0 (dl :sign))
+  (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                      :scale 512f0)
   ("sign"
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material 'level-complete)))
 
 (v:define-prefab "starfield" (:library ptp)
-  (c/xform:transform :scale 960
+  (c/xform:transform :scale 960f0
                      ;; NOTE: ortho projection, so we can put starfield way
                      ;; back.
-                     :translate (v3:vec 0 0 (dl :starfield)))
+                     :translate (v3:vec 0f0 0f0 (dl :starfield)))
   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
   (c/render:render :material 'starfield))
 
 (v:define-prefab "time-keeper" (:library ptp)
-  (c/xform:transform :translate (v3:vec 900 -512 (dl :time-keeper)))
+  (c/xform:transform :translate (v3:vec 900f0 -512f0 (dl :time-keeper)))
   (time-keeper :time-max 30f0
                :time-bar-transform (v:ref "time-bar-root"
                                           :component 'c/xform:transform)
@@ -2006,7 +2010,7 @@ NIL if no such list exists."
    ;; time-bar will cause it to stretch upwards from a "ground" at 0 in this
    ;; coordinate frame.
    ("time-display"
-    (c/xform:transform :translate (v3:vec 0 1 0))
+    (c/xform:transform :translate (v3:vec 0f0 1f0 0f0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
     ;; TODO: when 'time-bar is mis-spelled in the material,
     ;; I don't get the debug material, why?
@@ -2021,7 +2025,7 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   ("asteroids")
   (("title" :copy ("/title-sign" :from ptp))
-   (c/xform:transform :translate (v3:vec 0 0 (dl :sign)))))
+   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign)))))
 
 (v:define-prefab "level-0" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
@@ -2034,17 +2038,17 @@ NIL if no such list exists."
   (("time-keeper" :link ("/time-keeper" :from ptp))
    (time-keeper :time-max 20f0))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec 0 100 (dl :planet))
+   (c/xform:transform :translate (v3:vec 0f0 100f0 (dl :planet))
                       :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec -200 -100 (dl :planet))
+   (c/xform:transform :translate (v3:vec -200f0 -100f0 (dl :planet))
                       :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec 200 -100 (dl :planet))
+   (c/xform:transform :translate (v3:vec 200f0 -100f0 (dl :planet))
                       :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet03")))
@@ -2059,12 +2063,12 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec -200 100 (dl :planet))
+   (c/xform:transform :translate (v3:vec -200f0 100f0 (dl :planet))
                       :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec 200 100 (dl :planet))
+   (c/xform:transform :translate (v3:vec 200f0 100f0 (dl :planet))
                       :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet02")))
@@ -2080,7 +2084,7 @@ NIL if no such list exists."
   (("time-keeper" :link ("/time-keeper" :from ptp))
    (time-keeper :time-max 40f0))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec 0 100 (dl :planet))
+   (c/xform:transform :translate (v3:vec 0f0 100f0 (dl :planet))
                       :scale 0.9f0)
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet01")))
@@ -2095,11 +2099,11 @@ sequencing."
                                     :component 'player-stable))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
-   (c/xform:transform :translate (v3:vec 0 0 (dl :camera))))
+   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :camera))))
 
   (("player-1-stable" :link ("/player-stable" :from ptp))
    (c/xform:transform
-    :translate (v3:vec -900 550 (dl :player-stable))))
+    :translate (v3:vec -900f0 550f0 (dl :player-stable))))
 
   ("current-level"))
 
@@ -2111,7 +2115,7 @@ testing the starfield shader."
   (("starfield" :link ("/starfield" :from ptp)))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
-   (c/xform:transform :translate (v3:vec 0 0 (dl :camera)))))
+   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :camera)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Prefab descriptors for convenience

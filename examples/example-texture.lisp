@@ -155,7 +155,7 @@
     (:uv-z (lambda (context material)
              (declare (ignore material))
              ;; make sin in the range of 0 to 1 for texture coord.
-             (/ (1+ (sin (* (v:total-time context) 1.5))) 2.0))))))
+             (float (/ (1+ (sin (* (v:total-time context) 1.5))) 2.0) 1f0))))))
 
 (v:define-material 1d-array
   (:shader ex/shd:unlit-texture-1d-array
@@ -174,7 +174,7 @@
     (:uv-z (lambda (context material)
              (declare (ignore material))
              ;; make sin in the range of 0 to 1 for texture coord.
-             (/ (1+ (sin (* (v:total-time context) 1.5))) 2.0)))
+             (float (/ (1+ (sin (* (v:total-time context) 1.5))) 2.0) 1f0)))
     (:num-layers 4))))
 
 (v:define-material 2d-sweep-input
@@ -199,10 +199,11 @@
    :uniforms
    ((:tex.sampler1 'cubemaparray)
     (:mix-color (v4:one))
-    (:cube-layer (lambda (context material)
-                   (declare (ignore material))
-                   ;; make sin in the range of 0 to 1 for texture coord.
-                   (/ (1+ (sin (* (v:total-time context) 1.5))) 2.0)))
+    (:cube-layer
+     (lambda (context material)
+       (declare (ignore material))
+       ;; make sin in the range of 0 to 1 for texture coord.
+       (float (/ (1+ (sin (* (v:total-time context) 1.5))) 2.0) 1f0)))
     (:num-layers 2))))
 
 ;;; Components
@@ -226,8 +227,8 @@
             %material-retrieved-p t))
     (u:mvlet* ((context (v:context self))
                (x y (v:get-mouse-position context)))
-      (when (null x) (setf x (/ (v:option context :window-width) 2.0)))
-      (when (null y) (setf y (/ (v:option context :window-height) 2.0)))
+      (when (null x) (setf x (/ (v:option context :window-width) 2f0)))
+      (when (null y) (setf y (/ (v:option context :window-height) 2f0)))
       (v2:with-components ((c (channel0 self)))
         ;; crappy, but good enough.
         (setf cx (float (/ x (v:option context :window-width)) 1f0)
@@ -240,36 +241,36 @@
 
 (v:define-prefab "texture" (:library examples :policy :new-type)
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 6))
+   (c/cam:camera (:policy :new-args) :zoom 6f0))
   (("1d-texture" :copy "/mesh")
-   (c/xform:transform :translate (v3:vec -4 3 0))
+   (c/xform:transform :translate (v3:vec -4f0 3f0 0f0))
    (c/render:render :material '1d-gradient))
   (("2d-texture" :copy "/mesh")
-   (c/xform:transform :translate (v3:vec -2 3 0))
+   (c/xform:transform :translate (v3:vec -2f0 3f0 0f0))
    (c/render:render :material '2d-wood))
   (("3d-texture" :copy "/mesh")
-   (c/xform:transform :translate (v3:vec 0 3 0))
+   (c/xform:transform :translate (v3:vec 0f0 3f0 0f0))
    (c/render:render :material '3d))
   (("1d-array-texture" :copy "/mesh")
-   (c/xform:transform :translate (v3:vec 2 3 0))
+   (c/xform:transform :translate (v3:vec 2f0 3f0 0f0))
    (c/render:render :material '1d-array))
   (("2d-array-texture" :copy "/mesh")
-   (c/xform:transform :translate (v3:vec 4 3 0))
+   (c/xform:transform :translate (v3:vec 4f0 3f0 0f0))
    (c/render:render :material '2d-array))
   (("swept-input" :copy "/mesh")
-   (c/xform:transform :translate (v3:vec -4 1 0))
+   (c/xform:transform :translate (v3:vec -4f0 1f0 0f0))
    (c/render:render :material '2d-sweep-input)
    (shader-sweep))
   (("cube-map" :copy "/mesh")
-   (c/xform:transform :translate (v3:vec 0 -1 0)
+   (c/xform:transform :translate (v3:vec 0f0 -1f0 0f0)
                       :rotate (q:orient :world
-                                        :x (asin (/ (sqrt 2)))
-                                        :z (/ pi 4)))
+                                        :x (float (asin (/ (sqrt 2))) 1f0)
+                                        :z (float (/ pi 4) 1f0)))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))
    (c/render:render :material 'cubemap))
   (("cube-map-array" :copy "/mesh")
-   (c/xform:transform :translate (v3:vec 3 -1 0)
-                      :rotate/inc (c/xform:angular-velocity (v3:one) pi))
+   (c/xform:transform :translate (v3:vec 3f0 -1f0 0f0)
+                      :rotate/inc (p:angular-velocity (v3:one) (float pi 1f0)))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))
    (c/render:render :material 'cubemaparray)))
 

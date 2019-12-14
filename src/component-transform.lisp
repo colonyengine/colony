@@ -81,7 +81,7 @@
   (declare (optimize speed))
   (with-slots (%previous %current %incremental-delta %incremental) state
     (q:copy! %previous %current)
-    (angular-velocity->rotation! %incremental-delta %incremental delta)
+    (p:angular-velocity->rotation! %incremental-delta %incremental delta)
     (q:rotate! %current %current %incremental-delta)))
 
 (defun transform-node (core node)
@@ -203,7 +203,7 @@
 TRANSFORM, to world space and returns the new vector. The new vector is affected
 by scale, rotation, and translation. A newly allocated M:VEC3 is returned."
   (v3:with-components ((v point-vec))
-    (~:.xyz (m4:*v4 (model transform) (v4:vec vx vy vz 1)))))
+    (~:.xyz (m4:*v4 (model transform) (v4:vec vx vy vz 1f0)))))
 
 (defun inverse-transform-point (transform point-vec)
   "Transform the vector in POINT-VEC, assumed to be in the world space, to the
@@ -211,7 +211,7 @@ local space of the TRANSFORM and returns the new vector. The new vector is
 affected by scale, rotation, and translation. A newly allocated M:VEC3 is
 returned."
   (v3:with-components ((v point-vec))
-    (~:.xyz (m4:*v4 (m4:invert (model transform)) (v4:vec vx vy vz 1)))))
+    (~:.xyz (m4:*v4 (m4:invert (model transform)) (v4:vec vx vy vz 1f0)))))
 
 (defun transform-vector (transform vector-vec)
   "Transform the vector in VECTOR-VEC, assumed to be in the local space of the
@@ -220,7 +220,7 @@ rotation, but not by translation. A newly allocated M:VEC3 is returned."
   (v3:with-components ((v vector-vec))
     (let ((model (m4:copy (model transform))))
       (m4:set-translation! model model v3:+zero+)
-      (~:.xyz (m4:*v4 model (v4:vec vx vy vz 1))))))
+      (~:.xyz (m4:*v4 model (v4:vec vx vy vz 1f0))))))
 
 (defun inverse-transform-vector (transform vector-vec)
   "Transform the vector in VECTOR-VEC, assumed to be in the world space,
@@ -230,7 +230,7 @@ returned."
   (v3:with-components ((v vector-vec))
     (let ((model (m4:copy (model transform))))
       (m4:set-translation! model model v3:+zero+)
-      (~:.xyz (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))
+      (~:.xyz (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1f0))))))
 
 (defun transform-direction (transform direction-vec)
   "Transform the vector in DIRECTION-VEC, assumed to be in the local space of
@@ -242,7 +242,7 @@ returned."
       (m4:set-translation! model model v3:+zero+)
       (m4:normalize-rotation! model model)
       (m4:orthonormalize! model model)
-      (~:.xyz (m4:*v4 model (v4:vec vx vy vz 1))))))
+      (~:.xyz (m4:*v4 model (v4:vec vx vy vz 1f0))))))
 
 (defun inverse-transform-direction (transform direction-vec)
   "Transform the vector in DIRECTION-VEC, assumed to be in world space,
@@ -253,7 +253,7 @@ returned."
     (let ((model (m4:copy (model transform))))
       (m4:set-translation! model model v3:+zero+)
       (m4:normalize-rotation! model model)
-      (~:.xyz (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))
+      (~:.xyz (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1f0))))))
 
 ;;; NOTE: These functions return the vectors that represent forward, backward,
 ;;; up, down, right, and left in _world space_.
@@ -283,42 +283,3 @@ returned."
 (defun transform-left (transform)
   "Return the left vector (+X axis) in world space for this TRANSFORM."
   (v3:negate (m4:rotation-axis-to-vec3 (model transform) :x)))
-
-;;;; NOTE: This API is a candidate to go into the origin math library.
-;;;; It is pretty plausible that it exists here too if not there.
-
-(defun angular-velocity! (out axis radians-per-second)
-  (v3:with-components ((o out) (a axis))
-    (case axis
-      (:x (psetf ox 1f0 oy 0f0 oz 0f0))
-      (:y (psetf ox 0f0 oy 1f0 oz 0f0))
-      (:z (psetf ox 0f0 oy 0f0 oz 1f0))
-      (t
-       (v3:normalize! out axis)))
-    (v3:scale! out out (float radians-per-second 1f0))))
-
-(defun angular-velocity (axis radians-per-second)
-  "AXIS is a vector of any length or :x, :y, :z, for each of the positive local
-axis, RATE is in radians/second. Return an angular velocity vector following the
-right hand rule whose direction is parallel to AXIS and magnitude is RATE."
-  (angular-velocity! (v3:zero) axis radians-per-second))
-
-(defun angular-velocity->rotation! (out angular-velocity dt)
-  ;; TODO: Needs optimization. The assembly looks bad. Some GENERIC-? are in
-  ;; there.
-  (let ((dt (float dt 1f0)))
-    (declare (single-float dt))
-    (q:with-components ((o out))
-      (v3:with-components ((av angular-velocity))
-        (v3:with-elements ((nav 0f0 0f0 0f0))
-          (v3::%normalize navx navy navz avx avy avz)
-          (q::%from-axis-angle ow ox oy oz navx navy navz
-                               (* dt (v3::length angular-velocity)))
-          (q:normalize! out out))))))
-
-(defun angular-velocity->rotation (angular-velocity dt)
-  "ANGULAR-VELOCITY is a vec3 angular velocity vector whose magnitude represents
-radians/second rotation about its vector. DT is an amount of time. Return a
-normalized quaternion that represents the angular velocity rotation in DT amount
-of time."
-  (angular-velocity->rotation! (q:id) angular-velocity dt))
