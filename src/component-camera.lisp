@@ -13,23 +13,23 @@
           :initform :perspective)
    (%clip-near :reader clip-near
                :initarg :clip-near
-               :initform 0.1)
+               :initform 0.1f0)
    (%clip-far :reader clip-far
               :initarg :clip-far
-              :initform 1024)
+              :initform 1024f0)
    (%fov-y :reader fov-y
            :initarg :fov-y
-           :initform 90)
+           :initform 90f0)
    (%zoom :accessor zoom
           :initarg :zoom
-          :initform 1)
+          :initform 1f0)
    (%transform :reader transform)))
 
 (defun correct-camera-transform (camera)
   (when (v3:zero-p (c/xform::current (c/xform::translation (transform camera))))
     (let ((translation (ecase (mode camera)
-                         (:orthographic (v3:vec 0 0 1))
-                         (:perspective (v3:vec 0 0 50)))))
+                         (:orthographic (v3:vec 0f0 0f0 1f0))
+                         (:perspective (v3:vec 0f0 0f0 50f0)))))
       (c/xform:translate (transform camera) translation)
       (log:warn :virality.components
                 "Camera ~a was attached to an actor without a translation ~
@@ -40,17 +40,19 @@
   (with-slots (%projection %fov-y %zoom %clip-near %clip-far) camera
     (let ((context (v:context camera)))
       (m4:set-projection/perspective! %projection
-                                      (/ %fov-y %zoom)
-                                      (/ (v:option context :window-width)
-                                         (v:option context :window-height))
-                                      %clip-near
-                                      %clip-far))))
+                                      (float (/ %fov-y %zoom) 1f0)
+                                      (float
+                                       (/ (v:option context :window-width)
+                                          (v:option context :window-height))
+                                       1f0)
+                                      (float %clip-near 1f0)
+                                      (float %clip-far 1f0)))))
 
 (defmethod make-projection (camera (mode (eql :orthographic)))
   (with-slots (%projection %zoom %clip-near %clip-far) camera
     (let* ((context (v:context camera))
-           (w (/ (v:option context :window-width) %zoom 2))
-           (h (/ (v:option context :window-height) %zoom 2)))
+           (w (/ (v:option context :window-width) %zoom 2f0))
+           (h (/ (v:option context :window-height) %zoom 2f0)))
       (m4:set-projection/orthographic!
        %projection (- w) w (- h) h %clip-near %clip-far))))
 
@@ -72,7 +74,7 @@
   (let* ((context (v:context (v::core display)))
          (camera (find-active-camera context)))
     (with-slots (%zoom %mode) camera
-      (setf %zoom (a:clamp (+ %zoom (/ direction 2)) 1 10))
+      (setf %zoom (a:clamp (+ %zoom (/ direction 2f0)) 1f0 10f0))
       (make-projection %mode camera))))
 
 ;;; Component event hooks
@@ -80,7 +82,7 @@
 (defmethod v:on-component-initialize ((self camera))
   (with-slots (%transform %fov-y) self
     (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform)
-          %fov-y (* %fov-y (/ pi 180)))
+          %fov-y (* %fov-y (/ (float pi 1f0) 180f0)))
     (correct-camera-transform self)
     (make-projection self (mode self))
     (push self (v::cameras (v::core self)))))

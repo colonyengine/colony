@@ -4,7 +4,7 @@
   :window-width 1920
   :window-height 1080
   :vsync :on
-  :delta 1/120
+  :delta (float 1/120 1f0)
   :initial-scene 'geometric-volumes)
 
 (v:define-assets :virality.examples
@@ -37,10 +37,10 @@
                  :mode :perspective))
   ("iso"
    (c/xform:transform :rotate (q:orient :local
-                                        :x (- (atan (/ (sqrt 2))))
-                                        :y (- (/ pi 4))))
+                                        :x (- (atan (/ (sqrt 2f0))))
+                                        :y (- (/ (float pi 1f0) 4f0))))
    ("camera"
-    (c/xform:transform :translate (v3:vec 0 0 10))
+    (c/xform:transform :translate (v3:vec 0f0 0f0 10f0))
     (c/cam:camera :active-p t
                   :mode :orthographic))))
 

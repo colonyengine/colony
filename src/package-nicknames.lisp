@@ -23,6 +23,7 @@
       (:origin.mat3 :m3)
       (:origin.mat4 :m4)
       (:origin.quat :q)
+      (:origin.physics :p)
       (:verbose :log)
       (:virality.actions :action)
       (:virality.colliders :col)

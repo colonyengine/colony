@@ -13,7 +13,8 @@
 (defmethod v:on-component-initialize ((self simple-movement))
   (with-slots (%transform) self
     (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform))
-    (c/xform:translate %transform (v3:vec -400 0 0) :replace-p t :instant-p t)))
+    (c/xform:translate %transform (v3:vec -400f0 0f0 0f0)
+                       :replace-p t :instant-p t)))
 
 (defmethod v:on-component-update ((self simple-movement))
   (u:mvlet* ((context (v:context self))
@@ -21,17 +22,18 @@
              (lx ly (v:get-gamepad-analog context '(:gamepad1 :left-stick)))
              (rx ry (v:get-gamepad-analog context '(:gamepad1 :right-stick)))
              (instant-p (zerop (v:frame-count context))))
-    (let ((vec (v3:vec lx ly 0)))
-      (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150.0)
+    (let ((vec (v3:vec lx ly 0f0)))
+      (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150f0)
       (c/xform:translate transform
-                         (v3:+ (v3:vec -400 0 0) vec)
+                         (v3:+ (v3:vec -400f0 0f0 0f0) vec)
                          :replace-p t
                          :instant-p instant-p)
-      (unless (= rx ry 0.0)
+      (unless (= rx ry 0f0)
         (let* ((angle (atan (- rx) ry))
                (angle (if (minusp angle)
                           (+ pi (- pi (abs angle)))
-                          angle)))
+                          angle))
+               (angle (float angle 1f0)))
           (c/xform:rotate transform
                           (q:orient :local :z angle)
                           :replace-p t
@@ -41,7 +43,7 @@
   ((%transform :reader transform)
    (%velocity :reader velocity
               :initarg :velocity
-              :initform 0)))
+              :initform 0f0)))
 
 (defmethod v:on-component-initialize ((self shot-mover))
   (with-slots (%transform) self
@@ -76,7 +78,8 @@
                                           'c/xform:transform
                                           :translate parent-translation
                                           :rotate parent-rotation))
-             (shot-mover (v:make-component context 'shot-mover :velocity 1000))
+             (shot-mover (v:make-component context 'shot-mover
+					   :velocity 1000f0))
              (sprite (v:make-component context
                                        'c/sprite:sprite
                                        :spec :spritesheet-data
@@ -92,14 +95,14 @@
         (v:attach-components
          new-actor transform shot-mover sprite render)
         (v:spawn-actor new-actor)
-        (v:destroy new-actor :ttl 2)))))
+        (v:destroy new-actor :ttl 2f0)))))
 
 ;;; Prefabs
 
 (v:define-prefab "sprite-1" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("ship"
-   (c/xform:transform :rotate (q:orient :local :z (/ pi -2)))
+   (c/xform:transform :rotate (q:orient :local :z (float (/ pi -2) 1f0)))
    (simple-movement)
    (shot-emitter)
    ("ship-body"
@@ -110,7 +113,7 @@
                                  :uniforms ((:sprite.sampler sprites)))
                      :mode :sprite)
     ("exhaust"
-     (c/xform:transform :translate (v3:vec 0 -140 0))
+     (c/xform:transform :translate (v3:vec 0f0 -140f0 0f0))
      (c/sprite:sprite :spec :spritesheet-data
                       :name "exhaust03-01"
                       :frames 8)
@@ -119,13 +122,13 @@
                                   :uniforms ((:sprite.sampler sprites)))
                       :mode :sprite)
      (c/action:actions :default '((:type x/action:sprite-animate
-                                   :duration 0.5
+                                   :duration 0.5f0
                                    :repeat-p t)))))))
 
 (v:define-prefab "sprite-2" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("plane"
-   (c/xform:transform :scale 2)
+   (c/xform:transform :scale 2f0)
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet04")
    (c/render:render :material `(x/mat:sprite
@@ -133,15 +136,15 @@
                                 :uniforms ((:sprite.sampler sprites)))
                     :mode :sprite)
    (c/action:actions :default '((:type x/action:rotate
-                                 :duration 4
+                                 :duration 4f0
                                  :shape origin.shaping:bounce-in
                                  :repeat-p t)))))
 
 (v:define-prefab "sprite-3" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("plane"
-   (c/xform:transform :scale 2
-                      :rotate/inc (c/xform:angular-velocity :z pi))
+   (c/xform:transform :scale 2f0
+                      :rotate/inc (p:angular-velocity :z (float pi 1f0)))
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet04")
    (c/render:render :material `(x/mat:sprite

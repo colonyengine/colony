@@ -105,7 +105,7 @@
   ;; A test case, no transform component.
   (if (not (and (v:actor fist) (v:actor face)))
       (let ((distance/2 (/ (v3:distance (reg:center fist)
-                                        (reg:center face)) 2.0)))
+                                        (reg:center face)) 2f0)))
         (or (<= distance/2 (reg:radius fist))
             (<= distance/2 (reg:radius face))))
       ;; The real path through this code, which transforms the collider into
@@ -125,10 +125,10 @@
              ;; world matrix.
              (fist-world-radius
                (c/xform:transform-vector fist-transform
-                                         (v3:vec (reg:radius fist) 0 0)))
+                                         (v3:vec (reg:radius fist) 0f0 0f0)))
              (face-world-radius
                (c/xform:transform-vector face-transform
-                                         (v3:vec (reg:radius face) 0 0)))
+                                         (v3:vec (reg:radius face) 0f0 0f0)))
              ;; Compute the half way point between the two colliders.
              (distance (v3:distance fist-collider-world-center
                                     face-collider-world-center)))
