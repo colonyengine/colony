@@ -15,6 +15,7 @@
   (defparameter *package-nicknames*
     '((:alexandria :a)
       (:golden-utils :u)
+      (:origin :o)
       (:origin.swizzle :~)
       (:origin.vec2 :v2)
       (:origin.vec3 :v3)
@@ -23,7 +24,6 @@
       (:origin.mat3 :m3)
       (:origin.mat4 :m4)
       (:origin.quat :q)
-      (:origin.physics :p)
       (:verbose :log)
       (:virality.actions :action)
       (:virality.colliders :col)

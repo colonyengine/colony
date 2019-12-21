@@ -32,7 +32,7 @@
               :initform nil)
    (%shape :reader shape
            :initarg :shape
-           :initform 'origin.shaping:linear)
+           :initform 'o:linear)
    (%attrs :reader attrs
            :initarg :attrs
            :initform nil)))

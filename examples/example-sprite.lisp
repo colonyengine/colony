@@ -137,14 +137,15 @@
                     :mode :sprite)
    (c/action:actions :default '((:type x/action:rotate
                                  :duration 4f0
-                                 :shape origin.shaping:bounce-in
+                                 :shape o:bounce-in
                                  :repeat-p t)))))
 
 (v:define-prefab "sprite-3" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("plane"
    (c/xform:transform :scale 2f0
-                      :rotate/inc (p:angular-velocity :z (float pi 1f0)))
+                      :rotate/inc (o:make-velocity v3:+forward+
+						   (float pi 1f0)))
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet04")
    (c/render:render :material `(x/mat:sprite
