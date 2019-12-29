@@ -203,7 +203,8 @@
    (c/cam:camera (:policy :new-args) :zoom 6f0))
   ("rot-0-center"
    (c/xform:transform :translate (v3:vec -2f0 0f0 0f0)
-                      :rotate/inc (p:angular-velocity :z (float pi 1f0)))
+                      :rotate/inc (o:make-velocity v3:+forward+
+                                                   (float pi 1f0)))
    ("plane-0"
     (c/xform:transform :translate (v3:vec -2f0 0f0 0f0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
@@ -215,7 +216,8 @@
     (c/render:render :material '2d-wood)))
   ("rot-1-center"
    (c/xform:transform :translate (v3:vec 2f0 0f0 0f0)
-                      :rotate/inc (p:angular-velocity :z (float (- pi) 1f0)))
+                      :rotate/inc (o:make-velocity v3:+forward+
+                                                   (float (- pi) 1f0)))
    ("plane-1"
     (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
@@ -308,8 +310,8 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (c/xform:transform :translate (v3:vec 0f0 5f0 0f0)
                       :scale 0.5f0
                       :rotate (q:orient :local :x (float (/ pi 2f0) 1f0))
-                      :rotate/inc (p:angular-velocity (v3:one)
-                                                      (float pi 1.0))
+                      :rotate/inc (o:make-velocity (v3:one)
+                                                   (float pi 1.0))
                       :translate/inc (v3:vec 0f0 -2f0 0f0))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
@@ -371,8 +373,8 @@ actually are. You have to view the results to see the colliders lighting up."
    (c/xform:transform :translate (v3:zero)
                       :scale 2f0
                       :rotate (q:orient :local :x (float (/ pi 2) 1.0))
-                      :rotate/inc (p:angular-velocity (v3:one)
-                                                      (float pi 1.0))
+                      :rotate/inc (o:make-velocity (v3:one)
+                                                   (float pi 1.0))
                       :translate/inc (v3:zero))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :time-to-destroy 2f0)

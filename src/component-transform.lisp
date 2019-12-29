@@ -81,7 +81,7 @@
   (declare (optimize speed))
   (with-slots (%previous %current %incremental-delta %incremental) state
     (q:copy! %previous %current)
-    (p:angular-velocity->rotation! %incremental-delta %incremental delta)
+    (o:velocity->rotation! %incremental-delta %incremental delta)
     (q:rotate! %current %current %incremental-delta)))
 
 (defun transform-node (core node)
