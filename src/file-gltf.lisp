@@ -1312,8 +1312,8 @@ allowable inputs below and what is returned.
             (interp interp-p (jsown:val-safe jobj "interpolation"))
             (output out-p (jsown:val-safe jobj "output")))
 
-    (parse/assert in-p 'gltf-snimation-sampler "input")
-    (parse/assert out-p 'gltf-snimation-sampler "output")
+    (parse/assert in-p 'gltf-animation-sampler "input")
+    (parse/assert out-p 'gltf-animation-sampler "output")
 
     (make-animation-sampler
      :input input
@@ -1332,8 +1332,8 @@ allowable inputs below and what is returned.
             (samplers sa-p (jsown:val-safe jobj "samplers"))
             (name (jsown:val-safe jobj "output")))
 
-    (parse/assert ch-p 'gltf-snimation "channels")
-    (parse/assert sa-p 'gltf-snimation "samplers")
+    (parse/assert ch-p 'gltf-animation "channels")
+    (parse/assert sa-p 'gltf-animation "samplers")
 
     (make-animation
      :channels (map 'vector #'parse-channel channels)
