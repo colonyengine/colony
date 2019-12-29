@@ -1210,8 +1210,8 @@ NIL if no such list exists."
                 ;; Figure out where to put the explosion into world space.
                 (world-location
                   (c/xform:transform-point transform local-location))
-                (world-location (v3:vec (v4:x world-location)
-                                        (v4:y world-location)
+                (world-location (v3:vec (v3:x world-location)
+                                        (v3:y world-location)
                                         (dl :planet-warning-explosion)))
                 (random-rotation
                   (q:orient :local :z (float (random (* 2 pi)) 1f0)))
@@ -1866,7 +1866,7 @@ NIL if no such list exists."
   (c/col:sphere :center (v3:zero)
                 :on-layer :enemy-bullet
                 :referent (v:ref :self :component 'hit-points)
-                :radius 15)
+                :radius 15f0)
   (c/render:render :material 'sprite-sheet
                    :mode :sprite)
   (c/action:actions :default '((:type x/action:sprite-animate
