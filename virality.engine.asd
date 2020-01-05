@@ -10,6 +10,7 @@
   :source-control (:git "https://github.com/hackertheory/ViralityEngine.git")
   :encoding :utf-8
   :depends-on (#:alexandria
+               #:printv
                #:babel
                #:cl-graph
                #:cl-opengl
