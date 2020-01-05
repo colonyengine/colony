@@ -5,4 +5,5 @@
   (:export
    #:on-collision-enter
    #:on-collision-exit
-   #:on-collision-continue))
+   #:on-collision-continue
+   #:collide-p))

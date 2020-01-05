@@ -101,15 +101,17 @@
 
 (defmethod collide-p ((fist sphere) (face sphere))
   "Return T if the two spheres actually collided."
-  ;; A test path when testing colliders outside of FL's prefabs.
-  ;; A test case, no transform component.
   (if (not (and (v:actor fist) (v:actor face)))
+      ;; NOTE: This code path is here for testing the collider system when
+      ;; not running V properly. It should be removed when we figure out how
+      ;; to test V's collision system better.
       (let ((distance/2 (/ (v3:distance (reg:center fist)
                                         (reg:center face)) 2f0)))
         (or (<= distance/2 (reg:radius fist))
             (<= distance/2 (reg:radius face))))
-      ;; The real path through this code, which transforms the collider into
-      ;; world space appropriately.
+
+      ;; This is the REAL path through this code, which transforms the collider
+      ;; into world space appropriately.
       (let* ((fist-transform (v:component-by-type (v:actor fist)
                                                   'c/xform:transform))
              (face-transform (v:component-by-type (v:actor face)
@@ -121,8 +123,8 @@
              (face-collider-world-center
                (c/xform:transform-point face-transform (reg:center face)))
              ;; Figure out the size of the radius in world space. We treat the
-             ;; radius as a vector and rotate/scale (but no translate!) it by the
-             ;; world matrix.
+             ;; radius as a vector and rotate/scale (but no translate!) it by
+             ;; the world matrix.
              (fist-world-radius
                (c/xform:transform-vector fist-transform
                                          (v3:vec (reg:radius fist) 0f0 0f0)))

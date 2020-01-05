@@ -40,6 +40,8 @@ long the thing has yet to live, with NIL meaning infinity."))
 
 (defgeneric col:on-collision-exit (collider other))
 
+(defgeneric col:collide-p (collider other))
+
 ;;; Resource Cache
 
 (defgeneric rcache-layout (entry-type))
