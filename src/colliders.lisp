@@ -84,7 +84,7 @@ currently in contact."
   ;; since there is a symmetric link, I can check any one and be satisfied.
   (let ((contacts (contacts collider-system)))
     (when (u:href contacts fist-collider)
-      (a:when-let (found-p (u:href contacts fist-collider face-collider))
+      (a:when-let ((found-p (u:href contacts fist-collider face-collider)))
         ;; generalized-boolean.
         found-p))))
 
@@ -120,13 +120,13 @@ FIST-COLLIDER and FACE-COLLIDER."
   (assert (not (eq fist-collider face-collider)))
   (let ((contacts (contacts collider-system)))
     ;; Remove the link: fist -> face
-    (a:when-let (face-set (u:href contacts fist-collider))
+    (a:when-let ((face-set (u:href contacts fist-collider)))
       (remhash face-collider face-set)
       ;; If the fist is colliding with nothing now, remove its table.
       (when (zerop (hash-table-count face-set))
         (remhash fist-collider contacts)))
     ;; Remove the link: face -> fist
-    (a:when-let (fist-set (u:href contacts face-collider))
+    (a:when-let ((fist-set (u:href contacts face-collider)))
       (remhash fist-collider fist-set)
       ;; If the face is colliding with nothing now, remove its table.
       (when (zerop (hash-table-count fist-set))
@@ -142,7 +142,7 @@ FIST-COLLIDER and FACE-COLLIDER."
 had--and update all other faces too."
   (let ((contacts (contacts collider-system)))
     ;; Look up the fist to see if anything at all is contacting it.
-    (a:when-let (face-set (u:href contacts fist-collider))
+    (a:when-let ((face-set (u:href contacts fist-collider)))
       ;; NOTE: get a list of the faces, since we'll be altering the hash tables
       ;; while iterating over the faces
       (let ((face-colliders (u:hash-keys face-set)))

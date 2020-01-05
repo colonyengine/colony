@@ -75,20 +75,20 @@
 ;; other purposes.
 (defmethod v:on-collision-enter ((self sphere) other-collider)
   (incf (contact-count self))
-  (a:when-let (referent (referent self))
+  (a:when-let ((referent (referent self)))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
     (v:on-collision-enter referent other-collider)))
 
 (defmethod v:on-collision-continue ((self sphere) other-collider)
-  (a:when-let (referent (referent self))
+  (a:when-let ((referent (referent self)))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
     (v:on-collision-continue referent other-collider)))
 
 (defmethod v:on-collision-exit ((self sphere) other-collider)
   (decf (contact-count self))
-  (a:when-let (referent (referent self))
+  (a:when-let ((referent (referent self)))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
     (v:on-collision-continue referent other-collider)))
