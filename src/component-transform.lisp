@@ -241,7 +241,6 @@ returned."
     (let ((model (m4:copy (model transform))))
       (m4:set-translation! model model v3:+zero+)
       (m4:normalize-rotation! model model)
-      (m4:orthonormalize! model model)
       (~:.xyz (m4:*v4 model (v4:vec vx vy vz 1f0))))))
 
 (defun inverse-transform-direction (transform direction-vec)
