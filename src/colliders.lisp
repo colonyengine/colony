@@ -113,7 +113,7 @@ FIST-COLLIDER and FACE-COLLIDER."
   ;; If we're continuing to collide, run the protocol!
   (on-collision-continue fist-collider face-collider)
   (on-collision-continue face-collider fist-collider)
-  :ontinue)
+  :continue)
 
 (defun exit-contact (collider-system fist-collider face-collider)
   "Remove the contact between the FIST and the FACE."
