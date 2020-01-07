@@ -11,7 +11,7 @@
 ;;;; to the children of that thing
 (defgeneric emit (style gltf-instance &key stream indent))
 
-(defgeneric typecheck (gltf-instance &key &allow-other-keys))
+(defgeneric typecheck (pass gltf-instance &key &allow-other-keys))
 
 ;;;; Convenience functions for glTF data representation and outputting.
 (defun is-aligned-p (value alignment)
@@ -993,22 +993,23 @@ allowable inputs below and what is returned.
       (apply #'parse/error gltf-type field args)))
 
 
-(defun typecheck/error (gltf-type fmt &rest args)
+(defun typecheck/error (pass gltf-type fmt &rest args)
   (let ((rest-args (rest args)))
-    (error "glTF: Type error [type: ~S]~A"
-           gltf-type
+    (error "glTF: Type error [pass: ~A type: ~S]~A"
+           pass gltf-type
            (apply #'format nil (concatenate 'string ": " fmt "~%")
                   rest-args))))
 
-(defun typecheck/assert (gltf-obj value fmt &rest args)
+(defun typecheck/assert (pass gltf-obj value fmt &rest args)
   (if value
       t
-      (apply #'typecheck/error (class-name (class-of gltf-obj)) fmt args)))
+      (apply #'typecheck/error pass (class-name (class-of gltf-obj)) fmt args)))
 
-(defmacro typecheck/assert-group (gltf-obj &body forms)
+(defmacro typecheck/assert-group (pass gltf-obj &body forms)
   (a:with-gensyms (obj)
-    (let ((body (loop :for (val fmt . args) :in forms
-                      :collect `(typecheck/assert ,obj ,val ,fmt ,@args))))
+    (let ((body
+            (loop :for (val fmt . args) :in forms
+                  :collect `(typecheck/assert ,pass ,obj ,val ,fmt ,@args))))
       `(let ((,obj ,gltf-obj))
          ,@body))))
 
@@ -1046,7 +1047,7 @@ allowable inputs below and what is returned.
      :component-type
      (component-type-value->component-type-symbol component-type))))
 
-(defmethod typecheck ((obj gltf-indices) &key buffer-views)
+(defmethod typecheck ((pass (eql :static)) (obj gltf-indices) &key buffer-views)
   (with-accessors ((buffer-view buffer-view) (byte-offset byte-offset)
                    (component-type component-type))
       obj
@@ -1054,7 +1055,7 @@ allowable inputs below and what is returned.
     ;; TODO: check byte-offset alignment
 
     (symbol-macrolet ((ref-buffer-view (aref buffer-views buffer-view)))
-      (typecheck/assert-group obj
+      (typecheck/assert-group pass obj
         ((integerp buffer-view)
          "slot BUFFER-VIEW must be an integer!")
         ((>= buffer-view 0)
@@ -1084,14 +1085,14 @@ allowable inputs below and what is returned.
      :buffer-view buffer-view
      :byte-offset (if bo-p byte-offset 0))))
 
-(defmethod typecheck ((obj gltf-values) &key buffer-views)
+(defmethod typecheck ((pass (eql :static)) (obj gltf-values) &key buffer-views)
   (with-accessors ((buffer-view buffer-view) (byte-offset byte-offset))
       obj
 
     ;; TODO: check byte-offset alignment
 
     (symbol-macrolet ((ref-buffer-view (aref buffer-views buffer-view)))
-      (typecheck/assert-group obj
+      (typecheck/assert-group pass obj
         ((integerp buffer-view)
          "slot BUFFER-VIEW must be an integer!")
         ((>= buffer-view 0)
@@ -1123,7 +1124,8 @@ allowable inputs below and what is returned.
      :indices (parse-indices jobj-indices)
      :sparse-values (parse-values jobj-values))))
 
-(defmethod typecheck ((obj gltf-sparse) &key accessor buffer-views)
+(defmethod typecheck ((pass (eql :static))
+                      (obj gltf-sparse) &key accessor buffer-views)
   (declare (ignore accessor)) ;; TODO: Not implemented yet.
   (with-accessors ((sparse-count sparse-count)
                    (indices indices)
@@ -1132,15 +1134,15 @@ allowable inputs below and what is returned.
 
     ;; TODO: requires checking of actual data to be complete.
 
-    (typecheck/assert-group obj
+    (typecheck/assert-group pass obj
       ((integerp sparse-count)
        "slot SPARSE-COUNT must be an integer!")
       ((>= sparse-count 1)
        "slot SPARSE-COUNT must be >= 1!"))
 
-    (typecheck indices :buffer-views buffer-views)
+    (typecheck pass indices :buffer-views buffer-views)
 
-    (typecheck sparse-values :buffer-views buffer-views)
+    (typecheck pass sparse-values :buffer-views buffer-views)
 
     t))
 
@@ -1178,7 +1180,8 @@ allowable inputs below and what is returned.
      :sparse (when jobj-sparse (parse-sparse jobj-sparse))
      :name name)))
 
-(defmethod typecheck ((obj gltf-accessor) &key buffer-views)
+(defmethod typecheck ((pass (eql :static))
+                      (obj gltf-accessor) &key buffer-views)
   (with-accessors ((buffer-view buffer-view)
                    (byte-offset byte-offset)
                    (component-type component-type)
@@ -1192,12 +1195,12 @@ allowable inputs below and what is returned.
       obj
 
     (unless (null buffer-view)
-      (typecheck/assert-group obj
+      (typecheck/assert-group pass obj
         ((integerp buffer-view) "slot BUFFER-VIEW is not an integer!")
         ((>= buffer-view 0) "slot BUFFER-VIEW must be >= 0!")))
 
     (unless (null byte-offset)
-      (typecheck/assert-group obj
+      (typecheck/assert-group pass obj
         ((integerp byte-offset) "slot BYTE-OFFSET is not an integer!")
         ((>= byte-offset 0) "slot BYTE-OFFSET must be >= 0!")
         ((is-aligned-p byte-offset (component-type-size component-type))
@@ -1206,7 +1209,7 @@ allowable inputs below and what is returned.
 
     (let ((valid-domain '(:byte :unsigned-byte :short :unsigned-short
                           :unsigned-int :float)))
-      (typecheck/assert-group obj
+      (typecheck/assert-group pass obj
         ((symbolp component-type) "slot COMPONENT-TYPE is not a symbol!")
         ((member component-type valid-domain)
          "slot COMPONENT-TYPE [~(~S~)] is not a member of its valid domain: ~(~S~)!"
@@ -1215,18 +1218,18 @@ allowable inputs below and what is returned.
     ;; TODO: Must be present only when accessor contains vertex attributes, or
     ;; animation output data.
     (when normalized
-      (typecheck/assert-group obj
+      (typecheck/assert-group pass obj
         ((member normalized '(t nil))
          "slot NORMALIZED must be either T or NIL!")))
 
-    (typecheck/assert-group obj
+    (typecheck/assert-group pass obj
       ((integerp attribute-count)
        "slot ATTRIBUTE-COUNT is not an integer!")
       ((>= attribute-count 1)
        "slot ATTRIBUTE-COUNT must be >= 1!"))
 
     (let ((valid-domain '(:scalar :vec2 :vec3 :vec4 :mat2 :mat3 :mat4)))
-      (typecheck/assert-group obj
+      (typecheck/assert-group pass obj
         ((symbolp attribute-type) "slot ATTRIBUTE-TYPE is not a symbol!")
         ((member attribute-type valid-domain)
          "slot ATTRIBUTE-TYPE [~(~S~)] is not a member of its valid domain: ~(~S~)!"
@@ -1236,7 +1239,7 @@ allowable inputs below and what is returned.
     ;; TODO: Need to check with sparse substitution applied.
     (when max-value
       (let ((valid-lengths '(1 2 3 4 9 16)))
-        (typecheck/assert-group obj
+        (typecheck/assert-group pass obj
           ((vectorp max-value)
            "slot MAX-VALUE must be a vector!")
           ((member (length max-value) valid-lengths :test #'=)
@@ -1250,7 +1253,7 @@ allowable inputs below and what is returned.
     ;; TODO: Need to check with sparse substitution applied.
     (when min-value
       (let ((valid-lengths '(1 2 3 4 9 16)))
-        (typecheck/assert-group obj
+        (typecheck/assert-group pass obj
           ((vectorp min-value)
            "slot MIN-VALUE must be a vector!")
           ((member (length min-value) valid-lengths :test #'=)
@@ -1261,10 +1264,10 @@ allowable inputs below and what is returned.
            "slot MIN-VALUE must have the same length as slow MAX-VALUE!"))))
 
     (when sparse
-      (typecheck sparse :accessor obj :buffer-views buffer-views))
+      (typecheck pass sparse :accessor obj :buffer-views buffer-views))
 
     (when name
-      (typecheck/assert-group obj
+      (typecheck/assert-group pass obj
         ((stringp name)
          "slot NAME must be a string!")))
 
@@ -1897,13 +1900,14 @@ allowable inputs below and what is returned.
      :textures (parse-textures textures))))
 
 
-(defmethod typecheck ((obj gltf) &key)
+;; NOTE: This function is used for both passes since it is pass agnostic.
+(defmethod typecheck ((pass symbol) (obj gltf) &key)
   (with-accessors ((accessors accessors)
                    (buffer-views buffer-views))
       obj
 
     (loop :for accessor :across accessors
-          :do (typecheck accessor :buffer-views buffer-views))))
+          :do (typecheck pass accessor :buffer-views buffer-views))))
 
 
 
@@ -2241,7 +2245,7 @@ allowable inputs below and what is returned.
     (cond
       ((string= file-type "gltf")
        (let ((gltf (parse-gltf (%load-gltf path))))
-         (typecheck gltf)
+         (typecheck :static gltf)
          gltf))
       ((string= file-type "glb")
        (%load-glb path))
