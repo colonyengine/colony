@@ -389,25 +389,46 @@ actually are. You have to view the results to see the colliders lighting up."
   (("camera" :copy "/cameras/perspective")
    (c/cam:camera (:policy :new-args) :zoom 7f0))
 
-  ("stone"
-   (c/xform:transform :translate (v3:zero)
-                      :scale 2f0
-                      :rotate (q:orient :local :x (float (/ pi 2) 1.0))
-                      :rotate/inc (o:make-velocity (v3:one) o:pi/6)
-                      :translate/inc (v3:zero))
-   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
-   #++(destroy-my-actor :time-to-destroy 2f0)
-   (c/col:cuboid :display-id "Stone"
-                 :visualize t
-                 :on-layer :player
-                 :center (v3:zero)
-                 :minx -1f0
-                 :maxx 1f0
-                 :miny -1f0
-                 :maxy 1f0
-                 :minz -1f0
-                 :maxz 1f0)
-   (c/render:render :material 'damaged-helmet)))
+  ("a"
+   (c/xform:transform :translate (v3:vec -5f0 0f0 0f0)
+                      :translate/inc (v3:vec 0f0 0f0 0f0)
+                      :scale 2f0)
+
+   ("stone-cuboid"
+    (c/xform:transform :scale 2f0
+                       :rotate (q:orient :local :x (float (/ pi 2) 1.0))
+                       :rotate/inc (o:make-velocity (v3:one) o:pi/6))
+    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+    #++(destroy-my-actor :time-to-destroy 2f0)
+    (c/col:cuboid :display-id "Stone"
+                  :visualize t
+                  :on-layer :ground
+                  :center (v3:zero)
+                  :minx -1f0
+                  :maxx 1f0
+                  :miny -1f0
+                  :maxy 1f0
+                  :minz -1f0
+                  :maxz 1f0)
+    (c/render:render :material 'damaged-helmet)))
+
+  ("b"
+   (c/xform:transform :translate (v3:vec 5f0 0f0 0f0)
+                      :translate/inc (v3:vec 0f0 0f0 0f0)
+                      :scale 2f0)
+   ("stone-sphere"
+    (c/xform:transform :scale 2f0
+                       :rotate (q:orient :local :x (float (/ pi 2) 1.0))
+                       :rotate/inc (o:make-velocity (v3:one) o:pi/6))
+    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+    #++(destroy-my-actor :time-to-destroy 2f0)
+    (c/col:sphere :display-id "Stone"
+                  :visualize t
+                  :on-layer :ground
+                  :center (v3:zero)
+                  :radius 1.25f0)
+    (c/render:render :material 'damaged-helmet))))
+
 
 
 
