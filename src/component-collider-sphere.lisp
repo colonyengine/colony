@@ -60,7 +60,7 @@
         (:model (c/xform:model transform)
          :view (c/cam:view camera)
          :proj (c/cam:projection camera)
-         :collider-local-position (reg:center self)
+         :collider-local-center (reg:center self)
          :in-contact-p (plusp (contact-count self))
          ;; NOTE: The shader computes the radius appropriately for
          ;; visualization purposes.

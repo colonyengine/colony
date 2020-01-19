@@ -33,7 +33,8 @@
    #:collide-p
    #:on-layer
    #:referent
-   #:sphere))
+   #:sphere
+   #:cuboid))
 
 (defpackage #:virality.components.mesh.dynamic
   (:use #:cl)

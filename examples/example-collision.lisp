@@ -385,6 +385,33 @@ actually are. You have to view the results to see the colliders lighting up."
                  :radius 1f0)
    (c/render:render :material 'damaged-helmet)))
 
+(v:define-prefab "collision-test-2" (:library examples)
+  (("camera" :copy "/cameras/perspective")
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
+
+  ("stone"
+   (c/xform:transform :translate (v3:zero)
+                      :scale 2f0
+                      :rotate (q:orient :local :x (float (/ pi 2) 1.0))
+                      :rotate/inc (o:make-velocity (v3:one) o:pi/6)
+                      :translate/inc (v3:zero))
+   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+   #++(destroy-my-actor :time-to-destroy 2f0)
+   (c/col:cuboid :display-id "Stone"
+                 :visualize t
+                 :on-layer :player
+                 :center (v3:zero)
+                 :minx -1f0
+                 :maxx 1f0
+                 :miny -1f0
+                 :maxy 1f0
+                 :minz -1f0
+                 :maxz 1f0)
+   (c/render:render :material 'damaged-helmet)))
+
+
+
+
 ;;; Prefab descriptors
 
 (v:define-prefab-descriptor collision-smoke-test ()
@@ -395,3 +422,6 @@ actually are. You have to view the results to see the colliders lighting up."
 
 (v:define-prefab-descriptor collision-test-1 ()
   ("collision-test-1" examples))
+
+(v:define-prefab-descriptor collision-test-2 ()
+  ("collision-test-2" examples))

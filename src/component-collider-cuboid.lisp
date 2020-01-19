@@ -15,9 +15,8 @@
    (%geometry :reader geometry
               :initform (gl:gen-vertex-array))
 
-   ;; TODO: need one to render a cuboid.
    (%material :reader material
-              :initform 'x/mat::collider/sphere
+              :initform 'x/mat::collider/cuboid
               :annotation (v::material))
 
    ;; TODO: We do not have a difference between triggers and collisions yet.
@@ -54,30 +53,32 @@
 ;; them for types that DO have them. Then I can leave this here and also not pay
 ;; the cost to render it.
 (defmethod v:on-component-render ((self cuboid))
-  ;; disable this.
-  (return-from v:on-component-render nil)
 
   ;; FIXME when a new shader/material is created to draw a cuboid collider.
-  #++(unless (visualize self)
-       (return-from v:on-component-render))
-  #++(a:when-let ((camera (v::active-camera (v:context self)))
-                  (transform (v:component-by-type (v:actor self)
-                                                  'c/xform:transform)))
-       (mat:with-material (material self)
-           (:model (c/xform:model transform)
-            :view (c/cam:view camera)
-            :proj (c/cam:projection camera)
-            :collider-local-position (reg:center self)
-            :in-contact-p (plusp (contact-count self))
-            ;; NOTE: The shader computes the radius appropriately for
-            ;; visualization purposes.
-            :radius (reg:radius self))
+  (unless (visualize self)
+    (return-from v:on-component-render))
+  (a:when-let ((camera (v::active-camera (v:context self)))
+               (transform (v:component-by-type (v:actor self)
+                                               'c/xform:transform)))
+    (mat:with-material (material self)
+        (:model (c/xform:model transform)
+         :view (c/cam:view camera)
+         :proj (c/cam:projection camera)
+         :collider-local-center (reg:center self)
+         :in-contact-p (plusp (contact-count self))
+         ;; NOTE: The shader computes the world-space math appropriately for
+         ;; visualization purposes.
+         :minx (reg:minx self)
+         :maxx (reg:maxx self)
+         :miny (reg:miny self)
+         :maxy (reg:maxy self)
+         :minz (reg:minz self)
+         :maxz (reg:maxz self))
 
-
-         ;; Finally, draw the visualizaiton.
-         (gl:bind-vertex-array (geometry self))
-         (gl:draw-arrays-instanced :points 0 1 1)
-         (gl:bind-vertex-array 0))))
+      ;; Finally, draw the visualizaiton.
+      (gl:bind-vertex-array (geometry self))
+      (gl:draw-arrays-instanced :points 0 1 1)
+      (gl:bind-vertex-array 0))))
 
 
 ;; NOTE: We bubble the collision messages from the collider system through

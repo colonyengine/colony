@@ -46,8 +46,22 @@
 (mat:define-material collider/sphere
   (:shader shd/vis:collider/sphere
    :profiles (u-mvp)
-   :uniforms ((:collider-local-position (v3:zero))
+   :uniforms ((:collider-local-center (v3:zero))
               (:in-contact-color (v4:vec 1f0 0f0 0f0 1f0))
               (:not-in-contact-color (v4:vec 0f0 1f0 0f0 .5f0))
               (:in-contact-p nil)
               (:radius 0f0))))
+
+(mat:define-material collider/cuboid
+  (:shader shd/vis:collider/cuboid
+   :profiles (u-mvp)
+   :uniforms ((:collider-local-center (v3:zero))
+              (:in-contact-color (v4:vec 1f0 0f0 0f0 1f0))
+              (:not-in-contact-color (v4:vec 0f0 1f0 1f0 .5f0))
+              (:in-contact-p nil)
+              (:minx 0f0)
+              (:maxx 0f0)
+              (:miny 0f0)
+              (:maxy 0f0)
+              (:minz 0f0)
+              (:maxz 0f0))))
