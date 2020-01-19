@@ -8,32 +8,32 @@
 (defclass region-cuboid (region)
   ((%minx :accessor minx
           :initarg :minx
-          :initform -1f0)
+          :initform -.5f0)
    (%maxx :accessor maxx
           :initarg :maxx
-          :initform 1f0)
+          :initform .5f0)
    (%miny :accessor miny
           :initarg :miny
-          :initform -1f0)
+          :initform -.5f0)
    (%maxy :accessor maxy
           :initarg :maxy
-          :initform 1f0)
+          :initform .5f0)
    (%minz :accessor minz
           :initarg :minz
-          :initform -1f0)
+          :initform -.5f0)
    (%maxz :accessor maxz
           :initarg :maxz
-          :initform 1f0)))
+          :initform .5f0)))
 
 (defun make-region-cuboid (center minx maxx miny maxy minz maxz)
   (make-instance 'region-cuboid
                  :center center
-                 :minx (float minx 1f0)
-                 :maxx (float maxx 1f0)
-                 :miny (float miny 1f0)
-                 :maxy (float maxy 1f0)
-                 :minz (float minz 1f0)
-                 :maxz (float maxz 1f0)))
+                 :minx (float minx -.5f0)
+                 :maxx (float maxx .5f0)
+                 :miny (float miny -.5f0)
+                 :maxy (float maxy .5f0)
+                 :minz (float minz -.5f0)
+                 :maxz (float maxz .5f0)))
 
 (defclass region-sphere (region)
   ;; A specific type to make math faster when it is KNOWN one is using a sphere
