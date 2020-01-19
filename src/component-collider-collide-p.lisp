@@ -73,7 +73,6 @@
 
 (defun %collide-p-sphere/cuboid (fist face) ;; fist is sphere, face is cuboid ALWAYS
   ;; We're going to treat the cuboid as an OBB in world space and collide it with the
-  #++(:printv :hr)
   ;; sphere also in world space.
   (let* ((fist-transform (v:component-by-type (v:actor fist)
                                               'c/xform:transform))
