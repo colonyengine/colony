@@ -71,7 +71,7 @@
     (with-slots (%geometry) %spritesheet
       (gpu:uniform-int 'shd/sprite:sprite :sprite.index %index)
       (gl:bind-vertex-array %geometry)
-      (gl:draw-arrays-instanced :points 0 1 count)
+      (gl:draw-arrays-instanced :triangle-strip 0 4 count)
       (gl:bind-vertex-array 0))))
 
 (defmethod v:on-component-initialize ((self sprite))
