@@ -57,7 +57,8 @@
 (defun closest-pt-point-obb (world-pt obb-axes world-obb-center obb-half-widths)
   (let* ((d (v3:- world-pt world-obb-center))
          (q (v3:copy world-obb-center))
-         (vec-accessor (make-array 3 :initial-contents (list #'v3:x #'v3:y #'v3:z))))
+         (vec-accessor
+           (make-array 3 :initial-contents (list #'v3:x #'v3:y #'v3:z))))
 
     (dotimes (i 3)
       (let* ((dist (v3:dot d (aref obb-axes i))))
@@ -71,9 +72,11 @@
         (v3:+! q q (v3:scale (aref obb-axes i) dist))))
     q))
 
-(defun %collide-p-sphere/cuboid (fist face) ;; fist is sphere, face is cuboid ALWAYS
-  ;; We're going to treat the cuboid as an OBB in world space and collide it with the
-  ;; sphere also in world space.
+(defun %collide-p-sphere/cuboid (fist face)
+  ;; NOTE!!!! fist is sphere, face is cuboid. ALWAYS.
+  ;;
+  ;; We're going to treat the cuboid as an OBB in world space and collide
+  ;; it with the sphere also in world space.
   (let* ((fist-transform (v:component-by-type (v:actor fist)
                                               'c/xform:transform))
          (face-transform (v:component-by-type (v:actor face)
@@ -81,17 +84,22 @@
          ;; Compute on the cuboid objects
 
          ;; Create an OBB from the cuboid
-         (l-min (v3:+ (reg:center face) (v3:vec (reg:minx face) (reg:miny face) (reg:minz face))))
-         (l-max (v3:+ (reg:center face) (v3:vec (reg:maxx face) (reg:maxy face) (reg:maxz face))))
+         (l-min (v3:+ (reg:center face)
+                      (v3:vec (reg:minx face) (reg:miny face) (reg:minz face))))
+         (l-max (v3:+ (reg:center face)
+                      (v3:vec (reg:maxx face) (reg:maxy face) (reg:maxz face))))
          (w-min (c/xform:transform-point face-transform l-min))
          (w-max (c/xform:transform-point face-transform l-max))
          ;; center of OBB in world space.
          (w-center (v3:lerp w-min w-max .5f0))
-         ;; Now get rotation axes as rotated in world-space
-         ;; Page 101 of RTCD was vague on if u in the struct OBB was a basis vector or not.
-         (x-axis (v3:normalize (m4:rotation-axis-to-vec3 (c/xform:model face-transform) :x)))
-         (y-axis (v3:normalize (m4:rotation-axis-to-vec3 (c/xform:model face-transform) :y)))
-         (z-axis (v3:normalize (m4:rotation-axis-to-vec3 (c/xform:model face-transform) :z)))
+         ;; Now get rotation axes as rotated in world-space. Page 101 of RTCD
+         ;; was vague on if u in the struct OBB was a basis vector or not.
+         (x-axis (v3:normalize
+                  (m4:rotation-axis-to-vec3 (c/xform:model face-transform) :x)))
+         (y-axis (v3:normalize
+                  (m4:rotation-axis-to-vec3 (c/xform:model face-transform) :y)))
+         (z-axis (v3:normalize
+                  (m4:rotation-axis-to-vec3 (c/xform:model face-transform) :z)))
          (obb-axes (make-array 3 :element-type 'v3:vec
                                  :initial-contents (list x-axis y-axis z-axis)))
          (diagonal (v3:- w-max w-center))
@@ -105,8 +113,9 @@
          (fist-collider-world-center
            (c/xform:transform-point fist-transform (reg:center fist)))
          (fist-world-radius
-           (v3:length (c/xform:transform-vector fist-transform
-                                                (v3:vec (reg:radius fist) 0f0 0f0)))))
+           (v3:length
+            (c/xform:transform-vector fist-transform
+                                      (v3:vec (reg:radius fist) 0f0 0f0)))))
 
     (let* ((p (closest-pt-point-obb fist-collider-world-center
                                     obb-axes w-center half-widths))

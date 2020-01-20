@@ -53,8 +53,6 @@
 ;; them for types that DO have them. Then I can leave this here and also not pay
 ;; the cost to render it.
 (defmethod v:on-component-render ((self cuboid))
-
-  ;; FIXME when a new shader/material is created to draw a cuboid collider.
   (unless (visualize self)
     (return-from v:on-component-render))
   (a:when-let ((camera (v::active-camera (v:context self)))
