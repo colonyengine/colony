@@ -399,7 +399,6 @@ actually are. You have to view the results to see the colliders lighting up."
                        :rotate (q:orient :local :x (float (/ pi 2) 1.0))
                        :rotate/inc (o:make-velocity (v3:one) o:pi/6))
     (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
-    #++(destroy-my-actor :time-to-destroy 2f0)
     (c/col:cuboid :display-id "Stone"
                   :visualize t
                   :on-layer :ground
@@ -421,7 +420,6 @@ actually are. You have to view the results to see the colliders lighting up."
                        :rotate (q:orient :local :x (float (/ pi 2) 1.0))
                        :rotate/inc (o:make-velocity (v3:one) o:pi/6))
     (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
-    #++(destroy-my-actor :time-to-destroy 2f0)
     (c/col:sphere :display-id "Stone"
                   :visualize t
                   :on-layer :ground
@@ -429,9 +427,28 @@ actually are. You have to view the results to see the colliders lighting up."
                   :radius 1.25f0)
     (c/render:render :material 'damaged-helmet))))
 
+(v:define-prefab "collision-test-3" (:library examples)
+  (("camera" :copy "/cameras/perspective")
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
 
-
-
+  ("a"
+   ;; FIXME: The below -0.51f0 causes a hit, since it is less than 1 away from
+   ;; the other collider. Changing this to -0.5f0 causes it to miss, even though
+   ;; it is clearly penetrating. This seems to be related to the extents of the
+   ;; cube, because changing the min/max's to [-1, 1] instead of [-0.5, 0.5]
+   ;; causes a miss by a length of 2 instead of 1.
+   (c/xform:transform :translate (v3:vec -0.51f0 0f0 0f0)
+                      :translate/inc (v3:vec 0f0 0f0 0f0))
+   ("cuboid1"
+    (c/xform:transform :rotate (q:orient :local :z o:pi/4))
+    (c/col:cuboid :visualize t
+                  :on-layer :ground
+                  :center (v3:zero))))
+  ("cuboid2"
+   (c/xform:transform :translate (v3:vec 0.5f0 0f0 0f0))
+   (c/col:cuboid :visualize t
+                 :on-layer :ground
+                 :center (v3:zero))))
 
 ;;; Prefab descriptors
 
@@ -446,3 +463,6 @@ actually are. You have to view the results to see the colliders lighting up."
 
 (v:define-prefab-descriptor collision-test-2 ()
   ("collision-test-2" examples))
+
+(v:define-prefab-descriptor collision-test-3 ()
+  ("collision-test-3" examples))

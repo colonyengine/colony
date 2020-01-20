@@ -30,7 +30,9 @@
    ;; on-trigger-exit
    (%referent :accessor referent
               :initarg :referent
-              :initform nil)))
+              :initform nil)
+   (%obb :accessor obb
+         :initform nil)))
 
 (defmethod v:on-component-initialize ((self cuboid))
   ;; TODO
@@ -47,6 +49,30 @@
 (defmethod v:on-component-destroy ((self cuboid))
   (setf (referent self) nil))
 
+;; TODO: Refactor this as it was just a quick hack
+(defmethod v:on-component-physics-update ((self cuboid))
+  (let* ((xform (v:component-by-type (v:actor self) 'c/xform:transform))
+         (min (c/xform:transform-point
+               xform
+               (v3:+ (reg:center self)
+                     (v3:vec (reg:minx self)
+                             (reg:miny self)
+                             (reg:minz self)))))
+         (max (c/xform:transform-point
+               xform
+               (v3:+ (reg:center self)
+                     (v3:vec (reg:maxx self)
+                             (reg:maxy self)
+                             (reg:maxz self)))))
+         (center (v3:lerp min max 0.5))
+         (axes (m4:rotation-to-mat3
+                (m4:normalize-rotation
+                 (c/xform:model xform))))
+         (diagonal (v3:- max center))
+         (half-widths (v3:vec (v3:dot diagonal (m3:get-column axes 0))
+                              (v3:dot diagonal (m3:get-column axes 1))
+                              (v3:dot diagonal (m3:get-column axes 2)))))
+    (setf (obb self) (v::make-oriented-bounding-box center axes half-widths))))
 
 ;; TODO: When I implement the ability to not call protocol methods on types that
 ;; don't have them defined, ALSO create a feature that I can turn off calling
