@@ -421,7 +421,7 @@ the repl when the game is NOT running."
     (let* ((c0 (v:make-component context 'c/col:sphere
                                  :display-id "Ground"
                                  :on-layer :ground
-                                 :center (v3:zero)
+                                 :center (v3:vec)
                                  :radius 1))
            (c1 (v:make-component context 'c/col:sphere
                                  :display-id "Player"

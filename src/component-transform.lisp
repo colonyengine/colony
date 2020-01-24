@@ -13,18 +13,18 @@
                   :initarg :interpolated)))
 
 (defclass transform-state-vector (transform-state) ()
-  (:default-initargs :current (v3:zero)
-                     :incremental (v3:zero)
-                     :incremental-delta (v3:zero)
-                     :previous (v3:zero)
-                     :interpolated (v3:zero)))
+  (:default-initargs :current (v3:vec)
+                     :incremental (v3:vec)
+                     :incremental-delta (v3:vec)
+                     :previous (v3:vec)
+                     :interpolated (v3:vec)))
 
 (defclass transform-state-quaternion (transform-state) ()
-  (:default-initargs :current (q:id)
-                     :incremental (v3:zero) ;; whole angular-velocity vector
-                     :incremental-delta (q:id) ;; quaternion of ang-vel * dt
-                     :previous (q:id)
-                     :interpolated (q:id)))
+  (:default-initargs :current (q:quat 1)
+                     :incremental (v3:vec) ;; whole angular-velocity vector
+                     :incremental-delta (q:quat 1) ;; quaternion of ang-vel * dt
+                     :previous (q:quat 1)
+                     :interpolated (q:quat 1)))
 
 (defun make-translation-state ()
   (make-instance 'transform-state-vector))
@@ -33,7 +33,7 @@
   (make-instance 'transform-state-quaternion))
 
 (defun make-scaling-state ()
-  (make-instance 'transform-state-vector :current (v3:one)))
+  (make-instance 'transform-state-vector :current (v3:vec 1)))
 
 (defun interpolate-vector (state factor)
   (declare (optimize speed))
@@ -55,9 +55,9 @@
    (%scaling :reader scaling
              :initform (make-scaling-state))
    (%local :reader local
-           :initform (m4:id))
+           :initform (m4:mat 1))
    (%model :reader model
-           :initform (m4:id))))
+           :initform (m4:mat 1))))
 
 (defun add-child (parent child)
   (pushnew child (children parent))
@@ -133,12 +133,12 @@
 (defmethod reinitialize-instance ((instance transform)
                                   &key
                                     actor
-                                    (translate (v3:zero))
-                                    (translate/inc (v3:zero))
-                                    (rotate (q:id))
-                                    (rotate/inc (v3:zero)) ;; angular-velocity
-                                    (scale (v3:one))
-                                    (scale/inc (v3:zero)))
+                                    (translate (v3:vec))
+                                    (translate/inc (v3:vec))
+                                    (rotate (q:quat 1))
+                                    (rotate/inc (v3:vec)) ;; angular-velocity
+                                    (scale (v3:vec 1))
+                                    (scale/inc (v3:vec)))
   (with-slots (%translation %rotation %scaling) instance
     (setf (v:actor instance) actor
           (v::state instance) :initialize

@@ -211,7 +211,7 @@
     (c/col:sphere :display-id "Player"
                   :visualize t
                   :on-layer :player
-                  :center (v3:zero)
+                  :center (v3:vec)
                   :radius 1f0)
     (c/render:render :material '2d-wood)))
   ("rot-1-center"
@@ -224,7 +224,7 @@
     (c/col:sphere :display-id "Enemy"
                   :visualize t
                   :on-layer :enemy
-                  :center (v3:zero)
+                  :center (v3:vec)
                   :radius 1f0)
     (c/render:render :material '2d-wood))))
 
@@ -310,7 +310,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (c/xform:transform :translate (v3:vec 0f0 5f0 0f0)
                       :scale 0.5f0
                       :rotate (q:orient :local :x (float (/ pi 2f0) 1f0))
-                      :rotate/inc (o:make-velocity (v3:one)
+                      :rotate/inc (o:make-velocity (v3:vec 1)
                                                    (float pi 1.0))
                       :translate/inc (v3:vec 0f0 -2f0 0f0))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
@@ -320,7 +320,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
                  :on-layer :player
                  :referent (v:ref :self
                                   :component 'destroy-my-actor)
-                 :center (v3:zero)
+                 :center (v3:vec)
                  :radius 1f0)
    (c/render:render :material 'damaged-helmet))
 
@@ -330,7 +330,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (c/col:sphere :display-id "Ground"
                  :visualize t
                  :on-layer :ground
-                 :center (v3:zero)
+                 :center (v3:vec)
                  :radius 1f0)
    (c/render:render :material '2d-wood)))
 
@@ -370,18 +370,18 @@ actually are. You have to view the results to see the colliders lighting up."
                  :visualize t
                  :on-layer :ground))
   ("stone"
-   (c/xform:transform :translate (v3:zero)
+   (c/xform:transform :translate (v3:vec)
                       :scale 2f0
                       :rotate (q:orient :local :x (float (/ pi 2) 1.0))
-                      :rotate/inc (o:make-velocity (v3:one)
+                      :rotate/inc (o:make-velocity (v3:vec 1)
                                                    (float pi 1.0))
-                      :translate/inc (v3:zero))
+                      :translate/inc (v3:vec))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :time-to-destroy 2f0)
    (c/col:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :player
-                 :center (v3:zero)
+                 :center (v3:vec)
                  :radius 1f0)
    (c/render:render :material 'damaged-helmet)))
 
@@ -397,12 +397,12 @@ actually are. You have to view the results to see the colliders lighting up."
    ("stone-cuboid"
     (c/xform:transform :scale 2f0
                        :rotate (q:orient :local :x (float (/ pi 2) 1.0))
-                       :rotate/inc (o:make-velocity (v3:one) o:pi/6))
+                       :rotate/inc (o:make-velocity (v3:vec 1) o:pi/6))
     (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
     (c/col:cuboid :display-id "Stone"
                   :visualize t
                   :on-layer :ground
-                  :center (v3:zero)
+                  :center (v3:vec)
                   :minx -1f0
                   :maxx 1f0
                   :miny -1f0
@@ -418,12 +418,12 @@ actually are. You have to view the results to see the colliders lighting up."
    ("stone-sphere"
     (c/xform:transform :scale 2f0
                        :rotate (q:orient :local :x (float (/ pi 2) 1.0))
-                       :rotate/inc (o:make-velocity (v3:one) o:pi/6))
+                       :rotate/inc (o:make-velocity (v3:vec 1) o:pi/6))
     (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
     (c/col:sphere :display-id "Stone"
                   :visualize t
                   :on-layer :ground
-                  :center (v3:zero)
+                  :center (v3:vec)
                   :radius 1.25f0)
     (c/render:render :material 'damaged-helmet))))
 
@@ -443,12 +443,12 @@ actually are. You have to view the results to see the colliders lighting up."
     (c/xform:transform :rotate (q:orient :local :z o:pi/4))
     (c/col:cuboid :visualize t
                   :on-layer :ground
-                  :center (v3:zero))))
+                  :center (v3:vec))))
   ("cuboid2"
    (c/xform:transform :translate (v3:vec 0.5f0 0f0 0f0))
    (c/col:cuboid :visualize t
                  :on-layer :ground
-                 :center (v3:zero))))
+                 :center (v3:vec))))
 
 ;;; Prefab descriptors
 

@@ -3,13 +3,13 @@
 (defclass oriented-bounding-box ()
   ((%center :reader center
             :initarg :center
-            :initform (v3:zero))
+            :initform (v3:vec))
    (%axes :reader axes
           :initarg :axes
-          :initform (m3:zero))
+          :initform (m3:mat))
    (%half-widths :reader half-widths
                  :initarg :half-widths
-                 :initform (v3:zero))))
+                 :initform (v3:vec))))
 
 (defun make-oriented-bounding-box (center axes half-widths)
   (make-instance 'oriented-bounding-box
@@ -34,8 +34,8 @@
 (defun make-obb-obb-rotation (obb1 obb2)
   (let ((axes1 (axes obb1))
         (axes2 (axes obb2)))
-    (m3:with-components ((a (m3:id))
-                         (b (m3:id)))
+    (m3:with-components ((a (m3:mat 1))
+                         (b (m3:mat 1)))
       (psetf a00 (v3:dot (m3:get-column axes1 0) (m3:get-column axes2 0))
              a10 (v3:dot (m3:get-column axes1 1) (m3:get-column axes2 0))
              a20 (v3:dot (m3:get-column axes1 2) (m3:get-column axes2 0))

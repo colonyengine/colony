@@ -23,15 +23,15 @@
   (:shader ex/shd:damaged-helmet
    :profiles (x/mat:u-mvp)
    :uniforms
-   ((:metallic-roughness-values (v2:one))
+   ((:metallic-roughness-values (v2:vec 1))
     (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)
     (:base-color-sampler 'damaged-helmet/color)
-    (:base-color-factor (v4:one))
+    (:base-color-factor (v4:vec 1))
     (:normal-sampler 'damaged-helmet/normal)
     (:normal-scale 1f0)
     ;; NOTE: This vector points TOWARDS the light.
     (:light-direction (v3:vec 0f0 1f0 1f0))
-    (:light-color (v3:one))
+    (:light-color (v3:vec 1))
     (:occlusion-sampler 'damaged-helmet/ambient-occlusion)
     (:occlusion-strength 1f0)
     (:emissive-sampler 'damaged-helmet/emissive)

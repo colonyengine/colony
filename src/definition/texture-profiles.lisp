@@ -7,7 +7,7 @@
   ;; something else entirely.
   (:depth-stencil-texture-mode :depth-component) ;; note: opengl 4.3 or greater
   (:texture-base-level 0)
-  (:texture-border-color (v4:zero))
+  (:texture-border-color (v4:vec))
   (:texture-compare-func :lequal)
   (:texture-compare-mode :none)
   (:texture-lod-bias 0.0)

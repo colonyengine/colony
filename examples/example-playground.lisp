@@ -40,7 +40,7 @@
 (v:define-material art6
   (:profiles (x/mat:u-mvptr)
    :shader ex/shd:art6
-   :uniforms ((:mouse (v2:zero)))))
+   :uniforms ((:mouse (v2:vec)))))
 
 ;;; Components
 (v:define-component mouse-shader-input ()
@@ -50,7 +50,7 @@
    (%material-retrieved-p :reader material-retrieved-p
                           :initform nil)
    (%mouse :reader mouse
-           :initform (v2:zero))))
+           :initform (v2:vec))))
 
 (defmethod v:on-component-initialize ((self mouse-shader-input))
   (with-slots (%renderer) self

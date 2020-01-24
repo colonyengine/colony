@@ -161,41 +161,41 @@
    :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'title)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
-              (:max-intensity (v4:one)))))
+              (:max-intensity (v4:vec 1)))))
 
 (v:define-material starfield
   (:profiles (x/mat:u-mvpt)
    :shader ex/shd:starfield
    :uniforms ((:tex 'starfield)
-              (:mix-color (v4:one)))))
+              (:mix-color (v4:vec 1)))))
 
 (v:define-material warning-mothership
   (:profiles (x/mat:u-mvp)
    :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-mothership)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
-              (:max-intensity (v4:one)))))
+              (:max-intensity (v4:vec 1)))))
 
 (v:define-material warning-wave
   (:profiles (x/mat:u-mvp)
    :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-wave)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
-              (:max-intensity (v4:one)))))
+              (:max-intensity (v4:vec 1)))))
 
 (v:define-material game-over
   (:profiles (x/mat:u-mvp)
    :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'game-over)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
-              (:max-intensity (v4:one)))))
+              (:max-intensity (v4:vec 1)))))
 
 (v:define-material level-complete
   (:profiles (x/mat:u-mvp)
    :shader shd/tex:unlit-texture-decal
    :uniforms ((:tex.sampler1 'level-complete)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
-              (:max-intensity (v4:one)))))
+              (:max-intensity (v4:vec 1)))))
 
 (v:define-material time-bar
   (:profiles (x/mat:u-mvp)
@@ -262,7 +262,7 @@
           (;; Deal with deadzones and other bad data around the input vector.
            (vec (v3:vec lx ly 0f0))
            (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
-           (vec (if (< (v3:length vec) translate-deadzone) (v3:zero) vec))
+           (vec (if (< (v3:length vec) translate-deadzone) (v3:vec) vec))
            ;; Right trigger modifies speed. pull to lerp from full speed
            ;; to half speed.
            (ty
@@ -484,7 +484,7 @@
 (defun make-projectile (context translation rotation physics-layer depth-layer
                         &key
                           (parent nil)
-                          (scale (v3:one))
+                          (scale (v3:vec 1))
                           (destroy-ttl 2f0)
                           (velocity 1000f0)
                           (direction :+y)
@@ -558,7 +558,7 @@
           :initform "explode01-01")
    (%scale :accessor scale
            :initarg :scale
-           :initform (v3:one))
+           :initform (v3:vec 1))
    (%frames :accessor frames
             :initarg :frames
             :initform 15)))
@@ -1118,7 +1118,7 @@ NIL if no such list exists."
                                   :initform 3)
    (%explosion-region :accessor explosion-region
                       :initarg :explosion-region
-                      :initform (reg:make-region-ellipsoid (v3:zero)
+                      :initform (reg:make-region-ellipsoid (v3:vec)
                                                            100f0 100f0 0f0))
    (%level-manager :accessor level-manager
                    :initarg :level-manager
@@ -1863,7 +1863,7 @@ NIL if no such list exists."
   (hit-points :hp 1)
   (line-mover)
   (c/sprite:sprite :spec :spritesheet-data)
-  (c/col:sphere :center (v3:zero)
+  (c/col:sphere :center (v3:vec)
                 :on-layer :enemy-bullet
                 :referent (v:ref :self :component 'hit-points)
                 :radius 15f0)
@@ -1885,7 +1885,7 @@ NIL if no such list exists."
               ;; TODO: NEED(!) to visualize this effect!
               :invulnerability-timer 1f0)
   (player-movement)
-  (c/col:sphere :center (v3:zero)
+  (c/col:sphere :center (v3:vec)
                 :on-layer :player
                 :referent (v:ref :self :component 'hit-points)
                 :radius 30f0)
@@ -1895,7 +1895,7 @@ NIL if no such list exists."
    (c/render:render :material 'sprite-sheet
                     :mode :sprite)
    ("center-gun"
-    (c/xform:transform :translate (v3:zero))
+    (c/xform:transform :translate (v3:vec))
     (gun :physics-layer :player-bullet
          :depth-layer :player-bullet
          :name "bullet01" :frames 2))
@@ -1929,7 +1929,7 @@ NIL if no such list exists."
   (hit-points :hp 5)
   (explosion :name "explode03-01" :frames 15
              :scale (v3:vec 3f0 3f0 3f0))
-  (c/col:sphere :center (v3:zero)
+  (c/col:sphere :center (v3:vec)
                 :on-layer :planet
                 :referent (v:ref :self :component 'planet)
                 :visualize t
@@ -2093,7 +2093,7 @@ NIL if no such list exists."
 (v:define-prefab "protect-the-planets" (:library ptp)
   "The top most level prefab which has the component which drives the game
 sequencing."
-  (c/xform:transform :scale (v3:one))
+  (c/xform:transform :scale (v3:vec 1))
   (director :level-holder (v:ref "/protect-the-planets/current-level")
             :player-1-stable (v:ref "/protect-the-planets/player-1-stable"
                                     :component 'player-stable))
