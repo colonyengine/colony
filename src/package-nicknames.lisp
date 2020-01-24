@@ -6,6 +6,8 @@
    #+sbcl #:sb-ext
    #+ccl #:ccl
    #+(or ecl abcl clasp) #:ext
+   #+lispworks #:hcl
+   #+allegro #:excl
    #:add-package-local-nickname)
   (:export #:define-nicknames))
 
