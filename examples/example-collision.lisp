@@ -428,16 +428,16 @@ actually are. You have to view the results to see the colliders lighting up."
     (c/render:render :material 'damaged-helmet))))
 
 (v:define-prefab "collision-test-3" (:library examples)
-  (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7f0))
+  (("camera" :copy "/cameras/ortho")
+   (c/cam:camera (:policy :new-args) :zoom 140f0))
 
   ("a"
-   ;; FIXME: The below -0.51f0 causes a hit, since it is less than 1 away from
-   ;; the other collider. Changing this to -0.5f0 causes it to miss, even though
-   ;; it is clearly penetrating. This seems to be related to the extents of the
-   ;; cube, because changing the min/max's to [-1, 1] instead of [-0.5, 0.5]
-   ;; causes a miss by a length of 2 instead of 1.
-   (c/xform:transform :translate (v3:vec -0.51f0 0f0 0f0)
+   ;; FIXME: In the below -0.50f0 causes a hit, since it is less than 1 away
+   ;; from the other collider. Changing this to -0.51f0 does NOT cause a hit,
+   ;; even though it is clearly penetrating. This seems to be related to the
+   ;; extents of the cube, because changing the min/max's to [-1, 1] instead of
+   ;; [-0.5, 0.5] causes a miss by a length of 2 instead of 1.
+   (c/xform:transform :translate (v3:vec -.50f0 0f0 0f0)
                       :translate/inc (v3:vec 0f0 0f0 0f0))
    ("cuboid1"
     (c/xform:transform :rotate (q:orient :local :z o:pi/4))
