@@ -32,6 +32,9 @@
       q)))
 
 (defun make-obb-obb-rotation (obb1 obb2)
+  ;; TODO: This and the male-obb-obb-translation probably boild down to an
+  ;; inverted transform multiply in order to get B into A's space. If so, we
+  ;; should convert this code to that cause it'll be like 4 lines.
   (let ((axes1 (axes obb1))
         (axes2 (axes obb2)))
     (m3:with-components ((a (m3:mat 1))
@@ -44,8 +47,9 @@
              a21 (v3:dot (m3:get-column axes1 2) (m3:get-column axes2 1))
              a02 (v3:dot (m3:get-column axes1 0) (m3:get-column axes2 2))
              a12 (v3:dot (m3:get-column axes1 1) (m3:get-column axes2 2))
-             a22 (v3:dot (m3:get-column axes1 2) (m3:get-column axes2 2))
-             b00 (+ (abs a00) 1e-7)
+             a22 (v3:dot (m3:get-column axes1 2) (m3:get-column axes2 2)))
+
+      (psetf b00 (+ (abs a00) 1e-7)
              b10 (+ (abs a10) 1e-7)
              b20 (+ (abs a20) 1e-7)
              b01 (+ (abs a01) 1e-7)
@@ -57,6 +61,7 @@
       (values a b))))
 
 (defun make-obb-obb-translation (obb1 obb2)
+  ;; TODO: See TODO in make-obb-obb-rotation.
   (let ((axes1 (axes obb1))
         (translation (v3:- (center obb2) (center obb1))))
     (v3:vec (v3:dot translation (m3:get-column axes1 0))
