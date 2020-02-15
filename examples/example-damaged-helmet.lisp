@@ -125,14 +125,12 @@
                  ;; RV represents (as a 2d point) the offset from the
                  ;; original orientation, when a new drag event happens it'll
                  ;; smoothly start from RV in the new drag.
+                 (x-rot (+ (v2:x rv) (* (v2:x dv) rot-speed)))
+                 (y-rot (+ (v2:y rv) (* (v2:y dv) rot-speed)))
+                 (y-rot (if clamp-p (a:clamp y-rot (- range) range) y-rot))
                  (dv-rot (q:orient :local
-                                   :y (+ (v2:x rv)
-                                         (* (v2:x dv) rot-speed))
-                                   :x (a:clamp
-                                       (+ (v2:y rv)
-                                          (* (v2:y dv) rot-speed))
-                                       (- range)
-                                       range)
+                                   :y x-rot
+                                   :x y-rot
                                    ))
                  ;; Create the new potential rotation starting from the
                  ;; original orientation that takes into consideration the
