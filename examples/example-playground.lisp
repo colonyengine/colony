@@ -35,7 +35,7 @@
               (:speed 0.24f0)
               (:zoom 0.75f0)
               (:sampler 'art5/texture))
-   :shader shd/fx:window-rain))
+   :shader ex/shd:art5))
 
 (v:define-material art6
   (:profiles (x/mat:u-mvptr)
