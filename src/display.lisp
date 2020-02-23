@@ -5,6 +5,9 @@
           :initarg :core)
    (%window :reader window
             :initarg :window)
+   (%gl-context :reader gl-context
+                :initarg :gl-context
+                :initform nil)
    (%refresh-rate :reader refresh-rate
                   :initarg :refresh-rate)
    (%vsync-p :reader vsync-p
@@ -47,9 +50,9 @@
            (window (sdl2:create-window :title (option context :title)
                                        :w (option context :window-width)
                                        :h (option context :window-height)
-                                       :flags '(:opengl))))
-      (sdl2:gl-create-context window)
-      window)))
+                                       :flags '(:opengl)))
+           (context (sdl2:gl-create-context window)))
+      (values context window))))
 
 (defmethod initialize-instance :after ((instance display)
                                        &key &allow-other-keys)
@@ -60,12 +63,13 @@
     (maybe-set-vsync (option (context core) :vsync))))
 
 (defun make-display (core)
-  (let ((window (create-window core))
-        (refresh-rate (float (nth-value 3 (sdl2:get-current-display-mode 0))
-                             1d0)))
+  (u:mvlet ((gl-context window (create-window core))
+            (refresh-rate (float (nth-value 3 (sdl2:get-current-display-mode 0))
+                                 1d0)))
     (make-instance 'display
                    :core core
                    :window window
+                   :gl-context gl-context
                    :refresh-rate refresh-rate
                    :vsync-p (eq (option (context core) :vsync) :on))))
 

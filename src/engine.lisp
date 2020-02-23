@@ -54,9 +54,11 @@ tear-down procedure occurs when stopping the engine."
     (make-display core)))
 
 (defun shutdown-host (core)
-  (in::shutdown-gamepads (context core))
-  (sdl2:destroy-window (window (display core)))
-  (sdl2::sdl-quit))
+  (let ((display (display core)))
+    (in::shutdown-gamepads (context core))
+    (sdl2:gl-delete-context (gl-context display))
+    (sdl2:destroy-window (window display))
+    (sdl2::sdl-quit)))
 
 (defun load-initial-scene (core scene-name)
   (let* ((scene-name (or scene-name (option (context core) :initial-scene)))
