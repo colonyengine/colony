@@ -81,18 +81,20 @@
        (setf (u:href key-state :strafe-down) nil)))))
 
 (defun free-look/key-move (transform key-state speed)
-  (flet ((velocity (direction plus minus)
+  (flet ((axis-dir (direction plus minus)
            (v3:scale (c/xform:transform-direction transform direction)
                      (cond
-                       ((u:href key-state plus) speed)
-                       ((u:href key-state minus) (- speed))
+                       ((u:href key-state plus) 1f0)
+                       ((u:href key-state minus) -1f0)
                        (t 0f0)))))
-    (let* ((x (velocity v3:+right+ :strafe-right :strafe-left))
-           (y (velocity v3:+up+ :strafe-up :strafe-down))
-           (z (velocity v3:+back+ :forward :backward))
-           ;; TODO: normalize?
+    (let* ((x (axis-dir v3:+right+ :strafe-right :strafe-left))
+           (y (axis-dir v3:+up+ :strafe-up :strafe-down))
+           (z (axis-dir v3:+back+ :forward :backward))
            (vec (v3:+ (v3:+ x y) z))
-           (angle (velocity v3:+up+ :turn-left :turn-right)))
+           (vec (v3:normalize vec))
+           (vec (v3:scale vec speed))
+           (angle (axis-dir v3:+up+ :turn-left :turn-right))
+           (angle (v3:scale angle speed)))
       (c/xform:translate transform vec)
       (c/xform:rotate/velocity transform angle 1f0))))
 
@@ -105,7 +107,19 @@
                (x (velocity v3:+right+ dx))
                (y (velocity v3:+up+ dy))
                (z (velocity v3:+forward+ dy))
+
                ;; TODO: normalize?
+               ;;(xxx (v2:length (v2:vec dx dy)))
+               ;;
+               ;; This addition will cause a faster movement along a diagonal
+               ;; which is incorrect. This can be fixed by normalizing x, y, z.
+               ;; But then we must correctly encode the speed contribution of
+               ;; the mouse delta dx, dy AND the speed. This probably means we
+               ;; need to compute (* xxx speed) and use that as a scale for vec,
+               ;; angle, and z. The "velocity" function above probably should
+               ;; only return direction vectors based on the signum of the val.
+               ;; But, it is JUST complex enough that we need some paper to
+               ;; figure it out later when we aren't on stream.
                (vec (v3:+ x y))
                (angle (v3:+ (velocity v3:+down+ dx)
                             (velocity v3:+right+ dy))))

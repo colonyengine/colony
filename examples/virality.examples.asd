@@ -36,8 +36,3 @@
     ((:file "common")
      (:file "protect-the-planets")))
    (:file "examples")))
-
-;;;
-
-;; 1: Fix the input system
-;; 3: Free-look camera

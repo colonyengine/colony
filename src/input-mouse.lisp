@@ -94,6 +94,7 @@
             (warp-y (mouse-motion-state-warp-y motion-state)))
         (sdl2:warp-mouse-in-window nil warp-x warp-y)))))
 
-(defun mouse-motion-relative-p ()
-  (let ((motion-state (u:href (states (input-data)) '(:mouse :motion))))
+(defun mouse-motion-relative-p (context)
+  (let* ((input-data (v::input-data (v::core context)))
+         (motion-state (u:href (states input-data) '(:mouse :motion))))
     (mouse-motion-state-relative motion-state)))
