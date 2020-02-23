@@ -173,6 +173,10 @@
       (:model (%rotate/model-space %rotation rot replace-p instant-p))
       (:world (%rotate/world-space %rotation rot replace-p instant-p)))))
 
+(defun rotate/velocity (transform axis rate)
+  (with-slots (%incremental) (rotation transform)
+    (setf %incremental (o:make-velocity axis rate))))
+
 (defun %translate/model-space (translation vec &optional replace-p instant-p)
   (with-slots (%previous %current) translation
     (v3:+! %current (if replace-p v3:+zero+ %current) vec)

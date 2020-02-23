@@ -4,7 +4,14 @@
     #(nil :left :middle :right :x1 :x2)
   :test #'equalp)
 
-(defstruct mouse-motion-state x y dx dy)
+(defstruct mouse-motion-state
+  relative
+  (warp-x 0)
+  (warp-y 0)
+  (x 0)
+  (y 0)
+  (dx 0)
+  (dy 0))
 
 ;;; Events
 
@@ -28,24 +35,65 @@
     (unless (zerop y)
       (setf (u:href states '(:mouse :scroll-vertical)) y))))
 
-(defun on-mouse-move (context new-x new-y new-dx new-dy)
-  (let ((data (v::input-data (v::core context))))
-    (with-slots (x y dx dy) (u:href (states data) '(:mouse :motion))
-      (setf x new-x
-            y new-y
-            dx new-dx
-            dy new-dy))))
+;;; TODO: Update option table when display width/height changes.
+(defun on-mouse-move (context x y dx dy)
+  (let* ((data (v::input-data (v::core context)))
+         (motion-state (u:href (states data) '(:mouse :motion)))
+         (window-height (v::option context :window-height))
+         (relative (sdl2:relative-mouse-mode-p)))
+    ;; TODO: fix this?
+    (unless relative
+      (setf (mouse-motion-state-x motion-state) x
+            (mouse-motion-state-y motion-state) (- window-height y)))
+    (setf (mouse-motion-state-dx motion-state) dx
+          (mouse-motion-state-dy motion-state) (- dy))))
+
+(defun reset-mouse-state (data)
+  (let* ((states (states data))
+         (motion-state (u:href states '(:mouse :motion))))
+    (setf (u:href states '(:mouse :scroll-horizontal)) 0
+          (u:href states '(:mouse :scroll-vertical)) 0
+          (mouse-motion-state-dx motion-state) 0
+          (mouse-motion-state-dy motion-state) 0)))
 
 ;;; User protocol
 
 (defun get-mouse-position (context)
   (let* ((data (v::input-data (v::core context)))
-         (state (u:href (states data) '(:mouse :motion))))
-    (with-slots (x y dx dy) state
-      (values x y dx dy))))
+         (motion-state (u:href (states data) '(:mouse :motion)))
+         (x (mouse-motion-state-x motion-state))
+         (y (mouse-motion-state-y motion-state))
+         (dx (mouse-motion-state-dx motion-state))
+         (dy (mouse-motion-state-dy motion-state)))
+    (values x y dx dy)))
 
 (defun get-mouse-scroll (context axis)
   (let ((states (states (v::input-data (v::core context)))))
     (ecase axis
       (:horizontal (u:href states '(:mouse :scroll-horizontal)))
       (:vertical (u:href states '(:mouse :scroll-vertical))))))
+
+(defun enable-relative-motion (context)
+  (let* ((input-data (v::input-data (v::core context)))
+         (motion-state (u:href (states input-data) '(:mouse :motion)))
+         (window-height (v::option context :window-height))
+         (x (mouse-motion-state-x motion-state))
+         (y (- window-height (mouse-motion-state-y motion-state))))
+    (sdl2:set-relative-mouse-mode 1)
+    (setf (mouse-motion-state-relative motion-state) t
+          (mouse-motion-state-warp-x motion-state) x
+          (mouse-motion-state-warp-y motion-state) y)))
+
+(defun disable-relative-motion (context &key (warp t))
+  (let* ((input-data (v::input-data (v::core context)))
+         (motion-state (u:href (states input-data) '(:mouse :motion))))
+    (sdl2:set-relative-mouse-mode 0)
+    (setf (mouse-motion-state-relative motion-state) nil)
+    (when warp
+      (let ((warp-x (mouse-motion-state-warp-x motion-state))
+            (warp-y (mouse-motion-state-warp-y motion-state)))
+        (sdl2:warp-mouse-in-window nil warp-x warp-y)))))
+
+(defun mouse-motion-relative-p ()
+  (let ((motion-state (u:href (states (input-data)) '(:mouse :motion))))
+    (mouse-motion-state-relative motion-state)))

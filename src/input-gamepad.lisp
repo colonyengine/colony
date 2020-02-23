@@ -45,12 +45,15 @@
           (:y (u:map-domain -32767 32767 1 -1 clamped))))))
 
 (defmethod %get-gamepad-analog ((deadzone-type (eql :axial)) analog-state)
-  (with-slots (deadzone x y) analog-state
+  (let ((x (gamepad-analog-state-x analog-state))
+        (y (gamepad-analog-state-y analog-state)))
     (v2:with-components ((v (v2:vec x y)))
       (values vx vy))))
 
 (defmethod %get-gamepad-analog ((deadzone-type (eql :radial)) analog-state)
-  (with-slots (deadzone x y) analog-state
+  (let ((deadzone (gamepad-analog-state-deadzone analog-state))
+        (x (gamepad-analog-state-x analog-state))
+        (y (gamepad-analog-state-y analog-state)))
     (v2:with-components ((v (v2:vec x y)))
       (if (< (v2:length v) deadzone)
           (values 0.0 0.0)
@@ -58,7 +61,9 @@
 
 (defmethod %get-gamepad-analog ((deadzone-type (eql :radial-scaled))
                                 analog-state)
-  (with-slots (deadzone x y) analog-state
+  (let ((deadzone (gamepad-analog-state-deadzone analog-state))
+        (x (gamepad-analog-state-x analog-state))
+        (y (gamepad-analog-state-y analog-state)))
     (v2:with-components ((v (v2:vec x y)))
       (let ((length (v2:length v)))
         (if (< length deadzone)

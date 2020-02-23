@@ -95,7 +95,8 @@
     (setf (u:href states '(:mouse :scroll-horizontal)) 0
           (u:href states '(:mouse :scroll-vertical)) 0)
     (enable-entering data)
-    (disable-exiting data)))
+    (disable-exiting data)
+    (reset-mouse-state data)))
 
 (defun handle-events (context)
   (declare (optimize speed))

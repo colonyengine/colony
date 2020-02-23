@@ -69,6 +69,7 @@
    #:model
    #:remove-child
    #:rotate
+   #:rotate/velocity
    #:scale
    #:transform
    #:transform-backward

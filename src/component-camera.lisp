@@ -19,11 +19,16 @@
               :initform 1024f0)
    (%fov-y :reader fov-y
            :initarg :fov-y
-           :initform 90f0)
+           :initform 45f0)
    (%zoom :accessor zoom
           :initarg :zoom
           :initform 1f0)
-   (%transform :reader transform)))
+   (%transform :reader transform)
+   (%free-look :accessor free-look
+               :initarg :free-look
+               :initform nil)
+   (%free-look-state :reader free-look-state
+                     :initform nil)))
 
 (defun correct-camera-transform (camera)
   (when (v3:zero-p (c/xform::current (c/xform::translation (transform camera))))
@@ -80,12 +85,22 @@
 ;;; Component event hooks
 
 (defmethod v:on-component-initialize ((self camera))
-  (with-slots (%transform %fov-y) self
+  (with-slots (%transform %fov-y %free-look %free-look-state) self
     (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform)
           %fov-y (* %fov-y (/ (float pi 1f0) 180f0)))
+    (when %free-look
+      (setf %free-look-state (v::make-free-look-state (v::context self) %transform)))
     (correct-camera-transform self)
     (make-projection self (mode self))
     (push self (v::cameras (v::core self)))))
+
+(defmethod v:on-component-update ((self camera))
+  (when (free-look-state self)
+    (v::set-initial-free-look-orientation
+     (free-look-state self)
+     (m4:copy (c/xform:model (transform self)))))
+  (when (free-look self)
+    (v::update-free-look-state (free-look-state self))))
 
 (defmethod v:on-component-destroy ((self camera))
   (let ((context (v:context self)))

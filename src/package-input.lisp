@@ -3,6 +3,8 @@
 (defpackage #:virality.input
   (:use #:cl)
   (:export
+   #:disable-relative-motion
+   #:enable-relative-motion
    #:get-gamepad-analog
    #:get-mouse-position
    #:get-window-mode
@@ -11,6 +13,7 @@
    #:input-enabled-p
    #:input-enter-p
    #:input-exit-p
+   #:mouse-motion-relative-p
    #:on-gamepad-analog-move
    #:on-gamepad-attach
    #:on-gamepad-button-down

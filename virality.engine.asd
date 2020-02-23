@@ -95,6 +95,7 @@
    (:file "action-fade")
    (:file "action-rotate")
    (:file "action-sprite-animate")
+   (:file "free-look-state")
    (:file "image")
    (:file "image-pngload")
    (:file "image-sdl2")

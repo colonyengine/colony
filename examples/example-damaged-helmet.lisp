@@ -162,12 +162,13 @@
 
 (v:define-prefab "damaged-helmet" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 10f0))
+   (c/cam:camera (:policy :new-args)
+                 :free-look t))
   (("helmet" :copy "/mesh")
    (c/xform:transform :rotate (q:orient :local :x (float (/ pi 2f0) 1.0))
                       :rotate/inc (o:make-velocity v3:+forward+
                                                    (float (- (* pi 1/6)) 1f0))
-                      :scale 4f0)
+                      :scale 17f0)
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (c/render:render :material 'damaged-helmet)))
 
