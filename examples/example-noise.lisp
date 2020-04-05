@@ -125,6 +125,4 @@
                                 :shader ex/shd:noise/cubist-3d))))
 
 ;;; Prefab descriptors
-
-(v:define-prefab-descriptor noise ()
-  ("noise" examples))
+;; '(("noise" examples))

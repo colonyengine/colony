@@ -3,7 +3,7 @@
 ;; To run this game, start your lisp repl, then:
 ;;
 ;; (ql:quickload :virality.examples)
-;; (virality.examples:start "ptp")
+;; (virality.engine:start :project :virality.examples :scene '(("protect-the-planets" ptp)))
 
 ;; "Protect the Planets!"
 ;; by Peter Keller (psilord@cs.wisc.edu)
@@ -493,11 +493,8 @@
                           (name "bullet01")
                           (frames 1))
   (let* ((new-projectile
-           ;; TODO: This API needs to take a context. prefab-descriptor prolly
-           ;; needs to be a function, not a macro.
            (first (v:make-prefab-instance
                    (v::core context)
-                   ;; TODO: prefab-descriptor is wrong here.
                    `((,prefab-name ,prefab-library))
                    :parent parent)))
          ;; TODO: I'm expecting the new-projectile to have components here
@@ -574,7 +571,6 @@
   (let* ((new-explosion
            (first (v:make-prefab-instance
                    (v::core context)
-                   ;; TODO: prefab-descriptor is wrong here.
                    `((,prefab-name ,prefab-library)))))
          (explosion-transform (v:component-by-type new-explosion
                                                    'c/xform:transform))
@@ -851,13 +847,9 @@
    (%stable :accessor stable
             :initarg :stable
             :initform nil)
-   ;; TODO: make prefab-descriptor external (and possibly also have a function
-   ;; variant. Also have it return a vector instead of a list, more useful
-   ;; for indexing.
    (%mockette-prefab :accessor mockette-prefab
                      :initarg :mockette-prefab
-                     :initform (v:prefab-descriptor
-                                 ("player-ship-mockette" ptp)))
+                     :initform '(("player-ship-mockette" ptp)))
 
    ;; We keep references to all of the mockettes in an array that matches their
    ;; position on the screen so we can destroy them or re-create them as the
@@ -1479,15 +1471,13 @@ NIL if no such list exists."
    ;; The db of levels over which the game progresses.
    (%levels :accessor levels
             :initarg :levels
-            :initform (v:prefab-descriptor
-                        ("level-0" ptp)
+            :initform '(("level-0" ptp)
                         ("level-1" ptp)
                         ("level-2" ptp)))
    ;; which level is considered the demo level.
    (%demo-level :accessor demo-level
                 :initarg :demo-level
-                :initform (v:prefab-descriptor
-                            ("demo-level" ptp)))
+                :initform '(("demo-level" ptp)))
    ;; Which level are we playing?
    (%current-level :accessor current-level
                    :initarg :current-level
@@ -2121,8 +2111,5 @@ testing the starfield shader."
 ;; Prefab descriptors for convenience
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(v:define-prefab-descriptor ptp ()
-  ("protect-the-planets" ptp))
-
-(v:define-prefab-descriptor starfield-demo ()
-  ("starfield-demo" ptp))
+;; '(("protect-the-planets" ptp))
+;; '(("starfield-demo" ptp))

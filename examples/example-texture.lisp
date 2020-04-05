@@ -275,6 +275,4 @@
    (c/render:render :material 'cubemaparray)))
 
 ;;; Prefab descriptors
-
-(v:define-prefab-descriptor texture ()
-  ("texture" examples))
+;; '(("texture" examples))

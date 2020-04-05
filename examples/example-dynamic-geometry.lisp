@@ -35,6 +35,4 @@
                     :mode :dynamic-mesh)))
 
 ;;; Prefab descriptors
-
-(v:define-prefab-descriptor dynamic-geometry ()
-  ("dynamic-geometry" examples))
+;; '(("dynamic-geometry" examples))

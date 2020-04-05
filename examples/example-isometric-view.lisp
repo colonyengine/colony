@@ -44,6 +44,4 @@
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))))
 
 ;;; Prefab descriptors
-
-(v:define-prefab-descriptor isometric-view ()
-  ("isometric-view" examples))
+;; '(("isometric-view" examples))

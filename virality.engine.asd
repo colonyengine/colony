@@ -128,7 +128,6 @@
    (:file "prefab-parser")
    (:file "prefab-loader")
    (:file "prefab-reference")
-   (:file "prefab-descriptor")
    (:file "prefab")
    (:file "core")
    (:file "engine")

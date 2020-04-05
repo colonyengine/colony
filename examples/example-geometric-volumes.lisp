@@ -30,6 +30,4 @@
    (c/render:render :material 'x/mat:unlit-texture-decal-bright)))
 
 ;;; Prefab descriptors
-
-(v:define-prefab-descriptor geometric-volumes ()
-  ("geometric-volumes" examples))
+;; '(("geometric-volumes" examples))

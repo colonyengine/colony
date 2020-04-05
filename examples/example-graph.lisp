@@ -52,12 +52,6 @@
                                 :uniforms ((:size 1))))))
 
 ;;; Prefab descriptors
-
-(v:define-prefab-descriptor graph ()
-  ("graph" examples))
-
-(v:define-prefab-descriptor 3d-graph-1 ()
-  ("3d-graph-1" examples))
-
-(v:define-prefab-descriptor 3d-graph-2 ()
-  ("3d-graph-2" examples))
+;; '(("graph" examples))
+;; '(("3d-graph-1" examples))
+;; '("3d-graph-2" examples))

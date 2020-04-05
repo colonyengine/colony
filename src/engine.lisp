@@ -61,9 +61,9 @@ tear-down procedure occurs when stopping the engine."
     (sdl2::sdl-quit)))
 
 (defun load-initial-scene (core scene-name)
-  (let* ((scene-name (or scene-name (option (context core) :initial-scene)))
-         (prefab-descriptor (prefab::find-prefab-descriptor scene-name)))
-    (make-prefab-instance core prefab-descriptor)))
+  (let ((scene-name (or scene-name
+                        (option (context core) :initial-scene))))
+    (make-prefab-instance core scene-name)))
 
 (defun initialize-engine (core scene-name)
   (let ((title (option (context core) :title)))
