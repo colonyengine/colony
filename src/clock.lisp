@@ -125,7 +125,7 @@
                     (elapsed (clock-period-elapsed clock)))
     (let ((period-interval (clock-period-interval clock)))
       (when (>= (- current elapsed) period-interval)
-        (live-coding-update)
+        (update-repl)
         (locally (declare (optimize (speed 1)))
           (log:trace :virality.engine
                      "Periodic update performed (every ~d seconds)"

@@ -66,7 +66,7 @@ tear-down procedure occurs when stopping the engine."
 
 (defun initialize-engine (core scene-name)
   (log:info :virality.engine "Starting up ~a..." v:=title=)
-  (setup-live-coding)
+  (setup-repl)
   (enable-logging core)
   (make-thread-pool core)
   (make-clock core)
@@ -82,7 +82,7 @@ tear-down procedure occurs when stopping the engine."
   (log:info :virality.engine "Finished starting ~a" v:=title=))
 
 (defun iterate-main-loop (core)
-  (with-continue-restart "Virality Engine"
+  (with-continuable "Virality Engine"
     (let ((context (context core)))
       (in::handle-events context)
       (render-frame core)
