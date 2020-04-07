@@ -19,8 +19,10 @@
 (defmethod v:on-component-update ((self simple-movement))
   (u:mvlet* ((context (v:context self))
              (transform (transform self))
-             (lx ly (v:get-gamepad-analog context '(:gamepad1 :left-stick)))
-             (rx ry (v:get-gamepad-analog context '(:gamepad1 :right-stick)))
+             (lx ly (v:get-gamepad-analog
+                     context :radial-scaled '(:gamepad1 :left-stick)))
+             (rx ry (v:get-gamepad-analog
+                     context :radial-scaled '(:gamepad1 :right-stick)))
              (instant-p (zerop (v:frame-count context))))
     (let ((vec (v3:vec lx ly 0f0)))
       (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150f0)
@@ -65,8 +67,8 @@
 
 (defmethod v:on-component-update ((self shot-emitter))
   (let ((context (v:context self)))
-    (when (or (v:input-enter-p context '(:gamepad1 :a))
-              (v:input-enter-p context '(:mouse :left)))
+    (when (or (v:on-button-enter context :gamepad1 :a)
+              (v:on-button-enter context :mouse :left))
       (let* ((parent-model (c/xform:model (transform self)))
              (parent-translation (m4:get-translation parent-model))
              (parent-rotation (q:from-mat4 parent-model))

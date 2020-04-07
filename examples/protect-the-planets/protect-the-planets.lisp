@@ -253,7 +253,8 @@
                    (rotate-deadzone rotate-deadzone)
                    (region-cuboid region-cuboid))
       self
-    (u:mvlet ((lx ly (v:get-gamepad-analog context '(:gamepad1 :left-stick)))
+    (u:mvlet ((lx ly (v:get-gamepad-analog
+                      context :radial-scaled '(:gamepad1 :left-stick)))
               (instant-p (zerop (v:frame-count context))))
 
       ;; First, we settle the notion of how the player translates around with
@@ -267,7 +268,7 @@
            ;; to half speed.
            (ty
             (nth-value 1 (v:get-gamepad-analog
-                          context '(:gamepad1 :triggers))))
+                          context :radial-scaled '(:gamepad1 :triggers))))
            ;; Compute the actual translation vector related to our frame time!
            (vec
             (v3:scale vec
@@ -666,8 +667,8 @@
        (loop :while (>= cooldown-time (/ fire-period))
              :do (decf cooldown-time (/ fire-period)))
 
-       (u:mvlet ((rx ry (v:get-gamepad-analog context
-                                              '(:gamepad1 :right-stick))))
+       (u:mvlet ((rx ry (v:get-gamepad-analog
+                         context :radial-scaled '(:gamepad1 :right-stick))))
          (let* ((parent-model (c/xform:model emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
            (unless (or (= rx ry 0f0)
@@ -1596,9 +1597,8 @@ NIL if no such list exists."
           ;; The TODO is why the WHEN guard is around this line.
           (reset-stable player-1-stable)))
 
-
       ;; 3. We always listen for the start button so we can play a game.
-      (when (v:input-enter-p context '(:gamepad1 :start))
+      (when (v:on-button-enter context :gamepad1 :start)
         (setf current-level 0 ;; start at beginning of level progression
               next-state :level-spawn))
 

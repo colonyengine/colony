@@ -82,8 +82,8 @@
       self
     (u:mvlet* ((context (v:context self))
                (x y (v:get-mouse-position context))
-               (lm-start-drag-p (v:input-enter-p context '(:mouse :left)))
-               (lm-stop-drag-p (v:input-exit-p context '(:mouse :left)))
+               (lm-start-drag-p (v:on-button-enter context :mouse :left))
+               (lm-stop-drag-p (v:on-button-exit context :mouse :left))
                (xform (v:component-by-type (v:actor self) 'c/xform:transform))
                (range (- o:pi/2 .001)))
 

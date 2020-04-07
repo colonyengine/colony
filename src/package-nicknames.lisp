@@ -46,7 +46,6 @@
       (:virality.geometry :geo)
       (:shadow :gpu)
       (:virality.image :img)
-      (:virality.input :in)
       (:virality.materials :mat)
       (:virality.prefabs :prefab)
       (:umbra.color :shd/color)

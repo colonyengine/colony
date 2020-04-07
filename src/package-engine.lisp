@@ -6,7 +6,6 @@
    #:virality.colliders
    #:virality.geometry
    #:virality.materials
-   #:virality.input
    #:virality.prefabs
    #:virality.textures)
   (:export
@@ -30,7 +29,29 @@
    #:stop
    #:total-time
    #:with-shared-storage)
-  ;; I'm working on these still - MF
+  ;; input system
+  (:export
+   #:disable-relative-motion
+   #:enable-relative-motion
+   #:get-gamepad-analog
+   #:get-mouse-position
+   #:get-mouse-scroll
+   #:get-window-mode
+   #:get-window-size
+   #:get-window-title
+   #:mouse-motion-relative-p
+   #:on-button-enabled
+   #:on-button-enter
+   #:on-button-exit
+   #:on-gamepad-analog-move
+   #:on-gamepad-attach
+   #:on-gamepad-detach
+   #:on-gamepad-enabled
+   #:set-window-hidden
+   #:set-window-mode
+   #:set-window-title
+   #:set-window-size
+   #:set-window-visible)
   (:export
    #:attach-component
    #:attach-components

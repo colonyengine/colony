@@ -1,4 +1,4 @@
-(in-package #:virality.input)
+(in-package #:virality.engine)
 
 (a:define-constant +key-names+
     #(:unknown nil nil nil :a :b :c :d :e :f :g :h :i :j :k :l :m :n :o :p :q :r
@@ -35,16 +35,12 @@
       :kbdillumup :eject :sleep)
   :test #'equalp)
 
-;;; Events
+(defun on-key-up (data key)
+  (button-transition-out data (list :key key))
+  (button-transition-out data '(:key :any))
+  (button-transition-out data '(:button :any)))
 
-(defun on-key-up (context key)
-  (let ((data (v::input-data (v::core context))))
-    (input-transition-out data (list :key key))
-    (input-transition-out data '(:key :any))
-    (input-transition-out data '(:button :any))))
-
-(defun on-key-down (context key)
-  (let ((data (v::input-data (v::core context))))
-    (input-transition-in data (list :key key))
-    (input-transition-in data '(:key :any))
-    (input-transition-in data '(:button :any))))
+(defun on-key-down (data key)
+  (button-transition-in data (list :key key))
+  (button-transition-in data '(:key :any))
+  (button-transition-in data '(:button :any)))

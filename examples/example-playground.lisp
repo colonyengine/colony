@@ -63,7 +63,7 @@
             %material-retrieved-p t))
     (u:mvlet* ((context (v:context self))
                (x y (v:get-mouse-position context))
-               (lmb-p (v:input-enabled-p context '(:mouse :left))))
+               (lmb-p (v:on-button-enabled context :mouse :left)))
       (when (null x) (setf x (/ v:=window-width= 2f0)))
       (when (null y) (setf y (/ v:=window-height= 2f0)))
       (when lmb-p

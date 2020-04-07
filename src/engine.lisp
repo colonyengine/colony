@@ -45,17 +45,16 @@ tear-down procedure occurs when stopping the engine."
   (epilogue (context core)))
 
 (defun initialize-host (core)
-  (let ((flags '(:everything))
-        (gamepad-db (find-asset (context core) :virality.engine/gamepad-db)))
+  (let ((flags '(:everything)))
     (unless (apply #'sdl2:was-init flags)
       (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
         (sdl2::check-rc (sdl2::sdl-init flags))))
-    (in::prepare-gamepads gamepad-db)
+    (prepare-gamepads core)
     (make-display core)))
 
 (defun shutdown-host (core)
   (let ((display (display core)))
-    (in::shutdown-gamepads (context core))
+    (shutdown-gamepads core)
     (sdl2:gl-delete-context (gl-context display))
     (sdl2:destroy-window (window display))
     (sdl2::sdl-quit)))
@@ -72,6 +71,7 @@ tear-down procedure occurs when stopping the engine."
   (make-clock core)
   (initialize-host core)
   (initialize-shaders core)
+  (make-input-data core)
   (load-graphs core)
   (load-call-flows core)
   (tex::load-texture-descriptors core)
@@ -84,10 +84,10 @@ tear-down procedure occurs when stopping the engine."
 (defun iterate-main-loop (core)
   (with-continuable "Virality Engine"
     (let ((context (context core)))
-      (in::handle-events context)
+      (handle-events core)
       (render-frame core)
       ;; TODO: Remove this later when possible.
-      (when (in:input-enter-p context '(:key :escape))
+      (when (on-button-enter context :key :escape)
         (stop core)))))
 
 (defun main-loop (core)
