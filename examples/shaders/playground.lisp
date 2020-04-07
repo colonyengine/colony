@@ -202,7 +202,7 @@
                   (outline :bool)
                   ;; amount of focus/detail - [0, 1]
                   (detail :float))
-  (let* ((angle (/ (float pi) 4))
+  (let* ((angle o:pi/4)
          (s (sin angle))
          (c (cos angle))
          (uv (* (/ (- (.xy gl-frag-coord) (* res 0.5)) (.y res))

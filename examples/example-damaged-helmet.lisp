@@ -163,10 +163,10 @@
    (c/cam:camera (:policy :new-args)
                  :free-look t))
   (("helmet" :copy "/mesh")
-   (c/xform:transform :rotate (q:orient :local :x (float (/ pi 2f0) 1.0))
+   (c/xform:transform :rotate (q:orient :local :x o:pi/2)
                       :rotate/velocity (o:make-velocity
                                         v3:+forward+
-                                        (float (- (* pi 1/6)) 1f0))
+                                        (- o:pi/6))
                       :scale 17f0)
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (c/render:render :material 'damaged-helmet)))
@@ -178,7 +178,7 @@
 
   (("helmet" :copy "/mesh")
    (simple-mouse-rotator :clamp-p t)
-   (c/xform:transform :rotate (q:orient :local :x (float (/ pi 2f0) 1.0))
+   (c/xform:transform :rotate (q:orient :local :x o:pi/2)
                       :scale 4f0)
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (c/render:render :material 'damaged-helmet)))

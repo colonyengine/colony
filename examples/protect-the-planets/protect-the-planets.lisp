@@ -287,10 +287,9 @@
       (unless (or (= lx ly 0f0)
                   (< (v3:length (v3:vec lx ly 0f0)) rotate-deadzone))
         (let* ((angle (atan (- lx) ly))
-               (angle (if (< angle 0)
-                          (+ pi (- pi (abs angle)))
-                          angle))
-               (angle (float angle 1f0)))
+               (angle (if (minusp angle)
+                          (+ o:pi (- o:pi (abs angle)))
+                          angle)))
           (c/xform:rotate transform
                           (q:orient :local :z angle)
                           :replace-p t
@@ -674,10 +673,9 @@
            (unless (or (= rx ry 0f0)
                        (< (v3:length (v3:vec rx ry 0f0)) rotate-deadzone))
              (let* ((angle (atan (- rx) ry))
-                    (angle (if (< angle 0f0)
-                               (+ pi (- pi (abs angle)))
-                               angle))
-                    (angle (float angle 1f0)))
+                    (angle (if (minusp angle)
+                               (+ o:pi (- o:pi (abs angle)))
+                               angle)))
                ;; The rotation we use is indicated by the right stick vector.
                (make-projectile context
                                 parent-translation
@@ -717,7 +715,7 @@
                :initform 1)
    (%difficulty-period :accessor difficulty-period
                        :initarg :difficulty-period
-                       :initform (float 1/10 1f0)) ;; Hz
+                       :initform 0.1f0) ;; Hz
    (%difficulty-time :accessor difficulty-time
                      :initarg :difficulty-time
                      :initform 0f0)
@@ -1204,7 +1202,7 @@ NIL if no such list exists."
                                         (v3:y world-location)
                                         (dl :planet-warning-explosion)))
                 (random-rotation
-                  (q:orient :local :z (float (random (* 2 pi)) 1f0)))
+                  (q:orient :local :z (random o:2pi)))
                 ;; for now, use the same explosions as the planet itself
                 (explosion (v:component-by-type (v:actor self) 'explosion)))
 

@@ -44,12 +44,12 @@
 (defmethod make-projection (camera (mode (eql :perspective)))
   (with-slots (%projection %fov-y %zoom %clip-near %clip-far) camera
     (m4:set-projection/perspective! %projection
-                                    (float (/ %fov-y %zoom) 1f0)
+                                    (/ %fov-y %zoom)
                                     (float
                                      (/ v:=window-width= v:=window-height=)
                                      1f0)
-                                    (float %clip-near 1f0)
-                                    (float %clip-far 1f0))))
+                                    %clip-near
+                                    %clip-far)))
 
 (defmethod make-projection (camera (mode (eql :orthographic)))
   (with-slots (%projection %zoom %clip-near %clip-far) camera
@@ -84,9 +84,10 @@
 (defmethod v:on-component-initialize ((self camera))
   (with-slots (%transform %fov-y %free-look %free-look-state) self
     (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform)
-          %fov-y (* %fov-y (/ (float pi 1f0) 180f0)))
+          %fov-y (* %fov-y (/ o:pi 180)))
     (when %free-look
-      (setf %free-look-state (v::make-free-look-state (v::context self) %transform)))
+      (setf %free-look-state (v::make-free-look-state (v::context self)
+                                                      %transform)))
     (correct-camera-transform self)
     (make-projection self (mode self))
     (push self (v::cameras (v::core self)))))

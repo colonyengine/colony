@@ -38,7 +38,7 @@
   ("iso"
    (c/xform:transform :rotate (q:orient :local
                                         :x (- (atan (/ (sqrt 2f0))))
-                                        :y (- (/ (float pi 1f0) 4f0))))
+                                        :y (- o:pi/4)))
    ("camera"
     (c/xform:transform :translate (v3:vec 0f0 0f0 10f0))
     (c/cam:camera :active-p t

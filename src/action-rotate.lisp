@@ -4,8 +4,8 @@
   (let* ((transform (c/render::transform
                      (action:renderer (action:manager action))))
          (attrs (action:attrs action))
-         (angle (or (u:href attrs :angle) (* pi 2)))
-         (step (float (u:map-domain 0 1 0 angle (action:step action)) 1f0)))
+         (angle (or (u:href attrs :angle) o:2pi))
+         (step (u:map-domain 0 1 0 angle (action:step action))))
     (ecase (or (u:href attrs :axis) :z)
       (:x (c/xform:rotate transform (q:orient :local :x step) :replace-p t))
       (:y (c/xform:rotate transform (q:orient :local :y step) :replace-p t))
@@ -19,9 +19,8 @@
   (let* ((transform (c/render::transform
                      (action:renderer (action:manager action))))
          (attrs (action:attrs action))
-         (angle (or (u:href attrs :angle) (* pi 2)))
-         (step (- angle (u:map-domain 0 1 0 angle (action:step action))))
-	 (step (float step 1f0)))
+         (angle (or (u:href attrs :angle) o:2pi))
+         (step (- angle (u:map-domain 0 1 0 angle (action:step action)))))
     (ecase (or (u:href attrs :axis) :z)
       (:x (c/xform:rotate transform (q:orient :local :x step) :replace-p t))
       (:y (c/xform:rotate transform (q:orient :local :y step) :replace-p t))

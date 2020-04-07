@@ -191,8 +191,7 @@
    (c/cam:camera (:policy :new-args) :zoom 6f0))
   ("rot-0-center"
    (c/xform:transform :translate (v3:vec -2f0 0f0 0f0)
-                      :rotate/velocity (o:make-velocity v3:+forward+
-                                                        (float pi 1f0)))
+                      :rotate/velocity (o:make-velocity v3:+forward+ o:pi))
    ("plane-0"
     (c/xform:transform :translate (v3:vec -2f0 0f0 0f0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
@@ -204,8 +203,7 @@
     (c/render:render :material '2d-wood)))
   ("rot-1-center"
    (c/xform:transform :translate (v3:vec 2f0 0f0 0f0)
-                      :rotate/velocity (o:make-velocity v3:+forward+
-                                                        (float (- pi) 1f0)))
+                      :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi)))
    ("plane-1"
     (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
@@ -253,8 +251,7 @@ world space for a particular transform."
      ("mark"
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
-      (c/xform:transform :rotate (q:orient :local :z (float (/ pi 2f0) 1.0))
-                         :scale 2)
+      (c/xform:transform :rotate (q:orient :local :z o:pi/2) :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
       (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
       (c/render:render :material '2d-wood))))))
@@ -297,9 +294,8 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
   ("stone"
    (c/xform:transform :translate (v3:vec 0f0 5f0 0f0)
                       :scale 0.5f0
-                      :rotate (q:orient :local :x (float (/ pi 2f0) 1f0))
-                      :rotate/velocity (o:make-velocity (v3:vec 1)
-                                                        (float pi 1.0))
+                      :rotate (q:orient :local :x o:pi/2)
+                      :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
                       :translate/velocity (v3:vec 0f0 -2f0 0f0))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
@@ -360,9 +356,8 @@ actually are. You have to view the results to see the colliders lighting up."
   ("stone"
    (c/xform:transform :translate (v3:vec)
                       :scale 2f0
-                      :rotate (q:orient :local :x (float (/ pi 2) 1.0))
-                      :rotate/velocity (o:make-velocity (v3:vec 1)
-                                                        (float pi 1.0))
+                      :rotate (q:orient :local :x o:pi/2)
+                      :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
                       :translate/velocity (v3:vec))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :time-to-destroy 2f0)
@@ -384,7 +379,7 @@ actually are. You have to view the results to see the colliders lighting up."
 
    ("stone-cuboid"
     (c/xform:transform :scale 2f0
-                       :rotate (q:orient :local :x (float (/ pi 2) 1.0))
+                       :rotate (q:orient :local :x o:pi/2)
                        :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
     (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
     (c/col:cuboid :display-id "Stone"
@@ -405,7 +400,7 @@ actually are. You have to view the results to see the colliders lighting up."
                       :scale 2f0)
    ("stone-sphere"
     (c/xform:transform :scale 2f0
-                       :rotate (q:orient :local :x (float (/ pi 2) 1.0))
+                       :rotate (q:orient :local :x o:pi/2)
                        :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
     (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
     (c/col:sphere :display-id "Stone"

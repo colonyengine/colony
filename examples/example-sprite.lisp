@@ -31,9 +31,8 @@
       (unless (= rx ry 0f0)
         (let* ((angle (atan (- rx) ry))
                (angle (if (minusp angle)
-                          (+ pi (- pi (abs angle)))
-                          angle))
-               (angle (float angle 1f0)))
+                          (+ o:pi (- o:pi (abs angle)))
+                          angle)))
           (c/xform:rotate transform
                           (q:orient :local :z angle)
                           :replace-p t
@@ -100,7 +99,7 @@
 (v:define-prefab "sprite-1" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("ship"
-   (c/xform:transform :rotate (q:orient :local :z (float (/ pi -2) 1f0)))
+   (c/xform:transform :rotate (q:orient :local :z (- o:pi/2)))
    (simple-movement)
    (shot-emitter)
    ("ship-body"
@@ -142,8 +141,7 @@
   (("camera" :copy "/cameras/ortho"))
   ("plane"
    (c/xform:transform :scale 2f0
-                      :rotate/velocity (o:make-velocity v3:+forward+
-                                                        (float pi 1f0)))
+                      :rotate/velocity (o:make-velocity v3:+forward+ o:pi))
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet04")
    (c/render:render :material `(x/mat:sprite

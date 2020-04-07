@@ -4,12 +4,11 @@
 
 (v:define-prefab "isometric-view" (:library examples)
   ("camera-handle"
-   (c/xform:transform :rotate/velocity (o:make-velocity v3:+up+
-                                                        (float (/ pi 4) 1f0)))
+   (c/xform:transform :rotate/velocity (o:make-velocity v3:+up+ o:pi/4))
    ("iso"
     (c/xform:transform :rotate (q:orient :local
                                          :x (float (- (atan (/ (sqrt 2)))) 1f0)
-                                         :y (float (- (/ pi 4)) 1f0)))
+                                         :y (- o:pi/4)))
     ("camera"
      (c/xform:transform :translate (v3:vec 0f0 0f0 10f0))
      (c/cam:camera :active-p t
@@ -33,8 +32,7 @@
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb")))
   (("cube-origin" :copy "/mesh")
    (c/xform:transform
-    #++ :rotate/velocity #++ (p:angular-velocity
-                              (v3:vec -1f0 1f0 1f0) (float (/ pi 2) 1f0)))
+    #++ :rotate/velocity #++ (p:angular-velocity (v3:vec -1f0 1f0 1f0) o:pi/2))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb")))
   (("cube-x-0" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
