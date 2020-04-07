@@ -62,15 +62,16 @@
   (:use #:cl)
   (:export
    #:add-child
-   #:inverse-transform-direction
-   #:inverse-transform-point
-   #:inverse-transform-vector
+   #:get-rotation
+   #:get-scale
+   #:get-translation
    #:local
    #:model
    #:remove-child
    #:rotate
    #:rotate/velocity
    #:scale
+   #:scale/velocity
    #:transform
    #:transform-backward
    #:transform-direction
@@ -82,4 +83,4 @@
    #:transform-up
    #:transform-vector
    #:translate
-   ))
+   #:translate/velocity))

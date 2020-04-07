@@ -1,63 +1,22 @@
 (in-package #:virality.components.transform)
 
-(defclass transform-state ()
-  ((%current :accessor current
-             :initarg :current)
-   (%incremental :accessor incremental
-                 :initarg :incremental)
-   (%incremental-delta :accessor incremental-delta
-                       :initarg :incremental-delta)
-   (%previous :accessor previous
-              :initarg :previous)
-   (%interpolated :accessor interpolated
-                  :initarg :interpolated)))
-
-(defclass transform-state-vector (transform-state) ()
-  (:default-initargs :current (v3:vec)
-                     :incremental (v3:vec)
-                     :incremental-delta (v3:vec)
-                     :previous (v3:vec)
-                     :interpolated (v3:vec)))
-
-(defclass transform-state-quaternion (transform-state) ()
-  (:default-initargs :current (q:quat 1)
-                     :incremental (v3:vec) ;; whole angular-velocity vector
-                     :incremental-delta (q:quat 1) ;; quaternion of ang-vel * dt
-                     :previous (q:quat 1)
-                     :interpolated (q:quat 1)))
-
-(defun make-translation-state ()
-  (make-instance 'transform-state-vector))
-
-(defun make-rotation-state ()
-  (make-instance 'transform-state-quaternion))
-
-(defun make-scaling-state ()
-  (make-instance 'transform-state-vector :current (v3:vec 1)))
-
-(defun interpolate-vector (state factor)
-  (declare (optimize speed))
-  (v3:lerp! (interpolated state) (previous state) (current state) factor))
-
-(defun interpolate-quaternion (state factor)
-  (declare (optimize speed))
-  (q:slerp! (interpolated state) (previous state) (current state) factor))
-
 (v:define-component transform ()
   ((%parent :accessor parent
             :initform nil)
    (%children :accessor children
               :initform nil)
    (%translation :reader translation
-                 :initform (make-translation-state))
+                 :initform (v::make-translate-state))
    (%rotation :reader rotation
-              :initform (make-rotation-state))
+              :initform (v::make-rotate-state))
    (%scaling :reader scaling
-             :initform (make-scaling-state))
+             :initform (v::make-scale-state))
    (%local :reader local
            :initform (m4:mat 1))
    (%model :reader model
-           :initform (m4:mat 1))))
+           :initform (m4:mat 1))
+   (%normal-matrix :reader normal-matrix
+                   :initform (m4:mat 1))))
 
 (defun add-child (parent child)
   (pushnew child (children parent))
@@ -70,52 +29,35 @@
                            (children parent))
         (parent child) nil))
 
-(defun transform-node/vector (state delta)
-  (declare (optimize speed))
-  (with-slots (%previous %current %incremental-delta %incremental) state
-    (v3:copy! %previous %current)
-    (v3:scale! %incremental-delta %incremental delta)
-    (v3:+! %current %current %incremental-delta)))
-
-(defun transform-node/quat (state delta)
-  (declare (optimize speed))
-  (with-slots (%previous %current %incremental-delta %incremental) state
-    (q:copy! %previous %current)
-    (o:velocity->rotation! %incremental-delta %incremental delta)
-    (q:rotate! %current %current %incremental-delta)))
-
 (defun transform-node (core node)
-  (let ((delta (float (v::clock-delta-time (v::clock core)) 1f0)))
-    (transform-node/vector (scaling node) delta)
-    (transform-node/quat (rotation node) delta)
-    (transform-node/vector (translation node) delta)))
+  (let ((frame-time (v:frame-time (v:context core))))
+    (v::transform-node/vector (scaling node) v:=delta= frame-time)
+    (v::transform-node/quaternion (rotation node) v:=delta= frame-time)
+    (v::transform-node/vector (translation node) v:=delta= frame-time)))
 
 (defun resolve-local (node factor)
-  (declare (optimize speed))
-  (with-slots (%local %scaling %rotation %translation) node
-    (interpolate-vector %scaling factor)
-    (interpolate-quaternion %rotation factor)
-    (interpolate-vector %translation factor)
-    (m4:*! %local
-           (m4:copy! %local (q:to-mat4 (interpolated %rotation)))
-           (m4:set-scale m4:+id+ (interpolated %scaling)))
-    (m4:set-translation! %local %local (interpolated %translation))))
+  (with-slots (%local) node
+    (let ((translation (translation node))
+          (rotation (rotation node))
+          (scale (scaling node)))
+      (v::interpolate-vector scale factor)
+      (v::interpolate-quaternion rotation factor)
+      (v::interpolate-vector translation factor)
+      (m4:copy! %local (q:to-mat4 (v::interpolated rotation)))
+      (m4:*! %local %local (m4:set-scale m4:+id+ (v::interpolated scale)))
+      (m4:set-translation! %local %local (v::interpolated translation)))))
 
 (defun resolve-model (node factor)
-  (declare (optimize speed))
   (a:when-let ((parent (parent node)))
     (resolve-local node factor)
     (m4:*! (model node) (model parent) (local node))))
 
 (defun map-nodes (func parent)
-  (declare (optimize speed)
-           (function func))
   (funcall func parent)
   (dolist (child (children parent))
     (map-nodes func child)))
 
 (defun interpolate-transforms (core)
-  (declare (optimize speed))
   (let ((factor (float (v::clock-interpolation-factor (v::clock core)) 1f0)))
     (map-nodes
      (lambda (x)
@@ -130,133 +72,119 @@
     (apply #'reinitialize-instance instance args)
     instance))
 
-(defmethod reinitialize-instance ((instance transform)
-                                  &key
-                                    actor
-                                    (translate (v3:vec))
-                                    (translate/inc (v3:vec))
-                                    (rotate (q:quat 1))
-                                    (rotate/inc (v3:vec)) ;; angular-velocity
-                                    (scale (v3:vec 1))
-                                    (scale/inc (v3:vec)))
+(defmethod shared-initialize :after ((instance transform) slot-names
+                                     &key
+                                       actor
+                                       translate
+                                       translate/velocity
+                                       rotate
+                                       rotate/velocity
+                                       scale
+                                       scale/velocity)
   (with-slots (%translation %rotation %scaling) instance
     (setf (v:actor instance) actor
-          (v::state instance) :initialize
-          (current %translation) (v3:copy translate)
-          (previous %translation) (v3:copy (current %translation))
-          (incremental %translation) (v3:copy translate/inc)
-          (current %rotation) (q:copy rotate)
-          (previous %rotation) (q:copy (current %rotation))
-          (incremental %rotation) (v3:copy rotate/inc)
-          (current %scaling) (etypecase scale
-                               (v3:vec (v3:copy scale))
-                               (real (v3:vec scale scale scale)))
-          (previous %scaling) (v3:copy (current %scaling))
-          (incremental %scaling) (v3:copy scale/inc))))
+          (v::state instance) :initialize)
+    (v::initialize-translation %translation translate translate/velocity)
+    (v::initialize-rotation %rotation rotate rotate/velocity)
+    (v::initialize-scale %scaling scale scale/velocity)))
 
 ;;; User protocol
 
-(defun %rotate/model-space (rotation rot &optional replace-p instant-p)
-  (with-slots (%previous %current) rotation
-    (q:rotate! %current (if replace-p q:+id+ %current) rot)
-    (when instant-p
-      (q:copy! %previous %current))))
+(defun get-translation (transform &key copy)
+  (let ((translation (v::current (translation transform))))
+    (if copy (v3:copy translation) translation)))
 
-;; TODO
-(defun %rotate/world-space (rotation rot &optional replace-p instant-p)
-  (declare (ignore rotation rot replace-p instant-p))
-  (error "ROTATE not yet implemented for world space."))
+(defun get-rotation (transform &key copy)
+  (let ((rotation (v::current (rotation transform))))
+    (if copy (q:copy rotation) rotation)))
 
-(defun rotate (transform rot &key (space :model) replace-p instant-p)
-  (with-slots (%rotation) transform
-    (ecase space
-      (:model (%rotate/model-space %rotation rot replace-p instant-p))
-      (:world (%rotate/world-space %rotation rot replace-p instant-p)))))
-
-(defun rotate/velocity (transform axis rate)
-  (with-slots (%incremental) (rotation transform)
-    (setf %incremental (o:make-velocity axis rate))))
-
-(defun %translate/model-space (translation vec &optional replace-p instant-p)
-  (with-slots (%previous %current) translation
-    (v3:+! %current (if replace-p v3:+zero+ %current) vec)
-    (when instant-p
-      (v3:copy! %previous %current))))
-
-;; TODO
-(defun %translate/world-space (translation vec &optional replace-p instant-p)
-  (declare (ignore translation vec replace-p instant-p))
-  (error "TRANSLATE not yet implemented for world space."))
+(defun get-scale (transform &key copy)
+  (let ((scale (v::current (rotation transform))))
+    (if copy (v3:copy scale) scale)))
 
 (defun translate (transform vec &key (space :model) replace-p instant-p)
-  (with-slots (%translation) transform
+  (let ((state (translation transform)))
     (ecase space
-      (:model (%translate/model-space %translation vec replace-p instant-p))
-      (:world (%translate/world-space %translation vec replace-p instant-p)))))
+      (:model
+       (v3:+! (v::current state)
+              (if replace-p v3:+zero+ (v::current state))
+              vec)
+       (when instant-p
+         (v3:copy! (v::previous state) (v::current state))))
+      (:world (error "TRANSLATE not yet implemented for world space.")))))
 
-(defun scale (transform vec &key replace-p instant-p)
-  (with-slots (%previous %current) (scaling transform)
-    (v3:+! %current (if replace-p v3:+zero+ %current) vec)
-    (when instant-p
-      (v3:copy! %previous %current))))
+(defun translate/velocity (transform axis rate)
+  (let ((state (translation transform)))
+    (setf (v::incremental state) (o:make-velocity axis rate))))
+
+(defun rotate (transform quat &key (space :model) replace-p instant-p)
+  (let ((state (rotation transform)))
+    (ecase space
+      (:model
+       (q:rotate! (v::current state)
+                  (if replace-p q:+id+ (v::current state))
+                  quat)
+       (when instant-p
+         (q:copy! (v::previous state) (v::current state))))
+      (:world (error "ROTATE not yet implemented for world space.")))))
+
+(defun rotate/velocity (transform axis rate)
+  (let ((state (rotation transform)))
+    (setf (v::incremental state) (o:make-velocity axis rate))))
+
+(defun scale (transform vec &key (space :model) replace-p instant-p)
+  (let ((state (scaling transform)))
+    (ecase space
+      (:model
+       (v3:+! (v::current state)
+              (if replace-p v3:+zero+ (v::current state))
+              vec)
+       (when instant-p
+         (v3:copy! (v::previous state) (v::current state))))
+      (:world (error "SCALE not yet implemented for world space.")))))
+
+(defun scale/velocity (transform axis rate)
+  (let ((state (scaling transform)))
+    (setf (v::incremental state) (o:make-velocity axis rate))))
 
 ;;; TODO: Try and get rid of any produced garbage in the functions below.
 
-(defun transform-point (transform point-vec)
-  "Transform the vector in POINT-VEC, assumed to be in the local space of the
+(defun transform-point (transform point &key (space :model))
+  "Transform the vector in POINT, assumed to be in the local space of the
 TRANSFORM, to world space and returns the new vector. The new vector is affected
 by scale, rotation, and translation. A newly allocated M:VEC3 is returned."
-  (v3:with-components ((v point-vec))
-    (~:.xyz (m4:*v4 (model transform) (v4:vec vx vy vz 1f0)))))
+  (let ((model (model transform)))
+    (v3:with-components ((v point))
+      (~:.xyz
+       (ecase space
+         (:model (m4:*v4 model (v4:vec vx vy vz 1)))
+         (:world (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
 
-(defun inverse-transform-point (transform point-vec)
-  "Transform the vector in POINT-VEC, assumed to be in the world space, to the
-local space of the TRANSFORM and returns the new vector. The new vector is
-affected by scale, rotation, and translation. A newly allocated M:VEC3 is
-returned."
-  (v3:with-components ((v point-vec))
-    (~:.xyz (m4:*v4 (m4:invert (model transform)) (v4:vec vx vy vz 1f0)))))
-
-(defun transform-vector (transform vector-vec)
-  "Transform the vector in VECTOR-VEC, assumed to be in the local space of the
+(defun transform-vector (transform vector &key (space :model))
+  "Transform the vector in VECTOR, assumed to be in the local space of the
 TRANSFORM, to world space and return it. The new vector is affected by scale and
 rotation, but not by translation. A newly allocated M:VEC3 is returned."
-  (v3:with-components ((v vector-vec))
-    (let ((model (m4:copy (model transform))))
+  (let ((model (m4:copy (model transform))))
+    (v3:with-components ((v vector))
       (m4:set-translation! model model v3:+zero+)
-      (~:.xyz (m4:*v4 model (v4:vec vx vy vz 1f0))))))
+      (~:.xyz
+       (ecase space
+         (:model (m4:*v4 model (v4:vec vx vy vz 1)))
+         (:world (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
 
-(defun inverse-transform-vector (transform vector-vec)
-  "Transform the vector in VECTOR-VEC, assumed to be in the world space,
-to the local space of the TRANSFORM and return it. The new vector is affected by
-scale and rotation, but not by translation. A newly allocated M:VEC3 is
+(defun transform-direction (transform direction &key (space :model))
+  "Transform the vector in DIRECTION, assumed to be in the local space of the
+TRANSFORM, to the world space and return it. The new vector is affected only by
+rotation, and not by translation or scale. A newly allocated M:VEC3 is
 returned."
-  (v3:with-components ((v vector-vec))
-    (let ((model (m4:copy (model transform))))
-      (m4:set-translation! model model v3:+zero+)
-      (~:.xyz (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1f0))))))
-
-(defun transform-direction (transform direction-vec)
-  "Transform the vector in DIRECTION-VEC, assumed to be in the local space of
-the TRANSFORM, to the world space and return it. The new vector is affected only
-by rotation, and not by translation or scale. A newly allocated M:VEC3 is
-returned."
-  (v3:with-components ((v direction-vec))
-    (let ((model (m4:copy (model transform))))
+  (let ((model (m4:copy (model transform))))
+    (v3:with-components ((v direction))
       (m4:set-translation! model model v3:+zero+)
       (m4:normalize-rotation! model model)
-      (~:.xyz (m4:*v4 model (v4:vec vx vy vz 1f0))))))
-
-(defun inverse-transform-direction (transform direction-vec)
-  "Transform the vector in DIRECTION-VEC, assumed to be in world space,
-to the local space of the TRANSFORM and return it. The new vector is affected
-only by rotation, and not by translation or scale. A newly allocated M:VEC3 is
-returned."
-  (v3:with-components ((v direction-vec))
-    (let ((model (m4:copy (model transform))))
-      (m4:set-translation! model model v3:+zero+)
-      (m4:normalize-rotation! model model)
-      (~:.xyz (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1f0))))))
+      (~:.xyz
+       (ecase space
+         (:model (m4:*v4 model (v4:vec vx vy vz 1)))
+         (:world (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
 
 ;;; NOTE: These functions return the vectors that represent forward, backward,
 ;;; up, down, right, and left in _world space_.

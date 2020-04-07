@@ -31,7 +31,7 @@
                      :initform nil)))
 
 (defun correct-camera-transform (camera)
-  (when (v3:zero-p (c/xform::current (c/xform::translation (transform camera))))
+  (when (v3:zero-p (c/xform:get-translation (transform camera)))
     (let ((translation (ecase (mode camera)
                          (:orthographic (v3:vec 0f0 0f0 1f0))
                          (:perspective (v3:vec 0f0 0f0 50f0)))))

@@ -54,9 +54,7 @@
    (transform self)
    (let ((a (v3:normalize (m4:rotation-axis-to-vec3
                            (c/xform:local (transform self)) :y)))
-         (move-delta (float (* (velocity self)
-                               (v:frame-time (v:context self)))
-                            1f0)))
+         (move-delta (* (velocity self) (v:frame-time (v:context self)))))
      (v3:scale a move-delta))))
 
 (v:define-component shot-emitter ()
@@ -144,8 +142,8 @@
   (("camera" :copy "/cameras/ortho"))
   ("plane"
    (c/xform:transform :scale 2f0
-                      :rotate/inc (o:make-velocity v3:+forward+
-						   (float pi 1f0)))
+                      :rotate/velocity (o:make-velocity v3:+forward+
+                                                        (float pi 1f0)))
    (c/sprite:sprite :spec :spritesheet-data
                     :name "planet04")
    (c/render:render :material `(x/mat:sprite

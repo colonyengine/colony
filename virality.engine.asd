@@ -112,6 +112,7 @@
    (:file "texture-rectangle")
    (:file "texture-buffer")
    (:file "materials")
+   (:file "transform-state")
    (:file "component-transform")
    (:file "component-actions")
    (:file "component-camera")

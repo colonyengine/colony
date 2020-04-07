@@ -40,9 +40,9 @@
 
 ;; NOTE: This simple mouse rotator will NOT work correctly if the actor's
 ;; transform is having other updates applied to it over time. This includes
-;; :rotate/inc or action components that rotate, etc, etc. In order to make this
-;; possible, we'd need to shove a parent actor onto the model you want to rotate
-;; and put this component on THAT one.
+;; :rotate/velocity or action components that rotate, etc, etc. In order to make
+;; this possible, we'd need to shove a parent actor onto the model you want to
+;; rotate and put this component on THAT one.
 (v:define-component simple-mouse-rotator ()
   ((%rot-speed :accessor rot-speed
                :initarg :rot-speed
@@ -98,9 +98,7 @@
       ;; dynamically built as an persistent orientation offset from this origin
       ;; orientation.
       (unless orig-orient
-        (setf orig-orient
-              ;; TODO: Refactor and update transform public API.
-              (q:copy (c/xform::current (c/xform::rotation xform)))))
+        (setf orig-orient (c/xform:get-rotation xform :copy t)))
 
       (unless rv
         ;; RV represents a persistent 2D point we'll be moving around with the
@@ -166,8 +164,9 @@
                  :free-look t))
   (("helmet" :copy "/mesh")
    (c/xform:transform :rotate (q:orient :local :x (float (/ pi 2f0) 1.0))
-                      :rotate/inc (o:make-velocity v3:+forward+
-                                                   (float (- (* pi 1/6)) 1f0))
+                      :rotate/velocity (o:make-velocity
+                                        v3:+forward+
+                                        (float (- (* pi 1/6)) 1f0))
                       :scale 17f0)
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (c/render:render :material 'damaged-helmet)))

@@ -276,9 +276,7 @@
                              1f0)))
            ;; and ensure we clip the translation vector so we can't go out of
            ;; the boundary cube we set.
-           (current-translation
-            ;; TODO NOTE: Prolly should fix these to be external.
-            (c/xform::current (c/xform::translation transform)))
+           (current-translation (c/xform:get-translation transform))
            (vec
             (reg:clip-movement-vector vec current-translation region-cuboid)))
 

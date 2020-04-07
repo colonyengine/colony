@@ -31,7 +31,6 @@
   (when (<= (time-to-destroy self) 0)
     (v:destroy (v:actor self))))
 
-
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing getting the directions from a transform
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -87,7 +86,7 @@
       (setf (u:href (test-performed self) test-type) t))))
 
 (defun test-transform-point-api (self)
-  "Test if the TRANSFORM-POINT and INVERSE-TRANSFORM-POINT work."
+  "Test if TRANSFORM-POINT works."
   (let* ((actor (v:actor self))
          (actor-transform
            (v:component-by-type actor 'c/xform:transform))
@@ -97,32 +96,29 @@
            (c/xform:transform-point actor-transform
                                     object-space-point))
          (world->local
-           (c/xform:inverse-transform-point actor-transform
-                                            world-space-point)))
-
-    ;; See if transform-point and inverse-transform-point work.
+           (c/xform:transform-point actor-transform
+                                    world-space-point
+                                    :space :world)))
+    ;; See if transform-point works.
     (let ((result-0
             (v3:~ local->world world-space-point))
           (result-1
             (v3:~ world->local object-space-point)))
-
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
            :virality.examples
            "FAILED: (v3:~~ local->world:~a world-space-point: ~a) -> ~a"
            local->world world-space-point result-0))
-
         (unless result-1
           (log:error
            :virality.examples
            "FAILED: (v3:~~ world->local:~a object-space-point: ~a) -> ~a"
            world->local object-space-point result-1))
-
         (error "TRANSFORM-POINT API Failed!")))))
 
 (defun test-transform-vector-api (self)
-  "Test if the TRANSFORM-VECTOR and INVERSE-TRANSFORM-VECTOR work."
+  "Test if TRANSFORM-VECTOR works."
   (let* ((actor (v:actor self))
          (actor-transform
            (v:component-by-type actor 'c/xform:transform))
@@ -132,30 +128,26 @@
            (c/xform:transform-vector actor-transform
                                      object-space-vector))
          (world->local
-           (c/xform:inverse-transform-vector actor-transform
-                                             world-space-vector)))
-
-    ;; See if transform-point and inverse-transform-point work.
+           (c/xform:transform-vector actor-transform
+                                     world-space-vector
+                                     :space :world)))
+    ;; See if transform-vector works.
     (let ((result-0
             (v3:~ local->world world-space-vector))
           (result-1
             (v3:~ world->local object-space-vector)))
-
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
            :virality.examples
            "FAILED: (v3:~~ local->world:~a world-space-vector: ~a) -> ~a"
            local->world world-space-vector result-0))
-
         (unless result-1
           (log:error
            :virality.examples
            "FAILED: (v3:~~ world->local:~a object-space-vector: ~a) -> ~a"
            world->local object-space-vector result-1))
-
         (error "TRANSFORM-VECTOR API Failed!")))))
-
 
 (defun test-transform-direction-api (self)
   (let* ((actor (v:actor self))
@@ -169,30 +161,26 @@
            (c/xform:transform-direction actor-transform
                                         object-space-direction))
          (world->local
-           (c/xform:inverse-transform-direction actor-transform
-                                                world-space-direction)))
-
-    ;; See if transform-point and inverse-transform-point work.
+           (c/xform:transform-direction actor-transform
+                                        world-space-direction
+                                        :space :world)))
+    ;; See if transform-direction works.
     (let ((result-0
             (v3:~ local->world world-space-direction))
           (result-1
             (v3:~ world->local object-space-direction)))
-
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
            :virality.examples
            "FAILED: (v3:~~ local->world:~a world-space-direction: ~a) -> ~a"
            local->world world-space-direction result-0))
-
         (unless result-1
           (log:error
            :virality.examples
            "FAILED: (v3:~~ world->local:~a object-space-direction: ~a) -> ~a"
            world->local object-space-direction result-1))
-
         (error "TRANSFORM-DIRECTION API Failed!")))))
-
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The test prefabs.
@@ -203,8 +191,8 @@
    (c/cam:camera (:policy :new-args) :zoom 6f0))
   ("rot-0-center"
    (c/xform:transform :translate (v3:vec -2f0 0f0 0f0)
-                      :rotate/inc (o:make-velocity v3:+forward+
-                                                   (float pi 1f0)))
+                      :rotate/velocity (o:make-velocity v3:+forward+
+                                                        (float pi 1f0)))
    ("plane-0"
     (c/xform:transform :translate (v3:vec -2f0 0f0 0f0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
@@ -216,8 +204,8 @@
     (c/render:render :material '2d-wood)))
   ("rot-1-center"
    (c/xform:transform :translate (v3:vec 2f0 0f0 0f0)
-                      :rotate/inc (o:make-velocity v3:+forward+
-                                                   (float (- pi) 1f0)))
+                      :rotate/velocity (o:make-velocity v3:+forward+
+                                                        (float (- pi) 1f0)))
    ("plane-1"
     (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
     (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
@@ -310,9 +298,9 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (c/xform:transform :translate (v3:vec 0f0 5f0 0f0)
                       :scale 0.5f0
                       :rotate (q:orient :local :x (float (/ pi 2f0) 1f0))
-                      :rotate/inc (o:make-velocity (v3:vec 1)
-                                                   (float pi 1.0))
-                      :translate/inc (v3:vec 0f0 -2f0 0f0))
+                      :rotate/velocity (o:make-velocity (v3:vec 1)
+                                                        (float pi 1.0))
+                      :translate/velocity (v3:vec 0f0 -2f0 0f0))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
    (c/col:sphere :display-id "Stone"
@@ -373,9 +361,9 @@ actually are. You have to view the results to see the colliders lighting up."
    (c/xform:transform :translate (v3:vec)
                       :scale 2f0
                       :rotate (q:orient :local :x (float (/ pi 2) 1.0))
-                      :rotate/inc (o:make-velocity (v3:vec 1)
-                                                   (float pi 1.0))
-                      :translate/inc (v3:vec))
+                      :rotate/velocity (o:make-velocity (v3:vec 1)
+                                                        (float pi 1.0))
+                      :translate/velocity (v3:vec))
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :time-to-destroy 2f0)
    (c/col:sphere :display-id "Stone"
@@ -391,13 +379,13 @@ actually are. You have to view the results to see the colliders lighting up."
 
   ("a"
    (c/xform:transform :translate (v3:vec -5f0 0f0 0f0)
-                      :translate/inc (v3:vec 0f0 0f0 0f0)
+                      :translate/velocity (v3:vec 0f0 0f0 0f0)
                       :scale 2f0)
 
    ("stone-cuboid"
     (c/xform:transform :scale 2f0
                        :rotate (q:orient :local :x (float (/ pi 2) 1.0))
-                       :rotate/inc (o:make-velocity (v3:vec 1) o:pi/6))
+                       :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
     (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
     (c/col:cuboid :display-id "Stone"
                   :visualize t
@@ -413,12 +401,12 @@ actually are. You have to view the results to see the colliders lighting up."
 
   ("b"
    (c/xform:transform :translate (v3:vec 5f0 0f0 0f0)
-                      :translate/inc (v3:vec 0f0 0f0 0f0)
+                      :translate/velocity (v3:vec 0f0 0f0 0f0)
                       :scale 2f0)
    ("stone-sphere"
     (c/xform:transform :scale 2f0
                        :rotate (q:orient :local :x (float (/ pi 2) 1.0))
-                       :rotate/inc (o:make-velocity (v3:vec 1) o:pi/6))
+                       :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
     (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
     (c/col:sphere :display-id "Stone"
                   :visualize t
@@ -437,10 +425,11 @@ actually are. You have to view the results to see the colliders lighting up."
     ;; As cuboid 1 rotates it should always be hitting (red) cuboid 2 since they
     ;; penetrate and then share a plane when both are parallel to each other.
     (c/xform:transform :translate (v3:vec -.50f0 0f0 0f0)
-                       :translate/inc (v3:vec 0f0 0f0 0f0))
+                       :translate/velocity (v3:vec 0f0 0f0 0f0))
     ("cuboid1"
      (c/xform:transform :rotate (q:orient :local :z o:pi/4)
-                        :rotate/inc (o:make-velocity (v3:vec 0 0 1) o:pi/12))
+                        :rotate/velocity (o:make-velocity (v3:vec 0 0 1)
+                                                          o:pi/12))
      (c/col:cuboid :visualize t
                    :on-layer :ground
                    :center (v3:vec))))
@@ -457,10 +446,11 @@ actually are. You have to view the results to see the colliders lighting up."
     ;; gap and so both should turn green to represent no collision during that
     ;; small gap.
     (c/xform:transform :translate (v3:vec -.51f0 0f0 0f0)
-                       :translate/inc (v3:vec 0f0 0f0 0f0))
+                       :translate/velocity (v3:vec 0f0 0f0 0f0))
     ("cuboid1"
      (c/xform:transform :rotate (q:orient :local :z o:pi/4)
-                        :rotate/inc (o:make-velocity (v3:vec 0 0 1) o:pi/12))
+                        :rotate/velocity (o:make-velocity (v3:vec 0 0 1)
+                                                          o:pi/12))
      (c/col:cuboid :visualize t
                    :on-layer :ground
                    :center (v3:vec))))
@@ -469,12 +459,3 @@ actually are. You have to view the results to see the colliders lighting up."
     (c/col:cuboid :visualize t
                   :on-layer :ground
                   :center (v3:vec)))))
-
-
-
-;;; Prefab entry points
-;; '(("collision-smoke-test" examples))
-;; '(("collision-test-0" examples))
-;; '(("collision-test-1" examples)
-;; '(("collision-test-2" examples))
-;; '(("collision-test-3" examples))
