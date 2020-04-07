@@ -42,6 +42,3 @@
   (("cube-x-1" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 4f0 0f0 0f0))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))))
-
-;;; Prefab descriptors
-;; '(("isometric-view" examples))

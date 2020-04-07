@@ -273,6 +273,3 @@
                       :rotate/inc (o:make-velocity (v3:vec 1) (float pi 1f0)))
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))
    (c/render:render :material 'cubemaparray)))
-
-;;; Prefab descriptors
-;; '(("texture" examples))

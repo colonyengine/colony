@@ -183,7 +183,3 @@
                       :scale 4f0)
    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (c/render:render :material 'damaged-helmet)))
-
-;;; Prefab descriptors
-;; '(("damaged-helmet" examples))
-;; '("damaged-helmet-interactive" examples))

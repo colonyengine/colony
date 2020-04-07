@@ -28,6 +28,3 @@
                       :scale 6f0)
    (c/smesh:static-mesh :asset '(:virality.engine/mesh "cone.glb"))
    (c/render:render :material 'x/mat:unlit-texture-decal-bright)))
-
-;;; Prefab descriptors
-;; '(("geometric-volumes" examples))

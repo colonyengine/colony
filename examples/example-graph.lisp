@@ -49,8 +49,3 @@
                                 :shader ex/shd:3d-graph-2
                                 :instances 100000
                                 :uniforms ((:size 1))))))
-
-;;; Prefab descriptors
-;; '(("graph" examples))
-;; '(("3d-graph-1" examples))
-;; '("3d-graph-2" examples))

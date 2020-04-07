@@ -152,8 +152,3 @@
                                 ,(a:make-gensym '#:sprite)
                                 :uniforms ((:sprite.sampler sprites)))
                     :mode :sprite)))
-
-;;; Prefab descriptors
-;; '(("sprite-1" examples))
-;; '(("sprite-2" examples))
-;; '(("sprite-3" examples))

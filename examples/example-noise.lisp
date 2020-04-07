@@ -123,6 +123,3 @@
    (c/render:render :material '(noise
                                 noise/cubist-3d
                                 :shader ex/shd:noise/cubist-3d))))
-
-;;; Prefab descriptors
-;; '(("noise" examples))

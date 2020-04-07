@@ -116,11 +116,3 @@
    (c/xform:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                      (/ v:=window-height= 2f0)))
    (c/render:render :material 'art6)))
-
-;;; Prefab descriptors
-;; '(("art1" examples))
-;; '(("art2" examples))
-;; '(("art3" examples))
-;; '(("art4" examples))
-;; '(("art5" examples))
-;; '(("art6" examples))

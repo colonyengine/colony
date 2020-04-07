@@ -2106,10 +2106,3 @@ testing the starfield shader."
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
    (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :camera)))))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Prefab descriptors for convenience
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; '(("protect-the-planets" ptp))
-;; '(("starfield-demo" ptp))

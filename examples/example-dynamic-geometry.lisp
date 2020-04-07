@@ -33,6 +33,3 @@
    (c/dmesh:dynamic-mesh :geometry 'tile)
    (c/render:render :material 'dynamic-geometry
                     :mode :dynamic-mesh)))
-
-;;; Prefab descriptors
-;; '(("dynamic-geometry" examples))
