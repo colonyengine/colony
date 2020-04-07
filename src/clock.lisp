@@ -25,9 +25,9 @@
 
 (defun make-clock (core)
   (let* ((context (context core))
-         (delta-time (float (option context :delta) 1d0))
-         (period-interval (float (option context :period-interval) 1d0))
-         (debug-interval (float (option context :debug-interval) 1d0)))
+         (delta-time (float v:=delta= 1d0))
+         (period-interval (float v:=period-interval= 1d0))
+         (debug-interval (float v:=debug-interval= 1d0)))
     (setf (slot-value core '%clock)
           (%make-clock :delta-time delta-time
                        :period-interval period-interval

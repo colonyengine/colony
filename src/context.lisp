@@ -3,8 +3,6 @@
 (defclass context ()
   ((%core :reader core
           :initarg :core)
-   (%options :reader options
-             :initarg :options)
    (%active-camera :accessor active-camera
                    :initform nil)
    (%shared-storage :reader shared-storage
@@ -13,8 +11,7 @@
            :initform nil)))
 
 (defun make-context (core)
-  (setf (slot-value core '%context)
-        (make-instance 'context :core core :options (options core))))
+  (setf (slot-value core '%context) (make-instance 'context :core core)))
 
 ;; NOTE: This function must have &rest arguments, but they are ignored. This is
 ;; because this function is shared with the material protocol which must pass
@@ -37,6 +34,6 @@
   (float (clock-delta-time (clock (core context))) 1f0))
 
 (defun screen-resolution (context &rest ignored)
-  (declare (ignore ignored))
-  (v2:vec (float (option context :window-width) 1f0)
-          (float (option context :window-height) 1f0)))
+  (declare (ignore context ignored))
+  (v2:vec (float v:=window-width= 1f0)
+          (float v:=window-height= 1f0)))

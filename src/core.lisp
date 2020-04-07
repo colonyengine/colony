@@ -5,7 +5,6 @@
              :initarg :project)
    (%assets :reader assets
             :initform (meta 'assets))
-   (%options :accessor options)
    (%running-p :accessor running-p
                :initform t)
    (%rcache :reader rcache

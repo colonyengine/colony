@@ -61,12 +61,12 @@ tear-down procedure occurs when stopping the engine."
     (sdl2::sdl-quit)))
 
 (defun load-initial-scene (core scene-name)
-  (let* ((scene-name (or scene-name (option (context core) :initial-scene)))
+  (let* ((scene-name (or scene-name v:=initial-scene=))
          (prefab-descriptor (prefab::find-prefab-descriptor scene-name)))
     (make-prefab-instance core prefab-descriptor)))
 
 (defun initialize-engine (core scene-name)
-  (let ((title (option (context core) :title)))
+  (let ((title v:=title=))
     (log:info :virality.engine "Starting up ~a..." title)
     (setup-live-coding)
     (enable-logging core)
@@ -102,7 +102,7 @@ tear-down procedure occurs when stopping the engine."
 the last step, before finally starting the main game loop."
   (unwind-protect
        (let ((core (make-instance 'core :project project)))
-         (load-options core)
+         (load-config project)
          (make-context core)
          (setf *core-debug* core)
          (initialize-engine core scene)
@@ -115,11 +115,10 @@ the last step, before finally starting the main game loop."
 (defun stop (core)
   "Stop the engine, making sure to call any user-defined epilogue function
 first, and finally cleaning up."
-  (let ((title (option core :title)))
-    (log:info :virality.engine "Shutting down ~a..." title)
-    (run-epilogue core)
-    (gpu:unload-shaders)
-    (shutdown-host core)
-    (setf (running-p core) nil)
-    (makunbound '*core-debug*)
-    (log:info :virality.engine "Successfully shut down ~a" title)))
+  (log:info :virality.engine "Shutting down ~a..." v:=title=)
+  (run-epilogue core)
+  (gpu:unload-shaders)
+  (shutdown-host core)
+  (setf (running-p core) nil)
+  (makunbound '*core-debug*)
+  (log:info :virality.engine "Successfully shut down ~a" v:=title=))

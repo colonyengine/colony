@@ -18,12 +18,11 @@
 
 ;;; Prefabs
 
-(v:define-prefab "graph" (:library examples :context context)
+(v:define-prefab "graph" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   (("graph" :copy "/mesh")
-   (c/xform:transform :scale (v3:vec (/ (v:option context :window-width) 2f0)
-                                     (/ (v:option context :window-height) 2f0)
-                                     0f0))
+   (c/xform:transform :scale (v3:vec (/ v:=window-width= 2f0)
+                                     (/ v:=window-height= 2f0)))
    (c/render:render :material 'graph)))
 
 (v:define-prefab "3d-graph-1" (:library examples)

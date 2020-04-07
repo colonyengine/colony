@@ -9,7 +9,7 @@
             :initform (u:dict #'eq))))
 
 (defun make-thread-pool (core)
-  (let* ((worker-count (option (context core) :threads))
+  (let* ((worker-count v:=threads=)
          (thread-pool (make-instance 'thread-pool :worker-count worker-count)))
     (setf lparallel:*kernel* (lparallel:make-kernel worker-count)
           (slot-value core '%thread-pool) thread-pool)

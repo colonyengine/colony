@@ -18,6 +18,7 @@
                #:closer-mop
                #:doubly-linked-list
                #:fast-io
+               #:global-vars
                #:golden-utils
                #:jsown
                #:lparallel
@@ -51,10 +52,11 @@
    (:file "package-engine")
    (:file "package-nicknames")
    (:file "common")
+   (:file "metadata")
+   (:file "config")
    (:file "threading")
    (:file "interactive-development")
    (:file "debugging")
-   (:file "metadata")
    (:file "protocol")
    (:file "deployment")
    (:file "binary-parser")
@@ -68,7 +70,6 @@
    (:file "rcache")
    (:file "clock")
    (:file "context")
-   (:file "options")
    (:file "logging")
    (:file "graph")
    (:file "flow")

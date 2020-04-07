@@ -43,21 +43,18 @@
 
 (defmethod make-projection (camera (mode (eql :perspective)))
   (with-slots (%projection %fov-y %zoom %clip-near %clip-far) camera
-    (let ((context (v:context camera)))
-      (m4:set-projection/perspective! %projection
-                                      (float (/ %fov-y %zoom) 1f0)
-                                      (float
-                                       (/ (v:option context :window-width)
-                                          (v:option context :window-height))
-                                       1f0)
-                                      (float %clip-near 1f0)
-                                      (float %clip-far 1f0)))))
+    (m4:set-projection/perspective! %projection
+                                    (float (/ %fov-y %zoom) 1f0)
+                                    (float
+                                     (/ v:=window-width= v:=window-height=)
+                                     1f0)
+                                    (float %clip-near 1f0)
+                                    (float %clip-far 1f0))))
 
 (defmethod make-projection (camera (mode (eql :orthographic)))
   (with-slots (%projection %zoom %clip-near %clip-far) camera
-    (let* ((context (v:context camera))
-           (w (/ (v:option context :window-width) %zoom 2f0))
-           (h (/ (v:option context :window-height) %zoom 2f0)))
+    (let ((w (/ v:=window-width= %zoom 2f0))
+          (h (/ v:=window-height= %zoom 2f0)))
       (m4:set-projection/orthographic!
        %projection (- w) w (- h) h %clip-near %clip-far))))
 

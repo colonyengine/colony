@@ -15,8 +15,8 @@
    #:define-annotation
    #:define-assets
    #:define-call-flow
+   #:define-config
    #:define-graph
-   #:define-options
    #:delta
    #:destroy
    #:display-id
@@ -24,7 +24,6 @@
    #:frame-time
    #:id
    #:make-actor
-   #:option
    #:screen-resolution
    #:spawn-actor
    #:start

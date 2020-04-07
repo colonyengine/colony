@@ -39,12 +39,11 @@
 (defun on-mouse-move (context x y dx dy)
   (let* ((data (v::input-data (v::core context)))
          (motion-state (u:href (states data) '(:mouse :motion)))
-         (window-height (v::option context :window-height))
          (relative (sdl2:relative-mouse-mode-p)))
     ;; TODO: fix this?
     (unless relative
       (setf (mouse-motion-state-x motion-state) x
-            (mouse-motion-state-y motion-state) (- window-height y)))
+            (mouse-motion-state-y motion-state) (- v:=window-height= y)))
     (setf (mouse-motion-state-dx motion-state) dx
           (mouse-motion-state-dy motion-state) (- dy))))
 
@@ -76,9 +75,8 @@
 (defun enable-relative-motion (context)
   (let* ((input-data (v::input-data (v::core context)))
          (motion-state (u:href (states input-data) '(:mouse :motion)))
-         (window-height (v::option context :window-height))
          (x (mouse-motion-state-x motion-state))
-         (y (- window-height (mouse-motion-state-y motion-state))))
+         (y (- v:=window-height= (mouse-motion-state-y motion-state))))
     (sdl2:set-relative-mouse-mode 1)
     (setf (mouse-motion-state-relative motion-state) t
           (mouse-motion-state-warp-x motion-state) x

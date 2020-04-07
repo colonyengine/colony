@@ -35,9 +35,8 @@
 
 (defgeneric create-window (core)
   (:method :before (core)
-    (let* ((context (context core))
-           (opengl-version (option context :opengl-version))
-           (anti-alias-level (option context :anti-alias-level)))
+    (let* ((opengl-version v:=opengl-version=)
+           (anti-alias-level v:=anti-alias-level=))
       (u:mvlet ((major-version minor-version (parse-opengl-version
                                               opengl-version)))
         (sdl2:gl-set-attrs :context-major-version major-version
@@ -46,10 +45,9 @@
                            :multisamplebuffers (max 0 (signum anti-alias-level))
                            :multisamplesamples anti-alias-level))))
   (:method (core)
-    (let* ((context (context core))
-           (window (sdl2:create-window :title (option context :title)
-                                       :w (option context :window-width)
-                                       :h (option context :window-height)
+    (let* ((window (sdl2:create-window :title v:=title=
+                                       :w v:=window-width=
+                                       :h v:=window-height=
                                        :flags '(:opengl)))
            (context (sdl2:gl-create-context window)))
       (values context window))))
@@ -60,7 +58,7 @@
     (setf (slot-value core '%display) instance)
     (gl:enable :depth-test :blend :multisample :cull-face)
     (gl:blend-func :src-alpha :one-minus-src-alpha)
-    (maybe-set-vsync (option (context core) :vsync))))
+    (maybe-set-vsync v:=vsync=)))
 
 (defun make-display (core)
   (u:mvlet ((gl-context window (create-window core))
@@ -71,12 +69,12 @@
                    :window window
                    :gl-context gl-context
                    :refresh-rate refresh-rate
-                   :vsync-p (eq (option (context core) :vsync) :on))))
+                   :vsync-p (eq v:=vsync= :on))))
 
 (defmethod clear-screen ((display display))
   (let ((core (core display)))
     (multiple-value-call #'gl:clear-color
-      (if (eq (option core :log-level) :debug)
+      (if (eq v:=log-level= :debug)
           (values (* 0.25 (abs (sin (total-time (context core))))) 0 0 1)
           (values 0 0 0 1)))
     (gl:clear :color-buffer :depth-buffer)))
