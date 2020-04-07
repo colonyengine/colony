@@ -472,22 +472,9 @@ actually are. You have to view the results to see the colliders lighting up."
 
 
 
-
-
-
-;;; Prefab descriptors
-
-(v:define-prefab-descriptor collision-smoke-test ()
-  ("collision-smoke-test" examples))
-
-(v:define-prefab-descriptor collision-test-0 ()
-  ("collision-test-0" examples))
-
-(v:define-prefab-descriptor collision-test-1 ()
-  ("collision-test-1" examples))
-
-(v:define-prefab-descriptor collision-test-2 ()
-  ("collision-test-2" examples))
-
-(v:define-prefab-descriptor collision-test-3 ()
-  ("collision-test-3" examples))
+;;; Prefab entry points
+;; '(("collision-smoke-test" examples))
+;; '(("collision-test-0" examples))
+;; '(("collision-test-1" examples)
+;; '(("collision-test-2" examples))
+;; '(("collision-test-3" examples))

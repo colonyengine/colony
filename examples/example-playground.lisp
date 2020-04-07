@@ -118,21 +118,9 @@
    (c/render:render :material 'art6)))
 
 ;;; Prefab descriptors
-
-(v:define-prefab-descriptor art1 ()
-  ("art1" examples))
-
-(v:define-prefab-descriptor art2 ()
-  ("art2" examples))
-
-(v:define-prefab-descriptor art3 ()
-  ("art3" examples))
-
-(v:define-prefab-descriptor art4 ()
-  ("art4" examples))
-
-(v:define-prefab-descriptor art5 ()
-  ("art5" examples))
-
-(v:define-prefab-descriptor art6 ()
-  ("art6" examples))
+;; '(("art1" examples))
+;; '(("art2" examples))
+;; '(("art3" examples))
+;; '(("art4" examples))
+;; '(("art5" examples))
+;; '(("art6" examples))

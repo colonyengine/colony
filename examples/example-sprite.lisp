@@ -154,12 +154,6 @@
                     :mode :sprite)))
 
 ;;; Prefab descriptors
-
-(v:define-prefab-descriptor sprite-1 ()
-  ("sprite-1" examples))
-
-(v:define-prefab-descriptor sprite-2 ()
-  ("sprite-2" examples))
-
-(v:define-prefab-descriptor sprite-3 ()
-  ("sprite-3" examples))
+;; '(("sprite-1" examples))
+;; '(("sprite-2" examples))
+;; '(("sprite-3" examples))

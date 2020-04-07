@@ -5,7 +5,7 @@
   :window-height 720
   :vsync :on
   :delta (float 1/120 1f0)
-  :initial-scene 'geometric-volumes)
+  :initial-scene '(("geometric-volumes" examples)))
 
 (v:define-assets :virality.examples
   :data "data"

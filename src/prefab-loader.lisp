@@ -87,8 +87,8 @@
       (v:destroy actor :ttl ttl)
       actor)))
 
-(defun make-prefab-instance (core prefab-descriptor &key parent)
+(defun make-prefab-instance (core prefab-spec &key parent)
   (let (roots)
-    (dolist (spec prefab-descriptor)
+    (dolist (spec prefab-spec)
       (push (load-prefab core spec parent) roots))
     (nreverse roots)))

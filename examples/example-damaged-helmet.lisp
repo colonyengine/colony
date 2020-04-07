@@ -185,9 +185,5 @@
    (c/render:render :material 'damaged-helmet)))
 
 ;;; Prefab descriptors
-
-(v:define-prefab-descriptor damaged-helmet ()
-  ("damaged-helmet" examples))
-
-(v:define-prefab-descriptor damaged-helmet-interactive ()
-  ("damaged-helmet-interactive" examples))
+;; '(("damaged-helmet" examples))
+;; '("damaged-helmet-interactive" examples))
