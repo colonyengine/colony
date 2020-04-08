@@ -582,8 +582,7 @@
 
 (defun possibly-make-explosion-at-actor (actor)
   (let* ((context (v:context actor))
-         (actor-transform (v:component-by-type actor 'c/xform:transform))
-         (parent-model (c/xform:model actor-transform))
+         (parent-model (v:get-model-matrix actor))
          (parent-translation (m4:get-translation parent-model))
          (parent-rotation (q:from-mat4 parent-model))
          (explosion (v:component-by-type actor 'explosion)))
@@ -658,7 +657,7 @@
 
        (u:mvlet ((rx ry (v:get-gamepad-analog
                          context :radial-scaled '(:gamepad1 :right-stick))))
-         (let* ((parent-model (c/xform:model emitter-transform))
+         (let* ((parent-model (v:get-model-matrix emitter-transform))
                 (parent-translation (m4:get-translation parent-model)))
            (unless (or (= rx ry 0f0)
                        (< (v3:length (v3:vec rx ry 0f0)) rotate-deadzone))

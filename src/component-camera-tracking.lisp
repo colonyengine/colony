@@ -19,8 +19,9 @@
 
 (defmethod v:on-component-update ((self tracking-camera))
   (let* ((slave (slave self))
-         (model (c/xform:model (c/cam:transform slave)))
+         (model (v:get-model-matrix (c/cam:transform slave)))
          (eye (m4:get-translation model))
-         (target (m4:get-translation (c/xform:model (target-transform self))))
+         (target (m4:get-translation (v:get-model-matrix
+                                      (target-transform self))))
          (up (v3:vec 0f0 1f0 0f0)))
     (m4:set-view! (c/cam:view slave) eye target up)))

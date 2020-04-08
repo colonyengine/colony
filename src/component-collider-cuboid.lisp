@@ -51,8 +51,7 @@
 
 ;; TODO: Refactor this as it was just a quick hack
 (defmethod v:on-component-physics-update ((self cuboid))
-  (let* ((xform (v:component-by-type (v:actor self) 'c/xform:transform))
-         (min (v:transform-point self
+  (let* ((min (v:transform-point self
                                  (v3:+ (reg:center self)
                                        (v3:vec (reg:minx self)
                                                (reg:miny self)
@@ -65,7 +64,7 @@
          (center (v3:lerp min max 0.5))
          (axes (m4:rotation-to-mat3
                 (m4:normalize-rotation
-                 (c/xform:model xform))))
+                 (v:get-model-matrix self))))
          (diagonal (v3:- max center))
          (half-widths (v3:vec (v3:dot diagonal (m3:get-column axes 0))
                               (v3:dot diagonal (m3:get-column axes 1))
@@ -79,11 +78,9 @@
 (defmethod v:on-component-render ((self cuboid))
   (unless (visualize self)
     (return-from v:on-component-render))
-  (a:when-let ((camera (v::active-camera (v:context self)))
-               (transform (v:component-by-type (v:actor self)
-                                               'c/xform:transform)))
+  (a:when-let ((camera (v::active-camera (v:context self))))
     (mat:with-material (material self)
-        (:model (c/xform:model transform)
+        (:model (v:get-model-matrix self)
          :view (c/cam:view camera)
          :proj (c/cam:projection camera)
          :collider-local-center (reg:center self)

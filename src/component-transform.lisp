@@ -92,6 +92,10 @@
 ;;; The user protocol functions are generic and live in the VIRALITY.ENGINE
 ;;; package, but they call out to the helper functions below.
 
+(defun %get-model-matrix (transform copy)
+  (let ((model (model transform)))
+    (if copy (m4:copy model) model)))
+
 (defun %get-translation (transform copy)
   (let ((translation (v::current (translation transform))))
     (if copy (v3:copy translation) translation)))

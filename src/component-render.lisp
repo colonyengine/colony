@@ -62,7 +62,7 @@
 (defmethod v:on-component-render ((self render))
   (a:when-let ((camera (v::active-camera (v:context self))))
     (mat:with-material (material self)
-        (:model (c/xform:model (transform self))
+        (:model (v:get-model-matrix self)
          :view (c/cam:view camera)
          :proj (c/cam:projection camera))
       (funcall (draw-method self)))))

@@ -71,10 +71,7 @@
   ;;
   ;; We're going to treat the cuboid as an OBB in world space and collide
   ;; it with the sphere also in world space.
-  (let* ((face-transform (v:component-by-type (v:actor face)
-                                              'c/xform:transform))
-         ;; Compute on the cuboid objects
-
+  (let* (;; Compute on the cuboid objects
          ;; Create an OBB from the cuboid
          (l-min (v3:+ (reg:center face)
                       (v3:vec (reg:minx face) (reg:miny face) (reg:minz face))))
@@ -86,12 +83,12 @@
          (w-center (v3:lerp w-min w-max .5f0))
          ;; Now get rotation axes as rotated in world-space. Page 101 of RTCD
          ;; was vague on if u in the struct OBB was a basis vector or not.
-         (x-axis (v3:normalize
-                  (m4:rotation-axis-to-vec3 (c/xform:model face-transform) :x)))
-         (y-axis (v3:normalize
-                  (m4:rotation-axis-to-vec3 (c/xform:model face-transform) :y)))
-         (z-axis (v3:normalize
-                  (m4:rotation-axis-to-vec3 (c/xform:model face-transform) :z)))
+         (x-axis (v3:normalize (m4:rotation-axis-to-vec3
+                                (v:get-model-matrix face) :x)))
+         (y-axis (v3:normalize (m4:rotation-axis-to-vec3
+                                (v:get-model-matrix face) :y)))
+         (z-axis (v3:normalize (m4:rotation-axis-to-vec3
+                                (v:get-model-matrix face) :z)))
          (obb-axes (make-array 3 :element-type 'v3:vec
                                  :initial-contents (list x-axis y-axis z-axis)))
          (diagonal (v3:- w-max w-center))

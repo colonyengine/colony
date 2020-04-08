@@ -67,7 +67,7 @@
   (let ((context (v:context self)))
     (when (or (v:on-button-enter context :gamepad1 :a)
               (v:on-button-enter context :mouse :left))
-      (let* ((parent-model (c/xform:model (transform self)))
+      (let* ((parent-model (v:get-model-matrix self))
              (parent-translation (m4:get-translation parent-model))
              (parent-rotation (q:from-mat4 parent-model))
              (new-actor (v:make-actor context :display-id "Ship bullet"))

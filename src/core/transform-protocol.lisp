@@ -15,6 +15,18 @@
 ;;; minimize any overhead in finding that transform on each invocation of a
 ;;; transform API call, but we shouldn't force them to.
 
+(defgeneric get-model-matrix (object &key)
+  (:method ((object c/xform:transform) &key copy)
+    (c/xform::%get-model-matrix object copy))
+  (:method ((object actor) &key copy)
+    (let ((transform (component-by-type object 'c/xform:transform)))
+      (c/xform::%get-model-matrix transform copy)))
+  (:method ((object component) &key copy)
+    (a:if-let ((actor (actor object)))
+      (let ((transform (component-by-type actor 'c/xform:transform)))
+        (c/xform::%get-model-matrix transform copy))
+      (error "Component ~a is not currently attached to an actor." object))))
+
 (defgeneric get-translation (object &key)
   (:method ((object c/xform:transform) &key copy)
     (c/xform::%get-translation object copy))

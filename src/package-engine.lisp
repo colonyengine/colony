@@ -60,6 +60,7 @@
 
   ;; transform protocol
   (:export
+   #:get-model-matrix
    #:get-rotation
    #:get-scale
    #:get-translation

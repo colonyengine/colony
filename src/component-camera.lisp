@@ -61,7 +61,7 @@
 (defun compute-camera-view (camera)
   (with-slots (%active-p %transform %view) camera
     (when %active-p
-      (let* ((model (c/xform:model %transform))
+      (let* ((model (v:get-model-matrix camera))
              (eye (m4:get-translation model))
              (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3 model :z))))
              (up (m4:rotation-axis-to-vec3 model :y)))
@@ -95,7 +95,7 @@
   (when (free-look-state self)
     (v::set-initial-free-look-orientation
      (free-look-state self)
-     (m4:copy (c/xform:model (transform self)))))
+     (v:get-model-matrix self :copy t)))
   (when (free-look self)
     (v::update-free-look-state (free-look-state self))))
 

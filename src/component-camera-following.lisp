@@ -23,11 +23,10 @@
 (defmethod v:on-component-update ((self following-camera))
   (with-slots (%transform) (slave self)
     (let* ((target-position (m4:get-translation
-                             (c/xform:model (target-transform self))))
+                             (v:get-model-matrix (target-transform self))))
            (new-camera-position (v3:+! target-position
                                        target-position
-                                       (offset self))))
-      (m4:set-translation! (c/xform:model %transform)
-                           (c/xform:model %transform)
-                           new-camera-position)
+                                       (offset self)))
+           (model (v:get-model-matrix self)))
+      (m4:set-translation! model model new-camera-position)
       (c/cam:compute-camera-view (slave self)))))
