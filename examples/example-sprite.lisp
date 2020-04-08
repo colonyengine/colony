@@ -13,8 +13,10 @@
 (defmethod v:on-component-initialize ((self simple-movement))
   (with-slots (%transform) self
     (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform))
-    (c/xform:translate %transform (v3:vec -400f0 0f0 0f0)
-                       :replace-p t :instant-p t)))
+    (v:translate %transform
+                 (v3:vec -400f0 0f0 0f0)
+                 :replace t
+                 :instant t)))
 
 (defmethod v:on-component-update ((self simple-movement))
   (u:mvlet* ((context (v:context self))
@@ -26,19 +28,19 @@
              (instant-p (zerop (v:frame-count context))))
     (let ((vec (v3:vec lx ly 0f0)))
       (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150f0)
-      (c/xform:translate transform
-                         (v3:+ (v3:vec -400f0 0f0 0f0) vec)
-                         :replace-p t
-                         :instant-p instant-p)
+      (v:translate transform
+                   (v3:+ (v3:vec -400f0 0f0 0f0) vec)
+                   :replace t
+                   :instant instant-p)
       (unless (= rx ry 0f0)
         (let* ((angle (atan (- rx) ry))
                (angle (if (minusp angle)
                           (+ o:pi (- o:pi (abs angle)))
                           angle)))
-          (c/xform:rotate transform
-                          (q:orient :local :z angle)
-                          :replace-p t
-                          :instant-p instant-p))))))
+          (v:rotate transform
+                    (q:orient :local :z angle)
+                    :replace t
+                    :instant instant-p))))))
 
 (v:define-component shot-mover ()
   ((%transform :reader transform)
@@ -51,7 +53,7 @@
     (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform))))
 
 (defmethod v:on-component-update ((self shot-mover))
-  (c/xform:translate
+  (v:translate
    (transform self)
    (let ((a (v3:normalize (m4:rotation-axis-to-vec3
                            (c/xform:local (transform self)) :y)))

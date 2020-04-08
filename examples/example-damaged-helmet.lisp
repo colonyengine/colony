@@ -98,7 +98,7 @@
       ;; dynamically built as an persistent orientation offset from this origin
       ;; orientation.
       (unless orig-orient
-        (setf orig-orient (c/xform:get-rotation xform :copy t)))
+        (setf orig-orient (v:get-rotation xform :copy t)))
 
       (unless rv
         ;; RV represents a persistent 2D point we'll be moving around with the
@@ -139,7 +139,7 @@
             ;; the orientation BEFORE the dragging started). So when the user
             ;; lets go of the LMB, this BECOMES the new orientation for the
             ;; next drag attempt.
-            (c/xform:rotate xform putative-rot :replace-p t))))
+            (v:rotate xform putative-rot :replace t))))
 
       (when lm-stop-drag-p
         (setf dragging nil

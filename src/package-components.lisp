@@ -62,25 +62,7 @@
   (:use #:cl)
   (:export
    #:add-child
-   #:get-rotation
-   #:get-scale
-   #:get-translation
    #:local
    #:model
    #:remove-child
-   #:rotate
-   #:rotate/velocity
-   #:scale
-   #:scale/velocity
-   #:transform
-   #:transform-backward
-   #:transform-direction
-   #:transform-down
-   #:transform-forward
-   #:transform-left
-   #:transform-point
-   #:transform-right
-   #:transform-up
-   #:transform-vector
-   #:translate
-   #:translate/velocity))
+   #:transform))

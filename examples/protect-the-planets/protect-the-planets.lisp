@@ -277,11 +277,11 @@
                              1f0)))
            ;; and ensure we clip the translation vector so we can't go out of
            ;; the boundary cube we set.
-           (current-translation (c/xform:get-translation transform))
+           (current-translation (v:get-translation transform))
            (vec
             (reg:clip-movement-vector vec current-translation region-cuboid)))
 
-        (c/xform:translate transform vec))
+        (v:translate transform vec))
 
       ;; Then we settle the notion of how the player is oriented.  We're setting
       ;; a hard angle of rotation each time so we overwrite the previous value.
@@ -291,10 +291,10 @@
                (angle (if (minusp angle)
                           (+ o:pi (- o:pi (abs angle)))
                           angle)))
-          (c/xform:rotate transform
-                          (q:orient :local :z angle)
-                          :replace-p t
-                          :instant-p instant-p))))))
+          (v:rotate transform
+                    (q:orient :local :z angle)
+                    :replace t
+                    :instant instant-p))))))
 
 ;; ;;;;;;;;;
 ;; Component: line-mover
@@ -329,7 +329,7 @@
     ;; TODO: Figure out why I need this when physics is faster. It appears I
     ;; can compute a physics frame before components are attached?
     (when transform
-      (c/xform:translate
+      (v:translate
        transform
        (let* ((local (c/xform:local transform))
               (x (m4:rotation-axis-to-vec3 local :x))
@@ -503,14 +503,14 @@
 
     ;; Set the spatial configuration
     (setf (v3:z translation) (dl depth-layer))
-    (c/xform:translate projectile-transform translation
-                       :instant-p t :replace-p t)
+    (v:translate projectile-transform
+                 translation
+                 :instant t
+                 :replace t)
     ;; XXX This interface needs to take a quat here also
-    (c/xform:rotate projectile-transform rotation
-                    :instant-p t :replace-p t)
+    (v:rotate projectile-transform rotation :instant t :replace t)
     ;; And adjust the scale too.
-    (c/xform:scale projectile-transform scale
-                   :instant-p t :replace-p t)
+    (v:scale projectile-transform scale :instant t :replace t)
 
     (setf
      ;; Basic identification of the projectile
@@ -579,12 +579,9 @@
      (c/sprite:name (sprite explosion)) name
      (c/sprite:frames (sprite explosion)) frames)
 
-    (c/xform:scale explosion-transform scale
-                   :instant-p t :replace-p t)
-    (c/xform:translate explosion-transform translation
-                       :instant-p t :replace-p t)
-    (c/xform:rotate explosion-transform rotation
-                    :instant-p t :replace-p t)
+    (v:scale explosion-transform scale :instant t :replace t)
+    (v:translate explosion-transform translation :instant t :replace t)
+    (v:rotate explosion-transform rotation :instant t :replace t)
 
     ;; By default explosions live a certain amount of time.
     (v:destroy new-explosion :ttl destroy-ttl)
@@ -767,7 +764,7 @@
                   ;;
                   ;; TODO: abstract this to ue a boundary cube.
                   (target
-                    (c/xform:transform-point
+                    (v:transform-point
                      transform
                      (v3:vec (ransign 300f0) (ransign 300f0) 0.1f0)))
                   (quadrant (random 4)))
@@ -775,7 +772,7 @@
              ;; pick an origin point in director space and convert it to world
              ;; space
              (setf origin
-                   (c/xform:transform-point
+                   (v:transform-point
                     transform
                     (ecase quadrant
                       (0 ;; left side
@@ -884,7 +881,7 @@
                        :parent stable)))
            (transform (v:component-by-type mockette 'c/xform:transform)))
 
-      (c/xform:translate
+      (v:translate
        transform (v3:vec (* mockette-index (* dir width-increment)) -60f0 0f0))
 
       (setf (aref mockette-refs mockette-index) mockette))))
@@ -1198,7 +1195,7 @@ NIL if no such list exists."
                           1f0))
                 ;; Figure out where to put the explosion into world space.
                 (world-location
-                  (c/xform:transform-point transform local-location))
+                  (v:transform-point transform local-location))
                 (world-location (v3:vec (v3:x world-location)
                                         (v3:y world-location)
                                         (dl :planet-warning-explosion)))
@@ -1307,13 +1304,13 @@ NIL if no such list exists."
     (let ((how-far-to-empty (- 1f0 (/ time-left time-max))))
 
       ;; Size the time bar in accordance to how much time is left.
-      (c/xform:scale time-bar-transform
-                     (v3:vec time-bar-width
-                             (a:lerp how-far-to-empty
-                                     time-bar-height-scale
-                                     0f0)
-                             1f0)
-                     :replace-p t)
+      (v:scale time-bar-transform
+               (v3:vec time-bar-width
+                       (a:lerp how-far-to-empty
+                               time-bar-height-scale
+                               0f0)
+                       1f0)
+               :replace t)
 
       ;; Color the time bar in accordance to how much time is left.
       (let ((material (c/render:material time-bar-renderer)))

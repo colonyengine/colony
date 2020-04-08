@@ -54,12 +54,12 @@
          (actor-transform
            (v:component-by-type actor 'c/xform:transform)))
     (unless (u:href (test-performed self) test-type)
-      (let ((forward (c/xform:transform-forward actor-transform))
-            (backward (c/xform:transform-backward actor-transform))
-            (up (c/xform:transform-up actor-transform))
-            (down (c/xform:transform-down actor-transform))
-            (right (c/xform:transform-right actor-transform))
-            (left (c/xform:transform-left actor-transform)))
+      (let ((forward (v:transform-forward actor-transform))
+            (backward (v:transform-backward actor-transform))
+            (up (v:transform-up actor-transform))
+            (down (v:transform-down actor-transform))
+            (right (v:transform-right actor-transform))
+            (left (v:transform-left actor-transform)))
         (log:trace :virality.examples "FORWARD Vector -> ~a" forward)
         (log:trace :virality.examples "BACKWARD Vector -> ~a" backward)
         (log:trace :virality.examples "UP Vector -> ~a" up)
@@ -93,12 +93,9 @@
          (object-space-point (v3:vec 1f0 0f0 0f0))
          (world-space-point (v3:vec 1f0 3f0 1f0))
          (local->world
-           (c/xform:transform-point actor-transform
-                                    object-space-point))
+           (v:transform-point actor-transform object-space-point))
          (world->local
-           (c/xform:transform-point actor-transform
-                                    world-space-point
-                                    :space :world)))
+           (v:transform-point actor-transform world-space-point :space :world)))
     ;; See if transform-point works.
     (let ((result-0
             (v3:~ local->world world-space-point))
@@ -124,13 +121,10 @@
            (v:component-by-type actor 'c/xform:transform))
          (object-space-vector (v3:vec 2f0 2f0 0f0))
          (world-space-vector (v3:vec -4f0 4f0 0f0))
-         (local->world
-           (c/xform:transform-vector actor-transform
-                                     object-space-vector))
-         (world->local
-           (c/xform:transform-vector actor-transform
-                                     world-space-vector
-                                     :space :world)))
+         (local->world (v:transform-vector actor-transform object-space-vector))
+         (world->local (v:transform-vector actor-transform
+                                           world-space-vector
+                                           :space :world)))
     ;; See if transform-vector works.
     (let ((result-0
             (v3:~ local->world world-space-vector))
@@ -158,12 +152,10 @@
          (object-space-direction (v3:normalize (v3:vec 1f0 1f0 0f0)))
          (world-space-direction (v3:normalize (v3:vec -1f0 1f0 0f0)))
          (local->world
-           (c/xform:transform-direction actor-transform
-                                        object-space-direction))
-         (world->local
-           (c/xform:transform-direction actor-transform
-                                        world-space-direction
-                                        :space :world)))
+           (v:transform-direction actor-transform object-space-direction))
+         (world->local (v:transform-direction actor-transform
+                                              world-space-direction
+                                              :space :world)))
     ;; See if transform-direction works.
     (let ((result-0
             (v3:~ local->world world-space-direction))

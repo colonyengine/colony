@@ -52,13 +52,13 @@
 ;; TODO: Refactor this as it was just a quick hack
 (defmethod v:on-component-physics-update ((self cuboid))
   (let* ((xform (v:component-by-type (v:actor self) 'c/xform:transform))
-         (min (c/xform:transform-point
+         (min (v:transform-point
                xform
                (v3:+ (reg:center self)
                      (v3:vec (reg:minx self)
                              (reg:miny self)
                              (reg:minz self)))))
-         (max (c/xform:transform-point
+         (max (v:transform-point
                xform
                (v3:+ (reg:center self)
                      (v3:vec (reg:maxx self)

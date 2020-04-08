@@ -26,18 +26,18 @@
              ;; Figure out where the center for these colliders are in world
              ;; space.
              (fist-collider-world-center
-               (c/xform:transform-point fist-transform (reg:center fist)))
+               (v:transform-point fist-transform (reg:center fist)))
              (face-collider-world-center
-               (c/xform:transform-point face-transform (reg:center face)))
+               (v:transform-point face-transform (reg:center face)))
              ;; Figure out the size of the radius in world space. We treat the
              ;; radius as a vector and rotate/scale (but no translate!) it by
              ;; the world matrix.
              (fist-world-radius
-               (c/xform:transform-vector fist-transform
-                                         (v3:vec (reg:radius fist) 0f0 0f0)))
+               (v:transform-vector fist-transform
+                                   (v3:vec (reg:radius fist) 0f0 0f0)))
              (face-world-radius
-               (c/xform:transform-vector face-transform
-                                         (v3:vec (reg:radius face) 0f0 0f0)))
+               (v:transform-vector face-transform
+                                   (v3:vec (reg:radius face) 0f0 0f0)))
 
              ;; TODO: Allow the gamedev an ability to ensure that the world
              ;; matrix must be uniform for a sphere collider.  This involves
@@ -88,8 +88,8 @@
                       (v3:vec (reg:minx face) (reg:miny face) (reg:minz face))))
          (l-max (v3:+ (reg:center face)
                       (v3:vec (reg:maxx face) (reg:maxy face) (reg:maxz face))))
-         (w-min (c/xform:transform-point face-transform l-min))
-         (w-max (c/xform:transform-point face-transform l-max))
+         (w-min (v:transform-point face-transform l-min))
+         (w-max (v:transform-point face-transform l-max))
          ;; center of OBB in world space.
          (w-center (v3:lerp w-min w-max .5f0))
          ;; Now get rotation axes as rotated in world-space. Page 101 of RTCD
@@ -111,11 +111,11 @@
 
          ;; Get the important parts of the sphere into world space.
          (fist-collider-world-center
-           (c/xform:transform-point fist-transform (reg:center fist)))
+           (v:transform-point fist-transform (reg:center fist)))
          (fist-world-radius
            (v3:length
-            (c/xform:transform-vector fist-transform
-                                      (v3:vec (reg:radius fist) 0f0 0f0)))))
+            (v:transform-vector fist-transform
+                                (v3:vec (reg:radius fist) 0f0 0f0)))))
 
     (let* ((p (closest-pt-point-obb fist-collider-world-center
                                     obb-axes w-center half-widths))

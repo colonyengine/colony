@@ -138,7 +138,8 @@
      (:file "display")
      (:file "image")
      (:file "image-png")
-     (:file "image-hdr")))
+     (:file "image-hdr")
+     (:file "transform-protocol")))
    (:file "core-state")
    (:file "engine")
 

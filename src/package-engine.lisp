@@ -29,9 +29,11 @@
    #:stop
    #:total-time
    #:with-shared-storage)
+
   ;; hardware
   (:export
    #:get-hardware-info)
+
   ;; input system
   (:export
    #:disable-relative-motion
@@ -55,6 +57,28 @@
    #:set-window-title
    #:set-window-size
    #:set-window-visible)
+
+  ;; transform protocol
+  (:export
+   #:get-rotation
+   #:get-scale
+   #:get-translation
+   #:rotate
+   #:rotate/velocity
+   #:scale
+   #:scale/velocity
+   #:transform-backward
+   #:transform-direction
+   #:transform-down
+   #:transform-forward
+   #:transform-left
+   #:transform-point
+   #:transform-right
+   #:transform-up
+   #:transform-vector
+   #:translate
+   #:translate/velocity)
+
   (:export
    #:attach-component
    #:attach-components
