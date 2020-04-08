@@ -138,6 +138,9 @@
    (:file "prefab-loader")
    (:file "prefab-reference")
    (:file "prefab")
+   (:module "core"
+    :components
+    ((:file "opengl")))
    (:file "core-state")
    (:file "engine")
 
