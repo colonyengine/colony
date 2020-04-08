@@ -53,6 +53,7 @@
    (:module "base"
     :components
     ((:file "general")
+     (:file "live-coding")
      (:file "avl-tree")
      (:file "parser")
      (:file "uuid")))
@@ -60,7 +61,6 @@
    (:file "metadata")
    (:file "config")
    (:file "threading")
-   (:file "interactive-development")
    (:file "debugging")
    (:file "protocol")
    (:file "deployment")
