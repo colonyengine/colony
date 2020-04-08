@@ -20,13 +20,14 @@
           :initarg :spec)
    (%geometry :reader geometry
               :initarg :geometry)
-   (%buffer :reader buffer)
+   (%buffer-name :reader buffer-name)
+   (%buffer-id :reader buffer-id)
    (%sprites :reader sprites
              :initform (u:dict #'equalp))))
 
 (defun make-spritesheet (context sprite)
   (with-slots (%name %spec) sprite
-    (let* ((spec (v::find-resource context %spec))
+    (let* ((spec (v::find-asset context %spec))
            (spritesheet (make-instance 'spritesheet
                                        :spec (u:safe-read-file-form spec)
                                        :geometry (gl:gen-vertex-array))))
@@ -34,8 +35,8 @@
       spritesheet)))
 
 (defun write-spritesheet-buffer (spritesheet)
-  (with-slots (%spec %buffer %sprites) spritesheet
-    (loop :with buffer-name = (gpu:buffer-name %buffer)
+  (with-slots (%spec %buffer-name %sprites) spritesheet
+    (loop :with buffer-name = %buffer-name
           :with count = (length %spec)
           :with pos = (make-array count)
           :with size = (make-array count)
@@ -50,13 +51,15 @@
                    (gpu:write-buffer-path buffer-name :size size))))
 
 (defun make-spritesheet-buffer (spritesheet)
-  (with-slots (%spec %buffer) spritesheet
+  (with-slots (%spec %buffer-name %buffer-id) spritesheet
+    ;; TODO: This 1 is hardcoded because virality doesn't have an allocation
+    ;; system for these integers.
     (gpu:bind-block :spritesheet 1)
-    (setf %buffer (gpu:create-buffer (a:make-gensym :spritesheet)
-                                     :spritesheet))
+    (setf %buffer-name (a:make-gensym :spritesheet))
+    (setf %buffer-id (gpu:create-buffer %buffer-name :spritesheet))
     ;; TODO: Have materials automatically calculate a binding point instead of
     ;; hard-coding.
-    (gpu:bind-buffer (gpu:buffer-name %buffer) 1)
+    (gpu:bind-buffer %buffer-name 1)
     (write-spritesheet-buffer spritesheet)))
 
 (defun update-sprite-index (sprite step)
@@ -69,7 +72,7 @@
     (with-slots (%geometry) %spritesheet
       (gpu:uniform-int 'shd/sprite:sprite :sprite.index %index)
       (gl:bind-vertex-array %geometry)
-      (gl:draw-arrays-instanced :points 0 1 count)
+      (gl:draw-arrays-instanced :triangle-strip 0 4 count)
       (gl:bind-vertex-array 0))))
 
 (defmethod v:on-component-initialize ((self sprite))

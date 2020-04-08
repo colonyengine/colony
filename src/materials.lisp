@@ -20,9 +20,11 @@ two values, the first is a material instance, and the second is T if the
 material being looked up was actually found, or NIL if it wasn't (and the
 missing material used)."
   (symbol-macrolet ((table (material-table (v::materials core))))
-    (u:if-found (material (u:href table material-name))
-                material
-                (u:href table (a:ensure-symbol "MISSING-MATERIAL" :x/mat)))))
+    (u:mvlet ((material found-p (u:href table material-name)))
+      (if found-p
+          (values material t)
+          (values (u:href table (a:ensure-symbol "MISSING-MATERIAL" :x/mat))
+                  nil)))))
 
 (defun %add-material (material core)
   "Add the MATERIAL by its id into CORE."
@@ -644,6 +646,45 @@ applied in an overlay manner while defining a material."
              (setf ,definition (u:dict)))
            (setf (u:href ,definition (name ,profile)) ,profile))))))
 
+(defun update-material (old-material new-material)
+  (with-slots ((old-tex %active-texture-unit)
+               (old-attrs %attributes)
+               (old-blocks %blocks)
+               (old-instances %instances)
+               (old-overlays %profile-overlay-names)
+               (old-shader %shader)
+               (old-uniforms %uniforms))
+      old-material
+    (with-slots ((new-tex %active-texture-unit)
+                 (new-attrs %attributes)
+                 (new-blocks %blocks)
+                 (new-instances %instances)
+                 (new-overlays %profile-overlay-names)
+                 (new-shader %shader)
+                 (new-uniforms %uniforms))
+        new-material
+      (setf old-tex new-tex
+            old-attrs new-attrs
+            old-blocks new-blocks
+            old-overlays new-overlays
+            old-shader new-shader
+            old-uniforms new-uniforms))))
+
+(defun update-material/interactively (name func)
+  (when (boundp 'v::*core-debug*)
+    (v::push-queue
+     v::*core-debug*
+     :live-recompile
+     (list
+      :material
+      (lambda (core)
+        (u:mvlet ((old-material found-p (%lookup-material name core))
+                  (new-material (funcall func core)))
+          (resolve-material new-material core)
+          (if found-p
+              (update-material old-material new-material)
+              (%add-material new-material core))))))))
+
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
   (a:with-gensyms (func)
@@ -656,6 +697,7 @@ applied in an overlay manner while defining a material."
            (unless ,definition
              (setf ,definition (u:dict)))
            (setf (u:href ,definition ',name) ,func)
+           (update-material/interactively ',name ,func)
            (export ',name))))))
 
 ;; TODO: Make this constant time

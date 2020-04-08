@@ -30,12 +30,11 @@
 (defpackage #:virality.components.collider
   (:use #:cl)
   (:export
-   #:center
    #:collide-p
    #:on-layer
-   #:radius
    #:referent
-   #:sphere))
+   #:sphere
+   #:cuboid))
 
 (defpackage #:virality.components.mesh.dynamic
   (:use #:cl)
@@ -62,23 +61,26 @@
 (defpackage #:virality.components.transform
   (:use #:cl)
   (:export
-   #:inverse-transform-direction
-   #:inverse-transform-point
-   #:inverse-transform-vector
+   #:add-child
+   #:get-rotation
+   #:get-scale
+   #:get-translation
    #:local
    #:model
+   #:remove-child
    #:rotate
+   #:rotate/velocity
    #:scale
+   #:scale/velocity
    #:transform
-   #:transform-add-child
    #:transform-backward
    #:transform-direction
    #:transform-down
    #:transform-forward
    #:transform-left
    #:transform-point
-   #:transform-remove-child
    #:transform-right
    #:transform-up
    #:transform-vector
-   #:translate))
+   #:translate
+   #:translate/velocity))

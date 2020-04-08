@@ -5,7 +5,7 @@ set -e
 
 SCRIPT_PATH="$(cd "$(dirname "$0")" ; pwd -P)"
 REMOTE_FILE="https://raw.githubusercontent.com/gabomdq/SDL_GameControllerDB/master/gamecontrollerdb.txt"
-LOCAL_FILE="${SCRIPT_PATH}/../data/core/gamepad-db.txt"
+LOCAL_FILE="${SCRIPT_PATH}/../data/gamepad-db.txt"
 CUSTOM_FILE="${SCRIPT_PATH}/custom-gamepad-db.txt"
 
 echo -n "Updating gamepad database ... "

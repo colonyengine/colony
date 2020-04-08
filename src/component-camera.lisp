@@ -5,31 +5,36 @@
               :initarg :active-p
               :initform nil)
    (%view :reader view
-          :initform (m4:id))
+          :initform (m4:mat 1))
    (%projection :reader projection
-                :initform (m4:id))
+                :initform (m4:mat 1))
    (%mode :reader mode
           :initarg :mode
           :initform :perspective)
    (%clip-near :reader clip-near
                :initarg :clip-near
-               :initform 0.1)
+               :initform 0.1f0)
    (%clip-far :reader clip-far
               :initarg :clip-far
-              :initform 1024)
+              :initform 1024f0)
    (%fov-y :reader fov-y
            :initarg :fov-y
-           :initform 90)
+           :initform 45f0)
    (%zoom :accessor zoom
           :initarg :zoom
-          :initform 1)
-   (%transform :reader transform)))
+          :initform 1f0)
+   (%transform :reader transform)
+   (%free-look :accessor free-look
+               :initarg :free-look
+               :initform nil)
+   (%free-look-state :reader free-look-state
+                     :initform nil)))
 
 (defun correct-camera-transform (camera)
-  (when (v3:zero-p (c/xform::current (c/xform::translation (transform camera))))
+  (when (v3:zero-p (c/xform:get-translation (transform camera)))
     (let ((translation (ecase (mode camera)
-                         (:orthographic (v3:vec 0 0 1))
-                         (:perspective (v3:vec 0 0 50)))))
+                         (:orthographic (v3:vec 0f0 0f0 1f0))
+                         (:perspective (v3:vec 0f0 0f0 50f0)))))
       (c/xform:translate (transform camera) translation)
       (log:warn :virality.components
                 "Camera ~a was attached to an actor without a translation ~
@@ -38,19 +43,18 @@
 
 (defmethod make-projection (camera (mode (eql :perspective)))
   (with-slots (%projection %fov-y %zoom %clip-near %clip-far) camera
-    (let ((context (v:context camera)))
-      (m4:set-projection/perspective! %projection
-                                      (/ %fov-y %zoom)
-                                      (/ (v:option context :window-width)
-                                         (v:option context :window-height))
-                                      %clip-near
-                                      %clip-far))))
+    (m4:set-projection/perspective! %projection
+                                    (/ %fov-y %zoom)
+                                    (float
+                                     (/ v:=window-width= v:=window-height=)
+                                     1f0)
+                                    %clip-near
+                                    %clip-far)))
 
 (defmethod make-projection (camera (mode (eql :orthographic)))
   (with-slots (%projection %zoom %clip-near %clip-far) camera
-    (let* ((context (v:context camera))
-           (w (/ (v:option context :window-width) %zoom 2))
-           (h (/ (v:option context :window-height) %zoom 2)))
+    (let ((w (/ v:=window-width= %zoom 2f0))
+          (h (/ v:=window-height= %zoom 2f0)))
       (m4:set-projection/orthographic!
        %projection (- w) w (- h) h %clip-near %clip-far))))
 
@@ -72,20 +76,31 @@
   (let* ((context (v:context (v::core display)))
          (camera (find-active-camera context)))
     (with-slots (%zoom %mode) camera
-      (setf %zoom (a:clamp (+ %zoom (/ direction 2)) 1 10))
+      (setf %zoom (a:clamp (+ %zoom (/ direction 2f0)) 1f0 10f0))
       (make-projection %mode camera))))
 
 ;;; Component event hooks
 
 (defmethod v:on-component-initialize ((self camera))
-  (with-slots (%transform %fov-y) self
+  (with-slots (%transform %fov-y %free-look %free-look-state) self
     (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform)
-          %fov-y (* %fov-y (/ pi 180)))
+          %fov-y (* %fov-y (/ o:pi 180)))
+    (when %free-look
+      (setf %free-look-state (v::make-free-look-state (v::context self)
+                                                      %transform)))
     (correct-camera-transform self)
     (make-projection self (mode self))
-    (push self (v::cameras (v::core (v:context self))))))
+    (push self (v::cameras (v::core self)))))
+
+(defmethod v:on-component-update ((self camera))
+  (when (free-look-state self)
+    (v::set-initial-free-look-orientation
+     (free-look-state self)
+     (m4:copy (c/xform:model (transform self)))))
+  (when (free-look self)
+    (v::update-free-look-state (free-look-state self))))
 
 (defmethod v:on-component-destroy ((self camera))
   (let ((context (v:context self)))
-    (a:deletef (v::cameras (v::core context)) self)
+    (a:deletef (v::cameras (v::core self)) self)
     (setf (v::active-camera context) nil)))

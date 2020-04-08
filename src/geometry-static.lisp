@@ -114,8 +114,7 @@
 (defun parse-gltf-chunks (gltf)
   (loop :with stream = (fast-io:input-buffer-stream (buffer gltf))
         :until (= (file-position stream) (file-length stream))
-        :for chunk = (parse-gltf-chunk gltf)
-        :collect chunk))
+        :collect (parse-gltf-chunk gltf)))
 
 (defun parse-gltf-datastream (gltf)
   (let ((datastream (make-instance 'gltf-datastream)))

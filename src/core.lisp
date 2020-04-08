@@ -1,11 +1,10 @@
 (in-package #:virality.engine)
 
-(defvar *core-debug*)
-
 (defclass core ()
-  ((%resources :reader resources
-               :initform (meta 'resources))
-   (%options :accessor options)
+  ((%project :reader project
+             :initarg :project)
+   (%assets :reader assets
+            :initform (meta 'assets))
    (%running-p :accessor running-p
                :initform t)
    (%rcache :reader rcache
@@ -33,9 +32,7 @@
                      :initform nil)
    (%analyzed-graphs :reader analyzed-graphs
                      :initform (u:dict #'equalp))
-   (%recompilation-queue :reader recompilation-queue
-                         :initarg :recompilation-queue
-                         :initform (queues:make-queue :simple-cqueue))))
+   (%thread-pool :reader thread-pool)))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table
@@ -64,7 +61,7 @@
                       :initform (u:dict))
    (%actors-by-id :reader actors-by-id
                   :initform (u:dict #'equalp))
-   (%objects-by-uuid :reader objects-by-uuid
+   (%kernels-by-uuid :reader kernels-by-uuid
                      :initform (u:dict #'equalp))))
 
 (defun pending-preinit-tasks-p (core)
@@ -102,38 +99,3 @@ structures in CORE."
                   'entry/initialize-phase
                   :come-from-state-name 'ef-make-scene-tree)
     (setf (slot-value core '%scene-tree) actor)))
-
-(defgeneric shared-storage (context key)
-  (:method (context key)
-    (u:href (shared-storage-table context) key))
-  (:method (context (key component))
-    (shared-storage context (component-type key))))
-
-(defgeneric (setf shared-storage) (value context key)
-  (:method (value context key)
-    (setf (u:href (shared-storage-table context) key) value))
-  (:method (value context (key component))
-    (setf (shared-storage context (component-type key)) value)))
-
-;; This might call rcache-construct if needed.
-(defmethod rcache-lookup (context (entry-type symbol) &rest keys)
-  (with-slots (%rcache) (core context)
-    (ensure-nested-hash-table %rcache
-                              ;; NOTE: 'eq is for the rcache table itself.
-                              (list* 'eq (rcache-layout entry-type))
-                              (list* entry-type keys))
-    (multiple-value-bind (value presentp)
-        (apply #'u:href %rcache (list* entry-type keys))
-      (unless presentp
-        (setf value (apply #'rcache-construct context entry-type keys)
-              (apply #'u:href %rcache (list* entry-type keys)) value))
-      value)))
-
-;; This might call rcache-dispose if needed.
-(defmethod rcache-remove (context (entry-type symbol) &rest keys)
-  (with-slots (%rcache) (core context)
-    (multiple-value-bind (value presentp)
-        (apply #'u:href %rcache (list* entry-type keys))
-      (when presentp
-        (remhash (apply #'u:href %rcache (list* entry-type keys)) %rcache)
-        (rcache-dispose context entry-type value)))))

@@ -37,7 +37,26 @@ following in your REPL:
 
 ```lisp
 (ql:quickload :virality.examples)
-(virality.engine:start :scene 'virality.examples:damaged-helmet)
+
+(in-package :virality.examples)
+
+;; To show the GLTF damaged helmet.
+(virality.engine:start
+       :project :virality.examples
+       :scene '(("damaged-helmet" examples)))
+
+;; To run the Protect the Planets game (requires gamepad)
+(virality.engine:start
+       :project :virality.examples
+       :scene '(("protect-the-planets" ptp)))
+
+;; To run some interesting art that mfiano
+;; ported from shader-toy and hand modified.
+;;
+;; NOTE: Use mouse (drag LMB) to look around
+(virality.engine:start
+       :project :virality.examples
+       :scene '(("art6" examples)))
 
 ;; ESC exits
 ```

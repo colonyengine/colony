@@ -84,7 +84,7 @@ currently in contact."
   ;; since there is a symmetric link, I can check any one and be satisfied.
   (let ((contacts (contacts collider-system)))
     (when (u:href contacts fist-collider)
-      (a:when-let (found-p (u:href contacts fist-collider face-collider))
+      (a:when-let ((found-p (u:href contacts fist-collider face-collider)))
         ;; generalized-boolean.
         found-p))))
 
@@ -113,20 +113,20 @@ FIST-COLLIDER and FACE-COLLIDER."
   ;; If we're continuing to collide, run the protocol!
   (on-collision-continue fist-collider face-collider)
   (on-collision-continue face-collider fist-collider)
-  :ontinue)
+  :continue)
 
 (defun exit-contact (collider-system fist-collider face-collider)
   "Remove the contact between the FIST and the FACE."
   (assert (not (eq fist-collider face-collider)))
   (let ((contacts (contacts collider-system)))
     ;; Remove the link: fist -> face
-    (a:when-let (face-set (u:href contacts fist-collider))
+    (a:when-let ((face-set (u:href contacts fist-collider)))
       (remhash face-collider face-set)
       ;; If the fist is colliding with nothing now, remove its table.
       (when (zerop (hash-table-count face-set))
         (remhash fist-collider contacts)))
     ;; Remove the link: face -> fist
-    (a:when-let (fist-set (u:href contacts face-collider))
+    (a:when-let ((fist-set (u:href contacts face-collider)))
       (remhash fist-collider fist-set)
       ;; If the face is colliding with nothing now, remove its table.
       (when (zerop (hash-table-count fist-set))
@@ -142,7 +142,7 @@ FIST-COLLIDER and FACE-COLLIDER."
 had--and update all other faces too."
   (let ((contacts (contacts collider-system)))
     ;; Look up the fist to see if anything at all is contacting it.
-    (a:when-let (face-set (u:href contacts fist-collider))
+    (a:when-let ((face-set (u:href contacts fist-collider)))
       ;; NOTE: get a list of the faces, since we'll be altering the hash tables
       ;; while iterating over the faces
       (let ((face-colliders (u:hash-keys face-set)))
@@ -421,37 +421,37 @@ the repl when the game is NOT running."
     (let* ((c0 (v:make-component context 'c/col:sphere
                                  :display-id "Ground"
                                  :on-layer :ground
-                                 :center (v3:zero)
+                                 :center (v3:vec)
                                  :radius 1))
            (c1 (v:make-component context 'c/col:sphere
                                  :display-id "Player"
                                  :on-layer :player
-                                 :center (v3:vec -20 5 0)
+                                 :center (v3:vec -20f0 5f0 0f0)
                                  :radius 1))
            (c2 (v:make-component context 'c/col:sphere
                                  :display-id "Player-Bullet"
                                  :on-layer :player-bullet
-                                 :center (v3:vec -10 5 0)
+                                 :center (v3:vec -10f0 5f0 0f0)
                                  :radius 1))
            (c3 (v:make-component context 'c/col:sphere
                                  :display-id "Enemy"
                                  :on-layer :enemy
-                                 :center (v3:vec 20 5 0)
+                                 :center (v3:vec 20f0 5f0 0f0)
                                  :radius 1))
            (c4 (v:make-component context 'c/col:sphere
                                  :display-id "Enemy-Bullet"
                                  :on-layer :enemy-bullet
-                                 :center (v3:vec 10 5 0)
+                                 :center (v3:vec 10f0 5f0 0f0)
                                  :radius 1))
            (c5 (v:make-component context 'c/col:sphere
                                  :display-id "Scenery 1"
                                  :on-layer :scenery
-                                 :center (v3:vec 0 5 0)
+                                 :center (v3:vec 0f0 5f0 0f0)
                                  :radius 1))
            (c6 (v:make-component context 'c/col:sphere
                                  :display-id "Scenery 2"
                                  :on-layer :scenery
-                                 :center (v3:vec 1 5 0)
+                                 :center (v3:vec 1f0 5f0 0f0)
                                  :radius 1)))
       ;; Set referent to the same component for
       (dolist (c (list c0 c1 c2 c3 c4 c5 c6))
@@ -468,22 +468,22 @@ the repl when the game is NOT running."
       (compute-all-collisions (v::collider-system core))
       (format t "Collider Pass 1: enter~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (c/col:center c4) (v3:vec -9 5 0))
+      (setf (reg:center c4) (v3:vec -9f0 5f0 0f0))
       (compute-all-collisions (v::collider-system core))
       (format t "Collider Pass 2: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (c/col:center c4) (v3:vec -10 5 0))
+      (setf (reg:center c4) (v3:vec -10f0 5f0 0f0))
       (compute-all-collisions (v::collider-system core))
       (format t "Collider Pass 2a: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (c/col:center c4) (v3:vec -11 5 0))
+      (setf (reg:center c4) (v3:vec -11f0 5f0 0f0))
       (compute-all-collisions (v::collider-system core))
       (format t "Collider Pass 2b: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (c/col:center c4) (v3:vec -12 5 0))
+      (setf (reg:center c4) (v3:vec -12f0 5f0 0f0))
       (compute-all-collisions (v::collider-system core))
       (format t "Moving enemy-bullet.~%")
-      (setf (c/col:center c4) (v3:vec -13 5 0))
+      (setf (reg:center c4) (v3:vec -13f0 5f0 0f0))
       (format t "Collider Pass 3: exit~%")
       (compute-all-collisions (v::collider-system core))
       (format t "Collider Pass 4: no colliding~%")
@@ -496,3 +496,11 @@ the repl when the game is NOT running."
       (deregister-collider context c5)
       (deregister-collider context c6)
       (v::collider-system core))))
+
+;;; Protocol methods
+
+(defmethod on-collision-enter ((self v::component) (other v::component)))
+
+(defmethod on-collision-continue ((self v::component) (other v::component)))
+
+(defmethod on-collision-exit ((self v::component) (other v::component)))

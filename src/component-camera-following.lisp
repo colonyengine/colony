@@ -7,7 +7,7 @@
    (%target-transform :reader target-transform)
    (%offset :reader offset
             :initarg :offset
-            :initform (v3:zero))))
+            :initform (v3:vec))))
 
 (defmethod camera-target-actor ((camera following-camera) actor)
   (with-slots (%target-transform) camera

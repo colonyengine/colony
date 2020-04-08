@@ -6,6 +6,8 @@
    #+sbcl #:sb-ext
    #+ccl #:ccl
    #+(or ecl abcl clasp) #:ext
+   #+lispworks #:hcl
+   #+allegro #:excl
    #:add-package-local-nickname)
   (:export #:define-nicknames))
 
@@ -15,6 +17,7 @@
   (defparameter *package-nicknames*
     '((:alexandria :a)
       (:golden-utils :u)
+      (:origin :o)
       (:origin.swizzle :~)
       (:origin.vec2 :v2)
       (:origin.vec3 :v3)
@@ -25,7 +28,6 @@
       (:origin.quat :q)
       (:verbose :log)
       (:virality.actions :action)
-      (:virality.actors :actor)
       (:virality.colliders :col)
       (:virality.components.actions :c/action)
       (:virality.components.camera :c/cam)
@@ -42,22 +44,23 @@
       (:virality.extensions.materials :x/mat)
       (:virality.extensions.textures :x/tex)
       (:virality.geometry :geo)
-      (:virality.gpu :gpu)
+      (:shadow :gpu)
       (:virality.image :img)
       (:virality.input :in)
       (:virality.materials :mat)
       (:virality.prefabs :prefab)
-      (:virality.shaders :shd)
-      (:virality.shaders.color :shd/color)
-      (:virality.shaders.graphing :shd/graph)
-      (:virality.shaders.hashing :shd/hash)
-      (:virality.shaders.noise :shd/noise)
-      (:virality.shaders.sdf :shd/sdf)
-      (:virality.shaders.shaping :shd/shape)
-      (:virality.shaders.sprite :shd/sprite)
+      (:umbra.color :shd/color)
+      (:umbra.effects :shd/fx)
+      (:umbra.graphing :shd/graph)
+      (:umbra.hashing :shd/hash)
+      (:umbra.noise :shd/noise)
+      (:umbra.sdf :shd/sdf)
+      (:umbra.shaping :shd/shape)
+      (:umbra.sprite :shd/sprite)
       (:virality.shaders.texture :shd/tex)
       (:virality.shaders.visualization :shd/vis)
-      (:virality.textures :tex))))
+      (:virality.textures :tex)
+      (:virality.region :reg))))
 
 (macrolet ((define-nicknames/internal ()
              `(progn

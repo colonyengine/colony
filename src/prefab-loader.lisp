@@ -18,7 +18,7 @@
 (defun make-actor-components (context actors)
   (let ((components (u:dict)))
     (u:do-hash-values (actor actors)
-      (u:do-hash (type table (components-table (actor::prefab-node actor)))
+      (u:do-hash (type table (components-table (v::prefab-node actor)))
         (unless (u:href components actor)
           (setf (u:href components actor) (u:dict)))
         (u:do-hash (id data table)
@@ -60,13 +60,13 @@
   (let ((parent (or parent (v::scene-tree (v::core context))))
         (root (u:href actors (path (root prefab)))))
     (u:do-hash-values (actor actors)
-      (let ((node (actor::prefab-node actor)))
+      (let ((node (v::prefab-node actor)))
         (u:do-hash-values (child (children node))
-          (c/xform:transform-add-child
+          (c/xform:add-child
            (v:component-by-type actor 'c/xform:transform)
            (v:component-by-type (u:href actors (path child))
                                 'c/xform:transform)))))
-    (c/xform:transform-add-child
+    (c/xform:add-child
      (v:component-by-type parent 'c/xform:transform)
      (v:component-by-type root 'c/xform:transform))))
 
@@ -84,11 +84,11 @@
   (destructuring-bind (name library &key ttl) spec
     (let* ((prefab (find-prefab name library))
            (actor (funcall (func prefab) core :parent parent)))
-      (v:destroy-after-time actor :ttl ttl)
+      (v:destroy actor :ttl ttl)
       actor)))
 
-(defun make-prefab-instance (core prefab-descriptor &key parent)
+(defun make-prefab-instance (core prefab-spec &key parent)
   (let (roots)
-    (dolist (spec prefab-descriptor)
+    (dolist (spec prefab-spec)
       (push (load-prefab core spec parent) roots))
     (nreverse roots)))

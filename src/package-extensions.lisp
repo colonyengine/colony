@@ -16,6 +16,7 @@
    #:u-model
    #:u-mvp
    #:u-mvpt
+   #:u-mvptr
    #:u-proj
    #:u-time
    #:u-view

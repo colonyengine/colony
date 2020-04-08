@@ -1,12 +1,6 @@
 (in-package #:virality.engine)
 
-(defgeneric destroy-after-time (thing &key ttl)
-  (:documentation "Takes either an ACTOR or a COMPONENT. The keyword argument
-:TTL supplied in real seconds, how long the thing has yet to live, with NIL
-meaning infinity."))
-
-(defun destroy (thing)
-  (destroy-after-time thing :ttl 0))
+(defvar *core-debug*)
 
 (defun type-table (key type-table)
   (u:href type-table key))
@@ -65,14 +59,11 @@ the test function for `HT` itself."
 ;;; Recompilation queue
 
 (defun recompile-queued-items (core)
-  (loop :with queue = (recompilation-queue core)
-        :for ((kind data) found-p) = (multiple-value-list (queues:qpop queue))
+  (loop :for ((kind data) found-p) = (multiple-value-list
+                                      (pop-queue core :live-recompile))
         :while found-p
         :do (ecase kind
-              ;; NOTE: Look at function GENERATE-SHADER-MODIFY-HOOK for how we
-              ;; put data into the recompilation queue that this case in the
-              ;; ecase handles.
-              (:shader-recompilation (gpu:recompile-shaders data))
-              ;; NOTE: You will need a similar one for putting prefab
-              ;; recompilation tasks into the recompilation queue too.
-              (:prefab-recompilation 'put-your-function-here))))
+              (:shader
+               (gpu:recompile-shaders data))
+              ((:texture :material)
+               (funcall data core)))))

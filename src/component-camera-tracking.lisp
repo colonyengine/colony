@@ -22,5 +22,5 @@
          (model (c/xform:model (c/cam:transform slave)))
          (eye (m4:get-translation model))
          (target (m4:get-translation (c/xform:model (target-transform self))))
-         (up (v3:vec 0 1 0)))
+         (up (v3:vec 0f0 1f0 0f0)))
     (m4:set-view! (c/cam:view slave) eye target up)))

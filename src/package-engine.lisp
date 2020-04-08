@@ -2,28 +2,30 @@
 
 (uiop:define-package #:virality.engine
   (:use #:cl)
-  (:mix-reexport #:virality.actors
-                 #:virality.colliders
-                 #:virality.geometry
-                 #:virality.materials
-                 #:virality.input
-                 #:virality.prefabs
-                 #:virality.textures)
+  (:mix-reexport
+   #:virality.colliders
+   #:virality.geometry
+   #:virality.materials
+   #:virality.input
+   #:virality.prefabs
+   #:virality.textures)
   (:export
+   #:actor
    #:context
    #:define-annotation
+   #:define-assets
    #:define-call-flow
+   #:define-config
    #:define-graph
-   #:define-options
-   #:define-resources
    #:delta
-   #:destroy-after-time
    #:destroy
    #:display-id
    #:frame-count
    #:frame-time
    #:id
-   #:option
+   #:make-actor
+   #:screen-resolution
+   #:spawn-actor
    #:start
    #:stop
    #:total-time
@@ -33,7 +35,6 @@
    #:attach-component
    #:attach-components
    #:component-by-type
-   #:components-by-type
    #:define-component
    #:make-component
    #:on-component-attach

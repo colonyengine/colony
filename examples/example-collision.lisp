@@ -7,7 +7,7 @@
 (v:define-component destroy-my-actor ()
   ((%time-to-destroy :accessor time-to-destroy
                      :initarg :time-to-destroy
-                     :initform 5)))
+                     :initform 5f0)))
 
 (defmethod v:on-collision-enter ((self destroy-my-actor) other-collider)
   (log:info :virality.examples
@@ -30,7 +30,6 @@
   (decf (time-to-destroy self) (v:frame-time (v:context self)))
   (when (<= (time-to-destroy self) 0)
     (v:destroy (v:actor self))))
-
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing getting the directions from a transform
@@ -68,12 +67,12 @@
         (log:trace :virality.examples "RIGHT Vector -> ~a" right)
         (log:trace :virality.examples "LEFT Vector -> ~a" left)
         ;; NOTE: This expects the actor to be unrotated wrt the universe.
-        (unless (and (v3:~ forward (v3:vec 0 0 -1))
-                     (v3:~ backward (v3:vec 0 0 1))
-                     (v3:~ up (v3:vec 0 1 0))
-                     (v3:~ down (v3:vec 0 -1 0))
-                     (v3:~ right (v3:vec 1 0 0))
-                     (v3:~ left (v3:vec -1 0 0)))
+        (unless (and (v3:~ forward (v3:vec 0f0 0f0 -1f0))
+                     (v3:~ backward (v3:vec 0f0 0f0 1f0))
+                     (v3:~ up (v3:vec 0f0 1f0 0f0))
+                     (v3:~ down (v3:vec 0f0 -1f0 0f0))
+                     (v3:~ right (v3:vec 1f0 0f0 0f0))
+                     (v3:~ left (v3:vec -1f0 0f0 0f0)))
           (error "The Transform Axis Direction API didn't match expectations!"))
         (setf (u:href (test-performed self) test-type) t)))))
 
@@ -87,75 +86,68 @@
       (setf (u:href (test-performed self) test-type) t))))
 
 (defun test-transform-point-api (self)
-  "Test if the TRANSFORM-POINT and INVERSE-TRANSFORM-POINT work."
+  "Test if TRANSFORM-POINT works."
   (let* ((actor (v:actor self))
          (actor-transform
            (v:component-by-type actor 'c/xform:transform))
-         (object-space-point (v3:vec 1 0 0))
-         (world-space-point (v3:vec 1 3 1))
+         (object-space-point (v3:vec 1f0 0f0 0f0))
+         (world-space-point (v3:vec 1f0 3f0 1f0))
          (local->world
            (c/xform:transform-point actor-transform
                                     object-space-point))
          (world->local
-           (c/xform:inverse-transform-point actor-transform
-                                            world-space-point)))
-
-    ;; See if transform-point and inverse-transform-point work.
+           (c/xform:transform-point actor-transform
+                                    world-space-point
+                                    :space :world)))
+    ;; See if transform-point works.
     (let ((result-0
             (v3:~ local->world world-space-point))
           (result-1
             (v3:~ world->local object-space-point)))
-
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
            :virality.examples
            "FAILED: (v3:~~ local->world:~a world-space-point: ~a) -> ~a"
            local->world world-space-point result-0))
-
         (unless result-1
           (log:error
            :virality.examples
            "FAILED: (v3:~~ world->local:~a object-space-point: ~a) -> ~a"
            world->local object-space-point result-1))
-
         (error "TRANSFORM-POINT API Failed!")))))
 
 (defun test-transform-vector-api (self)
-  "Test if the TRANSFORM-VECTOR and INVERSE-TRANSFORM-VECTOR work."
+  "Test if TRANSFORM-VECTOR works."
   (let* ((actor (v:actor self))
          (actor-transform
            (v:component-by-type actor 'c/xform:transform))
-         (object-space-vector (v3:vec 2 2 0))
-         (world-space-vector (v3:vec -4 4 0))
+         (object-space-vector (v3:vec 2f0 2f0 0f0))
+         (world-space-vector (v3:vec -4f0 4f0 0f0))
          (local->world
            (c/xform:transform-vector actor-transform
                                      object-space-vector))
          (world->local
-           (c/xform:inverse-transform-vector actor-transform
-                                             world-space-vector)))
-
-    ;; See if transform-point and inverse-transform-point work.
+           (c/xform:transform-vector actor-transform
+                                     world-space-vector
+                                     :space :world)))
+    ;; See if transform-vector works.
     (let ((result-0
             (v3:~ local->world world-space-vector))
           (result-1
             (v3:~ world->local object-space-vector)))
-
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
            :virality.examples
            "FAILED: (v3:~~ local->world:~a world-space-vector: ~a) -> ~a"
            local->world world-space-vector result-0))
-
         (unless result-1
           (log:error
            :virality.examples
            "FAILED: (v3:~~ world->local:~a object-space-vector: ~a) -> ~a"
            world->local object-space-vector result-1))
-
         (error "TRANSFORM-VECTOR API Failed!")))))
-
 
 (defun test-transform-direction-api (self)
   (let* ((actor (v:actor self))
@@ -163,36 +155,32 @@
            (v:component-by-type actor 'c/xform:transform))
          ;; NOTE: these must be normalized for the test. I specified it this way
          ;; so it would be easier to see in your mind's eye.
-         (object-space-direction (v3:normalize (v3:vec 1 1 0)))
-         (world-space-direction (v3:normalize (v3:vec -1 1 0)))
+         (object-space-direction (v3:normalize (v3:vec 1f0 1f0 0f0)))
+         (world-space-direction (v3:normalize (v3:vec -1f0 1f0 0f0)))
          (local->world
            (c/xform:transform-direction actor-transform
-                                               object-space-direction))
+                                        object-space-direction))
          (world->local
-           (c/xform:inverse-transform-direction actor-transform
-                                                       world-space-direction)))
-
-    ;; See if transform-point and inverse-transform-point work.
+           (c/xform:transform-direction actor-transform
+                                        world-space-direction
+                                        :space :world)))
+    ;; See if transform-direction works.
     (let ((result-0
             (v3:~ local->world world-space-direction))
           (result-1
             (v3:~ world->local object-space-direction)))
-
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
            :virality.examples
            "FAILED: (v3:~~ local->world:~a world-space-direction: ~a) -> ~a"
            local->world world-space-direction result-0))
-
         (unless result-1
           (log:error
            :virality.examples
            "FAILED: (v3:~~ world->local:~a object-space-direction: ~a) -> ~a"
            world->local object-space-direction result-1))
-
         (error "TRANSFORM-DIRECTION API Failed!")))))
-
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The test prefabs.
@@ -200,30 +188,30 @@
 
 (v:define-prefab "collision-smoke-test" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 6))
+   (c/cam:camera (:policy :new-args) :zoom 6f0))
   ("rot-0-center"
-   (c/xform:transform :translate (v3:vec -2 0 0)
-                      :rotate/inc (q:orient :local :z pi))
+   (c/xform:transform :translate (v3:vec -2f0 0f0 0f0)
+                      :rotate/velocity (o:make-velocity v3:+forward+ o:pi))
    ("plane-0"
-    (c/xform:transform :translate (v3:vec -2 0 0))
-    (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+    (c/xform:transform :translate (v3:vec -2f0 0f0 0f0))
+    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
     (c/col:sphere :display-id "Player"
                   :visualize t
                   :on-layer :player
-                  :center (v3:zero)
-                  :radius 1)
+                  :center (v3:vec)
+                  :radius 1f0)
     (c/render:render :material '2d-wood)))
   ("rot-1-center"
-   (c/xform:transform :translate (v3:vec 2 0 0)
-                      :rotate/inc (q:orient :local :z (- pi)))
+   (c/xform:transform :translate (v3:vec 2f0 0f0 0f0)
+                      :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi)))
    ("plane-1"
-    (c/xform:transform :translate (v3:vec 2 0 0))
-    (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+    (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
+    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
     (c/col:sphere :display-id "Enemy"
                   :visualize t
                   :on-layer :enemy
-                  :center (v3:zero)
-                  :radius 1)
+                  :center (v3:vec)
+                  :radius 1f0)
     (c/render:render :material '2d-wood))))
 
 (v:define-prefab "collision-transform-test-0" (:library examples)
@@ -238,13 +226,13 @@ unit world vector representations of the axis directions as:
   left:     (-1 0 0)
 "
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7))
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
 
   ("thingy"
    ;; NOTE: The 5 0 0 is specific to the unit-test-transform-api tests.
-   (c/xform:transform :translate (v3:vec 5 0 0))
+   (c/xform:transform :translate (v3:vec 5f0 0f0 0f0))
    (unit-test-transform-api :test-type :test-direction-vectors)
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)))
 
 (v:define-prefab "collision-transform-test-1" (:library examples)
@@ -252,21 +240,20 @@ unit world vector representations of the axis directions as:
 world space for a particular transform."
 
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7))
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
 
   ("right"
-   (c/xform:transform :translate (v3:vec 1 0 0))
+   (c/xform:transform :translate (v3:vec 1f0 0f0 0f0))
    ("up"
-    (c/xform:transform :translate (v3:vec 0 1 0))
+    (c/xform:transform :translate (v3:vec 0f0 1f0 0f0))
     ("back"
-     (c/xform:transform :translate (v3:vec 0 0 1))
+     (c/xform:transform :translate (v3:vec 0f0 0f0 1f0))
      ("mark"
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
-      (c/xform:transform :rotate (q:orient :local :z (/ pi 2))
-                         :scale 2)
+      (c/xform:transform :rotate (q:orient :local :z o:pi/2) :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
-      (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+      (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
       (c/render:render :material '2d-wood))))))
 
 
@@ -286,49 +273,49 @@ that just spawns stone prefabs so they rain down onto the ground, which should
 be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7))
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
 
   ("left-gate"
-   (c/xform:transform :translate (v3:vec -1.15 2 -.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/xform:transform :translate (v3:vec -1.15f0 2f0 -.1f0))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Left-Gate"
                  :visualize t
                  :on-layer :ground))
 
   ("right-gate"
-   (c/xform:transform :translate (v3:vec 1.15 2 -.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/xform:transform :translate (v3:vec 1.15f0 2f0 -.1f0))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Right-Gate"
                  :visualize t
                  :on-layer :ground))
 
   ("stone"
-   (c/xform:transform :translate (v3:vec 0 5 0)
-                      :scale 0.5
-                      :rotate (q:orient :local :x (/ pi 2))
-                      :rotate/inc (q:orient :local (v3:one) pi)
-                      :translate/inc (v3:vec 0 -2 0))
-   (c/smesh:static-mesh :location '(:mesh "damaged-helmet.glb"))
+   (c/xform:transform :translate (v3:vec 0f0 5f0 0f0)
+                      :scale 0.5f0
+                      :rotate (q:orient :local :x o:pi/2)
+                      :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
+                      :translate/velocity (v3:vec 0f0 -2f0 0f0))
+   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
    (c/col:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :player
                  :referent (v:ref :self
                                   :component 'destroy-my-actor)
-                 :center (v3:zero)
-                 :radius 1)
+                 :center (v3:vec)
+                 :radius 1f0)
    (c/render:render :material 'damaged-helmet))
 
   ("ground"
-   (c/xform:transform :translate (v3:vec 0 -2 0.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/xform:transform :translate (v3:vec 0f0 -2f0 0.1f0))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/col:sphere :display-id "Ground"
                  :visualize t
                  :on-layer :ground
-                 :center (v3:zero)
-                 :radius 1)
+                 :center (v3:vec)
+                 :radius 1f0)
    (c/render:render :material '2d-wood)))
 
 (v:define-prefab "collision-test-1" (:library examples)
@@ -336,58 +323,134 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 actually are. You have to view the results to see the colliders lighting up."
 
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7))
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
 
   ("upper-left"
-   (c/xform:transform :translate (v3:vec -2 2 -0.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/xform:transform :translate (v3:vec -2f0 2f0 -0.1f0))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Upper-Left"
                  :visualize t
                  :on-layer :ground))
   ("upper-right"
-   (c/xform:transform :translate (v3:vec 2 2 -0.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/xform:transform :translate (v3:vec 2f0 2f0 -0.1f0))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Upper-Right"
                  :visualize t
                  :on-layer :ground))
   ("lower-left"
-   (c/xform:transform :translate (v3:vec -2 -2 -0.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/xform:transform :translate (v3:vec -2f0 -2f0 -0.1f0))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Lower-Left"
                  :visualize t
                  :on-layer :ground))
   ("lower-right"
-   (c/xform:transform :translate (v3:vec 2 -2 -0.1))
-   (c/smesh:static-mesh :location '((:core :mesh) "plane.glb"))
+   (c/xform:transform :translate (v3:vec 2f0 -2f0 -0.1f0))
+   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Lower-Right"
                  :visualize t
                  :on-layer :ground))
   ("stone"
-   (c/xform:transform :translate (v3:zero)
-                      :scale 2
-                      :rotate (q:orient :local :x (/ pi 2))
-                      :rotate/inc (q:orient :local (v3:one) pi)
-                      :translate/inc (v3:zero))
-   (c/smesh:static-mesh :location '(:mesh "damaged-helmet.glb"))
-   (destroy-my-actor :time-to-destroy 2)
+   (c/xform:transform :translate (v3:vec)
+                      :scale 2f0
+                      :rotate (q:orient :local :x o:pi/2)
+                      :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
+                      :translate/velocity (v3:vec))
+   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+   (destroy-my-actor :time-to-destroy 2f0)
    (c/col:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :player
-                 :center (v3:zero)
-                 :radius 1)
+                 :center (v3:vec)
+                 :radius 1f0)
    (c/render:render :material 'damaged-helmet)))
 
-;;; Prefab descriptors
+(v:define-prefab "collision-test-2" (:library examples)
+  (("camera" :copy "/cameras/perspective")
+   (c/cam:camera (:policy :new-args) :zoom 7f0))
 
-(v:define-prefab-descriptor collision-smoke-test ()
-  ("collision-smoke-test" examples))
+  ("a"
+   (c/xform:transform :translate (v3:vec -5f0 0f0 0f0)
+                      :translate/velocity (v3:vec 0f0 0f0 0f0)
+                      :scale 2f0)
 
-(v:define-prefab-descriptor collision-test-0 ()
-  ("collision-test-0" examples))
+   ("stone-cuboid"
+    (c/xform:transform :scale 2f0
+                       :rotate (q:orient :local :x o:pi/2)
+                       :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
+    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+    (c/col:cuboid :display-id "Stone"
+                  :visualize t
+                  :on-layer :ground
+                  :center (v3:vec)
+                  :minx -1f0
+                  :maxx 1f0
+                  :miny -1f0
+                  :maxy 1f0
+                  :minz -1f0
+                  :maxz 1f0)
+    (c/render:render :material 'damaged-helmet)))
 
-(v:define-prefab-descriptor collision-test-1 ()
-  ("collision-test-1" examples))
+  ("b"
+   (c/xform:transform :translate (v3:vec 5f0 0f0 0f0)
+                      :translate/velocity (v3:vec 0f0 0f0 0f0)
+                      :scale 2f0)
+   ("stone-sphere"
+    (c/xform:transform :scale 2f0
+                       :rotate (q:orient :local :x o:pi/2)
+                       :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
+    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+    (c/col:sphere :display-id "Stone"
+                  :visualize t
+                  :on-layer :ground
+                  :center (v3:vec)
+                  :radius 1.25f0)
+    (c/render:render :material 'damaged-helmet))))
+
+(v:define-prefab "collision-test-3" (:library examples)
+  (("camera" :copy "/cameras/ortho")
+   (c/cam:camera (:policy :new-args) :zoom 140f0))
+
+  ("test-case-always"
+   (c/xform:transform :translate (v3:vec -2f0 0f0 0f0))
+   ("a"
+    ;; As cuboid 1 rotates it should always be hitting (red) cuboid 2 since they
+    ;; penetrate and then share a plane when both are parallel to each other.
+    (c/xform:transform :translate (v3:vec -.50f0 0f0 0f0)
+                       :translate/velocity (v3:vec 0f0 0f0 0f0))
+    ("cuboid1"
+     (c/xform:transform :rotate (q:orient :local :z o:pi/4)
+                        :rotate/velocity (o:make-velocity (v3:vec 0 0 1)
+                                                          o:pi/12))
+     (c/col:cuboid :visualize t
+                   :on-layer :ground
+                   :center (v3:vec))))
+   ("cuboid2"
+    (c/xform:transform :translate (v3:vec 0.5f0 0f0 0f0))
+    (c/col:cuboid :visualize t
+                  :on-layer :ground
+                  :center (v3:vec))))
+
+  ("test-case-gap"
+   (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
+   ("a"
+    ;; As cuboid 1 rotates, when they become parallel, there will be a slight
+    ;; gap and so both should turn green to represent no collision during that
+    ;; small gap.
+    (c/xform:transform :translate (v3:vec -.51f0 0f0 0f0)
+                       :translate/velocity (v3:vec 0f0 0f0 0f0))
+    ("cuboid1"
+     (c/xform:transform :rotate (q:orient :local :z o:pi/4)
+                        :rotate/velocity (o:make-velocity (v3:vec 0 0 1)
+                                                          o:pi/12))
+     (c/col:cuboid :visualize t
+                   :on-layer :ground
+                   :center (v3:vec))))
+   ("cuboid2"
+    (c/xform:transform :translate (v3:vec 0.5f0 0f0 0f0))
+    (c/col:cuboid :visualize t
+                  :on-layer :ground
+                  :center (v3:vec)))))

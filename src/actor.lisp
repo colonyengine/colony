@@ -1,24 +1,18 @@
-(in-package #:virality.actors)
+(in-package #:virality.engine)
 
-(defclass actor (v::queryable)
-  ((%state :accessor state
-           :initarg :state
-           :initform :initialize)
-   (%components :reader components
+(defclass actor (kernel)
+  ((%components :reader components
                 :initform (u:dict))
-   (%components-by-type :reader components-by-type
+   (%components-by-type :reader %components-by-type
                         :initform (u:dict))
    (%prefab-node :reader prefab-node
                  :initarg :prefab-node
-                 :initform nil)
-   (%ttl :accessor ttl
-         :initarg :ttl
-         :initform 0)))
+                 :initform nil)))
 
 (defun make-actor (context &rest args &key &allow-other-keys)
   (let ((actor (apply #'make-instance 'actor :context context args)))
-    (v::register-object-uuid actor)
-    (v::register-object-id actor)
+    (register-kernel-uuid actor)
+    (register-kernel-id actor)
     actor))
 
 (defun spawn-actor (actor &key (parent :universe))
@@ -27,97 +21,81 @@ The actor is not yet in the scene and the main loop protocol will not be called
 on it or its components. If keyword argument :PARENT is supplied it is an actor
 reference which will be the parent of the spawning actor. It defaults to
 :universe, which means make this actor a child of the universe actor."
-  (let ((core (v::core (v:context actor)))
-        (transform (v:component-by-type actor 'c/xform:transform)))
+  (let* ((core (core actor))
+         (tables (tables core))
+         (transform (component-by-type actor 'c/xform:transform)))
     (cond
       ((eq parent :universe)
        (unless (c/xform::parent transform)
-         (c/xform:transform-add-child
-          (v:component-by-type (v::scene-tree core) 'c/xform:transform)
-          (v:component-by-type actor 'c/xform:transform))))
+         (c/xform:add-child
+          (component-by-type (scene-tree core) 'c/xform:transform)
+          (component-by-type actor 'c/xform:transform))))
       ((typep parent 'actor)
-       (c/xform:transform-add-child
-        (v:component-by-type parent 'c/xform:transform)
-        (v:component-by-type actor 'c/xform:transform)))
+       (c/xform:add-child
+        (component-by-type parent 'c/xform:transform)
+        (component-by-type actor 'c/xform:transform)))
       ((null parent)
        (u:noop))
       (t
        (error "Cannot parent actor ~s to unknown parent ~s" actor parent)))
-    (setf (u:href (v::actor-preinit-db (v::tables core)) actor) actor)
+    (setf (u:href (actor-preinit-db tables) actor) actor)
     (u:do-hash-values (v (components actor))
-      (setf (v::type-table (v::canonicalize-component-type
-                            (v::component-type v) core)
-                           (v::component-preinit-by-type-view (v::tables core)))
+      (setf (type-table (canonicalize-component-type (component-type v) core)
+                        (component-preinit-by-type-view tables))
             v))))
 
-(defun preinit->init (actor)
-  (let ((tables (v::tables (v::core (v:context actor)))))
-    (remhash actor (v::actor-preinit-db tables))
-    (setf (u:href (v::actor-init-db tables) actor) actor)))
+(defun actor/preinit->init (actor)
+  (let ((tables (tables (core actor))))
+    (remhash actor (actor-preinit-db tables))
+    (setf (u:href (actor-init-db tables) actor) actor)))
 
-(defun init->active (actor)
-  (let ((tables (v::tables (v::core (v:context actor)))))
-    (remhash actor (v::actor-init-db tables))
+(defun actor/init->active (actor)
+  (let ((tables (tables (core actor))))
+    (remhash actor (actor-init-db tables))
     (setf (state actor) :active
-          (u:href (v::actor-active-db tables) actor) actor)))
+          (u:href (actor-active-db tables) actor) actor)))
 
-(defmethod v:destroy-after-time ((thing actor) &key (ttl 0))
-  (let* ((core (v::core (v:context thing)))
-         (table (v::actor-predestroy-view (v::tables core))))
-    (when (eq thing (v::scene-tree core))
-      (error "Cannot destroy the scene tree root."))
-    ;; TODO: this needs fixing because TTL is never nil
-    (setf (ttl thing) (and ttl (max 0 ttl)))
-    ;; TODO: Same for this
-    (if ttl
-        (setf (u:href table thing) thing)
-        ;; If the TTL is stopped, we want to remove the actor from the
-        ;; pre-destroy view!
-        (remhash thing table))))
-
-(defun init-or-active->destroy (actor)
+(defun actor/init-or-active->destroy (actor)
   ;; TODO: A different logic error (that of a destroyed object not having its
   ;; components also destroyed), and a destroyed object being destroyed
   ;; twice--which is legal but not explicitly handled) caused this UNLESS to be
   ;; here. Replace with new flow.
-  (unless (eq (state actor) :destroy)
-    (let* ((core (v::core (v:context actor)))
-           (tables (v::tables core)))
-      (unless (plusp (ttl actor))
-        (setf (u:href (v::actor-destroy-db tables) actor) actor
-              (state actor) :destroy)
-        (remhash actor (v::actor-predestroy-view tables))
-        (unless (remhash actor (v::actor-active-db tables))
-          (remhash actor (v::actor-preinit-db tables)))
-        (u:do-hash-values (v (components actor))
-          (setf (v::ttl v) 0)
-          (v::enqueue-detach-event v actor)
-          (v::component/init-or-active->destroy v))))))
+  (unless (or (eq (state actor) :destroy)
+              (plusp (ttl actor)))
+    (let ((tables (tables (core actor))))
+      (setf (u:href (actor-destroy-db tables) actor) actor
+            (state actor) :destroy)
+      (remhash actor (actor-predestroy-view tables))
+      (unless (remhash actor (actor-active-db tables))
+        (remhash actor (actor-preinit-db tables)))
+      (u:do-hash-values (v (components actor))
+        (setf (ttl v) 0)
+        (enqueue-detach-event v actor)
+        (component/init-or-active->destroy v)))))
 
-(defun destroy-descendants (actor)
+(defun actor/destroy-descendants (actor)
   (flet ((destroy-actor (actor)
            (setf (ttl actor) 0)
-           (init-or-active->destroy actor)
-           (v::deregister-object-uuid actor)
-           (v::deregister-object-id actor)))
+           (actor/init-or-active->destroy actor)
+           (deregister-kernel-uuid actor)
+           (deregister-kernel-id actor)))
     (when actor
       (c/xform::map-nodes
        (lambda (x) (destroy-actor (actor x)))
-       (v:component-by-type actor 'c/xform:transform)))))
+       (component-by-type actor 'c/xform:transform)))))
 
-(defun disconnect (actor)
-  (when (eq (v:id actor) 'universe)
+(defun actor/disconnect (actor)
+  (when (eq (id actor) 'universe)
     (error "Cannot disconnect the top-level universe node."))
-  (let ((actor-transform (v:component-by-type actor 'c/xform:transform)))
-    (c/xform:transform-remove-child (c/xform::parent actor-transform)
-                                    actor-transform)))
+  (let ((transform (component-by-type actor 'c/xform:transform)))
+    (c/xform:remove-child (c/xform::parent transform) transform)))
 
-(defun destroy->released (actor)
-  (let ((core (v::core (v:context actor))))
+(defun actor/destroy->released (actor)
+  (let ((core (core actor)))
     (unless (zerop (hash-table-count (components actor)))
       (error "Destroyed actor still has components."))
-    (remhash actor (v::actor-destroy-db (v::tables core)))))
+    (remhash actor (actor-destroy-db (tables core)))))
 
-(defun countdown-to-destruction (actor)
+(defun actor/countdown-to-destruction (actor)
   (when (plusp (ttl actor))
-    (decf (ttl actor) (v:frame-time (v:context actor)))))
+    (decf (ttl actor) (frame-time (context actor)))))
