@@ -32,7 +32,6 @@
                        :period-interval period-interval
                        :debug-interval debug-interval))))
 
-(declaim (ftype (function () double-float) get-time))
 (defun get-time ()
   #+sbcl
   (u:mvlet ((s ms (sb-ext:get-time-of-day)))
@@ -47,21 +46,17 @@
           (clock-current-time clock) time)))
 
 (defun smooth-delta-time (clock refresh-rate)
-  (declare (optimize speed (safety 0))
-           (double-float refresh-rate))
   (symbol-macrolet ((frame-time (clock-frame-time clock))
                     (buffer (clock-delta-buffer clock)))
     (incf frame-time buffer)
     (let ((frame-count
-            (locally (declare (optimize (speed 1)))
-              (max 1d0 (ftruncate (+ 1d0 (* frame-time refresh-rate))))))
+            (max 1d0 (ftruncate (+ 1d0 (* frame-time refresh-rate)))))
           (previous frame-time))
       (setf frame-time (/ frame-count refresh-rate)
             buffer (- previous frame-time))
       nil)))
 
 (defun calculate-frame-rate (clock)
-  (declare (optimize speed (safety 0)))
   (symbol-macrolet ((debug-time (clock-debug-time clock))
                     (debug-interval (clock-debug-interval clock))
                     (debug-count (clock-debug-count clock)))
@@ -70,20 +65,17 @@
            (fps (/ debug-count debug-interval)))
       (when (and (>= elapsed debug-interval)
                  (plusp fps))
-        (locally (declare (optimize (speed 1)))
-          (log:info :virality.engine "Frame rate: ~,2f fps / ~,3f ms/f"
-                    fps (/ 1000 fps)))
+        (log:info :virality.engine "Frame rate: ~,2f fps / ~,3f ms/f"
+                    fps (/ 1000 fps))
         (setf debug-count 0d0
               debug-time current-time))
       (incf debug-count)
       nil)))
 
 (defun clock-physics-update (core clock)
-  (declare (optimize speed (safety 0)))
   (symbol-macrolet ((accumulator (clock-accumulator clock))
                     (delta (clock-delta-time clock)))
     (incf accumulator (clock-frame-time clock))
-
     (flet ((do-physics-update ()
              (execute-flow core
                            :default
@@ -118,23 +110,19 @@
       (setf (clock-interpolation-factor clock) (/ accumulator delta))
       nil)))
 
-(declaim (ftype (function (clock) null) clock-periodic-update))
 (defun clock-periodic-update (clock)
-  (declare (optimize speed (safety 0)))
   (symbol-macrolet ((current (clock-current-time clock))
                     (elapsed (clock-period-elapsed clock)))
     (let ((period-interval (clock-period-interval clock)))
       (when (>= (- current elapsed) period-interval)
         (update-repl)
-        (locally (declare (optimize (speed 1)))
-          (log:trace :virality.engine
+        (log:trace :virality.engine
                      "Periodic update performed (every ~d seconds)"
-                     period-interval))
+                     period-interval)
         (setf elapsed current)))
     nil))
 
 (defun clock-tick (core)
-  (declare (optimize speed (safety 0)))
   (let ((display (display core))
         (clock (clock core)))
     (symbol-macrolet ((previous (clock-previous-time clock))
@@ -146,7 +134,7 @@
             (clock-frame-time clock) (- current previous)
             (clock-total-time clock) (- current start)
             pause 0d0)
-      (when (vsync-p display)
+      (when =vsync=
         (smooth-delta-time clock (refresh-rate display)))
       (clock-physics-update core clock)
       (clock-periodic-update clock)
