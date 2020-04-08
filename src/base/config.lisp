@@ -32,17 +32,18 @@
                    (u:hash-merge =meta/config/default= (u:dict ,@body)))))))
 
 (define-config :virality.engine ()
-  :title "Virality Engine"
-  :window-width 800
-  :window-height 450
+  :allow-screensaver nil
+  :anti-alias-level 4
   :delta 1/30
-  :vsync :on
-  :period-interval 0.25
   :debug-interval 5
+  :initial-scene nil
+  :log-level :debug
   :log-repl-enabled t
   :log-repl-categories '(:virality)
-  :log-level :debug
-  :anti-alias-level 4
   :opengl-version "4.3"
-  :initial-scene nil
-  :threads 4)
+  :period-interval 0.25
+  :threads 4
+  :vsync t
+  :window-height 450
+  :window-width 800
+  :window-title "Virality Engine")

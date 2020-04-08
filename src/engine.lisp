@@ -44,31 +44,17 @@ last invocations of any component protocol method, but before any engine
 tear-down procedure occurs when stopping the engine."
   (epilogue (context core)))
 
-(defun initialize-host (core)
-  (let ((flags '(:everything)))
-    (unless (apply #'sdl2:was-init flags)
-      (let ((flags (autowrap:mask-apply 'sdl2::sdl-init-flags flags)))
-        (sdl2::check-rc (sdl2::sdl-init flags))))
-    (prepare-gamepads core)
-    (make-display core)))
-
-(defun shutdown-host (core)
-  (let ((display (display core)))
-    (shutdown-gamepads core)
-    (sdl2:gl-delete-context (gl-context display))
-    (sdl2:destroy-window (window display))
-    (sdl2::sdl-quit)))
-
 (defun load-initial-scene (core scene-name)
   (let ((scene-name (or scene-name v:=initial-scene=)))
     (make-prefab-instance core scene-name)))
 
 (defun initialize-engine (core scene-name)
-  (log:info :virality.engine "Starting up ~a..." v:=title=)
+  (log:info :virality.engine "Starting up ~a..." v:=window-title=)
   (setup-repl)
   (enable-logging core)
+  (make-display core)
+  (prepare-gamepads core)
   (make-clock core)
-  (initialize-host core)
   (initialize-shaders core)
   (make-input-data core)
   (load-hardware-info)
@@ -80,7 +66,7 @@ tear-down procedure occurs when stopping the engine."
   (col::initialize-collider-system core)
   (make-scene-tree core)
   (load-initial-scene core scene-name)
-  (log:info :virality.engine "Finished starting ~a" v:=title=))
+  (log:info :virality.engine "Finished starting ~a" v:=window-title=))
 
 (defun iterate-main-loop (core)
   (with-continuable "Virality Engine"
@@ -114,10 +100,11 @@ the last step, before finally starting the main game loop."
 (defun stop (core)
   "Stop the engine, making sure to call any user-defined epilogue function
 first, and finally cleaning up."
-  (log:info :virality.engine "Shutting down ~a..." v:=title=)
+  (log:info :virality.engine "Shutting down ~a..." v:=window-title=)
   (run-epilogue core)
   (gpu:unload-shaders)
-  (shutdown-host core)
+  (kill-display core)
+  (shutdown-gamepads core)
   (setf (running-p core) nil)
   (makunbound '*core-debug*)
-  (log:info :virality.engine "Successfully shut down ~a" v:=title=))
+  (log:info :virality.engine "Successfully shut down ~a" v:=window-title=))

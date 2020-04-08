@@ -94,7 +94,6 @@
    (:file "shared-storage")
    (:file "kernel")
    (:file "annotations")
-   (:file "display")
    (:file "shaders")
    (:file "region")
    (:file "bounding-volume-obb")
@@ -140,7 +139,8 @@
    (:file "prefab")
    (:module "core"
     :components
-    ((:file "opengl")))
+    ((:file "opengl")
+     (:file "display")))
    (:file "core-state")
    (:file "engine")
 

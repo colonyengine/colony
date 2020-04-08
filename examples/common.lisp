@@ -3,7 +3,6 @@
 (v:define-config :virality.examples ()
   :window-width 1280
   :window-height 720
-  :vsync :on
   :delta (float 1/120 1f0)
   :initial-scene '(("geometric-volumes" examples)))
 
