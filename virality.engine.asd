@@ -49,7 +49,7 @@
    (:file "package-textures")
    (:file "package-engine")
    (:file "package-nicknames")
-   (:module "base"
+   (:module "core-early"
     :components
     ((:file "general")
      (:file "metadata")
@@ -100,7 +100,6 @@
    (:file "action-fade")
    (:file "action-rotate")
    (:file "action-sprite-animate")
-   (:file "free-look-state")
    (:file "texture-common")
    (:file "texture")
    (:file "texture-1d")
@@ -113,7 +112,6 @@
    (:file "texture-rectangle")
    (:file "texture-buffer")
    (:file "materials")
-   (:file "transform-state")
    (:module "components"
     :components
     ((:file "transform")
@@ -136,14 +134,16 @@
      (:file "loader")
      (:file "reference")
      (:file "prefab")))
-   (:module "core"
+   (:module "core-late"
     :components
     ((:file "opengl")
      (:file "display")
      (:file "image")
      (:file "image-png")
      (:file "image-hdr")
-     (:file "transform-protocol")))
+     (:file "transform-state")
+     (:file "transform-protocol")
+     (:file "free-look-state")))
    (:file "core-state")
    (:file "engine")
 
