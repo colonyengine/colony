@@ -50,6 +50,9 @@
    (:file "package-textures")
    (:file "package-engine")
    (:file "package-nicknames")
+   (:module "base"
+    :components
+    ((:file "general")))
    (:file "common")
    (:file "metadata")
    (:file "config")

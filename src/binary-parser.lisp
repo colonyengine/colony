@@ -10,11 +10,6 @@
                     end)))
     (- index start)))
 
-(defun split-string (string delimiter)
-  (let ((pos (position delimiter string)))
-    (list (subseq string 0 pos)
-          (subseq string (1+ pos)))))
-
 (defun octets= (octet-vector octet-list)
   (equalp octet-vector (fast-io:octets-from octet-list)))
 

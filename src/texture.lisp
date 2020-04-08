@@ -123,10 +123,9 @@ NOTE: These are already in the RCACHE."
     ;; Then copy over the attributes, we support SIMPLE values such as: string,
     ;; array, list, vector, and symbol.
     (u:do-hash (key value (attributes texdesc))
-      (setf (u:href (attributes new-texdesc) key) (v::copy-thing value)))
+      (setf (u:href (attributes new-texdesc) key) (v::copy value)))
     (u:do-hash (key value (applied-attributes texdesc))
-      (setf (u:href (applied-attributes new-texdesc) key)
-            (v::copy-thing value)))
+      (setf (u:href (applied-attributes new-texdesc) key) (v::copy value)))
     new-texdesc))
 
 ;; The texture descriptor as read from the define-texture DSL form. This records

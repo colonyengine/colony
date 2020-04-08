@@ -370,7 +370,7 @@ corresponding in order to the input."
 (defun gen-default-copy/sem->com ()
   (lambda (semantic-value context mat)
     (declare (ignore context mat))
-    (v::copy-thing semantic-value)))
+    (v::copy semantic-value)))
 
 (defun identity/for-material-custom-functions (semval context material)
   "This is effectively IDENTITY in that it returns SEMVAL unchanged, but accepts
