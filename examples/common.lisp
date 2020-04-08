@@ -20,7 +20,7 @@
   :cubemap (:texture-example "cube-map")
   :cubemaparray (:texture-example "cube-map-array")
   :playground-tex (:tex "example-playground")
-  :spritesheet (:tex "sprite/sprites.tiff")
+  :spritesheet (:tex "sprite/sprites.png")
   :spritesheet-data (:data "sprites.spec")
   :damaged-helmet-textures (:tex "damaged-helmet")
   :ptp-tex (:tex "protect-the-planets"))

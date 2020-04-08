@@ -24,8 +24,8 @@
          (num-mipmaps (length all-layers)))
     ;; Figure out the ideal mipmap count from the base resolution.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
-        (compute-mipmap-levels (img:width first-image)
-                               (img:height first-image))
+        (compute-mipmap-levels (v::width first-image)
+                               (v::height first-image))
       ;; TODO: Fix this call for arrays
       #++(validate-mipmap-images images texture
                                  expected-mipmaps expected-resolutions)
@@ -36,19 +36,19 @@
         (if immutable-p
             (%gl:tex-storage-2d texture-type
                                 num-mipmaps-to-generate
-                                (img:internal-format first-image)
-                                (img:width first-image)
+                                (v::internal-format first-image)
+                                (v::width first-image)
                                 num-layers)
             (loop :for i :below num-mipmaps-to-generate
                   :for mipmap-resolution :in expected-resolutions
                   :do (gl:tex-image-2d texture-type
                                        (+ texture-base-level i)
-                                       (img:internal-format first-image)
+                                       (v::internal-format first-image)
                                        (first mipmap-resolution)
                                        num-layers
                                        0
-                                       (img:pixel-format first-image)
-                                       (img:pixel-type first-image)
+                                       (v::pixel-format first-image)
+                                       (v::pixel-type first-image)
                                        (cffi:null-pointer)))))
       ;; Upload all of the mipmap images into the texture ram.
       ;; TODO: Make this higher order.
@@ -62,12 +62,10 @@
                    level
                    0
                    i
-                   (img:width image)
+                   (v::width image)
                    1
-                   (img:pixel-format image)
-                   (img:pixel-type image)
-                   (img:data (aref (aref all-layers idx) i)))))
-      ;; And clean up main memory.
-      (free-mipmap-images all-layers :1d-array)
+                   (v::pixel-format image)
+                   (v::pixel-type image)
+                   (v::data (aref (aref all-layers idx) i)))))
       ;; Determine if opengl should generate the mipmaps.
       (potentially-autogenerate-mipmaps texture-type texture))))

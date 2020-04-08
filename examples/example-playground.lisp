@@ -3,7 +3,7 @@
 ;;; Textures
 
 (v:define-texture art5/texture (:texture-2d)
-  (:data #((:playground-tex "city.tiff"))))
+  (:data #((:playground-tex "city.png"))))
 
 ;;; Materials
 

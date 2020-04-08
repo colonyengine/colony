@@ -24,10 +24,9 @@
                #:jsown
                #:lparallel
                #:origin
-               #:pngload
+               #:pngload-fast
                #:queues.simple-cqueue
                #:sdl2
-               #:sdl2-image
                #:shadow
                #:split-sequence
                #:static-vectors
@@ -44,7 +43,6 @@
    (:file "package-components")
    (:file "package-extensions")
    (:file "package-geometry")
-   (:file "package-image")
    (:file "package-materials")
    (:file "package-prefab")
    (:file "package-shader")
@@ -103,9 +101,6 @@
    (:file "action-rotate")
    (:file "action-sprite-animate")
    (:file "free-look-state")
-   (:file "image")
-   (:file "image-pngload")
-   (:file "image-sdl2")
    (:file "texture-common")
    (:file "texture")
    (:file "texture-1d")
@@ -140,7 +135,10 @@
    (:module "core"
     :components
     ((:file "opengl")
-     (:file "display")))
+     (:file "display")
+     (:file "image")
+     (:file "image-png")
+     (:file "image-hdr")))
    (:file "core-state")
    (:file "engine")
 

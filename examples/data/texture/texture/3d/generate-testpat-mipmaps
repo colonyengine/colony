@@ -26,9 +26,9 @@ M1="mip_1"
 M2="mip_2"
 M3="mip_3"
 
-SUFFIX="tiff"
+SUFFIX="png"
 
-XARGS="-compress Zip -format tiff"
+XARGS="-compress Zip -format png"
 RESIZE="-resize 50%"
 
 # Note: We don't touch the mip_0 images, we just read from them.

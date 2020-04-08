@@ -45,7 +45,6 @@
       (:virality.extensions.textures :x/tex)
       (:virality.geometry :geo)
       (:shadow :gpu)
-      (:virality.image :img)
       (:virality.materials :mat)
       (:virality.prefabs :prefab)
       (:umbra.color :shd/color)

@@ -205,17 +205,17 @@ TEXTURE-TYPE into the texture memory."))
   "Read the images described in the mipmap location array DATA into main memory.
 If USE-MIPMAPS-P is true, then load all of the mipmaps, otherwise only load the
 base image, which is the first one in the array. CONTEXT is the core context
-slot value. Return a vector of image structure from the function IMG:READ-IMAGE.
+slot value. Return a vector of image structure from the function V:LOAD-IMAGE.
 If KIND is :1d or :2d, then DATA must be an array of location descriptors like:
-#((:project \"a/b/c/foo.tiff\") (:local \"a/b/c/foo.tiff\")) If KIND is
-:1d-array, :2d-array, :3d, then DATA must be an array of slices of mipmap
-images: #(#((:project \"a/b/c/slice0-mip0.tiff\") (:local
-\"a/b/c/slice1-mip0.tiff\"))) The same vector structure is returned but with the
-local descriptor lists replaced by actual IMAGE instances of the loaded images."
+#((:project \"a/b/c/foo.png\") (:local \"a/b/c/foo.png\")) If KIND is :1d-array,
+:2d-array, :3d, then DATA must be an array of slices of mipmap images:
+#(#((:project \"a/b/c/slice0-mip0.png\") (:local \"a/b/c/slice1-mip0.png\")))
+The same vector structure is returned but with the local descriptor lists
+replaced by actual IMAGE instances of the loaded images."
   (flet ((read-image-contextually (asset)
            (let* ((asset (a:ensure-list asset))
                   (path (apply #'v::find-asset context asset)))
-             (img:read-image path)))
+             (v::load-image path)))
          (process-cube-map-mipmaps (cube-data choice-func)
            ;; Process only one cube map right now... when this works, edit it to
            ;; process many cube maps.
@@ -272,20 +272,6 @@ local descriptor lists replaced by actual IMAGE instances of the loaded images."
                      (map 'vector #'read-image-contextually
                           (vector (aref x 0))))))
                 data))))))
-
-(defun free-mipmap-images (images kind)
-  "Free all main memory associated with the vector of image objects in IMAGES."
-  (loop :for potential-image :across images
-        :do (ecase kind
-              ((:1d :2d)
-               (img:free-storage potential-image))
-              ((:1d-array :2d-array :3d)
-               (loop :for actual-image :across potential-image
-                     :do (img:free-storage actual-image)))
-              ((:cube-map :cube-map-array)
-               (loop :for face :across potential-image
-                     :do (loop :for actual-image :across (second face)
-                               :do (img:free-storage actual-image)))))))
 
 (defun validate-mipmap-images (images texture expected-mipmaps
                                expected-resolutions)

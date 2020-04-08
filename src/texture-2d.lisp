@@ -19,7 +19,7 @@
       (loop :with max-size = v::=max-texture-size=
             :for image :across images
             :for location :across data
-            :do (when (> (max (img:height image) (img:width image))
+            :do (when (> (max (v::height image) (v::width image))
                          max-size)
                   (error "Image ~a for texture ~a is too big to be loaded onto ~
                           this card. Max resolution is ~a in either dimension."
@@ -28,8 +28,8 @@
                          max-size)))
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
-          (compute-mipmap-levels (img:width (aref images 0))
-                                 (img:height (aref images 0)))
+          (compute-mipmap-levels (v::width (aref images 0))
+                                 (v::height (aref images 0)))
         (validate-mipmap-images
          images texture expected-mipmaps expected-resolutions)
         (potentially-degrade-texture-min-filter texture)
@@ -38,9 +38,9 @@
           (let ((num-mipmaps-to-generate
                   (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
             (%gl:tex-storage-2d texture-type num-mipmaps-to-generate
-                                (img:internal-format (aref images 0))
-                                (img:width (aref images 0))
-                                (img:height (aref images 0)))))
+                                (v::internal-format (aref images 0))
+                                (v::width (aref images 0))
+                                (v::height (aref images 0)))))
         ;; Upload all of the mipmap images into the texture ram.
         ;; TODO: Make this higher order.
         (loop :for idx :below (if use-mipmaps-p (length images) 1)
@@ -52,23 +52,20 @@
                        level
                        0
                        0
-                       (img:width image)
-                       (img:height image)
-                       (img:pixel-format image)
-                       (img:pixel-type image)
-                       (img:data image))
+                       (v::width image)
+                       (v::height image)
+                       (v::pixel-format image)
+                       (v::pixel-type image)
+                       (v::data image))
                       (gl:tex-image-2d
                        texture-type
                        level
-                       (img:internal-format image)
-                       (img:width image)
-                       (img:height image)
+                       (v::internal-format image)
+                       (v::width image)
+                       (v::height image)
                        0
-                       (img:pixel-format image)
-                       (img:pixel-type image)
-                       (img:data image))))
-        ;; And clean up main memory.
-        ;; TODO: For procedural textures, this needs evolution.
-        (free-mipmap-images images :2d)
+                       (v::pixel-format image)
+                       (v::pixel-type image)
+                       (v::data image))))
         ;; Determine if opengl should generate the mipmaps.
         (potentially-autogenerate-mipmaps texture-type texture)))))

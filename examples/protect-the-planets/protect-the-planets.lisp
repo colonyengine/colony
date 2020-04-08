@@ -118,26 +118,26 @@
 ;; https://web.archive.org/web/20180723233810/http://webtreats.mysitemyway.com/terms-of-use/
 ;; Which says it can be used for any purpose.
 (v:define-texture starfield (:texture-2d)
-  (:data #((:ptp-tex "starfield.tiff"))))
+  (:data #((:ptp-tex "starfield.png"))))
 
 ;; These two textures were created by Pixel_Outlaw for use in this game.
 (v:define-texture warning-wave (:texture-2d)
-  (:data #((:ptp-tex "warning-wave.tiff"))))
+  (:data #((:ptp-tex "warning-wave.png"))))
 
 (v:define-texture warning-mothership (:texture-2d)
-  (:data #((:ptp-tex "warning-mothership.tiff"))))
+  (:data #((:ptp-tex "warning-mothership.png"))))
 
 (v:define-texture game-over (:texture-2d)
-  (:data #((:ptp-tex "game-over.tiff"))))
+  (:data #((:ptp-tex "game-over.png"))))
 
 (v:define-texture title (:texture-2d)
-  (:data #((:ptp-tex "title.tiff"))))
+  (:data #((:ptp-tex "title.png"))))
 
 (v:define-texture level-complete (:texture-2d)
-  (:data #((:ptp-tex "level-complete.tiff"))))
+  (:data #((:ptp-tex "level-complete.png"))))
 
 (v:define-texture white (:texture-2d x/tex:clamp-all-edges)
-  (:data #((:ptp-tex "white.tiff"))))
+  (:data #((:ptp-tex "white.png"))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Materials

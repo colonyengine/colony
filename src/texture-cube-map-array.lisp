@@ -24,8 +24,8 @@
     ;; Figure out the ideal mipmap count from the base resolution.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
         ;; TODO: This might need work with cube-maps.
-        (compute-mipmap-levels (img:width first-image)
-                               (img:height first-image))
+        (compute-mipmap-levels (v::width first-image)
+                               (v::height first-image))
       (declare (ignore expected-resolutions))
       ;; TODO: Fix this up for cube-maps
       #++(validate-mipmap-images images texture
@@ -41,15 +41,15 @@
                       width = ~a, height = ~a, depth = ~a~%"
                      texture-type
                      num-mipmaps-to-generate
-                     (img:internal-format first-image)
-                     (img:width first-image)
-                     (img:height first-image)
+                     (v::internal-format first-image)
+                     (v::width first-image)
+                     (v::height first-image)
                      (* (length data) 6))
           (%gl:tex-storage-3d texture-type
                               num-mipmaps-to-generate
-                              (img:internal-format first-image)
-                              (img:width first-image)
-                              (img:height first-image)
+                              (v::internal-format first-image)
+                              (v::width first-image)
+                              (v::height first-image)
                               ;; For this target, we need number of layer-face,
                               ;; not number of layer like in cube-maps!
                               (* (length data) 6))))
@@ -74,22 +74,21 @@
                                      0
                                      (+ (* cube-idx 6)
                                         face-idx)
-                                     (img:width image)
-                                     (img:height image)
+                                     (v::width image)
+                                     (v::height image)
                                      1
-                                     (img:pixel-format image)
-                                     (img:pixel-type image)
-                                     (img:data image))
+                                     (v::pixel-format image)
+                                     (v::pixel-type image)
+                                     (v::data image))
                                     (gl:tex-image-3d
                                      texture-type
                                      level
-                                     (img:internal-format image)
-                                     (img:width image)
-                                     (img:height image)
+                                     (v::internal-format image)
+                                     (v::width image)
+                                     (v::height image)
                                      (+ (* cube-idx 6) face-idx)
                                      0
-                                     (img:pixel-format image)
-                                     (img:pixel-type image)
-                                     (img:data image))))))))
-      (free-mipmap-images images :cube-map-array)
+                                     (v::pixel-format image)
+                                     (v::pixel-type image)
+                                     (v::data image))))))))
       (potentially-autogenerate-mipmaps texture-type texture))))

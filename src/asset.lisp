@@ -102,4 +102,4 @@
   :mesh (:data "mesh")
   :texture (:data "texture")
   :gamepad-db (:data "gamepad-db.txt")
-  :debug-tex (:texture "debug.tiff"))
+  :debug-tex (:texture "debug.png"))

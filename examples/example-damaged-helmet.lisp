@@ -3,19 +3,19 @@
 ;;; Textures
 
 (v:define-texture damaged-helmet/metallic-roughness (:texture-2d)
-  (:data #((:damaged-helmet-textures "metal-roughness.tiff"))))
+  (:data #((:damaged-helmet-textures "metal-roughness.png"))))
 
 (v:define-texture damaged-helmet/color (:texture-2d)
-  (:data #((:damaged-helmet-textures "albedo.tiff"))))
+  (:data #((:damaged-helmet-textures "albedo.png"))))
 
 (v:define-texture damaged-helmet/normal (:texture-2d)
-  (:data #((:damaged-helmet-textures "normal.tiff"))))
+  (:data #((:damaged-helmet-textures "normal.png"))))
 
 (v:define-texture damaged-helmet/ambient-occlusion (:texture-2d)
-  (:data #((:damaged-helmet-textures "ao.tiff"))))
+  (:data #((:damaged-helmet-textures "ao.png"))))
 
 (v:define-texture damaged-helmet/emissive (:texture-2d)
-  (:data #((:damaged-helmet-textures "emissive.tiff"))))
+  (:data #((:damaged-helmet-textures "emissive.png"))))
 
 ;;; Materials
 
