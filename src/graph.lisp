@@ -491,16 +491,12 @@ return it, otherwise return the unknown-type-id symbol."
 (defmacro define-graph (&whole form name (&key category depends-on roots)
                         &body body)
   (declare (ignore category depends-on roots body))
-  (a:with-gensyms (definitions)
-    `(symbol-macrolet ((,definitions (meta 'graphs)))
-       (unless ,definitions
-         (setf ,definitions (u:dict)))
-       (setf (u:href ,definitions ',name) ',(cdr form)))))
+  `(setf (u:href =meta/graphs= ',name) ',(cdr form)))
 
 (defun load-graphs (core)
   (with-slots (%analyzed-graphs) core
     (setf %analyzed-graphs (u:dict))
-    (u:do-hash-values (graph-code (meta 'graphs))
+    (u:do-hash-values (graph-code =meta/graphs=)
       (destructuring-bind (name (&key category depends-on roots) . body)
           graph-code
         (symbol-macrolet ((graph (u:href %analyzed-graphs category)))

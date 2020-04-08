@@ -93,12 +93,9 @@
     table))
 
 (defmacro define-assets (project &body body)
-  (let ((assets '(meta 'assets)))
-    `(progn
-       (check-asset-project-name ',project)
-       (unless ,assets
-         (setf ,assets (u:dict)))
-       (setf (u:href ,assets ,project) (make-asset-table ',body)))))
+  `(progn
+     (check-asset-project-name ',project)
+     (setf (u:href =meta/assets= ,project) (make-asset-table ',body))))
 
 (define-assets :virality.engine
   :data "data"

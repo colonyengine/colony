@@ -237,13 +237,8 @@ name which resulted in the exiting of the flow."
   (u:href flow flow-state-name))
 
 (defmacro define-call-flow (name () &body body)
-  (a:with-gensyms (call-flow)
-    (let ((definition '(meta 'call-flows)))
-      `(let ((,call-flow ,(parse-call-flows body)))
-         (unless ,definition
-           (setf (meta 'call-flows) (u:dict)))
-         (setf (u:href ,definition ',name) ,call-flow)))))
+  `(setf (u:href =meta/call-flows= ',name) ,(parse-call-flows body)))
 
 (defun load-call-flows (core)
-  (u:do-hash (k v (meta 'call-flows))
+  (u:do-hash (k v v::=meta/call-flows=)
     (setf (u:href (call-flows core) k) v)))

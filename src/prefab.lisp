@@ -56,8 +56,7 @@
 
 (defmacro define-prefab (name (&key library (context 'context) policy)
                          &body body)
-  (let* ((libraries '(v::meta 'prefabs))
-         (prefabs `(u:href ,libraries ',library)))
+  (let ((prefabs `(u:href v::=meta/prefabs= ',library)))
     (a:with-gensyms (prefab data)
       (u:mvlet ((body decls doc (a:parse-body body :documentation t)))
         `(progn
@@ -65,8 +64,6 @@
            (ensure-prefab-name-valid ',name)
            (ensure-prefab-library-set ',name ',library)
            (ensure-prefab-library-symbol ',name ',library)
-           (unless ,libraries
-             (setf (v::meta 'prefabs) (u:dict)))
            (unless ,prefabs
              (setf ,prefabs (u:dict #'equalp)))
            ;; NOTE: This prefab-wide ref environment is accessible via a

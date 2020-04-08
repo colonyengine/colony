@@ -6,12 +6,12 @@
 
 (defun validate-config-options (options)
   (u:do-plist (k v options)
-    (u:unless-found (x (u:href (meta 'options/default) k))
+    (u:unless-found (x (u:href =meta/config/default= k))
       (error "~s is not a valid config option. Valid options:~%~{~s~%~}"
-             x (u:hash-keys (meta 'options/default))))))
+             x (u:hash-keys =meta/config/default=)))))
 
 (defun load-config (project-name &rest args)
-  (u:do-hash (k v (u:href (meta 'options/project) project-name))
+  (u:do-hash (k v (u:href =meta/config/project= project-name))
     (let ((global (get-config-option-name k)))
       (setf (symbol-value global) v)))
   (u:do-plist (k v args)
@@ -22,16 +22,14 @@
   (declare (ignore options))
   `(progn
      ,@(if (eq project-name :virality.engine)
-           `((setf (meta 'options/default) (u:dict ,@body))
+           `((setf =meta/config/default= (u:dict ,@body))
              ,@(loop :for (k v) :on body :by #'cddr
                      :for name = (get-config-option-name k)
                      :append `((global-vars:define-global-parameter ,name ,v)
                                (export ',name))))
            `((validate-config-options ',body)
-             (unless (meta 'options/project)
-               (setf (meta 'options/project) (u:dict)))
-             (setf (u:href (meta 'options/project) ,project-name)
-                   (u:hash-merge (meta 'options/default) (u:dict ,@body)))))))
+             (setf (u:href =meta/config/project= ,project-name)
+                   (u:hash-merge =meta/config/default= (u:dict ,@body)))))))
 
 (define-config :virality.engine ()
   :title "Virality Engine"

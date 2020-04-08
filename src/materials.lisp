@@ -639,12 +639,10 @@ be executed after all the shader programs have been compiled."
   "Define a set of uniform and block shader attribute defaults that can be
 applied in an overlay manner while defining a material."
   (a:with-gensyms (profile)
-    (let ((definition '(v::meta 'material-profiles)))
-      (destructuring-bind (&key uniforms blocks) body
-        `(let ((,profile ,(parse-material-profile name uniforms blocks)))
-           (unless ,definition
-             (setf ,definition (u:dict)))
-           (setf (u:href ,definition (name ,profile)) ,profile))))))
+    (destructuring-bind (&key uniforms blocks) body
+      `(let ((,profile ,(parse-material-profile name uniforms blocks)))
+         (setf (u:href v::=meta/material-profiles= (name ,profile))
+               ,profile)))))
 
 (defun update-material (old-material new-material)
   (with-slots ((old-tex %active-texture-unit)
@@ -686,17 +684,14 @@ applied in an overlay manner while defining a material."
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
   (a:with-gensyms (func)
-    (let ((definition '(v::meta 'materials)))
-      (destructuring-bind (&key shader profiles (instances 1) attributes
-                             uniforms blocks)
-          body
-        `(let ((,func ,(parse-material name shader instances attributes profiles
-                                       uniforms blocks)))
-           (unless ,definition
-             (setf ,definition (u:dict)))
-           (setf (u:href ,definition ',name) ,func)
-           (update-material/interactively ',name ,func)
-           (export ',name))))))
+    (destructuring-bind (&key shader profiles (instances 1) attributes uniforms
+                           blocks)
+        body
+      `(let ((,func ,(parse-material name shader instances attributes profiles
+                                     uniforms blocks)))
+         (setf (u:href v::=meta/materials= ',name) ,func)
+         (update-material/interactively ',name ,func)
+         (export ',name)))))
 
 ;; TODO: Make this constant time
 (defmacro with-depth-function (material &body body)
@@ -722,8 +717,8 @@ applied in an overlay manner while defining a material."
            ,@body)))))
 
 (defun load-materials (core)
-  (u:do-hash-values (profile (v::meta 'material-profiles))
+  (u:do-hash-values (profile v::=meta/material-profiles=)
     (%add-material-profile profile core))
-  (u:do-hash-values (material-func (v::meta 'materials))
+  (u:do-hash-values (material-func v::=meta/materials=)
     (%add-material (funcall material-func core) core))
   (resolve-all-materials core))

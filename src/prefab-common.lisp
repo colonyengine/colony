@@ -93,7 +93,7 @@
   (format nil "/~{~a~^/~}" path-parts))
 
 (defun find-library (name)
-  (u:if-found (library (u:href (v::meta 'prefabs) name))
+  (u:if-found (library (u:href v::=meta/prefabs= name))
               library
               (error "Prefab library ~s does not exist." name)))
 

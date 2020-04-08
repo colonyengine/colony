@@ -4,7 +4,7 @@
   ((%project :reader project
              :initarg :project)
    (%assets :reader assets
-            :initform (meta 'assets))
+            :initform v::=meta/assets=)
    (%running-p :accessor running-p
                :initform t)
    (%rcache :reader rcache

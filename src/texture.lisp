@@ -487,11 +487,8 @@ return the TEXTURE instance for the debug-texture."
   "Define a set of attribute defaults that can be applied while defining a
 texture."
   (a:with-gensyms (profile)
-    (let ((definition '(v::meta 'texture-profiles)))
-      `(let ((,profile ,(parse-texture-profile name body)))
-         (unless ,definition
-           (setf ,definition (u:dict)))
-         (setf (u:href ,definition (name ,profile)) ,profile)))))
+    `(let ((,profile ,(parse-texture-profile name body)))
+       (setf (u:href v::=meta/texture-profiles= (name ,profile)) ,profile))))
 
 (defun update-texture (context old-descriptor new-descriptor)
   (v::push-queue
@@ -523,22 +520,19 @@ texture."
 (defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
   "Construct a semantic TEXTURE-DESCRIPTOR. "
   (a:with-gensyms (desc-lookup old-desc new-desc)
-    (let ((definition '(v::meta 'textures)))
-      `(symbol-macrolet ((,desc-lookup (u:href ,definition ',name)))
-         (unless ,definition
-           (setf ,definition (u:dict)))
-         (let ((,new-desc (make-texture-descriptor
-                           :name ',name
-                           :texture-type ',textype
-                           :profile-overlay-names ',profile-overlay-names))
-               (,old-desc ,desc-lookup))
-           ;; Record the parameters we'll overlay on the profile at use time.
-           (setf ,@(loop :for (key value) :in body
-                         :append `((u:href (attributes ,new-desc) ,key)
-                                   ,value)))
-           (setf ,desc-lookup ,new-desc)
-           (update-texture/interactively ,old-desc ,new-desc)
-           (export ',name))))))
+    `(symbol-macrolet ((,desc-lookup (u:href v::=meta/textures= ',name)))
+       (let ((,new-desc (make-texture-descriptor
+                         :name ',name
+                         :texture-type ',textype
+                         :profile-overlay-names ',profile-overlay-names))
+             (,old-desc ,desc-lookup))
+         ;; Record the parameters we'll overlay on the profile at use time.
+         (setf ,@(loop :for (key value) :in body
+                       :append `((u:href (attributes ,new-desc) ,key)
+                                 ,value)))
+         (setf ,desc-lookup ,new-desc)
+         (update-texture/interactively ,old-desc ,new-desc)
+         (export ',name)))))
 
 (defun resolve-semantic-texture-descriptor (core texture-descriptor)
   (symbol-macrolet ((profiles (profiles (v::textures core)))
@@ -641,8 +635,8 @@ semantic name of it which was specified with a DEFINE-TEXTURE."
       texture-name))
 
 (defun load-texture-descriptors (core)
-  (u:do-hash-values (profile (v::meta 'texture-profiles))
+  (u:do-hash-values (profile v::=meta/texture-profiles=)
     (add-texture-profile profile core))
-  (u:do-hash-values (desc (v::meta 'textures))
+  (u:do-hash-values (desc v::=meta/textures=)
     (add-semantic-texture-descriptor desc core))
   (resolve-all-semantic-texture-descriptors core))

@@ -23,7 +23,7 @@
                   :initarg :vertex-count)))
 
 (defun find-layout (layout-name)
-  (or (u:href (v::meta 'dynamic-geometry-layouts) layout-name)
+  (or (u:href v::=meta/geometry-layouts= layout-name)
       (error "Geometry layout ~s not found." layout-name)))
 
 (defun make-dynamic-geometry-thunk (layout-name
@@ -42,7 +42,7 @@
       geometry)))
 
 (defun make-dynamic-geometry (name)
-  (funcall (u:href (v::meta 'dynamic-geometry) name)))
+  (funcall (u:href v::=meta/geometry= name)))
 
 (defun update-dynamic-geometry (geometry primitive vertex-count &rest data)
   (with-slots (%primitive %vertex-count) geometry
@@ -58,27 +58,20 @@
 
 (defmacro define-geometry-layout (name &body body)
   (a:with-gensyms (groups order)
-    (let ((layouts '(v::meta 'dynamic-geometry-layouts)))
-      `(u:mvlet ((,groups ,order (make-groups ',body)))
-         (unless ,layouts
-           (setf ,layouts (u:dict)))
-         (setf (u:href ,layouts ',name)
-               (make-instance 'layout
-                              :name ',name
-                              :groups ,groups
-                              :group-order ,order))))))
+    `(u:mvlet ((,groups ,order (make-groups ',body)))
+       (setf (u:href v::=meta/geometry-layouts= ',name)
+             (make-instance 'layout
+                            :name ',name
+                            :groups ,groups
+                            :group-order ,order)))))
 
 (defmacro define-geometry (name &body body)
-  (let ((geometry-table '(v::meta 'dynamic-geometry)))
-    (destructuring-bind (&key layout (primitive :triangles) (vertex-count 0)
-                           buffers)
-        body
-      `(progn
-         (unless ,geometry-table
-           (setf (v::meta 'dynamic-geometry) (u:dict)))
-         (setf (u:href ,geometry-table ',name)
-               (make-dynamic-geometry-thunk
-                ',layout
-                :primitive ',primitive
-                :vertex-count ,vertex-count
-                :buffer-data ',buffers))))))
+  (destructuring-bind (&key layout (primitive :triangles) (vertex-count 0)
+                         buffers)
+      body
+    `(setf (u:href v::=meta/geometry= ',name)
+           (make-dynamic-geometry-thunk
+            ',layout
+            :primitive ',primitive
+            :vertex-count ,vertex-count
+            :buffer-data ',buffers))))
