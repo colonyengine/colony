@@ -52,7 +52,8 @@
    (:file "package-nicknames")
    (:module "base"
     :components
-    ((:file "general")))
+    ((:file "general")
+     (:file "uuid")))
    (:file "common")
    (:file "metadata")
    (:file "config")
@@ -67,7 +68,6 @@
    (:file "geometry-dynamic-group")
    (:file "geometry-dynamic-buffer")
    (:file "geometry-dynamic")
-   (:file "uuid")
    (:file "asset")
    (:file "rcache")
    (:file "clock")
