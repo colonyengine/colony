@@ -64,24 +64,25 @@
   (let ((header (make-instance 'gltf-header)))
     (with-slots (%magic %version %length) header
       (let* ((buffer (fast-io:make-input-buffer
-                      :vector (v::read-bytes (buffer gltf) 12)))
-             (magic (v::read-string buffer :bytes 4)))
+                      :vector (v::parse-bytes (buffer gltf) 12)))
+             (magic (v::parse-string buffer :byte-count 4)))
         (if (not (string= magic "glTF"))
             (error "Invalid glTF2 file.")
             (setf %magic magic
-                  %version (v::read-uint-le buffer 4)
-                  %length (v::read-uint-le buffer 4)))))
+                  %version (v::parse-uint/le buffer 4)
+                  %length (v::parse-uint/le buffer 4)))))
     header))
 
 (defgeneric parse-gltf-chunk-data (gltf chunk-type chunk &key)
   (:method :around (gltf chunk-type chunk &key)
     (let ((buffer (fast-io:make-input-buffer
-                   :vector (v::read-bytes (buffer gltf) (chunk-length chunk)))))
+                   :vector (v::parse-bytes (buffer gltf)
+                                           (chunk-length chunk)))))
       (call-next-method gltf chunk-type chunk :buffer buffer))))
 
 (defmethod parse-gltf-chunk-data (gltf (chunk-type (eql :json-content)) chunk
                                   &key buffer)
-  (let ((data (v::read-string buffer :encoding :utf-8)))
+  (let ((data (v::parse-string buffer :encoding :utf-8)))
     (setf (json gltf) (jsown:parse data))
     data))
 
@@ -92,7 +93,7 @@
         :for data-buffer :in buffers
         :for index :below (length buffers)
         :for size = (get-gltf-property gltf "byteLength" data-buffer)
-        :do (setf (aref data index) (v::read-bytes buffer size))
+        :do (setf (aref data index) (v::parse-bytes buffer size))
         :finally (setf (buffers gltf) data))
   nil)
 
@@ -105,8 +106,8 @@
   (let ((chunk (make-instance 'gltf-chunk))
         (buffer (buffer gltf)))
     (with-slots (%length %type %data) chunk
-      (setf %length (v::read-uint-le buffer 4)
-            %type (v::read-uint-le buffer 4)
+      (setf %length (v::parse-uint/le buffer 4)
+            %type (v::parse-uint/le buffer 4)
             %data (parse-gltf-chunk-data
                    gltf (get-gltf-chunk-type chunk) chunk)))
     chunk))

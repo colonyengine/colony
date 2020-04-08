@@ -54,6 +54,7 @@
     :components
     ((:file "general")
      (:file "avl-tree")
+     (:file "parser")
      (:file "uuid")))
    (:file "common")
    (:file "metadata")
@@ -63,7 +64,6 @@
    (:file "debugging")
    (:file "protocol")
    (:file "deployment")
-   (:file "binary-parser")
    (:file "geometry-static")
    (:file "geometry-dynamic-attribute")
    (:file "geometry-dynamic-group")
