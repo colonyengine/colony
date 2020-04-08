@@ -495,7 +495,6 @@ texture."
 
 (defun update-texture (context old-descriptor new-descriptor)
   (v::push-queue
-   (v::core context)
    :live-recompile
    (list
     :texture

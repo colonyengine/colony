@@ -1,8 +1,8 @@
 (in-package #:virality.engine)
 
 (defun initialize-shaders (core)
-  (let ((modify-hook (generate-shader-modify-hook core)))
+  (let ((modify-hook (generate-shader-modify-hook)))
     (setf (shaders core) (gpu:load-shaders modify-hook))))
 
-(defun generate-shader-modify-hook (core)
-  (lambda (x) (push-queue core :live-recompile (list :shader x))))
+(defun generate-shader-modify-hook ()
+  (lambda (x) (push-queue :live-recompile (list :shader x))))

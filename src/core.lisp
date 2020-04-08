@@ -30,8 +30,7 @@
    (%collider-system :accessor collider-system
                      :initform nil)
    (%analyzed-graphs :reader analyzed-graphs
-                     :initform (u:dict #'equalp))
-   (%thread-pool :reader thread-pool)))
+                     :initform (u:dict #'equalp))))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table

@@ -16,7 +16,7 @@
 
 (defun recompile-queued-items (core)
   (loop :for ((kind data) found-p) = (multiple-value-list
-                                      (pop-queue core :live-recompile))
+                                      (pop-queue :live-recompile))
         :while found-p
         :do (ecase kind
               (:shader
