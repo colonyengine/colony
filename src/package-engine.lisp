@@ -29,6 +29,9 @@
    #:stop
    #:total-time
    #:with-shared-storage)
+  ;; hardware
+  (:export
+   #:get-hardware-info)
   ;; input system
   (:export
    #:disable-relative-motion

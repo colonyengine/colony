@@ -12,6 +12,7 @@
   :depends-on (#:alexandria
                #:printv
                #:babel
+               #:cl-cpus
                #:cl-graph
                #:cl-opengl
                #:cl-ppcre
@@ -53,6 +54,7 @@
    (:module "base"
     :components
     ((:file "general")
+     (:file "hardware")
      (:file "live-coding")
      (:file "avl-tree")
      (:file "parser")
@@ -82,7 +84,6 @@
    (:file "component")
    (:file "shared-storage")
    (:file "kernel")
-   (:file "hardware-query")
    (:file "annotations")
    (:file "display")
    (:module "input"

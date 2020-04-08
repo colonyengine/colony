@@ -72,6 +72,7 @@ tear-down procedure occurs when stopping the engine."
   (initialize-host core)
   (initialize-shaders core)
   (make-input-data core)
+  (load-hardware-info)
   (load-graphs core)
   (load-call-flows core)
   (tex::load-texture-descriptors core)
