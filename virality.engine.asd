@@ -138,7 +138,7 @@
    (:file "prefab-loader")
    (:file "prefab-reference")
    (:file "prefab")
-   (:file "core")
+   (:file "core-state")
    (:file "engine")
 
    (:file "shader/texture")
