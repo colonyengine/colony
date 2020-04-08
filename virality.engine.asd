@@ -53,6 +53,7 @@
    (:module "base"
     :components
     ((:file "general")
+     (:file "avl-tree")
      (:file "uuid")))
    (:file "common")
    (:file "metadata")
