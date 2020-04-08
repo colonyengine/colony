@@ -31,11 +31,11 @@
                      :initform nil)))
 
 (defun correct-camera-transform (camera)
-  (when (v3:zero-p (v:get-translation (transform camera)))
+  (when (v3:zero-p (v:get-translation camera))
     (let ((translation (ecase (mode camera)
                          (:orthographic (v3:vec 0f0 0f0 1f0))
                          (:perspective (v3:vec 0f0 0f0 50f0)))))
-      (v:translate (transform camera) translation)
+      (v:translate camera translation)
       (log:warn :virality.components
                 "Camera ~a was attached to an actor without a translation ~
                  transform.~%Using a sane default value for ~(~a~): ~s."
@@ -86,8 +86,7 @@
     (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform)
           %fov-y (* %fov-y (/ o:pi 180)))
     (when %free-look
-      (setf %free-look-state (v::make-free-look-state (v::context self)
-                                                      %transform)))
+      (setf %free-look-state (v::make-free-look-state (v::context self) self)))
     (correct-camera-transform self)
     (make-projection self (mode self))
     (push self (v::cameras (v::core self)))))

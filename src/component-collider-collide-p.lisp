@@ -19,25 +19,19 @@
 
       ;; This is the REAL path through this code, which transforms the collider
       ;; into world space appropriately.
-      (let* ((fist-transform (v:component-by-type (v:actor fist)
-                                                  'c/xform:transform))
-             (face-transform (v:component-by-type (v:actor face)
-                                                  'c/xform:transform))
-             ;; Figure out where the center for these colliders are in world
+      (let* (;; Figure out where the center for these colliders are in world
              ;; space.
-             (fist-collider-world-center
-               (v:transform-point fist-transform (reg:center fist)))
-             (face-collider-world-center
-               (v:transform-point face-transform (reg:center face)))
+             (fist-collider-world-center (v:transform-point fist
+                                                            (reg:center fist)))
+             (face-collider-world-center (v:transform-point face
+                                                            (reg:center face)))
              ;; Figure out the size of the radius in world space. We treat the
              ;; radius as a vector and rotate/scale (but no translate!) it by
              ;; the world matrix.
-             (fist-world-radius
-               (v:transform-vector fist-transform
-                                   (v3:vec (reg:radius fist) 0f0 0f0)))
-             (face-world-radius
-               (v:transform-vector face-transform
-                                   (v3:vec (reg:radius face) 0f0 0f0)))
+             (fist-world-radius (v:transform-vector
+                                 fist (v3:vec (reg:radius fist) 0f0 0f0)))
+             (face-world-radius (v:transform-vector
+                                 face (v3:vec (reg:radius face) 0f0 0f0)))
 
              ;; TODO: Allow the gamedev an ability to ensure that the world
              ;; matrix must be uniform for a sphere collider.  This involves
@@ -77,9 +71,7 @@
   ;;
   ;; We're going to treat the cuboid as an OBB in world space and collide
   ;; it with the sphere also in world space.
-  (let* ((fist-transform (v:component-by-type (v:actor fist)
-                                              'c/xform:transform))
-         (face-transform (v:component-by-type (v:actor face)
+  (let* ((face-transform (v:component-by-type (v:actor face)
                                               'c/xform:transform))
          ;; Compute on the cuboid objects
 
@@ -88,8 +80,8 @@
                       (v3:vec (reg:minx face) (reg:miny face) (reg:minz face))))
          (l-max (v3:+ (reg:center face)
                       (v3:vec (reg:maxx face) (reg:maxy face) (reg:maxz face))))
-         (w-min (v:transform-point face-transform l-min))
-         (w-max (v:transform-point face-transform l-max))
+         (w-min (v:transform-point face l-min))
+         (w-max (v:transform-point face l-max))
          ;; center of OBB in world space.
          (w-center (v3:lerp w-min w-max .5f0))
          ;; Now get rotation axes as rotated in world-space. Page 101 of RTCD
@@ -110,12 +102,10 @@
                               (v3:dot diagonal z-axis)))
 
          ;; Get the important parts of the sphere into world space.
-         (fist-collider-world-center
-           (v:transform-point fist-transform (reg:center fist)))
-         (fist-world-radius
-           (v3:length
-            (v:transform-vector fist-transform
-                                (v3:vec (reg:radius fist) 0f0 0f0)))))
+         (fist-collider-world-center (v:transform-point fist (reg:center fist)))
+         (fist-world-radius (v3:length
+                             (v:transform-vector
+                              fist (v3:vec (reg:radius fist) 0f0 0f0)))))
 
     (let* ((p (closest-pt-point-obb fist-collider-world-center
                                     obb-axes w-center half-widths))

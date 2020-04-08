@@ -52,18 +52,16 @@
 ;; TODO: Refactor this as it was just a quick hack
 (defmethod v:on-component-physics-update ((self cuboid))
   (let* ((xform (v:component-by-type (v:actor self) 'c/xform:transform))
-         (min (v:transform-point
-               xform
-               (v3:+ (reg:center self)
-                     (v3:vec (reg:minx self)
-                             (reg:miny self)
-                             (reg:minz self)))))
-         (max (v:transform-point
-               xform
-               (v3:+ (reg:center self)
-                     (v3:vec (reg:maxx self)
-                             (reg:maxy self)
-                             (reg:maxz self)))))
+         (min (v:transform-point self
+                                 (v3:+ (reg:center self)
+                                       (v3:vec (reg:minx self)
+                                               (reg:miny self)
+                                               (reg:minz self)))))
+         (max (v:transform-point self
+                                 (v3:+ (reg:center self)
+                                       (v3:vec (reg:maxx self)
+                                               (reg:maxy self)
+                                               (reg:maxz self)))))
          (center (v3:lerp min max 0.5))
          (axes (m4:rotation-to-mat3
                 (m4:normalize-rotation

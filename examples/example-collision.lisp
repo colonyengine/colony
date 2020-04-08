@@ -49,17 +49,14 @@
      (test-transform-api self))))
 
 (defun test-axis-directions (self)
-  (let* ((actor (v:actor self))
-         (test-type (test-type self))
-         (actor-transform
-           (v:component-by-type actor 'c/xform:transform)))
+  (let ((test-type (test-type self)))
     (unless (u:href (test-performed self) test-type)
-      (let ((forward (v:transform-forward actor-transform))
-            (backward (v:transform-backward actor-transform))
-            (up (v:transform-up actor-transform))
-            (down (v:transform-down actor-transform))
-            (right (v:transform-right actor-transform))
-            (left (v:transform-left actor-transform)))
+      (let ((forward (v:transform-forward self))
+            (backward (v:transform-backward self))
+            (up (v:transform-up self))
+            (down (v:transform-down self))
+            (right (v:transform-right self))
+            (left (v:transform-left self)))
         (log:trace :virality.examples "FORWARD Vector -> ~a" forward)
         (log:trace :virality.examples "BACKWARD Vector -> ~a" backward)
         (log:trace :virality.examples "UP Vector -> ~a" up)
@@ -87,20 +84,15 @@
 
 (defun test-transform-point-api (self)
   "Test if TRANSFORM-POINT works."
-  (let* ((actor (v:actor self))
-         (actor-transform
-           (v:component-by-type actor 'c/xform:transform))
-         (object-space-point (v3:vec 1f0 0f0 0f0))
+  (let* ((object-space-point (v3:vec 1f0 0f0 0f0))
          (world-space-point (v3:vec 1f0 3f0 1f0))
-         (local->world
-           (v:transform-point actor-transform object-space-point))
-         (world->local
-           (v:transform-point actor-transform world-space-point :space :world)))
+         (local->world (v:transform-point self object-space-point))
+         (world->local (v:transform-point self
+                                          world-space-point
+                                          :space :world)))
     ;; See if transform-point works.
-    (let ((result-0
-            (v3:~ local->world world-space-point))
-          (result-1
-            (v3:~ world->local object-space-point)))
+    (let ((result-0 (v3:~ local->world world-space-point))
+          (result-1 (v3:~ world->local object-space-point)))
       (unless (and result-0 result-1)
         (unless result-0
           (log:error
@@ -116,13 +108,10 @@
 
 (defun test-transform-vector-api (self)
   "Test if TRANSFORM-VECTOR works."
-  (let* ((actor (v:actor self))
-         (actor-transform
-           (v:component-by-type actor 'c/xform:transform))
-         (object-space-vector (v3:vec 2f0 2f0 0f0))
+  (let* ((object-space-vector (v3:vec 2f0 2f0 0f0))
          (world-space-vector (v3:vec -4f0 4f0 0f0))
-         (local->world (v:transform-vector actor-transform object-space-vector))
-         (world->local (v:transform-vector actor-transform
+         (local->world (v:transform-vector self object-space-vector))
+         (world->local (v:transform-vector self
                                            world-space-vector
                                            :space :world)))
     ;; See if transform-vector works.
@@ -144,16 +133,12 @@
         (error "TRANSFORM-VECTOR API Failed!")))))
 
 (defun test-transform-direction-api (self)
-  (let* ((actor (v:actor self))
-         (actor-transform
-           (v:component-by-type actor 'c/xform:transform))
-         ;; NOTE: these must be normalized for the test. I specified it this way
+  (let* (;; NOTE: these must be normalized for the test. I specified it this way
          ;; so it would be easier to see in your mind's eye.
          (object-space-direction (v3:normalize (v3:vec 1f0 1f0 0f0)))
          (world-space-direction (v3:normalize (v3:vec -1f0 1f0 0f0)))
-         (local->world
-           (v:transform-direction actor-transform object-space-direction))
-         (world->local (v:transform-direction actor-transform
+         (local->world (v:transform-direction self object-space-direction))
+         (world->local (v:transform-direction self
                                               world-space-direction
                                               :space :world)))
     ;; See if transform-direction works.

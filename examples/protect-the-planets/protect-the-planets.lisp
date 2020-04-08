@@ -247,8 +247,7 @@
 
 
 (defmethod v:on-component-update ((self player-movement))
-  (with-accessors ((context v:context) (transform transform)
-                   (max-velocity max-velocity)
+  (with-accessors ((context v:context) (max-velocity max-velocity)
                    (translate-deadzone translate-deadzone)
                    (rotate-deadzone rotate-deadzone)
                    (region-cuboid region-cuboid))
@@ -277,11 +276,11 @@
                              1f0)))
            ;; and ensure we clip the translation vector so we can't go out of
            ;; the boundary cube we set.
-           (current-translation (v:get-translation transform))
+           (current-translation (v:get-translation self))
            (vec
             (reg:clip-movement-vector vec current-translation region-cuboid)))
 
-        (v:translate transform vec))
+        (v:translate self vec))
 
       ;; Then we settle the notion of how the player is oriented.  We're setting
       ;; a hard angle of rotation each time so we overwrite the previous value.
@@ -291,7 +290,7 @@
                (angle (if (minusp angle)
                           (+ o:pi (- o:pi (abs angle)))
                           angle)))
-          (v:rotate transform
+          (v:rotate self
                     (q:orient :local :z angle)
                     :replace t
                     :instant instant-p))))))
@@ -497,20 +496,15 @@
                    :parent parent)))
          ;; TODO: I'm expecting the new-projectile to have components here
          ;; without having gone through the flow. BAD!
-         (projectile-transform (v:component-by-type new-projectile
-                                                    'c/xform:transform))
          (projectile (v:component-by-type new-projectile 'projectile)))
 
     ;; Set the spatial configuration
     (setf (v3:z translation) (dl depth-layer))
-    (v:translate projectile-transform
-                 translation
-                 :instant t
-                 :replace t)
+    (v:translate new-projectile translation :instant t :replace t)
     ;; XXX This interface needs to take a quat here also
-    (v:rotate projectile-transform rotation :instant t :replace t)
+    (v:rotate new-projectile rotation :instant t :replace t)
     ;; And adjust the scale too.
-    (v:scale projectile-transform scale :instant t :replace t)
+    (v:scale new-projectile scale :instant t :replace t)
 
     (setf
      ;; Basic identification of the projectile
@@ -570,8 +564,6 @@
            (first (v:make-prefab-instance
                    (v::core context)
                    `((,prefab-name ,prefab-library)))))
-         (explosion-transform (v:component-by-type new-explosion
-                                                   'c/xform:transform))
          (explosion (v:component-by-type new-explosion 'explosion)))
 
     (setf
@@ -579,9 +571,9 @@
      (c/sprite:name (sprite explosion)) name
      (c/sprite:frames (sprite explosion)) frames)
 
-    (v:scale explosion-transform scale :instant t :replace t)
-    (v:translate explosion-transform translation :instant t :replace t)
-    (v:rotate explosion-transform rotation :instant t :replace t)
+    (v:scale new-explosion scale :instant t :replace t)
+    (v:translate new-explosion translation :instant t :replace t)
+    (v:rotate new-explosion rotation :instant t :replace t)
 
     ;; By default explosions live a certain amount of time.
     (v:destroy new-explosion :ttl destroy-ttl)
@@ -746,80 +738,77 @@
     (when pause-p
       (return-from v:on-component-update))
 
-    (let ((transform
-            (v:component-by-type (v:actor self) 'c/xform:transform)))
-      (flet ((ransign (val &optional (offset 0))
-               (float (+ (* (random (if (zerop val) 1 val))
-                            (if (zerop (random 2)) 1 -1))
-                         offset) 1f0)))
-        (cond
-          ((>= cooldown-time (/ (* spawn-period difficulty)))
-           (loop :while (>= cooldown-time (/ (* spawn-period difficulty)))
-                 :do (decf cooldown-time (/ (* spawn-period difficulty))))
+    (flet ((ransign (val &optional (offset 0))
+             (float (+ (* (random (if (zerop val) 1 val))
+                          (if (zerop (random 2)) 1 -1))
+                       offset) 1f0)))
+      (cond
+        ((>= cooldown-time (/ (* spawn-period difficulty)))
+         (loop :while (>= cooldown-time (/ (* spawn-period difficulty)))
+               :do (decf cooldown-time (/ (* spawn-period difficulty))))
 
-           ;; Find a spot offscreen to start the asteroid
-           (let* (origin
-                  ;; The target point picked out of the center box in director
-                  ;; space that we'll convert to world space.
-                  ;;
-                  ;; TODO: abstract this to ue a boundary cube.
-                  (target
-                    (v:transform-point
-                     transform
-                     (v3:vec (ransign 300f0) (ransign 300f0) 0.1f0)))
-                  (quadrant (random 4)))
+         ;; Find a spot offscreen to start the asteroid
+         (let (origin
+               ;; The target point picked out of the center box in director
+               ;; space that we'll convert to world space.
+               ;;
+               ;; TODO: abstract this to ue a boundary cube.
+               (target (v:transform-point
+                        self
+                        (v3:vec (ransign 300f0) (ransign 300f0) 0.1f0)))
+               (quadrant (random 4)))
 
-             ;; pick an origin point in director space and convert it to world
-             ;; space
-             (setf origin
-                   (v:transform-point
-                    transform
-                    (ecase quadrant
-                      (0 ;; left side
-                       (v3:vec -1000f0 (ransign 600f0) 0.1f0))
-                      (1 ;; top side
-                       (v3:vec (ransign 1000f0) 600f0 0.1f0))
-                      (2 ;; right side
-                       (v3:vec 1000f0 (ransign 600f0) 0.1f0))
-                      (3 ;; bottom side
-                       (v3:vec (ransign 1000f0) -600f0 0.1f0)))))
+           ;; pick an origin point in director space and convert it to world
+           ;; space
+           (setf origin
+                 (v:transform-point
+                  self
+                  (ecase quadrant
+                    (0 ;; left side
+                     (v3:vec -1000f0 (ransign 600f0) 0.1f0))
+                    (1 ;; top side
+                     (v3:vec (ransign 1000f0) 600f0 0.1f0))
+                    (2 ;; right side
+                     (v3:vec 1000f0 (ransign 600f0) 0.1f0))
+                    (3 ;; bottom side
+                     (v3:vec (ransign 1000f0) -600f0 0.1f0)))))
 
-             (destructuring-bind (name frames)
-                 (aref asteroid-db (random (length asteroid-db)))
-               (let* ((uniform-scale
-                        (+ (aref scale-range 0)
-                           (random (- (float (aref scale-range 1) 1.0)
-                                      (float (aref scale-range 0) 1.0))))))
-                 (make-projectile context
-                                  origin
-                                  q:+id+
-                                  :enemy
-                                  :asteroid
-                                  :velocity  (ransign 50f0 400f0)
-                                  ;; this direction is in world space.
-                                  ;; it moves from the origin to the target.
-                                  :direction (v3:normalize (v3:- target origin))
-                                  :scale (v3:vec uniform-scale
-                                                 uniform-scale
-                                                 uniform-scale)
-                                  :name name
-                                  :frames frames
-                                  :destroy-ttl 4f0
-                                  :parent asteroid-holder)))))
+           (destructuring-bind (name frames)
+               (aref asteroid-db (random (length asteroid-db)))
+             (let* ((uniform-scale
+                      (+ (aref scale-range 0)
+                         (random (- (float (aref scale-range 1) 1.0)
+                                    (float (aref scale-range 0) 1.0))))))
+               (make-projectile context
+                                origin
+                                q:+id+
+                                :enemy
+                                :asteroid
+                                :velocity  (ransign 50f0 400f0)
+                                ;; this direction is in world space.
+                                ;; it moves from the origin to the target.
+                                :direction (v3:normalize (v3:- target origin))
+                                :scale (v3:vec uniform-scale
+                                               uniform-scale
+                                               uniform-scale)
+                                :name name
+                                :frames frames
+                                :destroy-ttl 4f0
+                                :parent asteroid-holder)))))
 
-          (t
-           (incf cooldown-time (v:frame-time context))))
+        (t
+         (incf cooldown-time (v:frame-time context))))
 
-        ;; Now increase difficulty!
-        (cond
-          ((>= difficulty-time (/ difficulty-period))
-           (loop :while (>= difficulty-time (/ difficulty-period))
-                 :do (decf difficulty-time (/ difficulty-period)))
+      ;; Now increase difficulty!
+      (cond
+        ((>= difficulty-time (/ difficulty-period))
+         (loop :while (>= difficulty-time (/ difficulty-period))
+               :do (decf difficulty-time (/ difficulty-period)))
 
-           (incf difficulty 1))
+         (incf difficulty 1))
 
-          (t
-           (incf difficulty-time (v:frame-time context))))))))
+        (t
+         (incf difficulty-time (v:frame-time context)))))))
 
 ;; ;;;;;;;;;
 ;; Component: player-stable
@@ -873,16 +862,13 @@
                    (direction direction)
                    (stable stable))
       player-stable
-    (let* ((dir (ecase direction (:left -1f0) (:right 1f0)))
-           (mockette (first
-                      (v:make-prefab-instance
-                       (v::core player-stable)
-                       mockette-prefab
-                       :parent stable)))
-           (transform (v:component-by-type mockette 'c/xform:transform)))
-
+    (let ((dir (ecase direction (:left -1f0) (:right 1f0)))
+          (mockette (first (v:make-prefab-instance
+                            (v::core player-stable)
+                            mockette-prefab
+                            :parent stable))))
       (v:translate
-       transform (v3:vec (* mockette-index (* dir width-increment)) -60f0 0f0))
+       mockette (v3:vec (* mockette-index (* dir width-increment)) -60f0 0f0))
 
       (setf (aref mockette-refs mockette-index) mockette))))
 
@@ -1154,14 +1140,12 @@ NIL if no such list exists."
 
 (defmethod v:on-component-update ((self planet))
   (with-accessors ((context v:context)
-                   (transform transform)
                    (hit-points hit-points)
                    (hit-point-warning-threshhold hit-point-warning-threshhold)
                    (explosion-region explosion-region)
                    (warning-explosion-period warning-explosion-period)
                    (warning-explosion-timer warning-explosion-timer))
       self
-
 
     ;; TODO: Notice here we have a conditional running of the timer, how do we
     ;; represent this generically.
@@ -1194,8 +1178,7 @@ NIL if no such list exists."
                           0f0
                           1f0))
                 ;; Figure out where to put the explosion into world space.
-                (world-location
-                  (v:transform-point transform local-location))
+                (world-location (v:transform-point self local-location))
                 (world-location (v3:vec (v3:x world-location)
                                         (v3:y world-location)
                                         (dl :planet-warning-explosion)))

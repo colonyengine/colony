@@ -84,7 +84,6 @@
                (x y (v:get-mouse-position context))
                (lm-start-drag-p (v:on-button-enter context :mouse :left))
                (lm-stop-drag-p (v:on-button-exit context :mouse :left))
-               (xform (v:component-by-type (v:actor self) 'c/xform:transform))
                (range (- o:pi/2 .001)))
 
       (when (or (null x) (null y))
@@ -98,7 +97,7 @@
       ;; dynamically built as an persistent orientation offset from this origin
       ;; orientation.
       (unless orig-orient
-        (setf orig-orient (v:get-rotation xform :copy t)))
+        (setf orig-orient (v:get-rotation self :copy t)))
 
       (unless rv
         ;; RV represents a persistent 2D point we'll be moving around with the
@@ -139,7 +138,7 @@
             ;; the orientation BEFORE the dragging started). So when the user
             ;; lets go of the LMB, this BECOMES the new orientation for the
             ;; next drag attempt.
-            (v:rotate xform putative-rot :replace t))))
+            (v:rotate self putative-rot :replace t))))
 
       (when lm-stop-drag-p
         (setf dragging nil

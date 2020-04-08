@@ -3,8 +3,8 @@
 (defclass free-look-state ()
   ((%context :reader context
              :initarg :context)
-   (%camera-transform :reader camera-transform
-                      :initarg :camera-transform)
+   (%camera :reader camera
+            :initarg :camera)
    (%initial-state :accessor initial-state
                    :initform nil)
    (%initial-orientation :accessor initial-orientation
@@ -16,10 +16,10 @@
    (%mouse-sensitivity :reader mouse-sensitivity
                        :initform 10f0)))
 
-(defun make-free-look-state (context camera-transform)
+(defun make-free-look-state (context camera)
   (make-instance 'free-look-state
                  :context context
-                 :camera-transform camera-transform))
+                 :camera camera))
 
 (defun set-initial-free-look-orientation (state model)
   (unless (initial-state state)
@@ -27,12 +27,12 @@
           (initial-state state) t)))
 
 (defun reset-free-look-state (state)
-  (let* ((transform (camera-transform state))
+  (let* ((camera (camera state))
          (model (initial-orientation state))
          (translation (m4:get-translation model))
          (rotation (q:from-mat4 model)))
-    (translate transform translation :replace t)
-    (rotate transform rotation :replace t)))
+    (translate camera translation :replace t)
+    (rotate camera rotation :replace t)))
 
 (defun update-free-look-key-state (state)
   (let ((context (context state))
@@ -80,9 +80,9 @@
       ((on-button-exit context :key :pagedown)
        (setf (u:href key-state :strafe-down) nil)))))
 
-(defun free-look/key-move (transform key-state speed)
+(defun free-look/key-move (camera key-state speed)
   (flet ((axis-dir (direction plus minus)
-           (v3:scale (transform-direction transform direction)
+           (v3:scale (transform-direction camera direction)
                      (cond
                        ((u:href key-state plus) 1f0)
                        ((u:href key-state minus) -1f0)
@@ -95,12 +95,12 @@
            (vec (v3:scale vec speed))
            (angle (axis-dir v3:+up+ :turn-left :turn-right))
            (angle (v3:scale angle speed)))
-      (translate transform vec)
-      (rotate/velocity transform angle 1f0))))
+      (translate camera vec)
+      (rotate/velocity camera angle 1f0))))
 
-(defun free-look/mouse-move (state transform speed)
+(defun free-look/mouse-move (state camera speed)
   (flet ((velocity (direction x)
-           (v3:scale (transform-direction transform direction)
+           (v3:scale (transform-direction camera direction)
                      (* x speed))))
     (u:mvlet* ((context (context state))
                (mx my dx dy (get-mouse-position context))
@@ -128,21 +128,21 @@
                 (on-button-enter context :key :lalt))
         (enable-relative-motion context))
       (when (on-button-enabled context :key :lshift)
-        (translate transform vec))
+        (translate camera vec))
       (when (on-button-enabled context :key :lalt)
-        (translate transform z))
+        (translate camera z))
       (when (on-button-enabled context :key :lctrl)
-        (rotate/velocity transform angle 1f0))
+        (rotate/velocity camera angle 1f0))
       (when (or (on-button-exit context :key :lshift)
                 (on-button-exit context :key :lctrl)
                 (on-button-exit context :key :lalt))
         (disable-relative-motion context)))))
 
 (defun update-free-look-state (state)
-  (let* ((transform (camera-transform state))
+  (let* ((camera (camera state))
          (dt (frame-time (context state)))
          (key-speed (* (key-speed state) dt))
          (mouse-speed (* (mouse-sensitivity state) dt)))
     (update-free-look-key-state state)
-    (free-look/key-move transform (key-state state) key-speed)
-    (free-look/mouse-move state transform mouse-speed)))
+    (free-look/key-move camera (key-state state) key-speed)
+    (free-look/mouse-move state camera mouse-speed)))

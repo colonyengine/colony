@@ -13,14 +13,10 @@
 (defmethod v:on-component-initialize ((self simple-movement))
   (with-slots (%transform) self
     (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform))
-    (v:translate %transform
-                 (v3:vec -400f0 0f0 0f0)
-                 :replace t
-                 :instant t)))
+    (v:translate self (v3:vec -400f0 0f0 0f0) :replace t :instant t)))
 
 (defmethod v:on-component-update ((self simple-movement))
   (u:mvlet* ((context (v:context self))
-             (transform (transform self))
              (lx ly (v:get-gamepad-analog
                      context :radial-scaled '(:gamepad1 :left-stick)))
              (rx ry (v:get-gamepad-analog
@@ -28,7 +24,7 @@
              (instant-p (zerop (v:frame-count context))))
     (let ((vec (v3:vec lx ly 0f0)))
       (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150f0)
-      (v:translate transform
+      (v:translate self
                    (v3:+ (v3:vec -400f0 0f0 0f0) vec)
                    :replace t
                    :instant instant-p)
@@ -37,7 +33,7 @@
                (angle (if (minusp angle)
                           (+ o:pi (- o:pi (abs angle)))
                           angle)))
-          (v:rotate transform
+          (v:rotate self
                     (q:orient :local :z angle)
                     :replace t
                     :instant instant-p))))))
@@ -54,7 +50,7 @@
 
 (defmethod v:on-component-update ((self shot-mover))
   (v:translate
-   (transform self)
+   self
    (let ((a (v3:normalize (m4:rotation-axis-to-vec3
                            (c/xform:local (transform self)) :y)))
          (move-delta (* (velocity self) (v:frame-time (v:context self)))))
