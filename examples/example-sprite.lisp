@@ -96,7 +96,7 @@
 
 ;;; Prefabs
 
-(v:define-prefab "sprite-1" (:library examples)
+(v:define-prefab "sprite" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("ship"
    (c/xform:transform :rotate (q:orient :local :z (- o:pi/2)))
@@ -113,38 +113,9 @@
      (c/xform:transform :translate (v3:vec 0f0 -140f0 0f0))
      (c/sprite:sprite :spec :spritesheet-data
                       :name "exhaust03-01"
-                      :frames 8)
+                      :frames 8
+                      :duration 0.75)
      (c/render:render :material `(x/mat:sprite
                                   ,(a:make-gensym '#:sprite)
                                   :uniforms ((:sprite.sampler sprites)))
-                      :mode :sprite)
-     (c/action:actions :default '((:type x/action:sprite-animate
-                                   :duration 0.5f0
-                                   :repeat-p t)))))))
-
-(v:define-prefab "sprite-2" (:library examples)
-  (("camera" :copy "/cameras/ortho"))
-  ("plane"
-   (c/xform:transform :scale 2f0)
-   (c/sprite:sprite :spec :spritesheet-data
-                    :name "planet04")
-   (c/render:render :material `(x/mat:sprite
-                                ,(a:make-gensym '#:sprite)
-                                :uniforms ((:sprite.sampler sprites)))
-                    :mode :sprite)
-   (c/action:actions :default '((:type x/action:rotate
-                                 :duration 4f0
-                                 :shape o:bounce-in
-                                 :repeat-p t)))))
-
-(v:define-prefab "sprite-3" (:library examples)
-  (("camera" :copy "/cameras/ortho"))
-  ("plane"
-   (c/xform:transform :scale 2f0
-                      :rotate/velocity (o:make-velocity v3:+forward+ o:pi))
-   (c/sprite:sprite :spec :spritesheet-data
-                    :name "planet04")
-   (c/render:render :material `(x/mat:sprite
-                                ,(a:make-gensym '#:sprite)
-                                :uniforms ((:sprite.sampler sprites)))
-                    :mode :sprite)))
+                      :mode :sprite)))))

@@ -62,14 +62,6 @@ long the thing has yet to live, with NIL meaning infinity."))
 
 (defgeneric (setf %shared-storage) (value context key))
 
-;;; Actions
-
-(defgeneric action:on-insert (action type))
-
-(defgeneric action:on-finish (action type))
-
-(defgeneric action:on-update (action type))
-
 ;;; Prologue/Epilogue
 
 (defgeneric prologue (context))

@@ -471,9 +471,6 @@
            :initform nil)
    (%sprite :accessor sprite
             :initarg :sprite
-            :initform nil)
-   (%action :accessor action
-            :initarg :action
             :initform nil)))
 
 ;; we use this at runtime to instantiate a bullet prefab and fill in everything
@@ -1820,23 +1817,20 @@ NIL if no such list exists."
   (projectile :transform (v:ref :self :component 'c/xform:transform)
               :mover (v:ref :self :component 'line-mover)
               :collider (v:ref :self :component 'c/col:sphere)
-              :sprite (v:ref :self :component 'c/sprite:sprite)
-              :action (v:ref :self :component 'c/action:actions))
+              :sprite (v:ref :self :component 'c/sprite:sprite))
   (tags :tags '(:dangerous))
   (damage-points :dp 1)
   (explosion :name "explode01-01" :frames 15)
   (hit-points :hp 1)
   (line-mover)
-  (c/sprite:sprite :spec :spritesheet-data)
+  (c/sprite:sprite :spec :spritesheet-data
+                   :duration 0.5)
   (c/col:sphere :center (v3:vec)
                 :on-layer :enemy-bullet
                 :referent (v:ref :self :component 'hit-points)
                 :radius 15f0)
   (c/render:render :material 'sprite-sheet
-                   :mode :sprite)
-  (c/action:actions :default '((:type x/action:sprite-animate
-                                :duration 0.5f0
-                                :repeat-p t))))
+                   :mode :sprite))
 
 (v:define-prefab "player-ship" (:library ptp)
   "The venerable Player Ship. Controls how it looks, collides, and movement."
@@ -1869,12 +1863,10 @@ NIL if no such list exists."
     (c/xform:transform :translate (v3:vec 0f0 -60f0 0f0))
     (c/sprite:sprite :spec :spritesheet-data
                      :name "exhaust03-01"
-                     :frames 8)
+                     :frames 8
+                     :duration 0.5)
     (c/render:render :material 'sprite-sheet
-                     :mode :sprite)
-    (c/action:actions :default '((:type x/action:sprite-animate
-                                  :duration 0.5f0
-                                  :repeat-p t))))))
+                     :mode :sprite))))
 
 (v:define-prefab "player-ship-mockette" (:library ptp)
   "An image of the ship, but no colliders or guns."
@@ -1909,12 +1901,11 @@ NIL if no such list exists."
   (c/sprite:sprite :spec :spritesheet-data
                    ;; TODO: When this is misnamed, the error is extremely obscure
                    :name "explode01-01"
-                   :frames 15)
+                   :frames 15
+                   :duration 0.5
+                   :repeat nil)
   (c/render:render :material 'sprite-sheet
-                   :mode :sprite)
-  (c/action:actions :default '((:type x/action:sprite-animate
-                                :duration 0.5f0
-                                :repeat-p nil))))
+                   :mode :sprite))
 
 ;; TODO: Refactor these signs into a single prefab and a sign component to
 ;; manage the configuration of the prefab.

@@ -37,12 +37,11 @@
     (:emissive-sampler 'damaged-helmet/emissive)
     (:emissive-factor 0.3f0))))
 
-
 ;; NOTE: This simple mouse rotator will NOT work correctly if the actor's
 ;; transform is having other updates applied to it over time. This includes
-;; :rotate/velocity or action components that rotate, etc, etc. In order to make
-;; this possible, we'd need to shove a parent actor onto the model you want to
-;; rotate and put this component on THAT one.
+;; :rotate/velocity, etc. In order to make this possible, we'd need to shove a
+;; parent actor onto the model you want to rotate and put this component on THAT
+;; one.
 (v:define-component simple-mouse-rotator ()
   ((%rot-speed :accessor rot-speed
                :initarg :rot-speed

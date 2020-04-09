@@ -1,10 +1,5 @@
 (in-package #:cl-user)
 
-(defpackage #:virality.components.actions
-  (:use #:cl)
-  (:export
-   #:actions))
-
 (defpackage #:virality.components.camera
   (:use #:cl)
   (:export
@@ -55,8 +50,7 @@
   (:export
    #:frames
    #:name
-   #:sprite
-   #:update-sprite-index))
+   #:sprite))
 
 (defpackage #:virality.components.transform
   (:use #:cl)

@@ -1,14 +1,5 @@
 (in-package #:cl-user)
 
-(defpackage #:virality.extensions.actions
-  (:use #:cl)
-  (:export
-   #:fade-in
-   #:fade-out
-   #:rotate
-   #:rotate/reverse
-   #:sprite-animate))
-
 (defpackage #:virality.extensions.materials
   (:use #:cl)
   ;; profiles

@@ -12,7 +12,17 @@
    (%initial-index :reader initial-index)
    (%frames :accessor frames
             :initarg :frames
-            :initform 1))
+            :initform 1)
+   (%duration :reader duration
+              :initarg :duration
+              :initform 1)
+   (%repeat :reader repeat
+            :initarg :repeat
+            :initform t)
+   (%elapsed :reader elapsed
+             :initform 0f0)
+   (%pause :reader pause
+           :initform nil))
   ((:cached-spritesheet-data equalp)))
 
 (defclass spritesheet ()
@@ -62,11 +72,6 @@
     (gpu:bind-buffer %buffer-name 1)
     (write-spritesheet-buffer spritesheet)))
 
-(defun update-sprite-index (sprite step)
-  (with-slots (%index %initial-index %frames) sprite
-    (let ((max (1- (+ %initial-index %frames))))
-      (setf %index (floor (u:map-domain 0 1 %initial-index max step))))))
-
 (defun draw-sprite (sprite &optional count)
   (with-slots (%index %spritesheet) sprite
     (with-slots (%geometry) %spritesheet
@@ -91,3 +96,18 @@
         (setf %spritesheet cached-spritesheet
               %index (u:href (sprites %spritesheet) %name)
               %initial-index %index)))))
+
+(defmethod v:on-component-update ((self sprite))
+  (with-slots (%frames %index %initial-index %duration %repeat %elapsed %pause)
+      self
+    (unless %pause
+      (incf %elapsed (v:frame-time (v:context self)))
+      (if (>= %elapsed %duration)
+          (setf %elapsed 0
+                %index %initial-index
+                %pause (unless %repeat t))
+          (let* ((step (/ %elapsed %duration))
+                 (min %initial-index)
+                 (max (1- (+ min %frames)))
+                 (index (floor (a:clamp (a:lerp step min (1+ max)) min max))))
+            (setf %index index))))))

@@ -37,8 +37,7 @@
   :pathname "src"
   :serial t
   :components
-  ((:file "package-actions")
-   (:file "package-region")
+  ((:file "package-region")
    (:file "package-colliders")
    (:file "package-components")
    (:file "package-extensions")
@@ -96,10 +95,6 @@
    (:file "region")
    (:file "bounding-volume-obb")
    (:file "colliders")
-   (:file "action")
-   (:file "action-fade")
-   (:file "action-rotate")
-   (:file "action-sprite-animate")
    (:file "texture-common")
    (:file "texture")
    (:file "texture-1d")
@@ -115,7 +110,6 @@
    (:module "components"
     :components
     ((:file "transform")
-     (:file "actions")
      (:file "camera")
      (:file "camera-following")
      (:file "camera-tracking")
