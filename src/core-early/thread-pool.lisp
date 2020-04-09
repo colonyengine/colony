@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (global-vars:define-global-var =thread-pool= nil)
 

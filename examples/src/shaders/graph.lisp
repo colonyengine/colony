@@ -1,4 +1,4 @@
-(in-package #:virality.examples.shaders)
+(in-package #:virality-examples.shaders)
 
 (defun graph/frag ((uv :vec2)
                    &uniforms

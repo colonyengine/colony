@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defun get-png-channel-count (image)
   (ecase (pngload-fast:color-type image)

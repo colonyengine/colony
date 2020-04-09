@@ -1,4 +1,4 @@
-(asdf:defsystem #:virality.engine
+(asdf:defsystem #:virality
   :description "An experimental game engine."
   :author ("Michael Fiano <mail@michaelfiano.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
@@ -16,6 +16,7 @@
                #:cl-graph
                #:cl-opengl
                #:cl-ppcre
+               #:cl-slug
                #:closer-mop
                #:doubly-linked-list
                #:fast-io
@@ -45,7 +46,7 @@
    (:file "package-prefab")
    (:file "package-shader")
    (:file "package-textures")
-   (:file "package-engine")
+   (:file "package")
    (:file "package-nicknames")
    (:module "core-early"
     :components
@@ -57,7 +58,10 @@
      (:file "live-coding")
      (:file "avl-tree")
      (:file "parser")
-     (:file "uuid")))
+     (:file "uuid")
+     (:file "deployment")
+     (:file "asset")
+     #++(:file "asset-new")))
    (:module "input"
     :components
     ((:file "data")
@@ -70,13 +74,11 @@
    (:file "common")
    (:file "debugging")
    (:file "protocol")
-   (:file "deployment")
    (:file "geometry-static")
    (:file "geometry-dynamic-attribute")
    (:file "geometry-dynamic-group")
    (:file "geometry-dynamic-buffer")
    (:file "geometry-dynamic")
-   (:file "asset")
    (:file "rcache")
    (:file "clock")
    (:file "context")

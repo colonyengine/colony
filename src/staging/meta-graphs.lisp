@@ -190,22 +190,19 @@
     (:category v:texture-resolution
      :depends-on ((v:core (core))) ;; v:core is in context of category!
      :roots (all-textures))
-  (search-path all-textures
-               (:virality.examples -> core)))
+  (search-path all-textures (:virality-examples -> core)))
 
 (define-graph project
     (:category v:material-resolution
      :depends-on ((v:core (core)))
      :roots (all-materials))
-  (search-path all-materials
-               (:virality.examples -> core)))
+  (search-path all-materials (:virality-examples -> core)))
 
 (define-graph project
     (:category v:component-resolution
      :depends-on ((v:core (core)))
      :roots (all-component))
-  (search-path all-components
-               (-> :virality.examples -> core)))
+  (search-path all-components (-> :virality-examples -> core)))
 
 ;; component execution order
 (define-graph project

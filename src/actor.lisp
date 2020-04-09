@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defclass actor (kernel)
   ((%components :reader components

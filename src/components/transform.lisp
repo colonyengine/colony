@@ -88,9 +88,9 @@
     (v::initialize-rotation %rotation rotate rotate/velocity)
     (v::initialize-scale %scale scale scale/velocity)))
 
-;;; User protocol helper functions
-;;; The user protocol functions are generic and live in the VIRALITY.ENGINE
-;;; package, but they call out to the helper functions below.
+;;; User protocol helper functions The user protocol functions are generic and
+;;; live in the VIRALITY package, but they call out to the helper functions
+;;; below.
 
 (defun %get-model-matrix (transform copy)
   (let ((model (model transform)))

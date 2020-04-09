@@ -1,4 +1,4 @@
-(in-package #:virality.examples)
+(in-package #:virality-examples)
 
 ;;; Materials
 
@@ -10,7 +10,7 @@
 
 (v:define-prefab "noise-tile" (:library examples)
   (c/xform:transform :scale (v3:vec 90f0 90f0 0f0))
-  (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb")))
+  (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb")))
 
 (v:define-prefab "noise" (:library examples)
   (("camera" :copy "/cameras/ortho"))

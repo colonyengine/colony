@@ -1,4 +1,4 @@
-(in-package #:virality.examples.shaders)
+(in-package #:virality-examples.shaders)
 
 (defstruct pbr-info
   (n-dot-l :float :accessor n-dot-l)

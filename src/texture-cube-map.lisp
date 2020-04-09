@@ -19,7 +19,7 @@
          (num-mipmaps (length (second (aref first-cube 0)))))
     ;; TODO: I removed the verbose logging framework because it is buggy. ~axion
     ;; 4/9/2020.
-    #++(:printv :virality.engine "Loading :texture-cube-map images = ~a" images)
+    #++(:printv "Loading :texture-cube-map images = ~a" images)
     ;; Check to ensure they all fit into texture memory.
     ;; TODO: Refactor out of each method into validate-mipmap-images and
     ;; generalize.

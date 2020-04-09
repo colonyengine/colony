@@ -1,4 +1,4 @@
-(in-package #:virality.examples.shaders)
+(in-package #:virality-examples.shaders)
 
 (defstruct dynamic-attrs
   (pos :vec3)

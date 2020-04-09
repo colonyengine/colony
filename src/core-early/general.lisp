@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 ;;;; This file houses various general-purpose utilities used across Virality
 ;;;; Engine, that either don't belong in golden-utils, or just haven't been

@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 ;;;; This file contains functions for parsing binary file formats. This is used
 ;;;; to read GLTF model data, and is general-purpose enough to be used for other

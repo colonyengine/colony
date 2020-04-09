@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 ;;;; TODO: This file is currently not used by Virality Engine yet. The contents
 ;;;; of this file will become useful when we have a complete rendering pipeline

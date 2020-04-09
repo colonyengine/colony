@@ -21,8 +21,7 @@
          (num-mipmaps (length (second (aref first-cube 0)))))
     ;; TODO: I removed the verbose logging framework because it is buggy.
     ;; ~axion 4/9/2020.
-    #++(:printv :virality.engine "Loading :texture-cube-map-array images = ~a"
-                images)
+    #++(:printv "Loading :texture-cube-map-array images = ~a" images)
     ;; Figure out the ideal mipmap count from the base resolution.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
         ;; TODO: This might need work with cube-maps.
@@ -39,8 +38,7 @@
                 (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
           ;; TODO: I removed the verbose logging framework because it is buggy.
           ;; ~axion 4/9/2020.
-          #++(:printv :virality.engine
-                      "tex-storage-3d: texture-type = ~a, ~
+          #++(:printv "tex-storage-3d: texture-type = ~a, ~
                       num-mipmaps-to-generate = ~a, internal-format = ~a, ~
                       width = ~a, height = ~a, depth = ~a~%"
                       texture-type
@@ -69,8 +67,7 @@
                           :do
                              ;; TODO: I removed the verbose logging framework
                              ;; because it is buggy. ~axion 4/9/2020.
-                          #++(:printv :virality.engine
-                                      "inserting cube ~a face ~a[~a]~%"
+                          #++(:printv "inserting cube ~a face ~a[~a]~%"
                                       cube-idx face-signifier idx)
                              (let ((image (aref mipmaps idx)))
                                (if immutable-p

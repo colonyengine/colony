@@ -1,9 +1,9 @@
-(in-package #:virality.examples)
+(in-package #:virality-examples)
 
 ;; To run this game, start your lisp repl, then:
 ;;
-;; (ql:quickload :virality.examples)
-;; (virality.engine:start :project :virality.examples :scene '(("protect-the-planets" ptp)))
+;; (ql:quickload :virality-examples) (virality:start :project
+;; :virality-examples :scene '(("protect-the-planets" ptp)))
 
 ;; "Protect the Planets!"
 ;; by Peter Keller (psilord@cs.wisc.edu)
@@ -83,7 +83,7 @@
 ;; symbol name). However, I wanted the ENTIRE codebase to be in one file to
 ;; demonstrate this is possible for a game.
 
-(in-package #:virality.examples.shaders)
+(in-package #:virality-examples.shaders)
 
 (defun starfield/frag ((color :vec4)
                        (uv1 :vec2)
@@ -101,7 +101,7 @@
 
 
 ;; Back to our regularly scheduled package!
-(in-package #:virality.examples)
+(in-package #:virality-examples)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Textures
@@ -1914,7 +1914,7 @@ NIL if no such list exists."
   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material 'warning-wave)))
 
 (v:define-prefab "warning-mothership-sign" (:library ptp)
@@ -1922,28 +1922,28 @@ NIL if no such list exists."
   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material 'warning-mothership)))
 
 (v:define-prefab "title-sign" (:library ptp)
   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material 'title)))
 
 (v:define-prefab "game-over-sign" (:library ptp)
   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material 'game-over)))
 
 (v:define-prefab "level-complete-sign" (:library ptp)
   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                      :scale 512f0)
   ("sign"
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material 'level-complete)))
 
 (v:define-prefab "starfield" (:library ptp)
@@ -1951,7 +1951,7 @@ NIL if no such list exists."
                      ;; NOTE: ortho projection, so we can put starfield way
                      ;; back.
                      :translate (v3:vec 0f0 0f0 (dl :starfield)))
-  (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+  (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
   (c/render:render :material 'starfield))
 
 (v:define-prefab "time-keeper" (:library ptp)
@@ -1967,7 +1967,7 @@ NIL if no such list exists."
    ;; coordinate frame.
    ("time-display"
     (c/xform:transform :translate (v3:vec 0f0 1f0 0f0))
-    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+    (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
     ;; TODO: when 'time-bar is mis-spelled in the material,
     ;; I don't get the debug material, why?
     ;; TODO: I think this material is leaked when this object is destroyed.

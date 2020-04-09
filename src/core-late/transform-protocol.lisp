@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 ;;; NOTE: Each user protocol function below is generic for maximum flexibility.
 ;;; They can take 1 of 3 objects to operate on:

@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defclass hdr-image-buffer ()
   ((%stream :reader buffer-stream

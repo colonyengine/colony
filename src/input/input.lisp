@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defmacro event-case ((event) &body handlers)
   (let (events)

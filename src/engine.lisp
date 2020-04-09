@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 #+sbcl
 (u:eval-always
@@ -21,14 +21,14 @@
 (defmethod prologue :before ((context context))
   ;; TODO: I removed the verbose logging framework because it is buggy.
   ;; ~axion ;; 4/9/2020.
-  #++(:printv :virality.engine "Running prologue method."))
+  #++(:printv :virality "Running prologue method."))
 
 (defmethod prologue ((context context)))
 
 (defmethod epilogue :before ((context context))
   ;; TODO: I removed the verbose logging framework because it is buggy.
   ;; ~axion ;; 4/9/2020.
-  #++(:printv :virality.engine "Running epilogue method."))
+  #++(:printv :virality "Running epilogue method."))
 
 (defmethod epilogue ((context context)))
 

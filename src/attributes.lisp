@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 ;;; This will be the new home of the attributes type so we can manage DSL
 ;;; attributes in a nicer way. Semantic-attributes are usually written by a

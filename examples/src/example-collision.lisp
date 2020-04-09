@@ -1,4 +1,4 @@
-(in-package #:virality.examples)
+(in-package #:virality-examples)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This is not really a general purpose component. It is just here to help out
@@ -12,23 +12,20 @@
 (defmethod v:on-collision-enter ((self destroy-my-actor) other-collider)
   ;; TODO: I removed the verbose logging framework because it is buggy. ~axion
   ;; 4/9/2020.
-  #++(:printv :virality.examples
-              "DESTROY-MY-ACTOR: Actor ~a entered collision with collider ~
+  #++(:printv "DESTROY-MY-ACTOR: Actor ~a entered collision with collider ~
              ~a(on actor ~a)"
               (v:actor self) other-collider (v:actor other-collider))
   (when (string= (v:display-id other-collider) "Ground")
     ;; TODO: I removed the verbose logging framework because it is buggy. ~axion
     ;; 4/9/2020.
-    #++(:printv :virality.examples
-                "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" ~
+    #++(:printv "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" ~
                object, so destroy myself!")
     (v:destroy (v:actor self))))
 
 (defmethod v:on-collision-exit ((self destroy-my-actor) other-collider)
   ;; TODO: I removed the verbose logging framework because it is buggy. ~axion
   ;; 4/9/2020.
-  #++(:printv :virality.examples
-              "DESTROY-MY-ACTOR: Actor ~a is exiting collision with ~
+  #++(:printv "DESTROY-MY-ACTOR: Actor ~a is exiting collision with ~
              ~a(on actor: ~a)."
               (v:actor self) other-collider (v:actor other-collider)))
 
@@ -65,12 +62,12 @@
             (left (v:transform-left self)))
         ;; TODO: I removed the verbose logging framework because it is buggy.
         ;; ~axion 4/9/2020.
-        #++(:printv :virality.examples "FORWARD Vector -> ~a" forward)
-        #++(:printv :virality.examples "BACKWARD Vector -> ~a" backward)
-        #++(:printv :virality.examples "UP Vector -> ~a" up)
-        #++(:printv :virality.examples "DOWN Vector -> ~a" down)
-        #++(:printv :virality.examples "RIGHT Vector -> ~a" right)
-        #++(:printv :virality.examples "LEFT Vector -> ~a" left)
+        #++(:printv "FORWARD Vector -> ~a" forward)
+        #++(:printv "BACKWARD Vector -> ~a" backward)
+        #++(:printv "UP Vector -> ~a" up)
+        #++(:printv "DOWN Vector -> ~a" down)
+        #++(:printv "RIGHT Vector -> ~a" right)
+        #++(:printv "LEFT Vector -> ~a" left)
         ;; NOTE: This expects the actor to be unrotated wrt the universe.
         (unless (and (v3:~ forward (v3:vec 0f0 0f0 -1f0))
                      (v3:~ backward (v3:vec 0f0 0f0 1f0))
@@ -106,14 +103,12 @@
           ;; TODO: I removed the verbose logging framework because it is buggy.
           ;; ~axion 4/9/2020.
           #++(:printv
-              :virality.examples
               "FAILED: (v3:~~ local->world:~a world-space-point: ~a) -> ~a"
               local->world world-space-point result-0))
         (unless result-1
           ;; TODO: I removed the verbose logging framework because it is buggy.
           ;; ~axion 4/9/2020.
           #++(:printv
-              :virality.examples
               "FAILED: (v3:~~ world->local:~a object-space-point: ~a) -> ~a"
               world->local object-space-point result-1))
         (error "TRANSFORM-POINT API Failed!")))))
@@ -136,14 +131,12 @@
           ;; TODO: I removed the verbose logging framework because it is buggy.
           ;; ~axion 4/9/2020.
           #++(:printv
-              :virality.examples
               "FAILED: (v3:~~ local->world:~a world-space-vector: ~a) -> ~a"
               local->world world-space-vector result-0))
         (unless result-1
           ;; TODO: I removed the verbose logging framework because it is buggy.
           ;; ~axion 4/9/2020.
           #++(:printv
-              :virality.examples
               "FAILED: (v3:~~ world->local:~a object-space-vector: ~a) -> ~a"
               world->local object-space-vector result-1))
         (error "TRANSFORM-VECTOR API Failed!")))))
@@ -167,14 +160,12 @@
           ;; TODO: I removed the verbose logging framework because it is buggy.
           ;; ~axion 4/9/2020.
           #++(:printv
-              :virality.examples
               "FAILED: (v3:~~ local->world:~a world-space-direction: ~a) -> ~a"
               local->world world-space-direction result-0))
         (unless result-1
           ;; TODO: I removed the verbose logging framework because it is buggy.
           ;; ~axion 4/9/2020.
           #++(:printv
-              :virality.examples
               "FAILED: (v3:~~ world->local:~a object-space-direction: ~a) -> ~a"
               world->local object-space-direction result-1))
         (error "TRANSFORM-DIRECTION API Failed!")))))
@@ -191,7 +182,7 @@
                       :rotate/velocity (o:make-velocity v3:+forward+ o:pi))
    ("plane-0"
     (c/xform:transform :translate (v3:vec -2f0 0f0 0f0))
-    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+    (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
     (c/col:sphere :display-id "Player"
                   :visualize t
                   :on-layer :player
@@ -203,7 +194,7 @@
                       :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi)))
    ("plane-1"
     (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
-    (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+    (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
     (c/col:sphere :display-id "Enemy"
                   :visualize t
                   :on-layer :enemy
@@ -229,7 +220,7 @@ unit world vector representations of the axis directions as:
    ;; NOTE: The 5 0 0 is specific to the unit-test-transform-api tests.
    (c/xform:transform :translate (v3:vec 5f0 0f0 0f0))
    (unit-test-transform-api :test-type :test-direction-vectors)
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material '2d-wood)))
 
 (v:define-prefab "collision-transform-test-1" (:library examples)
@@ -250,7 +241,7 @@ world space for a particular transform."
       ;; "mark" Z axis.
       (c/xform:transform :rotate (q:orient :local :z o:pi/2) :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
-      (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+      (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
       (c/render:render :material '2d-wood))))))
 
 
@@ -274,7 +265,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("left-gate"
    (c/xform:transform :translate (v3:vec -1.15f0 2f0 -.1f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Left-Gate"
                  :visualize t
@@ -282,7 +273,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("right-gate"
    (c/xform:transform :translate (v3:vec 1.15f0 2f0 -.1f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Right-Gate"
                  :visualize t
@@ -307,7 +298,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("ground"
    (c/xform:transform :translate (v3:vec 0f0 -2f0 0.1f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/col:sphere :display-id "Ground"
                  :visualize t
                  :on-layer :ground
@@ -324,28 +315,28 @@ actually are. You have to view the results to see the colliders lighting up."
 
   ("upper-left"
    (c/xform:transform :translate (v3:vec -2f0 2f0 -0.1f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Upper-Left"
                  :visualize t
                  :on-layer :ground))
   ("upper-right"
    (c/xform:transform :translate (v3:vec 2f0 2f0 -0.1f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Upper-Right"
                  :visualize t
                  :on-layer :ground))
   ("lower-left"
    (c/xform:transform :translate (v3:vec -2f0 -2f0 -0.1f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Lower-Left"
                  :visualize t
                  :on-layer :ground))
   ("lower-right"
    (c/xform:transform :translate (v3:vec 2f0 -2f0 -0.1f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
    (c/render:render :material '2d-wood)
    (c/col:sphere :display-id "Lower-Right"
                  :visualize t

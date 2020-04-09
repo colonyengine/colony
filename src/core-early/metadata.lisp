@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 ;;;; This file sets up at compile time a collection of hash tables stored in
 ;;;; global variables used for storing metadata that are used during development

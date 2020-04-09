@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defclass flow-state ()
   ((%name :accessor name
@@ -137,7 +137,7 @@ the flow exited. Return two values The previous state name and the current state
 name which resulted in the exiting of the flow."
   ;; TODO: I removed the verbose logging framework because it is buggy. ~axion
   ;; 4/9/2020.
-  #++(:printv :virality.engine "Entering flow: (~a ~a ~a)"
+  #++(:printv "Entering flow: (~a ~a ~a)"
               call-flow-name flow-name flow-state-name)
   (loop :with call-flow = (get-call-flow call-flow-name core)
         :with flow = (get-flow flow-name call-flow)
@@ -149,7 +149,7 @@ name which resulted in the exiting of the flow."
         :do
            ;; TODO: I removed the verbose logging framework because it is buggy.
            ;; ~axion 4/9/2020.
-        #++(:printv :virality.engine "Processing flow-state: ~a, exiting: ~a"
+        #++(:printv "Processing flow-state: ~a, exiting: ~a"
                     (name flow-state) (exiting-p flow-state))
         ;; Step 1: Record state transition and update to current.
            (setf last-state-name current-state-name
@@ -219,7 +219,7 @@ name which resulted in the exiting of the flow."
            (when (exiting-p flow-state)
              ;; TODO: I removed the verbose logging framework because it is
              ;; buggy. ~axion 4/9/2020.
-             #++(:printv :virality.engine "Exiting flow: (~a ~a ~a)"
+             #++(:printv "Exiting flow: (~a ~a ~a)"
                          call-flow-name flow-name current-state-name)
              (return-from execute-flow
                (values last-state-name

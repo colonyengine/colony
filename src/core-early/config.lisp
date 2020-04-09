@@ -1,8 +1,8 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (u:eval-always
   (defun get-config-option-name (key)
-    (a:format-symbol :virality.engine "=~a=" key)))
+    (a:format-symbol :virality "=~a=" key)))
 
 (defun validate-config-options (options)
   (u:do-plist (k v options)
@@ -21,7 +21,7 @@
 (defmacro define-config (project-name options &body body)
   (declare (ignore options))
   `(progn
-     ,@(if (eq project-name :virality.engine)
+     ,@(if (eq project-name :virality)
            `((setf =meta/config/default= (u:dict ,@body))
              ,@(loop :for (k v) :on body :by #'cddr
                      :for name = (get-config-option-name k)
@@ -31,7 +31,7 @@
              (setf (u:href =meta/config/project= ,project-name)
                    (u:hash-merge =meta/config/default= (u:dict ,@body)))))))
 
-(define-config :virality.engine ()
+(define-config :virality ()
   :allow-screensaver nil
   :anti-alias-level 4
   :delta 1/30

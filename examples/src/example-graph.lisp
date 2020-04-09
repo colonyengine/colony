@@ -1,4 +1,4 @@
-(in-package #:virality.examples)
+(in-package #:virality-examples)
 
 ;;; Materials
 

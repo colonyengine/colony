@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defun identity/annotation (value component)
   (declare (ignore component))
@@ -447,7 +447,7 @@
                        :finally (return composing-value)))))
        ;; A method to locate the metadata in the shared storage form in this
        ;; class.
-       (defmethod ,(intern "SHARED-STORAGE-METADATA" :virality.engine)
+       (defmethod ,(intern "SHARED-STORAGE-METADATA" :virality)
            ((component-name (eql ',name)) &optional namespace)
          (declare (ignore component-name))
          (let ((ss-meta ',shared-storage-metadata))

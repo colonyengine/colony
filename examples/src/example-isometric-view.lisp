@@ -1,4 +1,4 @@
-(in-package #:virality.examples)
+(in-package #:virality-examples)
 
 ;;; Prefabs
 
@@ -26,17 +26,17 @@
   ;; NOTE: cubes are on xz plane.
   (("cube-z-1" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 0f0 0f0 -4f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb")))
+   (c/smesh:static-mesh :asset '(:virality/mesh "cube.glb")))
   (("cube-z-0" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 0f0 0f0 -2f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb")))
+   (c/smesh:static-mesh :asset '(:virality/mesh "cube.glb")))
   (("cube-origin" :copy "/mesh")
    (c/xform:transform
     #++ :rotate/velocity #++ (p:angular-velocity (v3:vec -1f0 1f0 1f0) o:pi/2))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb")))
+   (c/smesh:static-mesh :asset '(:virality/mesh "cube.glb")))
   (("cube-x-0" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb")))
+   (c/smesh:static-mesh :asset '(:virality/mesh "cube.glb")))
   (("cube-x-1" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 4f0 0f0 0f0))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))))
+   (c/smesh:static-mesh :asset '(:virality/mesh "cube.glb"))))

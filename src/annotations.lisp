@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 ;; I designed the system such that the direction the annotation goes is the same
 ;; for reading and writing.

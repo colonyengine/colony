@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defun print-scene-tree (core)
   "Print an ascii representation of the scene tree indented to show children."

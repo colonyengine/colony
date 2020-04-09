@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (a:define-constant +gltf-attribute-locations+
     '(("POSITION" . 0)

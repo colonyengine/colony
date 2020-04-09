@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (global-vars:define-global-var =cpu= "Unknown")
 (global-vars:define-global-var =cpu-count= 1)
@@ -57,6 +57,6 @@
         =max-ssbo-bindings= (get-gpu/max-ssbo-bindings)))
 
 (defun get-hardware-info (key)
-  (let ((global (a:format-symbol :virality.engine "=~a=" key)))
+  (let ((global (a:format-symbol :virality "=~a=" key)))
     (when (boundp global)
       (symbol-value global))))

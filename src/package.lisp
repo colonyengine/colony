@@ -1,6 +1,6 @@
 (in-package #:cl-user)
 
-(uiop:define-package #:virality.engine
+(uiop:define-package #:virality
   (:use #:cl)
   (:mix-reexport
    #:virality.colliders
@@ -79,6 +79,13 @@
    #:transform-vector
    #:translate
    #:translate/velocity)
+
+  ;; assets
+  (:export
+   #:define-asset-pool
+   #:find-asset
+   #:resolve-path
+   #:with-asset-cache)
 
   (:export
    #:attach-component

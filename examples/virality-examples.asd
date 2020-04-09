@@ -1,4 +1,4 @@
-(asdf:defsystem #:virality.examples
+(asdf:defsystem #:virality-examples
   :description "Virality Engine Examples"
   :author ("Michael Fiano <michael.fiano@gmail.com>"
            "Peter Keller <psilord@cs.wisc.edu>")
@@ -9,10 +9,12 @@
   :depends-on (#:alexandria
                #:golden-utils
                #:origin
-               #:virality.engine)
+               #:virality)
+  :pathname "src"
   :serial t
   :components
   ((:file "package")
+   ;; (:file "assets")
    (:file "common")
    (:file "shaders/playground")
    (:file "shaders/damaged-helmet")

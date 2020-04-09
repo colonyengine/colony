@@ -152,8 +152,7 @@ had--and update all other faces too."
           (when (contact-p collider-system fist-collider face-collider)
             ;; TODO: I removed the verbose logging framework because it is
             ;; buggy. ~axion 4/9/2020.
-            #++(:printv :virality.engine
-                        "remove-all-contacts: attempting to remove ~a from ~
+            #++(:printv "remove-all-contacts: attempting to remove ~a from ~
                         contacting ~a."
                         fist-collider face-collider)
             (exit-contact collider-system fist-collider face-collider)))))))
@@ -286,8 +285,7 @@ had--and update all other faces too."
                       (u:href (collision-plan collider-system) fist-layer)))
                 ;; TODO: I removed the verbose logging framework because it is
                 ;; buggy. ~axion 4/9/2020.
-                #++(:printv :virality.engine
-                            "Checking registering fist: ~s, [~s: ~s]"
+                #++(:printv "Checking registering fist: ~s, [~s: ~s]"
                             (v:display-id fist) (c/col:on-layer fist)
                             face-layers)
                 (cond
@@ -295,10 +293,9 @@ had--and update all other faces too."
                    ;; If no face layers to collide against AT ALL, automatically
                    ;; stabilize the fist and we're done with it.
 
-                   ;; TODO: I removed the verbose logging framework because it is
-                   ;; buggy. ~axion 4/9/2020.
-                   #++(:printv :virality.engine
-                               " Stabilizing[0]: ~s" (v:display-id fist))
+                   ;; TODO: I removed the verbose logging framework because it
+                   ;; is buggy. ~axion 4/9/2020.
+                   #++(:printv " Stabilizing[0]: ~s" (v:display-id fist))
                    (setf (u:href stable-colliders fist-layer fist) fist))
                   (t
                    ;; Else, we collide the fist against each face in each
@@ -306,8 +303,7 @@ had--and update all other faces too."
                    (dolist (face-layer face-layers)
                      ;; TODO: I removed the verbose logging framework because it
                      ;; is buggy. ~axion 4/9/2020.
-                     #++(:printv :virality.engine
-                                 " Checking contacts between layers: ~s <=> ~s"
+                     #++(:printv " Checking contacts between layers: ~s <=> ~s"
                                  fist-layer face-layer)
                      ;; Find all the face-layer colliders to which we need to
                      ;; collide.
@@ -320,8 +316,7 @@ had--and update all other faces too."
                          (u:do-hash-keys (face face-layer-stable-colliders)
                            ;; TODO: I removed the verbose logging framework
                            ;; because it is buggy. ~axion 4/9/2020.
-                           #++(:printv :virality.engine
-                                       "  compute-contact-state: [reg: ~s <-> ~
+                           #++(:printv "  compute-contact-state: [reg: ~s <-> ~
                                       stable: ~s]"
                                        (v:display-id fist) (v:display-id face))
                            (compute-contact-state collider-system fist face)))))
@@ -335,8 +330,7 @@ had--and update all other faces too."
 
                    ;; TODO: I removed the verbose logging framework because it is
                    ;; buggy. ~axion 4/9/2020.
-                   #++(:printv :virality.engine
-                               " Stabilizing[1]: ~s" (v:display-id fist))
+                   #++(:printv " Stabilizing[1]: ~s" (v:display-id fist))
                    (setf (u:href stable-colliders fist-layer fist)
                          fist)))))))))))
 

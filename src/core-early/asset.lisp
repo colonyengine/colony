@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defun resolve-project-path (system &optional path)
   (if (and (boundp '*deployed-p*) *deployed-p*)
@@ -97,7 +97,7 @@
      (check-asset-project-name ',project)
      (setf (u:href =meta/assets= ,project) (make-asset-table ',body))))
 
-(define-assets :virality.engine
+(define-assets :virality
   :data "data"
   :mesh (:data "mesh")
   :texture (:data "texture")

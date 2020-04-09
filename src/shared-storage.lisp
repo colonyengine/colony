@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defgeneric %shared-storage (context key)
   (:method (context key)

@@ -1,4 +1,4 @@
-(in-package #:virality.examples)
+(in-package #:virality-examples)
 
 ;;; Prefabs
 
@@ -19,5 +19,5 @@
                   :mode :orthographic))))
 
 (v:define-prefab "mesh" (:library ptp-base)
-  (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+  (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
   (c/render:render :material 'x/mat:unlit-texture))

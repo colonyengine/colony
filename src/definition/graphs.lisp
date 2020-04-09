@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (define-graph :core (:category component-dependency)
   (subdag all-unknown-types ((unknown-types)))

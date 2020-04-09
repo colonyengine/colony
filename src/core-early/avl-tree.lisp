@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defstruct (avl-tree
             (:constructor %make-avl-tree)

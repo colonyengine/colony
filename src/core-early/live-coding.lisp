@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (defmacro with-continuable (report &body body)
   `(restart-case (progn ,@body)

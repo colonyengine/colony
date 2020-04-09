@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (deftype clock () '(simple-array double-float (16)))
 
@@ -67,8 +67,7 @@
                  (plusp fps))
         ;; TODO: I removed the verbose logging framework because it is buggy.
         ;; ~axion ;; 4/9/2020.
-        #++(:printv :virality.engine "Frame rate: ~,2f fps / ~,3f ms/f"
-                    fps (/ 1000 fps))
+        #++(:printv "Frame rate: ~,2f fps / ~,3f ms/f" fps (/ 1000 fps))
         (setf debug-count 0d0
               debug-time current-time))
       (incf debug-count)
@@ -120,8 +119,7 @@
         (update-repl)
         ;; TODO: I removed the verbose logging framework because it is buggy.
         ;; ~axion ;; 4/9/2020.
-        #++(:printv :virality.engine
-                     "Periodic update performed (every ~d seconds)"
+        #++(:printv "Periodic update performed (every ~d seconds)"
                      period-interval)
         (setf elapsed current)))
     nil))

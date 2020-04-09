@@ -1,4 +1,4 @@
-(in-package #:virality.examples)
+(in-package #:virality-examples)
 
 ;;; Textures
 
@@ -266,10 +266,10 @@
                       :rotate (q:orient :world
                                         :x (float (asin (/ (sqrt 2))) 1f0)
                                         :z o:pi/4))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "cube.glb"))
    (c/render:render :material 'cubemap))
   (("cube-map-array" :copy "/mesh")
    (c/xform:transform :translate (v3:vec 3f0 -1f0 0f0)
                       :rotate/velocity (o:make-velocity (v3:vec 1) o:pi))
-   (c/smesh:static-mesh :asset '(:virality.engine/mesh "cube.glb"))
+   (c/smesh:static-mesh :asset '(:virality/mesh "cube.glb"))
    (c/render:render :material 'cubemaparray)))

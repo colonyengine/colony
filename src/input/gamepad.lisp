@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (a:define-constant +gamepad-axis-names+
     #((:left-stick :x) (:left-stick :y) (:right-stick :x) (:right-stick :y)
@@ -78,7 +78,7 @@
                          (1+ (hash-table-count %gamepad-instances))))))
 
 (defun prepare-gamepads (core)
-  (let ((database (find-asset (context core) :virality.engine/gamepad-db)))
+  (let ((database (find-asset (context core) :virality/gamepad-db)))
     (sdl2:game-controller-add-mappings-from-file (namestring database))
     (sdl2-ffi.functions:sdl-set-hint
      sdl2-ffi:+sdl-hint-joystick-allow-background-events+ "1")))

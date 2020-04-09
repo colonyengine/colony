@@ -1,12 +1,12 @@
-(in-package #:virality.examples)
+(in-package #:virality-examples)
 
-(v:define-config :virality.examples ()
+(v:define-config :virality-examples ()
   :window-width 1280
   :window-height 720
   :delta (float 1/120 1f0)
   :initial-scene '(("geometric-volumes" examples)))
 
-(v:define-assets :virality.examples
+(v:define-assets :virality-examples
   :data "data"
   :mesh (:data "mesh")
   :tex (:data "texture")
@@ -44,7 +44,7 @@
                   :mode :orthographic))))
 
 (v:define-prefab "mesh" (:library examples)
-  (c/smesh:static-mesh :asset '(:virality.engine/mesh "plane.glb"))
+  (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
   (c/render:render :material 'x/mat:unlit-texture))
 
 ;;; Graphs
@@ -52,9 +52,9 @@
 ;; TODO: FIgure out why the graph DSL can't parse syntax based on symbol-name.
 ;; The following in-package form is needed until this is fixed
 
-(in-package #:virality.engine)
+(in-package #:virality)
 
-(define-graph :virality.examples
+(define-graph :virality-examples
     (:category component-dependency
      :depends-on ((:core (all-unknown-types core-types)))
      :roots (all-ordered-types))
@@ -62,11 +62,11 @@
           ((splice core-types)
            -> (splice all-unknown-types))))
 
-(define-graph :virality.engine
+(define-graph :virality
     (:category component-package-order
      :depends-on ((:core-component-order (core-packages)))
      :roots (start-search))
-  (subdag current-project (:comp -> :virality.examples))
+  (subdag current-project (:comp -> :virality-examples))
   (subdag start-search
           ((splice current-project)
            -> (splice core-packages))))

@@ -36,7 +36,7 @@
       (:virality.components.render :c/render)
       (:virality.components.sprite :c/sprite)
       (:virality.components.transform :c/xform)
-      (:virality.engine :v)
+      (:virality :v)
       (:virality.extensions.materials :x/mat)
       (:virality.extensions.textures :x/tex)
       (:virality.geometry :geo)
