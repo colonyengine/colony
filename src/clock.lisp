@@ -65,7 +65,9 @@
            (fps (/ debug-count debug-interval)))
       (when (and (>= elapsed debug-interval)
                  (plusp fps))
-        (log:info :virality.engine "Frame rate: ~,2f fps / ~,3f ms/f"
+        ;; TODO: I removed the verbose logging framework because it is buggy.
+        ;; ~axion ;; 4/9/2020.
+        #++(:printv :virality.engine "Frame rate: ~,2f fps / ~,3f ms/f"
                     fps (/ 1000 fps))
         (setf debug-count 0d0
               debug-time current-time))
@@ -116,7 +118,9 @@
     (let ((period-interval (clock-period-interval clock)))
       (when (>= (- current elapsed) period-interval)
         (update-repl)
-        (log:trace :virality.engine
+        ;; TODO: I removed the verbose logging framework because it is buggy.
+        ;; ~axion ;; 4/9/2020.
+        #++(:printv :virality.engine
                      "Periodic update performed (every ~d seconds)"
                      period-interval)
         (setf elapsed current)))

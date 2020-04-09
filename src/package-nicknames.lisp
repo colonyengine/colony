@@ -26,7 +26,6 @@
       (:origin.mat3 :m3)
       (:origin.mat4 :m4)
       (:origin.quat :q)
-      (:verbose :log)
       (:virality.colliders :col)
       (:virality.components.camera :c/cam)
       (:virality.components.camera.following :c/gcam)

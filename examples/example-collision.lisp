@@ -10,21 +10,27 @@
                      :initform 5f0)))
 
 (defmethod v:on-collision-enter ((self destroy-my-actor) other-collider)
-  (log:info :virality.examples
-            "DESTROY-MY-ACTOR: Actor ~a entered collision with collider ~
+  ;; TODO: I removed the verbose logging framework because it is buggy. ~axion
+  ;; 4/9/2020.
+  #++(:printv :virality.examples
+              "DESTROY-MY-ACTOR: Actor ~a entered collision with collider ~
              ~a(on actor ~a)"
-            (v:actor self) other-collider (v:actor other-collider))
+              (v:actor self) other-collider (v:actor other-collider))
   (when (string= (v:display-id other-collider) "Ground")
-    (log:info :virality.examples
-              "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" ~
+    ;; TODO: I removed the verbose logging framework because it is buggy. ~axion
+    ;; 4/9/2020.
+    #++(:printv :virality.examples
+                "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" ~
                object, so destroy myself!")
     (v:destroy (v:actor self))))
 
 (defmethod v:on-collision-exit ((self destroy-my-actor) other-collider)
-  (log:info :virality.examples
-            "DESTROY-MY-ACTOR: Actor ~a is exiting collision with ~
+  ;; TODO: I removed the verbose logging framework because it is buggy. ~axion
+  ;; 4/9/2020.
+  #++(:printv :virality.examples
+              "DESTROY-MY-ACTOR: Actor ~a is exiting collision with ~
              ~a(on actor: ~a)."
-            (v:actor self) other-collider (v:actor other-collider)))
+              (v:actor self) other-collider (v:actor other-collider)))
 
 (defmethod v:on-component-update ((self destroy-my-actor))
   (decf (time-to-destroy self) (v:frame-time (v:context self)))
@@ -57,12 +63,14 @@
             (down (v:transform-down self))
             (right (v:transform-right self))
             (left (v:transform-left self)))
-        (log:trace :virality.examples "FORWARD Vector -> ~a" forward)
-        (log:trace :virality.examples "BACKWARD Vector -> ~a" backward)
-        (log:trace :virality.examples "UP Vector -> ~a" up)
-        (log:trace :virality.examples "DOWN Vector -> ~a" down)
-        (log:trace :virality.examples "RIGHT Vector -> ~a" right)
-        (log:trace :virality.examples "LEFT Vector -> ~a" left)
+        ;; TODO: I removed the verbose logging framework because it is buggy.
+        ;; ~axion 4/9/2020.
+        #++(:printv :virality.examples "FORWARD Vector -> ~a" forward)
+        #++(:printv :virality.examples "BACKWARD Vector -> ~a" backward)
+        #++(:printv :virality.examples "UP Vector -> ~a" up)
+        #++(:printv :virality.examples "DOWN Vector -> ~a" down)
+        #++(:printv :virality.examples "RIGHT Vector -> ~a" right)
+        #++(:printv :virality.examples "LEFT Vector -> ~a" left)
         ;; NOTE: This expects the actor to be unrotated wrt the universe.
         (unless (and (v3:~ forward (v3:vec 0f0 0f0 -1f0))
                      (v3:~ backward (v3:vec 0f0 0f0 1f0))
@@ -95,15 +103,19 @@
           (result-1 (v3:~ world->local object-space-point)))
       (unless (and result-0 result-1)
         (unless result-0
-          (log:error
-           :virality.examples
-           "FAILED: (v3:~~ local->world:~a world-space-point: ~a) -> ~a"
-           local->world world-space-point result-0))
+          ;; TODO: I removed the verbose logging framework because it is buggy.
+          ;; ~axion 4/9/2020.
+          #++(:printv
+              :virality.examples
+              "FAILED: (v3:~~ local->world:~a world-space-point: ~a) -> ~a"
+              local->world world-space-point result-0))
         (unless result-1
-          (log:error
-           :virality.examples
-           "FAILED: (v3:~~ world->local:~a object-space-point: ~a) -> ~a"
-           world->local object-space-point result-1))
+          ;; TODO: I removed the verbose logging framework because it is buggy.
+          ;; ~axion 4/9/2020.
+          #++(:printv
+              :virality.examples
+              "FAILED: (v3:~~ world->local:~a object-space-point: ~a) -> ~a"
+              world->local object-space-point result-1))
         (error "TRANSFORM-POINT API Failed!")))))
 
 (defun test-transform-vector-api (self)
@@ -121,15 +133,19 @@
             (v3:~ world->local object-space-vector)))
       (unless (and result-0 result-1)
         (unless result-0
-          (log:error
-           :virality.examples
-           "FAILED: (v3:~~ local->world:~a world-space-vector: ~a) -> ~a"
-           local->world world-space-vector result-0))
+          ;; TODO: I removed the verbose logging framework because it is buggy.
+          ;; ~axion 4/9/2020.
+          #++(:printv
+              :virality.examples
+              "FAILED: (v3:~~ local->world:~a world-space-vector: ~a) -> ~a"
+              local->world world-space-vector result-0))
         (unless result-1
-          (log:error
-           :virality.examples
-           "FAILED: (v3:~~ world->local:~a object-space-vector: ~a) -> ~a"
-           world->local object-space-vector result-1))
+          ;; TODO: I removed the verbose logging framework because it is buggy.
+          ;; ~axion 4/9/2020.
+          #++(:printv
+              :virality.examples
+              "FAILED: (v3:~~ world->local:~a object-space-vector: ~a) -> ~a"
+              world->local object-space-vector result-1))
         (error "TRANSFORM-VECTOR API Failed!")))))
 
 (defun test-transform-direction-api (self)
@@ -148,15 +164,19 @@
             (v3:~ world->local object-space-direction)))
       (unless (and result-0 result-1)
         (unless result-0
-          (log:error
-           :virality.examples
-           "FAILED: (v3:~~ local->world:~a world-space-direction: ~a) -> ~a"
-           local->world world-space-direction result-0))
+          ;; TODO: I removed the verbose logging framework because it is buggy.
+          ;; ~axion 4/9/2020.
+          #++(:printv
+              :virality.examples
+              "FAILED: (v3:~~ local->world:~a world-space-direction: ~a) -> ~a"
+              local->world world-space-direction result-0))
         (unless result-1
-          (log:error
-           :virality.examples
-           "FAILED: (v3:~~ world->local:~a object-space-direction: ~a) -> ~a"
-           world->local object-space-direction result-1))
+          ;; TODO: I removed the verbose logging framework because it is buggy.
+          ;; ~axion 4/9/2020.
+          #++(:printv
+              :virality.examples
+              "FAILED: (v3:~~ world->local:~a object-space-direction: ~a) -> ~a"
+              world->local object-space-direction result-1))
         (error "TRANSFORM-DIRECTION API Failed!")))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -19,8 +19,10 @@
          ;; TODO: We assume all cube maps have the same mipmap number. I don't
          ;; know if this is a reuirements or not.
          (num-mipmaps (length (second (aref first-cube 0)))))
-    (log:trace :virality.engine "Loading :texture-cube-map-array images = ~a"
-               images)
+    ;; TODO: I removed the verbose logging framework because it is buggy.
+    ;; ~axion 4/9/2020.
+    #++(:printv :virality.engine "Loading :texture-cube-map-array images = ~a"
+                images)
     ;; Figure out the ideal mipmap count from the base resolution.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
         ;; TODO: This might need work with cube-maps.
@@ -35,16 +37,18 @@
       (when immutable-p
         (let ((num-mipmaps-to-generate
                 (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
-          (log:trace :virality.engine
-                     "tex-storage-3d: texture-type = ~a, ~
+          ;; TODO: I removed the verbose logging framework because it is buggy.
+          ;; ~axion 4/9/2020.
+          #++(:printv :virality.engine
+                      "tex-storage-3d: texture-type = ~a, ~
                       num-mipmaps-to-generate = ~a, internal-format = ~a, ~
                       width = ~a, height = ~a, depth = ~a~%"
-                     texture-type
-                     num-mipmaps-to-generate
-                     (v::internal-format first-image)
-                     (v::width first-image)
-                     (v::height first-image)
-                     (* (length data) 6))
+                      texture-type
+                      num-mipmaps-to-generate
+                      (v::internal-format first-image)
+                      (v::width first-image)
+                      (v::height first-image)
+                      (* (length data) 6))
           (%gl:tex-storage-3d texture-type
                               num-mipmaps-to-generate
                               (v::internal-format first-image)
@@ -62,33 +66,36 @@
                           ;; NOTE: face-idx works cause I sorted the faces
                           ;; earlier.
                           :for face-idx :by 1
-                          :do (log:trace :virality.engine
-                                         "inserting cube ~a face ~a[~a]~%"
-                                         cube-idx face-signifier idx)
-                              (let ((image (aref mipmaps idx)))
-                                (if immutable-p
-                                    (gl:tex-sub-image-3d
-                                     texture-type
-                                     level
-                                     0
-                                     0
-                                     (+ (* cube-idx 6)
-                                        face-idx)
-                                     (v::width image)
-                                     (v::height image)
-                                     1
-                                     (v::pixel-format image)
-                                     (v::pixel-type image)
-                                     (v::data image))
-                                    (gl:tex-image-3d
-                                     texture-type
-                                     level
-                                     (v::internal-format image)
-                                     (v::width image)
-                                     (v::height image)
-                                     (+ (* cube-idx 6) face-idx)
-                                     0
-                                     (v::pixel-format image)
-                                     (v::pixel-type image)
-                                     (v::data image))))))))
+                          :do
+                             ;; TODO: I removed the verbose logging framework
+                             ;; because it is buggy. ~axion 4/9/2020.
+                          #++(:printv :virality.engine
+                                      "inserting cube ~a face ~a[~a]~%"
+                                      cube-idx face-signifier idx)
+                             (let ((image (aref mipmaps idx)))
+                               (if immutable-p
+                                   (gl:tex-sub-image-3d
+                                    texture-type
+                                    level
+                                    0
+                                    0
+                                    (+ (* cube-idx 6)
+                                       face-idx)
+                                    (v::width image)
+                                    (v::height image)
+                                    1
+                                    (v::pixel-format image)
+                                    (v::pixel-type image)
+                                    (v::data image))
+                                   (gl:tex-image-3d
+                                    texture-type
+                                    level
+                                    (v::internal-format image)
+                                    (v::width image)
+                                    (v::height image)
+                                    (+ (* cube-idx 6) face-idx)
+                                    0
+                                    (v::pixel-format image)
+                                    (v::pixel-type image)
+                                    (v::data image))))))))
       (potentially-autogenerate-mipmaps texture-type texture))))

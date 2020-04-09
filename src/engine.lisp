@@ -19,12 +19,16 @@
          (sb-profile:reset)))))
 
 (defmethod prologue :before ((context context))
-  (log:trace :virality.engine "Running prologue method."))
+  ;; TODO: I removed the verbose logging framework because it is buggy.
+  ;; ~axion ;; 4/9/2020.
+  #++(:printv :virality.engine "Running prologue method."))
 
 (defmethod prologue ((context context)))
 
 (defmethod epilogue :before ((context context))
-  (log:trace :virality.engine "Running epilogue method."))
+  ;; TODO: I removed the verbose logging framework because it is buggy.
+  ;; ~axion ;; 4/9/2020.
+  #++(:printv :virality.engine "Running epilogue method."))
 
 (defmethod epilogue ((context context)))
 
@@ -49,9 +53,7 @@ tear-down procedure occurs when stopping the engine."
     (make-prefab-instance core scene-name)))
 
 (defun initialize-engine (core scene-name)
-  (log:info :virality.engine "Starting up ~a..." v:=window-title=)
   (setup-repl)
-  (enable-logging core)
   (make-display core)
   (prepare-gamepads core)
   (make-clock core)
@@ -65,8 +67,7 @@ tear-down procedure occurs when stopping the engine."
   (mat::load-materials core)
   (col::initialize-collider-system core)
   (make-scene-tree core)
-  (load-initial-scene core scene-name)
-  (log:info :virality.engine "Finished starting ~a" v:=window-title=))
+  (load-initial-scene core scene-name))
 
 (defun iterate-main-loop (core)
   (with-continuable "Virality Engine"
@@ -100,11 +101,9 @@ the last step, before finally starting the main game loop."
 (defun stop (core)
   "Stop the engine, making sure to call any user-defined epilogue function
 first, and finally cleaning up."
-  (log:info :virality.engine "Shutting down ~a..." v:=window-title=)
   (run-epilogue core)
   (gpu:unload-shaders)
   (kill-display core)
   (shutdown-gamepads core)
   (setf (running-p core) nil)
-  (makunbound '*core-debug*)
-  (log:info :virality.engine "Successfully shut down ~a" v:=window-title=))
+  (makunbound '*core-debug*))

@@ -135,8 +135,10 @@ COME-FROM-STATE-NAME is an arbitrary symbol that indicates the previous
 flow-state name. This is often a symbolic name so execute-flow can determine how
 the flow exited. Return two values The previous state name and the current state
 name which resulted in the exiting of the flow."
-  (log:trace :virality.engine "Entering flow: (~a ~a ~a)"
-             call-flow-name flow-name flow-state-name)
+  ;; TODO: I removed the verbose logging framework because it is buggy. ~axion
+  ;; 4/9/2020.
+  #++(:printv :virality.engine "Entering flow: (~a ~a ~a)"
+              call-flow-name flow-name flow-state-name)
   (loop :with call-flow = (get-call-flow call-flow-name core)
         :with flow = (get-flow flow-name call-flow)
         :with flow-state = (get-flow-state flow-state-name flow)
@@ -144,88 +146,93 @@ name which resulted in the exiting of the flow."
         :with last-state-name
         :with selections
         :with policy = :identity-policy
-        :do (log:trace :virality.engine "Processing flow-state: ~a, exiting: ~a"
-                       (name flow-state) (exiting-p flow-state))
-            ;; Step 1: Record state transition and update to current.
-            (setf last-state-name current-state-name
-                  current-state-name (name flow-state))
-            ;; Step 2: Perform execution policy
-            (ecase (policy flow-state)
-              (:reset
-               (funcall (reset flow-state))))
-            ;; Step 3: Run Selector Function
-            (multiple-value-bind (the-policy the-selections)
-                (if (selector flow-state)
-                    (funcall (selector flow-state) core)
-                    (values :identity-policy nil))
-              (setf selections the-selections
-                    policy the-policy))
-            ;; Step 4: Iterate the action across everything in the selections.
-            ;; NOTE: This is not a map-tree or anything complex. It just assumes
-            ;; selection is going to be one of:
+        :do
+           ;; TODO: I removed the verbose logging framework because it is buggy.
+           ;; ~axion 4/9/2020.
+        #++(:printv :virality.engine "Processing flow-state: ~a, exiting: ~a"
+                    (name flow-state) (exiting-p flow-state))
+        ;; Step 1: Record state transition and update to current.
+           (setf last-state-name current-state-name
+                 current-state-name (name flow-state))
+           ;; Step 2: Perform execution policy
+           (ecase (policy flow-state)
+             (:reset
+              (funcall (reset flow-state))))
+           ;; Step 3: Run Selector Function
+           (multiple-value-bind (the-policy the-selections)
+               (if (selector flow-state)
+                   (funcall (selector flow-state) core)
+                   (values :identity-policy nil))
+             (setf selections the-selections
+                   policy the-policy))
+           ;; Step 4: Iterate the action across everything in the selections.
+           ;; NOTE: This is not a map-tree or anything complex. It just assumes
+           ;; selection is going to be one of:
 
-            ;; If the policy is :identity-policy, then the selection can be: a
-            ;; single hash table instance a single instance of some class a list
-            ;; of things that are either hash tables or class instances. If the
-            ;; policy is :type-policy, then the selection can be: a single
-            ;; type-table instance (more semantics for :type-policy could be
-            ;; added at a later date).
-            (labels ((act-on-item (item)
-                       (a:when-let ((action (action flow-state)))
-                         (etypecase item
-                           (hash-table (u:do-hash-values (v item)
-                                         (funcall action v)))
-                           (atom (funcall action item)))))
-                     (act-on-type-table (type-key type-table)
-                       ;; Get the hash of components for the type-key
-                       (u:when-found (component-table
-                                      (type-table type-key type-table))
-                         (act-on-item component-table))))
-              (ecase policy
-                ;; TODO: :type-policy is in this branch until I write the code
-                ;; path that it is supposed to take with that policy.
-                ((:identity-policy)
-                 (if (listp selections)
-                     (dolist (item selections)
-                       (act-on-item item))
-                     (act-on-item selections)))
-                ((:type-policy)
-                 (let* ((component-dependency-graph
-                          (u:href (analyzed-graphs core) 'component-dependency))
-                        (annotation (annotation component-dependency-graph))
-                        (dependency-type-order
-                          (toposort component-dependency-graph)))
-                   ;; Now, walk the list of dependency order and run the action
-                   ;; in the topologically sorted type order.
-                   (dolist (dependency-type dependency-type-order)
-                     (cond
-                       ;; If it is a regular type, then act on all available
-                       ;; components for that type.
-                       ((is-syntax-form-p '(component-type) dependency-type)
-                        (act-on-type-table (second dependency-type) selections))
-                       ;; If it is the unknown type, then run all components in
-                       ;; the unknown type set.
-                       ((is-syntax-form-p '(unknown-types) dependency-type)
-                        (act-on-type-table (unknown-type-id annotation)
-                                           selections))
-                       (t
-                        (error "EXECUTE-FLOW :type-policy is broken."))))))))
-            ;; Step 5: Exit if reached exiting state.
-            (when (exiting-p flow-state)
-              (log:trace :virality.engine "Exiting flow: (~a ~a ~a)"
+           ;; If the policy is :identity-policy, then the selection can be: a
+           ;; single hash table instance a single instance of some class a list
+           ;; of things that are either hash tables or class instances. If the
+           ;; policy is :type-policy, then the selection can be: a single
+           ;; type-table instance (more semantics for :type-policy could be
+           ;; added at a later date).
+           (labels ((act-on-item (item)
+                      (a:when-let ((action (action flow-state)))
+                        (etypecase item
+                          (hash-table (u:do-hash-values (v item)
+                                        (funcall action v)))
+                          (atom (funcall action item)))))
+                    (act-on-type-table (type-key type-table)
+                      ;; Get the hash of components for the type-key
+                      (u:when-found (component-table
+                                     (type-table type-key type-table))
+                        (act-on-item component-table))))
+             (ecase policy
+               ;; TODO: :type-policy is in this branch until I write the code
+               ;; path that it is supposed to take with that policy.
+               ((:identity-policy)
+                (if (listp selections)
+                    (dolist (item selections)
+                      (act-on-item item))
+                    (act-on-item selections)))
+               ((:type-policy)
+                (let* ((component-dependency-graph
+                         (u:href (analyzed-graphs core) 'component-dependency))
+                       (annotation (annotation component-dependency-graph))
+                       (dependency-type-order
+                         (toposort component-dependency-graph)))
+                  ;; Now, walk the list of dependency order and run the action
+                  ;; in the topologically sorted type order.
+                  (dolist (dependency-type dependency-type-order)
+                    (cond
+                      ;; If it is a regular type, then act on all available
+                      ;; components for that type.
+                      ((is-syntax-form-p '(component-type) dependency-type)
+                       (act-on-type-table (second dependency-type) selections))
+                      ;; If it is the unknown type, then run all components in
+                      ;; the unknown type set.
+                      ((is-syntax-form-p '(unknown-types) dependency-type)
+                       (act-on-type-table (unknown-type-id annotation)
+                                          selections))
+                      (t
+                       (error "EXECUTE-FLOW :type-policy is broken."))))))))
+           ;; Step 5: Exit if reached exiting state.
+           (when (exiting-p flow-state)
+             ;; TODO: I removed the verbose logging framework because it is
+             ;; buggy. ~axion 4/9/2020.
+             #++(:printv :virality.engine "Exiting flow: (~a ~a ~a)"
                          call-flow-name flow-name current-state-name)
-              (return-from execute-flow
-                (values last-state-name
-                        current-state-name)))
-            ;; Step 6: Run the transition function to determine the next
-            ;; flow-state. Currently, a transition can only go into the SAME
-            ;; flow.
-            (flet ((act-on-transition (transition)
-                     (etypecase transition
-                       (function (funcall transition core))
-                       (symbol transition))))
-              (setf flow-state (u:href flow (act-on-transition
-                                             (transition flow-state)))))))
+             (return-from execute-flow
+               (values last-state-name
+                       current-state-name)))
+           ;; Step 6: Run the transition function to determine the next
+           ;; flow-state. Currently, a transition can only go into the SAME
+           ;; flow.
+           (flet ((act-on-transition (transition)
+                    (etypecase transition
+                      (function (funcall transition core))
+                      (symbol transition))))
+             (setf flow-state (u:href flow (act-on-transition
+                                            (transition flow-state)))))))
 
 (defun get-call-flow (call-flow-name core)
   (u:href (call-flows core) call-flow-name))

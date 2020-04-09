@@ -36,10 +36,9 @@
                          (:orthographic (v3:vec 0f0 0f0 1f0))
                          (:perspective (v3:vec 0f0 0f0 50f0)))))
       (v:translate camera translation)
-      (log:warn :virality.components
-                "Camera ~a was attached to an actor without a translation ~
+      (warn "Camera ~a was attached to an actor without a translation ~
                  transform.~%Using a sane default value for ~(~a~): ~s."
-                (v:id (v:actor camera)) (mode camera) translation))))
+            (v:id (v:actor camera)) (mode camera) translation))))
 
 (defmethod make-projection (camera (mode (eql :perspective)))
   (with-slots (%projection %fov-y %zoom %clip-near %clip-far) camera

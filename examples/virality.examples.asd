@@ -9,7 +9,6 @@
   :depends-on (#:alexandria
                #:golden-utils
                #:origin
-               #:verbose
                #:virality.engine)
   :serial t
   :components

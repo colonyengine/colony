@@ -32,8 +32,7 @@
                #:static-vectors
                #:trivial-features
                #:uiop
-               #:umbra
-               #:verbose)
+               #:umbra)
   :pathname "src"
   :serial t
   :components
@@ -81,7 +80,6 @@
    (:file "rcache")
    (:file "clock")
    (:file "context")
-   (:file "logging")
    (:file "graph")
    (:file "flow")
    (:file "attributes")

@@ -150,10 +150,12 @@ had--and update all other faces too."
         ;; removing hash tables we don't need anymore.
         (dolist (face-collider face-colliders)
           (when (contact-p collider-system fist-collider face-collider)
-            (log:trace :virality.engine
-                       "remove-all-contacts: attempting to remove ~a from ~
+            ;; TODO: I removed the verbose logging framework because it is
+            ;; buggy. ~axion 4/9/2020.
+            #++(:printv :virality.engine
+                        "remove-all-contacts: attempting to remove ~a from ~
                         contacting ~a."
-                       fist-collider face-collider)
+                        fist-collider face-collider)
             (exit-contact collider-system fist-collider face-collider)))))))
 
 (defun compute-contact-state (collider-system fist-collider face-collider)
@@ -282,24 +284,31 @@ had--and update all other faces too."
               ;; The FIST is good to go! collide it and stabilize it!
               (let ((face-layers
                       (u:href (collision-plan collider-system) fist-layer)))
-                (log:trace :virality.engine
-                           "Checking registering fist: ~s, [~s: ~s]"
-                           (v:display-id fist) (c/col:on-layer fist)
-                           face-layers)
+                ;; TODO: I removed the verbose logging framework because it is
+                ;; buggy. ~axion 4/9/2020.
+                #++(:printv :virality.engine
+                            "Checking registering fist: ~s, [~s: ~s]"
+                            (v:display-id fist) (c/col:on-layer fist)
+                            face-layers)
                 (cond
                   ((null face-layers)
                    ;; If no face layers to collide against AT ALL, automatically
                    ;; stabilize the fist and we're done with it.
-                   (log:trace :virality.engine
-                              " Stabilizing[0]: ~s" (v:display-id fist))
+
+                   ;; TODO: I removed the verbose logging framework because it is
+                   ;; buggy. ~axion 4/9/2020.
+                   #++(:printv :virality.engine
+                               " Stabilizing[0]: ~s" (v:display-id fist))
                    (setf (u:href stable-colliders fist-layer fist) fist))
                   (t
                    ;; Else, we collide the fist against each face in each
                    ;; layer.
                    (dolist (face-layer face-layers)
-                     (log:trace :virality.engine
-                                " Checking contacts between layers: ~s <=> ~s"
-                                fist-layer face-layer)
+                     ;; TODO: I removed the verbose logging framework because it
+                     ;; is buggy. ~axion 4/9/2020.
+                     #++(:printv :virality.engine
+                                 " Checking contacts between layers: ~s <=> ~s"
+                                 fist-layer face-layer)
                      ;; Find all the face-layer colliders to which we need to
                      ;; collide.
                      (let ((face-layer-stable-colliders
@@ -309,10 +318,12 @@ had--and update all other faces too."
                        (unless (zerop (hash-table-count
                                        face-layer-stable-colliders))
                          (u:do-hash-keys (face face-layer-stable-colliders)
-                           (log:trace :virality.engine
-                                      "  compute-contact-state: [reg: ~s <-> ~
+                           ;; TODO: I removed the verbose logging framework
+                           ;; because it is buggy. ~axion 4/9/2020.
+                           #++(:printv :virality.engine
+                                       "  compute-contact-state: [reg: ~s <-> ~
                                       stable: ~s]"
-                                      (v:display-id fist) (v:display-id face))
+                                       (v:display-id fist) (v:display-id face))
                            (compute-contact-state collider-system fist face)))))
                    ;; And when we *FINISH* colliding the specific registering
                    ;; fist against all of the stable faces in all face-layers
@@ -321,8 +332,11 @@ had--and update all other faces too."
                    ;; need be.
                    ;; NOTE: We CANNOT stabilize until AFTER the registering fist
                    ;; has been collided with all stable faces.
-                   (log:trace :virality.engine
-                              " Stabilizing[1]: ~s" (v:display-id fist))
+
+                   ;; TODO: I removed the verbose logging framework because it is
+                   ;; buggy. ~axion 4/9/2020.
+                   #++(:printv :virality.engine
+                               " Stabilizing[1]: ~s" (v:display-id fist))
                    (setf (u:href stable-colliders fist-layer fist)
                          fist)))))))))))
 
