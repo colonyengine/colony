@@ -1,4 +1,4 @@
-(in-package #:virality.components.mesh.static)
+(in-package #:virality.components)
 
 (v:define-component static-mesh ()
   ((%asset :reader asset

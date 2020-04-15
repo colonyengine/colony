@@ -1,4 +1,4 @@
-(in-package #:virality.components.camera)
+(in-package #:virality.components)
 
 (v:define-component camera ()
   ((%active-p :accessor active-p
@@ -82,7 +82,7 @@
 
 (defmethod v:on-component-initialize ((self camera))
   (with-slots (%transform %fov-y %free-look %free-look-state) self
-    (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform)
+    (setf %transform (v:component-by-type (v:actor self) 'comp:transform)
           %fov-y (* %fov-y (/ o:pi 180)))
     (when %free-look
       (setf %free-look-state (v::make-free-look-state (v::context self) self)))

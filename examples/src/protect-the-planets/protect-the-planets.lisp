@@ -243,7 +243,7 @@
 (defmethod v:on-component-attach ((self player-movement) actor)
   (declare (ignore actor))
   (with-accessors ((actor v:actor) (transform transform)) self
-    (setf transform (v:component-by-type actor 'c/xform:transform))))
+    (setf transform (v:component-by-type actor 'comp:transform))))
 
 
 (defmethod v:on-component-update ((self player-movement))
@@ -317,7 +317,7 @@
 (defmethod v:on-component-attach ((self line-mover) actor)
   (declare (ignore actor))
   (with-accessors ((actor v:actor) (transform transform)) self
-    (setf transform (v:component-by-type actor 'c/xform:transform))))
+    (setf transform (v:component-by-type actor 'comp:transform))))
 
 (defmethod v:on-component-physics-update ((self line-mover))
   (with-accessors ((context v:context)
@@ -330,7 +330,7 @@
     (when transform
       (v:translate
        transform
-       (let* ((local (c/xform:local transform))
+       (let* ((local (comp:local transform))
               (x (m4:rotation-axis-to-vec3 local :x))
               (y (m4:rotation-axis-to-vec3 local :y))
               (z (m4:rotation-axis-to-vec3 local :z))
@@ -512,13 +512,13 @@
      ;; Set what layer is the collider on?
      ;; TODO: When setting this, ensure I move the collider to the right
      ;; layer in the physics system.
-     (c/col:on-layer (collider projectile)) physics-layer
+     (comp:on-layer (collider projectile)) physics-layer
      ;; How fast is the projectile going?
      (velocity (mover projectile)) velocity
      ;; Tell the sprite what it should be rendering
      ;; TODO: make NAME and FRAMES public for sprite component.
-     (c/sprite:name (sprite projectile)) name
-     (c/sprite:frames (sprite projectile)) frames
+     (comp:name (sprite projectile)) name
+     (comp:frames (sprite projectile)) frames
 
      ;; and, what direction is it going in?
      (direction (mover projectile)) direction)
@@ -565,8 +565,8 @@
 
     (setf
      ;; Configure the sprite.
-     (c/sprite:name (sprite explosion)) name
-     (c/sprite:frames (sprite explosion)) frames)
+     (comp:name (sprite explosion)) name
+     (comp:frames (sprite explosion)) frames)
 
     (v:scale new-explosion scale :instant t :replace t)
     (v:translate new-explosion translation :instant t :replace t)
@@ -629,7 +629,7 @@
 (defmethod v:on-component-attach ((self gun) actor)
   (declare (ignore actor))
   (with-accessors ((actor v:actor) (emitter-transform emitter-transform)) self
-    (setf emitter-transform (v:component-by-type actor 'c/xform:transform))))
+    (setf emitter-transform (v:component-by-type actor 'comp:transform))))
 
 (defmethod v:on-component-physics-update ((self gun))
   (with-accessors ((context v:context)
@@ -1126,7 +1126,7 @@ NIL if no such list exists."
           (report-planet-alive (level-manager planet)))))))
 
 (defmethod v:on-component-attach ((self planet) actor)
-  (setf (transform self) (v:component-by-type actor 'c/xform:transform)))
+  (setf (transform self) (v:component-by-type actor 'comp:transform)))
 
 (defmethod v:on-component-physics-update ((self planet))
   ;; This might fail for a few frames until things stabilize in the creation of
@@ -1292,7 +1292,7 @@ NIL if no such list exists."
                :replace t)
 
       ;; Color the time bar in accordance to how much time is left.
-      (let ((material (c/render:material time-bar-renderer)))
+      (let ((material (comp:material time-bar-renderer)))
         (setf (v:uniform-ref material :mix-color)
               (v4:lerp time-bar-full-color time-bar-empty-color
                        how-far-to-empty)))
@@ -1814,22 +1814,22 @@ NIL if no such list exists."
 
 (v:define-prefab "projectile" (:library ptp)
   "A generic projectile that can be a bullet, or an asteroid, or whatever."
-  (projectile :transform (v:ref :self :component 'c/xform:transform)
+  (projectile :transform (v:ref :self :component 'comp:transform)
               :mover (v:ref :self :component 'line-mover)
-              :collider (v:ref :self :component 'c/col:sphere)
-              :sprite (v:ref :self :component 'c/sprite:sprite))
+              :collider (v:ref :self :component 'comp:sphere)
+              :sprite (v:ref :self :component 'comp:sprite))
   (tags :tags '(:dangerous))
   (damage-points :dp 1)
   (explosion :name "explode01-01" :frames 15)
   (hit-points :hp 1)
   (line-mover)
-  (c/sprite:sprite :spec :spritesheet-data
+  (comp:sprite :spec :spritesheet-data
                    :duration 0.5)
-  (c/col:sphere :center (v3:vec)
-                :on-layer :enemy-bullet
-                :referent (v:ref :self :component 'hit-points)
-                :radius 15f0)
-  (c/render:render :material 'sprite-sheet
+  (comp:sphere :center (v3:vec)
+               :on-layer :enemy-bullet
+               :referent (v:ref :self :component 'hit-points)
+               :radius 15f0)
+  (comp:render :material 'sprite-sheet
                    :mode :sprite))
 
 (v:define-prefab "player-ship" (:library ptp)
@@ -1844,35 +1844,35 @@ NIL if no such list exists."
               ;; TODO: NEED(!) to visualize this effect!
               :invulnerability-timer 1f0)
   (player-movement)
-  (c/col:sphere :center (v3:vec)
-                :on-layer :player
-                :referent (v:ref :self :component 'hit-points)
-                :radius 30f0)
+  (comp:sphere :center (v3:vec)
+               :on-layer :player
+               :referent (v:ref :self :component 'hit-points)
+               :radius 30f0)
   ("ship-body"
-   (c/sprite:sprite :spec :spritesheet-data
+   (comp:sprite :spec :spritesheet-data
                     :name "ship26")
-   (c/render:render :material 'sprite-sheet
+   (comp:render :material 'sprite-sheet
                     :mode :sprite)
    ("center-gun"
-    (c/xform:transform :translate (v3:vec))
+    (comp:transform :translate (v3:vec))
     (gun :physics-layer :player-bullet
          :depth-layer :player-bullet
          :name "bullet01" :frames 2))
 
    ("exhaust"
-    (c/xform:transform :translate (v3:vec 0f0 -60f0 0f0))
-    (c/sprite:sprite :spec :spritesheet-data
+    (comp:transform :translate (v3:vec 0f0 -60f0 0f0))
+    (comp:sprite :spec :spritesheet-data
                      :name "exhaust03-01"
                      :frames 8
                      :duration 0.5)
-    (c/render:render :material 'sprite-sheet
+    (comp:render :material 'sprite-sheet
                      :mode :sprite))))
 
 (v:define-prefab "player-ship-mockette" (:library ptp)
   "An image of the ship, but no colliders or guns."
-  (c/sprite:sprite :spec :spritesheet-data
+  (comp:sprite :spec :spritesheet-data
                    :name "ship26")
-  (c/render:render :material 'sprite-sheet
+  (comp:render :material 'sprite-sheet
                    :mode :sprite))
 
 (v:define-prefab "player-stable" (:library ptp)
@@ -1886,92 +1886,92 @@ NIL if no such list exists."
   (hit-points :hp 5)
   (explosion :name "explode03-01" :frames 15
              :scale (v3:vec 3f0 3f0 3f0))
-  (c/col:sphere :center (v3:vec)
-                :on-layer :planet
-                :referent (v:ref :self :component 'planet)
-                :visualize t
-                :radius 145f0)
-  (c/sprite:sprite :spec :spritesheet-data
+  (comp:sphere :center (v3:vec)
+               :on-layer :planet
+               :referent (v:ref :self :component 'planet)
+               :visualize t
+               :radius 145f0)
+  (comp:sprite :spec :spritesheet-data
                    :name "planet01")
-  (c/render:render :material 'sprite-sheet
+  (comp:render :material 'sprite-sheet
                    :mode :sprite))
 
 (v:define-prefab "generic-explosion" (:library ptp)
-  (explosion :sprite (v:ref :self :component 'c/sprite:sprite))
-  (c/sprite:sprite :spec :spritesheet-data
+  (explosion :sprite (v:ref :self :component 'comp:sprite))
+  (comp:sprite :spec :spritesheet-data
                    ;; TODO: When this is misnamed, the error is extremely obscure
                    :name "explode01-01"
                    :frames 15
                    :duration 0.5
                    :repeat nil)
-  (c/render:render :material 'sprite-sheet
+  (comp:render :material 'sprite-sheet
                    :mode :sprite))
 
 ;; TODO: Refactor these signs into a single prefab and a sign component to
 ;; manage the configuration of the prefab.
 (v:define-prefab "warning-wave-sign" (:library ptp)
   "Not used yet."
-  (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
-                     :scale 512f0)
+  (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
+                  :scale 512f0)
   ("sign"
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material 'warning-wave)))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material 'warning-wave)))
 
 (v:define-prefab "warning-mothership-sign" (:library ptp)
   "Not used yet."
-  (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
-                     :scale 512f0)
+  (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
+                  :scale 512f0)
   ("sign"
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material 'warning-mothership)))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material 'warning-mothership)))
 
 (v:define-prefab "title-sign" (:library ptp)
-  (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
-                     :scale 512f0)
+  (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
+                  :scale 512f0)
   ("sign"
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material 'title)))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material 'title)))
 
 (v:define-prefab "game-over-sign" (:library ptp)
-  (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
-                     :scale 512f0)
+  (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
+                  :scale 512f0)
   ("sign"
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material 'game-over)))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material 'game-over)))
 
 (v:define-prefab "level-complete-sign" (:library ptp)
-  (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign))
-                     :scale 512f0)
+  (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
+                  :scale 512f0)
   ("sign"
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material 'level-complete)))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material 'level-complete)))
 
 (v:define-prefab "starfield" (:library ptp)
-  (c/xform:transform :scale 960f0
-                     ;; NOTE: ortho projection, so we can put starfield way
-                     ;; back.
-                     :translate (v3:vec 0f0 0f0 (dl :starfield)))
-  (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-  (c/render:render :material 'starfield))
+  (comp:transform :scale 960f0
+                  ;; NOTE: ortho projection, so we can put starfield way
+                  ;; back.
+                  :translate (v3:vec 0f0 0f0 (dl :starfield)))
+  (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+  (comp:render :material 'starfield))
 
 (v:define-prefab "time-keeper" (:library ptp)
-  (c/xform:transform :translate (v3:vec 900f0 -512f0 (dl :time-keeper)))
+  (comp:transform :translate (v3:vec 900f0 -512f0 (dl :time-keeper)))
   (time-keeper :time-max 30f0
                :time-bar-transform (v:ref "time-bar-root"
-                                          :component 'c/xform:transform)
+                                          :component 'comp:transform)
                :time-bar-renderer (v:ref "time-bar-root/time-display"
-                                         :component 'c/render:render))
+                                         :component 'comp:render))
   ("time-bar-root"
    ;; When we scale the transform for this object, the alignment of the
    ;; time-bar will cause it to stretch upwards from a "ground" at 0 in this
    ;; coordinate frame.
    ("time-display"
-    (c/xform:transform :translate (v3:vec 0f0 1f0 0f0))
-    (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
+    (comp:transform :translate (v3:vec 0f0 1f0 0f0))
+    (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
     ;; TODO: when 'time-bar is mis-spelled in the material,
     ;; I don't get the debug material, why?
     ;; TODO: I think this material is leaked when this object is destroyed.
-    (c/render:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-"))))))
+    (comp:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-"))))))
 
 (v:define-prefab "demo-level" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field))
@@ -1981,7 +1981,7 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   ("asteroids")
   (("title" :copy ("/title-sign" :from ptp))
-   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :sign)))))
+   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign)))))
 
 (v:define-prefab "level-0" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
@@ -1994,19 +1994,19 @@ NIL if no such list exists."
   (("time-keeper" :link ("/time-keeper" :from ptp))
    (time-keeper :time-max 20f0))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec 0f0 100f0 (dl :planet))
+   (comp:transform :translate (v3:vec 0f0 100f0 (dl :planet))
                       :scale 0.9f0)
-   (c/sprite:sprite :spec :spritesheet-data
+   (comp:sprite :spec :spritesheet-data
                     :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec -200f0 -100f0 (dl :planet))
+   (comp:transform :translate (v3:vec -200f0 -100f0 (dl :planet))
                       :scale 0.9f0)
-   (c/sprite:sprite :spec :spritesheet-data
+   (comp:sprite :spec :spritesheet-data
                     :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec 200f0 -100f0 (dl :planet))
+   (comp:transform :translate (v3:vec 200f0 -100f0 (dl :planet))
                       :scale 0.9f0)
-   (c/sprite:sprite :spec :spritesheet-data
+   (comp:sprite :spec :spritesheet-data
                     :name "planet03")))
 
 (v:define-prefab "level-1" (:library ptp)
@@ -2019,14 +2019,14 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec -200f0 100f0 (dl :planet))
+   (comp:transform :translate (v3:vec -200f0 100f0 (dl :planet))
                       :scale 0.9f0)
-   (c/sprite:sprite :spec :spritesheet-data
+   (comp:sprite :spec :spritesheet-data
                     :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec 200f0 100f0 (dl :planet))
+   (comp:transform :translate (v3:vec 200f0 100f0 (dl :planet))
                       :scale 0.9f0)
-   (c/sprite:sprite :spec :spritesheet-data
+   (comp:sprite :spec :spritesheet-data
                     :name "planet02")))
 
 (v:define-prefab "level-2" (:library ptp)
@@ -2040,25 +2040,25 @@ NIL if no such list exists."
   (("time-keeper" :link ("/time-keeper" :from ptp))
    (time-keeper :time-max 40f0))
   (("planet-0" :link ("/generic-planet" :from ptp))
-   (c/xform:transform :translate (v3:vec 0f0 100f0 (dl :planet))
+   (comp:transform :translate (v3:vec 0f0 100f0 (dl :planet))
                       :scale 0.9f0)
-   (c/sprite:sprite :spec :spritesheet-data
+   (comp:sprite :spec :spritesheet-data
                     :name "planet01")))
 
 
 (v:define-prefab "protect-the-planets" (:library ptp)
   "The top most level prefab which has the component which drives the game
 sequencing."
-  (c/xform:transform :scale (v3:vec 1))
+  (comp:transform :scale (v3:vec 1))
   (director :level-holder (v:ref "/protect-the-planets/current-level")
             :player-1-stable (v:ref "/protect-the-planets/player-1-stable"
                                     :component 'player-stable))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
-   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :camera))))
+   (comp:transform :translate (v3:vec 0f0 0f0 (dl :camera))))
 
   (("player-1-stable" :link ("/player-stable" :from ptp))
-   (c/xform:transform
+   (comp:transform
     :translate (v3:vec -900f0 550f0 (dl :player-stable))))
 
   ("current-level"))
@@ -2071,4 +2071,4 @@ testing the starfield shader."
   (("starfield" :link ("/starfield" :from ptp)))
 
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
-   (c/xform:transform :translate (v3:vec 0f0 0f0 (dl :camera)))))
+   (comp:transform :translate (v3:vec 0f0 0f0 (dl :camera)))))

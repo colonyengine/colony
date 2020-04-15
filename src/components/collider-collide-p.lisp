@@ -1,4 +1,4 @@
-(in-package #:virality.components.collider)
+(in-package #:virality.components)
 
 ;; All colliders define a COLLIDE-P method appropriate for any combination that
 ;; could be computed.

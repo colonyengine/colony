@@ -69,7 +69,7 @@
              path))))
 
 (defun ensure-path-single-transform (components path)
-  (when (> (count 'c/xform:transform components :key #'car) 1)
+  (when (> (count 'comp:transform components :key #'car) 1)
     (error "Cannot have multiple transform components per path.~%Path: ~s."
            path)))
 

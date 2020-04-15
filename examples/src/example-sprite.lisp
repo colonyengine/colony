@@ -12,7 +12,7 @@
 
 (defmethod v:on-component-initialize ((self simple-movement))
   (with-slots (%transform) self
-    (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform))
+    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))
     (v:translate self (v3:vec -400f0 0f0 0f0) :replace t :instant t)))
 
 (defmethod v:on-component-update ((self simple-movement))
@@ -46,13 +46,13 @@
 
 (defmethod v:on-component-initialize ((self shot-mover))
   (with-slots (%transform) self
-    (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform))))
+    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))))
 
 (defmethod v:on-component-update ((self shot-mover))
   (v:translate
    self
    (let ((a (v3:normalize (m4:rotation-axis-to-vec3
-                           (c/xform:local (transform self)) :y)))
+                           (comp:local (transform self)) :y)))
          (move-delta (* (velocity self) (v:frame-time (v:context self)))))
      (v3:scale a move-delta))))
 
@@ -61,7 +61,7 @@
 
 (defmethod v:on-component-initialize ((self shot-emitter))
   (with-slots (%transform) self
-    (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform))))
+    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))))
 
 (defmethod v:on-component-update ((self shot-emitter))
   (let ((context (v:context self)))
@@ -72,18 +72,18 @@
              (parent-rotation (q:from-mat4 parent-model))
              (new-actor (v:make-actor context :display-id "Ship bullet"))
              (transform (v:make-component context
-                                          'c/xform:transform
+                                          'comp:transform
                                           :translate parent-translation
                                           :rotate parent-rotation))
              (shot-mover (v:make-component context 'shot-mover
 					   :velocity 1000f0))
              (sprite (v:make-component context
-                                       'c/sprite:sprite
+                                       'comp:sprite
                                        :spec :spritesheet-data
                                        :name "bullet01"
                                        :frames 2))
              (render (v:make-component context
-                                       'c/render:render
+                                       'comp:render
                                        :material `(x/mat:sprite
                                                    ,(a:make-gensym '#:sprite)
                                                    :uniforms
@@ -99,23 +99,23 @@
 (v:define-prefab "sprite" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("ship"
-   (c/xform:transform :rotate (q:orient :local :z (- o:pi/2)))
+   (comp:transform :rotate (q:orient :local :z (- o:pi/2)))
    (simple-movement)
    (shot-emitter)
    ("ship-body"
-    (c/sprite:sprite :spec :spritesheet-data
-                     :name "ship29")
-    (c/render:render :material `(x/mat:sprite
-                                 ,(a:make-gensym '#:sprite)
-                                 :uniforms ((:sprite.sampler sprites)))
-                     :mode :sprite)
+    (comp:sprite :spec :spritesheet-data
+                 :name "ship29")
+    (comp:render :material `(x/mat:sprite
+                             ,(a:make-gensym '#:sprite)
+                             :uniforms ((:sprite.sampler sprites)))
+                 :mode :sprite)
     ("exhaust"
-     (c/xform:transform :translate (v3:vec 0f0 -140f0 0f0))
-     (c/sprite:sprite :spec :spritesheet-data
-                      :name "exhaust03-01"
-                      :frames 8
-                      :duration 0.75)
-     (c/render:render :material `(x/mat:sprite
-                                  ,(a:make-gensym '#:sprite)
-                                  :uniforms ((:sprite.sampler sprites)))
-                      :mode :sprite)))))
+     (comp:transform :translate (v3:vec 0f0 -140f0 0f0))
+     (comp:sprite :spec :spritesheet-data
+                  :name "exhaust03-01"
+                  :frames 8
+                  :duration 0.75)
+     (comp:render :material `(x/mat:sprite
+                              ,(a:make-gensym '#:sprite)
+                              :uniforms ((:sprite.sampler sprites)))
+                  :mode :sprite)))))

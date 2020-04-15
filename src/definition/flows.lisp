@@ -99,7 +99,7 @@
                     (action
                      (lambda (core)
                        (clock-tick core)
-                       (c/xform::interpolate-transforms core)))
+                       (comp::interpolate-transforms core)))
                     (transition make-active-camera-view))
         ;; NOTE: This flow-state is invoked deep inside of TICK in the
         ;; flow-state physics loop. Its purpose is to be called every time the
@@ -139,12 +139,12 @@
                      (lambda (core)
                        (let ((context (context core)))
                          (symbol-macrolet ((camera (active-camera context)))
-                           (unless (and camera (c/cam:active-p camera))
-                             (setf camera (c/cam:find-active-camera
+                           (unless (and camera (comp:active-p camera))
+                             (setf camera (comp:find-active-camera
                                            context)))
                            (values :identity-policy
                                    camera)))))
-                    (action #'c/cam:compute-camera-view)
+                    (action #'comp:compute-camera-view)
                     (transition protocol-attach/detach-components))
         (flow-state protocol-attach/detach-components :reset ()
                     (selector

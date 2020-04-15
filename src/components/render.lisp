@@ -1,4 +1,4 @@
-(in-package #:virality.components.render)
+(in-package #:virality.components)
 
 (v:define-component render ()
   ((%mode :reader mode
@@ -20,19 +20,19 @@
               (:static-mesh
                (lambda ()
                  (geo::draw-static-geometry
-                  (c/smesh::data
-                   (v:component-by-type actor 'c/smesh:static-mesh))
+                  (comp::data
+                   (v:component-by-type actor 'comp:static-mesh))
                   instances)))
               (:dynamic-mesh
                (lambda ()
                  (geo::draw-dynamic-geometry
-                  (c/dmesh::geometry
-                   (v:component-by-type actor 'c/dmesh:dynamic-mesh))
+                  (comp::geometry
+                   (v:component-by-type actor 'comp:dynamic-mesh))
                   instances)))
               (:sprite
                (lambda ()
-                 (c/sprite::draw-sprite
-                  (v:component-by-type (v:actor render) 'c/sprite:sprite)
+                 (comp::draw-sprite
+                  (v:component-by-type (v:actor render) 'comp:sprite)
                   instances)))
               (otherwise
                ;; TODO: Sort of a debugging interface so I can replace above
@@ -44,7 +44,7 @@
                ;; render something prolly needs more thought and refactoring.
                ;; For now it is a hack to help me be able to write a different
                ;; 'sprite' component than the one in Virality. If this isn't
-               ;; here, then I'll call c/sprite:draw-sprite instead of the
+               ;; here, then I'll call comp:draw-sprite instead of the
                ;; correct one for my own sprite component.
                (destructuring-bind (extended-mode component &rest args)
                    (mode render)
@@ -56,13 +56,13 @@
 
 (defmethod v:on-component-initialize ((self render))
   (with-slots (%transform) self
-    (setf %transform (v:component-by-type (v:actor self) 'c/xform:transform))
+    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))
     (set-draw-method self)))
 
 (defmethod v:on-component-render ((self render))
   (a:when-let ((camera (v::active-camera (v:context self))))
     (mat:with-material (material self)
         (:model (v:get-model-matrix self)
-         :view (c/cam:view camera)
-         :proj (c/cam:projection camera))
+         :view (comp:view camera)
+         :proj (comp:projection camera))
       (funcall (draw-method self)))))

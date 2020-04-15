@@ -1,4 +1,4 @@
-(in-package #:virality.components.collider)
+(in-package #:virality.components)
 
 (v:define-component cuboid (reg:region-cuboid)
   (;; The collider is only ever on a single layer.
@@ -81,8 +81,8 @@
   (a:when-let ((camera (v::active-camera (v:context self))))
     (mat:with-material (material self)
         (:model (v:get-model-matrix self)
-         :view (c/cam:view camera)
-         :proj (c/cam:projection camera)
+         :view (comp:view camera)
+         :proj (comp:projection camera)
          :collider-local-center (reg:center self)
          :in-contact-p (plusp (contact-count self))
          ;; NOTE: The shader computes the world-space math appropriately for

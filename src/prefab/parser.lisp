@@ -132,8 +132,8 @@
 (defun insert-missing-transforms (prefab)
   (u:do-hash (path node (parse-tree prefab))
     (with-slots (%components) node
-      (unless (find 'c/xform:transform %components :key #'car)
-        (push '(c/xform:transform (:policy :old-type)) %components))
+      (unless (find 'comp:transform %components :key #'car)
+        (push '(comp:transform (:policy :old-type)) %components))
       (ensure-path-single-transform %components path))))
 
 (defun collect-source-components (node)

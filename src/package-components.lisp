@@ -1,59 +1,40 @@
 (in-package #:cl-user)
 
-(defpackage #:virality.components.camera
+(defpackage #:virality.components
   (:use #:cl)
+  ;; camera
   (:export
    #:active-p
    #:camera
    #:compute-camera-view
    #:find-active-camera
+   #:following-camera
    #:projection
+   #:tracking-camera
    #:transform
    #:view
-   #:zoom-camera))
-
-(defpackage #:virality.components.camera.tracking
-  (:use #:cl)
-  (:export
-   #:tracking-camera))
-
-(defpackage #:virality.components.camera.following
-  (:use #:cl)
-  (:export
-   #:following-camera))
-
-(defpackage #:virality.components.collider
-  (:use #:cl)
+   #:zoom-camera)
+  ;; collider
   (:export
    #:collide-p
    #:on-layer
    #:referent
    #:sphere
-   #:cuboid))
-
-(defpackage #:virality.components.mesh.dynamic
-  (:use #:cl)
-  (:export #:dynamic-mesh))
-
-(defpackage #:virality.components.mesh.static
-  (:use #:cl)
-  (:export #:static-mesh))
-
-(defpackage #:virality.components.render
-  (:use #:cl)
+   #:cuboid)
+  ;; meshes
+  (:export
+   #:dynamic-mesh
+   #:static-mesh)
+  ;; render
   (:export
    #:material
-   #:render))
-
-(defpackage #:virality.components.sprite
-  (:use #:cl)
+   #:render)
+  ;; sprite
   (:export
    #:frames
    #:name
-   #:sprite))
-
-(defpackage #:virality.components.transform
-  (:use #:cl)
+   #:sprite)
+  ;; transform
   (:export
    #:add-child
    #:local

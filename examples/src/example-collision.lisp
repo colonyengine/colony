@@ -176,31 +176,31 @@
 
 (v:define-prefab "collision-smoke-test" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 6f0))
+   (comp:camera (:policy :new-args) :zoom 6f0))
   ("rot-0-center"
-   (c/xform:transform :translate (v3:vec -2f0 0f0 0f0)
-                      :rotate/velocity (o:make-velocity v3:+forward+ o:pi))
+   (comp:transform :translate (v3:vec -2f0 0f0 0f0)
+                   :rotate/velocity (o:make-velocity v3:+forward+ o:pi))
    ("plane-0"
-    (c/xform:transform :translate (v3:vec -2f0 0f0 0f0))
-    (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-    (c/col:sphere :display-id "Player"
-                  :visualize t
-                  :on-layer :player
-                  :center (v3:vec)
-                  :radius 1f0)
-    (c/render:render :material '2d-wood)))
+    (comp:transform :translate (v3:vec -2f0 0f0 0f0))
+    (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+    (comp:sphere :display-id "Player"
+                 :visualize t
+                 :on-layer :player
+                 :center (v3:vec)
+                 :radius 1f0)
+    (comp:render :material '2d-wood)))
   ("rot-1-center"
-   (c/xform:transform :translate (v3:vec 2f0 0f0 0f0)
-                      :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi)))
+   (comp:transform :translate (v3:vec 2f0 0f0 0f0)
+                   :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi)))
    ("plane-1"
-    (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
-    (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-    (c/col:sphere :display-id "Enemy"
-                  :visualize t
-                  :on-layer :enemy
-                  :center (v3:vec)
-                  :radius 1f0)
-    (c/render:render :material '2d-wood))))
+    (comp:transform :translate (v3:vec 2f0 0f0 0f0))
+    (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+    (comp:sphere :display-id "Enemy"
+                 :visualize t
+                 :on-layer :enemy
+                 :center (v3:vec)
+                 :radius 1f0)
+    (comp:render :material '2d-wood))))
 
 (v:define-prefab "collision-transform-test-0" (:library examples)
   "This test just prints out the directions of the actor transform. Since
@@ -214,35 +214,35 @@ unit world vector representations of the axis directions as:
   left:     (-1 0 0)
 "
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7f0))
+   (comp:camera (:policy :new-args) :zoom 7f0))
 
   ("thingy"
    ;; NOTE: The 5 0 0 is specific to the unit-test-transform-api tests.
-   (c/xform:transform :translate (v3:vec 5f0 0f0 0f0))
+   (comp:transform :translate (v3:vec 5f0 0f0 0f0))
    (unit-test-transform-api :test-type :test-direction-vectors)
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material '2d-wood)))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material '2d-wood)))
 
 (v:define-prefab "collision-transform-test-1" (:library examples)
   "This test checks to see if we can move in and out of object space and
 world space for a particular transform."
 
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7f0))
+   (comp:camera (:policy :new-args) :zoom 7f0))
 
   ("right"
-   (c/xform:transform :translate (v3:vec 1f0 0f0 0f0))
+   (comp:transform :translate (v3:vec 1f0 0f0 0f0))
    ("up"
-    (c/xform:transform :translate (v3:vec 0f0 1f0 0f0))
+    (comp:transform :translate (v3:vec 0f0 1f0 0f0))
     ("back"
-     (c/xform:transform :translate (v3:vec 0f0 0f0 1f0))
+     (comp:transform :translate (v3:vec 0f0 0f0 1f0))
      ("mark"
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
-      (c/xform:transform :rotate (q:orient :local :z o:pi/2) :scale 2)
+      (comp:transform :rotate (q:orient :local :z o:pi/2) :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
-      (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-      (c/render:render :material '2d-wood))))))
+      (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+      (comp:render :material '2d-wood))))))
 
 
 (v:define-prefab "collision-test-0" (:library examples)
@@ -261,184 +261,184 @@ that just spawns stone prefabs so they rain down onto the ground, which should
 be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7f0))
+   (comp:camera (:policy :new-args) :zoom 7f0))
 
   ("left-gate"
-   (c/xform:transform :translate (v3:vec -1.15f0 2f0 -.1f0))
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material '2d-wood)
-   (c/col:sphere :display-id "Left-Gate"
-                 :visualize t
-                 :on-layer :ground))
+   (comp:transform :translate (v3:vec -1.15f0 2f0 -.1f0))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:sphere :display-id "Left-Gate"
+                :visualize t
+                :on-layer :ground))
 
   ("right-gate"
-   (c/xform:transform :translate (v3:vec 1.15f0 2f0 -.1f0))
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material '2d-wood)
-   (c/col:sphere :display-id "Right-Gate"
-                 :visualize t
-                 :on-layer :ground))
+   (comp:transform :translate (v3:vec 1.15f0 2f0 -.1f0))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:sphere :display-id "Right-Gate"
+                :visualize t
+                :on-layer :ground))
 
   ("stone"
-   (c/xform:transform :translate (v3:vec 0f0 5f0 0f0)
-                      :scale 0.5f0
-                      :rotate (q:orient :local :x o:pi/2)
-                      :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
-                      :translate/velocity (v3:vec 0f0 -2f0 0f0))
-   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+   (comp:transform :translate (v3:vec 0f0 5f0 0f0)
+                   :scale 0.5f0
+                   :rotate (q:orient :local :x o:pi/2)
+                   :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
+                   :translate/velocity (v3:vec 0f0 -2f0 0f0))
+   (comp:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :display-id "destroy-my-actor: stone")
-   (c/col:sphere :display-id "Stone"
-                 :visualize t
-                 :on-layer :player
-                 :referent (v:ref :self
-                                  :component 'destroy-my-actor)
-                 :center (v3:vec)
-                 :radius 1f0)
-   (c/render:render :material 'damaged-helmet))
+   (comp:sphere :display-id "Stone"
+                :visualize t
+                :on-layer :player
+                :referent (v:ref :self
+                                 :component 'destroy-my-actor)
+                :center (v3:vec)
+                :radius 1f0)
+   (comp:render :material 'damaged-helmet))
 
   ("ground"
-   (c/xform:transform :translate (v3:vec 0f0 -2f0 0.1f0))
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/col:sphere :display-id "Ground"
-                 :visualize t
-                 :on-layer :ground
-                 :center (v3:vec)
-                 :radius 1f0)
-   (c/render:render :material '2d-wood)))
+   (comp:transform :translate (v3:vec 0f0 -2f0 0.1f0))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:sphere :display-id "Ground"
+                :visualize t
+                :on-layer :ground
+                :center (v3:vec)
+                :radius 1f0)
+   (comp:render :material '2d-wood)))
 
 (v:define-prefab "collision-test-1" (:library examples)
   "This test demonstrates that at frame 0 colliders that should be colliding
 actually are. You have to view the results to see the colliders lighting up."
 
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7f0))
+   (comp:camera (:policy :new-args) :zoom 7f0))
 
   ("upper-left"
-   (c/xform:transform :translate (v3:vec -2f0 2f0 -0.1f0))
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material '2d-wood)
-   (c/col:sphere :display-id "Upper-Left"
-                 :visualize t
-                 :on-layer :ground))
+   (comp:transform :translate (v3:vec -2f0 2f0 -0.1f0))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:sphere :display-id "Upper-Left"
+                :visualize t
+                :on-layer :ground))
   ("upper-right"
-   (c/xform:transform :translate (v3:vec 2f0 2f0 -0.1f0))
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material '2d-wood)
-   (c/col:sphere :display-id "Upper-Right"
-                 :visualize t
-                 :on-layer :ground))
+   (comp:transform :translate (v3:vec 2f0 2f0 -0.1f0))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:sphere :display-id "Upper-Right"
+                :visualize t
+                :on-layer :ground))
   ("lower-left"
-   (c/xform:transform :translate (v3:vec -2f0 -2f0 -0.1f0))
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material '2d-wood)
-   (c/col:sphere :display-id "Lower-Left"
-                 :visualize t
-                 :on-layer :ground))
+   (comp:transform :translate (v3:vec -2f0 -2f0 -0.1f0))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:sphere :display-id "Lower-Left"
+                :visualize t
+                :on-layer :ground))
   ("lower-right"
-   (c/xform:transform :translate (v3:vec 2f0 -2f0 -0.1f0))
-   (c/smesh:static-mesh :asset '(:virality/mesh "plane.glb"))
-   (c/render:render :material '2d-wood)
-   (c/col:sphere :display-id "Lower-Right"
-                 :visualize t
-                 :on-layer :ground))
+   (comp:transform :translate (v3:vec 2f0 -2f0 -0.1f0))
+   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:render :material '2d-wood)
+   (comp:sphere :display-id "Lower-Right"
+                :visualize t
+                :on-layer :ground))
   ("stone"
-   (c/xform:transform :translate (v3:vec)
-                      :scale 2f0
-                      :rotate (q:orient :local :x o:pi/2)
-                      :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
-                      :translate/velocity (v3:vec))
-   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+   (comp:transform :translate (v3:vec)
+                   :scale 2f0
+                   :rotate (q:orient :local :x o:pi/2)
+                   :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
+                   :translate/velocity (v3:vec))
+   (comp:static-mesh :asset '(:mesh "damaged-helmet.glb"))
    (destroy-my-actor :time-to-destroy 2f0)
-   (c/col:sphere :display-id "Stone"
-                 :visualize t
-                 :on-layer :player
-                 :center (v3:vec)
-                 :radius 1f0)
-   (c/render:render :material 'damaged-helmet)))
+   (comp:sphere :display-id "Stone"
+                :visualize t
+                :on-layer :player
+                :center (v3:vec)
+                :radius 1f0)
+   (comp:render :material 'damaged-helmet)))
 
 (v:define-prefab "collision-test-2" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 7f0))
+   (comp:camera (:policy :new-args) :zoom 7f0))
 
   ("a"
-   (c/xform:transform :translate (v3:vec -5f0 0f0 0f0)
-                      :translate/velocity (v3:vec 0f0 0f0 0f0)
-                      :scale 2f0)
+   (comp:transform :translate (v3:vec -5f0 0f0 0f0)
+                   :translate/velocity (v3:vec 0f0 0f0 0f0)
+                   :scale 2f0)
 
    ("stone-cuboid"
-    (c/xform:transform :scale 2f0
-                       :rotate (q:orient :local :x o:pi/2)
-                       :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
-    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
-    (c/col:cuboid :display-id "Stone"
-                  :visualize t
-                  :on-layer :ground
-                  :center (v3:vec)
-                  :minx -1f0
-                  :maxx 1f0
-                  :miny -1f0
-                  :maxy 1f0
-                  :minz -1f0
-                  :maxz 1f0)
-    (c/render:render :material 'damaged-helmet)))
+    (comp:transform :scale 2f0
+                    :rotate (q:orient :local :x o:pi/2)
+                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
+    (comp:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+    (comp:cuboid :display-id "Stone"
+                 :visualize t
+                 :on-layer :ground
+                 :center (v3:vec)
+                 :minx -1f0
+                 :maxx 1f0
+                 :miny -1f0
+                 :maxy 1f0
+                 :minz -1f0
+                 :maxz 1f0)
+    (comp:render :material 'damaged-helmet)))
 
   ("b"
-   (c/xform:transform :translate (v3:vec 5f0 0f0 0f0)
-                      :translate/velocity (v3:vec 0f0 0f0 0f0)
-                      :scale 2f0)
+   (comp:transform :translate (v3:vec 5f0 0f0 0f0)
+                   :translate/velocity (v3:vec 0f0 0f0 0f0)
+                   :scale 2f0)
    ("stone-sphere"
-    (c/xform:transform :scale 2f0
-                       :rotate (q:orient :local :x o:pi/2)
-                       :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
-    (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
-    (c/col:sphere :display-id "Stone"
-                  :visualize t
-                  :on-layer :ground
-                  :center (v3:vec)
-                  :radius 1.25f0)
-    (c/render:render :material 'damaged-helmet))))
+    (comp:transform :scale 2f0
+                    :rotate (q:orient :local :x o:pi/2)
+                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
+    (comp:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+    (comp:sphere :display-id "Stone"
+                 :visualize t
+                 :on-layer :ground
+                 :center (v3:vec)
+                 :radius 1.25f0)
+    (comp:render :material 'damaged-helmet))))
 
 (v:define-prefab "collision-test-3" (:library examples)
   (("camera" :copy "/cameras/ortho")
-   (c/cam:camera (:policy :new-args) :zoom 140f0))
+   (comp:camera (:policy :new-args) :zoom 140f0))
 
   ("test-case-always"
-   (c/xform:transform :translate (v3:vec -2f0 0f0 0f0))
+   (comp:transform :translate (v3:vec -2f0 0f0 0f0))
    ("a"
     ;; As cuboid 1 rotates it should always be hitting (red) cuboid 2 since they
     ;; penetrate and then share a plane when both are parallel to each other.
-    (c/xform:transform :translate (v3:vec -.50f0 0f0 0f0)
-                       :translate/velocity (v3:vec 0f0 0f0 0f0))
+    (comp:transform :translate (v3:vec -.50f0 0f0 0f0)
+                    :translate/velocity (v3:vec 0f0 0f0 0f0))
     ("cuboid1"
-     (c/xform:transform :rotate (q:orient :local :z o:pi/4)
-                        :rotate/velocity (o:make-velocity (v3:vec 0 0 1)
-                                                          o:pi/12))
-     (c/col:cuboid :visualize t
+     (comp:transform :rotate (q:orient :local :z o:pi/4)
+                     :rotate/velocity (o:make-velocity (v3:vec 0 0 1)
+                                                       o:pi/12))
+     (comp:cuboid :visualize t
                    :on-layer :ground
                    :center (v3:vec))))
    ("cuboid2"
-    (c/xform:transform :translate (v3:vec 0.5f0 0f0 0f0))
-    (c/col:cuboid :visualize t
+    (comp:transform :translate (v3:vec 0.5f0 0f0 0f0))
+    (comp:cuboid :visualize t
                   :on-layer :ground
                   :center (v3:vec))))
 
   ("test-case-gap"
-   (c/xform:transform :translate (v3:vec 2f0 0f0 0f0))
+   (comp:transform :translate (v3:vec 2f0 0f0 0f0))
    ("a"
     ;; As cuboid 1 rotates, when they become parallel, there will be a slight
     ;; gap and so both should turn green to represent no collision during that
     ;; small gap.
-    (c/xform:transform :translate (v3:vec -.51f0 0f0 0f0)
-                       :translate/velocity (v3:vec 0f0 0f0 0f0))
+    (comp:transform :translate (v3:vec -.51f0 0f0 0f0)
+                    :translate/velocity (v3:vec 0f0 0f0 0f0))
     ("cuboid1"
-     (c/xform:transform :rotate (q:orient :local :z o:pi/4)
-                        :rotate/velocity (o:make-velocity (v3:vec 0 0 1)
-                                                          o:pi/12))
-     (c/col:cuboid :visualize t
+     (comp:transform :rotate (q:orient :local :z o:pi/4)
+                     :rotate/velocity (o:make-velocity (v3:vec 0 0 1)
+                                                       o:pi/12))
+     (comp:cuboid :visualize t
                    :on-layer :ground
                    :center (v3:vec))))
    ("cuboid2"
-    (c/xform:transform :translate (v3:vec 0.5f0 0f0 0f0))
-    (c/col:cuboid :visualize t
+    (comp:transform :translate (v3:vec 0.5f0 0f0 0f0))
+    (comp:cuboid :visualize t
                   :on-layer :ground
                   :center (v3:vec)))))

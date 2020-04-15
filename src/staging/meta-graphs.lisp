@@ -175,11 +175,11 @@
   (execution-order all-unknown-types
                    ((unknown-types))) ;; (unknown-types) is special token
   (execution-order drawable
-                   (c/smesh:static-mesh
-                    -> c/dmesh:dynamic-mesh
-                    -> c/sprite:sprite
-                    -> c/render:render))
-  (execution-order core (c/xform:transform -> (splice drawable))))
+                   (comp:static-mesh
+                    -> comp:dynamic-mesh
+                    -> comp:sprite
+                    -> comp:render))
+  (execution-order core (comp:transform -> (splice drawable))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Project graphs (that use the above)

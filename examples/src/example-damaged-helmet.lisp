@@ -158,25 +158,25 @@
 
 (v:define-prefab "damaged-helmet" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args)
-                 :free-look t))
+   (comp:camera (:policy :new-args)
+                :free-look t))
   (("helmet" :copy "/mesh")
-   (c/xform:transform :rotate (q:orient :local :x o:pi/2)
-                      :rotate/velocity (o:make-velocity
-                                        v3:+forward+
-                                        (- o:pi/6))
-                      :scale 17f0)
-   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
-   (c/render:render :material 'damaged-helmet)))
+   (comp:transform :rotate (q:orient :local :x o:pi/2)
+                   :rotate/velocity (o:make-velocity
+                                     v3:+forward+
+                                     (- o:pi/6))
+                   :scale 17f0)
+   (comp:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+   (comp:render :material 'damaged-helmet)))
 
 
 (v:define-prefab "damaged-helmet-interactive" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (c/cam:camera (:policy :new-args) :zoom 10f0))
+   (comp:camera (:policy :new-args) :zoom 10f0))
 
   (("helmet" :copy "/mesh")
    (simple-mouse-rotator :clamp-p t)
-   (c/xform:transform :rotate (q:orient :local :x o:pi/2)
-                      :scale 4f0)
-   (c/smesh:static-mesh :asset '(:mesh "damaged-helmet.glb"))
-   (c/render:render :material 'damaged-helmet)))
+   (comp:transform :rotate (q:orient :local :x o:pi/2)
+                   :scale 4f0)
+   (comp:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+   (comp:render :material 'damaged-helmet)))

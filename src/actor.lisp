@@ -23,17 +23,17 @@ reference which will be the parent of the spawning actor. It defaults to
 :universe, which means make this actor a child of the universe actor."
   (let* ((core (core actor))
          (tables (tables core))
-         (transform (component-by-type actor 'c/xform:transform)))
+         (transform (component-by-type actor 'comp:transform)))
     (cond
       ((eq parent :universe)
-       (unless (c/xform::parent transform)
-         (c/xform:add-child
-          (component-by-type (scene-tree core) 'c/xform:transform)
-          (component-by-type actor 'c/xform:transform))))
+       (unless (comp::parent transform)
+         (comp:add-child
+          (component-by-type (scene-tree core) 'comp:transform)
+          (component-by-type actor 'comp:transform))))
       ((typep parent 'actor)
-       (c/xform:add-child
-        (component-by-type parent 'c/xform:transform)
-        (component-by-type actor 'c/xform:transform)))
+       (comp:add-child
+        (component-by-type parent 'comp:transform)
+        (component-by-type actor 'comp:transform)))
       ((null parent)
        (u:noop))
       (t
@@ -80,15 +80,15 @@ reference which will be the parent of the spawning actor. It defaults to
            (deregister-kernel-uuid actor)
            (deregister-kernel-id actor)))
     (when actor
-      (c/xform::map-nodes
+      (comp::map-nodes
        (lambda (x) (destroy-actor (actor x)))
-       (component-by-type actor 'c/xform:transform)))))
+       (component-by-type actor 'comp:transform)))))
 
 (defun actor/disconnect (actor)
   (when (eq (id actor) 'universe)
     (error "Cannot disconnect the top-level universe node."))
-  (let ((transform (component-by-type actor 'c/xform:transform)))
-    (c/xform:remove-child (c/xform::parent transform) transform)))
+  (let ((transform (component-by-type actor 'comp:transform)))
+    (comp:remove-child (comp::parent transform) transform)))
 
 (defun actor/destroy->released (actor)
   (let ((core (core actor)))

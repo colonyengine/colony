@@ -1,4 +1,4 @@
-(in-package #:virality.components.camera.following)
+(in-package #:virality.components)
 
 (v:define-component following-camera ()
   ((%slave :reader slave)
@@ -13,11 +13,11 @@
   (with-slots (%target-transform) camera
     (setf (target-actor camera) actor)
     (when actor
-      (setf %target-transform (v:component-by-type actor 'c/xform:transform)))))
+      (setf %target-transform (v:component-by-type actor 'comp:transform)))))
 
 (defmethod v:on-component-initialize ((self following-camera))
   (with-slots (%slave) self
-    (setf %slave (v:component-by-type (v:actor self) 'c/cam:camera))
+    (setf %slave (v:component-by-type (v:actor self) 'comp:camera))
     (camera-target-actor self (target-actor self))))
 
 (defmethod v:on-component-update ((self following-camera))
@@ -29,4 +29,4 @@
                                        (offset self)))
            (model (v:get-model-matrix self)))
       (m4:set-translation! model model new-camera-position)
-      (c/cam:compute-camera-view (slave self)))))
+      (comp:compute-camera-view (slave self)))))

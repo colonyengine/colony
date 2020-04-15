@@ -5,8 +5,8 @@
   (labels ((map-scene-tree (func parent &optional (level 0))
              (funcall func parent level)
              (let ((parent-transform
-                     (component-by-type parent 'c/xform:transform)))
-               (dolist (child (c/xform::children parent-transform))
+                     (component-by-type parent 'comp:transform)))
+               (dolist (child (comp::children parent-transform))
                  (map-scene-tree func (actor child) (1+ level))))))
     (map-scene-tree
      (lambda (actor level)

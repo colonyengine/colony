@@ -21,31 +21,31 @@
 (v:define-prefab "graph" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   (("graph" :copy "/mesh")
-   (c/xform:transform :scale (v3:vec (/ v:=window-width= 2f0)
-                                     (/ v:=window-height= 2f0)))
-   (c/render:render :material 'graph)))
+   (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
+                                  (/ v:=window-height= 2f0)))
+   (comp:render :material 'graph)))
 
 (v:define-prefab "3d-graph-1" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (c/xform:transform :translate (v3:vec 0f0 70f0 100f0))
-   (c/cam:camera (:policy :new-args) :zoom 2f0)
-   (c/tcam:tracking-camera :target-actor (v:ref "/3d-graph-1/graph")))
+   (comp:transform :translate (v3:vec 0f0 70f0 100f0))
+   (comp:camera (:policy :new-args) :zoom 2f0)
+   (comp:tracking-camera :target-actor (v:ref "/3d-graph-1/graph")))
   (("graph" :copy "/mesh")
-   (c/render:render :material '(3d-graph
-                                3d-graph-1
-                                :shader ex/shd:3d-graph-1
-                                :instances 100000
-                                :uniforms ((:size 0.5f0))))))
+   (comp:render :material '(3d-graph
+                            3d-graph-1
+                            :shader ex/shd:3d-graph-1
+                            :instances 100000
+                            :uniforms ((:size 0.5f0))))))
 
 (v:define-prefab "3d-graph-2" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (c/xform:transform :translate (v3:vec 0f0 50f0 100f0))
-   (c/cam:camera (:policy :new-args) :zoom 2f0)
-   (c/tcam:tracking-camera
+   (comp:transform :translate (v3:vec 0f0 50f0 100f0))
+   (comp:camera (:policy :new-args) :zoom 2f0)
+   (comp:tracking-camera
     :target-actor (v:ref "/3d-graph-2/graph")))
   (("graph" :copy "/mesh")
-   (c/render:render :material '(3d-graph
-                                3d-graph-2
-                                :shader ex/shd:3d-graph-2
-                                :instances 100000
-                                :uniforms ((:size 1))))))
+   (comp:render :material '(3d-graph
+                            3d-graph-2
+                            :shader ex/shd:3d-graph-2
+                            :instances 100000
+                            :uniforms ((:size 1))))))
