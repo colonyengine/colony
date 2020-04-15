@@ -4,7 +4,6 @@
   (:use #:cl)
   (:mix-reexport
    #:virality.colliders
-   #:virality.geometry
    #:virality.materials
    #:virality.prefabs
    #:virality.textures)
@@ -86,6 +85,12 @@
    #:find-asset
    #:resolve-path
    #:with-asset-cache)
+
+  ;; geometry
+  (:export
+   #:define-geometry
+   #:define-geometry-layout
+   #:update-geometry)
 
   (:export
    #:attach-component

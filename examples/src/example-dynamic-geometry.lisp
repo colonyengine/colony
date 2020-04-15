@@ -2,21 +2,20 @@
 
 ;; Dynamic geometry
 
-(v:define-geometry-layout tile
+(v:define-geometry-layout 2d ()
   (:data (:format interleaved)
-         (position :type float :count 3)
-         (normal :type float :count 3)
-         (uv :type float :count 3)))
+         (position :type float :count 2)
+         (uv :type float :count 2)))
 
-(v:define-geometry tile
-  :layout tile
-  :primitive :triangle-strip
-  :vertex-count 4
-  :buffers
-  (:data (((-0.5f0 0.5f0 0f0) (0f0 0f0 1f0) (-1f0 1f0 0f0))
-          ((-0.5f0 -0.5f0 0f0) (0f0 0f0 1f0) (-1f0 -1f0 0f0))
-          ((0.5f0 0.5f0 0f0) (0f0 0f0 1f0) (1f0 1f0 0f0))
-          ((0.5f0 -0.5f0 0f0) (0f0 0f0 1f0) (1f0 -1f0 0f0)))))
+(v:define-geometry tile ()
+  (:layout 2d
+   :vertex-count 4
+   :primitive :triangle-strip
+   :buffers
+   (:data (((-0.5 0.5) (0 1))
+           ((-0.5 -0.5) (0 0))
+           ((0.5 0.5) (1 1))
+           ((0.5 -0.5) (1 0))))))
 
 ;;; Prefabs
 

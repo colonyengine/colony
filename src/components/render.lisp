@@ -24,14 +24,13 @@
                           instances)))
               (:dynamic-mesh
                (lambda ()
-                 (geo::draw-dynamic-geometry
-                  (comp::geometry
-                   (v:component-by-type actor 'comp:dynamic-mesh))
+                 (v::draw-geometry
+                  (geometry (v:component-by-type actor 'dynamic-mesh))
                   instances)))
               (:sprite
                (lambda ()
-                 (comp::draw-sprite
-                  (v:component-by-type (v:actor render) 'comp:sprite)
+                 (draw-sprite
+                  (v:component-by-type (v:actor render) 'sprite)
                   instances)))
               (otherwise
                ;; TODO: Sort of a debugging interface so I can replace above
@@ -43,8 +42,8 @@
                ;; render something prolly needs more thought and refactoring.
                ;; For now it is a hack to help me be able to write a different
                ;; 'sprite' component than the one in Virality. If this isn't
-               ;; here, then I'll call comp:draw-sprite instead of the
-               ;; correct one for my own sprite component.
+               ;; here, then I'll call draw-sprite instead of the correct one
+               ;; for my own sprite component.
                (destructuring-bind (extended-mode component &rest args)
                    (mode render)
                  (ecase extended-mode
@@ -55,13 +54,13 @@
 
 (defmethod v:on-component-initialize ((self render))
   (with-slots (%transform) self
-    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))
+    (setf %transform (v:component-by-type (v:actor self) 'transform))
     (set-draw-method self)))
 
 (defmethod v:on-component-render ((self render))
   (a:when-let ((camera (v::active-camera (v:context self))))
     (mat:with-material (material self)
         (:model (v:get-model-matrix self)
-         :view (comp:view camera)
-         :proj (comp:projection camera))
+         :view (view camera)
+         :proj (projection camera))
       (funcall (draw-method self)))))

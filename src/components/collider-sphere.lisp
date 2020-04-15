@@ -56,8 +56,8 @@
   (a:when-let ((camera (v::active-camera (v:context self))))
     (mat:with-material (material self)
         (:model (v:get-model-matrix self)
-         :view (comp:view camera)
-         :proj (comp:projection camera)
+         :view (view camera)
+         :proj (projection camera)
          :collider-local-center (reg:center self)
          :in-contact-p (plusp (contact-count self))
          ;; NOTE: The shader computes the radius appropriately for

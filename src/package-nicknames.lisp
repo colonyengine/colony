@@ -31,7 +31,6 @@
       (:virality :v)
       (:virality.extensions.materials :x/mat)
       (:virality.extensions.textures :x/tex)
-      (:virality.geometry :geo)
       (:shadow :gpu)
       (:virality.materials :mat)
       (:virality.prefabs :prefab)
