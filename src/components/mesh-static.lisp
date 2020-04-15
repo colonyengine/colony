@@ -1,6 +1,6 @@
 (in-package #:virality.components)
 
-(v:define-component static-mesh ()
+(v:define-component mesh ()
   ((%asset :reader asset
            :initarg :asset
            :initform nil)
@@ -13,7 +13,7 @@
    (%primitive :reader primitive))
   ((:cached-mesh-data eq)))
 
-(defmethod v:on-component-initialize ((self static-mesh))
+(defmethod v:on-component-initialize ((self mesh))
   (with-slots (%asset %name %index %primitive) self
     (unless %asset
       (error "A mesh component must have an asset."))
@@ -24,7 +24,7 @@
            (gltf (v:with-shared-storage
                      (context context)
                      ((cached-mesh mesh-present-p
-                                   ('static-mesh :cached-mesh-data %asset)
+                                   ('mesh :cached-mesh-data %asset)
                                    (v::load-gltf path)))
                    cached-mesh))
            (mesh (u:href (v::meshes gltf) %name)))

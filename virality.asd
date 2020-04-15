@@ -47,6 +47,7 @@
    (:file "package-textures")
    (:file "package")
    (:file "package-nicknames")
+
    (:module "core-early"
     :components
     ((:file "general")
@@ -63,8 +64,8 @@
      (:file "graph")
      (:file "flow")
      (:file "protocol")
-     (:file "resource-cache")
-     #++(:file "asset-new")))
+     (:file "resource-cache")))
+
    (:module "input"
     :components
     ((:file "data")
@@ -74,6 +75,7 @@
      (:file "window")
      (:file "button")
      (:file "input")))
+
    (:file "common")
    (:file "debugging")
    (:file "clock")
@@ -89,6 +91,7 @@
    (:file "region")
    (:file "bounding-volume-obb")
    (:file "colliders")
+
    (:module "texture"
     :components
     ((:file "common")
@@ -102,6 +105,7 @@
      (:file "cube-map-array")
      (:file "rectangle")
      (:file "buffer")))
+
    (:module "geometry"
     :components
     ((:file "spec")
@@ -110,20 +114,25 @@
      (:file "layout")
      (:file "buffer")
      (:file "geometry")))
+
+   ;; TODO: this must be placed after textures but before components. Fix this.
+   ;; ~axion 4/15/2020
    (:file "material")
+
    (:module "components"
     :components
     ((:file "transform")
      (:file "camera")
      (:file "camera-following")
      (:file "camera-tracking")
-     (:file "mesh-dynamic")
+     (:file "geometry")
      (:file "mesh-static")
      (:file "render")
      (:file "sprite")
      (:file "collider-sphere")
      (:file "collider-cuboid")
      (:file "collider-collide-p")))
+
    (:module "prefab"
     :components
     ((:file "common")
@@ -132,6 +141,7 @@
      (:file "loader")
      (:file "reference")
      (:file "prefab")))
+
    (:module "core-late"
     :components
     ((:file "opengl")
@@ -143,6 +153,7 @@
      (:file "transform-state")
      (:file "transform-protocol")
      (:file "free-look-state")))
+
    (:file "core-state")
    (:file "engine")
 

@@ -44,8 +44,8 @@
                  :mode :orthographic))))
 
 (v:define-prefab "mesh" (:library examples)
-  (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
-                    :name "plane")
+  (comp:mesh :asset '(:virality/mesh "primitives.glb")
+             :name "plane")
   (comp:render :material 'x/mat:unlit-texture))
 
 ;;; Graphs

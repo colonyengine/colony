@@ -3,7 +3,7 @@
 (v:define-component render ()
   ((%mode :reader mode
           :initarg :mode
-          :initform :static-mesh)
+          :initform :mesh)
    (%draw-method :reader draw-method
                  :initform (constantly nil))
    (%transform :reader transform)
@@ -17,15 +17,15 @@
           (instances (mat::instances (material render))))
       (setf %draw-method
             (case (mode render)
-              (:static-mesh
+              (:mesh
                (lambda ()
                  (funcall (v::draw-func
-                           (primitive (v:component-by-type actor 'static-mesh)))
+                           (primitive (v:component-by-type actor 'mesh)))
                           instances)))
-              (:dynamic-mesh
+              (:geometry
                (lambda ()
                  (v::draw-geometry
-                  (geometry (v:component-by-type actor 'dynamic-mesh))
+                  (geometry (v:component-by-type actor 'geometry))
                   instances)))
               (:sprite
                (lambda ()

@@ -2,8 +2,8 @@
 
 (define-graph :core (:category component-dependency)
   (subdag all-unknown-types ((unknown-types)))
-  (subdag drawables (comp:static-mesh
-                     -> comp:dynamic-mesh
+  (subdag drawables (comp:mesh
+                     -> comp:geometry
                      -> comp:sprite
                      -> comp:render))
   (subdag core-types (comp:transform -> (splice drawables))))

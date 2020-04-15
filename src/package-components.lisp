@@ -21,10 +21,12 @@
    #:referent
    #:sphere
    #:cuboid)
-  ;; meshes
+  ;; geometry
   (:export
-   #:dynamic-mesh
-   #:static-mesh)
+   #:geometry)
+  ;; mesh
+  (:export
+   #:mesh)
   ;; render
   (:export
    #:material

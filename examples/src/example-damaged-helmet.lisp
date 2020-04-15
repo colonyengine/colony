@@ -164,8 +164,8 @@
                                      v3:+forward+
                                      (- o:pi/6))
                    :scale 17f0)
-   (comp:static-mesh :asset '(:mesh "damaged-helmet.glb")
-                     :name "damaged-helmet")
+   (comp:mesh :asset '(:mesh "damaged-helmet.glb")
+              :name "damaged-helmet")
    (comp:render :material 'damaged-helmet)))
 
 (v:define-prefab "damaged-helmet-interactive" (:library examples)
@@ -176,6 +176,6 @@
    (simple-mouse-rotator :clamp-p t)
    (comp:transform :rotate (q:orient :local :x o:pi/2)
                    :scale 4f0)
-   (comp:static-mesh :asset '(:mesh "damaged-helmet.glb")
-                     :name "damaged-helmet")
+   (comp:mesh :asset '(:mesh "damaged-helmet.glb")
+              :name "damaged-helmet")
    (comp:render :material 'damaged-helmet)))

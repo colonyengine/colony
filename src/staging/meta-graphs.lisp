@@ -175,8 +175,8 @@
   (execution-order all-unknown-types
                    ((unknown-types))) ;; (unknown-types) is special token
   (execution-order drawable
-                   (comp:static-mesh
-                    -> comp:dynamic-mesh
+                   (comp:mesh
+                    -> comp:geometry
                     -> comp:sprite
                     -> comp:render))
   (execution-order core (comp:transform -> (splice drawable))))
