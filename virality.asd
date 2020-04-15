@@ -74,7 +74,6 @@
    (:file "common")
    (:file "debugging")
    (:file "protocol")
-   (:file "geometry-static")
    (:file "geometry-dynamic-attribute")
    (:file "geometry-dynamic-group")
    (:file "geometry-dynamic-buffer")

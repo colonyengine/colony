@@ -1914,7 +1914,8 @@ NIL if no such list exists."
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material 'warning-wave)))
 
 (v:define-prefab "warning-mothership-sign" (:library ptp)
@@ -1922,28 +1923,32 @@ NIL if no such list exists."
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material 'warning-mothership)))
 
 (v:define-prefab "title-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material 'title)))
 
 (v:define-prefab "game-over-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material 'game-over)))
 
 (v:define-prefab "level-complete-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material 'level-complete)))
 
 (v:define-prefab "starfield" (:library ptp)
@@ -1951,7 +1956,8 @@ NIL if no such list exists."
                   ;; NOTE: ortho projection, so we can put starfield way
                   ;; back.
                   :translate (v3:vec 0f0 0f0 (dl :starfield)))
-  (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+  (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                    :name "plane")
   (comp:render :material 'starfield))
 
 (v:define-prefab "time-keeper" (:library ptp)
@@ -1967,7 +1973,8 @@ NIL if no such list exists."
    ;; coordinate frame.
    ("time-display"
     (comp:transform :translate (v3:vec 0f0 1f0 0f0))
-    (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+    (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                      :name "plane")
     ;; TODO: when 'time-bar is mis-spelled in the material,
     ;; I don't get the debug material, why?
     ;; TODO: I think this material is leaked when this object is destroyed.

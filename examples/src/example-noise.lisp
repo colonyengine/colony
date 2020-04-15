@@ -10,7 +10,8 @@
 
 (v:define-prefab "noise-tile" (:library examples)
   (comp:transform :scale (v3:vec 90f0 90f0 0f0))
-  (comp:static-mesh :asset '(:virality/mesh "plane.glb")))
+  (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                    :name "plane"))
 
 (v:define-prefab "noise" (:library examples)
   (("camera" :copy "/cameras/ortho"))

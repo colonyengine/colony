@@ -182,7 +182,8 @@
                    :rotate/velocity (o:make-velocity v3:+forward+ o:pi))
    ("plane-0"
     (comp:transform :translate (v3:vec -2f0 0f0 0f0))
-    (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+    (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                      :name "plane")
     (comp:sphere :display-id "Player"
                  :visualize t
                  :on-layer :player
@@ -194,7 +195,8 @@
                    :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi)))
    ("plane-1"
     (comp:transform :translate (v3:vec 2f0 0f0 0f0))
-    (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+    (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                      :name "plane")
     (comp:sphere :display-id "Enemy"
                  :visualize t
                  :on-layer :enemy
@@ -220,7 +222,8 @@ unit world vector representations of the axis directions as:
    ;; NOTE: The 5 0 0 is specific to the unit-test-transform-api tests.
    (comp:transform :translate (v3:vec 5f0 0f0 0f0))
    (unit-test-transform-api :test-type :test-direction-vectors)
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material '2d-wood)))
 
 (v:define-prefab "collision-transform-test-1" (:library examples)
@@ -241,7 +244,8 @@ world space for a particular transform."
       ;; "mark" Z axis.
       (comp:transform :rotate (q:orient :local :z o:pi/2) :scale 2)
       (unit-test-transform-api :test-type :test-transform-api)
-      (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+      (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                        :name "plane")
       (comp:render :material '2d-wood))))))
 
 
@@ -265,7 +269,8 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("left-gate"
    (comp:transform :translate (v3:vec -1.15f0 2f0 -.1f0))
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material '2d-wood)
    (comp:sphere :display-id "Left-Gate"
                 :visualize t
@@ -273,7 +278,8 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("right-gate"
    (comp:transform :translate (v3:vec 1.15f0 2f0 -.1f0))
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material '2d-wood)
    (comp:sphere :display-id "Right-Gate"
                 :visualize t
@@ -285,7 +291,8 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
                    :rotate (q:orient :local :x o:pi/2)
                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
                    :translate/velocity (v3:vec 0f0 -2f0 0f0))
-   (comp:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+   (comp:static-mesh :asset '(:mesh "damaged-helmet.glb")
+                     :name "damaged-helmet")
    (destroy-my-actor :display-id "destroy-my-actor: stone")
    (comp:sphere :display-id "Stone"
                 :visualize t
@@ -298,7 +305,8 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
 
   ("ground"
    (comp:transform :translate (v3:vec 0f0 -2f0 0.1f0))
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:sphere :display-id "Ground"
                 :visualize t
                 :on-layer :ground
@@ -315,28 +323,32 @@ actually are. You have to view the results to see the colliders lighting up."
 
   ("upper-left"
    (comp:transform :translate (v3:vec -2f0 2f0 -0.1f0))
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material '2d-wood)
    (comp:sphere :display-id "Upper-Left"
                 :visualize t
                 :on-layer :ground))
   ("upper-right"
    (comp:transform :translate (v3:vec 2f0 2f0 -0.1f0))
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material '2d-wood)
    (comp:sphere :display-id "Upper-Right"
                 :visualize t
                 :on-layer :ground))
   ("lower-left"
    (comp:transform :translate (v3:vec -2f0 -2f0 -0.1f0))
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material '2d-wood)
    (comp:sphere :display-id "Lower-Left"
                 :visualize t
                 :on-layer :ground))
   ("lower-right"
    (comp:transform :translate (v3:vec 2f0 -2f0 -0.1f0))
-   (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+   (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                     :name "plane")
    (comp:render :material '2d-wood)
    (comp:sphere :display-id "Lower-Right"
                 :visualize t
@@ -347,7 +359,8 @@ actually are. You have to view the results to see the colliders lighting up."
                    :rotate (q:orient :local :x o:pi/2)
                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
                    :translate/velocity (v3:vec))
-   (comp:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+   (comp:static-mesh :asset '(:mesh "damaged-helmet.glb")
+                     :name "damaged-helmet")
    (destroy-my-actor :time-to-destroy 2f0)
    (comp:sphere :display-id "Stone"
                 :visualize t
@@ -369,7 +382,8 @@ actually are. You have to view the results to see the colliders lighting up."
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
                     :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
-    (comp:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+    (comp:static-mesh :asset '(:mesh "damaged-helmet.glb")
+                      :name "damaged-helmet")
     (comp:cuboid :display-id "Stone"
                  :visualize t
                  :on-layer :ground
@@ -390,7 +404,8 @@ actually are. You have to view the results to see the colliders lighting up."
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
                     :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
-    (comp:static-mesh :asset '(:mesh "damaged-helmet.glb"))
+    (comp:static-mesh :asset '(:mesh "damaged-helmet.glb")
+                      :name "damaged-helmet")
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground

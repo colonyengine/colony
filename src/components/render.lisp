@@ -19,10 +19,9 @@
             (case (mode render)
               (:static-mesh
                (lambda ()
-                 (geo::draw-static-geometry
-                  (comp::data
-                   (v:component-by-type actor 'comp:static-mesh))
-                  instances)))
+                 (funcall (v::draw-func
+                           (primitive (v:component-by-type actor 'static-mesh)))
+                          instances)))
               (:dynamic-mesh
                (lambda ()
                  (geo::draw-dynamic-geometry

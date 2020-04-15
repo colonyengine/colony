@@ -19,5 +19,6 @@
                  :mode :orthographic))))
 
 (v:define-prefab "mesh" (:library ptp-base)
-  (comp:static-mesh :asset '(:virality/mesh "plane.glb"))
+  (comp:static-mesh :asset '(:virality/mesh "primitives.glb")
+                    :name "plane")
   (comp:render :material 'x/mat:unlit-texture))
