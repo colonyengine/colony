@@ -152,8 +152,6 @@
             (when clamp-p
               (setf ry (a:clamp ry (- range) range)))))))))
 
-
-
 ;;; Prefabs
 
 (v:define-prefab "damaged-helmet" (:library examples)
@@ -169,7 +167,6 @@
    (comp:static-mesh :asset '(:mesh "damaged-helmet.glb")
                      :name "damaged-helmet")
    (comp:render :material 'damaged-helmet)))
-
 
 (v:define-prefab "damaged-helmet-interactive" (:library examples)
   (("camera" :copy "/cameras/perspective")

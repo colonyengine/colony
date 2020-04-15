@@ -21,8 +21,8 @@
       :framebuffer-srgb :line-smooth :polygon-offset-fill :polygon-offset-line
       :polygon-offset-point :polygon-smooth :primitive-restart
       :primitive-restart-fixed-index :rasterizer-discard
-      :sample-alpha-to-coverage :sample-alpha-to-one
-      :sample-coverage :sample-shading :sample-mask :scissor-test :stencil-test
+      :sample-alpha-to-coverage :sample-alpha-to-one :sample-coverage
+      :sample-shading :sample-mask :scissor-test :stencil-test
       :texture-cube-map-seamless :program-point-size)
   :test #'equal)
 
