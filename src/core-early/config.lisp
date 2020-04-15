@@ -42,6 +42,7 @@
   :log-repl-categories '(:virality)
   :opengl-version "4.3"
   :period-interval 0.25
+  :release nil
   :threads 4
   :vsync t
   :window-height 450
