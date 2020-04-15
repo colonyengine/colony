@@ -29,11 +29,10 @@
                            (children parent))
         (parent child) nil))
 
-(defun transform-node (core node)
-  (let ((frame-time (v:frame-time (v:context core))))
-    (v::transform-node/vector (scale node) v:=delta= frame-time)
-    (v::transform-node/quaternion (rotation node) v:=delta= frame-time)
-    (v::transform-node/vector (translation node) v:=delta= frame-time)))
+(defun transform-node (node)
+  (v::transform-node/vector (scale node) v:=delta=)
+  (v::transform-node/quaternion (rotation node) v:=delta=)
+  (v::transform-node/vector (translation node) v:=delta=))
 
 (defun resolve-local (node factor)
   (with-slots (%local) node

@@ -85,7 +85,7 @@
                            :come-from-state-name
                            :ef-physics-update)
              (c/xform::map-nodes
-              (lambda (x) (c/xform::transform-node core x))
+              (lambda (x) (c/xform::transform-node x))
               (component-by-type (scene-tree core) 'c/xform:transform))
              (execute-flow core
                            :default
