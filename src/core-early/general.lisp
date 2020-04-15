@@ -9,6 +9,13 @@
 ;;;; outside of game development. This rule will help us should we choose to
 ;;;; lift any of these into external libraries.
 
+(defun posix-argv0 ()
+  "Returns the POSIX C equivalent of argv[0],which is typically the program name
+when executing a dumped executable. NOTE: This more than likely does not make
+sense to be called in an interactive Lisp session, but we'll let callers decide
+when to use it."
+  (first (uiop:raw-command-line-arguments)))
+
 ;; TODO: The following function should be called early on during engine
 ;; initialization. ~axion 4/7/2020
 (defun initialize-rng ()
