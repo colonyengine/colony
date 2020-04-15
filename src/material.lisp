@@ -671,7 +671,7 @@ applied in an overlay manner while defining a material."
 
 (defun update-material/interactively (name func)
   (v::push-queue
-   :live-recompile
+   :recompile
    (list
     :material
     (lambda (core)

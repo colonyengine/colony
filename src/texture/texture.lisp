@@ -480,7 +480,7 @@ texture."
 
 (defun update-texture (context old-descriptor new-descriptor)
   (v::push-queue
-   :live-recompile
+   :recompile
    (list
     :texture
     (lambda (core)

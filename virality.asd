@@ -56,6 +56,7 @@
      (:file "hardware")
      (:file "thread-pool")
      (:file "live-coding")
+     (:file "debug")
      (:file "avl-tree")
      (:file "parser")
      (:file "uuid")
@@ -77,7 +78,6 @@
      (:file "input")))
 
    (:file "common")
-   (:file "debugging")
    (:file "clock")
    (:file "context")
    (:file "attributes")

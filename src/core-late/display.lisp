@@ -61,7 +61,7 @@
 
 (defun clear-screen (core)
   (multiple-value-call #'gl:clear-color
-    (if (eq v:=log-level= :debug)
+    (if (eq =log-level= :debug)
         (values (* 0.25 (abs (sin (total-time (context core))))) 0 0 1)
         (values 0 0 0 1)))
   (gl:clear :color-buffer :depth-buffer))

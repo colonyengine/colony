@@ -35,5 +35,5 @@
 
 (defun screen-resolution (context &rest ignored)
   (declare (ignore context ignored))
-  (v2:vec (float v:=window-width= 1f0)
-          (float v:=window-height= 1f0)))
+  (v2:vec (float =window-width= 1f0)
+          (float =window-height= 1f0)))

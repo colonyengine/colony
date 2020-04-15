@@ -247,5 +247,5 @@ name which resulted in the exiting of the flow."
   `(setf (u:href =meta/call-flows= ',name) ,(parse-call-flows body)))
 
 (defun load-call-flows (core)
-  (u:do-hash (k v v::=meta/call-flows=)
+  (u:do-hash (k v =meta/call-flows=)
     (setf (u:href (call-flows core) k) v)))

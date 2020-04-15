@@ -49,7 +49,7 @@ tear-down procedure occurs when stopping the engine."
   (epilogue (context core)))
 
 (defun load-initial-scene (core scene-name)
-  (let ((scene-name (or scene-name v:=initial-scene=)))
+  (let ((scene-name (or scene-name =initial-scene=)))
     (make-prefab-instance core scene-name)))
 
 (defun initialize-engine (core scene-name)
