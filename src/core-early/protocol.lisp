@@ -44,17 +44,17 @@ long the thing has yet to live, with NIL meaning infinity."))
 
 ;;; Resource Cache
 
-(defgeneric rcache-layout (entry-type))
+(defgeneric resource-cache-layout (entry-type))
 
-(defgeneric rcache-peek (context entry-type &rest keys))
+(defgeneric resource-cache-peek (context entry-type &rest keys))
 
-(defgeneric rcache-lookup (context entry-type &rest keys))
+(defgeneric resource-cache-lookup (context entry-type &rest keys))
 
-(defgeneric rcache-construct (context entry-type &rest keys))
+(defgeneric resource-cache-construct (context entry-type &rest keys))
 
-(defgeneric rcache-remove (context entry-type &rest keys))
+(defgeneric resource-cache-remove (context entry-type &rest keys))
 
-(defgeneric rcache-dispose (context entry-type removed-value))
+(defgeneric resource-cache-dispose (context entry-type removed-value))
 
 ;;; Shared Storage
 

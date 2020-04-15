@@ -62,6 +62,8 @@
      (:file "asset")
      (:file "graph")
      (:file "flow")
+     (:file "protocol")
+     (:file "resource-cache")
      #++(:file "asset-new")))
    (:module "input"
     :components
@@ -74,8 +76,6 @@
      (:file "input")))
    (:file "common")
    (:file "debugging")
-   (:file "protocol")
-   (:file "rcache")
    (:file "clock")
    (:file "context")
    (:file "attributes")
@@ -142,8 +142,7 @@
      (:file "gltf")
      (:file "transform-state")
      (:file "transform-protocol")
-     (:file "free-look-state")
-     ))
+     (:file "free-look-state")))
    (:file "core-state")
    (:file "engine")
 

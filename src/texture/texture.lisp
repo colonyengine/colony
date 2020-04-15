@@ -56,7 +56,7 @@ declaring storage of some kind to the GPU."
 (defun get-unrealized-textures (context)
   "Return a list of textures that are specified in materials, but haven't been
 completed (no opengl parameters set for them, or data loaded into GPU).
-NOTE: These are already in the RCACHE."
+NOTE: These are already in the resource-cache."
   (u:hash-values
    (unrealized-procedural-textures
     (v::textures (v::core context)))))
@@ -394,9 +394,11 @@ assign it to the computed texture descriptor slot in TEXTURE."
 
 (defun find-debug-texture (core)
   (let* ((texture-name (canonicalize-texture-name 'x/tex:debug-texture))
-         (texture (v::rcache-peek (v::context core) :texture texture-name)))
+         (texture (v::resource-cache-peek
+                   (v::context core) :texture texture-name)))
     (unless texture
-      (error "FIND-DEBUG-TEXTURE: It is impossible that the debug-texture doesn't not exist. Fixme."))
+      (error "FIND-DEBUG-TEXTURE: It is impossible that the debug-texture ~
+              doesn't not exist. Fixme."))
     texture))
 
 (defun unload-texture (context texture)
@@ -434,7 +436,7 @@ return the TEXTURE instance for the debug-texture."
                                    :texid id)))
       (values (upload-texture context texture) t))
 
-    (values (v::rcache-lookup
+    (values (v::resource-cache-lookup
              context :texture
              (canonicalize-texture-name 'x/tex:debug-texture))
             nil)))
@@ -484,7 +486,7 @@ texture."
     (lambda (core)
       (if old-descriptor
           (let* ((old-name (canonicalize-texture-name (name old-descriptor)))
-                 (old-texture (v::rcache-peek
+                 (old-texture (v::resource-cache-peek
                                (v::context core)
                                :texture old-name)))
             (remove-semantic-texture-descriptor old-descriptor core)
@@ -496,7 +498,7 @@ texture."
           (let ((new-name (canonicalize-texture-name (name new-descriptor))))
             (add-semantic-texture-descriptor new-descriptor core)
             (resolve-semantic-texture-descriptor core new-descriptor)
-            (v::rcache-lookup context :texture new-name)))))))
+            (v::resource-cache-lookup context :texture new-name)))))))
 
 (defun update-texture/interactively (old-descriptor new-descriptor)
   (when (boundp 'v::*core-debug*)
@@ -585,19 +587,21 @@ the size and types specified on the GPU."
                    data))
   #())
 
-;;; Interim use of the RCACHE API.
+;;; Interim use of the resource-cache API.
 
 ;; TODO: candidate for public API.
-(defmethod v::rcache-layout ((entry-type (eql :texture)))
+(defmethod v::resource-cache-layout ((entry-type (eql :texture)))
   '(equalp))
 
 ;; TODO: candidate for public API.
-(defmethod v::rcache-construct (context (entry-type (eql :texture)) &rest keys)
+(defmethod v::resource-cache-construct (context (entry-type (eql :texture))
+                                        &rest keys)
   (destructuring-bind (texture-location) keys
     (load-texture context texture-location)))
 
 ;; TODO: candidate for public API.
-(defmethod v::rcache-dispose (context (entry-type (eql :texture)) texture)
+(defmethod v::resource-cache-dispose (context (entry-type (eql :texture))
+                                      texture)
   (gl:delete-texture (texid texture)))
 
 ;;; Utility functions for texturing, maybe move elsewhere.

@@ -5,8 +5,9 @@
 
 (defmethod load-texture-data ((texture-type (eql :texture-buffer)) texture
                               context)
-  ;; NOTE: this one might be a little harder to get right, since the rcache
-  ;; stuff might end up being wrong since this is a buffer object, not a
-  ;; traditional texture. So pay attention while implementing this one.
+  ;; NOTE: this one might be a little harder to get right, since the
+  ;; resource-cache stuff might end up being wrong since this is a buffer
+  ;; object, not a traditional texture. So pay attention while implementing this
+  ;; one.
   (error "load-texture-data: :texture-buffer implement me")
   nil)

@@ -7,8 +7,8 @@
             :initform v::=meta/assets=)
    (%running-p :accessor running-p
                :initform t)
-   (%rcache :reader rcache
-            :initform (u:dict))
+   (%resource-cache :reader resource-cache
+                    :initform (u:dict))
    (%clock :reader clock
            :initform nil)
    (%display :reader display

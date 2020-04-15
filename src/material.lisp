@@ -357,13 +357,14 @@ corresponding in order to the input."
     (declare (ignore mat))
     (etypecase semantic-value
       ((or cons symbol)
-       (v::rcache-lookup context
-                         :texture
-                         (tex::canonicalize-texture-name semantic-value)))
+       (v::resource-cache-lookup
+        context
+        :texture
+        (tex::canonicalize-texture-name semantic-value)))
       (vector
        (map 'vector
             (lambda (sv)
-              (v::rcache-lookup
+              (v::resource-cache-lookup
                context :texture (tex::canonicalize-texture-name sv)))
             semantic-value)))))
 
