@@ -18,6 +18,9 @@
 (global-vars:define-global-var =meta/config/default= (u:dict #'eq))
 (global-vars:define-global-var =meta/config/project= (u:dict #'eq))
 
+;; Framebuffer specifications, stored by `DEFINE-FRAMEBUFFER`.
+(global-vars:define-global-var =meta/framebuffers= (u:dict #'eq))
+
 ;; Dynamic geometry objects, stored by `DEFINE-GEOMETRY`.
 (global-vars:define-global-var =meta/geometry= (u:dict #'eq))
 

@@ -158,6 +158,7 @@
      (:file "image-png")
      (:file "image-hdr")
      (:file "gltf")
+     (:file "framebuffer")
      (:file "transform-state")
      (:file "transform-protocol")
      (:file "free-look-state")))

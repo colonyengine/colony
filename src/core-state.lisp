@@ -18,6 +18,8 @@
              :initform nil)
    (%input-data :reader input-data)
    (%shaders :accessor shaders)
+   (%framebuffers :reader framebuffers
+                  :initform (u:dict #'eq))
    (%materials :accessor materials
                :initform (mat::make-materials-table))
    (%textures :accessor textures
