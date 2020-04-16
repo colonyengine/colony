@@ -7,10 +7,10 @@
 (defclass attributes ()
   ((%semantic-attributes :reader semantic-attributes
                          :initarg :semantic-attributes
-                         :initform (u:dict))
+                         :initform (u:dict #'eq))
    (%computed-attributes :reader computed-attributes
                          :initarg :computed-attributes
-                         :initform (u:dict))))
+                         :initform (u:dict #'eq))))
 
 (defun make-attributes (&rest args)
   (apply #'make-instance 'attributes args))

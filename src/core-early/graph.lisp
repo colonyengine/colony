@@ -14,7 +14,7 @@
                 :initform nil)
    (%graphdefs :accessor graphdefs
                :initarg :graphdefs
-               :initform  (u:dict))))
+               :initform  (u:dict #'eq))))
 
 (defun make-analyzed-graph (&rest init-args)
   (apply #'make-instance 'analyzed-graph init-args))
@@ -56,7 +56,7 @@
    ;; appropriate graphdef instance.
    (%subforms :accessor subforms
               :initarg :subforms
-              :initform (u:dict))))
+              :initform (u:dict #'eq))))
 
 (defun make-graphdef-depends-on (name &rest init-args)
   (apply #'make-instance 'graphdef-depends-on :name name init-args))
@@ -103,7 +103,7 @@
                      :initarg :unknown-type-id)
    (%referenced-types :accessor referenced-types
                       :initarg :referenced-types
-                      :initform (u:dict))))
+                      :initform (u:dict #'eq))))
 
 (defmethod make-graph-annotation ((category (eql 'component-dependency))
                                   &rest init-args)
@@ -113,7 +113,7 @@
 (defclass graph-annotation/component-package-order ()
   ((%pattern-matched-packages :accessor pattern-matched-packages
                               :initarg :pattern-matched-packages
-                              :initform (u:dict))))
+                              :initform (u:dict #'eq))))
 
 (defmethod make-graph-annotation ((category (eql 'component-package-order))
                                   &rest init-args)
@@ -222,7 +222,7 @@ null, and contains hyper edges, return values: list of hyper-edge pairs,
                            :kind kind))))))
 
 (defun parse-graph-definition (name category depends-on roots subforms)
-  (let ((subform-db (u:dict)))
+  (let ((subform-db (u:dict #'eq)))
     (make-graphdef name
                    :category category
                    :depends-on depends-on
@@ -287,7 +287,7 @@ the cl-graph, the roots as elements, the leaves as elements."
 graphdef references holding real references to the named subforms."
   (loop :for gdef :in (u:hash-values (graphdefs graph))
         :for whole-depends-on-form = (depends-on gdef)
-        :do (setf (depends-on gdef) (u:dict))
+        :do (setf (depends-on gdef) (u:dict #'eq))
             (loop :for (gdef-name subform-names) :in whole-depends-on-form
                   :for gdef-reference = (u:href (graphdefs graph) gdef-name)
                   :for analyzed-depends-on = (make-graphdef-depends-on
@@ -495,7 +495,7 @@ return it, otherwise return the unknown-type-id symbol."
 
 (defun load-graphs (core)
   (with-slots (%analyzed-graphs) core
-    (setf %analyzed-graphs (u:dict))
+    (setf %analyzed-graphs (u:dict #'eq))
     (u:do-hash-values (graph-code =meta/graphs=)
       (destructuring-bind (name (&key category depends-on roots) . body)
           graph-code

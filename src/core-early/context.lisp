@@ -6,7 +6,7 @@
    (%active-camera :accessor active-camera
                    :initform nil)
    (%storage :reader storage
-             :initform (u:dict))
+             :initform (u:dict #'eq))
    (%state :accessor state
            :initform nil)))
 

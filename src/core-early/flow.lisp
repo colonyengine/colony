@@ -56,7 +56,7 @@
   "Parse the selection, action, and transition form from the FUNCS list.
 They can be in any order, but return them as a values in the specific order of
 selector, action, and transition."
-  (let ((ht (u:dict)))
+  (let ((ht (u:dict #'eq)))
     (dolist (func-form funcs)
       (when func-form
         (setf (u:href ht (first func-form)) (second func-form))))
@@ -108,7 +108,7 @@ containing each flow-state indexed by name."
       (let ((flow-table (a:make-gensym '#:flow-table)))
         (ensure-matched-symbol match "flow")
         `(,flow-name
-          (let ((,flow-table (u:dict))
+          (let ((,flow-table (u:dict #'eq))
                 ,@binds)
             ,@ignores
             ,@(loop :for (name state) :in (mapcar #'parse-flow-state
@@ -120,7 +120,7 @@ containing each flow-state indexed by name."
   "Parse an entire call-flow and return a list of the name of it and a form
 which evaluates to a hash table of flows keyed by their name."
   (let ((call-flows (a:make-gensym '#:call-flows)))
-    `(let ((,call-flows (u:dict)))
+    `(let ((,call-flows (u:dict #'eq)))
        ,@(loop :for (name flow) :in (mapcar #'parse-flow form)
                :collect `(setf (u:href ,call-flows ',name) ,flow))
        ,call-flows)))

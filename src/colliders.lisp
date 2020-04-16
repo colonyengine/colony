@@ -15,7 +15,7 @@
    (%collision-plan :reader collision-plan
                     :initarg :collision-plan
                     ;; keyed by layer, value is list of layers it collides with
-                    :initform (u:dict))
+                    :initform (u:dict #'eq))
    ;; Keyed by :layer-name,
    ;; Value is ht
    ;; Key of second ht is collider-ref
@@ -25,19 +25,19 @@
                            ;; keyed by on-layer in collider, value is a hash.
                            ;; second has is keyed by ref to collider and value
                            ;; is collider.
-                           :initform (u:dict))
+                           :initform (u:dict #'eq))
    ;; Stable colliders are ones that have already been registered.
    (%stable-colliders :reader stable-colliders
                       :initarg :stable-colliders
                       ;; keyed by on-layer in collider, value is a hash. second
                       ;; has is keyed by ref to collider and value is collider.
-                      :initform (u:dict))
+                      :initform (u:dict #'eq))
    (%deregistering-colliders :reader deregistering-colliders
                              :initarg :deregistering-colliders
                              ;; keyed by on-layer in collider, value is a hash.
                              ;; second has is keyed by ref to collider and value
                              ;; is collider.
-                             :initform (u:dict))
+                             :initform (u:dict #'eq))
    ;; This is a buffer that we'll use to make colliding a layer against itself
    ;; faster and easier to compute.
    (%buffer :accessor buffer
@@ -52,7 +52,7 @@
    ;; updated to be consistent.
    (%contacts :reader contacts
               :initarg :contacts
-              :initform (u:dict))))
+              :initform (u:dict #'eq))))
 
 (defun make-collider-system (&rest init-args)
   (apply #'make-instance 'collider-system init-args))
@@ -93,11 +93,11 @@ currently in contact."
   (let ((contacts (contacts collider-system)))
     ;; First, we add a link: fist -> face.
     (unless (u:href contacts fist-collider)
-      (setf (u:href contacts fist-collider) (u:dict)))
+      (setf (u:href contacts fist-collider) (u:dict #'eq)))
     (setf (u:href contacts fist-collider face-collider) face-collider)
     ;; Then we add a symmetric back link: face -> fist.
     (unless (u:href contacts face-collider)
-      (setf (u:href contacts face-collider) (u:dict)))
+      (setf (u:href contacts face-collider) (u:dict #'eq)))
     (setf (u:href contacts face-collider fist-collider) fist-collider)
     ;; Now that the contact has been added we'll invoke the enter protocol for
     ;; the contact.
@@ -391,6 +391,7 @@ had--and update all other faces too."
              ;; The KEY is the row header, the VALUE is the X locations that
              ;; indicate a collision situation.
              ,(u:dict
+               #'eq
                :ground (list :ground)
                :player (list :ground)
                :player-bullet (list :ground)
@@ -408,9 +409,9 @@ had--and update all other faces too."
       (dolist (physics-layer (physics-layers new-collider-system))
         ;; Set up the htables to receive the collider references for each
         ;; physics-layer
-        (setf (u:href registering-colliders physics-layer) (u:dict)
-              (u:href stable-colliders physics-layer) (u:dict)
-              (u:href deregistering-colliders physics-layer) (u:dict))))))
+        (setf (u:href registering-colliders physics-layer) (u:dict #'eq)
+              (u:href stable-colliders physics-layer) (u:dict #'eq)
+              (u:href deregistering-colliders physics-layer) (u:dict #'eq))))))
 
 ;; TODO: Move to utility file, maybe put in goldern-utils. Possibly extend to
 ;; take &rest and perform all combinations of keys/values/etc in hash table.

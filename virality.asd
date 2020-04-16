@@ -100,7 +100,6 @@
    (:file "bounding-volume-obb")
    (:file "colliders")
 
-
    (:module "texture"
     :components
     ((:file "common")

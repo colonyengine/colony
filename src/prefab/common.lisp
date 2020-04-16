@@ -40,7 +40,7 @@
    (%components :reader components
                 :initform nil)
    (%components-table :reader components-table
-                      :initform (u:dict))
+                      :initform (u:dict #'eq))
    (%parent :reader parent
             :initarg :parent
             :initform nil)

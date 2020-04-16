@@ -85,7 +85,7 @@
        base-path))))
 
 (defun make-asset-table (spec)
-  (let ((table (u:dict)))
+  (let ((table (u:dict #'eq)))
     (u:do-plist (k v spec)
       (check-asset-key-keyword k)
       (check-asset-key-unique table k)

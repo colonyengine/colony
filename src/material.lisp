@@ -4,10 +4,10 @@
 (defclass materials-table ()
   ((%material-table :reader material-table
                     :initarg :material-table
-                    :initform (u:dict))
+                    :initform (u:dict #'eq))
    (%profiles :reader profiles
               :initarg :profiles
-              :initform (u:dict))))
+              :initform (u:dict #'eq))))
 
 ;;; Internal Materials-table API
 (defun make-materials-table (&rest init-args)
@@ -171,10 +171,10 @@ CORE. Return a list of the return values of the FUNC."
           :initarg :name)
    (%uniforms :reader uniforms
               :initarg :uniforms
-              :initform (u:dict))
+              :initform (u:dict #'eq))
    (%blocks :reader blocks
             :initarg :blocks
-            :initform (u:dict))))
+            :initform (u:dict #'eq))))
 
 (defun %make-material-profile (&rest init-args)
   (apply #'make-instance 'material-profile init-args))
@@ -203,13 +203,13 @@ CORE. Return a list of the return values of the FUNC."
    (%uniforms :reader uniforms
               :initarg :uniforms
               ;; key is a uniform keyword, value is material-uniform-value
-              :initform (u:dict))
+              :initform (u:dict #'eq))
    (%blocks :reader blocks
             :initarg :blocks
             ;; Hash tables:
             ;; key1 = <block-alias>,
             ;; value = material-block-value
-            :initform (u:dict))
+            :initform (u:dict #'eq))
    (%active-texture-unit :accessor active-texture-unit
                          :initarg :active-texture-unit
                          :initform 0)))
@@ -253,8 +253,8 @@ CORE. Return a list of the return values of the FUNC."
          (new-shader (shader current-mat))
          (new-instances (instances current-mat))
          (new-attributes (attributes current-mat))
-         (new-uniforms (u:dict))
-         (new-blocks (u:dict))
+         (new-uniforms (u:dict #'eq))
+         (new-blocks (u:dict #'eq))
          (new-active-texture-unit (active-texture-unit current-mat))
          (new-mat
            ;; TODO: Fix %make-material so I don't have to do this.

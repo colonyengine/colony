@@ -3,11 +3,11 @@
 (defclass textures-table ()
   ((%profiles :reader profiles
               :initarg :profiles
-              :initform (u:dict))
+              :initform (u:dict #'eq))
    ;; All texture-descriptors from DEFINE-TEXTURE are stored here.
    (%semantic-texture-descriptors :reader semantic-texture-descriptors
                                   :initarg :semantic-texture-descriptors
-                                  :initform (u:dict))
+                                  :initform (u:dict #'eq))
    ;; If a material requires a texture, but it was procedural, we mark a note of
    ;; it in here so the gamedev can find it later and generate them before the
    ;; game starts.
@@ -82,7 +82,7 @@ NOTE: These are already in the resource-cache."
           :initarg :name)
    (%attributes :reader attributes
                 :initarg :attributes
-                :initform (u:dict))))
+                :initform (u:dict #'eq))))
 
 ;; TODO: Candidate for public API
 (defun make-texture-profile (&rest init-args)
@@ -100,11 +100,11 @@ NOTE: These are already in the resource-cache."
    ;; Attribute specified in the define-texture form
    (%attributes :accessor attributes
                 :initarg :attributes
-                :initform (u:dict))
+                :initform (u:dict #'eq))
    ;; Up to date attributes once the profiles have been applied.
    (%applied-attributes :accessor applied-attributes
                         :initarg :applied-attributes
-                        :initform (u:dict))))
+                        :initform (u:dict #'eq))))
 
 ;; TODO candidate for public API
 (defun make-texture-descriptor (&rest init-args)

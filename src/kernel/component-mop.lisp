@@ -41,7 +41,7 @@
    (%annotations :accessor annotations
                  :initarg :annotations
                  ;; key: symbol, value: component-class/annotation-value
-                 :initform (u:dict))
+                 :initform (u:dict #'eq))
    (%annotations-dirty-p :accessor annotations-dirty-p
                          :initarg :annotations-dirty-p
                          :initform nil)
@@ -56,7 +56,7 @@
    ;; annotations across inherited components.
    (%annotated-slots :accessor annotated-slots
                      :initarg :annotated-slots
-                     :initform (u:dict))))
+                     :initform (u:dict #'eq))))
 
 (defmethod c2mop:validate-superclass ((class component-class)
                                       (super standard-class))
@@ -118,11 +118,11 @@
 ;; Ability to reset the annotations.
 (defun clear-annotations (component-metaclass-name)
   (let ((db (find-class component-metaclass-name)))
-    (setf (annotations db) (u:dict)
+    (setf (annotations db) (u:dict #'eq)
           (annotation-serialnum db) 0
           (annotations-dirty-p db) nil
           (annotation-array db) #()
-          (annotated-slots db) (u:dict))))
+          (annotated-slots db) (u:dict #'eq))))
 
 ;; Define a set of slot definition classes that understand the concept of being
 ;; annotated.

@@ -16,7 +16,7 @@
                             ;; value: hash-table
                             ;; key2: metagraph form name
                             ;; value2: metagraph-definition
-                            :initform (u:dict))))
+                            :initform (u:dict #'eq))))
 
 ;; A raw and unprocessed define-graph form and the timestamp when it was
 ;; stored in one of these class types.

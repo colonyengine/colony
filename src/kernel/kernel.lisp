@@ -45,14 +45,14 @@
   (a:when-let ((table (actors-by-id (tables (core kernel))))
                (id (id kernel)))
     (unless (u:href table id)
-      (setf (u:href table id) (u:dict)))
+      (setf (u:href table id) (u:dict #'eq)))
     (setf (u:href table id kernel) kernel)))
 
 (defmethod register-kernel-id ((kernel component))
   (a:when-let ((table (components-by-id (tables (core kernel))))
                (id (id kernel)))
     (unless (u:href table id)
-      (setf (u:href table id) (u:dict)))
+      (setf (u:href table id) (u:dict #'eq)))
     (setf (u:href table id kernel) kernel)))
 
 (defun deregister-kernel-uuid (kernel)

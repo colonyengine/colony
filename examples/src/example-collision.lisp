@@ -42,7 +42,7 @@
                :initarg :test-type
                :initform nil)
    (%test-performed :reader test-performed
-                    :initform (u:dict))))
+                    :initform (u:dict #'eq))))
 
 (defmethod v:on-component-physics-update ((self unit-test-transform-api))
   (ecase (test-type self)

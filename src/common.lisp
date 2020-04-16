@@ -8,7 +8,7 @@
 (defun (setf type-table) (entry type-name-key type-table)
   (symbol-macrolet ((entry-table (u:href type-table type-name-key)))
     (unless (nth-value 1 entry-table)
-      (setf entry-table (u:dict)))
+      (setf entry-table (u:dict #'eq)))
     (setf (u:href entry-table entry) entry)))
 
 (defun type-table-drop (component component-type type-table)

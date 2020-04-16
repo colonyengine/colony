@@ -40,24 +40,26 @@
 ;; translucency since the rendering can happen in any order. Stencil textures
 ;; are ok though. NOTE: We must be careful here since things that collide with
 ;; each other must actually be physically close together in the game.
-(defparameter *draw-layer* (u:dict :starfield -100f0
-                                   :player-stable -99f0
+(defparameter *draw-layer* (u:dict
+                            #'eq
+                            :starfield -100f0
+                            :player-stable -99f0
 
-                                   :planet -.08f0
-                                   :planet-warning-explosion -.07f0
-                                   :planet-explosion -.06f0
-                                   :asteroid -.05f0
-                                   :enemy-ship -.04f0
-                                   :enemy-explosion -.03f0
-                                   :enemy-bullet -.02f0
-                                   :player-bullet -.01f0
-                                   :player 0.00f0
-                                   :player-explosion 0.01f0
+                            :planet -.08f0
+                            :planet-warning-explosion -.07f0
+                            :planet-explosion -.06f0
+                            :asteroid -.05f0
+                            :enemy-ship -.04f0
+                            :enemy-explosion -.03f0
+                            :enemy-bullet -.02f0
+                            :player-bullet -.01f0
+                            :player 0.00f0
+                            :player-explosion 0.01f0
 
-                                   :time-keeper 300f0
-                                   :sign 400f0
-                                   :camera 500f0
-                                   ))
+                            :time-keeper 300f0
+                            :sign 400f0
+                            :camera 500f0
+                            ))
 (defun dl (draw-layer-name)
   (u:href *draw-layer* draw-layer-name))
 
@@ -960,12 +962,12 @@ return the lives-remaining after the life has been consumed."
       (context context)
       ((tag->actors tag->actors/present-p ('tags :db :tag->actors)
                     ;; key: tag, Value: hash table of actor -> actor
-                    (u:dict))
+                    (u:dict #'eq))
        (actor->tags actor->tags/present-p ('tags :db :actor->tags)
                     ;; Key: actor, Value: hash table of tag -> tag
-                    (u:dict)))
+                    (u:dict #'eq)))
 
-      (values tag->actors actor->tags)))
+    (values tag->actors actor->tags)))
 
 (defmethod v:on-component-initialize ((self tags))
   ;; Seed the storage cache. We're modifying the tags list, so copy-seq it to
@@ -982,12 +984,12 @@ return the lives-remaining after the life has been consumed."
       (dolist (tag adding-tags)
         ;; Add a tag -> actor set link
         (unless (u:href tag->actors tag)
-          (setf (u:href tag->actors tag) (u:dict)))
+          (setf (u:href tag->actors tag) (u:dict #'eq)))
         (setf (u:href tag->actors tag actor) actor)
 
         ;; Add an actor -> tag set link
         (unless (u:href actor->tags actor)
-          (setf (u:href actor->tags actor) (u:dict)))
+          (setf (u:href actor->tags actor) (u:dict #'eq)))
         (setf (u:href actor->tags actor tag) tag)))))
 
 ;; public API
