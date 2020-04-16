@@ -48,6 +48,12 @@
    (:file "package")
    (:file "package-nicknames")
 
+   ;; This module houses files that are still being worked out and not
+   ;; integrated into the core yet.
+   (:module "flux"
+    :components
+    ((:file "attributes")))
+
    (:module "core-early"
     :components
     ((:file "general")
@@ -67,6 +73,13 @@
      (:file "protocol")
      (:file "resource-cache")))
 
+   (:module "kernel"
+    :components
+    ((:file "actor")
+     (:file "component-mop")
+     (:file "component")
+     (:file "kernel")))
+
    (:module "input"
     :components
     ((:file "data")
@@ -80,12 +93,7 @@
    (:file "common")
    (:file "clock")
    (:file "context")
-   (:file "attributes")
-   (:file "actor")
-   (:file "mop-component")
-   (:file "component")
    (:file "shared-storage")
-   (:file "kernel")
    (:file "annotations")
    (:file "shaders")
    (:file "region")
@@ -160,7 +168,6 @@
    (:file "shader/texture")
    (:file "shader/visualization-collider")
 
-   (:file "definition/annotations")
    (:file "definition/graphs")
    (:file "definition/flows")
    (:file "definition/texture-profiles")

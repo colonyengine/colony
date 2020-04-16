@@ -62,5 +62,4 @@
       (setf (computed-attribute attrs key) (funcall copier-func value)))))
 
 (defmethod overlay-computed-attributes ((attrs attributes) &rest ordering)
-  (declare (ignore attrs ordering))
-  nil)
+  (declare (ignore attrs ordering)))
