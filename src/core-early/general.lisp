@@ -16,8 +16,6 @@ sense to be called in an interactive Lisp session, but we'll let callers decide
 when to use it."
   (first (uiop:raw-command-line-arguments)))
 
-;; TODO: The following function should be called early on during engine
-;; initialization. ~axion 4/7/2020
 (defun initialize-rng ()
   "Initializes the PRNG's state, so that the same sequence is not generated each
 time the image is started."

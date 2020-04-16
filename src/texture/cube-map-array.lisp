@@ -19,8 +19,6 @@
          ;; TODO: We assume all cube maps have the same mipmap number. I don't
          ;; know if this is a reuirements or not.
          (num-mipmaps (length (second (aref first-cube 0)))))
-    ;; TODO: I removed the verbose logging framework because it is buggy.
-    ;; ~axion 4/9/2020.
     #++(:printv "Loading :texture-cube-map-array images = ~a" images)
     ;; Figure out the ideal mipmap count from the base resolution.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
@@ -36,8 +34,6 @@
       (when immutable-p
         (let ((num-mipmaps-to-generate
                 (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
-          ;; TODO: I removed the verbose logging framework because it is buggy.
-          ;; ~axion 4/9/2020.
           #++(:printv "tex-storage-3d: texture-type = ~a, ~
                       num-mipmaps-to-generate = ~a, internal-format = ~a, ~
                       width = ~a, height = ~a, depth = ~a~%"
@@ -65,8 +61,6 @@
                           ;; earlier.
                           :for face-idx :by 1
                           :do
-                             ;; TODO: I removed the verbose logging framework
-                             ;; because it is buggy. ~axion 4/9/2020.
                           #++(:printv "inserting cube ~a face ~a[~a]~%"
                                       cube-idx face-signifier idx)
                              (let ((image (aref mipmaps idx)))

@@ -19,15 +19,11 @@
          (sb-profile:reset)))))
 
 (defmethod prologue :before ((context context))
-  ;; TODO: I removed the verbose logging framework because it is buggy.
-  ;; ~axion ;; 4/9/2020.
   #++(:printv :virality "Running prologue method."))
 
 (defmethod prologue ((context context)))
 
 (defmethod epilogue :before ((context context))
-  ;; TODO: I removed the verbose logging framework because it is buggy.
-  ;; ~axion ;; 4/9/2020.
   #++(:printv :virality "Running epilogue method."))
 
 (defmethod epilogue ((context context)))
@@ -54,6 +50,7 @@ tear-down procedure occurs when stopping the engine."
 
 (defun initialize-engine (core scene-name)
   (setup-repl)
+  (initialize-rng)
   (make-display core)
   (prepare-gamepads)
   (make-clock core)

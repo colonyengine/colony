@@ -4,9 +4,7 @@
 ;;;; global variables used for storing metadata that are used during development
 ;;;; only.
 
-;; Game asset metadata, stored by `DEFINE-ASSETS`.
-(global-vars:define-global-var =meta/assets= (u:dict #'eq))
-;; TODO: ~axion 4/15/2020
+;; Game asset metadata, stored by `DEFINE-ASSET-POOL`.
 (global-vars:define-global-var =meta/asset-pools= (u:dict #'eq))
 
 ;; Call flows for defining the entity-component call flow, storing by

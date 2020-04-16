@@ -150,8 +150,6 @@ had--and update all other faces too."
         ;; removing hash tables we don't need anymore.
         (dolist (face-collider face-colliders)
           (when (contact-p collider-system fist-collider face-collider)
-            ;; TODO: I removed the verbose logging framework because it is
-            ;; buggy. ~axion 4/9/2020.
             #++(:printv "remove-all-contacts: attempting to remove ~a from ~
                         contacting ~a."
                         fist-collider face-collider)
@@ -283,8 +281,6 @@ had--and update all other faces too."
               ;; The FIST is good to go! collide it and stabilize it!
               (let ((face-layers
                       (u:href (collision-plan collider-system) fist-layer)))
-                ;; TODO: I removed the verbose logging framework because it is
-                ;; buggy. ~axion 4/9/2020.
                 #++(:printv "Checking registering fist: ~s, [~s: ~s]"
                             (v:display-id fist) (comp:on-layer fist)
                             face-layers)
@@ -292,17 +288,12 @@ had--and update all other faces too."
                   ((null face-layers)
                    ;; If no face layers to collide against AT ALL, automatically
                    ;; stabilize the fist and we're done with it.
-
-                   ;; TODO: I removed the verbose logging framework because it
-                   ;; is buggy. ~axion 4/9/2020.
                    #++(:printv " Stabilizing[0]: ~s" (v:display-id fist))
                    (setf (u:href stable-colliders fist-layer fist) fist))
                   (t
                    ;; Else, we collide the fist against each face in each
                    ;; layer.
                    (dolist (face-layer face-layers)
-                     ;; TODO: I removed the verbose logging framework because it
-                     ;; is buggy. ~axion 4/9/2020.
                      #++(:printv " Checking contacts between layers: ~s <=> ~s"
                                  fist-layer face-layer)
                      ;; Find all the face-layer colliders to which we need to
@@ -314,8 +305,6 @@ had--and update all other faces too."
                        (unless (zerop (hash-table-count
                                        face-layer-stable-colliders))
                          (u:do-hash-keys (face face-layer-stable-colliders)
-                           ;; TODO: I removed the verbose logging framework
-                           ;; because it is buggy. ~axion 4/9/2020.
                            #++(:printv "  compute-contact-state: [reg: ~s <-> ~
                                       stable: ~s]"
                                        (v:display-id fist) (v:display-id face))
@@ -327,9 +316,6 @@ had--and update all other faces too."
                    ;; need be.
                    ;; NOTE: We CANNOT stabilize until AFTER the registering fist
                    ;; has been collided with all stable faces.
-
-                   ;; TODO: I removed the verbose logging framework because it is
-                   ;; buggy. ~axion 4/9/2020.
                    #++(:printv " Stabilizing[1]: ~s" (v:display-id fist))
                    (setf (u:href stable-colliders fist-layer fist)
                          fist)))))))))))
