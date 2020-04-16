@@ -58,6 +58,8 @@ long the thing has yet to live, with NIL meaning infinity."))
 
 ;;; Prologue/Epilogue
 
-(defgeneric prologue (context))
+(defgeneric prologue (context)
+  (:method (context)))
 
-(defgeneric epilogue (context))
+(defgeneric epilogue (context)
+  (:method (context)))

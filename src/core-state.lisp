@@ -99,3 +99,9 @@ structures in CORE."
                   'entry/initialize-phase
                   :come-from-state-name 'ef-make-scene-tree)
     (setf (slot-value core '%scene-tree) actor)))
+
+(defun make-core (project)
+  (let ((core (make-instance 'core :project project)))
+    (setf *core-debug* core)
+    (make-context core)
+    core))

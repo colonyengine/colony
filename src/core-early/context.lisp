@@ -13,6 +13,13 @@
 (defun make-context (core)
   (setf (slot-value core '%context) (make-instance 'context :core core)))
 
+(defun run-prologue (core)
+  (let ((context (context core)))
+    (setf (state context) (prologue context))))
+
+(defun run-epilogue (core)
+  (epilogue (context core)))
+
 ;; NOTE: This function must have &rest arguments, but they are ignored. This is
 ;; because this function is shared with the material protocol which must pass
 ;; more than the context.
