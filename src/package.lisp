@@ -11,7 +11,6 @@
    #:actor
    #:context
    #:define-annotation
-   #:define-assets
    #:define-call-flow
    #:define-config
    #:define-graph

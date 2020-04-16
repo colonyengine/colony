@@ -3,19 +3,19 @@
 ;;; Textures
 
 (v:define-texture damaged-helmet/metallic-roughness (:texture-2d)
-  (:data #((:damaged-helmet-textures "metal-roughness.png"))))
+  (:data #((mesh-textures helmet-metal-roughness))))
 
 (v:define-texture damaged-helmet/color (:texture-2d)
-  (:data #((:damaged-helmet-textures "albedo.png"))))
+  (:data #((mesh-textures helmet-albedo))))
 
 (v:define-texture damaged-helmet/normal (:texture-2d)
-  (:data #((:damaged-helmet-textures "normal.png"))))
+  (:data #((mesh-textures helmet-normal))))
 
 (v:define-texture damaged-helmet/ambient-occlusion (:texture-2d)
-  (:data #((:damaged-helmet-textures "ao.png"))))
+  (:data #((mesh-textures helmet-ao))))
 
 (v:define-texture damaged-helmet/emissive (:texture-2d)
-  (:data #((:damaged-helmet-textures "emissive.png"))))
+  (:data #((mesh-textures helmet-emissive))))
 
 ;;; Materials
 
@@ -84,39 +84,31 @@
                (lm-start-drag-p (v:on-button-enter context :mouse :left))
                (lm-stop-drag-p (v:on-button-exit context :mouse :left))
                (range (- o:pi/2 .001)))
-
       (when (or (null x) (null y))
         ;; TODO: Figure out how this even happens.
         (return-from v:on-component-update))
-
       ;; TODO: Drag detection and handling is very primitive and prolly should
       ;; be done elsewhere.
-
       ;; NOTE: We get this ONCE and then the entire rotation of the object is
       ;; dynamically built as an persistent orientation offset from this origin
       ;; orientation.
       (unless orig-orient
         (setf orig-orient (v:get-rotation self :copy t)))
-
       (unless rv
         ;; RV represents a persistent 2D point we'll be moving around with the
         ;; mouse--even across multiple drag events. This RV 2D point represents
         ;; the persistent orientation difference we're going to apply to the
         ;; original-orientation
         (setf rv (v2:copy start-drag-point)))
-
       (when lm-start-drag-p
         (setf start-drag-point (v2:vec x y)
               drag-point (v2:vec x y)
               dragging t))
-
       (when dragging
         (setf drag-point (v2:vec x y))
-
         (let* ((dv (v2:- drag-point start-drag-point)))
           ;; TODO: This mathematical concept here is slightly clunky, so fixup
           ;; the transform API to make this a lot easier to do.
-
           (let* (;; This is built by adding the new drag vector to RV. Sirnce
                  ;; RV represents (as a 2d point) the offset from the
                  ;; original orientation, when a new drag event happens it'll
@@ -126,19 +118,16 @@
                  (y-rot (if clamp-p (a:clamp y-rot (- range) range) y-rot))
                  (dv-rot (q:orient :local
                                    :y x-rot
-                                   :x y-rot
-                                   ))
+                                   :x y-rot))
                  ;; Create the new potential rotation starting from the
                  ;; original orientation that takes into consideration the
                  ;; new orientation indicated by dv-rot
                  (putative-rot (q:rotate dv-rot orig-orient)))
-
             ;; Now, preview it to the user (remember, the orig-orientation was
             ;; the orientation BEFORE the dragging started). So when the user
             ;; lets go of the LMB, this BECOMES the new orientation for the
             ;; next drag attempt.
             (v:rotate self putative-rot :replace t))))
-
       (when lm-stop-drag-p
         (setf dragging nil
               end-drag-point (v2:vec x y))
@@ -160,22 +149,19 @@
                 :free-look t))
   (("helmet" :copy "/mesh")
    (comp:transform :rotate (q:orient :local :x o:pi/2)
-                   :rotate/velocity (o:make-velocity
-                                     v3:+forward+
-                                     (- o:pi/6))
+                   :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi/6))
                    :scale 17f0)
-   (comp:mesh :asset '(:mesh "damaged-helmet.glb")
+   (comp:mesh :asset '(meshes damaged-helmet)
               :name "damaged-helmet")
    (comp:render :material 'damaged-helmet)))
 
 (v:define-prefab "damaged-helmet-interactive" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (comp:camera (:policy :new-args) :zoom 10f0))
-
+   (comp:camera (:policy :new-args)))
   (("helmet" :copy "/mesh")
    (simple-mouse-rotator :clamp-p t)
    (comp:transform :rotate (q:orient :local :x o:pi/2)
-                   :scale 4f0)
-   (comp:mesh :asset '(:mesh "damaged-helmet.glb")
+                   :scale 17f0)
+   (comp:mesh :asset '(meshes damaged-helmet)
               :name "damaged-helmet")
    (comp:render :material 'damaged-helmet)))

@@ -10,8 +10,7 @@
    (%index :reader index
            :initarg :index
            :initform 0)
-   (%primitive :reader primitive))
-  ((:cached-mesh-data eq)))
+   (%primitive :reader primitive)))
 
 (defmethod v:on-component-initialize ((self mesh))
   (with-slots (%asset %name %index %primitive) self
@@ -20,13 +19,9 @@
     (unless %name
       (error "A mesh component must have a name."))
     (let* ((context (v:context self))
-           (path (apply #'v::find-asset context %asset))
-           (gltf (v:with-storage
-                     (context context)
-                     ((cached-mesh mesh-present-p
-                                   ('mesh :cached-mesh-data %asset)
-                                   (v::load-gltf path)))
-                   cached-mesh))
+           (path (v::resolve-path %asset))
+           (gltf (v:with-asset-cache context :mesh path
+                   (v::load-gltf path)))
            (mesh (u:href (v::meshes gltf) %name)))
       (unless mesh
         (error "Mesh name ~s not found in mesh file ~s." %name path))

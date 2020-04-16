@@ -4,7 +4,7 @@
   ((%project :reader project
              :initarg :project)
    (%assets :reader assets
-            :initform =meta/assets=)
+            :initform (u:dict #'eq))
    (%running-p :accessor running-p
                :initform t)
    (%resource-cache :reader resource-cache

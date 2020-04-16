@@ -55,7 +55,7 @@ tear-down procedure occurs when stopping the engine."
 (defun initialize-engine (core scene-name)
   (setup-repl)
   (make-display core)
-  (prepare-gamepads core)
+  (prepare-gamepads)
   (make-clock core)
   (initialize-shaders core)
   (make-input-data core)

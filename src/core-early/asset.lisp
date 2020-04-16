@@ -1,105 +1,150 @@
 (in-package #:virality)
 
-(defun resolve-project-path (system &optional path)
-  (if (and (boundp '*deployed-p*) *deployed-p*)
+;;; spec
+
+(defclass asset-spec ()
+  ((%pool :reader pool
+          :initarg :pool)
+   (%name :reader name
+          :initarg :name)
+   (%path :reader path
+          :initarg :path)))
+
+(u:define-printer (asset-spec stream :type nil)
+  (format stream "~s (pool: ~s)" (name asset-spec) (pool asset-spec)))
+
+(defun find-asset-pool (name)
+  (u:href =meta/asset-pools= name))
+
+(defun make-asset-spec (pool-name base-path data)
+  (destructuring-bind (name path) data
+    (let* ((pool (find-asset-pool pool-name))
+           (base-path (uiop:ensure-directory-pathname base-path))
+           (path (uiop:merge-pathnames* path base-path))
+           (asset (make-instance 'asset-spec
+                                 :pool pool-name
+                                 :name name
+                                 :path path)))
+      (setf (u:href pool name) asset)
+      asset)))
+
+(defun find-asset-spec (pool-name spec-name)
+  (a:if-let ((pool (find-asset-pool pool-name)))
+    (or (u:href pool spec-name)
+        (error "Asset ~s not found in pool ~s." spec-name pool-name))
+    (error "Asset pool ~s does not exist." pool-name)))
+
+(defun get-asset-pool-system (pool-name)
+  (let ((package-name (package-name (symbol-package pool-name))))
+    (or (asdf:find-system (a:make-keyword package-name) nil)
+        (error "Asset pool ~s must be defined in a package with the same name ~
+                as its ASDF system."
+               pool-name))))
+
+(defun make-asset-symbol (path)
+  (intern
+   (string-upcase
+    (cl-slug:slugify
+     (pathname-name path)))))
+
+(defun asset-path-collect-p (path filter)
+  (flet ((normalize-type (type)
+           (string-downcase (string-left-trim "." type))))
+    (let ((path-type (string-downcase (pathname-type path))))
+      (some
+       (lambda (x)
+         (string= path-type (normalize-type x)))
+       (a:ensure-list filter)))))
+
+(defun update-asset-pool (pool-name path filter)
+  (let ((pool (find-asset-pool pool-name)))
+    (let* ((path (uiop:ensure-directory-pathname path))
+           (system (get-asset-pool-system pool-name))
+           (resolved-path (%resolve-path system path)))
+      (clrhash pool)
+      (u:map-files
+       resolved-path
+       (lambda (x)
+         (let* ((asset-name (make-asset-symbol x))
+                (file-name (file-namestring x))
+                (spec (list asset-name file-name)))
+           (u:if-found (existing (u:href pool asset-name))
+                       (error "Asset pool ~s has ambiguously named assets:~%~
+                               File 1: ~a~%File 2: ~a~%Normalized name: ~a"
+                              pool-name
+                              file-name
+                              (file-namestring (path existing))
+                              asset-name)
+                       (make-asset-spec pool-name path spec))))
+       :test (lambda (x) (if filter (asset-path-collect-p x filter) t))
+       :recursive-p nil))))
+
+(defun make-asset-pool (name path filter)
+  (let ((pool (u:dict #'eq)))
+    (setf (u:href =meta/asset-pools= name) pool)
+    (update-asset-pool name path filter)
+    pool))
+
+(defmacro define-asset-pool (name options &body body)
+  (declare (ignore options))
+  (destructuring-bind (&key path filter) body
+    `(if (u:href =meta/asset-pools= ',name)
+         (update-asset-pool ',name ,path ',filter)
+         (make-asset-pool ',name ,path ',filter))))
+
+;;; implementation
+
+(defun find-asset (context type key)
+  (u:href (assets (core context)) type key))
+
+(defun delete-asset (context type key)
+  (remhash key (u:href (assets (core context)) type)))
+
+(defun %resolve-path (system path)
+  (if =release=
       #+sbcl
-      (truename
-       (uiop:merge-pathnames*
-        path
-        (uiop:pathname-directory-pathname
-         (first sb-ext:*posix-argv*))))
-      #-sbcl
-      (error "Virality Engine was not deployed with SBCL.")
-      (asdf:system-relative-pathname (asdf:find-system system) path)))
-
-(defun find-asset (context asset &optional sub-path)
-  (u:mvlet* ((project key (split-asset-key asset))
-             (project (or project (project (core context))))
-             (assets (assets (core context))))
-    (u:if-found (path (u:href assets project key))
-                (resolve-project-path
-                 project
-                 (uiop:merge-pathnames* sub-path path))
-                (error "Asset ~s not found." asset))))
-
-(defun check-asset-project-name (project)
-  (unless (asdf:find-system project nil)
-    (error "Project ~s could not be found." project)))
-
-(defun check-asset-key-keyword (key)
-  (unless (keywordp key)
-    (error "Asset key is not a keyword symbol: ~s." key)))
-
-(defun check-asset-key-leading-slash (key)
-  (when (char= (char (symbol-name key) 0) #\/)
-    (error "Asset key ~s cannot begin with a slash character." key)))
-
-(defun check-asset-key-unique (table key)
-  (when (u:href table key)
-    (error "Duplicate asset key: ~s." key)))
-
-(defun check-asset-key-exists (table key path-spec)
-  (when (and key (not (u:href table key)))
-    (error "Asset key ~s is not defined when attempting to merge the path ~
-            specifier ~s."
-           key path-spec)))
-
-(defun check-asset-path-trailing-dot (path index)
-  (when (and index (= (1+ index) (length path)))
-    (error "Asset path ~s cannot end with a dot character." path)))
-
-(defun check-asset-path-file-base-path (base-path path)
-  (when (and base-path (pathname-type base-path))
-    (error "Asset path ~s is a file and cannot be merged with path ~s."
-           base-path path)))
-
-(defun split-asset-key (key)
-  (let* ((key-name (symbol-name key))
-         (index (position #\/ key-name)))
-    (check-asset-key-leading-slash key)
-    (if index
-        (values (a:make-keyword (subseq key-name 0 index))
-                (a:make-keyword (subseq key-name (1+ index))))
-        (values nil
-                key))))
-
-(defun split-asset-path (path)
-  (let ((index (position #\. path :from-end t)))
-    (check-asset-path-trailing-dot path index)
-    (if index
-        (values (subseq path 0 index)
-                (subseq path (1+ index)))
-        path)))
-
-(defun make-asset-path (table path-spec)
-  (destructuring-bind (sub-path &optional key)
-      (reverse (a:ensure-list path-spec))
-    (check-asset-key-exists table key path-spec)
-    (u:mvlet ((base-path (u:href table key))
-              (name type (split-asset-path (string-trim "/" sub-path))))
-      (check-asset-path-file-base-path base-path sub-path)
       (uiop:merge-pathnames*
-       (if type
-           (make-pathname :name name :type type)
-           (make-pathname :directory `(:relative ,name)))
-       base-path))))
+       path
+       (uiop:pathname-directory-pathname (first sb-ext:*posix-argv*)))
+      #-sbcl
+      (error "Release must be deployed on SBCL to load assets.")
+      (asdf:system-relative-pathname system path)))
 
-(defun make-asset-table (spec)
-  (let ((table (u:dict #'eq)))
-    (u:do-plist (k v spec)
-      (check-asset-key-keyword k)
-      (check-asset-key-unique table k)
-      (setf (u:href table k) (make-asset-path table v)))
-    table))
+(defun resolve-system-path (path &optional (system :virality))
+  (let* ((system (asdf:find-system system))
+         (path (uiop:merge-pathnames*
+                path
+                (uiop:ensure-directory-pathname "data")))
+         (resolved-path (%resolve-path system path)))
+    resolved-path))
 
-(defmacro define-assets (project &body body)
-  `(progn
-     (check-asset-project-name ',project)
-     (setf (u:href =meta/assets= ,project) (make-asset-table ',body))))
+(defgeneric resolve-path (asset))
 
-(define-assets :virality
-  :data "data"
-  :mesh (:data "mesh")
-  :texture (:data "texture")
-  :gamepad-db (:data "gamepad-db.txt")
-  :debug-tex (:texture "debug.png"))
+(defmethod resolve-path ((asset list))
+  (destructuring-bind (pool-name spec-name) asset
+    (let* ((spec (find-asset-spec pool-name spec-name))
+           (system (get-asset-pool-system pool-name))
+           (path (%resolve-path system (path spec))))
+      (if (uiop:file-exists-p path)
+          (values path spec)
+          (error "File path not found for asset ~s of pool ~s.~%Path: ~s."
+                 spec-name pool-name path)))))
+
+(defmethod resolve-path ((asset string))
+  (resolve-system-path asset :virality))
+
+(defmacro with-asset-cache (context type key &body body)
+  (a:with-gensyms (table value found-p)
+    `(symbol-macrolet ((,table (u:href (assets (core ,context)) ,type)))
+       (u:mvlet ((,value ,found-p ,table))
+         (unless ,found-p
+           (setf ,table (u:dict #'equalp))))
+       (a:ensure-gethash ,key ,table (progn ,@body)))))
+
+(define-asset-pool meshes ()
+  :path "data/mesh"
+  :filter "glb")
+
+(define-asset-pool textures ()
+  :path "data/texture"
+  :filter "png")

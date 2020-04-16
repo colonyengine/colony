@@ -6,6 +6,8 @@
 
 ;; Game asset metadata, stored by `DEFINE-ASSETS`.
 (global-vars:define-global-var =meta/assets= (u:dict #'eq))
+;; TODO: ~axion 4/15/2020
+(global-vars:define-global-var =meta/asset-pools= (u:dict #'eq))
 
 ;; Call flows for defining the entity-component call flow, storing by
 ;; `DEFINE-CALL-FLOW`.

@@ -3,7 +3,7 @@
 ;;; Textures
 
 (v:define-texture sprites (:texture-2d)
-  (:data #(:spritesheet)))
+  (:data #((textures sprites))))
 
 ;;; Components
 
@@ -79,7 +79,7 @@
 					   :velocity 1000f0))
              (sprite (v:make-component context
                                        'comp:sprite
-                                       :spec :spritesheet-data
+                                       :spec '(metadata sprites)
                                        :name "bullet01"
                                        :frames 2))
              (render (v:make-component context
@@ -103,7 +103,7 @@
    (simple-movement)
    (shot-emitter)
    ("ship-body"
-    (comp:sprite :spec :spritesheet-data
+    (comp:sprite :spec '(metadata sprites)
                  :name "ship29")
     (comp:render :material `(x/mat:sprite
                              ,(a:make-gensym '#:sprite)
@@ -111,7 +111,7 @@
                  :mode :sprite)
     ("exhaust"
      (comp:transform :translate (v3:vec 0f0 -140f0 0f0))
-     (comp:sprite :spec :spritesheet-data
+     (comp:sprite :spec '(metadata sprites)
                   :name "exhaust03-01"
                   :frames 8
                   :duration 0.75)

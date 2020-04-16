@@ -37,12 +37,13 @@
 
 (defun make-spritesheet (context sprite)
   (with-slots (%name %spec) sprite
-    (let* ((spec (v::find-asset context %spec))
-           (spritesheet (make-instance 'spritesheet
-                                       :spec (u:safe-read-file-form spec)
-                                       :geometry (gl:gen-vertex-array))))
-      (make-spritesheet-buffer spritesheet)
-      spritesheet)))
+    (let ((path (v::resolve-path %spec)))
+      (v:with-asset-cache context :spritesheet %spec
+        (let ((spritesheet (make-instance 'spritesheet
+                                          :spec (u:safe-read-file-form path)
+                                          :geometry (gl:gen-vertex-array))))
+          (make-spritesheet-buffer spritesheet)
+          spritesheet)))))
 
 (defun write-spritesheet-buffer (spritesheet)
   (with-slots (%spec %buffer-name %sprites) spritesheet

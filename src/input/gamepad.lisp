@@ -77,8 +77,8 @@
         (a:format-symbol :keyword "GAMEPAD~d"
                          (1+ (hash-table-count %gamepad-instances))))))
 
-(defun prepare-gamepads (core)
-  (let ((database (find-asset (context core) :virality/gamepad-db)))
+(defun prepare-gamepads ()
+  (let ((database (resolve-system-path "gamepads.db")))
     (sdl2:game-controller-add-mappings-from-file (namestring database))
     (sdl2-ffi.functions:sdl-set-hint
      sdl2-ffi:+sdl-hint-joystick-allow-background-events+ "1")))

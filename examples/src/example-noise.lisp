@@ -10,7 +10,7 @@
 
 (v:define-prefab "noise-tile" (:library examples)
   (comp:transform :scale (v3:vec 90f0 90f0 0f0))
-  (comp:mesh :asset '(:virality/mesh "primitives.glb")
+  (comp:mesh :asset '(v::meshes v::primitives)
              :name "plane"))
 
 (v:define-prefab "noise" (:library examples)

@@ -6,24 +6,24 @@
   :delta (float 1/120 1f0)
   :initial-scene '(("geometric-volumes" examples)))
 
-(v:define-assets :virality-examples
-  :data "data"
-  :mesh (:data "mesh")
-  :tex (:data "texture")
-  :log "log"
-  :log-debug (:log "debug.log")
-  :log-error (:log "error.log")
-  :texture-example (:tex "texture")
-  :1da (:texture-example "1d-array")
-  :2da (:texture-example "2d-array")
-  :3d (:texture-example "3d")
-  :cubemap (:texture-example "cube-map")
-  :cubemaparray (:texture-example "cube-map-array")
-  :playground-tex (:tex "example-playground")
-  :spritesheet (:tex "sprite/sprites.png")
-  :spritesheet-data (:data "sprites.spec")
-  :damaged-helmet-textures (:tex "damaged-helmet")
-  :ptp-tex (:tex "protect-the-planets"))
+(v:define-asset-pool metadata ()
+  :path "data/metadata")
+
+(v:define-asset-pool meshes ()
+  :path "data/mesh"
+  :filter "glb")
+
+(v:define-asset-pool textures ()
+  :path "data/texture"
+  :filter "png")
+
+(v:define-asset-pool mesh-textures ()
+  :path "data/texture/mesh"
+  :filter "png")
+
+(v:define-asset-pool ptp-textures ()
+  :path "data/texture/protect-the-planets"
+  :filter "png")
 
 ;;; Prefabs
 
@@ -44,7 +44,7 @@
                  :mode :orthographic))))
 
 (v:define-prefab "mesh" (:library examples)
-  (comp:mesh :asset '(:virality/mesh "primitives.glb")
+  (comp:mesh :asset '(v::meshes v::primitives)
              :name "plane")
   (comp:render :material 'x/mat:unlit-texture))
 

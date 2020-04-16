@@ -112,7 +112,7 @@
 ;; We only use a single sprite sheet atlas that contains all of our textures.
 ;; This one is invluded with FL
 (v:define-texture sprite-atlas (:texture-2d)
-  (:data #(:spritesheet)))
+  (:data #((textures sprites))))
 
 ;; This background image was downloaded off the web here:
 ;; https://www.wikitree.com/photo/jpg/Tileable_Background_Images
@@ -120,26 +120,26 @@
 ;; https://web.archive.org/web/20180723233810/http://webtreats.mysitemyway.com/terms-of-use/
 ;; Which says it can be used for any purpose.
 (v:define-texture starfield (:texture-2d)
-  (:data #((:ptp-tex "starfield.png"))))
+  (:data #((ptp-textures starfield))))
 
 ;; These two textures were created by Pixel_Outlaw for use in this game.
 (v:define-texture warning-wave (:texture-2d)
-  (:data #((:ptp-tex "warning-wave.png"))))
+  (:data #((ptp-textures warning-wave))))
 
 (v:define-texture warning-mothership (:texture-2d)
-  (:data #((:ptp-tex "warning-mothership.png"))))
+  (:data #((ptp-textures warning-mothership))))
 
 (v:define-texture game-over (:texture-2d)
-  (:data #((:ptp-tex "game-over.png"))))
+  (:data #((ptp-textures game-over))))
 
 (v:define-texture title (:texture-2d)
-  (:data #((:ptp-tex "title.png"))))
+  (:data #((ptp-textures title))))
 
 (v:define-texture level-complete (:texture-2d)
-  (:data #((:ptp-tex "level-complete.png"))))
+  (:data #((ptp-textures level-complete))))
 
 (v:define-texture white (:texture-2d x/tex:clamp-all-edges)
-  (:data #((:ptp-tex "white.png"))))
+  (:data #((ptp-textures white))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Materials
@@ -1824,7 +1824,7 @@ NIL if no such list exists."
   (explosion :name "explode01-01" :frames 15)
   (hit-points :hp 1)
   (line-mover)
-  (comp:sprite :spec :spritesheet-data
+  (comp:sprite :spec '(metadata sprites)
                    :duration 0.5)
   (comp:sphere :center (v3:vec)
                :on-layer :enemy-bullet
@@ -1850,10 +1850,10 @@ NIL if no such list exists."
                :referent (v:ref :self :component 'hit-points)
                :radius 30f0)
   ("ship-body"
-   (comp:sprite :spec :spritesheet-data
-                    :name "ship26")
+   (comp:sprite :spec '(metadata sprites)
+                :name "ship26")
    (comp:render :material 'sprite-sheet
-                    :mode :sprite)
+                :mode :sprite)
    ("center-gun"
     (comp:transform :translate (v3:vec))
     (gun :physics-layer :player-bullet
@@ -1862,19 +1862,19 @@ NIL if no such list exists."
 
    ("exhaust"
     (comp:transform :translate (v3:vec 0f0 -60f0 0f0))
-    (comp:sprite :spec :spritesheet-data
-                     :name "exhaust03-01"
-                     :frames 8
-                     :duration 0.5)
+    (comp:sprite :spec '(metadata sprites)
+                 :name "exhaust03-01"
+                 :frames 8
+                 :duration 0.5)
     (comp:render :material 'sprite-sheet
-                     :mode :sprite))))
+                 :mode :sprite))))
 
 (v:define-prefab "player-ship-mockette" (:library ptp)
   "An image of the ship, but no colliders or guns."
-  (comp:sprite :spec :spritesheet-data
-                   :name "ship26")
+  (comp:sprite :spec '(metadata sprites)
+               :name "ship26")
   (comp:render :material 'sprite-sheet
-                   :mode :sprite))
+               :mode :sprite))
 
 (v:define-prefab "player-stable" (:library ptp)
   ;; TODO: Clarify when we actually need the / infront of the actor name during
@@ -1892,21 +1892,21 @@ NIL if no such list exists."
                :referent (v:ref :self :component 'planet)
                :visualize t
                :radius 145f0)
-  (comp:sprite :spec :spritesheet-data
-                   :name "planet01")
+  (comp:sprite :spec '(metadata sprites)
+               :name "planet01")
   (comp:render :material 'sprite-sheet
-                   :mode :sprite))
+               :mode :sprite))
 
 (v:define-prefab "generic-explosion" (:library ptp)
   (explosion :sprite (v:ref :self :component 'comp:sprite))
-  (comp:sprite :spec :spritesheet-data
-                   ;; TODO: When this is misnamed, the error is extremely obscure
-                   :name "explode01-01"
-                   :frames 15
-                   :duration 0.5
-                   :repeat nil)
+  (comp:sprite :spec '(metadata sprites)
+               ;; TODO: When this is misnamed, the error is extremely obscure
+               :name "explode01-01"
+               :frames 15
+               :duration 0.5
+               :repeat nil)
   (comp:render :material 'sprite-sheet
-                   :mode :sprite))
+               :mode :sprite))
 
 ;; TODO: Refactor these signs into a single prefab and a sign component to
 ;; manage the configuration of the prefab.
@@ -1915,7 +1915,7 @@ NIL if no such list exists."
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:mesh :asset '(:virality/mesh "primitives.glb")
+   (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
    (comp:render :material 'warning-wave)))
 
@@ -1924,7 +1924,7 @@ NIL if no such list exists."
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:mesh :asset '(:virality/mesh "primitives.glb")
+   (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
    (comp:render :material 'warning-mothership)))
 
@@ -1932,7 +1932,7 @@ NIL if no such list exists."
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:mesh :asset '(:virality/mesh "primitives.glb")
+   (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
    (comp:render :material 'title)))
 
@@ -1940,7 +1940,7 @@ NIL if no such list exists."
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:mesh :asset '(:virality/mesh "primitives.glb")
+   (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
    (comp:render :material 'game-over)))
 
@@ -1948,7 +1948,7 @@ NIL if no such list exists."
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:mesh :asset '(:virality/mesh "primitives.glb")
+   (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
    (comp:render :material 'level-complete)))
 
@@ -1957,7 +1957,7 @@ NIL if no such list exists."
                   ;; NOTE: ortho projection, so we can put starfield way
                   ;; back.
                   :translate (v3:vec 0f0 0f0 (dl :starfield)))
-  (comp:mesh :asset '(:virality/mesh "primitives.glb")
+  (comp:mesh :asset '(v::meshes v::primitives)
              :name "plane")
   (comp:render :material 'starfield))
 
@@ -1974,7 +1974,7 @@ NIL if no such list exists."
    ;; coordinate frame.
    ("time-display"
     (comp:transform :translate (v3:vec 0f0 1f0 0f0))
-    (comp:mesh :asset '(:virality/mesh "primitives.glb")
+    (comp:mesh :asset '(v::meshes v::primitives)
                :name "plane")
     ;; TODO: when 'time-bar is mis-spelled in the material,
     ;; I don't get the debug material, why?
@@ -2003,19 +2003,19 @@ NIL if no such list exists."
    (time-keeper :time-max 20f0))
   (("planet-0" :link ("/generic-planet" :from ptp))
    (comp:transform :translate (v3:vec 0f0 100f0 (dl :planet))
-                      :scale 0.9f0)
-   (comp:sprite :spec :spritesheet-data
-                    :name "planet01"))
+                   :scale 0.9f0)
+   (comp:sprite :spec '(metadata sprites)
+                :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
    (comp:transform :translate (v3:vec -200f0 -100f0 (dl :planet))
-                      :scale 0.9f0)
-   (comp:sprite :spec :spritesheet-data
-                    :name "planet02"))
+                   :scale 0.9f0)
+   (comp:sprite :spec '(metadata sprites)
+                :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from ptp))
    (comp:transform :translate (v3:vec 200f0 -100f0 (dl :planet))
-                      :scale 0.9f0)
-   (comp:sprite :spec :spritesheet-data
-                    :name "planet03")))
+                   :scale 0.9f0)
+   (comp:sprite :spec '(metadata sprites)
+                :name "planet03")))
 
 (v:define-prefab "level-1" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
@@ -2028,14 +2028,14 @@ NIL if no such list exists."
   (("time-keeper" :link ("/time-keeper" :from ptp)))
   (("planet-0" :link ("/generic-planet" :from ptp))
    (comp:transform :translate (v3:vec -200f0 100f0 (dl :planet))
-                      :scale 0.9f0)
-   (comp:sprite :spec :spritesheet-data
-                    :name "planet01"))
+                   :scale 0.9f0)
+   (comp:sprite :spec '(metadata sprites)
+                :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
    (comp:transform :translate (v3:vec 200f0 100f0 (dl :planet))
-                      :scale 0.9f0)
-   (comp:sprite :spec :spritesheet-data
-                    :name "planet02")))
+                   :scale 0.9f0)
+   (comp:sprite :spec '(metadata sprites)
+                :name "planet02")))
 
 (v:define-prefab "level-2" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
@@ -2049,9 +2049,9 @@ NIL if no such list exists."
    (time-keeper :time-max 40f0))
   (("planet-0" :link ("/generic-planet" :from ptp))
    (comp:transform :translate (v3:vec 0f0 100f0 (dl :planet))
-                      :scale 0.9f0)
-   (comp:sprite :spec :spritesheet-data
-                    :name "planet01")))
+                   :scale 0.9f0)
+   (comp:sprite :spec '(metadata sprites)
+                :name "planet01")))
 
 
 (v:define-prefab "protect-the-planets" (:library ptp)
