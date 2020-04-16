@@ -184,7 +184,7 @@ name which resulted in the exiting of the flow."
                     (act-on-type-table (type-key type-table)
                       ;; Get the hash of components for the type-key
                       (u:when-found (component-table
-                                     (type-table type-key type-table))
+                                     (u:href type-table type-key))
                         (act-on-item component-table))))
              (ecase policy
                ;; TODO: :type-policy is in this branch until I write the code

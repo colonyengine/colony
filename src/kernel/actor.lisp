@@ -38,11 +38,14 @@ reference which will be the parent of the spawning actor. It defaults to
        (u:noop))
       (t
        (error "Cannot parent actor ~s to unknown parent ~s" actor parent)))
-    (setf (u:href (actor-preinit-db tables) actor) actor)
-    (u:do-hash-values (v (components actor))
-      (setf (type-table (canonicalize-component-type (component-type v) core)
-                        (component-preinit-by-type-view tables))
-            v))))
+    ;; Populate book-keeping tables
+    (let ((preinit-by-type (component-preinit-by-type-view tables)))
+      (setf (u:href (actor-preinit-db tables) actor) actor)
+      (u:do-hash-values (v (components actor))
+        (let ((key (canonicalize-component-type (component-type v) core)))
+          (unless (u:href preinit-by-type key)
+            (setf (u:href preinit-by-type key) (u:dict #'eq)))
+          (setf (u:href preinit-by-type key v) v))))))
 
 (defun actor/preinit->init (actor)
   (let ((tables (tables (core actor))))
