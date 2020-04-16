@@ -77,3 +77,6 @@ of `TESTS` is the test function for `TABLE` itself."
             ;; The key is potentially newly minted.
             (setf current (u:href current key)))
   table)
+
+(defmacro make-nested-dict (test-func &rest keys)
+  `(u:dict ,test-func ,@(mapcan (lambda (x) `(,x (u:dict ,test-func))) keys)))
