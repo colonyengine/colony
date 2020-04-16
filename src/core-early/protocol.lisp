@@ -56,12 +56,6 @@ long the thing has yet to live, with NIL meaning infinity."))
 
 (defgeneric resource-cache-dispose (context entry-type removed-value))
 
-;;; Shared Storage
-
-(defgeneric %shared-storage (context key))
-
-(defgeneric (setf %shared-storage) (value context key))
-
 ;;; Prologue/Epilogue
 
 (defgeneric prologue (context))

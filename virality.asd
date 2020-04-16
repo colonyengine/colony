@@ -71,13 +71,16 @@
      (:file "graph")
      (:file "flow")
      (:file "protocol")
-     (:file "resource-cache")))
+     (:file "resource-cache")
+     (:file "clock")
+     (:file "context")))
 
    (:module "kernel"
     :components
     ((:file "actor")
      (:file "component-mop")
      (:file "component")
+     (:file "storage")
      (:file "kernel")))
 
    (:module "input"
@@ -91,14 +94,12 @@
      (:file "input")))
 
    (:file "common")
-   (:file "clock")
-   (:file "context")
-   (:file "shared-storage")
    (:file "annotations")
    (:file "shaders")
    (:file "region")
    (:file "bounding-volume-obb")
    (:file "colliders")
+
 
    (:module "texture"
     :components
@@ -134,7 +135,7 @@
      (:file "camera-following")
      (:file "camera-tracking")
      (:file "geometry")
-     (:file "mesh-static")
+     (:file "mesh")
      (:file "render")
      (:file "sprite")
      (:file "collider-sphere")

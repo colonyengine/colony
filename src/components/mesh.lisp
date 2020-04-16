@@ -21,7 +21,7 @@
       (error "A mesh component must have a name."))
     (let* ((context (v:context self))
            (path (apply #'v::find-asset context %asset))
-           (gltf (v:with-shared-storage
+           (gltf (v:with-storage
                      (context context)
                      ((cached-mesh mesh-present-p
                                    ('mesh :cached-mesh-data %asset)

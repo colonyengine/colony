@@ -11,7 +11,7 @@
    (%visualize :accessor visualize
                :initarg :visualize
                :initform nil)
-   ;; TODO: Put geometry into shared storage for all sphere's to use.
+   ;; TODO: Put geometry into storage for all sphere's to use.
    (%geometry :reader geometry
               :initform (gl:gen-vertex-array))
 

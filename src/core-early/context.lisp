@@ -5,8 +5,8 @@
           :initarg :core)
    (%active-camera :accessor active-camera
                    :initform nil)
-   (%shared-storage :reader shared-storage
-                    :initform (u:dict))
+   (%storage :reader storage
+             :initform (u:dict))
    (%state :accessor state
            :initform nil)))
 

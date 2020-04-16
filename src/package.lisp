@@ -27,7 +27,7 @@
    #:start
    #:stop
    #:total-time
-   #:with-shared-storage)
+   #:with-storage)
 
   ;; hardware
   (:export

@@ -948,15 +948,15 @@ return the lives-remaining after the life has been consumed."
           :initarg :tags
           :initform nil))
 
-  (;; In this shared storage, we keep an association between a tag and the actor
-   ;; set which uses it, and form each actor to the tag set it has. This allows
+  (;; In this storage, we keep an association between a tag and the actor set
+   ;; which uses it, and form each actor to the tag set it has. This allows
    ;; extremely fast lookups in either direction.
    (:db eq)))
 
 ;; private API (probably)
 (defun tags-refs (context)
   ;; Create the DB if not present.
-  (v:with-shared-storage
+  (v:with-storage
       (context context)
       ((tag->actors tag->actors/present-p ('tags :db :tag->actors)
                     ;; key: tag, Value: hash table of actor -> actor
@@ -965,12 +965,11 @@ return the lives-remaining after the life has been consumed."
                     ;; Key: actor, Value: hash table of tag -> tag
                     (u:dict)))
 
-    (values tag->actors actor->tags)))
+      (values tag->actors actor->tags)))
 
 (defmethod v:on-component-initialize ((self tags))
-  ;; Seed the shared storage cache.
-  ;; We're modifying the tags list, so copy-seq it to ensure it isn't a quoted
-  ;; list.
+  ;; Seed the storage cache. We're modifying the tags list, so copy-seq it to
+  ;; ensure it isn't a quoted list.
   (setf (tags self) (copy-seq (tags self)))
   (tags-refs (v:context self)))
 

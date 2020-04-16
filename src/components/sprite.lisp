@@ -88,7 +88,7 @@
         (error "A sprite component must have a name."))
       (unless spec
         (error "A sprite component must have a spritesheet spec specified."))
-      (v:with-shared-storage
+      (v:with-storage
           (context context)
           ((cached-spritesheet spritesheet-present-p
                                ('sprite :cached-spritesheet-data spec)

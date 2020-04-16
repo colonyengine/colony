@@ -386,7 +386,7 @@
           :collect `(,name ,anno)))
 
 (defmacro define-component (name super-classes &body body)
-  (destructuring-bind (slots &optional shared-storage-metadata) body
+  (destructuring-bind (slots &optional storage-metadata) body
     ;; At macro-expansion time actually forward-declare the annotations into
     ;; the 'component class and store a reference to the registered entries.
     ;; We use this to generate the optimized lookups in the read/write
@@ -445,12 +445,12 @@
                                  (funcall (setter annotation-value)
                                           composing-value instance))
                        :finally (return composing-value)))))
-       ;; A method to locate the metadata in the shared storage form in this
+       ;; A method to locate the metadata in the storage form in this
        ;; class.
-       (defmethod ,(intern "SHARED-STORAGE-METADATA" :virality)
+       (defmethod ,(intern "STORAGE-METADATA" :virality)
            ((component-name (eql ',name)) &optional namespace)
          (declare (ignore component-name))
-         (let ((ss-meta ',shared-storage-metadata))
+         (let ((ss-meta ',storage-metadata))
            (if namespace
                ;; TODO: make this better/faster
                (find namespace ss-meta :key #'first)
