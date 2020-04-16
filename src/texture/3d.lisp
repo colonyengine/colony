@@ -13,8 +13,8 @@
                             (:shape (:slices :back-to-front))))
         (current-layout (get-computed-applied-attribute texture :layout)))
     (unless (equal current-layout hardcoded-layout)
-      (error "3D Texture ~a has layout:~%  ~s~%but it can only have this as ~
-              its layout:~%~s"
+      (error "3D Texture ~a has layout: ~s, but it can only have this as its ~
+              layout:~%~s"
              (name texture) current-layout hardcoded-layout)))
   (let* ((use-mipmaps-p
            (get-computed-applied-attribute texture :use-mipmaps))
