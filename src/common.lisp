@@ -1,7 +1,5 @@
 (in-package #:virality)
 
-(defvar *core-debug*)
-
 (defun recompile-queued-items (core)
   (loop :for ((kind data) found-p) = (multiple-value-list
                                       (pop-queue :recompile))

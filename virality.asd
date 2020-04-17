@@ -56,7 +56,9 @@
      (:file "protocol")
      (:file "resource-cache")
      (:file "clock")
-     (:file "context")))
+     (:file "shaders")
+     (:file "context")
+     (:file "core")))
 
    ;; This module houses files that are still being worked out and not
    ;; integrated into the core yet.
@@ -87,7 +89,6 @@
 
    (:file "common")
    (:file "annotations")
-   (:file "shaders")
    (:file "region")
    (:file "bounding-volume-obb")
    (:file "colliders")
@@ -142,6 +143,11 @@
      (:file "reference")
      (:file "prefab")))
 
+   (:module "shader"
+    :components
+    ((:file "texture")
+     (:file "collider")))
+
    (:module "core-late"
     :components
     ((:file "opengl")
@@ -153,17 +159,16 @@
      (:file "framebuffer")
      (:file "transform-state")
      (:file "transform-protocol")
-     (:file "free-look-state")))
+     (:file "free-look-state")
+     ;; NOTE: This file should always be loaded last in core-late.
+     (:file "engine")))
 
-   (:file "core-state")
-   (:file "engine")
-
-   (:file "shader/texture")
-   (:file "shader/visualization-collider")
-
-   (:file "definition/graphs")
-   (:file "definition/flows")
-   (:file "definition/texture-profiles")
-   (:file "definition/textures")
-   (:file "definition/material-profiles")
-   (:file "definition/materials")))
+   ;; NOTE: This module should always be loaded last, directly after core-late.
+   (:module "definition"
+    :components
+    ((:file "graphs")
+     (:file "flows")
+     (:file "texture-profiles")
+     (:file "textures")
+     (:file "material-profiles")
+     (:file "materials")))))
