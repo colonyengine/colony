@@ -3,11 +3,11 @@
 ;;; Materials
 
 (v:define-material graph
-  (:profiles (x/mat:u-mvpt)
+  (:profiles (x:u-mvpt)
    :shader ex/shd:graph))
 
 (v:define-material 3d-graph
-  (:profiles (x/mat:u-mvpt)
+  (:profiles (x:u-mvpt)
    :shader ex/shd:3d-graph-1
    :instances 1000
    :attributes (:depth :always)

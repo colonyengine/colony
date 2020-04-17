@@ -392,7 +392,7 @@ assign it to the computed texture descriptor slot in TEXTURE."
 ;; TODO 1. make missing texture and missing material not recompiliable.
 
 (defun find-debug-texture (core)
-  (let* ((texture-name (canonicalize-texture-name 'x/tex:debug-texture))
+  (let* ((texture-name (canonicalize-texture-name 'x:debug-texture))
          (texture (v::resource-cache-peek
                    (v::context core) :texture texture-name)))
     (unless texture
@@ -437,7 +437,7 @@ return the TEXTURE instance for the debug-texture."
 
     (values (v::resource-cache-lookup
              context :texture
-             (canonicalize-texture-name 'x/tex:debug-texture))
+             (canonicalize-texture-name 'x:debug-texture))
             nil)))
 
 (defun upload-texture (context texture)
@@ -523,8 +523,8 @@ texture."
 
 (defun resolve-semantic-texture-descriptor (core texture-descriptor)
   (symbol-macrolet ((profiles (profiles (v::textures core)))
-                    (default-profile-name 'x/tex:default-profile))
-    ;; 1. Check for x/tex:default-profile
+                    (default-profile-name 'x:default-profile))
+    ;; 1. Check for x:default-profile
     (unless (u:href profiles default-profile-name)
       (error "Default-profile for texture descriptors is not defined."))
     ;; 2. For each texture-descriptor, apply all the profiles in order.
@@ -567,7 +567,7 @@ texture."
 
 (defun resolve-all-semantic-texture-descriptors (core)
   " Ensure that these aspects of texture profiles and desdcriptors are ok:
-1. The X/TEX:DEFAULT-PROFILE exists.
+1. The X:DEFAULT-PROFILE exists.
 2. Each texture-descriptor has an updated applied-profile set of attributes.
 3. All currently known about texture descriptors have valid profile references.
 4. All images specified by paths actually exist at that path.

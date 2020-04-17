@@ -21,7 +21,7 @@
    (%framebuffers :reader framebuffers
                   :initform (u:dict #'eq))
    (%materials :accessor materials
-               :initform (mat::make-materials-table))
+               :initform (make-materials-table))
    (%textures :accessor textures
               :initform (tex::make-textures-table))
    (%context :reader context)

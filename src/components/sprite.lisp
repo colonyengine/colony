@@ -58,25 +58,25 @@
                   (setf (aref pos i) (v2:vec x y)
                         (aref size i) (v2:vec w h)
                         (u:href %sprites id) i)))
-          :finally (gpu:write-buffer-path buffer-name :pos pos)
-                   (gpu:write-buffer-path buffer-name :size size))))
+          :finally (shadow:write-buffer-path buffer-name :pos pos)
+                   (shadow:write-buffer-path buffer-name :size size))))
 
 (defun make-spritesheet-buffer (spritesheet)
   (with-slots (%spec %buffer-name %buffer-id) spritesheet
     ;; TODO: This 1 is hardcoded because virality doesn't have an allocation
     ;; system for these integers.
-    (gpu:bind-block :spritesheet 1)
+    (shadow:bind-block :spritesheet 1)
     (setf %buffer-name (a:make-gensym :spritesheet))
-    (setf %buffer-id (gpu:create-buffer %buffer-name :spritesheet))
+    (setf %buffer-id (shadow:create-buffer %buffer-name :spritesheet))
     ;; TODO: Have materials automatically calculate a binding point instead of
     ;; hard-coding.
-    (gpu:bind-buffer %buffer-name 1)
+    (shadow:bind-buffer %buffer-name 1)
     (write-spritesheet-buffer spritesheet)))
 
 (defun draw-sprite (sprite &optional count)
   (with-slots (%index %spritesheet) sprite
     (with-slots (%geometry) %spritesheet
-      (gpu:uniform-int 'shd/sprite:sprite :sprite.index %index)
+      (shadow:uniform-int 'umbra.sprite:sprite :sprite.index %index)
       (gl:bind-vertex-array %geometry)
       (gl:draw-arrays-instanced :triangle-strip 0 4 count)
       (gl:bind-vertex-array 0))))

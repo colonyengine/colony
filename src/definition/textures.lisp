@@ -1,4 +1,4 @@
-(in-package #:virality.extensions.textures)
+(in-package #:virality.extensions)
 
 (tex:define-texture debug-texture (:texture-2d clamp-all-edges)
   ;; I can put overrides in here too specific to this texture.

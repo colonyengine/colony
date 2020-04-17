@@ -27,4 +27,4 @@
                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
                    :scale 6f0)
    (comp:mesh :name "cone")
-   (comp:render :material 'x/mat:unlit-texture-decal-bright)))
+   (comp:render :material 'x:unlit-texture-decal-bright)))

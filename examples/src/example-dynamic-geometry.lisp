@@ -20,7 +20,7 @@
 ;;; Prefabs
 
 (v:define-material dynamic-geometry
-  (:profiles (x/mat:u-mvp)
+  (:profiles (x:u-mvp)
    :shader ex/shd:dynamic-geometry))
 
 (v:define-prefab "dynamic-geometry" (:library examples)

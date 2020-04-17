@@ -3,15 +3,15 @@
 ;;; Textures
 
 (v:define-texture 1d-gradient
-    (:texture-1d x/tex:clamp-all-edges)
+    (:texture-1d x:clamp-all-edges)
   (:data #((textures texture-gradient-1d))))
 
 (v:define-texture 2d-wood
-    (:texture-2d x/tex:clamp-all-edges)
+    (:texture-2d x:clamp-all-edges)
   (:data #((textures wood))))
 
 (v:define-texture 3d
-    (:texture-3d x/tex:clamp-all-edges)
+    (:texture-3d x:clamp-all-edges)
   ;; TODO: Currently, these are the only valid origin and slices values. They
   ;; directly match the default of opengl.
   (:layout `((:origin :left-back-bottom)
@@ -34,7 +34,7 @@
            #((textures 3d-slice-0-3)))))
 
 (v:define-texture 1d-array
-    (:texture-1d-array x/tex:clamp-all-edges)
+    (:texture-1d-array x:clamp-all-edges)
   ;; If there are multiple images in each list, they are mipmaps. Since this is
   ;; a test, each mip_0 image is 8 width x 1 height
   (:data #(#((textures red-line-0)
@@ -55,7 +55,7 @@
              (textures white-line-3)))))
 
 (v:define-texture 2d-array
-    (:texture-2d-array x/tex:clamp-all-edges)
+    (:texture-2d-array x:clamp-all-edges)
   ;; Since this is a test, each mip_0 image is 1024x1024 and has 11 mipmaps.
   (:data #(#((textures blue-fur-0)
              (textures blue-fur-1)
@@ -134,21 +134,21 @@
 
 (v:define-material 1d-gradient
   (:shader ex/shd:unlit-texture-1d
-   :profiles (x/mat:u-mvp)
+   :profiles (x:u-mvp)
    :uniforms
    ((:tex.sampler1 '1d-gradient)
     (:mix-color (v4:vec 1)))))
 
 (v:define-material 2d-wood
-  (:shader shd/tex:unlit-texture
-   :profiles (x/mat:u-mvp)
+  (:shader shd:unlit-texture
+   :profiles (x:u-mvp)
    :uniforms
    ((:tex.sampler1 '2d-wood)
     (:mix-color (v4:vec 1)))))
 
 (v:define-material 3d
   (:shader ex/shd:unlit-texture-3d
-   :profiles (x/mat:u-mvp)
+   :profiles (x:u-mvp)
    :uniforms
    ((:tex.sampler1 '3d)
     (:mix-color (v4:vec 1))
@@ -159,7 +159,7 @@
 
 (v:define-material 1d-array
   (:shader ex/shd:unlit-texture-1d-array
-   :profiles (x/mat:u-mvpt)
+   :profiles (x:u-mvpt)
    :uniforms
    ((:tex.sampler1 '1d-array)
     (:mix-color (v4:vec 1))
@@ -167,7 +167,7 @@
 
 (v:define-material 2d-array
   (:shader ex/shd:unlit-texture-2d-array
-   :profiles (x/mat:u-mvpt)
+   :profiles (x:u-mvpt)
    :uniforms
    ((:tex.sampler1 '2d-array)
     (:mix-color (v4:vec 1))
@@ -179,7 +179,7 @@
 
 (v:define-material 2d-sweep-input
   (:shader ex/shd:noise-2d/sweep-input
-   :profiles (x/mat:u-mvp)
+   :profiles (x:u-mvp)
    :uniforms
    ;; any old 2d texture here will do since we overwrite it with noise.
    ((:tex.sampler1 '2d-wood)
@@ -188,14 +188,14 @@
 
 (v:define-material cubemap
   (:shader ex/shd:unlit-texture-cube-map
-   :profiles (x/mat:u-mvp)
+   :profiles (x:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemap)
     (:mix-color (v4:vec 1)))))
 
 (v:define-material cubemaparray
   (:shader ex/shd:unlit-texture-cube-map-array
-   :profiles (x/mat:u-mvp)
+   :profiles (x:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemaparray)
     (:mix-color (v4:vec 1))

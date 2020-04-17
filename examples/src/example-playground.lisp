@@ -8,19 +8,19 @@
 ;;; Materials
 
 (v:define-material art1
-  (:profiles (x/mat:u-mvptr)
+  (:profiles (x:u-mvptr)
    :shader ex/shd:art1))
 
 (v:define-material art2
-  (:profiles (x/mat:u-mvptr)
+  (:profiles (x:u-mvptr)
    :shader ex/shd:art2))
 
 (v:define-material art3
-  (:profiles (x/mat:u-mvptr)
+  (:profiles (x:u-mvptr)
    :shader ex/shd:art3))
 
 (v:define-material art4
-  (:profiles (x/mat:u-mvptr)
+  (:profiles (x:u-mvptr)
    :uniforms ((:zoom 0.85f0)
               (:speed 1f0)
               (:strength 0.7f0)
@@ -30,7 +30,7 @@
    :shader ex/shd:art4))
 
 (v:define-material art5
-  (:profiles (x/mat:u-mvptr)
+  (:profiles (x:u-mvptr)
    :uniforms ((:blur 7.5f0)
               (:speed 0.24f0)
               (:zoom 0.75f0)
@@ -38,7 +38,7 @@
    :shader ex/shd:art5))
 
 (v:define-material art6
-  (:profiles (x/mat:u-mvptr)
+  (:profiles (x:u-mvptr)
    :shader ex/shd:art6
    :uniforms ((:mouse (v2:vec)))))
 

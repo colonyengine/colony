@@ -1,4 +1,4 @@
-(in-package #:virality.region)
+(in-package #:virality)
 
 (defclass region ()
   ((%center :accessor center
@@ -65,7 +65,6 @@
                                    :y (float y 1f0)
                                    :z (float z 1f0)))
 
-
 (defun clip-movement-vector (movement-vector current-translation region-cuboid)
   "Clip the MOVEMENT-VECTOR by an amount that will cause it to not violate the
 REGION-CUBOID when MOVEMENT-VECTOR is added to the CURRENT-TRANSLATION.
@@ -95,21 +94,15 @@ Return a newly allocated and adjusted MOVEMENT-VECTOR."
               (offset-maxz (+ (v3:z center) maxz)))
           (when (< nx offset-minx)
             (setf adj-x (- offset-minx nx)))
-
           (when (> nx offset-maxx)
             (setf adj-x (- offset-maxx nx)))
-
           (when (< ny offset-miny)
             (setf adj-y (- offset-miny ny)))
-
           (when (> ny offset-maxy)
             (setf adj-y (- offset-maxy ny)))
-
           (when (< nz offset-minz)
             (setf adj-z (- offset-minz nz)))
-
           (when (> nz offset-maxz)
             (setf adj-z (- offset-maxz nz)))
-
           ;; NOTE: Allocates memory.
           (v3:vec (+ mx adj-x) (+ my adj-y) (+ mz adj-z)))))))

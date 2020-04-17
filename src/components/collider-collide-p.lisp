@@ -12,26 +12,26 @@
       ;; NOTE: This code path is here for testing the collider system when
       ;; not running V properly. It should be removed when we figure out how
       ;; to test V's collision system better.
-      (let ((distance/2 (/ (v3:distance (reg:center fist)
-                                        (reg:center face)) 2f0)))
-        (or (<= distance/2 (reg:radius fist))
-            (<= distance/2 (reg:radius face))))
+      (let ((distance/2 (/ (v3:distance (v:center fist)
+                                        (v:center face)) 2f0)))
+        (or (<= distance/2 (v:radius fist))
+            (<= distance/2 (v:radius face))))
 
       ;; This is the REAL path through this code, which transforms the collider
       ;; into world space appropriately.
       (let* (;; Figure out where the center for these colliders are in world
              ;; space.
              (fist-collider-world-center (v:transform-point fist
-                                                            (reg:center fist)))
+                                                            (v:center fist)))
              (face-collider-world-center (v:transform-point face
-                                                            (reg:center face)))
+                                                            (v:center face)))
              ;; Figure out the size of the radius in world space. We treat the
              ;; radius as a vector and rotate/scale (but no translate!) it by
              ;; the world matrix.
              (fist-world-radius (v:transform-vector
-                                 fist (v3:vec (reg:radius fist) 0f0 0f0)))
+                                 fist (v3:vec (v:radius fist) 0f0 0f0)))
              (face-world-radius (v:transform-vector
-                                 face (v3:vec (reg:radius face) 0f0 0f0)))
+                                 face (v3:vec (v:radius face) 0f0 0f0)))
 
              ;; TODO: Allow the gamedev an ability to ensure that the world
              ;; matrix must be uniform for a sphere collider.  This involves
@@ -73,10 +73,10 @@
   ;; it with the sphere also in world space.
   (let* (;; Compute on the cuboid objects
          ;; Create an OBB from the cuboid
-         (l-min (v3:+ (reg:center face)
-                      (v3:vec (reg:minx face) (reg:miny face) (reg:minz face))))
-         (l-max (v3:+ (reg:center face)
-                      (v3:vec (reg:maxx face) (reg:maxy face) (reg:maxz face))))
+         (l-min (v3:+ (v:center face)
+                      (v3:vec (v:minx face) (v:miny face) (v:minz face))))
+         (l-max (v3:+ (v:center face)
+                      (v3:vec (v:maxx face) (v:maxy face) (v:maxz face))))
          (w-min (v:transform-point face l-min))
          (w-max (v:transform-point face l-max))
          ;; center of OBB in world space.
@@ -99,10 +99,10 @@
                               (v3:dot diagonal z-axis)))
 
          ;; Get the important parts of the sphere into world space.
-         (fist-collider-world-center (v:transform-point fist (reg:center fist)))
+         (fist-collider-world-center (v:transform-point fist (v:center fist)))
          (fist-world-radius (v3:length
                              (v:transform-vector
-                              fist (v3:vec (reg:radius fist) 0f0 0f0)))))
+                              fist (v3:vec (v:radius fist) 0f0 0f0)))))
 
     (let* ((p (closest-pt-point-obb fist-collider-world-center
                                     obb-axes w-center half-widths))

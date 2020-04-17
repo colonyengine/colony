@@ -21,7 +21,7 @@
 
 (v:define-material damaged-helmet
   (:shader ex/shd:damaged-helmet
-   :profiles (x/mat:u-mvp)
+   :profiles (x:u-mvp)
    :uniforms
    ((:metallic-roughness-values (v2:vec 1))
     (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)

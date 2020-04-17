@@ -14,7 +14,7 @@
 (defun set-draw-method (render)
   (with-slots (%draw-method) render
     (let ((actor (v:actor render))
-          (instances (mat::instances (material render))))
+          (instances (v::instances (material render))))
       (setf %draw-method
             (case (mode render)
               (:mesh
@@ -59,7 +59,7 @@
 
 (defmethod v:on-component-render ((self render))
   (a:when-let ((camera (v::active-camera (v:context self))))
-    (mat:with-material (material self)
+    (v:with-material (material self)
         (:model (v:get-model-matrix self)
          :view (view camera)
          :proj (projection camera))

@@ -1,12 +1,89 @@
 (in-package #:cl-user)
 
-(uiop:define-package #:virality
+(defpackage #:virality.textures
   (:use #:cl)
-  (:mix-reexport
-   #:virality.colliders
-   #:virality.materials
-   #:virality.prefabs
-   #:virality.textures)
+  (:export
+   #:define-texture
+   #:define-texture-profile))
+
+(defpackage #:virality.prefabs
+  (:use #:cl)
+  (:export
+   #:define-prefab
+   #:find-prefab
+   #:make-prefab-instance
+   #:ref))
+
+(defpackage #:virality.shaders
+  (:use #:shadow.glsl #:umbra.common))
+
+(defpackage #:virality.extensions
+  (:use #:cl)
+  ;; material profiles
+  (:export
+   #:u-model
+   #:u-mvp
+   #:u-mvpt
+   #:u-mvptr
+   #:u-proj
+   #:u-time
+   #:u-view
+   #:u-vp
+   #:u-vpt)
+  ;; texture profiles
+  (:export
+   #:clamp-all-edges
+   #:default-profile)
+  ;; textures
+  (:export
+   #:debug-texture))
+
+(defpackage #:virality.components
+  (:use #:cl)
+  ;; camera
+  (:export
+   #:active-p
+   #:camera
+   #:compute-camera-view
+   #:find-active-camera
+   #:following-camera
+   #:projection
+   #:tracking-camera
+   #:transform
+   #:view
+   #:zoom-camera)
+  ;; collider
+  (:export
+   #:collide-p
+   #:on-layer
+   #:referent
+   #:sphere
+   #:cuboid)
+  ;; geometry
+  (:export
+   #:geometry)
+  ;; mesh
+  (:export
+   #:mesh)
+  ;; render
+  (:export
+   #:material
+   #:render)
+  ;; sprite
+  (:export
+   #:frames
+   #:name
+   #:sprite)
+  ;; transform
+  (:export
+   #:add-child
+   #:local
+   #:model
+   #:remove-child
+   #:transform))
+
+(defpackage #:virality
+  (:use #:cl)
   (:export
    #:actor
    #:context
@@ -27,11 +104,30 @@
    #:stop
    #:total-time
    #:with-storage)
-
+  ;; prefabs
+  (:import-from
+   #:virality.prefabs
+   #:define-prefab
+   #:find-prefab
+   #:make-prefab-instance
+   #:ref)
+  (:export
+   #:virality.prefabs
+   #:define-prefab
+   #:find-prefab
+   #:make-prefab-instance
+   #:ref)
+  ;; textures
+  (:import-from
+   #:virality.textures
+   #:define-texture
+   #:define-texture-profile)
+  (:export
+   #:define-texture
+   #:define-texture-profile)
   ;; hardware
   (:export
    #:get-hardware-info)
-
   ;; input system
   (:export
    #:disable-relative-motion
@@ -55,7 +151,6 @@
    #:set-window-title
    #:set-window-size
    #:set-window-visible)
-
   ;; transform protocol
   (:export
    #:get-model-matrix
@@ -77,20 +172,58 @@
    #:transform-vector
    #:translate
    #:translate/velocity)
-
+  ;; colliders
+  (:export
+   #:collide-p
+   #:on-collision-continue
+   #:on-collision-enter
+   #:on-collision-exit)
   ;; assets
   (:export
    #:define-asset-pool
    #:find-asset
    #:resolve-path
    #:with-asset-cache)
-
   ;; geometry
   (:export
    #:define-geometry
    #:define-geometry-layout
    #:update-geometry)
-
+  ;; regions
+  (:export
+   #:region
+   #:center
+   #:clip-movement-vector)
+  ;; regions (cubboid)
+  (:export
+   #:region-cuboid
+   #:minx
+   #:maxx
+   #:miny
+   #:maxy
+   #:minz
+   #:maxz)
+  ;; regions (sphere)
+  (:export
+   #:make-region-cuboid
+   #:region-sphere
+   #:radius
+   #:make-region-sphere)
+  ;; regions (ellipsoid)
+  (:export
+   #:region-ellipsoid
+   #:x
+   #:y
+   #:z
+   #:make-region-ellipsoid)
+  ;; materials
+  (:export
+   #:copy-material
+   #:define-material
+   #:define-material-profile
+   #:uniform-ref
+   #:with-material)
+  ;; kernel
   (:export
    #:attach-component
    #:attach-components
@@ -104,3 +237,61 @@
    #:on-component-physics-update
    #:on-component-render
    #:on-component-update))
+
+(defpackage #:virality.nicknames
+  (:use #:cl)
+  (:import-from
+   #+sbcl #:sb-ext
+   #+ccl #:ccl
+   #+(or ecl abcl clasp) #:ext
+   #+lispworks #:hcl
+   #+allegro #:excl
+   #:add-package-local-nickname)
+  (:export #:define-nicknames))
+
+(in-package #:virality.nicknames)
+
+(golden-utils:eval-always
+  (defvar *package-nicknames*
+    '((:alexandria :a)
+      (:origin :o)
+      (:origin.swizzle :~)
+      (:origin.vec2 :v2)
+      (:origin.vec3 :v3)
+      (:origin.vec4 :v4)
+      (:origin.mat2 :m2)
+      (:origin.mat3 :m3)
+      (:origin.mat4 :m4)
+      (:origin.quat :q)
+      (:golden-utils :u)
+      (:virality.components :comp)
+      (:virality :v)
+      (:virality.extensions :x)
+      (:virality.prefabs :prefab)
+      (:virality.shaders :shd)
+      (:virality.textures :tex))))
+
+(macrolet ((define-nicknames/internal ()
+             `(progn
+                ,@(mapcan
+                   (lambda (x)
+                     (mapcar
+                      (lambda (y)
+                        `(add-package-local-nickname ,@(reverse y) ,(car x)))
+                      *package-nicknames*))
+                   (remove-if-not
+                    (lambda (x)
+                      (search "VIRALITY" x))
+                    *package-nicknames*
+                    :key (lambda (x) (symbol-name (car x))))))))
+  (define-nicknames/internal))
+
+(defmacro define-nicknames (&body body)
+  `(progn
+     ,@(mapcan
+        (lambda (x)
+          (mapcar
+           (lambda (y)
+             `(add-package-local-nickname ,@(reverse y) ,(car x)))
+           (append *package-nicknames* body)))
+        body)))

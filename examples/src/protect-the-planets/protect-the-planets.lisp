@@ -98,7 +98,7 @@
 
 
 (define-shader starfield ()
-  (:vertex (shd/tex:unlit/vert mesh-attrs))
+  (:vertex (shd:unlit/vert mesh-attrs))
   (:fragment (starfield/frag :vec4 :vec2)))
 
 
@@ -138,7 +138,7 @@
 (v:define-texture level-complete (:texture-2d)
   (:data #((ptp-textures level-complete))))
 
-(v:define-texture white (:texture-2d x/tex:clamp-all-edges)
+(v:define-texture white (:texture-2d x:clamp-all-edges)
   (:data #((ptp-textures white))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -149,8 +149,8 @@
 ;; materials can be made for the same shader each providing diferent inputs to
 ;; that shader.
 (v:define-material sprite-sheet
-  (:profiles (x/mat:u-mvp)
-   :shader shd/sprite:sprite
+  (:profiles (x:u-mvp)
+   :shader umbra.sprite:sprite
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
               (:opacity 1.0))
    :blocks ((:block-name :spritesheet
@@ -159,49 +159,49 @@
              :binding-policy :manual))))
 
 (v:define-material title
-  (:profiles (x/mat:u-mvp)
-   :shader shd/tex:unlit-texture-decal
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'title)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:vec 1)))))
 
 (v:define-material starfield
-  (:profiles (x/mat:u-mvpt)
+  (:profiles (x:u-mvpt)
    :shader ex/shd:starfield
    :uniforms ((:tex 'starfield)
               (:mix-color (v4:vec 1)))))
 
 (v:define-material warning-mothership
-  (:profiles (x/mat:u-mvp)
-   :shader shd/tex:unlit-texture-decal
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-mothership)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:vec 1)))))
 
 (v:define-material warning-wave
-  (:profiles (x/mat:u-mvp)
-   :shader shd/tex:unlit-texture-decal
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-wave)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:vec 1)))))
 
 (v:define-material game-over
-  (:profiles (x/mat:u-mvp)
-   :shader shd/tex:unlit-texture-decal
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'game-over)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:vec 1)))))
 
 (v:define-material level-complete
-  (:profiles (x/mat:u-mvp)
-   :shader shd/tex:unlit-texture-decal
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'level-complete)
               (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
               (:max-intensity (v4:vec 1)))))
 
 (v:define-material time-bar
-  (:profiles (x/mat:u-mvp)
-   :shader shd/tex:unlit-texture
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture
    :uniforms ((:tex.sampler1 'white)
               (:mix-color (v4:vec 0f0 1f0 0f0 1f0)))))
 
@@ -236,7 +236,7 @@
    ;; The format is minx, maxx, miny, maxy, minz, maxz
    (%region-cuboid :accessor region-cuboid
                    :initarg :region-cuboid
-                   :initform (reg:make-region-cuboid
+                   :initform (v:make-region-cuboid
                               (v3:vec 0f0 0f0 0f0)
                               -900f0 900f0 -500f0 500f0 0f0 0f0))))
 
@@ -280,7 +280,7 @@
            ;; the boundary cube we set.
            (current-translation (v:get-translation self))
            (vec
-            (reg:clip-movement-vector vec current-translation region-cuboid)))
+            (v:clip-movement-vector vec current-translation region-cuboid)))
 
         (v:translate self vec))
 
@@ -1087,8 +1087,8 @@ NIL if no such list exists."
                                   :initform 3)
    (%explosion-region :accessor explosion-region
                       :initarg :explosion-region
-                      :initform (reg:make-region-ellipsoid (v3:vec)
-                                                           100f0 100f0 0f0))
+                      :initform (v:make-region-ellipsoid (v3:vec)
+                                                         100f0 100f0 0f0))
    (%level-manager :accessor level-manager
                    :initarg :level-manager
                    :initform nil)
@@ -1164,14 +1164,14 @@ NIL if no such list exists."
        (flet ((zrandom (val)
                 (if (zerop val) 0f0 (float (random val) 1.0))))
          (let* ((er explosion-region)
-                (cx (v3:x (reg:center er)))
-                (cy (v3:y (reg:center er)))
+                (cx (v3:x (v:center er)))
+                (cy (v3:y (v:center er)))
                 (xsign (if (zerop (random 2)) 1f0 -1f0))
                 (ysign (if (zerop (random 2)) 1f0 -1f0))
                 (local-location
                   ;; Note: In terms of the coordinate space of the planet!
-                  (v4:vec (+ cx (float (* (zrandom (reg:x er)) xsign) 1f0))
-                          (+ cy (float (* (zrandom (reg:y er)) ysign) 1f0))
+                  (v4:vec (+ cx (float (* (zrandom (v:x er)) xsign) 1f0))
+                          (+ cy (float (* (zrandom (v:y er)) ysign) 1f0))
                           0f0
                           1f0))
                 ;; Figure out where to put the explosion into world space.

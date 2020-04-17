@@ -36,23 +36,7 @@
   :pathname "src"
   :serial t
   :components
-  ((:file "package-region")
-   (:file "package-colliders")
-   (:file "package-components")
-   (:file "package-extensions")
-   (:file "package-materials")
-   (:file "package-prefab")
-   (:file "package-shader")
-   (:file "package-textures")
-   (:file "package")
-   (:file "package-nicknames")
-
-   ;; This module houses files that are still being worked out and not
-   ;; integrated into the core yet.
-   (:module "flux"
-    :components
-    ((:file "attributes")
-     (:file "avl-tree")))
+  ((:file "package")
 
    (:module "core-early"
     :components
@@ -73,6 +57,13 @@
      (:file "resource-cache")
      (:file "clock")
      (:file "context")))
+
+   ;; This module houses files that are still being worked out and not
+   ;; integrated into the core yet.
+   (:module "flux"
+    :components
+    ((:file "attributes")
+     (:file "avl-tree")))
 
    (:module "kernel"
     :components

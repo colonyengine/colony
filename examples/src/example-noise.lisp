@@ -3,7 +3,7 @@
 ;;; Materials
 
 (v:define-material noise
-  (:profiles (x/mat:u-mvpt)
+  (:profiles (x:u-mvpt)
    :shader ex/shd:noise))
 
 ;;; Prefabs

@@ -1,6 +1,9 @@
 (in-package #:cl-user)
 
 (defpackage #:virality-examples
+  (:local-nicknames
+   (#:a #:alexandria)
+   (#:u #:golden-utils))
   (:use #:cl)
   (:export #:start))
 

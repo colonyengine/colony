@@ -8,6 +8,6 @@
         :while found-p
         :do (ecase kind
               (:shader
-               (gpu:recompile-shaders data))
+               (shadow:recompile-shaders data))
               ((:texture :material)
                (funcall data core)))))

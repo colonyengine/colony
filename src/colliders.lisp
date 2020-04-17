@@ -1,4 +1,4 @@
-(in-package #:virality.colliders)
+(in-package #:virality)
 
 ;; TODO: This is a naive collider resolution system that doesn't even take into
 ;; consideration or provide the feature of a sleeping collider. Also the main
@@ -61,7 +61,7 @@
 ;; happens just after disabling a component. NOTE: Think about this more.
 (defun register-collider (context collider)
   "Add a new collider that may participate in the collision system."
-  (let* ((cs (v::collider-system (v::core context)))
+  (let* ((cs (collider-system (core context)))
          (registering-colliders (registering-colliders cs)))
     ;; Insert the request for processing.
     (setf (u:href registering-colliders (comp:on-layer collider) collider)
@@ -69,7 +69,7 @@
 
 (defun deregister-collider (context collider)
   "Mark that a collider is ready to leve the collision system."
-  (let* ((cs (v::collider-system (v::core context)))
+  (let* ((cs (collider-system (core context)))
          (deregistering-colliders (deregistering-colliders cs)))
     ;; Insert the request for processing.
     (setf (u:href deregistering-colliders (comp:on-layer collider) collider)
@@ -282,13 +282,13 @@ had--and update all other faces too."
               (let ((face-layers
                       (u:href (collision-plan collider-system) fist-layer)))
                 #++(:printv "Checking registering fist: ~s, [~s: ~s]"
-                            (v:display-id fist) (comp:on-layer fist)
+                            (display-id fist) (comp:on-layer fist)
                             face-layers)
                 (cond
                   ((null face-layers)
                    ;; If no face layers to collide against AT ALL, automatically
                    ;; stabilize the fist and we're done with it.
-                   #++(:printv " Stabilizing[0]: ~s" (v:display-id fist))
+                   #++(:printv " Stabilizing[0]: ~s" (display-id fist))
                    (setf (u:href stable-colliders fist-layer fist) fist))
                   (t
                    ;; Else, we collide the fist against each face in each
@@ -307,7 +307,7 @@ had--and update all other faces too."
                          (u:do-hash-keys (face face-layer-stable-colliders)
                            #++(:printv "  compute-contact-state: [reg: ~s <-> ~
                                       stable: ~s]"
-                                       (v:display-id fist) (v:display-id face))
+                                       (display-id fist) (display-id face))
                            (compute-contact-state collider-system fist face)))))
                    ;; And when we *FINISH* colliding the specific registering
                    ;; fist against all of the stable faces in all face-layers
@@ -316,7 +316,7 @@ had--and update all other faces too."
                    ;; need be.
                    ;; NOTE: We CANNOT stabilize until AFTER the registering fist
                    ;; has been collided with all stable faces.
-                   #++(:printv " Stabilizing[1]: ~s" (v:display-id fist))
+                   #++(:printv " Stabilizing[1]: ~s" (display-id fist))
                    (setf (u:href stable-colliders fist-layer fist)
                          fist)))))))))))
 
@@ -387,7 +387,7 @@ had--and update all other faces too."
                :planet (list :enemy))))
          (new-collider-system
            (apply #'make-collider-system collider-system-desc)))
-    (setf (v::collider-system core) new-collider-system)
+    (setf (collider-system core) new-collider-system)
     (with-accessors ((registering-colliders registering-colliders)
                      (stable-colliders stable-colliders)
                      (deregistering-colliders deregistering-colliders))
@@ -410,44 +410,44 @@ had--and update all other faces too."
 (defun test-collider-system ()
   "Manually test the basic functionality of the collider system. To be run at
 the repl when the game is NOT running."
-  (let* ((core (make-instance 'v::core))
-         (context (make-instance 'v:context :core core)))
-    (setf (slot-value core 'v::%context) context)
-    (let* ((c0 (v:make-component context 'comp:sphere
-                                 :display-id "Ground"
-                                 :on-layer :ground
-                                 :center (v3:vec)
-                                 :radius 1))
-           (c1 (v:make-component context 'comp:sphere
-                                 :display-id "Player"
-                                 :on-layer :player
-                                 :center (v3:vec -20f0 5f0 0f0)
-                                 :radius 1))
-           (c2 (v:make-component context 'comp:sphere
-                                 :display-id "Player-Bullet"
-                                 :on-layer :player-bullet
-                                 :center (v3:vec -10f0 5f0 0f0)
-                                 :radius 1))
-           (c3 (v:make-component context 'comp:sphere
-                                 :display-id "Enemy"
-                                 :on-layer :enemy
-                                 :center (v3:vec 20f0 5f0 0f0)
-                                 :radius 1))
-           (c4 (v:make-component context 'comp:sphere
-                                 :display-id "Enemy-Bullet"
-                                 :on-layer :enemy-bullet
-                                 :center (v3:vec 10f0 5f0 0f0)
-                                 :radius 1))
-           (c5 (v:make-component context 'comp:sphere
-                                 :display-id "Scenery 1"
-                                 :on-layer :scenery
-                                 :center (v3:vec 0f0 5f0 0f0)
-                                 :radius 1))
-           (c6 (v:make-component context 'comp:sphere
-                                 :display-id "Scenery 2"
-                                 :on-layer :scenery
-                                 :center (v3:vec 1f0 5f0 0f0)
-                                 :radius 1)))
+  (let* ((core (make-instance 'core))
+         (context (make-instance 'context :core core)))
+    (setf (slot-value core '%context) context)
+    (let* ((c0 (make-component context 'comp:sphere
+                               :display-id "Ground"
+                               :on-layer :ground
+                               :center (v3:vec)
+                               :radius 1))
+           (c1 (make-component context 'comp:sphere
+                               :display-id "Player"
+                               :on-layer :player
+                               :center (v3:vec -20f0 5f0 0f0)
+                               :radius 1))
+           (c2 (make-component context 'comp:sphere
+                               :display-id "Player-Bullet"
+                               :on-layer :player-bullet
+                               :center (v3:vec -10f0 5f0 0f0)
+                               :radius 1))
+           (c3 (make-component context 'comp:sphere
+                               :display-id "Enemy"
+                               :on-layer :enemy
+                               :center (v3:vec 20f0 5f0 0f0)
+                               :radius 1))
+           (c4 (make-component context 'comp:sphere
+                               :display-id "Enemy-Bullet"
+                               :on-layer :enemy-bullet
+                               :center (v3:vec 10f0 5f0 0f0)
+                               :radius 1))
+           (c5 (make-component context 'comp:sphere
+                               :display-id "Scenery 1"
+                               :on-layer :scenery
+                               :center (v3:vec 0f0 5f0 0f0)
+                               :radius 1))
+           (c6 (make-component context 'comp:sphere
+                               :display-id "Scenery 2"
+                               :on-layer :scenery
+                               :center (v3:vec 1f0 5f0 0f0)
+                               :radius 1)))
       ;; Set referent to the same component for
       (dolist (c (list c0 c1 c2 c3 c4 c5 c6))
         (setf (comp:referent c) c))
@@ -460,29 +460,29 @@ the repl when the game is NOT running."
       (register-collider context c5)
       (register-collider context c6)
       (format t "Collider Pass 0: no colliding~%")
-      (compute-all-collisions (v::collider-system core))
+      (compute-all-collisions (collider-system core))
       (format t "Collider Pass 1: enter~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (reg:center c4) (v3:vec -9f0 5f0 0f0))
-      (compute-all-collisions (v::collider-system core))
+      (setf (center c4) (v3:vec -9f0 5f0 0f0))
+      (compute-all-collisions (collider-system core))
       (format t "Collider Pass 2: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (reg:center c4) (v3:vec -10f0 5f0 0f0))
-      (compute-all-collisions (v::collider-system core))
+      (setf (center c4) (v3:vec -10f0 5f0 0f0))
+      (compute-all-collisions (collider-system core))
       (format t "Collider Pass 2a: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (reg:center c4) (v3:vec -11f0 5f0 0f0))
-      (compute-all-collisions (v::collider-system core))
+      (setf (center c4) (v3:vec -11f0 5f0 0f0))
+      (compute-all-collisions (collider-system core))
       (format t "Collider Pass 2b: continue~%")
       (format t "Moving enemy-bullet.~%")
-      (setf (reg:center c4) (v3:vec -12f0 5f0 0f0))
-      (compute-all-collisions (v::collider-system core))
+      (setf (center c4) (v3:vec -12f0 5f0 0f0))
+      (compute-all-collisions (collider-system core))
       (format t "Moving enemy-bullet.~%")
-      (setf (reg:center c4) (v3:vec -13f0 5f0 0f0))
+      (setf (center c4) (v3:vec -13f0 5f0 0f0))
       (format t "Collider Pass 3: exit~%")
-      (compute-all-collisions (v::collider-system core))
+      (compute-all-collisions (collider-system core))
       (format t "Collider Pass 4: no colliding~%")
-      (compute-all-collisions (v::collider-system core))
+      (compute-all-collisions (collider-system core))
       (deregister-collider context c0)
       (deregister-collider context c1)
       (deregister-collider context c2)
@@ -490,12 +490,12 @@ the repl when the game is NOT running."
       (deregister-collider context c4)
       (deregister-collider context c5)
       (deregister-collider context c6)
-      (v::collider-system core))))
+      (collider-system core))))
 
 ;;; Protocol methods
 
-(defmethod on-collision-enter ((self v::component) (other v::component)))
+(defmethod on-collision-enter ((self component) (other component)))
 
-(defmethod on-collision-continue ((self v::component) (other v::component)))
+(defmethod on-collision-continue ((self component) (other component)))
 
-(defmethod on-collision-exit ((self v::component) (other v::component)))
+(defmethod on-collision-exit ((self component) (other component)))

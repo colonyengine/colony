@@ -1,6 +1,6 @@
 (in-package #:virality.components)
 
-(v:define-component cuboid (reg:region-cuboid)
+(v:define-component cuboid (v:region-cuboid)
   (;; The collider is only ever on a single layer.
    (%on-layer :accessor on-layer
               :initarg :on-layer)
@@ -16,7 +16,7 @@
               :initform (gl:gen-vertex-array))
 
    (%material :reader material
-              :initform 'x/mat::collider/cuboid
+              :initform 'x::collider/cuboid
               :annotation (v::material))
 
    ;; TODO: We do not have a difference between triggers and collisions yet.
@@ -40,11 +40,11 @@
 
 (defmethod v:on-component-attach ((self cuboid) actor)
   (declare (ignore actor))
-  (col::register-collider (v:context self) self))
+  (v::register-collider (v:context self) self))
 
 (defmethod v:on-component-detach ((self cuboid) actor)
   (declare (ignore actor))
-  (col::deregister-collider (v:context self) self))
+  (v::deregister-collider (v:context self) self))
 
 (defmethod v:on-component-destroy ((self cuboid))
   (setf (referent self) nil))
@@ -52,15 +52,15 @@
 ;; TODO: Refactor this as it was just a quick hack
 (defmethod v:on-component-physics-update ((self cuboid))
   (let* ((min (v:transform-point self
-                                 (v3:+ (reg:center self)
-                                       (v3:vec (reg:minx self)
-                                               (reg:miny self)
-                                               (reg:minz self)))))
+                                 (v3:+ (v:center self)
+                                       (v3:vec (v:minx self)
+                                               (v:miny self)
+                                               (v:minz self)))))
          (max (v:transform-point self
-                                 (v3:+ (reg:center self)
-                                       (v3:vec (reg:maxx self)
-                                               (reg:maxy self)
-                                               (reg:maxz self)))))
+                                 (v3:+ (v:center self)
+                                       (v3:vec (v:maxx self)
+                                               (v:maxy self)
+                                               (v:maxz self)))))
          (center (v3:lerp min max 0.5))
          (axes (m4:rotation-to-mat3
                 (m4:normalize-rotation
@@ -79,20 +79,20 @@
   (unless (visualize self)
     (return-from v:on-component-render))
   (a:when-let ((camera (v::active-camera (v:context self))))
-    (mat:with-material (material self)
+    (v:with-material (material self)
         (:model (v:get-model-matrix self)
          :view (view camera)
          :proj (projection camera)
-         :collider-local-center (reg:center self)
+         :collider-local-center (v:center self)
          :in-contact-p (plusp (contact-count self))
          ;; NOTE: The shader computes the world-space math appropriately for
          ;; visualization purposes.
-         :minx (reg:minx self)
-         :maxx (reg:maxx self)
-         :miny (reg:miny self)
-         :maxy (reg:maxy self)
-         :minz (reg:minz self)
-         :maxz (reg:maxz self))
+         :minx (v:minx self)
+         :maxx (v:maxx self)
+         :miny (v:miny self)
+         :maxy (v:maxy self)
+         :minz (v:minz self)
+         :maxz (v:maxz self))
 
       ;; Finally, draw the visualizaiton.
       (gl:bind-vertex-array (geometry self))

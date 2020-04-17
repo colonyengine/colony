@@ -1,4 +1,4 @@
-(in-package #:virality.shaders.texture)
+(in-package #:virality.shaders)
 
 (defstruct texture-struct
   (sampler1 :sampler-2d :accessor sampler1)
@@ -34,7 +34,6 @@
 (defun unlit-color/frag ((color :vec4)
                          (uv1 :vec2))
   color)
-
 
 (defun unlit-color-decal/frag ((color :vec4)
                                (uv1 :vec2))

@@ -30,13 +30,13 @@
                         (* (abs (- (/ (- dist (- 0.5 width)) (* width 2))
                                    0.5))
                            2)))
-         (noise (vec3 (+ (* 0.4 (shd/noise:perlin (* 2 mask-uv)))
-                         (* 0.3 (shd/noise:perlin-surflet (* 16 mask-uv))))))
+         (noise (vec3 (+ (* 0.4 (umbra.noise:perlin (* 2 mask-uv)))
+                         (* 0.3 (umbra.noise:perlin-surflet (* 16 mask-uv))))))
          (noise (* noise (vec3 0.6 0.9 0.7) (+ 0.5 (* 0.5 (vec3 uv 1))))))
     (vec4 (* noise mask) 1)))
 
 (define-shader art1 ()
-  (:vertex (shd/tex:unlit/vert-nil mesh-attrs))
+  (:vertex (shd:unlit/vert-nil mesh-attrs))
   (:fragment (art1/frag)))
 
 ;;; Art 2
@@ -87,13 +87,13 @@
                (bands (sin (+ (* x 30) (* y 10))))
                (b1 (smoothstep -0.2 0.2 bands))
                (b2 (smoothstep -0.2 0.2 (- bands 0.5)))
-               (noise (vec3 (+ (* 0.4 (shd/noise:perlin (* (vec2 x y) 10)))
-                               (* 0.7 (shd/noise:cellular (* (vec2 x y) 50)))
-                               (* 0.3 (shd/noise:perlin-surflet
+               (noise (vec3 (+ (* 0.4 (umbra.noise:perlin (* (vec2 x y) 10)))
+                               (* 0.7 (umbra.noise:cellular (* (vec2 x y) 50)))
+                               (* 0.3 (umbra.noise:perlin-surflet
                                        (* (vec2 x y) 200))))))
-               (noise (shd/color:color-filter noise
-                                              (vec3 (sin x) (sin y) 0.5)
-                                              1))
+               (noise (umbra.color:color-filter noise
+                                                (vec3 (sin x) (sin y) 0.5)
+                                                1))
                (blend (+ (max (* b1 (- 1 b2)) (* ripples b2 waves))
                          (* waves 0.5 b2)))
                (blend (mix blend
@@ -103,7 +103,7 @@
       (vec4 color 1))))
 
 (define-shader art2 ()
-  (:vertex (shd/tex:unlit/vert-nil mesh-attrs))
+  (:vertex (shd:unlit/vert-nil mesh-attrs))
   (:fragment (art2/frag)))
 
 ;;; Art 3
@@ -131,7 +131,7 @@
          (distance-surface 0.0)
          (distance-origin 0.0)
          (point (vec3 0))
-         (p (* .4 (shd/noise:perlin (* uv 4))))
+         (p (* .4 (umbra.noise:perlin (* uv 4))))
          (radius (mix 0.6 0.9 (* (sin (* p 4))
                                  (cos (* p 2))))))
 
@@ -154,13 +154,13 @@
                (bands (sin (+ (* x 30) (* y 50))))
                (b1 (smoothstep -0.2 0.2 bands))
                (b2 (smoothstep -0.2 0.2 (- bands 0.5)))
-               (noise (vec3 (+ (* 0.4 (shd/noise:perlin (* (vec2 x y) 10)))
-                               (* 0.7 (shd/noise:cellular (* (vec2 x y) 50)))
-                               (* 0.3 (shd/noise:perlin-surflet
+               (noise (vec3 (+ (* 0.4 (umbra.noise:perlin (* (vec2 x y) 10)))
+                               (* 0.7 (umbra.noise:cellular (* (vec2 x y) 50)))
+                               (* 0.3 (umbra.noise:perlin-surflet
                                        (* (vec2 x y) 200))))))
-               (noise (shd/color:color-filter noise
-                                              (vec3 (sin x) (sin y) 0.5)
-                                              1))
+               (noise (umbra.color:color-filter noise
+                                                (vec3 (sin x) (sin y) 0.5)
+                                                1))
                (blend (+ (max (* b1 (- 1 b2)) (* ripples b2 waves))
                          (* waves 0.5 b2)))
                (blend (mix blend
@@ -170,7 +170,7 @@
       (vec4 color 1))))
 
 (define-shader art3 ()
-  (:vertex (shd/tex:unlit/vert-nil mesh-attrs))
+  (:vertex (shd:unlit/vert-nil mesh-attrs))
   (:fragment (art3/frag)))
 
 ;;; Art 4
@@ -229,7 +229,7 @@
       (vec4 color 1))))
 
 (define-shader art4 ()
-  (:vertex (shd/tex:unlit/vert-nil mesh-attrs))
+  (:vertex (shd:unlit/vert-nil mesh-attrs))
   (:fragment (art4/frag)))
 
 (defun art5/hash ((n :float))
@@ -526,5 +526,5 @@
           (vec4 c 1)))))
 
 (define-shader art6 ()
-  (:vertex (shd/tex:unlit/vert-nil mesh-attrs))
+  (:vertex (shd:unlit/vert-nil mesh-attrs))
   (:fragment (art6/frag)))

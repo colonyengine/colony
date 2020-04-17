@@ -84,7 +84,7 @@
                                        :frames 2))
              (render (v:make-component context
                                        'comp:render
-                                       :material `(x/mat:sprite
+                                       :material `(x:sprite
                                                    ,(a:make-gensym '#:sprite)
                                                    :uniforms
                                                    ((:sprite.sampler sprites)))
@@ -105,7 +105,7 @@
    ("ship-body"
     (comp:sprite :spec '(metadata sprites)
                  :name "ship29")
-    (comp:render :material `(x/mat:sprite
+    (comp:render :material `(x:sprite
                              ,(a:make-gensym '#:sprite)
                              :uniforms ((:sprite.sampler sprites)))
                  :mode :sprite)
@@ -115,7 +115,7 @@
                   :name "exhaust03-01"
                   :frames 8
                   :duration 0.75)
-     (comp:render :material `(x/mat:sprite
+     (comp:render :material `(x:sprite
                               ,(a:make-gensym '#:sprite)
                               :uniforms ((:sprite.sampler sprites)))
                   :mode :sprite)))))

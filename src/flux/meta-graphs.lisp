@@ -153,19 +153,19 @@
     (:category v:texture-resolution
      :depends-on nil
      :weak-roots (core))
-  (search-path core (:x/tex)))
+  (search-path core (:x)))
 
 (define-graph core
     (:category v:material-resolution
      :depends-on nil
      :weak-roots (core))
-  (search-path core (:x/mat)))
+  (search-path core (:x)))
 
 (define-graph core
     (:category v:component-resolution
      :depends-on nil
      :weak-roots (core))
-  (search-path core (:virality.components)))
+  (search-path core (:comp)))
 
 ;; component execution order
 (define-graph core

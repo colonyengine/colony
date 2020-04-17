@@ -1,4 +1,4 @@
-(in-package #:virality.shaders.visualization)
+(in-package #:virality.shaders)
 
 (defun collider/sphere/vert ()
   (values))

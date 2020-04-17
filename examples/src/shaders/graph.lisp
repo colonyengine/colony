@@ -6,7 +6,7 @@
   (let* ((dim (vec2 (1+ (sin time)) (+ 2 (sin time))))
          (uv (+ (* uv (- (.y dim) (.x dim)))
                 (vec2 (.x dim) -0.5))))
-    (shd/graph:graph
+    (umbra.graphing:graph
      (lambda ((x :float))
        (* (sin (* x x x)) (sin x)))
      (* 4 uv)
@@ -15,7 +15,7 @@
      10)))
 
 (define-shader graph ()
-  (:vertex (shd/tex:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (graph/frag :vec2)))
 
 (defun 3d-graph/graph ((fn (function (:float) :vec3))
@@ -40,8 +40,8 @@
                    0 1 0
                    (sin i) 0 (cos i)))
          (pos (* m3 offset))
-         (h (* 40 (shd/noise:perlin-surflet (+ (* 0.03 pos)
-                                               (vec3 (* 0.5 time))))))
+         (h (* 40 (umbra.noise:perlin-surflet (+ (* 0.03 pos)
+                                                 (vec3 (* 0.5 time))))))
          (pos (vec3 (.x pos) h (.z pos)))
          (color (mix (vec4 1 0.8 0 0)
                      (vec4 0.85)
@@ -104,8 +104,8 @@
   (let ((scale 1))
     (mix (vec4 0)
          color
-         (shd/sdf:mask/fill
-          (shd/sdf:dist/circle (- (* uv 2 scale) (vec2 scale)) scale)))))
+         (umbra.sdf:mask/fill
+          (umbra.sdf:dist/circle (- (* uv 2 scale) (vec2 scale)) scale)))))
 
 (define-shader 3d-graph-1 ()
   (:vertex (3d-graph/vert1 mesh-attrs))

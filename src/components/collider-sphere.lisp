@@ -1,6 +1,6 @@
 (in-package #:virality.components)
 
-(v:define-component sphere (reg:region-sphere)
+(v:define-component sphere (v:region-sphere)
   (;; The collider is only ever on a single layer.
    (%on-layer :accessor on-layer
               :initarg :on-layer)
@@ -15,7 +15,7 @@
    (%geometry :reader geometry
               :initform (gl:gen-vertex-array))
    (%material :reader material
-              :initform 'x/mat::collider/sphere
+              :initform 'x::collider/sphere
               :annotation (v::material))
    ;; TODO: We do not have a difference between triggers and collisions yet.
    ;; That will come when actual physics arrives.
@@ -36,11 +36,11 @@
 
 (defmethod v:on-component-attach ((self sphere) actor)
   (declare (ignore actor))
-  (col::register-collider (v:context self) self))
+  (v::register-collider (v:context self) self))
 
 (defmethod v:on-component-detach ((self sphere) actor)
   (declare (ignore actor))
-  (col::deregister-collider (v:context self) self))
+  (v::deregister-collider (v:context self) self))
 
 (defmethod v:on-component-destroy ((self sphere))
   (setf (referent self) nil))
@@ -54,15 +54,15 @@
   (unless (visualize self)
     (return-from v:on-component-render))
   (a:when-let ((camera (v::active-camera (v:context self))))
-    (mat:with-material (material self)
+    (v:with-material (material self)
         (:model (v:get-model-matrix self)
          :view (view camera)
          :proj (projection camera)
-         :collider-local-center (reg:center self)
+         :collider-local-center (v:center self)
          :in-contact-p (plusp (contact-count self))
          ;; NOTE: The shader computes the radius appropriately for
          ;; visualization purposes.
-         :radius (reg:radius self))
+         :radius (v:radius self))
       ;; Finally, draw the visualizaiton.
       (gl:bind-vertex-array (geometry self))
       (gl:draw-arrays-instanced :points 0 1 1)

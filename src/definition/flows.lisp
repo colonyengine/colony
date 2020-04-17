@@ -125,8 +125,8 @@
                     (action (lambda (core)
                               (let ((cs (collider-system core)))
                                 ;; NOTE: This order is required.
-                                (col::compute-stable-collisions cs)
-                                (col::compute-registering-collisions cs))))
+                                (compute-stable-collisions cs)
+                                (compute-registering-collisions cs))))
                     (transition nil))
         ;; TODO: Should I run flow destroy-phase just before this next
         ;; flow-state so that those actors/components aren't even drawn?
@@ -283,7 +283,7 @@
                     (action
                      (lambda (core)
                        (let ((cs (collider-system core)))
-                         (col::compute-deregistering-collisions cs))))
+                         (compute-deregistering-collisions cs))))
                     (transition protocol-destroy-component))
         ;; 6
         (flow-state protocol-destroy-component :reset ()

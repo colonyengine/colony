@@ -34,13 +34,13 @@ long the thing has yet to live, with NIL meaning infinity."))
 
 ;;; Collider
 
-(defgeneric col:on-collision-enter (collider other))
+(defgeneric on-collision-enter (collider other))
 
-(defgeneric col:on-collision-continue (collider other))
+(defgeneric on-collision-continue (collider other))
 
-(defgeneric col:on-collision-exit (collider other))
+(defgeneric on-collision-exit (collider other))
 
-(defgeneric col:collide-p (collider other))
+(defgeneric collide-p (collider other))
 
 ;;; Resource Cache
 
