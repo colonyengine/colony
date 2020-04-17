@@ -25,7 +25,7 @@
                #:lparallel
                #:origin
                #:pngload-fast
-               #:queues.simple-cqueue
+               #:queues.simple-queue
                #:sdl2
                #:shadow
                #:split-sequence
