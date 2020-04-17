@@ -57,6 +57,7 @@
      (:file "resource-cache")
      (:file "clock")
      (:file "shaders")
+     (:file "annotations")
      (:file "context")
      (:file "core")))
 
@@ -87,11 +88,11 @@
      (:file "button")
      (:file "input")))
 
-   (:file "common")
-   (:file "annotations")
-   (:file "region")
-   (:file "bounding-volume-obb")
-   (:file "colliders")
+   (:module "collision-detection"
+    :components
+    ((:file "region")
+     (:file "bounding-volume-obb")
+     (:file "colliders")))
 
    (:module "texture"
     :components
@@ -134,6 +135,8 @@
      (:file "collider-cuboid")
      (:file "collider-collide-p")))
 
+   ;; NOTE: This module should always be loaded directly after the component
+   ;; module.
    (:module "prefab"
     :components
     ((:file "common")
@@ -148,6 +151,8 @@
     ((:file "texture")
      (:file "collider")))
 
+   ;; NOTE: This module should always be loaded after the components, prefabs,
+   ;; and shaders module.
    (:module "core-late"
     :components
     ((:file "opengl")
