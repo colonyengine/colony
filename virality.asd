@@ -63,7 +63,9 @@
    (:module "flux"
     :components
     ((:file "attributes")
-     (:file "avl-tree")))
+     (:file "avl-tree")
+     ;; TODO: Fix this file so it loads. ~axion 4/17/2020
+     #++(:file "meta-graphs")))
 
    (:module "kernel"
     :components
