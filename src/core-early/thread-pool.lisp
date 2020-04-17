@@ -17,7 +17,7 @@
           =thread-pool= thread-pool)))
 
 (defun destroy-thread-pool ()
-  (lparallel:end-kernel :wait t)
+  (lparallel:end-kernel)
   (when =thread-pool=
     (setf lparallel:*kernel* nil
           =thread-pool= nil)))

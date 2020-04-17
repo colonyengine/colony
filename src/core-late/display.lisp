@@ -76,7 +76,9 @@
                     'entry/perform-one-frame
                     :come-from-state-name :ef)
       (sdl2:gl-swap-window (window %display))
-      (incf (clock-frame-count %clock)))))
+      (incf (clock-frame-count %clock))
+      (when *profile*
+        (incf =profile-frame-counter=)))))
 
 (defun get-resolution (context)
   (resolution (display (core context))))

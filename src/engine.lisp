@@ -23,7 +23,7 @@
   (make-scene-tree core)
   (load-initial-scene core scene-name)
   (run-prologue core)
-  (start-loop core))
+  (start-game-loop core))
 
 (defun deinitialize (core)
   (run-epilogue core)
@@ -33,17 +33,20 @@
   (destroy-thread-pool)
   (makunbound '*core-debug*))
 
-(defun start-loop (core)
+(defun start-game-loop (core)
+  ;; Note: We let-bind the following variables so that we don't have to
+  ;; dynamically access core's slot values each step of the main game loop.
   (let ((context (context core))
         (input-data (input-data core)))
     (initialize-frame-time (clock core))
-    (u:while (running-p core)
-      (with-continuable "Virality Engine"
-        (handle-events input-data)
-        (render-frame core)
-        ;; TODO: Remove this later when possible.
-        (when (on-button-enter context :key :escape)
-          (stop core))))))
+    (with-profiling core
+      (u:while (running-p core)
+        (with-continuable "Virality Engine"
+          (handle-events input-data)
+          (render-frame core)
+          ;; TODO: Remove this later when possible.
+          (when (on-button-enter context :key :escape)
+            (stop core)))))))
 
 (defun start (&key project scene)
   (let ((core (make-core project)))
