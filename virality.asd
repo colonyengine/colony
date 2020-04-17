@@ -18,7 +18,6 @@
                #:cl-ppcre
                #:cl-slug
                #:closer-mop
-               #:doubly-linked-list
                #:fast-io
                #:global-vars
                #:golden-utils
