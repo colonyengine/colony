@@ -51,7 +51,8 @@
    ;; integrated into the core yet.
    (:module "flux"
     :components
-    ((:file "attributes")))
+    ((:file "attributes")
+     (:file "avl-tree")))
 
    (:module "core-early"
     :components
@@ -62,7 +63,6 @@
      (:file "thread-pool")
      (:file "live-coding")
      (:file "debug")
-     (:file "avl-tree")
      (:file "parser")
      (:file "uuid")
      (:file "deployment")
