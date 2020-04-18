@@ -25,8 +25,7 @@
            `((setf =meta/config/default= (u:dict ,@body))
              ,@(loop :for (k v) :on body :by #'cddr
                      :for name = (get-config-option-name k)
-                     :append `((global-vars:define-global-parameter ,name ,v)
-                               (export ',name))))
+                     :collect `(global-vars:define-global-parameter ,name ,v)))
            `((validate-config-options ',body)
              (setf (u:href =meta/config/project= ,project-name)
                    (u:hash-merge =meta/config/default= (u:dict ,@body)))))))
@@ -38,8 +37,6 @@
   :debug-interval 5
   :initial-scene nil
   :log-level :debug
-  :log-repl-enabled t
-  :log-repl-categories '(:virality)
   :opengl-version "4.3"
   :period-interval 0.25
   :release nil

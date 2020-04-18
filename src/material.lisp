@@ -691,8 +691,7 @@ applied in an overlay manner while defining a material."
       `(let ((,func ,(parse-material name shader instances attributes profiles
                                      uniforms blocks)))
          (setf (u:href =meta/materials= ',name) ,func)
-         (update-material/interactively ',name ,func)
-         (export ',name)))))
+         (update-material/interactively ',name ,func)))))
 
 ;; TODO: Make this constant time
 (defmacro with-depth-function (material &body body)

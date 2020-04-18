@@ -85,7 +85,7 @@
 ;; symbol name). However, I wanted the ENTIRE codebase to be in one file to
 ;; demonstrate this is possible for a game.
 
-(in-package #:virality-examples.shaders)
+(in-package #:virality-examples.shader)
 
 (defun starfield/frag ((color :vec4)
                        (uv1 :vec2)

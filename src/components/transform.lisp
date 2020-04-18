@@ -1,4 +1,4 @@
-(in-package #:virality.components)
+(in-package #:virality.component)
 
 (v:define-component transform ()
   ((%parent :accessor parent

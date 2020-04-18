@@ -1,4 +1,4 @@
-(in-package #:virality.shaders)
+(in-package #:virality.shader)
 
 (defstruct texture-struct
   (sampler1 :sampler-2d :accessor sampler1)

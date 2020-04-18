@@ -1,4 +1,4 @@
-(in-package #:virality.components)
+(in-package #:virality.component)
 
 (v:define-component camera ()
   ((%active-p :accessor active-p

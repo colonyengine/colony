@@ -1,4 +1,4 @@
-(in-package #:virality.extensions)
+(in-package #:virality.extension)
 
 (v:define-material unlit-color
   (:shader shd:unlit-color

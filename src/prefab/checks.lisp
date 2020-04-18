@@ -1,4 +1,4 @@
-(in-package #:virality.prefabs)
+(in-package #:virality.prefab)
 
 (defun ensure-prefab-name-string (name)
   (unless (stringp name)

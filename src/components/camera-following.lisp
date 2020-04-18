@@ -1,4 +1,4 @@
-(in-package #:virality.components)
+(in-package #:virality.component)
 
 (v:define-component following-camera ()
   ((%slave :reader slave)

@@ -1,4 +1,4 @@
-(in-package #:virality-examples.shaders)
+(in-package #:virality-examples.shader)
 
 (defun dynamic-geometry/vert ((pos :vec2)
                               (uv :vec2)

@@ -1,12 +1,12 @@
 (in-package #:cl-user)
 
-(defpackage #:virality.textures
+(defpackage #:virality.texture
   (:use #:cl)
   (:export
    #:define-texture
    #:define-texture-profile))
 
-(defpackage #:virality.prefabs
+(defpackage #:virality.prefab
   (:use #:cl)
   (:export
    #:define-prefab
@@ -14,11 +14,22 @@
    #:make-prefab-instance
    #:ref))
 
-(defpackage #:virality.shaders
-  (:use #:shadow.glsl #:umbra.common))
+(uiop:define-package #:virality.shader
+  (:use-reexport #:shadow.glsl #:umbra.common))
 
-(defpackage #:virality.extensions
+(defpackage #:virality.extension
   (:use #:cl)
+  ;; materials
+  (:export
+   #:collider/cuboid
+   #:collider/sphere
+   #:missing-material
+   #:sprite
+   #:unlit-color
+   #:unlit-color-decal
+   #:unlit-texture
+   #:unlit-texture-decal
+   #:unlit-texture-decal-bright)
   ;; material profiles
   (:export
    #:u-model
@@ -30,15 +41,15 @@
    #:u-view
    #:u-vp
    #:u-vpt)
+  ;; textures
+  (:export
+   #:debug-texture)
   ;; texture profiles
   (:export
    #:clamp-all-edges
-   #:default-profile)
-  ;; textures
-  (:export
-   #:debug-texture))
+   #:default-profile))
 
-(defpackage #:virality.components
+(defpackage #:virality.component
   (:use #:cl)
   ;; camera
   (:export
@@ -104,22 +115,38 @@
    #:stop
    #:total-time
    #:with-storage)
+  ;; config
+  (:export
+   #:=allow-screensaver=
+   #:=anti-alias-level=
+   #:=delta=
+   #:=debug-interval=
+   #:=initial-scene=
+   #:=log-level=
+   #:=opengl-version=
+   #:=period-interval=
+   #:=release=
+   #:=threads=
+   #:=vsync=
+   #:=window-height=
+   #:=window-width=
+   #:=window-title=)
   ;; prefabs
   (:import-from
-   #:virality.prefabs
+   #:virality.prefab
    #:define-prefab
    #:find-prefab
    #:make-prefab-instance
    #:ref)
   (:export
-   #:virality.prefabs
+   #:virality.prefab
    #:define-prefab
    #:find-prefab
    #:make-prefab-instance
    #:ref)
   ;; textures
   (:import-from
-   #:virality.textures
+   #:virality.texture
    #:define-texture
    #:define-texture-profile)
   (:export
@@ -264,12 +291,12 @@
       (:origin.mat4 :m4)
       (:origin.quat :q)
       (:golden-utils :u)
-      (:virality.components :comp)
+      (:virality.component :comp)
       (:virality :v)
-      (:virality.extensions :x)
-      (:virality.prefabs :prefab)
-      (:virality.shaders :shd)
-      (:virality.textures :tex))))
+      (:virality.extension :x)
+      (:virality.prefab :prefab)
+      (:virality.shader :shd)
+      (:virality.texture :tex))))
 
 (macrolet ((define-nicknames/internal ()
              `(progn

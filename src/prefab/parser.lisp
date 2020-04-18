@@ -1,4 +1,4 @@
-(in-package #:virality.prefabs)
+(in-package #:virality.prefab)
 
 (defun parse-prefab (prefab)
   (let (success-p)

@@ -1,4 +1,4 @@
-(in-package #:virality.prefabs)
+(in-package #:virality.prefab)
 
 (defmacro preprocess-spec (prefab-name context policy spec)
   (labels ((rec (data)
@@ -81,5 +81,4 @@
                         (,prefab (make-prefab ',name ',library ,doc ,data)))
                (setf (u:href ,prefabs ',name) ,prefab
                      (func ,prefab) (make-factory ,prefab))
-               (parse-prefab ,prefab)))
-           (export ',library))))))
+               (parse-prefab ,prefab))))))))

@@ -1,4 +1,4 @@
-(in-package #:virality.textures)
+(in-package #:virality.texture)
 
 (defclass textures-table ()
   ((%profiles :reader profiles
@@ -518,8 +518,7 @@ texture."
                        :append `((u:href (attributes ,new-desc) ,key)
                                  ,value)))
          (setf ,desc-lookup ,new-desc)
-         (update-texture/interactively ,old-desc ,new-desc)
-         (export ',name)))))
+         (update-texture/interactively ,old-desc ,new-desc)))))
 
 (defun resolve-semantic-texture-descriptor (core texture-descriptor)
   (symbol-macrolet ((profiles (profiles (v::textures core)))

@@ -1,4 +1,4 @@
-(in-package #:virality.prefabs)
+(in-package #:virality.prefab)
 
 (defclass prefab ()
   ((%name :reader name

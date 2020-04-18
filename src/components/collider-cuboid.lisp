@@ -1,4 +1,4 @@
-(in-package #:virality.components)
+(in-package #:virality.component)
 
 (v:define-component cuboid (v:region-cuboid)
   (;; The collider is only ever on a single layer.

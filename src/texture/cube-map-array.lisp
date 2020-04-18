@@ -1,4 +1,4 @@
-(in-package #:virality.textures)
+(in-package #:virality.texture)
 
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map-array))
                               texture context)
