@@ -54,7 +54,7 @@
   (unless (visualize self)
     (return-from v:on-component-render))
   (a:when-let ((camera (v::active-camera (v:context self))))
-    (v:with-material (material self)
+    (with-material (material self)
         (:model (v:get-model-matrix self)
          :view (view camera)
          :proj (projection camera)

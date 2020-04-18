@@ -37,7 +37,6 @@
   :serial t
   :components
   ((:file "package")
-
    (:module "core-early"
     :components
     ((:file "general")
@@ -60,7 +59,6 @@
      (:file "annotations")
      (:file "context")
      (:file "core")))
-
    ;; This module houses files that are still being worked out and not
    ;; integrated into the core yet.
    (:module "flux"
@@ -69,7 +67,6 @@
      (:file "avl-tree")
      ;; TODO: Fix this file so it loads. ~axion 4/17/2020
      #++(:file "meta-graphs")))
-
    (:module "kernel"
     :components
     ((:file "actor")
@@ -77,7 +74,6 @@
      (:file "component")
      (:file "storage")
      (:file "kernel")))
-
    (:module "input"
     :components
     ((:file "data")
@@ -87,13 +83,19 @@
      (:file "window")
      (:file "button")
      (:file "input")))
-
    (:module "collision-detection"
     :components
     ((:file "region")
      (:file "bounding-volume-obb")
      (:file "colliders")))
-
+   (:module "geometry"
+    :components
+    ((:file "spec")
+     (:file "attribute")
+     (:file "group")
+     (:file "layout")
+     (:file "buffer")
+     (:file "geometry")))
    (:module "texture"
     :components
     ((:file "common")
@@ -107,20 +109,6 @@
      (:file "cube-map-array")
      (:file "rectangle")
      (:file "buffer")))
-
-   (:module "geometry"
-    :components
-    ((:file "spec")
-     (:file "attribute")
-     (:file "group")
-     (:file "layout")
-     (:file "buffer")
-     (:file "geometry")))
-
-   ;; TODO: this must be placed after textures but before components. Fix this.
-   ;; ~axion 4/15/2020
-   (:file "material")
-
    (:module "components"
     :components
     ((:file "transform")
@@ -134,9 +122,6 @@
      (:file "collider-sphere")
      (:file "collider-cuboid")
      (:file "collider-collide-p")))
-
-   ;; NOTE: This module should always be loaded directly after the component
-   ;; module.
    (:module "prefab"
     :components
     ((:file "common")
@@ -145,14 +130,10 @@
      (:file "loader")
      (:file "reference")
      (:file "prefab")))
-
    (:module "shader"
     :components
     ((:file "texture")
      (:file "collider")))
-
-   ;; NOTE: This module should always be loaded after the components, prefabs,
-   ;; and shaders module.
    (:module "core-late"
     :components
     ((:file "opengl")
@@ -161,14 +142,12 @@
      (:file "image-png")
      (:file "image-hdr")
      (:file "gltf")
+     (:file "material")
      (:file "framebuffer")
      (:file "transform-state")
      (:file "transform-protocol")
      (:file "free-look-state")
-     ;; NOTE: This file should always be loaded last in core-late.
      (:file "engine")))
-
-   ;; NOTE: This module should always be loaded last, directly after core-late.
    (:module "definition"
     :components
     ((:file "graphs")

@@ -693,29 +693,6 @@ applied in an overlay manner while defining a material."
          (setf (u:href =meta/materials= ',name) ,func)
          (update-material/interactively ',name ,func)))))
 
-;; TODO: Make this constant time
-(defmacro with-depth-function (material &body body)
-  `(destructuring-bind (&key depth) (attributes ,material)
-     (if depth
-         (let ((old-depth (get-gpu-parameter :depth-func)))
-           (unwind-protect
-                (progn
-                  (gl:depth-func depth)
-                  ,@body)
-             (gl:depth-func old-depth)))
-         (progn ,@body))))
-
-(defmacro with-material (material (&rest bindings) &body body)
-  (a:with-gensyms (material-ref)
-    `(let ((,material-ref ,material))
-       (shadow:with-shader (shader ,material-ref)
-         (setf ,@(loop :for (k v) :on bindings :by #'cddr
-                       :collect `(uniform-ref ,material-ref ,k)
-                       :collect v))
-         (bind-material ,material-ref)
-         (with-depth-function ,material-ref
-           ,@body)))))
-
 (defun load-materials (core)
   (u:do-hash-values (profile =meta/material-profiles=)
     (%add-material-profile profile core))
