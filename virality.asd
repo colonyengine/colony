@@ -24,7 +24,7 @@
                #:jsown
                #:lparallel
                #:origin
-               #:pngload-fast
+               #:pngload
                #:queues.simple-queue
                #:sdl2
                #:shadow
