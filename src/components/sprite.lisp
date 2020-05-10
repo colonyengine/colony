@@ -52,17 +52,9 @@
                  (index (floor (a:clamp (a:lerp step min (1+ max)) min max))))
             (setf %index index))))))
 
-;; TODO: Fix after slave render system is in place.
-(defun draw-sprite (sprite &optional count)
-  (with-slots (%index %spritesheet) sprite
-    (shadow:uniform-int 'umbra.sprite:sprite :sprite.index %index)
-    (gl:bind-vertex-array (v::geometry %spritesheet))
-    (gl:draw-arrays-instanced :triangle-strip 0 4 count)
+(defmethod v:on-component-slave-render ((master render) (self sprite))
+  (let ((instance-count (v::instances (comp:material master))))
+    (shadow:uniform-int 'umbra.sprite:sprite :sprite.index (index self))
+    (gl:bind-vertex-array (v::geometry (spritesheet self)))
+    (gl:draw-arrays-instanced :triangle-strip 0 4 instance-count)
     (gl:bind-vertex-array 0)))
-#++(defmethod v:on-component-slave-render ((renderer render) (self sprite))
-     (with-slots (%index %spritesheet) self
-       (with-slots (%geometry) %spritesheet
-         (shadow:uniform-int 'umbra.sprite:sprite :sprite.index %index)
-         (gl:bind-vertex-array %geometry)
-         (gl:draw-arrays-instanced :triangle-strip 0 4 count)
-         (gl:bind-vertex-array 0))))

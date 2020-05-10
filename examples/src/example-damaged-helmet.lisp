@@ -153,7 +153,8 @@
                    :scale 17f0)
    (comp:mesh :asset '(meshes damaged-helmet)
               :name "damaged-helmet")
-   (comp:render :material 'damaged-helmet)))
+   (comp:render :material 'damaged-helmet
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "damaged-helmet-interactive" (:library examples)
   (("camera" :copy "/cameras/perspective")
@@ -164,4 +165,5 @@
                    :scale 17f0)
    (comp:mesh :asset '(meshes damaged-helmet)
               :name "damaged-helmet")
-   (comp:render :material 'damaged-helmet)))
+   (comp:render :material 'damaged-helmet
+                :slave (v:ref :self :component 'comp:mesh))))

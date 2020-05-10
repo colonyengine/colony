@@ -1707,7 +1707,7 @@ NIL if no such list exists."
                :referent (v:ref :self :component 'hit-points)
                :radius 15f0)
   (comp:render :material 'sprite-sheet
-               :mode :sprite))
+               :slave (v:ref :self :component 'comp:sprite)))
 
 (v:define-prefab "player-ship" (:library ptp)
   "The venerable Player Ship. Controls how it looks, collides, and movement."
@@ -1729,7 +1729,7 @@ NIL if no such list exists."
    (comp:sprite :spec '(metadata sprites)
                 :name "ship26")
    (comp:render :material 'sprite-sheet
-                :mode :sprite)
+                :slave (v:ref :self :component 'comp:sprite))
    ("center-gun"
     (comp:transform :translate (v3:vec))
     (gun :physics-layer :player-bullet
@@ -1742,14 +1742,14 @@ NIL if no such list exists."
                  :frames 8
                  :duration 0.5)
     (comp:render :material 'sprite-sheet
-                 :mode :sprite))))
+                 :slave (v:ref :self :component 'comp:sprite)))))
 
 (v:define-prefab "player-ship-mockette" (:library ptp)
   "An image of the ship, but no colliders or guns."
   (comp:sprite :spec '(metadata sprites)
                :name "ship26")
   (comp:render :material 'sprite-sheet
-               :mode :sprite))
+               :slave (v:ref :self :component 'comp:sprite)))
 
 (v:define-prefab "player-stable" (:library ptp)
   ;; TODO: Clarify when we actually need the / infront of the actor name during
@@ -1770,7 +1770,7 @@ NIL if no such list exists."
   (comp:sprite :spec '(metadata sprites)
                :name "planet01")
   (comp:render :material 'sprite-sheet
-               :mode :sprite))
+               :slave (v:ref :self :component 'comp:sprite)))
 
 (v:define-prefab "generic-explosion" (:library ptp)
   (explosion :sprite (v:ref :self :component 'comp:sprite))
@@ -1781,7 +1781,7 @@ NIL if no such list exists."
                :duration 0.5
                :repeat nil)
   (comp:render :material 'sprite-sheet
-               :mode :sprite))
+               :slave (v:ref :self :component 'comp:sprite)))
 
 ;; TODO: Refactor these signs into a single prefab and a sign component to
 ;; manage the configuration of the prefab.
@@ -1792,7 +1792,8 @@ NIL if no such list exists."
   ("sign"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'warning-wave)))
+   (comp:render :material 'warning-wave
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "warning-mothership-sign" (:library ptp)
   "Not used yet."
@@ -1801,7 +1802,8 @@ NIL if no such list exists."
   ("sign"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'warning-mothership)))
+   (comp:render :material 'warning-mothership
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "title-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
@@ -1809,7 +1811,8 @@ NIL if no such list exists."
   ("sign"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'title)))
+   (comp:render :material 'title
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "game-over-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
@@ -1817,7 +1820,8 @@ NIL if no such list exists."
   ("sign"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'game-over)))
+   (comp:render :material 'game-over
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "level-complete-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
@@ -1825,7 +1829,8 @@ NIL if no such list exists."
   ("sign"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'level-complete)))
+   (comp:render :material 'level-complete
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "starfield" (:library ptp)
   (comp:transform :scale 960f0
@@ -1834,7 +1839,8 @@ NIL if no such list exists."
                   :translate (v3:vec 0f0 0f0 (dl :starfield)))
   (comp:mesh :asset '(v::meshes v::primitives)
              :name "plane")
-  (comp:render :material 'starfield))
+  (comp:render :material 'starfield
+               :slave (v:ref :self :component 'comp:mesh)))
 
 (v:define-prefab "time-keeper" (:library ptp)
   (comp:transform :translate (v3:vec 900f0 -512f0 (dl :time-keeper)))
@@ -1854,7 +1860,8 @@ NIL if no such list exists."
     ;; TODO: when 'time-bar is mis-spelled in the material,
     ;; I don't get the debug material, why?
     ;; TODO: I think this material is leaked when this object is destroyed.
-    (comp:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-"))))))
+    (comp:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-"))
+                 :slave (v:ref :self :component 'comp:mesh)))))
 
 (v:define-prefab "demo-level" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field))

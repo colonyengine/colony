@@ -30,4 +30,4 @@
                    :scale (v3:vec 20f0 20f0 20f0))
    (comp:geometry :geometry 'tile)
    (comp:render :material 'dynamic-geometry
-                :mode :geometry)))
+                :slave (v:ref :self :component 'comp:geometry))))

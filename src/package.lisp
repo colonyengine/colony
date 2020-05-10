@@ -262,6 +262,7 @@
    #:on-component-destroy
    #:on-component-initialize
    #:on-component-physics-update
+   #:on-component-slave-render
    #:on-component-render
    #:on-component-update)
   ;; spritesheet

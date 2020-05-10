@@ -88,7 +88,7 @@
                                                    ,(a:make-gensym '#:sprite)
                                                    :uniforms
                                                    ((:sprite.sampler sprites)))
-                                       :mode :sprite)))
+                                       :slave sprite)))
         (v:attach-components
          new-actor transform shot-mover sprite render)
         (v:spawn-actor new-actor)
@@ -108,7 +108,7 @@
     (comp:render :material `(x:sprite
                              ,(a:make-gensym '#:sprite)
                              :uniforms ((:sprite.sampler sprites)))
-                 :mode :sprite)
+                 :slave (v:ref :self :component'comp:sprite))
     ("exhaust"
      (comp:transform :translate (v3:vec 0f0 -140f0 0f0))
      (comp:sprite :spec '(metadata sprites)
@@ -118,4 +118,4 @@
      (comp:render :material `(x:sprite
                               ,(a:make-gensym '#:sprite)
                               :uniforms ((:sprite.sampler sprites)))
-                  :mode :sprite)))))
+                  :slave (v:ref :self :component'comp:sprite))))))

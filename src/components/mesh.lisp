@@ -26,3 +26,7 @@
       (unless mesh
         (error "Mesh name ~s not found in mesh file ~s." %name path))
       (setf %primitive (aref (v::primitives mesh) %index)))))
+
+(defmethod v:on-component-slave-render ((master render) (self mesh))
+  (let ((instance-count (v::instances (comp:material master))))
+    (funcall (v::draw-func (primitive self)) instance-count)))

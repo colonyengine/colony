@@ -21,4 +21,5 @@
 (v:define-prefab "mesh" (:library ptp-base)
   (comp:mesh :asset '(v::meshes v::primitives)
              :name "plane")
-  (comp:render :material 'x:unlit-texture))
+  (comp:render :material 'x:unlit-texture
+               :slave (v:ref :self :component 'comp:mesh)))

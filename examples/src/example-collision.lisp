@@ -169,7 +169,8 @@
                  :on-layer :player
                  :center (v3:vec)
                  :radius 1f0)
-    (comp:render :material '2d-wood)))
+    (comp:render :material '2d-wood
+                 :slave (v:ref :self :component 'comp:mesh))))
   ("rot-1-center"
    (comp:transform :translate (v3:vec 2f0 0f0 0f0)
                    :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi)))
@@ -182,7 +183,8 @@
                  :on-layer :enemy
                  :center (v3:vec)
                  :radius 1f0)
-    (comp:render :material '2d-wood))))
+    (comp:render :material '2d-wood
+                 :slave (v:ref :self :component 'comp:mesh)))))
 
 (v:define-prefab "collision-transform-test-0" (:library examples)
   "This test just prints out the directions of the actor transform. Since
@@ -204,14 +206,17 @@ unit world vector representations of the axis directions as:
    (unit-test-transform-api :test-type :test-direction-vectors)
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material '2d-wood)))
+   (comp:render :material '2d-wood
+                :slave (v:ref :self :component 'comp:mesh))))
 
+;; TODO: This currently fails. Compute this math by hand and verify if the math
+;; or the test is correct.
 (v:define-prefab "collision-transform-test-1" (:library examples)
   "This test checks to see if we can move in and out of object space and
 world space for a particular transform."
 
   (("camera" :copy "/cameras/perspective")
-   (comp:camera (:policy :new-args) :zoom 7f0))
+   (comp:camera (:policy :new-args) :zoom 3.5f0))
 
   ("right"
    (comp:transform :translate (v3:vec 1f0 0f0 0f0))
@@ -226,7 +231,8 @@ world space for a particular transform."
       (unit-test-transform-api :test-type :test-transform-api)
       (comp:mesh :asset '(v::meshes v::primitives)
                  :name "plane")
-      (comp:render :material '2d-wood))))))
+      (comp:render :material '2d-wood
+                   :slave (v:ref :self :component 'comp:mesh)))))))
 
 
 (v:define-prefab "collision-test-0" (:library examples)
@@ -249,7 +255,8 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (comp:transform :translate (v3:vec -1.15f0 2f0 -.1f0))
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material '2d-wood)
+   (comp:render :material '2d-wood
+                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Left-Gate"
                 :visualize t
                 :on-layer :ground))
@@ -257,7 +264,8 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (comp:transform :translate (v3:vec 1.15f0 2f0 -.1f0))
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material '2d-wood)
+   (comp:render :material '2d-wood
+                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Right-Gate"
                 :visualize t
                 :on-layer :ground))
@@ -277,7 +285,8 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
                                  :component 'destroy-my-actor)
                 :center (v3:vec)
                 :radius 1f0)
-   (comp:render :material 'damaged-helmet))
+   (comp:render :material 'damaged-helmet
+                :slave (v:ref :self :component 'comp:mesh)))
   ("ground"
    (comp:transform :translate (v3:vec 0f0 -2f0 0.1f0))
    (comp:mesh :asset '(v::meshes v::primitives)
@@ -287,18 +296,20 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
                 :on-layer :ground
                 :center (v3:vec)
                 :radius 1f0)
-   (comp:render :material '2d-wood)))
+   (comp:render :material '2d-wood
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "collision-test-1" (:library examples)
   "This test demonstrates that at frame 0 colliders that should be colliding
 actually are. You have to view the results to see the colliders lighting up."
   (("camera" :copy "/cameras/perspective")
-   (comp:camera (:policy :new-args) :zoom 7f0))
+   (comp:camera (:policy :new-args) :zoom 4f0))
   ("upper-left"
    (comp:transform :translate (v3:vec -2f0 2f0 -0.1f0))
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material '2d-wood)
+   (comp:render :material '2d-wood
+                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Upper-Left"
                 :visualize t
                 :on-layer :ground))
@@ -306,7 +317,8 @@ actually are. You have to view the results to see the colliders lighting up."
    (comp:transform :translate (v3:vec 2f0 2f0 -0.1f0))
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material '2d-wood)
+   (comp:render :material '2d-wood
+                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Upper-Right"
                 :visualize t
                 :on-layer :ground))
@@ -314,7 +326,8 @@ actually are. You have to view the results to see the colliders lighting up."
    (comp:transform :translate (v3:vec -2f0 -2f0 -0.1f0))
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material '2d-wood)
+   (comp:render :material '2d-wood
+                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Lower-Left"
                 :visualize t
                 :on-layer :ground))
@@ -322,7 +335,8 @@ actually are. You have to view the results to see the colliders lighting up."
    (comp:transform :translate (v3:vec 2f0 -2f0 -0.1f0))
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material '2d-wood)
+   (comp:render :material '2d-wood
+                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Lower-Right"
                 :visualize t
                 :on-layer :ground))
@@ -340,11 +354,12 @@ actually are. You have to view the results to see the colliders lighting up."
                 :on-layer :player
                 :center (v3:vec)
                 :radius 1f0)
-   (comp:render :material 'damaged-helmet)))
+   (comp:render :material 'damaged-helmet
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "collision-test-2" (:library examples)
   (("camera" :copy "/cameras/perspective")
-   (comp:camera (:policy :new-args) :zoom 7f0))
+   (comp:camera (:policy :new-args) :zoom 3f0))
   ("a"
    (comp:transform :translate (v3:vec -5f0 0f0 0f0)
                    :translate/velocity (v3:vec 0f0 0f0 0f0)
@@ -365,7 +380,8 @@ actually are. You have to view the results to see the colliders lighting up."
                  :maxy 1f0
                  :minz -1f0
                  :maxz 1f0)
-    (comp:render :material 'damaged-helmet)))
+    (comp:render :material 'damaged-helmet
+                 :slave (v:ref :self :component 'comp:mesh))))
   ("b"
    (comp:transform :translate (v3:vec 5f0 0f0 0f0)
                    :translate/velocity (v3:vec 0f0 0f0 0f0)
@@ -381,7 +397,8 @@ actually are. You have to view the results to see the colliders lighting up."
                  :on-layer :ground
                  :center (v3:vec)
                  :radius 1.25f0)
-    (comp:render :material 'damaged-helmet))))
+    (comp:render :material 'damaged-helmet
+                 :slave (v:ref :self :component 'comp:mesh)))))
 
 (v:define-prefab "collision-test-3" (:library examples)
   (("camera" :copy "/cameras/ortho")

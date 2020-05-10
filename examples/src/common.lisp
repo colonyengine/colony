@@ -46,7 +46,8 @@
 (v:define-prefab "mesh" (:library examples)
   (comp:mesh :asset '(v::meshes v::primitives)
              :name "plane")
-  (comp:render :material 'x:unlit-texture))
+  (comp:render :material 'x:unlit-texture
+               :slave (v:ref :self :component 'comp:mesh)))
 
 ;;; Graphs
 

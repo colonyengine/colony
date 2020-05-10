@@ -79,35 +79,40 @@
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)))
-   (comp:render :material 'art1)))
+   (comp:render :material 'art1
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "art2" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)))
-   (comp:render :material 'art2)))
+   (comp:render :material 'art2
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "art3" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)))
-   (comp:render :material 'art3)))
+   (comp:render :material 'art3
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "art4" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)))
-   (comp:render :material 'art4)))
+   (comp:render :material 'art4
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "art5" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)))
-   (comp:render :material 'art5)))
+   (comp:render :material 'art5
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "art6" (:library examples)
   (("camera" :copy "/cameras/ortho"))
@@ -115,4 +120,5 @@
    (mouse-shader-input)
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)))
-   (comp:render :material 'art6)))
+   (comp:render :material 'art6
+                :slave (v:ref :self :component 'comp:mesh))))

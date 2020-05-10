@@ -23,7 +23,8 @@
   (("graph" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)))
-   (comp:render :material 'graph)))
+   (comp:render :material 'graph
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "3d-graph-1" (:library examples)
   (("camera" :copy "/cameras/perspective")
@@ -35,7 +36,8 @@
                             3d-graph-1
                             :shader ex/shd:3d-graph-1
                             :instances 100000
-                            :uniforms ((:size 0.5f0))))))
+                            :uniforms ((:size 0.5f0)))
+                :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "3d-graph-2" (:library examples)
   (("camera" :copy "/cameras/perspective")
@@ -48,4 +50,5 @@
                             3d-graph-2
                             :shader ex/shd:3d-graph-2
                             :instances 100000
-                            :uniforms ((:size 1))))))
+                            :uniforms ((:size 1)))
+                :slave (v:ref :self :component 'comp:mesh))))

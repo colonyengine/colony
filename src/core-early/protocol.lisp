@@ -30,6 +30,8 @@ long the thing has yet to live, with NIL meaning infinity."))
 
 (defgeneric on-component-render (component))
 
+(defgeneric on-component-slave-render (renderer component))
+
 (defgeneric on-component-destroy (component))
 
 ;;; Collider

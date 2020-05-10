@@ -241,25 +241,31 @@
 
 (v:define-prefab "texture" (:library examples :policy :new-type)
   (("camera" :copy "/cameras/perspective")
-   (comp:camera (:policy :new-args) :zoom 6f0))
+   (comp:camera (:policy :new-args) :zoom 3f0))
   (("1d-texture" :copy "/mesh")
    (comp:transform :translate (v3:vec -4f0 3f0 0f0))
-   (comp:render :material '1d-gradient))
+   (comp:render :material '1d-gradient
+                :slave (v:ref :self :component 'comp:mesh)))
   (("2d-texture" :copy "/mesh")
    (comp:transform :translate (v3:vec -2f0 3f0 0f0))
-   (comp:render :material '2d-wood))
+   (comp:render :material '2d-wood
+                :slave (v:ref :self :component 'comp:mesh)))
   (("3d-texture" :copy "/mesh")
    (comp:transform :translate (v3:vec 0f0 3f0 0f0))
-   (comp:render :material '3d))
+   (comp:render :material '3d
+                :slave (v:ref :self :component 'comp:mesh)))
   (("1d-array-texture" :copy "/mesh")
    (comp:transform :translate (v3:vec 2f0 3f0 0f0))
-   (comp:render :material '1d-array))
+   (comp:render :material '1d-array
+                :slave (v:ref :self :component 'comp:mesh)))
   (("2d-array-texture" :copy "/mesh")
    (comp:transform :translate (v3:vec 4f0 3f0 0f0))
-   (comp:render :material '2d-array))
+   (comp:render :material '2d-array
+                :slave (v:ref :self :component 'comp:mesh)))
   (("swept-input" :copy "/mesh")
    (comp:transform :translate (v3:vec -4f0 1f0 0f0))
-   (comp:render :material '2d-sweep-input)
+   (comp:render :material '2d-sweep-input
+                :slave (v:ref :self :component 'comp:mesh))
    (shader-sweep))
   (("cube-map" :copy "/mesh")
    (comp:transform :translate (v3:vec 0f0 -1f0 0f0)
@@ -268,10 +274,12 @@
                                      :z o:pi/4))
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "cube")
-   (comp:render :material 'cubemap))
+   (comp:render :material 'cubemap
+                :slave (v:ref :self :component 'comp:mesh)))
   (("cube-map-array" :copy "/mesh")
    (comp:transform :translate (v3:vec 3f0 -1f0 0f0)
                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi))
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "cube")
-   (comp:render :material 'cubemaparray)))
+   (comp:render :material 'cubemaparray
+                :slave (v:ref :self :component 'comp:mesh))))
