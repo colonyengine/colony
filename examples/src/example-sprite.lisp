@@ -76,7 +76,7 @@
                                           :translate parent-translation
                                           :rotate parent-rotation))
              (shot-mover (v:make-component context 'shot-mover
-					   :velocity 1000f0))
+                                           :velocity 1000f0))
              (sprite (v:make-component context
                                        'comp:sprite
                                        :spec '(metadata sprites)

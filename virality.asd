@@ -147,6 +147,7 @@
      (:file "transform-state")
      (:file "transform-protocol")
      (:file "free-look-state")
+     (:file "spritesheet")
      (:file "engine")))
    (:module "definition"
     :components

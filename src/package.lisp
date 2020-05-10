@@ -263,7 +263,13 @@
    #:on-component-initialize
    #:on-component-physics-update
    #:on-component-render
-   #:on-component-update))
+   #:on-component-update)
+  ;; spritesheet
+  (:export
+   #:find-sprite
+   #:make-spritesheet
+   #:spritesheet
+   #:update-spritesheet-shader))
 
 (defpackage #:virality.nicknames
   (:use #:cl)

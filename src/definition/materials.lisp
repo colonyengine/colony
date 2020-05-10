@@ -32,6 +32,7 @@
   (:profiles (u-mvp)
    :shader umbra.sprite:sprite
    :uniforms ((:sprite.sampler 'x:debug-texture)
+              (:sprite.index 0)
               (:opacity 1.0))
    :blocks ((:block-name :spritesheet
              :storage-type :buffer
