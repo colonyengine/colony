@@ -86,7 +86,7 @@
          (local->world (v:transform-point self object-space-point))
          (world->local (v:transform-point self
                                           world-space-point
-                                          :space :world)))
+                                          :space :model)))
     ;; See if transform-point works.
     (let ((result-0 (v3:~ local->world world-space-point))
           (result-1 (v3:~ world->local object-space-point)))
@@ -108,7 +108,7 @@
          (local->world (v:transform-vector self object-space-vector))
          (world->local (v:transform-vector self
                                            world-space-vector
-                                           :space :world)))
+                                           :space :model)))
     ;; See if transform-vector works.
     (let ((result-0
             (v3:~ local->world world-space-vector))
@@ -133,7 +133,7 @@
          (local->world (v:transform-direction self object-space-direction))
          (world->local (v:transform-direction self
                                               world-space-direction
-                                              :space :world)))
+                                              :space :model)))
     ;; See if transform-direction works.
     (let ((result-0
             (v3:~ local->world world-space-direction))

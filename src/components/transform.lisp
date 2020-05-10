@@ -110,13 +110,13 @@
 (defun %translate (transform vec space replace instant)
   (let ((state (translation transform)))
     (ecase space
-      (:model
+      (:local
        (v3:+! (v::current state)
               (if replace v3:+zero+ (v::current state))
               vec)
        (when instant
          (v3:copy! (v::previous state) (v::current state))))
-      (:world (error "TRANSLATE not yet implemented for world space.")))))
+      (:model (error "TRANSLATE not yet implemented for world space.")))))
 
 (defun %translate/velocity (transform axis rate)
   (let ((state (translation transform)))
@@ -125,13 +125,13 @@
 (defun %rotate (transform quat space replace instant)
   (let ((state (rotation transform)))
     (ecase space
-      (:model
+      (:local
        (q:rotate! (v::current state)
                   (if replace q:+id+ (v::current state))
                   quat)
        (when instant
          (q:copy! (v::previous state) (v::current state))))
-      (:world (error "ROTATE not yet implemented for world space.")))))
+      (:model (error "ROTATE not yet implemented for world space.")))))
 
 (defun %rotate/velocity (transform axis rate)
   (let ((state (rotation transform)))
@@ -140,13 +140,13 @@
 (defun %scale (transform vec space replace instant)
   (let ((state (scale transform)))
     (ecase space
-      (:model
+      (:local
        (v3:+! (v::current state)
               (if replace v3:+zero+ (v::current state))
               vec)
        (when instant
          (v3:copy! (v::previous state) (v::current state))))
-      (:world (error "SCALE not yet implemented for world space.")))))
+      (:model (error "SCALE not yet implemented for world space.")))))
 
 (defun %scale/velocity (transform axis rate)
   (let ((state (scale transform)))
@@ -157,8 +157,8 @@
     (v3:with-components ((v point))
       (~:.xyz
        (ecase space
-         (:model (m4:*v4 model (v4:vec vx vy vz 1)))
-         (:world (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
+         (:local (m4:*v4 model (v4:vec vx vy vz 1)))
+         (:model (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
 
 (defun %transform-vector (transform vector space)
   (let ((model (m4:copy (model transform))))
@@ -166,8 +166,8 @@
       (m4:set-translation! model model v3:+zero+)
       (~:.xyz
        (ecase space
-         (:model (m4:*v4 model (v4:vec vx vy vz 1)))
-         (:world (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
+         (:local (m4:*v4 model (v4:vec vx vy vz 1)))
+         (:model (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
 
 (defun %transform-direction (transform direction space)
   (let ((model (m4:copy (model transform))))
@@ -176,8 +176,8 @@
       (m4:normalize-rotation! model model)
       (~:.xyz
        (ecase space
-         (:model (m4:*v4 model (v4:vec vx vy vz 1)))
-         (:world (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
+         (:local (m4:*v4 model (v4:vec vx vy vz 1)))
+         (:model (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
 
 (defun %transform-forward (transform)
   (v3:negate (m4:rotation-axis-to-vec3 (model transform) :z)))
