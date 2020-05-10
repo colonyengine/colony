@@ -250,7 +250,7 @@ a test. After it disappears, nothing else happens. TODO: Make a spawner object
 that just spawns stone prefabs so they rain down onto the ground, which should
 be made bigger. to accomodate it. Maybe some fragments too when it hits..."
   (("camera" :copy "/cameras/perspective")
-   (comp:camera (:policy :new-args) :zoom 7f0))
+   (comp:camera (:policy :new-args) :zoom 4f0))
   ("left-gate"
    (comp:transform :translate (v3:vec -1.15f0 2f0 -.1f0))
    (comp:mesh :asset '(v::meshes v::primitives)

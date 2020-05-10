@@ -14,7 +14,7 @@
      (comp:camera :active-p t
                   :clip-near .1f0
                   :clip-far 1024f0
-                  :zoom 100f0
+                  :zoom 50f0
                   :mode :orthographic))))
   ;; TODO: Can't use this, because of transform propogation bug.
   ;; Once that is fixed I can bring this back in.
