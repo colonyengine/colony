@@ -16,8 +16,8 @@
    (%merge-id :reader merge-id
               :initarg :merge-id)))
 
-(defun ref (id &key component-type merge-id)
-  (declare (ignore id component-type merge-id))
+(defun ref (id &key component merge-id)
+  (declare (ignore id component merge-id))
   (u:noop))
 
 (defun parse-reference-path/absolute (reference)

@@ -43,11 +43,15 @@
 (defmacro inject-ref-environment (&body body)
   `(let (actor-table component-table current-actor current-component)
      (flet ((ref (&rest args)
-              (lookup-reference args
-                                current-actor
-                                current-component
-                                actor-table
-                                component-table)))
+              (when args
+                (lookup-reference args
+                                  current-actor
+                                  current-component
+                                  actor-table
+                                  component-table))))
+       ;; NOTE: If a prefab doesn't make a ref, this just removes a DCE note on
+       ;; SBCL.
+       (ref)
        ,@body)))
 
 (defmethod documentation ((object string) (doc-type symbol))
