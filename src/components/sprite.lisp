@@ -28,7 +28,7 @@
 (defmethod v:on-component-initialize ((self sprite))
   (with-slots (%name %spec %spritesheet %index %initial-index) self
     (let ((context (v:context self))
-          (spec (a:ensure-list %spec)))
+          (spec (u:ensure-list %spec)))
       (unless %name
         (error "A sprite component must have a name."))
       (unless spec
@@ -49,7 +49,7 @@
           (let* ((step (/ %elapsed %duration))
                  (min %initial-index)
                  (max (1- (+ min %frames)))
-                 (index (floor (a:clamp (a:lerp step min (1+ max)) min max))))
+                 (index (floor (u:clamp (u:lerp step min (1+ max)) min max))))
             (setf %index index))))))
 
 (defmethod v:on-component-slave-render ((master render) (self sprite))

@@ -30,7 +30,7 @@
 ;;; Query table management
 
 (defun register-kernel-uuid (kernel)
-  (a:if-let ((table (kernels-by-uuid (tables (core kernel))))
+  (u:if-let ((table (kernels-by-uuid (tables (core kernel))))
              (uuid (uuid kernel)))
     (symbol-macrolet ((found (u:href table uuid)))
       (u:if-found (found (u:href table uuid))
@@ -42,14 +42,14 @@
            kernel)))
 
 (defmethod register-kernel-id ((kernel actor))
-  (a:when-let ((table (actors-by-id (tables (core kernel))))
+  (u:when-let ((table (actors-by-id (tables (core kernel))))
                (id (id kernel)))
     (unless (u:href table id)
       (setf (u:href table id) (u:dict #'eq)))
     (setf (u:href table id kernel) kernel)))
 
 (defmethod register-kernel-id ((kernel component))
-  (a:when-let ((table (components-by-id (tables (core kernel))))
+  (u:when-let ((table (components-by-id (tables (core kernel))))
                (id (id kernel)))
     (unless (u:href table id)
       (setf (u:href table id) (u:dict #'eq)))
@@ -59,7 +59,7 @@
   (remhash (uuid kernel) (kernels-by-uuid (tables (core kernel)))))
 
 (defmethod deregister-kernel-id ((kernel actor))
-  (a:when-let ((table (actors-by-id (tables (core kernel))))
+  (u:when-let ((table (actors-by-id (tables (core kernel))))
                (id (id kernel)))
     (symbol-macrolet ((actors (u:href table id)))
       (remhash kernel actors)
@@ -67,7 +67,7 @@
         (remhash id table)))))
 
 (defmethod deregister-kernel-id ((kernel component))
-  (a:when-let ((table (components-by-id (tables (core kernel))))
+  (u:when-let ((table (components-by-id (tables (core kernel))))
                (id (id kernel)))
     (symbol-macrolet ((components (u:href table id)))
       (remhash kernel components)
@@ -96,13 +96,13 @@
 
 (defun find-actors-by-id (context id)
   "Return a list of all actor instances with the given `ID`."
-  (a:when-let* ((table (actors-by-id (tables (core context))))
+  (u:when-let* ((table (actors-by-id (tables (core context))))
                 (by-id (u:href table id)))
     (u:hash-values by-id)))
 
 (defun find-components-by-id (context id)
   "Return a list of all component instances with the given `ID`."
-  (a:when-let* ((table (components-by-id (tables (core context))))
+  (u:when-let* ((table (components-by-id (tables (core context))))
                 (by-id (u:href table id)))
     (u:hash-values by-id)))
 

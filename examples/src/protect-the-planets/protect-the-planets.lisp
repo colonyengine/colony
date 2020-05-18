@@ -7,7 +7,7 @@
 
 ;; "Protect the Planets!"
 ;; by Peter Keller (psilord@cs.wisc.edu)
-;; With significant contributions by: Michael Fiano (mail@michaelfiano.com)
+;; With significant contributions by: Michael Fiano (mail@mfiano.net)
 ;;
 ;; Requirements: gamepad, preferably xbox/ps4 like, linux, gtx 660 or better but
 ;; nvidia gpus are not specifically required.
@@ -263,7 +263,7 @@
            ;; Compute the actual translation vector related to our frame time!
            (vec (v3:scale
                  vec
-                 (float (* (a:lerp ty max-velocity (/ max-velocity 2f0))
+                 (float (* (u:lerp ty max-velocity (/ max-velocity 2f0))
                            (v:frame-time context))
                         1f0)))
            ;; and ensure we clip the translation vector so we can't go out of
@@ -980,7 +980,7 @@ SELF instance which must be a TAGS component."
 (defmethod tags-has-tag-p ((self v:actor) query-tag)
   "Return T if there is a tags component on the SELF actor and it also
 contains the QUERY-TAG."
-  (a:when-let ((tags-component (v:component-by-type self 'tags)))
+  (u:when-let ((tags-component (v:component-by-type self 'tags)))
     (tags-has-tag-p tags-component query-tag)))
 
 ;; public API
@@ -988,7 +988,7 @@ contains the QUERY-TAG."
   "Return a list of actors that are tagged with the QUERY-TAG. Return
 NIL if no such list exists."
   (u:mvlet ((tag->actors actor->tags (tags-refs context)))
-    (a:when-let ((actors (u:href tag->actors query-tag)))
+    (u:when-let ((actors (u:href tag->actors query-tag)))
       (u:hash-keys actors))))
 
 (defmethod v:on-component-attach ((self tags) actor)
@@ -1051,7 +1051,7 @@ NIL if no such list exists."
                    (reported-to-level-manager reported-to-level-manager))
       planet
     ;; TODO: Maybe a change to tags API to shorten this idiomatic code?
-    (a:when-let ((actor-lvlmgr
+    (u:when-let ((actor-lvlmgr
                   (first (tags-find-actors-with-tag context :level-manager))))
       (let ((level-manager
               (v:component-by-type actor-lvlmgr 'level-manager)))
@@ -1210,7 +1210,7 @@ NIL if no such list exists."
       ;; Size the time bar in accordance to how much time is left.
       (v:scale time-bar-transform
                (v3:vec time-bar-width
-                       (a:lerp how-far-to-empty
+                       (u:lerp how-far-to-empty
                                time-bar-height-scale
                                0f0)
                        1f0)
@@ -1462,7 +1462,7 @@ NIL if no such list exists."
       ;; we need to do the work to show the demo level.
       (unless (eq state previous-state)
         ;; 0. If there is a player (like maybe you beat the game), destroy it.
-        (a:when-let ((players (tags-find-actors-with-tag context :player)))
+        (u:when-let ((players (tags-find-actors-with-tag context :player)))
           (dolist (player players)
             (v:destroy player)))
         ;; 1. Spawn the demo-level which includes the PtP sign and press play
@@ -1658,7 +1658,7 @@ NIL if no such list exists."
       self
     ;; If there is a player then destroy it, we'll let the rest of the state
     ;; machine deal with it resetting the internal state.
-    (a:when-let ((player (first (tags-find-actors-with-tag context :player))))
+    (u:when-let ((player (first (tags-find-actors-with-tag context :player))))
       (v:destroy player))
     (unless (eq state previous-state)
       (setf game-over-timer 0f0)

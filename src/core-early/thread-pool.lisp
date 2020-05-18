@@ -24,11 +24,11 @@
 
 (defun ensure-channel (purpose)
   (let ((channels (channels =thread-pool=)))
-    (a:ensure-gethash purpose channels (lparallel:make-channel))))
+    (u:ensure-gethash purpose channels (lparallel:make-channel))))
 
 (defun ensure-queue (purpose)
   (let ((queues (queues =thread-pool=)))
-    (a:ensure-gethash purpose queues (lparallel.queue:make-queue))))
+    (u:ensure-gethash purpose queues (lparallel.queue:make-queue))))
 
 (defun submit-job (purpose job &optional (priority :default))
   (when =thread-pool=

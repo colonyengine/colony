@@ -1,17 +1,13 @@
 (asdf:defsystem #:virality
   :description "An experimental game engine."
-  :author ("Michael Fiano <mail@michaelfiano.com>"
+  :author ("Michael Fiano <mail@mfiano.net>"
            "Peter Keller <psilord@cs.wisc.edu>")
-  :maintainer ("Michael Fiano <mail@michaelfiano.com>"
-               "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
-  :homepage "https://github.com/hackertheory/ViralityEngine"
-  :bug-tracker "https://github.com/hackertheory/ViralityEngine/issues"
-  :source-control (:git "https://github.com/hackertheory/ViralityEngine.git")
+  :homepage "https://github.com/bufferswap/ViralityEngine"
+  :bug-tracker "https://github.com/bufferswap/ViralityEngine/issues"
+  :source-control (:git "https://github.com/bufferswap/ViralityEngine")
   :encoding :utf-8
-  :depends-on (#:alexandria
-               #:printv
-               #:babel
+  :depends-on (#:babel
                #:cl-cpus
                #:cl-graph
                #:cl-opengl
@@ -20,19 +16,20 @@
                #:closer-mop
                #:fast-io
                #:global-vars
-               #:golden-utils
                #:jsown
                #:lparallel
-               #:origin
+               #:net.mfiano.lisp.golden-utils
+               #:net.mfiano.lisp.origin
+               #:net.mfiano.lisp.shadow
+               #:net.mfiano.lisp.umbra
                #:pngload
+               #:printv
                #:queues.simple-queue
                #:sdl2
-               #:shadow
                #:split-sequence
                #:static-vectors
                #:trivial-features
-               #:uiop
-               #:umbra)
+               #:uiop)
   :pathname "src"
   :serial t
   :components

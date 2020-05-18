@@ -47,7 +47,7 @@
       (m4:set-translation! %local %local (v::interpolated translation)))))
 
 (defun resolve-model (node factor)
-  (a:when-let ((parent (parent node)))
+  (u:when-let ((parent (parent node)))
     (resolve-local node factor)
     (m4:*! (model node) (model parent) (local node))))
 

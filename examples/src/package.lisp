@@ -2,8 +2,7 @@
 
 (defpackage #:virality-examples
   (:local-nicknames
-   (#:a #:alexandria)
-   (#:u #:golden-utils))
+   (#:u #:net.mfiano.lisp.golden-utils))
   (:use #:cl)
   (:export #:start))
 

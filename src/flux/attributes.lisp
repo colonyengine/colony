@@ -29,7 +29,7 @@
 (defmethod do-semantic-attributes ((attrs attributes) func)
   ;; First make a copy-ish of the hash table in case the func wants to modify
   ;; the hash table.
-  (u:do-hash (k v (a:copy-hash-table (semantic-attributes attrs)))
+  (u:do-hash (k v (u:copy-hash-table (semantic-attributes attrs)))
     (funcall func k v)))
 
 ;;; Computed attributes API
@@ -46,7 +46,7 @@
 (defmethod do-computed-attributes ((attrs attributes) func)
   ;; First make a copy-ish of the hash table in case the func wants to modify
   ;; the hash table.
-  (u:do-hash (k v (a:copy-hash-table (computed-attributes attrs)))
+  (u:do-hash (k v (u:copy-hash-table (computed-attributes attrs)))
     (funcall func k v)))
 
 ;;; Attribute computation and merging API

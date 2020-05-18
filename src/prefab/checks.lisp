@@ -145,7 +145,7 @@
                type x valid-options path)))))
 
 (defun ensure-component-policy (type options path)
-  (a:when-let ((policy (getf options :policy))
+  (u:when-let ((policy (getf options :policy))
                (valid-policies '(:new-type :old-type :new-args :old-args)))
     (unless (member policy valid-policies)
       (error "Component type ~s has an invalid policy: ~s.~%Valid policies: ~

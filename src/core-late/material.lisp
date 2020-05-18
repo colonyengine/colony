@@ -23,7 +23,7 @@ material used)."
     (u:mvlet ((material found-p (u:href table material-name)))
       (if found-p
           (values material t)
-          (values (u:href table (a:ensure-symbol "MISSING-MATERIAL" :x))
+          (values (u:href table (u:ensure-symbol "MISSING-MATERIAL" :x))
                   nil)))))
 
 (defun %add-material (material core)
@@ -304,7 +304,7 @@ CORE. Return a list of the return values of the FUNC."
 ;; TODO: these modify the semantic-buffer which then gets processed into a new
 ;; computed buffer.
 (defun uniform-ref (mat uniform-var)
-  (a:if-let ((material-uniform-value (u:href (uniforms mat) uniform-var)))
+  (u:if-let ((material-uniform-value (u:href (uniforms mat) uniform-var)))
     (semantic-value material-uniform-value)
     (error "Material ~s does not have the referenced uniform ~s.~%~
             Please add a uniform to the material, and/or check your material ~
@@ -314,7 +314,7 @@ CORE. Return a list of the return values of the FUNC."
 ;; We can only set the semantic-value, which gets automatically upgraded to the
 ;; computed-value upon setting.
 (defun (setf uniform-ref) (new-val mat uniform-var)
-  (a:if-let ((material-uniform-value (u:href (uniforms mat) uniform-var)))
+  (u:if-let ((material-uniform-value (u:href (uniforms mat) uniform-var)))
     (progn
       ;; TODO: Need to do something with the old computed value since it might
       ;; be consuming resources like when it is a sampler on the GPU.
@@ -437,7 +437,7 @@ and ignores the CONTEXT and MATERIAL arguments."
   "Return a function which creates a partially complete material instance.
 It is partially complete because it does not yet have the shader binder function
 available for it so BIND-UNIFORMS cannot yet be called on it."
-  (a:with-gensyms (matvar)
+  (u:with-gensyms (matvar)
     `(lambda (core)
        (let ((,matvar (%make-material ',name ',shader ,instances ',attributes
                                       ',profiles core)))
@@ -625,7 +625,7 @@ be executed after all the shader programs have been compiled."
    core))
 
 (defun parse-material-profile (name uniforms blocks)
-  (a:with-gensyms (matprof)
+  (u:with-gensyms (matprof)
     `(let* ((,matprof (%make-material-profile :name ',name)))
        ,(parse-material-uniforms matprof uniforms)
        ;; TODO: We prevent processing of blocks in material-profiles until we
@@ -639,7 +639,7 @@ be executed after all the shader programs have been compiled."
 (defmacro define-material-profile (name &body (body))
   "Define a set of uniform and block shader attribute defaults that can be
 applied in an overlay manner while defining a material."
-  (a:with-gensyms (profile)
+  (u:with-gensyms (profile)
     (destructuring-bind (&key uniforms blocks) body
       `(let ((,profile ,(parse-material-profile name uniforms blocks)))
          (setf (u:href =meta/material-profiles= (name ,profile))
@@ -684,7 +684,7 @@ applied in an overlay manner while defining a material."
 
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...
-  (a:with-gensyms (func)
+  (u:with-gensyms (func)
     (destructuring-bind (&key shader profiles (instances 1) attributes uniforms
                            blocks)
         body

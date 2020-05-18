@@ -27,7 +27,7 @@
          (progn ,@body))))
 
 (defmacro with-material (material (&rest bindings) &body body)
-  (a:with-gensyms (material-ref)
+  (u:with-gensyms (material-ref)
     `(let ((,material-ref ,material))
        (shadow:with-shader (v::shader ,material-ref)
          (setf ,@(loop :for (k v) :on bindings :by #'cddr
@@ -42,7 +42,7 @@
     (setf %transform (v:component-by-type (v:actor self) 'transform))))
 
 (defmethod v:on-component-render ((self render))
-  (a:when-let ((camera (v::active-camera (v:context self)))
+  (u:when-let ((camera (v::active-camera (v:context self)))
                (slave (slave self)))
     (with-material (material self)
         (:model (v:get-model-matrix self)

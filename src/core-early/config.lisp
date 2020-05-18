@@ -2,7 +2,7 @@
 
 (u:eval-always
   (defun get-config-option-name (key)
-    (a:format-symbol :virality "=~a=" key)))
+    (u:format-symbol :virality "=~a=" key)))
 
 (defun validate-config-options (options)
   (u:do-plist (k v options)

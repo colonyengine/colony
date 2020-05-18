@@ -29,14 +29,14 @@
       asset)))
 
 (defun find-asset-spec (pool-name spec-name)
-  (a:if-let ((pool (find-asset-pool pool-name)))
+  (u:if-let ((pool (find-asset-pool pool-name)))
     (or (u:href pool spec-name)
         (error "Asset ~s not found in pool ~s." spec-name pool-name))
     (error "Asset pool ~s does not exist." pool-name)))
 
 (defun get-asset-pool-system (pool-name)
   (let ((package-name (package-name (symbol-package pool-name))))
-    (or (asdf:find-system (a:make-keyword package-name) nil)
+    (or (asdf:find-system (u:make-keyword package-name) nil)
         (error "Asset pool ~s must be defined in a package with the same name ~
                 as its ASDF system."
                pool-name))))
@@ -54,7 +54,7 @@
       (some
        (lambda (x)
          (string= path-type (normalize-type x)))
-       (a:ensure-list filter)))))
+       (u:ensure-list filter)))))
 
 (defun update-asset-pool (pool-name path filter)
   (let ((pool (find-asset-pool pool-name)))
@@ -134,12 +134,12 @@
   (resolve-system-path asset :virality))
 
 (defmacro with-asset-cache (context type key &body body)
-  (a:with-gensyms (table value found-p)
+  (u:with-gensyms (table value found-p)
     `(symbol-macrolet ((,table (u:href (assets (core ,context)) ,type)))
        (u:mvlet ((,value ,found-p ,table))
          (unless ,found-p
            (setf ,table (u:dict #'equalp))))
-       (a:ensure-gethash ,key ,table (progn ,@body)))))
+       (u:ensure-gethash ,key ,table (progn ,@body)))))
 
 (define-asset-pool meshes ()
   :path "data/mesh"

@@ -234,7 +234,7 @@ null, and contains hyper edges, return values: list of hyper-edge pairs,
                          :finally (return subform-db)))))
 
 (defun add-cross-product-edges (clg source-list target-list)
-  (a:map-product
+  (u:map-product
    (lambda (v1 v2)
      (cl-graph:add-edge-between-vertexes clg v1 v2 :edge-type :directed))
    source-list
@@ -321,7 +321,7 @@ graphdef references holding real references to the named subforms."
 depends-on in that GDEF."
   (let ((splice-name (second splice-form)))
     ;; Check if the splice is natively in the current gdef.
-    (a:when-let ((splice (u:href (subforms gdef) splice-name)))
+    (u:when-let ((splice (u:href (subforms gdef) splice-name)))
       (return-from lookup-splice (values splice gdef)))
     ;; If it isn't, then check which depends-on in the current gdef
     (dolist (dep-inst (u:hash-values (depends-on gdef)))
@@ -423,7 +423,7 @@ depends-on in that GDEF."
             (lambda (vert) (cl-graph:in-cycle-p clg vert))))
          (annotation (make-graph-annotation
                       (category graph)
-                      :unknown-type-id (a:make-gensym "UNKNOWN-TYPE-ID-"))))
+                      :unknown-type-id (u:make-gensym "UNKNOWN-TYPE-ID-"))))
     ;; compute/store toposort, can only do if no cycles.
     (unless contains-cycles-p
       (let ((tsort (mapcar #'cl-graph:element (cl-graph:topological-sort clg))))
@@ -466,7 +466,7 @@ depends-on in that GDEF."
                 (format nil "^~a$" putative-package-name)))
          ;; Kind of a terrible Big-O...
          (dolist (pkg-name all-packages)
-           (a:when-let* ((matched-pkg-name (ppcre:scan-to-strings
+           (u:when-let* ((matched-pkg-name (ppcre:scan-to-strings
                                             putative-package-name-regex
                                             pkg-name))
                          (found-pkg (find-package matched-pkg-name)))

@@ -299,11 +299,11 @@
     (push (find-method #'shared-initialize '(:around) (list class t) nil)
           methods)
     (remove-duplicates
-     (union (a:mappend #'c2mop:slot-definition-initargs
+     (union (u:mappend #'c2mop:slot-definition-initargs
                        (c2mop:class-slots class))
             (mapcan
              (lambda (x)
-               (mapcar #'a:make-keyword
+               (mapcar #'u:make-keyword
                        (rest (member '&key (c2mop:method-lambda-list x)))))
              (remove nil methods))))))
 
@@ -457,7 +457,7 @@
                ss-meta))))))
 
 (defun get-computed-component-precedence-list (component-type)
-  (a:when-let ((class (find-class component-type nil)))
+  (u:when-let ((class (find-class component-type nil)))
     (loop :for class :in (c2mop:compute-class-precedence-list class)
           :for name = (class-name class)
           :until (eq name 'component)

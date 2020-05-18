@@ -70,7 +70,7 @@
            (destructuring-bind (&key id (display-id target) copy link policy)
                options
              (ensure-path-options-keys path options)
-             (a:if-let ((copy/link-form (or copy link)))
+             (u:if-let ((copy/link-form (or copy link)))
                (parse-copy/link library path target options)
                (direct-path target :id id
                                    :display-id display-id
@@ -102,10 +102,10 @@
                      (setf %id id
                            %display-id display-id
                            %options options)
-                     (a:appendf %components components)
+                     (u:appendf %components components)
                      (%make-nodes path children)))))
              (%expand-path (parts)
-               (a:when-let* ((parts (butlast parts))
+               (u:when-let* ((parts (butlast parts))
                              (path (format nil "/~{~a~^/~}" parts)))
                  (make-node prefab path)
                  (%expand-path parts))))
@@ -164,11 +164,11 @@
 
 (defun make-relationships (prefab)
   (flet ((get-parent (path)
-           (a:when-let ((path-parts (butlast (explode-path path))))
+           (u:when-let ((path-parts (butlast (explode-path path))))
              (make-node-path-from-parts path-parts))))
     (with-slots (%library) prefab
       (u:do-hash (path node (parse-tree prefab))
-        (a:when-let ((parent-path (get-parent path)))
+        (u:when-let ((parent-path (get-parent path)))
           (setf (slot-value node '%parent) (find-node parent-path %library)
                 (u:href (children (parent node)) path)
                 (find-node path %library)))))))

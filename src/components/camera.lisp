@@ -75,7 +75,7 @@
   (let* ((context (v:context (v::core display)))
          (camera (find-active-camera context)))
     (with-slots (%zoom %mode) camera
-      (setf %zoom (a:clamp (+ %zoom (/ direction 2f0)) 1f0 10f0))
+      (setf %zoom (u:clamp (+ %zoom (/ direction 2f0)) 1f0 10f0))
       (make-projection %mode camera))))
 
 ;;; Component event hooks
@@ -100,5 +100,5 @@
 
 (defmethod v:on-component-destroy ((self camera))
   (let ((context (v:context self)))
-    (a:deletef (v::cameras (v::core self)) self)
+    (u:deletef (v::cameras (v::core self)) self)
     (setf (v::active-camera context) nil)))

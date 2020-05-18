@@ -15,7 +15,9 @@
    #:ref))
 
 (uiop:define-package #:virality.shader
-  (:use-reexport #:shadow.glsl #:umbra.common))
+  (:use-reexport
+   #:net.mfiano.lisp.shadow.glsl
+   #:net.mfiano.lisp.umbra.common))
 
 (defpackage #:virality.extension
   (:use #:cl)
@@ -274,6 +276,8 @@
    #:update-spritesheet-shader))
 
 (defpackage #:virality.nicknames
+  (:local-nicknames
+   (#:u #:net.mfiano.lisp.golden-utils))
   (:use #:cl)
   (:import-from
    #+sbcl #:sb-ext
@@ -286,19 +290,24 @@
 
 (in-package #:virality.nicknames)
 
-(golden-utils:eval-always
+(u:eval-always
   (defvar *package-nicknames*
-    '((:alexandria :a)
-      (:origin :o)
-      (:origin.swizzle :~)
-      (:origin.vec2 :v2)
-      (:origin.vec3 :v3)
-      (:origin.vec4 :v4)
-      (:origin.mat2 :m2)
-      (:origin.mat3 :m3)
-      (:origin.mat4 :m4)
-      (:origin.quat :q)
-      (:golden-utils :u)
+    '((:net.mfiano.lisp.golden-utils :u)
+      (:net.mfiano.lisp.origin :o)
+      (:net.mfiano.lisp.origin.swizzle :~)
+      (:net.mfiano.lisp.origin.vec2 :v2)
+      (:net.mfiano.lisp.origin.vec3 :v3)
+      (:net.mfiano.lisp.origin.vec4 :v4)
+      (:net.mfiano.lisp.origin.mat2 :m2)
+      (:net.mfiano.lisp.origin.mat3 :m3)
+      (:net.mfiano.lisp.origin.mat4 :m4)
+      (:net.mfiano.lisp.origin.quat :q)
+      (:net.mfiano.lisp.shadow :shadow)
+      (:net.mfiano.lisp.umbra.color :umbra.color)
+      (:net.mfiano.lisp.umbra.graphing :umbra.graphing)
+      (:net.mfiano.lisp.umbra.noise :umbra.noise)
+      (:net.mfiano.lisp.umbra.sdf :umbra.sdf)
+      (:net.mfiano.lisp.umbra.sprite :umbra.sprite)
       (:virality.component :comp)
       (:virality :v)
       (:virality.extension :x)

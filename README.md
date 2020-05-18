@@ -65,15 +65,11 @@ There are many more examples.
 
 ## License
 
-Copyright © 2017-2018
+Copyright © 2017-2020
 
-* Michael Fiano <mail@michaelfiano.com>
+* Michael Fiano <mail@mfiano.net>
 
 * Peter Keller <psilord@cs.wisc.edu>
-
-* Bart Botta <00003b@gmail.com>
-
-* Elijah Malaby <djeis>
 
 Licensed under the MIT License.
 

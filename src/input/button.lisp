@@ -17,7 +17,7 @@
     (push input (u:href (entering data) :button))))
 
 (defun button-transition-out (data input)
-  (a:when-let ((state (u:href (states data) input)))
+  (u:when-let ((state (u:href (states data) input)))
     (setf (button-state-enter state) nil
           (button-state-enabled state) nil
           (button-state-exit state) t)
@@ -42,16 +42,16 @@
     (setf exiting nil)))
 
 (defun on-button-enter (context &rest args)
-  (a:when-let* ((data (input-data (core context)))
+  (u:when-let* ((data (input-data (core context)))
                 (state (u:href (states data) args)))
     (button-state-enter state)))
 
 (defun on-button-enabled (context &rest args)
-  (a:when-let* ((data (input-data (core context)))
+  (u:when-let* ((data (input-data (core context)))
                 (state (u:href (states data) args)))
     (button-state-enabled state)))
 
 (defun on-button-exit (context &rest args)
-  (a:when-let* ((data (input-data (core context)))
+  (u:when-let* ((data (input-data (core context)))
                 (state (u:href (states data) args)))
     (button-state-exit state)))

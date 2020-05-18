@@ -33,7 +33,7 @@
 (defun generate-reset-function (symbols values)
   (let* ((tmp-symbols
            (loop :for symbol :in symbols
-                 :collect (a:format-symbol nil "~a-ONCE-ONLY"
+                 :collect (u:format-symbol nil "~a-ONCE-ONLY"
                                            (symbol-name symbol))))
          (once-only-bindings (mapcar
                               (lambda (tsym value) `(,tsym ,value))
@@ -105,7 +105,7 @@ flow-state CLOS instance for it."
 containing each flow-state indexed by name."
   (destructuring-bind (match flow-name . flow-states) form
     (multiple-value-bind (binds ignores) (get-flow-state-variables flow-states)
-      (let ((flow-table (a:make-gensym '#:flow-table)))
+      (let ((flow-table (u:make-gensym '#:flow-table)))
         (ensure-matched-symbol match "flow")
         `(,flow-name
           (let ((,flow-table (u:dict #'eq))
@@ -119,7 +119,7 @@ containing each flow-state indexed by name."
 (defun parse-call-flows (form)
   "Parse an entire call-flow and return a list of the name of it and a form
 which evaluates to a hash table of flows keyed by their name."
-  (let ((call-flows (a:make-gensym '#:call-flows)))
+  (let ((call-flows (u:make-gensym '#:call-flows)))
     `(let ((,call-flows (u:dict #'eq)))
        ,@(loop :for (name flow) :in (mapcar #'parse-flow form)
                :collect `(setf (u:href ,call-flows ',name) ,flow))
@@ -172,7 +172,7 @@ name which resulted in the exiting of the flow."
            ;; type-table instance (more semantics for :type-policy could be
            ;; added at a later date).
            (labels ((act-on-item (item)
-                      (a:when-let ((action (action flow-state)))
+                      (u:when-let ((action (action flow-state)))
                         (etypecase item
                           (hash-table (u:do-hash-values (v item)
                                         (funcall action v)))

@@ -7,8 +7,8 @@
         (let ((body (list*
                      `(declare (ignorable ,@(u:plist-values options)))
                      body)))
-          (dolist (type (a:ensure-list type))
-            (a:when-let ((x (sdl2::expand-handler event type options body)))
+          (dolist (type (u:ensure-list type))
+            (u:when-let ((x (sdl2::expand-handler event type options body)))
               (push x events))))))
     `(case (sdl2:get-event-type ,event)
        ,@(nreverse events))))

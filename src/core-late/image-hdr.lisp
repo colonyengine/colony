@@ -58,11 +58,11 @@
                         (string/= line "")
                         (char/= #\# (char line 0)))
                (let* ((delimiter (position #\= line))
-                      (key (a:make-keyword
+                      (key (u:make-keyword
                             (string-upcase (trim (subseq line 0 delimiter)))))
                       (value (trim (subseq line (1+ delimiter)))))
                  (when (eq key :format)
-                   (let ((format (a:make-keyword
+                   (let ((format (u:make-keyword
                                   (subseq (string-upcase value) 11 14))))
                      (unless (eq format :rgb)
                        (error "Unsupported HDR color space: ~a." format))

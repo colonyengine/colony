@@ -19,7 +19,7 @@
           :initform nil)))
 
 (defun get-image-type (path)
-  (a:make-keyword (string-upcase (pathname-type path))))
+  (u:make-keyword (string-upcase (pathname-type path))))
 
 (defgeneric %load-image (type path)
   (:method (type path)

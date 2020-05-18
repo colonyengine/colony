@@ -423,7 +423,7 @@ assign it to the computed texture descriptor slot in TEXTURE."
 for TEXTURE-NAME from disk (or elsewhere) and the uploading of it to the GPU.
 If TEXTURE-NAME does not resolve to a known semantic texture descriptor then
 return the TEXTURE instance for the debug-texture."
-  (a:if-let ((semantic-texdesc
+  (u:if-let ((semantic-texdesc
               (find-semantic-texture-descriptor
                (semantic-texture-name texture-name) context)))
     (let* ((id (gl:gen-texture))
@@ -463,7 +463,7 @@ return the TEXTURE instance for the debug-texture."
   texture)
 
 (defun parse-texture-profile (name body-form)
-  (a:with-gensyms (texprof)
+  (u:with-gensyms (texprof)
     `(let* ((,texprof (make-texture-profile :name ',name)))
        (setf ,@(loop :for (attribute value) :in body-form
                      :appending `((u:href (attributes ,texprof) ,attribute)
@@ -473,7 +473,7 @@ return the TEXTURE instance for the debug-texture."
 (defmacro define-texture-profile (name &body body)
   "Define a set of attribute defaults that can be applied while defining a
 texture."
-  (a:with-gensyms (profile)
+  (u:with-gensyms (profile)
     `(let ((,profile ,(parse-texture-profile name body)))
        (setf (u:href v::=meta/texture-profiles= (name ,profile)) ,profile))))
 
@@ -506,7 +506,7 @@ texture."
 
 (defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
   "Construct a semantic TEXTURE-DESCRIPTOR. "
-  (a:with-gensyms (desc-lookup old-desc new-desc)
+  (u:with-gensyms (desc-lookup old-desc new-desc)
     `(symbol-macrolet ((,desc-lookup (u:href v::=meta/textures= ',name)))
        (let ((,new-desc (make-texture-descriptor
                          :name ',name

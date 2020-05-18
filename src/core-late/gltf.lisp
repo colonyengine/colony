@@ -1,6 +1,6 @@
 (in-package #:virality)
 
-(a:define-constant +gltf-attribute-locations+
+(u:define-constant +gltf-attribute-locations+
     '(("POSITION" . 0)
       ("NORMAL" . 1)
       ("TANGENT" . 2)
@@ -152,7 +152,7 @@
     (5126 :float)))
 
 (defun get-gltf-component-count (data-type)
-  (ecase (a:make-keyword data-type)
+  (ecase (u:make-keyword data-type)
     (:scalar 1)
     (:vec2 2)
     (:vec3 3)
@@ -217,7 +217,7 @@
         (setf (element-count primitive) count)))))
 
 (defun make-gltf-index-buffer (gltf primitive data)
-  (a:when-let* ((indices (get-gltf-property gltf "indices" data))
+  (u:when-let* ((indices (get-gltf-property gltf "indices" data))
                 (accessor (elt (get-gltf-property gltf "accessors") indices)))
     (setf (element-count primitive) (get-gltf-property gltf "count" accessor)
           (component-type primitive) (get-gltf-component-type gltf accessor)

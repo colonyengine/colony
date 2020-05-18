@@ -1,11 +1,11 @@
 (in-package #:virality)
 
-(a:define-constant +gamepad-axis-names+
+(u:define-constant +gamepad-axis-names+
     #((:left-stick :x) (:left-stick :y) (:right-stick :x) (:right-stick :y)
       (:triggers :x) (:triggers :y))
   :test #'equalp)
 
-(a:define-constant +gamepad-button-names+
+(u:define-constant +gamepad-button-names+
     #(:a :b :x :y :back :guide :start :left-stick-button :right-stick-button
       :left-shoulder :right-shoulder :up :down :left :right)
   :test #'equalp)
@@ -44,7 +44,7 @@
 
 (defun gamepad-attach-transition-out (data gamepad-id)
   (let ((input (list :attach gamepad-id)))
-    (a:when-let ((state (u:href (states data) input)))
+    (u:when-let ((state (u:href (states data) input)))
       (setf (gamepad-attach-state-enter state) nil
             (gamepad-attach-state-enabled state) nil
             (gamepad-attach-state-exit state) t)
@@ -74,7 +74,7 @@
 (defun generate-gamepad-id (data)
   (with-slots (%gamepad-instances %detached-gamepads) data
     (or (pop %detached-gamepads)
-        (a:format-symbol :keyword "GAMEPAD~d"
+        (u:format-symbol :keyword "GAMEPAD~d"
                          (1+ (hash-table-count %gamepad-instances))))))
 
 (defun prepare-gamepads ()
@@ -84,7 +84,7 @@
      sdl2-ffi:+sdl-hint-joystick-allow-background-events+ "1")))
 
 (defun shutdown-gamepads (core)
-  (a:when-let* ((data (input-data core))
+  (u:when-let* ((data (input-data core))
                 (instances (gamepad-instances data)))
     (u:do-hash-values (v instances)
       (sdl2:game-controller-close (gamepad-handle v)))
@@ -93,7 +93,7 @@
 (defun normalize-gamepad-analog-value (sub-device axis value)
   (if (eq sub-device :triggers)
       (u:map-domain 0 32767 0 1 value)
-      (let ((clamped (a:clamp value -32767 32767)))
+      (let ((clamped (u:clamp value -32767 32767)))
         (ecase axis
           (:x (u:map-domain -32767 32767 -1 1 clamped))
           (:y (u:map-domain -32767 32767 1 -1 clamped))))))
@@ -117,7 +117,7 @@
     (let* ((gamepad (u:href %gamepad-instances instance))
            (id (gamepad-id gamepad)))
       (sdl2:game-controller-close (gamepad-handle gamepad))
-      (a:appendf %detached-gamepads (list id))
+      (u:appendf %detached-gamepads (list id))
       (remhash id %gamepad-ids)
       (remhash instance %gamepad-instances)
       (gamepad-attach-transition-out data (list :attach id)))))
@@ -188,16 +188,16 @@
               (:y (setf (gamepad-analog-state-y state) value))))))))
 
 (defun on-gamepad-attach (context gamepad-id)
-  (a:when-let* ((data (input-data (core context)))
+  (u:when-let* ((data (input-data (core context)))
                 (state (u:href (states data) (list :attach gamepad-id))))
     (gamepad-attach-state-enter state)))
 
 (defun on-gamepad-enabled (context gamepad-id)
-  (a:when-let* ((data (input-data (core context)))
+  (u:when-let* ((data (input-data (core context)))
                 (state (u:href (states data) (list :attach gamepad-id))))
     (gamepad-attach-state-enabled state)))
 
 (defun on-gamepad-detach (context gamepad-id)
-  (a:when-let* ((data (input-data (core context)))
+  (u:when-let* ((data (input-data (core context)))
                 (state (u:href (states data) (list :attach gamepad-id))))
     (gamepad-attach-state-exit state)))

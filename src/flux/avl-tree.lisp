@@ -94,7 +94,7 @@
 (u:fn-> avl-walk (avl-tree function) null)
 (defun avl-walk (tree func)
   (declare (optimize speed))
-  (a:when-let ((node (avl-node-p (avl-tree-root tree))))
+  (u:when-let ((node (avl-node-p (avl-tree-root tree))))
     (loop :with current = node
           :with stack
           :do (cond
@@ -232,7 +232,7 @@
 (u:fn-> avl-insert (avl-tree t) avl-node)
 (defun avl-insert (tree item)
   (declare (optimize speed))
-  (a:if-let ((node (avl-node-p (nth-value 1 (avl-find tree item)))))
+  (u:if-let ((node (avl-node-p (nth-value 1 (avl-find tree item)))))
     (progn
       (setf (u:href (avl-node-data node) item) item)
       node)
@@ -253,7 +253,7 @@
                        ((funcall sorter key (avl-node-key parent))
                         (setf (avl-node-left parent) node))
                        (t (setf (avl-node-right parent) node))))
-      (a:when-let ((new-root (avl-insert-rebalance node)))
+      (u:when-let ((new-root (avl-insert-rebalance node)))
         (setf (avl-tree-root tree) new-root))
       node)))
 
@@ -317,12 +317,12 @@
                          (t (avl-transplant node (avl-node-left node))
                             (avl-delete-rebalance (avl-node-left node)
                                                   direction)))))))
-    (a:when-let ((node (avl-node-p (nth-value 1 (avl-find tree item))))
+    (u:when-let ((node (avl-node-p (nth-value 1 (avl-find tree item))))
                  (sentinel (avl-tree-sentinel tree)))
       (when (u:href (avl-node-data node) item)
         (if (<= (hash-table-count (avl-node-data node)) 1)
             (progn
-              (a:when-let ((new-root (%delete node)))
+              (u:when-let ((new-root (%delete node)))
                 (setf (avl-tree-root tree) new-root))
               (setf (avl-node-parent sentinel) sentinel)
               (clrhash (avl-node-data node)))
@@ -334,7 +334,7 @@
   (declare (optimize speed))
   (labels ((%find (node key sorter)
              (declare (function sorter))
-             (a:when-let ((result (and (avl-node-p node) (avl-node-key node))))
+             (u:when-let ((result (and (avl-node-p node) (avl-node-key node))))
                (cond
                  ((funcall sorter key result)
                   (%find (avl-node-left node) key sorter))
@@ -343,7 +343,7 @@
                  (t node)))))
     (locally (declare #+sbcl (sb-ext:muffle-conditions sb-ext:compiler-note))
       (when (typep item (avl-tree-item-type tree))
-        (a:when-let ((node (%find (avl-tree-root tree)
+        (u:when-let ((node (%find (avl-tree-root tree)
                                   (funcall (avl-tree-key tree) item)
                                   (avl-tree-sorter tree))))
           (values (u:href (avl-node-data node) item)

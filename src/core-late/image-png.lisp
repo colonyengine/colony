@@ -21,7 +21,7 @@
 (defun get-png-internal-format (image)
   (let ((channel-count (get-png-channel-count image))
         (bit-depth (pngload:bit-depth image)))
-    (a:format-symbol :keyword "~a~d"
+    (u:format-symbol :keyword "~a~d"
                      (subseq "RGBA" 0 channel-count)
                      bit-depth)))
 

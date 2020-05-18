@@ -23,7 +23,7 @@
       (destructuring-bind (name (&key (format 'interleaved) (divisor 0))
                            . attrs)
           group
-        (u:mvlet ((group-type (a:format-symbol :virality "GEOMETRY-GROUP/~a"
+        (u:mvlet ((group-type (u:format-symbol :virality "GEOMETRY-GROUP/~a"
                                                format))
                   (attributes attribute-order (make-geometry-attributes attrs)))
           (push name order)

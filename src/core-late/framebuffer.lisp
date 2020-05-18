@@ -41,7 +41,7 @@
         spec
       (make-instance 'framebuffer-attachment-spec
                      :name name
-                     :buffer (a:ensure-list buffer)
+                     :buffer (u:ensure-list buffer)
                      :point point
                      :width (generate-size-func :width width)
                      :height (generate-size-func :height height)))))
@@ -94,9 +94,9 @@
   (u:href (framebuffers core) name))
 
 (defun framebuffer-attachment-point->gl (point)
-  (destructuring-bind (type &optional (index 0)) (a:ensure-list point)
+  (destructuring-bind (type &optional (index 0)) (u:ensure-list point)
     (ecase type
-      (:color (a:format-symbol :keyword "~a-ATTACHMENT~d" type index))
+      (:color (u:format-symbol :keyword "~a-ATTACHMENT~d" type index))
       (:depth :depth-attachment)
       (:stencil :stencil-attachment)
       (:depth/stencil :depth-stencil-attachment))))
@@ -113,7 +113,7 @@
    attachment-names))
 
 (defun framebuffer-attachment-point->render-buffer-format (point)
-  (destructuring-bind (type &optional index) (a:ensure-list point)
+  (destructuring-bind (type &optional index) (u:ensure-list point)
     (declare (ignore index))
     (ecase type
       (:color :rgb)
@@ -202,7 +202,7 @@
         (make-framebuffer core spec))))
 
 (defmacro with-framebuffer (framebuffer (&key mode attachments) &body body)
-  (a:with-gensyms (id target)
+  (u:with-gensyms (id target)
     `(if ,framebuffer
          (let ((,id (id ,framebuffer))
                (,target ,(if mode
@@ -217,8 +217,8 @@
 
 ;; TODO: ~axion
 #++(on-recompile :framebuffer data ()
-                 (a:when-let ((spec (find-framebuffer-spec data))
-                              (data (find-framebuffer data)))
-                   (framebuffer-attach-all data)
-                   (dolist (material (materials spec))
-                     (enqueue :recompile (list :material material)))))
+     (u:when-let ((spec (find-framebuffer-spec data))
+                  (data (find-framebuffer data)))
+       (framebuffer-attach-all data)
+       (dolist (material (materials spec))
+         (enqueue :recompile (list :material material)))))

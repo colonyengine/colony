@@ -51,7 +51,7 @@
     (setf (slot-value core '%display) display)))
 
 (defun kill-display (core)
-  (a:when-let ((display (display core)))
+  (u:when-let ((display (display core)))
     (sdl2:gl-delete-context (context display))
     (sdl2:destroy-window (window display)))
   (sdl2:sdl-quit))

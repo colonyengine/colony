@@ -85,7 +85,7 @@
              (render (v:make-component context
                                        'comp:render
                                        :material `(x:sprite
-                                                   ,(a:make-gensym '#:sprite)
+                                                   ,(u:make-gensym '#:sprite)
                                                    :uniforms
                                                    ((:sprite.sampler sprites)))
                                        :slave sprite)))
@@ -106,7 +106,7 @@
     (comp:sprite :spec '(metadata sprites)
                  :name "ship29")
     (comp:render :material `(x:sprite
-                             ,(a:make-gensym '#:sprite)
+                             ,(u:make-gensym '#:sprite)
                              :uniforms ((:sprite.sampler sprites)))
                  :slave (v:ref :self :component'comp:sprite))
     ("exhaust"
@@ -116,6 +116,6 @@
                   :frames 8
                   :duration 0.75)
      (comp:render :material `(x:sprite
-                              ,(a:make-gensym '#:sprite)
+                              ,(u:make-gensym '#:sprite)
                               :uniforms ((:sprite.sampler sprites)))
                   :slave (v:ref :self :component'comp:sprite))))))

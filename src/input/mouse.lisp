@@ -1,6 +1,6 @@
 (in-package #:virality)
 
-(a:define-constant +mouse-button-names+
+(u:define-constant +mouse-button-names+
     #(nil :left :middle :right :x1 :x2)
   :test #'equalp)
 

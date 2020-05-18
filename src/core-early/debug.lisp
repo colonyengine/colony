@@ -8,9 +8,9 @@
   (let ((packages (remove-if-not
                    (lambda (x)
                      (or (u:string-starts-with-p x "VIRALITY")
-                         (u:string-starts-with-p x "ORIGIN")
-                         (string= x "SHADOW")
-                         (string= x "GOLDEN-UTILS")
+                         (u:string-starts-with-p x "NET.MFIANO.LISP.ORIGIN")
+                         (string= x "NET.MFIANO.LISP.SHADOW")
+                         (string= x "NET.MFIANO.LISP.GOLDEN-UTILS")
                          (string= x "SDL2")
                          (string= x "CL-OPENGL")))
                    (mapcar #'package-name (list-all-packages)))))

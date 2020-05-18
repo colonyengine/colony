@@ -8,7 +8,7 @@
   (let ((repl-package (find-if #'find-package '(:slynk :swank))))
     (macrolet ((sym (sym &optional package)
                  (let ((name (symbol-name sym)))
-                   `(a:ensure-symbol ,name ,(or package 'repl-package)))))
+                   `(u:ensure-symbol ,name ,(or package 'repl-package)))))
       (case repl-package
         ((:slynk :swank)
          (compile '%find-repl
@@ -19,7 +19,7 @@
                   (ecase repl-package
                     (:slynk
                      `(lambda ()
-                        (a:when-let ((repl (find
+                        (u:when-let ((repl (find
                                             (,(sym :current-thread))
                                             (,(sym :channels))
                                             :key #',(sym :channel-thread))))
@@ -28,7 +28,7 @@
                      (constantly nil))))
          (compile '%update-repl
                   `(lambda ()
-                     (a:when-let ((repl (%find-repl)))
+                     (u:when-let ((repl (%find-repl)))
                        (with-continuable "REPL"
                          (,(sym :handle-requests) repl t))))))
         (t (setf (symbol-function '%setup-repl) (constantly nil)

@@ -57,6 +57,6 @@
         =max-ssbo-bindings= (get-gpu/max-ssbo-bindings)))
 
 (defun get-hardware-info (key)
-  (let ((global (a:format-symbol :virality "=~a=" key)))
+  (let ((global (u:format-symbol :virality "=~a=" key)))
     (when (boundp global)
       (symbol-value global))))

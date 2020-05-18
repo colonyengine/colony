@@ -24,8 +24,8 @@
               (make-instance 'geometry-attribute
                              :name name
                              :normalize normalize
-                             :type (a:make-keyword type)
-                             :out-type (a:make-keyword out-type)
+                             :type (u:make-keyword type)
+                             :out-type (u:make-keyword out-type)
                              :element-count count))))
     (values attrs (nreverse order))))
 

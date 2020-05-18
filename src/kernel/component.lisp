@@ -58,7 +58,7 @@ DEFINE-COMPONENT form."
         component-type)))
 
 (defmethod make-component (context type &rest args)
-  (a:if-let ((new-type (qualify-component (core context) type)))
+  (u:if-let ((new-type (qualify-component (core context) type)))
     (apply #'make-instance new-type :type new-type :context context args)
     (error "Could not qualify the component type ~s." type)))
 
@@ -116,7 +116,7 @@ one of the same type."
               (:detached (on-component-detach component actor)))))
 
 (defun component/preinit->init (component)
-  (a:when-let ((thunk (initializer component)))
+  (u:when-let ((thunk (initializer component)))
     (funcall thunk)
     (setf (initializer component) nil))
   (let* ((core (core component))

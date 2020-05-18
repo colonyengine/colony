@@ -1,6 +1,6 @@
 (in-package #:virality.texture)
 
-(a:define-constant +sampler-type->texture-type+
+(u:define-constant +sampler-type->texture-type+
     (u:dict :sampler-1d :texture-1d
             :isampler-1d :texture-1d
             :usampler-1d :texture-1d
@@ -39,7 +39,7 @@
   "This variable is a hash table to map sampler types to texture types. It is a
 constant and will never be changed at runtime.")
 
-(a:define-constant +cube-map-face->texture-type+
+(u:define-constant +cube-map-face->texture-type+
     (u:dict :+x '(:texture-cube-map-positive-x 0)
             :-x '(:texture-cube-map-negative-x 1)
             :+y '(:texture-cube-map-positive-y 2)

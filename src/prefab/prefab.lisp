@@ -55,14 +55,14 @@
        ,@body)))
 
 (defmethod documentation ((object string) (doc-type symbol))
-  (a:when-let ((prefab (%find-prefab object doc-type)))
+  (u:when-let ((prefab (%find-prefab object doc-type)))
     (doc prefab)))
 
 (defmacro define-prefab (name (&key library (context 'context) policy)
                          &body body)
   (let ((prefabs `(u:href v::=meta/prefabs= ',library)))
-    (a:with-gensyms (prefab data)
-      (u:mvlet ((body decls doc (a:parse-body body :documentation t)))
+    (u:with-gensyms (prefab data)
+      (u:mvlet ((body decls doc (u:parse-body body :documentation t)))
         `(progn
            (ensure-prefab-name-string ',name)
            (ensure-prefab-name-valid ',name)
