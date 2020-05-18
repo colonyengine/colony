@@ -32,6 +32,7 @@
    (:file "example-playground")
    (:file "example-sprite")
    (:file "example-texture")
+   (:file "example-scale-around")
    (:module "protect-the-planets"
     :components
     ((:file "common")

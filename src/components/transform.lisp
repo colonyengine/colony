@@ -196,3 +196,48 @@
 
 (defun %transform-left (transform)
   (v3:negate (m4:rotation-axis-to-vec3 (model transform) :x)))
+
+(defun %scale-around (target-transform pivot-in-world-space scale-diff
+                      &key (min-scale (v3:vec 0f0 0f0 0f0))
+                        (max-scale
+                         (v3:vec most-positive-single-float
+                                 most-positive-single-float
+                                 most-positive-single-float)))
+
+  (let* (;; We need the translation of the target transform from its parent.
+         (a (%get-translation target-transform t))
+         ;; We need the pivot point in the coordinte space of the _parent_
+         ;; of the target.
+         (parent-transform (parent target-transform))
+         (b (%transform-point parent-transform pivot-in-world-space :model))
+         ;; And the vector from the pivot point to the target in the parent's
+         ;; coordinate frame.
+         (c (v3:- a b))
+         ;; Get the local scale of the target
+         (s (%get-scale target-transform t))
+         ;; And what that scale would be if we performed the scale-diff.
+         (asd (v3:+ s scale-diff)))
+
+    ;; If any component of the scale dips down below or above the extents,
+    ;; don't attempt to scale. There are different choices in how this can
+    ;; be enforced, for now this is probably good enough.
+    (v3:with-components ((asd asd) (mins min-scale) (maxs max-scale))
+      (unless (or (< asdx minsx) ;; TODO: Need any< and any> in origin.
+                  (< asdy minsy)
+                  (< asdz minsz)
+                  (> asdx maxsx)
+                  (> asdy maxsy)
+                  (> asdz maxsz))
+
+        (let* (;; Compute the relative scale vector
+               (rs (v3:/ asd s))
+               ;; And then use it to compute where the new location position
+               ;; is going to be for the target frame.
+               (scaled-c (v3:* c rs))
+               (fp (v3:+ b scaled-c)))
+
+          ;; Now scale up or down the target's frame by the requested amount.
+          (%scale target-transform scale-diff :local nil nil)
+          ;; And adjust the target's translation vector from the parent to
+          ;; put the pivot point into the same place as the target scales.
+          (%translate target-transform fp :local t nil))))))

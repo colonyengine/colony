@@ -187,6 +187,7 @@
    #:rotate
    #:rotate/velocity
    #:scale
+   #:scale-around
    #:scale/velocity
    #:transform-backward
    #:transform-direction

@@ -123,6 +123,18 @@
         (comp::%scale transform vec space replace instant))
       (error "Component ~a is not currently attached to an actor." object))))
 
+(defgeneric scale-around (object pivot-in-world scale-vec &key)
+  (:method ((object comp:transform) pivot-in-world scale-vec &key)
+    (comp::%scale-around object pivot-in-world scale-vec))
+  (:method ((object actor) pivot-in-world scale-vec &key)
+    (let ((transform (component-by-type object 'comp:transform)))
+      (comp::%scale-around transform pivot-in-world scale-vec)))
+  (:method ((object component) pivot-in-world scale-vec &key)
+    (a:if-let ((actor (actor object)))
+      (let ((transform (component-by-type actor 'comp:transform)))
+        (comp::%scale-around transform pivot-in-world scale-vec))
+      (error "Component ~a is not currently attached to an actor." object))))
+
 (defgeneric scale/velocity (object axis rate)
   (:method ((object comp:transform) axis rate)
     (comp::%scale/velocity object axis rate))
