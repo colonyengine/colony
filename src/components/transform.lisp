@@ -104,7 +104,7 @@
     (if copy (q:copy rotation) rotation)))
 
 (defun %get-scale (transform copy)
-  (let ((scale (v::current (rotation transform))))
+  (let ((scale (v::current (scale transform))))
     (if copy (v3:copy scale) scale)))
 
 (defun %translate (transform vec space replace instant)
