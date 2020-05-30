@@ -10,9 +10,10 @@
          (texture-base-level
            (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
-         (data (get-computed-applied-attribute texture :data)))
+         (data (get-computed-applied-attribute texture :data))
+         (flip-y (get-computed-applied-attribute texture :flip-y)))
     ;; load all of the images we may require.
-    (let ((images (read-mipmap-images context data use-mipmaps-p :1d)))
+    (let ((images (read-mipmap-images context data use-mipmaps-p :1d flip-y)))
       ;; Check to ensure they all fit into texture memory.
       ;; TODO: Refactor out of each method into validate-mipmap-images and
       ;; generalize.

@@ -12,7 +12,9 @@
                               texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
          (data (get-computed-applied-attribute texture :data))
-         (images (read-mipmap-images context data use-mipmaps-p :cube-map))
+         (flip-y (get-computed-applied-attribute texture :flip-y))
+         (images (read-mipmap-images
+                  context data use-mipmaps-p :cube-map flip-y))
          (first-cube (aref images 0))
          (first-image (aref (second (aref first-cube 0)) 0))
          ;; TODO: This is not safe, need to check all of them.

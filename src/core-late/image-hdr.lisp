@@ -167,7 +167,7 @@
       (setf (buffer-position buffer) pos
             (end buffer) end))))
 
-(defmethod %load-image ((type (eql :hdr)) path)
+(defmethod %load-image ((type (eql :hdr)) path &key flip-y)
   (u:with-binary-input (in path)
     (let* ((data (make-array 8192 :element-type 'u:ub8 :initial-element 0))
            (buffer (make-instance 'hdr-image-buffer
@@ -179,8 +179,14 @@
            (data (make-array (* width height)
                              :element-type 'u:ub32
                              :initial-element #xffffffff)))
-      (loop :for y :below height
-            :do (read-hdr-image-scanline buffer width data :offset (* y width)))
+      (if flip-y
+          (loop :for y :from (1- height) :downto 0
+                :do (read-hdr-image-scanline
+                     buffer width data
+                     :offset (* y width)))
+          (loop :for y :below height
+                :do (read-hdr-image-scanline
+                     buffer width data :offset (* y width))))
       (make-instance 'image
                      :path path
                      :width width

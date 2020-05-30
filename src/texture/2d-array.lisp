@@ -14,9 +14,10 @@
          (data (get-computed-applied-attribute texture :data))
          (num-layers (length data))
          (reshaped-layers (reshape-image-array-layout data))
+         (flip-y (get-computed-applied-attribute texture :flip-y))
          (all-layers
            (read-mipmap-images
-            context reshaped-layers use-mipmaps-p :2d-array))
+            context reshaped-layers use-mipmaps-p :2d-array flip-y))
          (first-image (aref (aref all-layers 0) 0))
          ;; TODO: Assert num-mipmaps is same for all layers.
          (num-mipmaps (length all-layers)))
@@ -74,20 +75,20 @@
       ;; TODO: Make this higher order.
       (loop :for idx :below (if use-mipmaps-p num-mipmaps 1)
             :for level = (+ texture-base-level idx)
-            :for image = (aref (aref all-layers idx) 0)
             ;; Construct the entire 2d array image of these 1d image pieces.
             :do (dotimes (i num-layers)
-                  (gl:tex-sub-image-3d
-                   texture-type
-                   level
-                   0
-                   0
-                   i
-                   (v::width image)
-                   (v::height image)
-                   1
-                   (v::pixel-format image)
-                   (v::pixel-type image)
-                   (v::data (aref (aref all-layers idx) i)))))
+                  (let ((image (aref (aref all-layers idx) i)))
+                    (gl:tex-sub-image-3d
+                     texture-type
+                     level
+                     0
+                     0
+                     i
+                     (v::width image)
+                     (v::height image)
+                     1
+                     (v::pixel-format image)
+                     (v::pixel-type image)
+                     (v::data image)))))
       ;; Determine if opengl should generate the mipmaps.
       (potentially-autogenerate-mipmaps texture-type texture))))

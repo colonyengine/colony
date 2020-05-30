@@ -25,8 +25,8 @@
                      (subseq "RGBA" 0 channel-count)
                      bit-depth)))
 
-(defmethod %load-image ((type (eql :png)) path)
-  (let ((image (pngload:load-file path :flatten t)))
+(defmethod %load-image ((type (eql :png)) path &key flip-y)
+  (let ((image (pngload:load-file path :flatten t :flip-y flip-y)))
     (make-instance 'image
                    :path path
                    :width (pngload:width image)

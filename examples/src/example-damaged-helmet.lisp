@@ -2,20 +2,57 @@
 
 ;;; Textures
 
-(v:define-texture damaged-helmet/metallic-roughness (:texture-2d)
-  (:data #((mesh-textures helmet-metal-roughness))))
+(v:define-texture damaged-helmet/mesh (:texture-2d-array)
+  (:flip-y t)
+  (:data
+   #(#((mesh-textures helmet-albedo))
+     #((mesh-textures helmet-ao))
+     #((mesh-textures helmet-emissive))
+     #((mesh-textures helmet-metallic-roughness))
+     #((mesh-textures helmet-normal)))))
 
-(v:define-texture damaged-helmet/color (:texture-2d)
-  (:data #((mesh-textures helmet-albedo))))
+(v:define-texture doge2 (:texture-cube-map-array)
+  (:texture-min-filter :linear-mipmap-linear)
+  (:flip-y t)
+  (:data
+   #(((:layout :six)
+      #((:+x #((environments doge2-diffuse-right)))
+        (:-x #((environments doge2-diffuse-left)))
+        (:+y #((environments doge2-diffuse-top)))
+        (:-y #((environments doge2-diffuse-bottom)))
+        (:+z #((environments doge2-diffuse-front)))
+        (:-z #((environments doge2-diffuse-back)))))
+     ((:layout :six)
+      #((:+x #((environments doge2-specular-right)))
+        (:-x #((environments doge2-specular-left)))
+        (:+y #((environments doge2-specular-top)))
+        (:-y #((environments doge2-specular-bottom)))
+        (:+z #((environments doge2-specular-front)))
+        (:-z #((environments doge2-specular-back))))))))
 
-(v:define-texture damaged-helmet/normal (:texture-2d)
-  (:data #((mesh-textures helmet-normal))))
+(v:define-texture papermill (:texture-cube-map-array)
+  (:texture-min-filter :linear-mipmap-linear)
+  (:flip-y t)
+  (:data
+   #(((:layout :six)
+      #((:+x #((environments papermill-diffuse-right)))
+        (:-x #((environments papermill-diffuse-left)))
+        (:+y #((environments papermill-diffuse-top)))
+        (:-y #((environments papermill-diffuse-bottom)))
+        (:+z #((environments papermill-diffuse-front)))
+        (:-z #((environments papermill-diffuse-back)))))
+     ((:layout :six)
+      #((:+x #((environments papermill-specular-right)))
+        (:-x #((environments papermill-specular-left)))
+        (:+y #((environments papermill-specular-top)))
+        (:-y #((environments papermill-specular-bottom)))
+        (:+z #((environments papermill-specular-front)))
+        (:-z #((environments papermill-specular-back))))))))
 
-(v:define-texture damaged-helmet/ambient-occlusion (:texture-2d)
-  (:data #((mesh-textures helmet-ao))))
-
-(v:define-texture damaged-helmet/emissive (:texture-2d)
-  (:data #((mesh-textures helmet-emissive))))
+(v:define-texture brdf-lut (:texture-2d)
+  (:flip-y t)
+  (:data
+   #((v:textures v::brdf-lut))))
 
 ;;; Materials
 
@@ -23,19 +60,21 @@
   (:shader ex/shd:damaged-helmet
    :profiles (x:u-mvp)
    :uniforms
-   ((:metallic-roughness-values (v2:vec 1))
-    (:metallic-roughness-sampler 'damaged-helmet/metallic-roughness)
-    (:base-color-sampler 'damaged-helmet/color)
+   ((:light.direction (v3:vec -0.7399 -0.6428 -0.1983))
+    (:light.color (v3:vec 1))
+    (:light.intensity 2)
+    (:sampler 'damaged-helmet/mesh)
     (:base-color-factor (v4:vec 1))
-    (:normal-sampler 'damaged-helmet/normal)
-    (:normal-scale 1f0)
-    ;; NOTE: This vector points TOWARDS the light.
-    (:light-direction (v3:vec 0f0 1f0 1f0))
-    (:light-color (v3:vec 1))
-    (:occlusion-sampler 'damaged-helmet/ambient-occlusion)
-    (:occlusion-strength 1f0)
-    (:emissive-sampler 'damaged-helmet/emissive)
-    (:emissive-factor 0.3f0))))
+    (:metallic-factor 1)
+    (:roughness-factor 1)
+    (:normal-scale 1)
+    (:normal-matrix (m4:mat 1))
+    (:occlusion-strength 1)
+    (:emissive-factor 1)
+    (:brdf-lut 'brdf-lut)
+    (:environment-sampler 'papermill)
+    (:use-punctual t)
+    (:use-ibl t))))
 
 ;; NOTE: This simple mouse rotator will NOT work correctly if the actor's
 ;; transform is having other updates applied to it over time. This includes
@@ -152,7 +191,7 @@
                    :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi/6))
                    :scale 17f0)
    (comp:mesh :asset '(meshes damaged-helmet)
-              :name "damaged-helmet")
+              :name "helmet")
    (comp:render :material 'damaged-helmet
                 :slave (v:ref :self :component 'comp:mesh))))
 

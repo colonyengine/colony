@@ -13,12 +13,14 @@
            (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
          (data (get-computed-applied-attribute texture :data))
+         (flip-y (get-computed-applied-attribute texture :flip-y))
          (num-layers (length data))
          (reshaped-layers (reshape-image-array-layout data))
          (all-layers (read-mipmap-images context
                                          reshaped-layers
                                          use-mipmaps-p
-                                         :1d-array))
+                                         :1d-array
+                                         flip-y))
          (first-image (aref (aref all-layers 0) 0))
          ;; TODO: Assert num-mipmaps is same for all layers.
          (num-mipmaps (length all-layers)))

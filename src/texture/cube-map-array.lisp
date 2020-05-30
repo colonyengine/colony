@@ -10,9 +10,10 @@
            (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
          (data (get-computed-applied-attribute texture :data))
+         (flip-y (get-computed-applied-attribute texture :flip-y))
          ;; load all of the images we may require.
          (images (read-mipmap-images
-                  context data use-mipmaps-p :cube-map-array))
+                  context data use-mipmaps-p :cube-map-array flip-y))
          (first-cube (aref images 0))
          (first-image (aref (second (aref first-cube 0)) 0))
          ;; TODO: This is not safe, need to check all of them.

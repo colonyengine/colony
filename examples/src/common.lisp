@@ -21,6 +21,10 @@
   :path "data/texture/mesh"
   :filter "png")
 
+(v:define-asset-pool environments ()
+  :path "data/texture/environment"
+  :filter "hdr")
+
 (v:define-asset-pool ptp-textures ()
   :path "data/texture/protect-the-planets"
   :filter "png")

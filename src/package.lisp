@@ -117,6 +117,9 @@
    #:stop
    #:total-time
    #:with-storage)
+  ;; asset pools
+  (:export
+   #:textures)
   ;; config
   (:export
    #:=allow-screensaver=

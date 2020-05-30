@@ -201,7 +201,7 @@ NOTE: These are already in the resource-cache."
 TEXTURE-TYPE into the texture memory."))
 
 
-(defun read-mipmap-images (context data use-mipmaps-p kind)
+(defun read-mipmap-images (context data use-mipmaps-p kind flip-y)
   "Read the images described in the mipmap location array DATA into main memory.
 If USE-MIPMAPS-P is true, then load all of the mipmaps, otherwise only load the
 base image, which is the first one in the array. CONTEXT is the core context
@@ -214,7 +214,7 @@ The same vector structure is returned but with the local descriptor lists
 replaced by actual IMAGE instances of the loaded images."
   (flet ((read-image-contextually (asset)
            (v:with-asset-cache context :texture asset
-             (v::load-image (v::resolve-path asset))))
+             (v::load-image (v::resolve-path asset) :flip-y flip-y)))
          (process-cube-map-mipmaps (cube-data choice-func)
            ;; Process only one cube map right now... when this works, edit it to
            ;; process many cube maps.
@@ -623,6 +623,7 @@ semantic name of it which was specified with a DEFINE-TEXTURE."
       texture-name))
 
 (defun load-texture-descriptors (core)
+  (gl:pixel-store :unpack-alignment 1)
   (u:do-hash-values (profile v::=meta/texture-profiles=)
     (add-texture-profile profile core))
   (u:do-hash-values (desc v::=meta/textures=)

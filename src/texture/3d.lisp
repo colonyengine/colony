@@ -27,11 +27,13 @@
          (max-mipmaps (- texture-max-level texture-base-level))
          (max-texture-3d-size (v::get-gpu-parameter :max-3d-texture-size))
          (data (get-computed-applied-attribute texture :data))
+         (flip-y (get-computed-applied-attribute texture :flip-y))
          (num-mipmaps (length data)))
     #++(format t "Attempting to load 3d texture ~a onto GPU: immutable = ~a~%"
                (name texture) immutable-p)
     ;; Load all of our images for each mipmap level, if needed.
-    (let* ((all-slices (read-mipmap-images context data use-mipmaps-p :3d))
+    (let* ((all-slices (read-mipmap-images
+                        context data use-mipmaps-p :3d flip-y))
            (first-image (aref (aref all-slices 0) 0))
            (depth (length (aref all-slices 0))))
       ;; Figure out the ideal mipmap count from the base resolution.
