@@ -15,9 +15,9 @@
    #:ref))
 
 (uiop:define-package #:virality.shader
-  (:use-reexport
-   #:net.mfiano.lisp.shadow.glsl
-   #:net.mfiano.lisp.umbra.common))
+    (:use-reexport
+     #:net.mfiano.lisp.shadow.glsl
+     #:net.mfiano.lisp.umbra.common))
 
 (defpackage #:virality.extension
   (:use #:cl)
