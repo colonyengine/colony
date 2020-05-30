@@ -203,6 +203,6 @@
    (comp:transform :rotate (q:orient :local :x o:pi/2)
                    :scale 17f0)
    (comp:mesh :asset '(meshes damaged-helmet)
-              :name "damaged-helmet")
+              :name "helmet")
    (comp:render :material 'damaged-helmet
                 :slave (v:ref :self :component 'comp:mesh))))
