@@ -254,6 +254,8 @@
                                                        view-dir
                                                        brdf-lut
                                                        environment-sampler)))
+    (setf color (mix color (* color ao) occlusion-strength))
+    (incf color emissive)
     (vec4 (umbra.color:rgb->srgb (umbra.color:tone-map/aces color 1))
           (.a base-color))))
 
