@@ -119,14 +119,21 @@
     ((color :vec4)
      (tex-cube-map-coord :vec3)
      &uniforms
+     (time :float)
      (tex texture-struct-cube-map-array)
      (cube-layer :float)
      (num-layers :float)
      (mix-color :vec4))
-  ;; TODO: Fix this to grab out of different layers like 2d-array.
-  (let* ((cube-map-array-tex-coord (vec4 tex-cube-map-coord 0))
-         (tex-color (texture (sampler1 tex) cube-map-array-tex-coord)))
+
+  ;; NOTE: Not a general purpose cube-map-array shader, but just an example!
+  ;; We take ths incoming uv-z and use it to index the layers.
+  (let* ((uv-dist (sqrt (+ (expt (* (sin time) (.s tex-cube-map-coord)) 2)
+                           (expt (* (cos time) (.t tex-cube-map-coord)) 2))))
+         (c-layer (clamp (floor (mix 0 num-layers uv-dist)) 0 (1- num-layers)))
+         (tex-color (texture (sampler1 tex)
+                             (vec4 tex-cube-map-coord c-layer))))
     (* tex-color mix-color)))
+
 
 (define-shader unlit-texture-1d ()
   (:vertex (shd:unlit/vert mesh-attrs))
