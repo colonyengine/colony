@@ -43,9 +43,26 @@
 
 (defmethod v:on-component-render ((self render))
   (u:when-let ((camera (v::active-camera (v:context self)))
-               (slave (slave self)))
-    (with-material (material self)
+               (slave (slave self))
+               (material (material self)))
+    (with-material material
         (:model (v:get-model-matrix self)
          :view (view camera)
          :proj (projection camera))
+
+      ;; TODO: For now, if this uniform exists, set it up. We don't want to
+      ;; unecessarily set this all the time, since it could compute work for a
+      ;; lot of situations where we don't need it and as a general rule
+      ;; materials might not have it. Another solution is that the user sets a
+      ;; function for the normal-matrix and when it gets called it figures out
+      ;; the actor and passes it in (along with the material). Need to think on
+      ;; it a little bit more. Currently the function only knows of the context
+      ;; and the material. Since materials are shared by different renderers,
+      ;; materials can't have backreferences to their components/actors.
+      (when (v:uniform-ref-p material :normal-matrix)
+        (setf (v:uniform-ref material :normal-matrix)
+              (m4:transpose (m4:invert
+                             (m4:* (view camera)
+                                   (v:get-model-matrix (transform self)))))))
+
       (v:on-component-slave-render self slave))))

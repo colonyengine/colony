@@ -254,6 +254,7 @@
    #:copy-material
    #:define-material
    #:define-material-profile
+   #:uniform-ref-p
    #:uniform-ref
    #:with-material)
   ;; kernel

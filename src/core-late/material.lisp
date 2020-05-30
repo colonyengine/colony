@@ -301,6 +301,10 @@ CORE. Return a list of the return values of the FUNC."
   (bind-material-uniforms mat)
   (bind-material-buffers mat))
 
+(defun uniform-ref-p (mat uniform-var)
+  "Return a generalized boolean if the specified uniform ref exists or not."
+  (u:href (uniforms mat) uniform-var))
+
 ;; TODO: these modify the semantic-buffer which then gets processed into a new
 ;; computed buffer.
 (defun uniform-ref (mat uniform-var)
