@@ -593,9 +593,9 @@ or if it a vector of the same. Return NIL otherwise."
   ;; TODO: 2. Create the block-name-alias, but only once.
   (unless (shadow:find-block alias-name)
     (shadow:create-block-alias (storage-type block-value)
-                            (block-name block-value)
-                            (shader material)
-                            alias-name)))
+                               (block-name block-value)
+                               (shader material)
+                               alias-name)))
 
 (defun annotate-material-blocks (material shader-program core)
   ;; TODO: Ensure that all :block-alias names are unique in the material
