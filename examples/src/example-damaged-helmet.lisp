@@ -227,7 +227,7 @@
       ;; dynamically built as an persistent orientation offset from this origin
       ;; orientation.
       (unless orig-orient
-        (setf orig-orient (v:get-rotation self :copy t)))
+        (setf orig-orient (v:get-rotation self)))
       (unless rv
         ;; RV represents a persistent 2D point we'll be moving around with the
         ;; mouse--even across multiple drag events. This RV 2D point represents

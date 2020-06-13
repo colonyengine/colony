@@ -34,7 +34,9 @@
    (%collider-system :accessor collider-system
                      :initform nil)
    (%analyzed-graphs :reader analyzed-graphs
-                     :initform (u:dict #'equalp))))
+                     :initform (u:dict #'equalp))
+   (%end-of-frame-work :accessor end-of-frame-work
+                       :initform nil)))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table

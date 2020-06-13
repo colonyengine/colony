@@ -5,12 +5,18 @@
               :initarg :previous)
    (%current :accessor current
              :initarg :current)
+   (%future :accessor future
+            :initarg :future)
    (%incremental :accessor incremental
                  :initarg :incremental)
    (%incremental-delta :reader incremental-delta
                        :initarg :incremental-delta)
    (%interpolated :reader interpolated
-                  :initarg :interpolated)))
+                  :initarg :interpolated)
+   (%replace-count :accessor replace-count
+                   :initform 0)
+   (%replace-warned-p :accessor replace-warned-p
+                      :initform nil)))
 
 (defun make-translate-state ()
   (make-instance 'transform-state

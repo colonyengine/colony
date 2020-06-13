@@ -83,7 +83,9 @@
                            :come-from-state-name
                            :ef-physics-update)
              (comp::map-nodes
-              (lambda (x) (comp::transform-node x))
+              (lambda (x)
+                (comp::transform-node x)
+                (comp::reset-transform-replace-count x))
               (component-by-type (scene-tree core) 'comp:transform))
              (execute-flow core
                            :default

@@ -386,6 +386,17 @@
                                      'entry/active-phase
                                      :come-from-state-name
                                      :ef-active-phase)))
+                    (transition eof-work))
+        (flow-state eof-work :reset ()
+                    (selector
+                     (lambda (core)
+                       (values :identity-policy core)))
+                    (action
+                     (lambda (core)
+                       (map nil
+                            (lambda (x) (funcall x core))
+                            (end-of-frame-work core))
+                       (setf (end-of-frame-work core) nil)))
                     (transition destroy-phase))
         (flow-state destroy-phase :reset ()
                     (selector

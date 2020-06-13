@@ -58,7 +58,8 @@
   (let ((factor (float (v::clock-interpolation-factor (v::clock core)) 1f0)))
     (map-nodes
      (lambda (x)
-       (resolve-model x factor))
+       (resolve-model x factor)
+       (reset-transform-replace-count x))
      (v:component-by-type (v::scene-tree core) 'transform))))
 
 (defmethod v:make-component (context (component-type (eql 'transform))
@@ -85,6 +86,23 @@
     (v::initialize-rotation %rotation rotate rotate/velocity)
     (v::initialize-scale %scale scale scale/velocity)))
 
+(defun update-replace-count (transform state transform-type)
+  (let ((actor (v::actor transform)))
+    (when (and (plusp (v::replace-count state))
+               (null (v::replace-warned-p state)))
+      (warn (format nil "Attempted to replace transform state ~s more than ~
+                         once, for actor ~s."
+                    transform-type
+                    actor))
+      (setf (v::replace-warned-p state) t))
+    (incf (v::replace-count state))))
+
+(defun reset-transform-replace-count (transform)
+  (setf (v::replace-count (translation transform)) 0
+        (v::replace-count (rotation transform)) 0
+        (v::replace-count (scale transform)) 0)
+  (values))
+
 ;;; User protocol helper functions The user protocol functions are generic and
 ;;; live in the VIRALITY package, but they call out to the helper functions
 ;;; below.
@@ -93,28 +111,50 @@
   (let ((model (model transform)))
     (if copy (m4:copy model) model)))
 
-(defun %get-translation (transform copy)
-  (let ((translation (v::current (translation transform))))
-    (if copy (v3:copy translation) translation)))
+(defun %get-translation (transform space)
+  (m4:get-translation
+   (ecase space
+     (:local
+      (local transform))
+     (:model
+      (model transform)))))
 
-(defun %get-rotation (transform copy)
-  (let ((rotation (v::current (rotation transform))))
-    (if copy (q:copy rotation) rotation)))
+(defun %get-rotation (transform space)
+  (q:from-mat4
+   (ecase space
+     (:local
+      (local transform))
+     (:model
+      (model transform)))))
 
-(defun %get-scale (transform copy)
-  (let ((scale (v::current (scale transform))))
-    (if copy (v3:copy scale) scale)))
+(defun %get-scale (transform space)
+  (m4:get-scale
+   (ecase space
+     (:local
+      (local transform))
+     (:model
+      (model transform)))))
 
 (defun %translate (transform vec space replace instant)
   (let ((state (translation transform)))
     (ecase space
       (:local
        (v3:+! (v::current state)
-              (if replace v3:+zero+ (v::current state))
+              (cond
+                (replace
+                 (update-replace-count transform state :translate)
+                 v3:+zero+)
+                (t (v::current state)))
               vec)
        (when instant
-         (v3:copy! (v::previous state) (v::current state))))
-      (:model (error "TRANSLATE not yet implemented for world space.")))))
+         (push
+          (lambda (core)
+            (declare (ignore core))
+            (v3:copy! (v::previous state) (v::current state)))
+          (v::end-of-frame-work (v::core transform)))))
+      (:model (error "TRANSLATE not yet implemented for world space.")))
+    ;; side-effects only; return T
+    t))
 
 (defun %translate/velocity (transform axis rate)
   (let ((state (translation transform)))
@@ -125,11 +165,21 @@
     (ecase space
       (:local
        (q:rotate! (v::current state)
-                  (if replace q:+id+ (v::current state))
+                  (cond
+                    (replace
+                     (update-replace-count transform state :rotate)
+                     q:+id+)
+                    (t (v::current state)))
                   quat)
        (when instant
-         (q:copy! (v::previous state) (v::current state))))
-      (:model (error "ROTATE not yet implemented for world space.")))))
+         (push
+          (lambda (core)
+            (declare (ignore core))
+            (q:copy! (v::previous state) (v::current state)))
+          (v::end-of-frame-work (v::core transform)))))
+      (:model (error "ROTATE not yet implemented for world space.")))
+    ;; side-effects only; return T
+    t))
 
 (defun %rotate/velocity (transform axis rate)
   (let ((state (rotation transform)))
@@ -140,11 +190,21 @@
     (ecase space
       (:local
        (v3:+! (v::current state)
-              (if replace v3:+zero+ (v::current state))
+              (cond
+                (replace
+                 (update-replace-count transform state :scale)
+                 v3:+zero+)
+                (t (v::current state)))
               vec)
        (when instant
-         (v3:copy! (v::previous state) (v::current state))))
-      (:model (error "SCALE not yet implemented for world space.")))))
+         (push
+          (lambda (core)
+            (declare (ignore core))
+            (v3:copy! (v::previous state) (v::current state)))
+          (v::end-of-frame-work (v::core transform)))))
+      (:model (error "SCALE not yet implemented for world space.")))
+    ;; side-effects only; return T
+    t))
 
 (defun %scale/velocity (transform axis rate)
   (let ((state (scale transform)))
@@ -189,7 +249,9 @@
           (%scale target-transform scale-diff :local nil nil)
           ;; And adjust the target's translation vector from the parent to
           ;; put the pivot point into the same place as the target scales.
-          (%translate target-transform fp :local t nil))))))
+          (%translate target-transform fp :local t nil))))
+    ;; side-effects only; return T
+    t))
 
 (defun %transform-point (transform point space)
   (let ((model (model transform)))
