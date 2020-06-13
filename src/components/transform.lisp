@@ -91,7 +91,7 @@
     (when (and (plusp (v::replace-count state))
                (null (v::replace-warned-p state)))
       (warn (format nil "Attempted to replace transform state ~s more than ~
-                         once, for actor ~s."
+                         once in a physics step or frame, for actor ~s."
                     transform-type
                     actor))
       (setf (v::replace-warned-p state) t))
