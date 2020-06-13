@@ -276,7 +276,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
                    :translate/velocity (v3:vec 0f0 -2f0 0f0))
    (comp:mesh :asset '(meshes damaged-helmet)
-              :name "damaged-helmet")
+              :name "helmet")
    (destroy-my-actor :display-id "destroy-my-actor: stone")
    (comp:sphere :display-id "Stone"
                 :visualize t
@@ -347,7 +347,7 @@ actually are. You have to view the results to see the colliders lighting up."
                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
                    :translate/velocity (v3:vec))
    (comp:mesh :asset '(meshes damaged-helmet)
-              :name "damaged-helmet")
+              :name "helmet")
    (destroy-my-actor :time-to-destroy 2f0)
    (comp:sphere :display-id "Stone"
                 :visualize t
@@ -369,7 +369,7 @@ actually are. You have to view the results to see the colliders lighting up."
                     :rotate (q:orient :local :x o:pi/2)
                     :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
     (comp:mesh :asset '(meshes damaged-helmet)
-               :name "damaged-helmet")
+               :name "helmet")
     (comp:cuboid :display-id "Stone"
                  :visualize t
                  :on-layer :ground
@@ -391,7 +391,7 @@ actually are. You have to view the results to see the colliders lighting up."
                     :rotate (q:orient :local :x o:pi/2)
                     :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
     (comp:mesh :asset '(meshes damaged-helmet)
-               :name "damaged-helmet")
+               :name "helmet")
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground
