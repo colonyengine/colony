@@ -103,6 +103,12 @@
         (v::replace-count (scale transform)) 0)
   (values))
 
+(defun process-deferred-instant-transform-updates (core)
+  (map nil (lambda (x) (funcall x core))
+       (nreverse (v::end-of-frame-work core)))
+  (setf (v::end-of-frame-work core) nil))
+
+
 ;;; User protocol helper functions The user protocol functions are generic and
 ;;; live in the VIRALITY package, but they call out to the helper functions
 ;;; below.

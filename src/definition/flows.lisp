@@ -91,6 +91,10 @@
                     (selector nil)
                     (action nil)
                     (transition physics-loop))
+        ;; NOTE: We don't call comp::process-deferred-instant-transform-updates
+        ;; in the "physics-loop" flow-state below because that should happen at
+        ;; the end of the transform updating, OR the end of the frame after the
+        ;; user code has ran (and in this case, before component destruction).
         (flow-state physics-loop :reset ()
                     (selector
                      (lambda (core)
@@ -391,12 +395,7 @@
                     (selector
                      (lambda (core)
                        (values :identity-policy core)))
-                    (action
-                     (lambda (core)
-                       (map nil
-                            (lambda (x) (funcall x core))
-                            (end-of-frame-work core))
-                       (setf (end-of-frame-work core) nil)))
+                    (action #'comp::process-deferred-instant-transform-updates)
                     (transition destroy-phase))
         (flow-state destroy-phase :reset ()
                     (selector

@@ -82,6 +82,7 @@
                            'protocol-physics-update
                            :come-from-state-name
                            :ef-physics-update)
+             (comp::process-deferred-instant-transform-updates core)
              (comp::map-nodes
               (lambda (x)
                 (comp::transform-node x)
