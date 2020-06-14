@@ -18,7 +18,7 @@
   (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
   (:fragment (graph/frag :vec2)))
 
-(defun 3d-graph/graph ((fn (function (:float) :vec3))
+(defun 3d-graph/graph ((fn (function (:float) (:vec3 :vec4)))
                        (pos :vec3)
                        (view :mat4)
                        (proj :mat4)
