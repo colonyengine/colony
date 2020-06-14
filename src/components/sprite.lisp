@@ -44,7 +44,6 @@
       (incf %elapsed (v:frame-time (v:context self)))
       (if (>= %elapsed %duration)
           (setf %elapsed 0
-                %index %initial-index
                 %pause (unless %repeat t))
           (let* ((step (/ %elapsed %duration))
                  (min %initial-index)
