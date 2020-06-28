@@ -34,7 +34,7 @@ clone this repository into your local-projects directory.
 For now, being on the `develop` branch will provide a better experience
 and newer features.
 
-If you're run ViralityEngine before, and haven't in a while, then
+If you've run ViralityEngine before, and haven't in a while, then
 
 cd ~quicklisp/local-projects
 
