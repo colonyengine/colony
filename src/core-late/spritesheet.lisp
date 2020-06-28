@@ -3,6 +3,8 @@
 (defclass spritesheet ()
   ((%name :reader name
           :initarg :name)
+   (%block-alias :reader block-alias
+                 :initarg :block-alias)
    (%spec :reader spec
           :initarg :spec)
    (%geometry :reader geometry
@@ -14,8 +16,8 @@
   (with-slots (%name) spritesheet
     ;; TODO: This 1 is hardcoded because virality doesn't have an allocation
     ;; system for these integers.
-    (shadow:bind-block :spritesheet 1)
-    (shadow:create-buffer %name :spritesheet)
+    (shadow:bind-block (block-alias spritesheet) 1)
+    (shadow:create-buffer %name (block-alias spritesheet))
     ;; TODO: Have materials automatically calculate a binding point instead of
     ;; hard-coding.
     (shadow:bind-buffer %name 1)))
@@ -44,11 +46,12 @@
              name
              (name spritesheet))))
 
-(defun make-spritesheet (context spec)
+(defun make-spritesheet (context spec block-alias)
   (let ((path (v::resolve-path spec)))
-    (v:with-asset-cache context :spritesheet spec
+    (v:with-asset-cache context block-alias spec
       (let ((spritesheet (make-instance 'spritesheet
                                         :name spec
+                                        :block-alias block-alias
                                         :spec (u:safe-read-file-form path)
                                         :geometry (gl:gen-vertex-array))))
         (make-spritesheet-buffer spritesheet)

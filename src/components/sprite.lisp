@@ -7,6 +7,12 @@
    (%spec :reader spec
           :initarg :spec
           :initform nil)
+   (%block-alias :reader block-alias
+                 :initarg :block-alias
+                 ;; TODO: This default assumes umbra's sprite shader, which has
+                 ;; an exported ssbo buffer named :spritesheet, is paired with
+                 ;; this component.
+                 :initform :spritesheet)
    (%spritesheet :reader spritesheet)
    (%index :reader index)
    (%initial-index :reader initial-index)
@@ -33,7 +39,7 @@
         (error "A sprite component must have a name."))
       (unless spec
         (error "A sprite component must have a spritesheet spec specified."))
-      (setf %spritesheet (v:make-spritesheet context %spec)
+      (setf %spritesheet (v:make-spritesheet context %spec (block-alias self))
             %index (v:find-sprite %spritesheet %name)
             %initial-index %index))))
 

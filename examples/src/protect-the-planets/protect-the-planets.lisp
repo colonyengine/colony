@@ -96,6 +96,55 @@
   (:vertex (shd:unlit/vert mesh-attrs))
   (:fragment (starfield/frag :vec4 :vec2)))
 
+;; Here is a sprite shader, regularly from umbra, but I needed some
+;; modification to discard texels with very low alpha values.
+
+(defstruct sprite-data
+  (sampler :sampler-2d :accessor sampler)
+  (index :int :accessor index))
+
+(defstruct spritesheet-data
+  (pos (:ivec2 2048) :accessor pos)
+  (size (:ivec2 2048) :accessor size))
+
+(defun make-vertex-data ((sprite sprite-data)
+                         (ptp-spritesheet spritesheet-data))
+  (let* ((tex-size (.xyxy (texture-size (sampler sprite) 0)))
+         (size (aref (size ptp-spritesheet) (index sprite)))
+         (a (aref (pos ptp-spritesheet) (index sprite)))
+         (b (+ a size))
+         (vertpos (vec4 (* size 0.5) (* size -0.5)))
+         (uv (/ (vec4 a b) tex-size)))
+    (case gl-vertex-id
+      (0 (values (.xy vertpos) (.zw uv)))
+      (1 (values (.zy vertpos) (.xw uv)))
+      (2 (values (.xw vertpos) (.zy uv)))
+      (otherwise (values (.zw vertpos) (.xy uv))))))
+
+(defun sprite/v (&uniforms
+                 (model :mat4)
+                 (view :mat4)
+                 (proj :mat4)
+                 (sprite sprite-data)
+                 (ptp-spritesheet spritesheet-data :ssbo :std-430))
+  (mvlet* ((pos uv (make-vertex-data sprite ptp-spritesheet)))
+    (values (* proj view model (vec4 pos 0 1))
+            uv)))
+
+(defun sprite/f ((uv :vec2)
+                 &uniforms
+                 (sprite sprite-data)
+                 (opacity :float))
+  (let ((color (texture (sampler sprite) uv)))
+    (if (> (.a color) .05f0)
+        (vec4 (.rgb color) (* (.a color) opacity))
+        (discard))))
+
+(define-shader sprite-cutout (:primitive :triangle-strip)
+  (:vertex (sprite/v))
+  (:fragment (sprite/f :vec2)))
+
+
 ;; Back to our regularly scheduled package!
 (in-package #:virality-examples)
 
@@ -144,12 +193,13 @@
 ;; that shader.
 (v:define-material sprite-sheet
   (:profiles (x:u-mvp)
-   :shader umbra.sprite:sprite
+   :shader ex/shd:sprite-cutout
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
+              (:sprite.index 0)
               (:opacity 1.0))
-   :blocks ((:block-name :spritesheet
+   :blocks ((:block-name :ptp-spritesheet
              :storage-type :buffer
-             :block-alias :spritesheet
+             :block-alias :ptp-spritesheet
              :binding-policy :manual))))
 
 (v:define-material title
@@ -1701,6 +1751,7 @@ NIL if no such list exists."
   (hit-points :hp 1)
   (line-mover)
   (comp:sprite :spec '(metadata sprites)
+               :block-alias :ptp-spritesheet
                :duration 0.5)
   (comp:sphere :center (v3:vec)
                :on-layer :enemy-bullet
@@ -1727,6 +1778,7 @@ NIL if no such list exists."
                :radius 30f0)
   ("ship-body"
    (comp:sprite :spec '(metadata sprites)
+                :block-alias :ptp-spritesheet
                 :name "ship26")
    (comp:render :material 'sprite-sheet
                 :slave (v:ref :self :component 'comp:sprite))
@@ -1738,6 +1790,7 @@ NIL if no such list exists."
    ("exhaust"
     (comp:transform :translate (v3:vec 0f0 -60f0 0f0))
     (comp:sprite :spec '(metadata sprites)
+                 :block-alias :ptp-spritesheet
                  :name "exhaust03-01"
                  :frames 8
                  :duration 0.5)
@@ -1747,6 +1800,7 @@ NIL if no such list exists."
 (v:define-prefab "player-ship-mockette" (:library ptp)
   "An image of the ship, but no colliders or guns."
   (comp:sprite :spec '(metadata sprites)
+               :block-alias :ptp-spritesheet
                :name "ship26")
   (comp:render :material 'sprite-sheet
                :slave (v:ref :self :component 'comp:sprite)))
@@ -1768,6 +1822,7 @@ NIL if no such list exists."
                :visualize t
                :radius 145f0)
   (comp:sprite :spec '(metadata sprites)
+               :block-alias :ptp-spritesheet
                :name "planet01")
   (comp:render :material 'sprite-sheet
                :slave (v:ref :self :component 'comp:sprite)))
@@ -1775,6 +1830,7 @@ NIL if no such list exists."
 (v:define-prefab "generic-explosion" (:library ptp)
   (explosion :sprite (v:ref :self :component 'comp:sprite))
   (comp:sprite :spec '(metadata sprites)
+               :block-alias :ptp-spritesheet
                ;; TODO: When this is misnamed, the error is extremely obscure
                :name "explode01-01"
                :frames 15
@@ -1887,16 +1943,19 @@ NIL if no such list exists."
    (comp:transform :translate (v3:vec 0f0 100f0 (dl :planet))
                    :scale 0.9f0)
    (comp:sprite :spec '(metadata sprites)
+                :block-alias :ptp-spritesheet
                 :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
    (comp:transform :translate (v3:vec -200f0 -100f0 (dl :planet))
                    :scale 0.9f0)
    (comp:sprite :spec '(metadata sprites)
+                :block-alias :ptp-spritesheet
                 :name "planet02"))
   (("planet-2" :link ("/generic-planet" :from ptp))
    (comp:transform :translate (v3:vec 200f0 -100f0 (dl :planet))
                    :scale 0.9f0)
    (comp:sprite :spec '(metadata sprites)
+                :block-alias :ptp-spritesheet
                 :name "planet03")))
 
 (v:define-prefab "level-1" (:library ptp)
@@ -1912,11 +1971,13 @@ NIL if no such list exists."
    (comp:transform :translate (v3:vec -200f0 100f0 (dl :planet))
                    :scale 0.9f0)
    (comp:sprite :spec '(metadata sprites)
+                :block-alias :ptp-spritesheet
                 :name "planet01"))
   (("planet-1" :link ("/generic-planet" :from ptp))
    (comp:transform :translate (v3:vec 200f0 100f0 (dl :planet))
                    :scale 0.9f0)
    (comp:sprite :spec '(metadata sprites)
+                :block-alias :ptp-spritesheet
                 :name "planet02")))
 
 (v:define-prefab "level-2" (:library ptp)
@@ -1933,6 +1994,7 @@ NIL if no such list exists."
    (comp:transform :translate (v3:vec 0f0 100f0 (dl :planet))
                    :scale 0.9f0)
    (comp:sprite :spec '(metadata sprites)
+                :block-alias :ptp-spritesheet
                 :name "planet01")))
 
 (v:define-prefab "protect-the-planets" (:library ptp)
