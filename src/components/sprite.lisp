@@ -41,7 +41,14 @@
   (with-slots (%frames %index %initial-index %duration %repeat %elapsed %pause)
       self
     (unless %pause
-      (incf %elapsed (v:frame-time (v:context self)))
+      (let* ((context (v:context self))
+             (ft (v:frame-time context))
+             (threshold (v:refresh-rate context)))
+        ;; If the frame time is somehow incredibly slow, assume the amount of
+        ;; time that had passed is the screen refresh rate. This prevents large
+        ;; skips of frames in these situations.
+        (incf %elapsed (if (> ft threshold) threshold ft)))
+
       (if (>= %elapsed %duration)
           (setf %elapsed 0
                 %pause (unless %repeat t))
