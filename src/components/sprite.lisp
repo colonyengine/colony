@@ -53,7 +53,8 @@
 
 (defmethod v:on-component-slave-render ((master render) (self sprite))
   (let ((instance-count (v::instances (comp:material master))))
-    (shadow:uniform-int 'umbra.sprite:sprite :sprite.index (index self))
-    (gl:bind-vertex-array (v::geometry (spritesheet self)))
-    (gl:draw-arrays-instanced :triangle-strip 0 4 instance-count)
-    (gl:bind-vertex-array 0)))
+    (with-material (comp:material master)
+        (:sprite.index (index self))
+      (gl:bind-vertex-array (v::geometry (spritesheet self)))
+      (gl:draw-arrays-instanced :triangle-strip 0 4 instance-count)
+      (gl:bind-vertex-array 0))))
