@@ -13,7 +13,6 @@
 
 (v:define-texture doge2 (:texture-cube-map-array)
   (:texture-min-filter :linear-mipmap-linear)
-  (:flip-y t)
   (:data
    #(((:layout :six)
       #((:+x #((environments doge2-diffuse-right)))
@@ -32,7 +31,6 @@
 
 (v:define-texture papermill (:texture-cube-map-array)
   (:texture-min-filter :linear-mipmap-linear)
-  (:flip-y t)
   (:data
    #(((:layout :six)
       #((:+x #((environments papermill-diffuse-right)))
@@ -51,7 +49,6 @@
 
 (v:define-texture helipad (:texture-cube-map-array)
   (:texture-min-filter :linear-mipmap-linear)
-  (:flip-y t)
   (:data
    #(((:layout :six)
       #((:+x #((environments helipad-diffuse-right)))
@@ -70,7 +67,6 @@
 
 (v:define-texture pisa (:texture-cube-map-array)
   (:texture-min-filter :linear-mipmap-linear)
-  (:flip-y t)
   (:data
    #(((:layout :six)
       #((:+x #((environments pisa-diffuse-right)))
@@ -89,7 +85,6 @@
 
 (v:define-texture footprint-court (:texture-cube-map-array)
   (:texture-min-filter :linear-mipmap-linear)
-  (:flip-y t)
   (:data
    #(((:layout :six)
       #((:+x #((environments footprint-court-diffuse-right)))
@@ -108,7 +103,6 @@
 
 (v:define-texture ennis (:texture-cube-map-array)
   (:texture-min-filter :linear-mipmap-linear)
-  (:flip-y t)
   (:data
    #(((:layout :six)
       #((:+x #((environments ennis-diffuse-right)))
@@ -127,7 +121,6 @@
 
 (v:define-texture field (:texture-cube-map-array)
   (:texture-min-filter :linear-mipmap-linear)
-  (:flip-y t)
   (:data
    #(((:layout :six)
       #((:+x #((environments field-diffuse-right)))
@@ -145,7 +138,7 @@
         (:-z #((environments field-specular-back))))))))
 
 (v:define-texture brdf-lut (:texture-2d)
-  (:flip-y t)
+  (:flip-y t) ;; TODO: Hrm.... is this right?
   (:data
    #((v:textures v::brdf-lut))))
 
