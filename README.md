@@ -49,7 +49,6 @@ Put this bash script into local-projects, you might call it
 'update-virality-depdendencies.sh' or something similar.
 
 ```
-# BEGIN -----------------------------------------------------------------
 #! /bin/bash
 
 echo "Updating shadow..."
@@ -75,7 +74,6 @@ if [ ! -d ./algae ]; then
 	git clone https://github.com/mfiano/algae.git
 fi
 (cd algae && git pull)
-# END -----------------------------------------------------------------
 ```
 
 Then chmod 700 the script and run it while in the ~quicklisp/local-projects
