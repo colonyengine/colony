@@ -41,6 +41,11 @@
   (float (clock-delta-time (clock (core context))) 1f0))
 
 (defun screen-resolution (context &rest ignored)
+  "Return a V2:VEC of the screen resolution."
   (declare (ignore context ignored))
   (v2:vec (float =window-width= 1f0)
           (float =window-height= 1f0)))
+
+(defmethod refresh-rate (context)
+  "Return the screen refresh rate."
+  (refresh-rate (display (core context))))

@@ -109,6 +109,7 @@
    #:display-id
    #:frame-count
    #:frame-time
+   #:refresh-rate
    #:id
    #:make-actor
    #:screen-resolution
