@@ -1,8 +1,8 @@
 (in-package #:virality-examples)
 
 (v:define-config :virality-examples ()
-  :window-width 1280
-  :window-height 720
+  :window-width 1920 ;; 1280
+  :window-height 1080 ;; 720
   :delta (float 1/120 1f0)
   :initial-scene '(("geometric-volumes" examples)))
 
