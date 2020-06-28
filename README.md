@@ -26,6 +26,9 @@ frame.
 
 ## Install
 
+**NOTE: You may have better luck with the `develop` branch for the time being! The master
+branch is a bit crusty.**
+
 This system is not yet available to be installed automatically with Quicklisp.
 To manually install using Quicklisp, clone this repository into your
 local-projects directory.
