@@ -100,6 +100,12 @@ following in your REPL:
        :scene '(("damaged-helmet-interactive" examples)))
 
 ;; To run the Protect the Planets game (requires a gamepad to play)
+;; Directions:
+;; Press Start to play.
+;; Use d-pad to move around 8-way.
+;; Hold right shoulder to pivot while moving.
+;; Hold A (or whatever mapped to A) button to fire.
+;; Esc on keyboard quits.
 (virality:start
        :project :virality-examples
        :scene '(("protect-the-planets" ptp)))

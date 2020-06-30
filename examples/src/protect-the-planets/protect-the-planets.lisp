@@ -51,6 +51,7 @@
                             :enemy-explosion -.03f0
                             :enemy-bullet -.02f0
                             :player-bullet -.01f0
+                            :player-guide -.005f0
                             :player 0.00f0
                             :player-explosion 0.01f0
                             :time-keeper 300f0
@@ -184,6 +185,11 @@
 (v:define-texture white (:texture-2d x:clamp-all-edges)
   (:data #((ptp-textures white))))
 
+(v:define-texture pivot (:texture-2d x:clamp-all-edges)
+  (:texture-min-filter :nearest-mipmap-linear)
+  (:texture-mag-filter :linear)
+  (:data #((ptp-textures pivot))))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Materials
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -249,6 +255,13 @@
    :uniforms ((:tex.sampler1 'white)
               (:mix-color (v4:vec 0f0 1f0 0f0 1f0)))))
 
+(v:define-material pivot
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'pivot)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 .75f0))
+              (:max-intensity (v4:vec 1)))))
+
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -267,13 +280,20 @@
                :initform nil)
    (%max-velocity :accessor max-velocity
                   :initarg :max-velocity
-                  :initform 1500f0)
+                  :initform 800f0)
    (%translate-deadzone :accessor translate-deadzone
                         :initarg :translate-deadzone
                         :initform .1f0)
    (%rotate-deadzone :accessor rotate-deadzone
                      :initarg :rotate-deadzone
                      :initform .1f0)
+   (%move-type :accessor move-type
+               :initarg :move-type
+               :initform :analog)
+   (%pivot-prefab :accessor pivot-prefab
+                  :initarg :pivot-prefab)
+   (%pivot-actor :accessor pivot-actor
+                 :initform nil)
    ;; We just hack in a boundary cube you can't go outside of. This is in the
    ;; local space of the actor to which this component is attached.
    ;; The format is minx, maxx, miny, maxy, minz, maxz
@@ -294,45 +314,168 @@
   (with-accessors ((context v:context) (max-velocity max-velocity)
                    (translate-deadzone translate-deadzone)
                    (rotate-deadzone rotate-deadzone)
-                   (region-cuboid region-cuboid))
+                   (region-cuboid region-cuboid)
+                   (move-type move-type)
+                   (pivot-prefab pivot-prefab)
+                   (pivot-actor pivot-actor))
       self
-    (u:mvlet ((lx ly (v:get-gamepad-analog
-                      context :radial-scaled '(:gamepad1 :left-stick)))
-              (instant-p (zerop (v:frame-count context))))
-      ;; First, we settle the notion of how the player translates around with
-      ;; left stick
-      (u:mvlet*
-          (;; Deal with deadzones and other bad data around the input vector.
-           (vec (v3:vec lx ly 0f0))
-           (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
-           (vec (if (< (v3:length vec) translate-deadzone) (v3:vec) vec))
-           ;; Right trigger modifies speed. pull to lerp from full speed
-           ;; to half speed.
-           (ty (nth-value 1 (v:get-gamepad-analog
-                             context :radial-scaled '(:gamepad1 :triggers))))
-           ;; Compute the actual translation vector related to our frame time!
-           (vec (v3:scale
-                 vec
-                 (float (* (u:lerp ty max-velocity (/ max-velocity 2f0))
-                           (v:frame-time context))
-                        1f0)))
-           ;; and ensure we clip the translation vector so we can't go out of
-           ;; the boundary cube we set.
-           (current-translation (v:get-translation self))
-           (vec (v:clip-movement-vector vec current-translation region-cuboid)))
-        (v:translate self vec))
-      ;; Then we settle the notion of how the player is oriented.  We're setting
-      ;; a hard angle of rotation each time so we overwrite the previous value.
-      (unless (or (= lx ly 0f0)
-                  (< (v3:length (v3:vec lx ly 0f0)) rotate-deadzone))
-        (let* ((angle (atan (- lx) ly))
-               (angle (if (minusp angle)
-                          (+ o:pi (- o:pi (abs angle)))
-                          angle)))
-          (v:rotate self
-                    (q:orient :local :z angle)
-                    :replace t
-                    :instant instant-p))))))
+
+    (let ((instant-p (zerop (v:frame-count context))))
+
+      (ecase move-type
+        (:analog
+         ;; Method 1: Left Analog Stick to fly.
+         (u:mvlet ((lx ly (v:get-gamepad-analog
+                           context :radial-scaled '(:gamepad1 :left-stick))))
+           ;; First, we settle the notion of how the player translates around
+           ;; with left stick
+           (u:mvlet*
+               (;; Deal with deadzones and other bad data around the input
+                ;; vector.
+                (vec (v3:vec lx ly 0f0))
+                (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
+                (vec (if (< (v3:length vec) translate-deadzone) (v3:vec) vec))
+                ;; Right trigger modifies speed. pull to lerp from full speed
+                ;; to half speed.
+                (ty (nth-value 1 (v:get-gamepad-analog
+                                  context :radial-scaled
+                                  '(:gamepad1 :triggers))))
+                ;; Compute the actual translation vector related to our frame
+                ;; time!
+                (vec (v3:scale
+                      vec
+                      (float (* (u:lerp ty max-velocity (/ max-velocity 2f0))
+                                (v:frame-time context))
+                             1f0)))
+                ;; and ensure we clip the translation vector so we can't go out
+                ;; of the boundary cube we set.
+                (current-translation (v:get-translation self))
+                (vec (v:clip-movement-vector vec current-translation
+                                             region-cuboid)))
+             (v:translate self vec))
+           ;; Then we settle the notion of how the player is oriented.  We're
+           ;; setting a hard angle of rotation each time so we overwrite the
+           ;; previous value.
+           (unless (or (= lx ly 0f0)
+                       (< (v3:length (v3:vec lx ly 0f0)) rotate-deadzone))
+             (let* ((angle (atan (- lx) ly))
+                    (angle (if (minusp angle)
+                               (+ o:pi (- o:pi (abs angle)))
+                               angle)))
+               (v:rotate self
+                         (q:orient :local :z angle)
+                         :replace t
+                         :instant instant-p)))))
+        (:dpad-pivot
+
+         ;; Method 2: normalized dpad to move 8-way, temporary button for
+         ;; rotation pivot
+
+         (let* ((left (v:on-button-enabled context :gamepad1 :left))
+                (right (v:on-button-enabled context :gamepad1 :right))
+                (up (v:on-button-enabled context :gamepad1 :up))
+                (down (v:on-button-enabled context :gamepad1 :down))
+                (speed-control
+                  (if (v:on-button-enabled context :gamepad1 :left-shoulder)
+                      .5f0
+                      1f0))
+                (move  (v3:+ (v3:+ (if left v3:+left+ v3:+zero+)
+                                   (if right v3:+right+ v3:+zero+))
+                             (v3:+ (if up v3:+up+ v3:+zero+)
+                                   (if down v3:+down+ v3:+zero+))))
+                (move (if (v3:~ move v3:+zero+)
+                          v3:+zero+
+                          (v3:normalize move)))
+
+                (move (v3:scale move (* max-velocity
+                                        speed-control
+                                        (v:frame-time context))))
+
+                (current-translation (v:get-translation self))
+                (clipped-move (v:clip-movement-vector move current-translation
+                                                      region-cuboid))
+                ;; deal with pivot activation
+                (right-shoulder
+                  (v:on-button-enabled context :gamepad1 :right-shoulder))
+                (pivoting-p right-shoulder))
+
+           ;; place myself where I should go.
+           (v:translate self clipped-move)
+
+           ;; Implement pivoting system.
+           (cond
+             (pivoting-p
+              (let ((this-frame-world-guide-pos (v3:vec 0f0 0f0 0f0))
+                    (guide-created-this-frame nil))
+
+                ;; Make the guide if there isn't one. This will put it under
+                ;; the ship.
+                (unless pivot-actor
+                  (let* ((new-pivot-guide
+                           (first (v:make-prefab-instance (v::core context)
+                                                          pivot-prefab)))
+
+                         ;; TODO: Implement a configurable distance down the
+                         ;; front direction of the ship for where the pivot
+                         ;; should appear.
+                         (guide-world-pos
+                           (v:transform-point self v3:+zero+)))
+
+                    ;; stupid rendering "layer"
+                    (setf (v3:z guide-world-pos) (dl :player-guide)
+                          guide-created-this-frame t)
+
+                    ;; store where we made it this frame.
+                    (v3:copy! this-frame-world-guide-pos guide-world-pos)
+
+                    (v:translate new-pivot-guide guide-world-pos
+                                 :instant t :replace t)
+
+                    ;; Store the reference so we can destroy it later.
+                    (setf pivot-actor new-pivot-guide)))
+
+
+                ;; Now aim the ship at the center of the guide at all times
+                ;; while pivoting.
+
+                (unless guide-created-this-frame
+                  (v3:copy! this-frame-world-guide-pos
+                            (v:get-translation pivot-actor :space :model)))
+
+                (let* ((world/ship-to-guide-vec
+                         (v3:- this-frame-world-guide-pos
+                               (v:transform-point self v3:+zero+))))
+
+                  ;; orient the ship in accordance with the world direction
+                  ;; to the pivot.
+                  (v3:with-components ((l world/ship-to-guide-vec))
+                    (unless (or (= lx ly 0f0)
+                                (< (v3:length (v3:vec lx ly 0f0)) .001))
+                      (let* ((angle (atan (- lx) ly))
+                             (angle (if (minusp angle)
+                                        (+ o:pi (- o:pi (abs angle)))
+                                        angle)))
+                        (v:rotate self
+                                  (q:orient :local :z angle)
+                                  :replace t
+                                  :instant instant-p)))))))
+
+             (t ;; not pivoting
+
+              (when pivot-actor
+                (v:destroy pivot-actor)
+                (setf pivot-actor nil))
+
+              nil)))
+
+
+
+         nil)))))
+
+(defmethod v:on-component-destroy ((self player-movement))
+  (when (pivot-actor self)
+    (v:destroy (pivot-actor self))
+    (setf (pivot-actor self) nil)))
 
 ;; ;;;;;;;;;
 ;; Component: line-mover
@@ -518,7 +661,8 @@
                           (prefab-name "projectile")
                           (prefab-library 'ptp)
                           (name "bullet01")
-                          (frames 1))
+                          (frames 1)
+                          (duration 1 duration-supplied-p))
   (let* ((new-projectile
            (first (v:make-prefab-instance
                    (v::core context)
@@ -553,6 +697,10 @@
      (comp:frames (sprite projectile)) frames
      ;; and, what direction is it going in?
      (direction (mover projectile)) direction)
+
+    (when duration-supplied-p
+      (setf (comp:duration (sprite projectile)) duration))
+
     ;; By default projectiles live a certain amount of time.
     (v:destroy new-projectile :ttl destroy-ttl)
     new-projectile))
@@ -648,14 +796,17 @@
    (%frames :accessor frames
             :initarg :frames
             ;; TODO: Bug, if I put 1 here, I get the WRONG sprite sometimes.
-            :initform 2)))
+            :initform 2)
+   (%duration :accessor duration
+              :initarg :duration
+              :initform 1)))
 
 (defmethod v:on-component-attach ((self gun) actor)
   (declare (ignore actor))
   (with-accessors ((actor v:actor) (emitter-transform emitter-transform)) self
     (setf emitter-transform (v:component-by-type actor 'comp:transform))))
 
-(defmethod v:on-component-physics-update ((self gun))
+(defmethod v:on-component-update ((self gun))
   (with-accessors ((context v:context)
                    (rotate-deadzone rotate-deadzone)
                    (fire-period fire-period)
@@ -664,21 +815,32 @@
                    (depth-layer depth-layer))
       self
 
-    ;; TODO: I could make a macro to do this syntax work, like WITH-TIMER, but I
-    ;; think a names registrant of a function into the component that is called
-    ;; repeatedly is better since enabling and disabling from elsewhere becomes
-    ;; possible. Will think about for later.
+    ;; TODO: I could make a macro to do this syntax work, like WITH-TIMER, but
+    ;; I think a names registrant of a function into the component that is
+    ;; called repeatedly is better since enabling and disabling from elsewhere
+    ;; becomes possible. Will think about for later.
     (cond
       ;; We exceeded our cooldown time, so time to fire!
       ((>= cooldown-time (/ fire-period))
+
        ;; We keep track of time such that we're most accurate in time that we
        ;; next need to fire.
        (loop :while (>= cooldown-time (/ fire-period))
              :do (decf cooldown-time (/ fire-period)))
+
+       ;; TODO: Maybe move this stuff into the player controls component and
+       ;; just check for "should I be shooting right now" boolean instead.
+
+       ;; TODO: Fix this so that it fires immediately upon the button being
+       ;; hit instead of eaiting the itme period and then firing.
+
+       ;; NOTE: Both methods work simultaneously
+
+       ;; Method 1: Right analog stick fires
        (u:mvlet ((rx ry (v:get-gamepad-analog
                          context :radial-scaled '(:gamepad1 :right-stick))))
-         (let* ((parent-model (v:get-model-matrix emitter-transform))
-                (parent-translation (m4:get-translation parent-model)))
+         (let* ((world-spawn-point
+                  (v:transform-point emitter-transform v3:+zero+)))
            (unless (or (= rx ry 0f0)
                        (< (v3:length (v3:vec rx ry 0f0)) rotate-deadzone))
              (let* ((angle (atan (- rx) ry))
@@ -687,16 +849,35 @@
                                angle)))
                ;; The rotation we use is indicated by the right stick vector.
                (make-projectile context
-                                parent-translation
+                                world-spawn-point
                                 (q:orient :local :z angle)
                                 (physics-layer self)
                                 depth-layer
                                 :velocity 2000f0
                                 :name (name self)
-                                :frames (frames self)))))))
+                                :frames (frames self)
+                                :duration (duration self))))))
+
+       ;; Method 2: X button fires in direction ship is pointing
+       (u:when-let ((fire-p (v:on-button-enabled context :gamepad1 :a)))
+         (let* ((current-rotation (v:get-rotation self :space :model))
+                (world-spawn-point
+                  (v:transform-point emitter-transform v3:+zero+)))
+
+           (make-projectile context
+                            world-spawn-point
+                            current-rotation
+                            (physics-layer self)
+                            depth-layer
+                            :velocity 2000f0
+                            :name (name self)
+                            :frames (frames self)
+                            :duration (duration self)))))
+
+
       ;; Just accumulate more physics time until we know we can fire again.
       (t
-       (incf cooldown-time (v:delta context))))))
+       (incf cooldown-time (v:frame-time context))))))
 
 ;; ;;;;;;;;;
 ;; Component: asteroid-field
@@ -1771,7 +1952,8 @@ NIL if no such list exists."
               ;; for 1 second.
               ;; TODO: NEED(!) to visualize this effect!
               :invulnerability-timer 1f0)
-  (player-movement)
+  (player-movement :move-type :dpad-pivot
+                   :pivot-prefab '(("pivot-guide" ptp)))
   (comp:sphere :center (v3:vec)
                :on-layer :player
                :referent (v:ref :self :component 'hit-points)
@@ -1782,8 +1964,8 @@ NIL if no such list exists."
                 :name "ship26")
    (comp:render :material 'sprite-sheet
                 :slave (v:ref :self :component 'comp:sprite))
-   ("center-gun"
-    (comp:transform :translate (v3:vec))
+   ("front-gun"
+    (comp:transform :translate (v3:vec 0f0 50f0 0f0))
     (gun :physics-layer :player-bullet
          :depth-layer :player-bullet
          :name "bullet01" :frames 2))
@@ -1870,6 +2052,16 @@ NIL if no such list exists."
    (comp:render :material 'title
                 :slave (v:ref :self :component 'comp:mesh))))
 
+
+(v:define-prefab "pivot-guide" (:library ptp)
+  (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
+                  :scale 64f0)
+  ("pivot"
+   (comp:mesh :asset '(v::meshes v::primitives)
+              :name "plane")
+   (comp:render :material 'pivot
+                :slave (v:ref :self :component 'comp:mesh))))
+
 (v:define-prefab "game-over-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
@@ -1927,7 +2119,7 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   ("asteroids")
   (("title" :copy ("/title-sign" :from ptp))
-   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign)))))
+   (comp:transform :translate (v3:vec 0f0 0f0 (- (dl :sign) 1f0) ))))
 
 (v:define-prefab "level-0" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
