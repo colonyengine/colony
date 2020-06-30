@@ -19,7 +19,7 @@
    (%frames :accessor frames
             :initarg :frames
             :initform 1)
-   (%duration :reader duration
+   (%duration :accessor duration
               :initarg :duration
               :initform 1)
    (%repeat :reader repeat
