@@ -27,9 +27,8 @@
 
 (defun deinitialize (core)
   (run-epilogue core)
+  (shutdown-gamepads core)
   (kill-display core)
-  ;; TODO: This causes a double free, what's up?
-  ;;(shutdown-gamepads core)
   (sdl2:quit)
   (destroy-thread-pool)
   (makunbound '*core-debug*))
