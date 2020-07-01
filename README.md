@@ -104,6 +104,7 @@ following in your REPL:
 ;; Press Start to play.
 ;; Use d-pad to move around 8-way.
 ;; Hold right shoulder to pivot while moving.
+;; Hold left shoulder for half-speed.
 ;; Hold A (or whatever mapped to A) button to fire.
 ;; Esc on keyboard quits.
 (virality:start
