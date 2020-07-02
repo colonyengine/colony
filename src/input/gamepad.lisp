@@ -78,7 +78,7 @@
                          (1+ (hash-table-count %gamepad-instances))))))
 
 (defun prepare-gamepads ()
-  (let ((database (resolve-system-path "gamepads.db")))
+  (let ((database (resolve-system-path "gamepad-db.txt")))
     (sdl2:game-controller-add-mappings-from-file (namestring database))
     (sdl2-ffi.functions:sdl-set-hint
      sdl2-ffi:+sdl-hint-joystick-allow-background-events+ "1")))
