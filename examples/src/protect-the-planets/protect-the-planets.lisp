@@ -708,6 +708,7 @@
                           (name "bullet01")
                           (frames 1)
                           (duration 1 duration-supplied-p)
+                          (repeat t repeat-supplied-p)
                           (render-layer nil))
   (let* ((new-projectile
            (first (v:make-prefab-instance
@@ -748,6 +749,9 @@
 
     (when duration-supplied-p
       (setf (comp:duration (sprite projectile)) duration))
+
+    (when repeat-supplied-p
+      (setf (comp:repeat (sprite projectile)) repeat))
 
     (setf (render-layer sketch) render-layer
           (render-layer hit-points) render-layer)
@@ -856,7 +860,13 @@
             :initform 2)
    (%duration :accessor duration
               :initarg :duration
-              :initform 1)))
+              :initform 1)
+   ;; Hrm, this one here is a bit funny. It mesans I shoudl really break up my
+   ;; different projectiles into prefabs as opposed to collapsing the code
+   ;; together and parameterizing their construction.
+   (%repeat :accessor repeat
+            :initarg :repeat
+            :initform t)))
 
 (defmethod v:on-component-attach ((self gun) actor)
   (declare (ignore actor))
@@ -914,6 +924,7 @@
                                 :name (name self)
                                 :frames (frames self)
                                 :duration (duration self)
+				:repeat (repeat self)
                                 :render-layer :player-bullet)))))
 
        ;; Method 2: X button fires in direction ship is pointing
@@ -931,6 +942,7 @@
                             :name (name self)
                             :frames (frames self)
                             :duration (duration self)
+			    :repeat (repeat self)
                             :render-layer :player-bullet))))
 
 
@@ -2035,7 +2047,10 @@ NIL if no such list exists."
     (comp:transform :translate (v3:vec 0f0 50f0 0f0))
     (gun :physics-layer :player-bullet
          :depth-layer :player-bullet
-         :name "bullet01" :frames 2))
+         :name "bullet01"
+         :frames 8
+         :duration .5f0
+         :repeat nil))
    ("exhaust"
     (comp:transform :translate (v3:vec 0f0 -60f0 0f0))
     (comp:sprite :spec '(metadata sprites)
