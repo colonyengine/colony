@@ -66,6 +66,8 @@
      :roots (all-ordered-types))
   (subdag all-ordered-types
           ((splice core-types)
+           -> virality-examples::sketch
+           -> virality-examples::delayed-render
            -> (splice all-unknown-types))))
 
 (define-graph :virality

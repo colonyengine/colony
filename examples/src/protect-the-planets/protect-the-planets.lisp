@@ -13,9 +13,11 @@
 ;; nvidia gpus are not specifically required.
 ;;
 ;; Controls:
-;; left stick controls movement,
-;; right-stick controls shooting and direction of shooting,
-;; right trigger slows movement.
+;; Start button starts the game.
+;; dpad controls movement in 8-way normalized format
+;; left-shoulder slows down
+;; right-shoulder activates pivot guide
+;; A button fires
 
 ;; The commented delimited categories group the code into various sections.  The
 ;; FL related sections, like Textures, Materials, Components, etc, generally
@@ -33,33 +35,64 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; NOTE: Because we don't yet have mesh/sprite rendering order in Virality
-;; Engine, or order independent transparency tools, etc yet, we'll need to
-;; define were things exist in layers perpendicular to the orthographic camera
-;; so they can be rendered in order according to the zbuffer. This also means no
-;; translucency since the rendering can happen in any order. Stencil textures
-;; are ok though. NOTE: We must be careful here since things that collide with
-;; each other must actually be physically close together in the game.
+;; Engine, or order independent transparency tools, etc yet, we'll need to use
+;; a special system only for this game. It consists of using the z axis to
+;; indicate different spatial layers for things and then two special components
+;; in hacked-components.lisp which implement a draw-order system based upon
+;; rendering-layers. Basically, a "sketch" component "renders" itself to a
+;; queue keyed by the render-layer it knows about, and then later the
+;; "delayed-render" component will actually render all the render layers in
+;; order. I just implemented this draw-order scheme and may remove the need for
+;; the z axis values in the future of possible. Given this, alpha blending
+;; works between layers, but can produce wrong fragments in the same layer if
+;; they overlap. The typedag for the example project has been augmented to
+;; ensure that all sketches happen before the delayed rendering of them.
+
 (defparameter *draw-layer* (u:dict
                             #'eq
                             :starfield -100f0
                             :player-stable -99f0
                             :planet -.08f0
-                            :planet-warning-explosion -.07f0
-                            :planet-explosion -.06f0
+                            :planet-explosion -.07f0
+                            :planet-warning-explosion -.06f0
+                            :asteroid-explosion -.055f0
                             :asteroid -.05f0
                             :enemy-ship -.04f0
                             :enemy-explosion -.03f0
                             :enemy-bullet -.02f0
                             :player-bullet -.01f0
-                            :player-guide -.005f0
+                            :pivot-guide -.005f0
                             :player 0.00f0
                             :player-explosion 0.01f0
                             :time-keeper 300f0
+                            :mockette 350f0
                             :sign 400f0
                             :camera 500f0))
 
 (defun dl (draw-layer-name)
   (u:href *draw-layer* draw-layer-name))
+
+;; NOTE: Must be same order as the z axis layering above. Last it greatest Z,
+;; first is least Z.
+(defparameter *render-layer-order*
+  '(:starfield
+    :player-stable
+    :planet
+    :planet-explosion
+    :planet-warning-explosion
+    :asteroid-explosion
+    :asteroid
+    :enemy-ship
+    :enemy-explosion
+    :enemy-bullet
+    :player-bullet
+    :pivot-guide
+    :player
+    :player-explosion
+    :time-keeper
+    :mockette
+    :sign
+    :camera))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Shaders
@@ -137,11 +170,13 @@
                  (sprite sprite-data)
                  (opacity :float))
   (let ((color (texture (sampler sprite) uv)))
-    (if (> (.a color) .05f0)
-        (vec4 (.rgb color) (* (.a color) opacity))
-        (discard))))
+    (vec4 (.rgb color) (* (.a color) opacity))
+    ;; Did I implement render-layers correctly?
+    #++(if (> (.a color) .05f0)
+           (vec4 (.rgb color) (* (.a color) opacity))
+           (discard))))
 
-(define-shader sprite-cutout (:primitive :triangle-strip)
+(define-shader ptp-sprite (:primitive :triangle-strip)
   (:vertex (sprite/v))
   (:fragment (sprite/f :vec2)))
 
@@ -199,7 +234,8 @@
 ;; that shader.
 (v:define-material sprite-sheet
   (:profiles (x:u-mvp)
-   :shader ex/shd:sprite-cutout
+   :shader ex/shd:ptp-sprite
+   :attributes (:depth :lequal)
    :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
               (:sprite.index 0)
               (:opacity 1.0))
@@ -422,7 +458,7 @@
                            (v:transform-point self v3:+zero+)))
 
                     ;; stupid rendering "layer"
-                    (setf (v3:z guide-world-pos) (dl :player-guide)
+                    (setf (v3:z guide-world-pos) (dl :pivot-guide)
                           guide-created-this-frame t)
 
                     ;; store where we made it this frame.
@@ -554,6 +590,9 @@
   ((%hp :accessor hp
         :initarg :hp
         :initform 1)
+   (%render-layer :accessor render-layer
+                  :initarg :render-layer
+                  :initform nil)
    (%invulnerability-timer :accessor invulnerability-timer
                            :initarg :invulnerability-timer
                            :initform 0)
@@ -612,7 +651,13 @@
       (v:destroy (v:actor self))
       ;; And, if the actor had an explosion component, cause the explosion
       ;; to happen
-      (possibly-make-explosion-at-actor (v:actor self)))))
+
+      ;; NOTE: This can be the player or a planet or asteroid, so how do I
+      ;; pick the right rendering layer? Something in the actor needs to
+      ;; know what it is.
+      (possibly-make-explosion-at-actor (v:actor self)
+                                        ;; TODO: I don't like this solution.
+                                        (render-layer self)))))
 
 (defmethod v:on-collision-enter ((self hit-points) other-collider)
   (with-accessors ((context v:context)
@@ -662,7 +707,8 @@
                           (prefab-library 'ptp)
                           (name "bullet01")
                           (frames 1)
-                          (duration 1 duration-supplied-p))
+                          (duration 1 duration-supplied-p)
+                          (render-layer nil))
   (let* ((new-projectile
            (first (v:make-prefab-instance
                    (v::core context)
@@ -670,7 +716,9 @@
                    :parent parent)))
          ;; TODO: I'm expecting the new-projectile to have components here
          ;; without having gone through the flow. BAD!
-         (projectile (v:component-by-type new-projectile 'projectile)))
+         (projectile (v:component-by-type new-projectile 'projectile))
+         (hit-points (v:component-by-type new-projectile 'hit-points))
+         (sketch (v:component-by-type new-projectile 'sketch)))
 
     ;; Set the spatial configuration
     (setf (v3:z translation) (dl depth-layer))
@@ -701,6 +749,10 @@
     (when duration-supplied-p
       (setf (comp:duration (sprite projectile)) duration))
 
+    (setf (render-layer sketch) render-layer
+          (render-layer hit-points) render-layer)
+
+
     ;; By default projectiles live a certain amount of time.
     (v:destroy new-projectile :ttl destroy-ttl)
     new-projectile))
@@ -727,7 +779,7 @@
 
 ;; NOTE: No physics layers for this since they don't even participate in the
 ;; collisions.
-(defun make-explosion (context translation rotation scale
+(defun make-explosion (context translation rotation scale render-layer
                        &key (destroy-ttl 2f0)
                          (prefab-name "generic-explosion")
                          (prefab-library 'ptp)
@@ -737,11 +789,14 @@
            (first (v:make-prefab-instance
                    (v::core context)
                    `((,prefab-name ,prefab-library)))))
-         (explosion (v:component-by-type new-explosion 'explosion)))
+         (explosion (v:component-by-type new-explosion 'explosion))
+         (sketch (v:component-by-type new-explosion 'sketch)))
     (setf
      ;; Configure the sprite.
      (comp:name (sprite explosion)) name
-     (comp:frames (sprite explosion)) frames)
+     (comp:frames (sprite explosion)) frames
+     ;; Configure the render layer
+     (render-layer sketch) render-layer)
     (v:scale new-explosion scale :instant t :replace t)
     (v:translate new-explosion translation :instant t :replace t)
     (v:rotate new-explosion rotation :instant t :replace t)
@@ -749,7 +804,7 @@
     (v:destroy new-explosion :ttl destroy-ttl)
     new-explosion))
 
-(defun possibly-make-explosion-at-actor (actor)
+(defun possibly-make-explosion-at-actor (actor render-layer)
   (let* ((context (v:context actor))
          (parent-model (v:get-model-matrix actor))
          (parent-translation (m4:get-translation parent-model))
@@ -760,8 +815,10 @@
                       parent-translation
                       parent-rotation
                       (scale explosion)
+                      render-layer
                       :name (name explosion)
-                      :frames (frames explosion)))))
+                      :frames (frames explosion)
+                      ))))
 
 ;; ;;;;;;;;;
 ;; Component: gun
@@ -856,7 +913,8 @@
                                 :velocity 2000f0
                                 :name (name self)
                                 :frames (frames self)
-                                :duration (duration self))))))
+                                :duration (duration self)
+                                :render-layer :player-bullet)))))
 
        ;; Method 2: X button fires in direction ship is pointing
        (u:when-let ((fire-p (v:on-button-enabled context :gamepad1 :a)))
@@ -872,7 +930,8 @@
                             :velocity 2000f0
                             :name (name self)
                             :frames (frames self)
-                            :duration (duration self)))))
+                            :duration (duration self)
+                            :render-layer :player-bullet))))
 
 
       ;; Just accumulate more physics time until we know we can fire again.
@@ -988,7 +1047,8 @@
                                 :name name
                                 :frames frames
                                 :destroy-ttl 4f0
-                                :parent asteroid-holder)))))
+                                :parent asteroid-holder
+                                :render-layer :asteroid)))))
         (t
          (incf cooldown-time (v:frame-time context))))
       ;; Now increase difficulty!
@@ -1057,8 +1117,11 @@
                             (v::core player-stable)
                             mockette-prefab
                             :parent stable))))
+
       (v:translate
-       mockette (v3:vec (* mockette-index (* dir width-increment)) -60f0 0f0))
+       mockette (v3:vec (* mockette-index (* dir width-increment))
+                        -60f0
+                        (dl :mockette)))
       (setf (aref mockette-refs mockette-index) mockette))))
 
 ;; This is useful if you want to use the prefab in a player1 or player2
@@ -1351,6 +1414,7 @@ NIL if no such list exists."
                              world-location
                              random-rotation
                              (v3:vec .25f0 .25f0 1f0)
+                             :planet-warning-explosion
                              :name (name explosion)
                              :frames (frames explosion))))))
       (t
@@ -1938,8 +2002,9 @@ NIL if no such list exists."
                :on-layer :enemy-bullet
                :referent (v:ref :self :component 'hit-points)
                :radius 15f0)
-  (comp:render :material 'sprite-sheet
-               :slave (v:ref :self :component 'comp:sprite)))
+  (sketch :material 'sprite-sheet
+          :render-layer nil ;; to be set at prefab instancing time.
+          :slave (v:ref :self :component 'comp:sprite)))
 
 (v:define-prefab "player-ship" (:library ptp)
   "The venerable Player Ship. Controls how it looks, collides, and movement."
@@ -1948,6 +2013,7 @@ NIL if no such list exists."
              :scale (v3:vec 2f0 2f0 2f0))
   (damage-points :dp 1)
   (hit-points :hp 1
+              :render-layer :player-explosion
               ;; When the player is born, they are automatically invulnerable
               ;; for 1 second.
               ;; TODO: NEED(!) to visualize this effect!
@@ -1962,8 +2028,9 @@ NIL if no such list exists."
    (comp:sprite :spec '(metadata sprites)
                 :block-alias :ptp-spritesheet
                 :name "ship26")
-   (comp:render :material 'sprite-sheet
-                :slave (v:ref :self :component 'comp:sprite))
+   (sketch :material 'sprite-sheet
+           :render-layer :player
+           :slave (v:ref :self :component 'comp:sprite))
    ("front-gun"
     (comp:transform :translate (v3:vec 0f0 50f0 0f0))
     (gun :physics-layer :player-bullet
@@ -1976,16 +2043,18 @@ NIL if no such list exists."
                  :name "exhaust03-01"
                  :frames 8
                  :duration 0.5)
-    (comp:render :material 'sprite-sheet
-                 :slave (v:ref :self :component 'comp:sprite)))))
+    (sketch :material 'sprite-sheet
+            :render-layer :player
+            :slave (v:ref :self :component 'comp:sprite)))))
 
 (v:define-prefab "player-ship-mockette" (:library ptp)
   "An image of the ship, but no colliders or guns."
   (comp:sprite :spec '(metadata sprites)
                :block-alias :ptp-spritesheet
                :name "ship26")
-  (comp:render :material 'sprite-sheet
-               :slave (v:ref :self :component 'comp:sprite)))
+  (sketch :material 'sprite-sheet
+          :render-layer :mockette
+          :slave (v:ref :self :component 'comp:sprite)))
 
 (v:define-prefab "player-stable" (:library ptp)
   ;; TODO: Clarify when we actually need the / infront of the actor name during
@@ -1995,7 +2064,8 @@ NIL if no such list exists."
 
 (v:define-prefab "generic-planet" (:library ptp)
   (planet :hit-points (v:ref :self :component 'hit-points))
-  (hit-points :hp 5)
+  (hit-points :hp 5
+              :render-layer :planet-explosion)
   (explosion :name "explode03-01" :frames 15
              :scale (v3:vec 3f0 3f0 3f0))
   (comp:sphere :center (v3:vec)
@@ -2006,8 +2076,9 @@ NIL if no such list exists."
   (comp:sprite :spec '(metadata sprites)
                :block-alias :ptp-spritesheet
                :name "planet01")
-  (comp:render :material 'sprite-sheet
-               :slave (v:ref :self :component 'comp:sprite)))
+  (sketch :material 'sprite-sheet
+          :render-layer :planet
+          :slave (v:ref :self :component 'comp:sprite)))
 
 (v:define-prefab "generic-explosion" (:library ptp)
   (explosion :sprite (v:ref :self :component 'comp:sprite))
@@ -2018,8 +2089,9 @@ NIL if no such list exists."
                :frames 15
                :duration 0.5
                :repeat nil)
-  (comp:render :material 'sprite-sheet
-               :slave (v:ref :self :component 'comp:sprite)))
+  (sketch :material 'sprite-sheet
+          :render-layer nil ;; set in the creator of this prefab.
+          :slave (v:ref :self :component 'comp:sprite)))
 
 ;; TODO: Refactor these signs into a single prefab and a sign component to
 ;; manage the configuration of the prefab.
@@ -2030,8 +2102,9 @@ NIL if no such list exists."
   ("sign"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'warning-wave
-                :slave (v:ref :self :component 'comp:mesh))))
+   (sketch :material 'warning-wave
+           :render-layer :sign
+           :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "warning-mothership-sign" (:library ptp)
   "Not used yet."
@@ -2040,8 +2113,9 @@ NIL if no such list exists."
   ("sign"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'warning-mothership
-                :slave (v:ref :self :component 'comp:mesh))))
+   (sketch :material 'warning-mothership
+           :render-layer :sign
+           :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "title-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
@@ -2049,8 +2123,9 @@ NIL if no such list exists."
   ("sign"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'title
-                :slave (v:ref :self :component 'comp:mesh))))
+   (sketch :material 'title
+           :render-layer :sign
+           :slave (v:ref :self :component 'comp:mesh))))
 
 
 (v:define-prefab "pivot-guide" (:library ptp)
@@ -2059,8 +2134,9 @@ NIL if no such list exists."
   ("pivot"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'pivot
-                :slave (v:ref :self :component 'comp:mesh))))
+   (sketch :material 'pivot
+           :render-layer :pivot-guide
+           :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "game-over-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
@@ -2068,8 +2144,9 @@ NIL if no such list exists."
   ("sign"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'game-over
-                :slave (v:ref :self :component 'comp:mesh))))
+   (sketch :material 'game-over
+           :render-layer :sign
+           :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "level-complete-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
@@ -2077,8 +2154,9 @@ NIL if no such list exists."
   ("sign"
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "plane")
-   (comp:render :material 'level-complete
-                :slave (v:ref :self :component 'comp:mesh))))
+   (sketch :material 'level-complete
+           :render-layer :sign
+           :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "starfield" (:library ptp)
   (comp:transform :scale 960f0
@@ -2087,8 +2165,9 @@ NIL if no such list exists."
                   :translate (v3:vec 0f0 0f0 (dl :starfield)))
   (comp:mesh :asset '(v::meshes v::primitives)
              :name "plane")
-  (comp:render :material 'starfield
-               :slave (v:ref :self :component 'comp:mesh)))
+  (sketch :material 'starfield
+          :render-layer :starfield
+          :slave (v:ref :self :component 'comp:mesh)))
 
 (v:define-prefab "time-keeper" (:library ptp)
   (comp:transform :translate (v3:vec 900f0 -512f0 (dl :time-keeper)))
@@ -2096,7 +2175,7 @@ NIL if no such list exists."
                :time-bar-transform (v:ref "time-bar-root"
                                           :component 'comp:transform)
                :time-bar-renderer (v:ref "time-bar-root/time-display"
-                                         :component 'comp:render))
+                                         :component 'sketch))
   ("time-bar-root"
    ;; When we scale the transform for this object, the alignment of the
    ;; time-bar will cause it to stretch upwards from a "ground" at 0 in this
@@ -2108,8 +2187,9 @@ NIL if no such list exists."
     ;; TODO: when 'time-bar is mis-spelled in the material,
     ;; I don't get the debug material, why?
     ;; TODO: I think this material is leaked when this object is destroyed.
-    (comp:render :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-"))
-                 :slave (v:ref :self :component 'comp:mesh)))))
+    (sketch :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-"))
+            :render-layer :time-keeper
+            :slave (v:ref :self :component 'comp:mesh)))))
 
 (v:define-prefab "demo-level" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field))
@@ -2119,7 +2199,7 @@ NIL if no such list exists."
   (("starfield" :link ("/starfield" :from ptp)))
   ("asteroids")
   (("title" :copy ("/title-sign" :from ptp))
-   (comp:transform :translate (v3:vec 0f0 0f0 (- (dl :sign) 1f0) ))))
+   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign)))))
 
 (v:define-prefab "level-0" (:library ptp)
   (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
@@ -2193,6 +2273,8 @@ NIL if no such list exists."
   "The top most level prefab which has the component which drives the game
 sequencing."
   (comp:transform :scale (v3:vec 1))
+  (delayed-render :layer-order *render-layer-order*)
+  (tags :tags '(:delayed-render-system))
   (director :level-holder (v:ref "/protect-the-planets/current-level")
             :player-1-stable (v:ref "/protect-the-planets/player-1-stable"
                                     :component 'player-stable))

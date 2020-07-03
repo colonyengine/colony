@@ -34,6 +34,7 @@
    (:file "example-scale-around")
    (:module "protect-the-planets"
     :components
-    ((:file "common")
+    ((:file "hacked-components")
+     (:file "common")
      (:file "protect-the-planets")))
    (:file "examples")))
