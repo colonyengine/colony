@@ -223,7 +223,7 @@
 (v:define-texture pivot (:texture-2d x:clamp-all-edges)
   (:texture-min-filter :nearest-mipmap-linear)
   (:texture-mag-filter :linear)
-  (:data #((ptp-textures pivot))))
+  (:data #((ptp-textures transpivot))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Materials
@@ -248,7 +248,7 @@
   (:profiles (x:u-mvp)
    :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'title)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
               (:max-intensity (v4:vec 1)))))
 
 (v:define-material starfield
@@ -261,28 +261,28 @@
   (:profiles (x:u-mvp)
    :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-mothership)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
               (:max-intensity (v4:vec 1)))))
 
 (v:define-material warning-wave
   (:profiles (x:u-mvp)
    :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'warning-wave)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
               (:max-intensity (v4:vec 1)))))
 
 (v:define-material game-over
   (:profiles (x:u-mvp)
    :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'game-over)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
               (:max-intensity (v4:vec 1)))))
 
 (v:define-material level-complete
   (:profiles (x:u-mvp)
    :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'level-complete)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 .5f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
               (:max-intensity (v4:vec 1)))))
 
 (v:define-material time-bar
@@ -295,7 +295,7 @@
   (:profiles (x:u-mvp)
    :shader shd:unlit-texture-decal
    :uniforms ((:tex.sampler1 'pivot)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 .75f0))
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
               (:max-intensity (v4:vec 1)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
