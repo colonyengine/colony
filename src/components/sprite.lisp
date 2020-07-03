@@ -22,7 +22,7 @@
    (%duration :accessor duration
               :initarg :duration
               :initform 1)
-   (%repeat :reader repeat
+   (%repeat :accessor repeat
             :initarg :repeat
             :initform t)
    (%elapsed :reader elapsed

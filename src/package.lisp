@@ -87,6 +87,7 @@
    #:frames
    #:name
    #:duration
+   #:repeat
    #:sprite)
   ;; transform
   (:export
