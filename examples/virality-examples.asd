@@ -1,8 +1,8 @@
 (asdf:defsystem #:virality-examples
   :description "Virality Engine Examples"
-  :author ("Michael Fiano <michael.fiano@gmail.com>"
+  :author ("Michael Fiano <mail@mfiano.net>"
            "Peter Keller <psilord@cs.wisc.edu>")
-  :maintainer ("Michael Fiano <michael.fiano@gmail.com>"
+  :maintainer ("Michael Fiano <mail@mfiano.net>"
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :version "0.1.0"
