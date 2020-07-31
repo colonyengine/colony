@@ -221,7 +221,7 @@
   (:data #((ptp-textures white))))
 
 (v:define-texture pivot (:texture-2d x:clamp-all-edges)
-  (:texture-min-filter :nearest-mipmap-linear)
+  (:texture-min-filter :linear-mipmap-linear)
   (:texture-mag-filter :linear)
   (:data #((ptp-textures transpivot))))
 
