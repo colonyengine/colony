@@ -26,6 +26,10 @@ them each frame.
 
 ## Install
 
+NOTE: Virality will only work on sbcl 2.0.5 or before. There was some change
+in 2.0.6 that causes Virality to not load and we are in the process of
+figuring out why.
+
 This system is not yet available to be installed automatically with Quicklisp.
 
 To manually install such that Quicklisp will be able to find ViralityEngine,
