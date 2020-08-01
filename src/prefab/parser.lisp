@@ -149,7 +149,7 @@
     (setf %components (append (collect-source-components source) %components))))
 
 (defun copy-source-nodes (prefab)
-  (u:do-hash (path node (parse-tree prefab))
+  (u:do-hash (path node (u:copy-hash-table (parse-tree prefab)))
     (destructuring-bind (&key source from &allow-other-keys) (options node)
       (when source
         (map-nodes
