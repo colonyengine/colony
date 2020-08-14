@@ -15,7 +15,7 @@
             :initform (v2:vec))
    (%rate :reader rate
           :initarg :rate
-          :initform 5)
+          :initform 0.5)
    (%spec :reader spec
           :initform nil)
    (%update-time :accessor update-time
