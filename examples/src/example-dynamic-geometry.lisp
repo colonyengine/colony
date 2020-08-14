@@ -2,13 +2,8 @@
 
 ;; Dynamic geometry
 
-(v:define-geometry-layout 2d ()
-  (:data (:format interleaved)
-         (position :type float :count 2)
-         (uv :type float :count 2)))
-
 (v:define-geometry tile ()
-  (:layout 2d
+  (:layout x:2d
    :vertex-count 4
    :primitive :triangle-strip
    :buffers

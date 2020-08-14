@@ -21,6 +21,9 @@
 
 (defpackage #:virality.extension
   (:use #:cl)
+  ;; geometry layouts
+  (:export
+   #:2d)
   ;; materials
   (:export
    #:collider/cuboid

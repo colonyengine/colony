@@ -152,4 +152,5 @@
      (:file "texture-profiles")
      (:file "textures")
      (:file "material-profiles")
-     (:file "materials")))))
+     (:file "materials")
+     (:file "geometry-layouts")))))
