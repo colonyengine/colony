@@ -20,7 +20,7 @@
 (v:define-prefab "font" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   (("text")
-   (comp:transform :scale (v3:vec 10))
+   (comp:transform :scale (v3:vec 3))
    (comp:geometry :name 'comp::text)
    (comp:font :asset '(metadata font)
               :text "Hello World")
