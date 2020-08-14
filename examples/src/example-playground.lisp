@@ -43,6 +43,7 @@
    :uniforms ((:mouse (v2:vec)))))
 
 ;;; Components
+
 (v:define-component mouse-shader-input ()
   ((%renderer :reader renderer)
    (%material :accessor material
