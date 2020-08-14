@@ -72,8 +72,10 @@
       (u:mvlet* ((text (resolve-font-text self))
                  (func (funcall #'generate-font-data self))
                  (width height (v::map-font-glyphs (spec self) func text)))
-        (v2:with-components ((fd (dimensions self)))
-          (setf fdx width fdy height))
-        (v:update-geometry (geometry geometry) :data (buffer-data self)))
+        (v3:with-components ((s (v:get-scale actor)))
+          (v2:with-components ((fd (dimensions self)))
+            (setf fdx width fdy height))
+          (v:update-geometry (geometry geometry) :data (buffer-data self))
+          (v:translate actor (v3:vec (- (* sx width)) (* sy height) 0) :replace t)))
       (setf (buffer-data self) nil
             (update-time self) time))))
