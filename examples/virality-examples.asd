@@ -21,6 +21,7 @@
    (:file "shaders/graph")
    (:file "shaders/noise")
    (:file "shaders/texture")
+   (:file "shaders/font")
    (:file "example-collision")
    (:file "example-damaged-helmet")
    (:file "example-dynamic-geometry")
@@ -32,6 +33,7 @@
    (:file "example-sprite")
    (:file "example-texture")
    (:file "example-scale-around")
+   (:file "example-font")
    (:module "protect-the-planets"
     :components
     ((:file "hacked-components")

@@ -75,6 +75,9 @@
    #:referent
    #:sphere
    #:cuboid)
+  ;; font
+  (:export
+   #:font)
   ;; geometry
   (:export
    #:geometry)
@@ -302,7 +305,8 @@
 
 (u:eval-always
   (defvar *package-nicknames*
-    '((:net.mfiano.lisp.golden-utils :u)
+    '((:3b-bmfont :font)
+      (:net.mfiano.lisp.golden-utils :u)
       (:net.mfiano.lisp.origin :o)
       (:net.mfiano.lisp.origin.swizzle :~)
       (:net.mfiano.lisp.origin.vec2 :v2)

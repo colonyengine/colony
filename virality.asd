@@ -7,7 +7,9 @@
   :bug-tracker "https://github.com/bufferswap/ViralityEngine/issues"
   :source-control (:git "https://github.com/bufferswap/ViralityEngine")
   :encoding :utf-8
-  :depends-on (#:babel
+  :depends-on (#:3b-bmfont
+               #:3b-bmfont/json
+               #:babel
                #:cl-cpus
                #:cl-graph
                #:cl-opengl
@@ -115,6 +117,7 @@
      (:file "geometry")
      (:file "mesh")
      (:file "sprite")
+     (:file "font")
      (:file "collider-sphere")
      (:file "collider-cuboid")
      (:file "collider-collide-p")))
@@ -144,6 +147,7 @@
      (:file "transform-protocol")
      (:file "free-look-state")
      (:file "spritesheet")
+     (:file "font")
      (:file "engine")))
    (:module "definition"
     :components
