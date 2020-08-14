@@ -16,12 +16,27 @@
 
 ;;; Prefabs
 
-(v:define-prefab "font" (:library examples)
+;; The basic reusable text-display, :copy or :link this into other prefabs and
+;; make changes as needed.
+(v:define-prefab "text-display" (:library examples)
+  (comp:geometry :name 'comp::text)
+  (comp:font :asset '(metadata font)
+             :text "Hello, World!")
+  (comp:render :material 'font
+               :slave (v:ref :self :component 'comp:geometry)))
+
+;; Example use of the above prefab.
+(v:define-prefab "example-text-display" (:library examples)
   (("camera" :copy "/cameras/ortho"))
-  (("text")
-   (comp:transform :scale (v3:vec 5))
-   (comp:geometry :name 'comp::text)
-   (comp:font :asset '(metadata font)
-              :text "Hello, World!")
-   (comp:render :material 'font
-                :slave (v:ref :self :component 'comp:geometry))))
+
+  (("sign" :copy "/text-display")
+   (comp:transform :scale (v3:vec 5f0)
+                   :translate/velocity (v3:vec 0f0 50f0 0f0))
+   (comp:font :text "Wall Clock Time"))
+
+  (("wall-clock-time" :copy "/text-display")
+   (comp:transform :scale (v3:vec 5f0))
+   (comp:font :rate 0
+              :text (lambda ()
+                      (format nil "~5$"
+                              (v:total-time (v:context (v:ref :self))))))))
