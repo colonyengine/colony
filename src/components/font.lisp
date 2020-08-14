@@ -15,7 +15,7 @@
             :initform (v2:vec))
    (%rate :reader rate
           :initarg :rate
-          :initform 0.5)
+          :initform 5)
    (%spec :reader spec
           :initform nil)
    (%update-time :accessor update-time
@@ -68,7 +68,8 @@
          (actor (v:actor self))
          (geometry (v:component-by-type actor 'geometry))
          (time (v:total-time context)))
-    (when (>= time (+ (update-time self) (rate self)))
+    (when (or (zerop (v:frame-count context))
+              (>= time (+ (update-time self) (rate self))))
       (u:mvlet* ((text (resolve-font-text self))
                  (func (funcall #'generate-font-data self))
                  (width height (v::map-font-glyphs (spec self) func text)))
@@ -76,6 +77,8 @@
           (v2:with-components ((fd (dimensions self)))
             (setf fdx width fdy height))
           (v:update-geometry (geometry geometry) :data (buffer-data self))
-          (v:translate actor (v3:vec (- (* sx width)) (* sy height) 0) :replace t)))
+          (v:translate actor
+                       (v3:vec (- (* sx width)) (* sy height) 0)
+                       :replace t)))
       (setf (buffer-data self) nil
             (update-time self) time))))
