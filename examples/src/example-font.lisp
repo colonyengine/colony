@@ -3,7 +3,6 @@
 ;;; Textures
 
 (v:define-texture font (:texture-2d)
-  (:flip-y t)
   (:data #((textures font))))
 
 ;;; Materials
