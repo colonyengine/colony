@@ -36,7 +36,9 @@
    (%analyzed-graphs :reader analyzed-graphs
                      :initform (u:dict #'equalp))
    (%end-of-frame-work :accessor end-of-frame-work
-                       :initform nil)))
+                       :initform nil)
+   (%prefab-entities :reader prefab-entities
+                     :initform (u:dict #'equalp))))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table

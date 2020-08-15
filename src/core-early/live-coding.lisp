@@ -48,5 +48,5 @@
         :do (ecase kind
               (:shader
                (shadow:recompile-shaders data))
-              ((:texture :material)
+              ((:texture :material :prefab)
                (funcall data core)))))

@@ -58,6 +58,20 @@
   (u:when-let ((prefab (%find-prefab object doc-type)))
     (doc prefab)))
 
+(defun update-prefab/interactively (spec)
+  (v::push-queue
+   :recompile
+   (list
+    :prefab
+    (lambda (core)
+      (dolist (entity (u:href (v::prefab-entities core) spec))
+        (let* ((transform (v:component-by-type entity 'comp:transform))
+               (parent (comp::parent transform)))
+          (declare (ignore parent))
+          ;; TODO: Figure out why parenting isn't working
+          (v::destroy entity)
+          (load-prefab core spec nil)))))))
+
 (defmacro define-prefab (name (&key library (context 'context) policy)
                          &body body)
   (let ((prefabs `(u:href v::=meta/prefabs= ',library)))
@@ -85,4 +99,5 @@
                         (,prefab (make-prefab ',name ',library ,doc ,data)))
                (setf (u:href ,prefabs ',name) ,prefab
                      (func ,prefab) (make-factory ,prefab))
-               (parse-prefab ,prefab))))))))
+               (parse-prefab ,prefab)))
+           (update-prefab/interactively '(,name ,library)))))))
