@@ -36,7 +36,7 @@
     (vec4 (* noise mask) 1)))
 
 (define-shader art1 ()
-  (:vertex (shd:unlit/vert-nil mesh-attrs))
+  (:vertex (unlit/vert-nil mesh-attrs))
   (:fragment (art1/frag)))
 
 ;;; Art 2
@@ -103,7 +103,7 @@
       (vec4 color 1))))
 
 (define-shader art2 ()
-  (:vertex (shd:unlit/vert-nil mesh-attrs))
+  (:vertex (unlit/vert-nil mesh-attrs))
   (:fragment (art2/frag)))
 
 ;;; Art 3
@@ -170,7 +170,7 @@
       (vec4 color 1))))
 
 (define-shader art3 ()
-  (:vertex (shd:unlit/vert-nil mesh-attrs))
+  (:vertex (unlit/vert-nil mesh-attrs))
   (:fragment (art3/frag)))
 
 ;;; Art 4
@@ -229,7 +229,7 @@
       (vec4 color 1))))
 
 (define-shader art4 ()
-  (:vertex (shd:unlit/vert-nil mesh-attrs))
+  (:vertex (unlit/vert-nil mesh-attrs))
   (:fragment (art4/frag)))
 
 (defun art5/hash ((n :float))
@@ -526,5 +526,5 @@
           (vec4 c 1)))))
 
 (define-shader art6 ()
-  (:vertex (shd:unlit/vert-nil mesh-attrs))
+  (:vertex (unlit/vert-nil mesh-attrs))
   (:fragment (art6/frag)))

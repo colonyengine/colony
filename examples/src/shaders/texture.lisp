@@ -136,23 +136,23 @@
 
 
 (define-shader unlit-texture-1d ()
-  (:vertex (shd:unlit/vert mesh-attrs))
+  (:vertex (unlit/vert mesh-attrs))
   (:fragment (unlit-texture-1d/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-3d ()
-  (:vertex (shd:unlit/vert mesh-attrs))
+  (:vertex (unlit/vert mesh-attrs))
   (:fragment (unlit-texture-3d/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-1d-array ()
-  (:vertex (shd:unlit/vert mesh-attrs))
+  (:vertex (unlit/vert mesh-attrs))
   (:fragment (unlit-texture-1d-array/frag :vec4 :vec2)))
 
 (define-shader noise-2d/sweep-input ()
-  (:vertex (shd:unlit/vert mesh-attrs))
+  (:vertex (unlit/vert mesh-attrs))
   (:fragment (noise-2d/sweep-input/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-2d-array ()
-  (:vertex (shd:unlit/vert mesh-attrs))
+  (:vertex (unlit/vert mesh-attrs))
   (:fragment (unlit-texture-2d-array/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-cube-map ()

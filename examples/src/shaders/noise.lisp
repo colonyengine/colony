@@ -117,73 +117,73 @@
     (vec4 noise 1)))
 
 (define-shader noise ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/frag :vec2)))
 
 (define-shader noise/perlin-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/perlin-3d/frag :vec2)))
 
 (define-shader noise/perlin-surflet-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/perlin-surflet-3d/frag :vec2)))
 
 (define-shader noise/perlin-improved-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/perlin-improved-3d/frag :vec2)))
 
 (define-shader noise/perlin-4d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/perlin-4d/frag :vec2)))
 
 (define-shader noise/cellular-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/cellular-3d/frag :vec2)))
 
 (define-shader noise/cellular-fast-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/cellular-fast-3d/frag :vec2)))
 
 (define-shader noise/hermite-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/hermite-3d/frag :vec2)))
 
 (define-shader noise/simplex-perlin-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/simplex-perlin-3d/frag :vec2)))
 
 (define-shader noise/simplex-cellular-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/simplex-cellular-3d/frag :vec2)))
 
 (define-shader noise/simplex-polkadot-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/simplex-polkadot-3d/frag :vec2)))
 
 (define-shader noise/value-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/value-3d/frag :vec2)))
 
 (define-shader noise/value-4d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/value-4d/frag :vec2)))
 
 (define-shader noise/value-hermite-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/value-hermite-3d/frag :vec2)))
 
 (define-shader noise/value-perlin-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/value-perlin-3d/frag :vec2)))
 
 (define-shader noise/polkadot-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/polkadot-3d/frag :vec2)))
 
 (define-shader noise/polkadot-box-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/polkadot-box-3d/frag :vec2)))
 
 (define-shader noise/cubist-3d ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (noise/cubist-3d/frag :vec2)))

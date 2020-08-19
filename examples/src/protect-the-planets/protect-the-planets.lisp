@@ -127,7 +127,7 @@
     (* tex-color mix-color)))
 
 (define-shader starfield ()
-  (:vertex (shd:unlit/vert mesh-attrs))
+  (:vertex (unlit/vert mesh-attrs))
   (:fragment (starfield/frag :vec4 :vec2)))
 
 ;; Here is a sprite shader, regularly from umbra, but I needed some

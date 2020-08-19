@@ -15,9 +15,20 @@
    #:ref))
 
 (uiop:define-package #:virality.shader
-    (:use-reexport
-     #:net.mfiano.lisp.shadow.glsl
-     #:net.mfiano.lisp.umbra.common))
+  (:use-reexport
+   #:net.mfiano.lisp.shadow.glsl
+   #:net.mfiano.lisp.umbra.common)
+  ;; shaders
+  (:export
+   #:collider/cuboid
+   #:collider/sphere
+   #:unlit-color
+   #:unlit-color-decal
+   #:unlit-texture
+   #:unlit-texture-decal
+   #:unlit/vert
+   #:unlit/vert-nil
+   #:unlit/vert-only-uv1))
 
 (defpackage #:virality.extension
   (:use #:cl)

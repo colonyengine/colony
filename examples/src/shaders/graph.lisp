@@ -15,7 +15,7 @@
      10)))
 
 (define-shader graph ()
-  (:vertex (shd:unlit/vert-only-uv1 mesh-attrs))
+  (:vertex (unlit/vert-only-uv1 mesh-attrs))
   (:fragment (graph/frag :vec2)))
 
 (defun 3d-graph/graph ((fn (function (:float) (:vec3 :vec4)))
