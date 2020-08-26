@@ -6,9 +6,9 @@
                "Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :version "0.1.0"
-  :depends-on (#:net.mfiano.lisp.golden-utils
-               #:net.mfiano.lisp.origin
-               #:virality)
+  :depends-on (#:virality
+	       #:net.mfiano.lisp.golden-utils
+               #:net.mfiano.lisp.origin)
   :pathname "src"
   :serial t
   :components

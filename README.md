@@ -28,6 +28,22 @@ them each frame.
 
 This system is not yet available to be installed automatically with Quicklisp.
 
+NOTE: cl-opengl has a feature in it to work around an INTEL GPU bug that causes
+a severe performance problem in most cases where people aren't using the buggy
+intel driver. While you aren't required to perform the actions in this note if
+you do the performance of V will be much better. V disables this feature in V's
+asd file.  However, if there are cl-opengl fasls which have been pre-cached,
+they need to be recompiled. So, first recursively remove ~/.cache/common-lisp/*
+or wherever you store your fasls.  Then ensure that V is _FIRST_ in any
+:depends-on line for your V projects. Then, load a V project as the first thing
+you do with in a REPL with the removed fasls and cl-opengl will be required by
+V's asd which will turn off the feature. If you try and load something other
+than V that requires cl-opengl, then the feature won't be turned off and the
+performance problem will still happen. cl-opengl will probably be fixed to
+change this behavior in a future commit, but until then this is a fix for a
+performance problem.
+
+
 To manually install such that Quicklisp will be able to find ViralityEngine,
 clone this repository into your local-projects directory.
 
