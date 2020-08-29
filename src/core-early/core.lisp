@@ -38,7 +38,9 @@
    (%end-of-frame-work :accessor end-of-frame-work
                        :initform nil)
    (%prefab-entities :reader prefab-entities
-                     :initform (u:dict #'equalp))))
+                     :initform (u:dict #'equalp))
+   (%last-picked-actor :accessor last-picked-actor
+                       :initform nil)))
 
 (defclass bookkeeping-tables ()
   ((%component-search-table :reader component-search-table

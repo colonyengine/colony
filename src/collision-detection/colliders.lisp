@@ -30,7 +30,7 @@
    (%stable-colliders :reader stable-colliders
                       :initarg :stable-colliders
                       ;; keyed by on-layer in collider, value is a hash. second
-                      ;; has is keyed by ref to collider and value is collider.
+                      ;; hash is keyed by ref to collider and value is collider.
                       :initform (u:dict #'eq))
    (%deregistering-colliders :reader deregistering-colliders
                              :initarg :deregistering-colliders

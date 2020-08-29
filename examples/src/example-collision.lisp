@@ -440,3 +440,102 @@ actually are. You have to view the results to see the colliders lighting up."
     (comp:cuboid :visualize t
                  :on-layer :ground
                  :center (v3:vec)))))
+
+(v:define-component pick-test () ())
+
+(v:define-prefab "collision-test-4" (:library examples)
+  (("camera" :copy "/cameras/perspective")
+   (pick-test)
+   (comp:camera (:policy :new-args) :zoom 1f0))
+  ("a"
+   (comp:transform :translate (v3:vec 5f0 0f0 0f0)
+                   :translate/velocity (v3:vec 0f0 0f0 0f0)
+                   :scale 1f0)
+   ("stone-sphere1"
+    (comp:transform :scale 2f0
+                    :rotate (q:orient :local :x o:pi/2)
+                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
+    (comp:mesh :asset '(meshes damaged-helmet)
+               :name "helmet")
+    (comp:sphere :display-id "Stone"
+                 :visualize t
+                 :on-layer :ground
+                 :center (v3:vec 5 0 0)
+                 :radius 1.25f0)
+    (comp:render :material 'damaged-helmet
+                 :slave (v:ref :self :component 'comp:mesh))))
+  ("b"
+   (comp:transform :translate (v3:vec -5f0 0f0 0f0)
+                   :translate/velocity (v3:vec 0f0 0f0 0f0)
+                   :scale 1f0)
+   ("stone-sphere2"
+    (comp:transform :scale 2f0
+                    :rotate (q:orient :local :x o:pi/2)
+                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
+    (comp:mesh :asset '(meshes damaged-helmet)
+               :name "helmet")
+    (comp:sphere :display-id "Stone"
+                 :visualize t
+                 :on-layer :ground
+                 :center (v3:vec)
+                 :radius 1.25f0)
+    (comp:render :material 'damaged-helmet
+                 :slave (v:ref :self :component 'comp:mesh)))))
+
+(v:define-prefab "collision-test-5" (:library examples)
+  (("camera" :copy "/cameras/perspective")
+   (pick-test)
+   (comp:camera (:policy :new-args) :zoom 1f0))
+  ("a"
+   (comp:transform :translate (v3:vec 15f0 0f0 0f0)
+                   :translate/velocity (v3:vec 0f0 0f0 0f0)
+                   :scale 1f0)
+   ("stone-obb1"
+    (comp:transform :scale 15f0
+                    :rotate (q:orient :local :x o:pi/2))
+    (comp:mesh :asset '(meshes damaged-helmet)
+               :name "helmet")
+    (comp:cuboid :display-id "Stone"
+                 :visualize t
+                 :on-layer :ground
+                 :center (v3:vec)
+                 :minx -1f0
+                 :maxx 1f0
+                 :miny -1f0
+                 :maxy 1f0
+                 :minz -1f0
+                 :maxz 1f0)
+    (comp:render :material 'damaged-helmet
+                 :slave (v:ref :self :component 'comp:mesh))))
+  ("b"
+   (comp:transform :translate (v3:vec -15f0 0f0 0f0)
+                   :translate/velocity (v3:vec 0f0 0f0 0f0)
+                   :scale 1f0)
+   ("stone-obb2"
+    (comp:transform :scale 15f0
+                    :rotate (q:orient :local :z o:pi/4 :x o:pi/2))
+    (comp:mesh :asset '(meshes damaged-helmet)
+               :name "helmet")
+    (comp:cuboid :display-id "Stone"
+                 :visualize t
+                 :on-layer :ground
+                 :center (v3:vec)
+                 :minx -1f0
+                 :maxx 1f0
+                 :miny -1f0
+                 :maxy 1f0
+                 :minz -1f0
+                 :maxz 1f0)
+    (comp:render :material 'damaged-helmet
+                 :slave (v:ref :self :component 'comp:mesh)))))
+
+(defmethod v:on-component-update ((self pick-test))
+  (let ((context (v:context self))
+        (line-segment (make-instance 'v::line-segment))
+        (picked nil))
+    (when (v:on-button-enter context :mouse :left)
+      (setf picked (v::pick-actor context line-segment)))
+    (when picked
+      (:printv picked)
+      ;; TODO: Uncomment this when sly has send-to-repl in master
+      #++(v::send-to-repl (list picked) :comment "Picked actor"))))

@@ -153,6 +153,7 @@
      (:file "free-look-state")
      (:file "spritesheet")
      (:file "font")
+     (:file "object-picking")
      (:file "engine")))
    (:module "definition"
     :components
