@@ -15,21 +15,25 @@
   (mapcar #'parse-integer
           (split-sequence:split-sequence #\. =opengl-version=)))
 
-(defun make-opengl-context (display)
+(defun set-opengl-attributes ()
   (destructuring-bind (major minor) (parse-opengl-version)
     (sdl2:gl-set-attrs :context-major-version major
                        :context-minor-version minor
                        :context-profile-mask 1
                        :multisamplebuffers 1
-                       :multisamplesamples 4)
-    (let ((context (sdl2:gl-create-context (window display))))
-      (setf (context display) context)
-      (apply #'gl:enable +enabled-capabilities+)
-      (apply #'gl:disable +disabled-capabilities+)
-      (apply #'gl:blend-func +blend-mode+)
-      (gl:depth-func +depth-mode+))))
+                       :multisamplesamples 4)))
+
+(defun make-opengl-context (display)
+  (let ((context (sdl2:gl-create-context (window display))))
+    (setf (context display) context)
+    (apply #'gl:enable +enabled-capabilities+)
+    (apply #'gl:disable +disabled-capabilities+)
+    (apply #'gl:blend-func +blend-mode+)
+    (gl:depth-func +depth-mode+)))
 
 (defun make-window ()
+  ;; opengl attributes must be set BEFORE SDL window creation.
+  (set-opengl-attributes)
   (sdl2:create-window :title =window-title=
                       :w (truncate =window-width=)
                       :h (truncate =window-height=)
@@ -43,6 +47,7 @@
                                  :window (make-window)
                                  :refresh-rate refresh-rate
                                  :resolution resolution)))
+    ;; opengl context must be created AFTER SDL window creation.
     (make-opengl-context display)
     (sdl2:gl-set-swap-interval (if =vsync= 1 0))
     (if =allow-screensaver=
