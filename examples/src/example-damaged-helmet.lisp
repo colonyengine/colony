@@ -270,27 +270,53 @@
 
 ;;; Prefabs
 
+(v:define-prefab "default-helmet" (:library examples)
+  "A base description of the damaged helmet so we can use it easily elsewhere."
+  (comp:transform :rotate (q:orient :local :x o:pi/2))
+  (comp:mesh :asset '(meshes damaged-helmet)
+             :name "helmet")
+  (comp:render :material 'damaged-helmet
+               :slave (v:ref :self :component 'comp:mesh)))
+
 (v:define-prefab "damaged-helmet" (:library examples)
   (("camera" :copy "/cameras/perspective")
    (comp:camera (:policy :new-args)
                 :free-look t))
-  (("helmet" :copy "/mesh")
-   (comp:transform :rotate (q:orient :local :x o:pi/2)
-                   :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi/6))
-                   :scale 17f0)
-   (comp:mesh :asset '(meshes damaged-helmet)
-              :name "helmet")
-   (comp:render :material 'damaged-helmet
-                :slave (v:ref :self :component 'comp:mesh))))
+  (("helmet" :copy "/default-helmet")
+   (comp:transform :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi/6))
+                   :scale 17f0)))
+
+(v:define-prefab "damaged-helmet-group" (:library examples)
+  (("camera" :copy "/cameras/perspective")
+   (comp:camera (:policy :new-args)
+                :free-look t))
+  ("group"
+   (comp:transform :translate (v3:vec 0f0 0f0 -25f0)
+                   :rotate/velocity (o:make-velocity v3:+up+ (- o:pi/6)))
+   (("helmet1" :copy "/default-helmet")
+    (comp:transform :rotate/velocity (o:make-velocity (v3:vec 1d0 1d0 1d0)
+                                                      (- o:pi/3))
+                    :translate (v3:vec -25f0 5f0 0f0)
+                    :scale 17f0))
+   (("helmet2" :copy "/default-helmet")
+    (comp:transform :rotate/velocity (o:make-velocity (v3:vec 1d0 1d0 1d0)
+                                                      (- o:pi/3))
+                    :translate (v3:vec 25f0 5f0 0f0)
+                    :scale 17f0))
+   (("helmet4" :copy "/default-helmet")
+    (comp:transform :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi/6))
+                    :translate (v3:vec 0f0 -5f0 25f0)
+                    :scale 17f0))
+   (("helmet3" :copy "/default-helmet")
+    (comp:transform :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi/6))
+                    :translate (v3:vec 0f0 -5f0 -25f0)
+                    :scale 17f0))))
+
+
 
 (v:define-prefab "damaged-helmet-interactive" (:library examples)
   (("camera" :copy "/cameras/perspective")
    (comp:camera (:policy :new-args)))
-  (("helmet" :copy "/mesh")
-   (simple-mouse-rotator :clamp-p t)
-   (comp:transform :rotate (q:orient :local :x o:pi/2)
-                   :scale 17f0)
-   (comp:mesh :asset '(meshes damaged-helmet)
-              :name "helmet")
-   (comp:render :material 'damaged-helmet
-                :slave (v:ref :self :component 'comp:mesh))))
+  (("helmet" :copy "/default-helmet")
+   (comp:transform :scale 17f0)
+   (simple-mouse-rotator :clamp-p t)))
