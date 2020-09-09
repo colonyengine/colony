@@ -180,12 +180,12 @@
                             (model :mat4)
                             (view :mat4)
                             (proj :mat4)
-                            (normal-matrix :mat4))
+                            (normal-matrix :mat3))
   (with-slots (mesh/pos mesh/normal mesh/tangent mesh/uv1) mesh-attrs
     (let* ((pos (* model (vec4 mesh/pos 1)))
            (world-pos (/ (.xyz pos) (.w pos)))
            (normal (normalize
-                    (vec3 (* normal-matrix (vec4 (.xyz mesh/normal) 0)))))
+                    (* normal-matrix mesh/normal)))
            (camera-pos (.xyz (aref (inverse view) 3)))
            (view-dir (normalize (- camera-pos world-pos))))
       (values (* proj view pos)

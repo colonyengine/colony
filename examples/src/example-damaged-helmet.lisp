@@ -156,7 +156,7 @@
     (:metallic-factor 1)
     (:roughness-factor 1)
     (:normal-scale 1)
-    (:normal-matrix (m4:mat 1))
+    (:normal-matrix (m3:mat 1))
     (:occlusion-strength 1)
     (:emissive-factor 1)
     (:brdf-lut 'brdf-lut)
