@@ -4,8 +4,9 @@
 ;; engine doesn't yet have a proper system for representing sorting of
 ;; rendering components. So, these two components take the place of the
 ;; rendering component in PtP. They will be removed and this hackish solution
-;; delete when rendering components can properly sort. This method is also
+;; deleted when rendering components can properly sort. This method is also
 ;; crappy and not intended for default behavior in V. It is too nasty to use.
+;; The code duplication alone is vomitous.
 
 ;; NOTE: I should be able to specify these components in the typedag, but
 ;; that functionality seems terribly broken right now.
@@ -39,12 +40,22 @@
          (progn ,@body))))
 
 (defmacro with-material (material (&rest bindings) &body body)
+  "Bind uniforms in BINDINGS before evaluating the BODY.
+If the uniform doesn't exist, silently ignore the setting of it.  NOTE: This
+means if the BODY sets a uniform it will be IGNORED for this render, and if a
+shared material may affect the NEXT rendering call!"
   (u:with-gensyms (material-ref)
     `(let ((,material-ref ,material))
        (shadow:with-shader (v::shader ,material-ref)
-         (setf ,@(loop :for (k v) :on bindings :by #'cddr
-                       :collect `(v:uniform-ref ,material-ref ,k)
-                       :collect v))
+         ;; TODO: This behavior here implies a policy about uniform usage for
+         ;; materials, in that, using a material that doesn't define this
+         ;; uniform will silently ignore the issue if you try setting it.
+         ;; The todo here is figure out how to get this better described so
+         ;; we can do compile time checks on uniforms.
+         (progn
+           ,@(loop :for (k v) :on bindings :by #'cddr
+                   :collect `(when (v:uniform-ref-p ,material-ref ,k)
+                               (setf (v:uniform-ref ,material-ref ,k) ,v))))
          (v::bind-material ,material-ref)
          (with-depth-function ,material-ref
            ,@body)))))

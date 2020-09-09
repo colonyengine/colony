@@ -27,12 +27,22 @@
          (progn ,@body))))
 
 (defmacro with-material (material (&rest bindings) &body body)
+  "Bind uniforms in BINDINGS before evaluating the BODY.
+If the uniform doesn't exist, silently ignore the setting of it.  NOTE: This
+means if the BODY sets a uniform it will be IGNORED for this render, and if a
+shared material may affect the NEXT rendering call!"
   (u:with-gensyms (material-ref)
     `(let ((,material-ref ,material))
        (shadow:with-shader (v::shader ,material-ref)
-         (setf ,@(loop :for (k v) :on bindings :by #'cddr
-                       :collect `(v:uniform-ref ,material-ref ,k)
-                       :collect v))
+         ;; TODO: This behavior here implies a policy about uniform usage for
+         ;; materials, in that, using a material that doesn't define this
+         ;; uniform will silently ignore the issue if you try setting it.
+         ;; The todo here is figure out how to get this better described so
+         ;; we can do compile time checks on uniforms.
+         (progn
+           ,@(loop :for (k v) :on bindings :by #'cddr
+                   :collect `(when (v:uniform-ref-p ,material-ref ,k)
+                               (setf (v:uniform-ref ,material-ref ,k) ,v))))
          (v::bind-material ,material-ref)
          (with-depth-function ,material-ref
            ,@body)))))
@@ -45,32 +55,15 @@
   (u:when-let ((camera (v::active-camera (v:context self)))
                (slave (slave self))
                (material (material self)))
-    (:printv (v:actor self) (v:uniform-ref material :normal-matrix))
     (with-material material
         (:model (v:get-model-matrix self)
          :view (view camera)
-         :proj (projection camera))
-
-      ;; TODO: For now, if this uniform exists, set it up. We don't want to
-      ;; unecessarily set this all the time, since it could compute work for a
-      ;; lot of situations where we don't need it and as a general rule
-      ;; materials might not have it. Another solution is that the user sets a
-      ;; function for the normal-matrix and when it gets called it figures out
-      ;; the actor and passes it in (along with the material). Need to think on
-      ;; it a little bit more. Currently the function only knows of the context
-      ;; and the material. Since materials are shared by different renderers,
-      ;; materials can't have backreferences to their components/actors.
-      (when (v:uniform-ref-p material :normal-matrix)
-        (let ((normal-matrix
-                (m4:rotation-to-mat3
-                 (m4:transpose (m4:invert
-                                (m4:set-translation
-                                 (m4:* (view camera)
-                                       (v:get-model-matrix self))
-                                 (v3:vec 0 0 0)))))))
-
-          ;; TODO: Implement a m3:invert and reorganize this expressions
-          ;; to reduce operations and not cons memory.
-          (setf (v:uniform-ref material :normal-matrix) normal-matrix)))
+         :proj (projection camera)
+         :normal-matrix (m4:rotation-to-mat3
+                         (m4:transpose (m4:invert
+                                        (m4:set-translation
+                                         (m4:* (view camera)
+                                               (v:get-model-matrix self))
+                                         (v3:vec 0 0 0))))))
 
       (v:on-component-slave-render self slave))))
