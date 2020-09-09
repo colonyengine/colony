@@ -45,6 +45,7 @@
   (u:when-let ((camera (v::active-camera (v:context self)))
                (slave (slave self))
                (material (material self)))
+    (:printv (v:actor self) (v:uniform-ref material :normal-matrix))
     (with-material material
         (:model (v:get-model-matrix self)
          :view (view camera)
@@ -60,14 +61,15 @@
       ;; and the material. Since materials are shared by different renderers,
       ;; materials can't have backreferences to their components/actors.
       (when (v:uniform-ref-p material :normal-matrix)
-        (setf (v:uniform-ref material :normal-matrix)
-              ;; TODO: Implement a m3:invert and reorganize this expressions
-              ;; to reduce operations and not cons memory.
-              (m4:rotation-to-mat3
-               (m4:transpose (m4:invert
-                              (m4:set-translation
-                               (m4:* (view camera)
-                                     (v:get-model-matrix self))
-                               (v3:vec 0 0 0)))))))
+        (let ((foo (m4:rotation-to-mat3
+                    (m4:transpose (m4:invert
+                                   (m4:set-translation
+                                    (m4:* (view camera)
+                                          (v:get-model-matrix self))
+                                    (v3:vec 0 0 0)))))))
+          (setf (v:uniform-ref material :normal-matrix)
+                ;; TODO: Implement a m3:invert and reorganize this expressions
+                ;; to reduce operations and not cons memory.
+                foo)))
 
       (v:on-component-slave-render self slave))))
