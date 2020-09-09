@@ -287,39 +287,6 @@
                    :scale 17f0)))
 
 (v:define-prefab "damaged-helmet-group" (:library examples)
-<<<<<<< HEAD
-  "This scene shows a bug concerning the environment mapping we need to solve.
-The rotating helmet's env map doesn't stay fixed, and the non rotating helmet's
-env map rotates as if it is rotating. This sort of looks like a shared
-structure problem, but it definitely needs inspection."
-
-  (("camera" :copy "/cameras/perspective")
-   (comp:camera (:policy :new-args)
-                :free-look t))
-  ("group"
-   (comp:transform :translate (v3:vec 0f0 0f0 -25f0)
-                   :rotate/velocity (o:make-velocity v3:+up+ (- o:pi/6)))
-   (("helmet1" :copy "/default-helmet")
-    (comp:transform :rotate/velocity (o:make-velocity (v3:vec 1d0 1d0 1d0)
-                                                      (- o:pi/3))
-                    :translate (v3:vec -25f0 5f0 0f0)
-                    :scale 17f0))
-   #++(("helmet2" :copy "/default-helmet")
-       (comp:transform :rotate/velocity (o:make-velocity (v3:vec 1d0 1d0 1d0)
-                                                         (- o:pi/3))
-                       :translate (v3:vec 25f0 5f0 0f0)
-                       :scale 17f0))
-   #++(("helmet4" :copy "/default-helmet")
-       (comp:transform :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi/6))
-                       :translate (v3:vec 0f0 -5f0 25f0)
-                       :scale 17f0))
-   (("helmet3" :copy "/default-helmet")
-    (comp:transform :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi/6))
-                    :translate (v3:vec 0f0 -5f0 -25f0)
-                    :scale 17f0))))
-
-
-=======
   (("camera" :copy "/cameras/perspective"))
   (("helmet1" :copy "/default-helmet")
    (comp:transform :rotate/velocity (o:make-velocity (v3:vec 1) (- o:pi/3))
@@ -328,7 +295,6 @@ structure problem, but it definitely needs inspection."
   (("helmet2" :copy "/default-helmet")
    (comp:transform :translate (v3:vec 15 0 0)
                    :scale 15)))
->>>>>>> e7a2b0f6acf2ffbf17d49d4c8cd39a1466ac6b46
 
 (v:define-prefab "damaged-helmet-interactive" (:library examples)
   (("camera" :copy "/cameras/perspective")
