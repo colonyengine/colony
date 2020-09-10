@@ -53,17 +53,10 @@ shared material may affect the NEXT rendering call!"
 
 (defmethod v:on-component-render ((self render))
   (u:when-let ((camera (v::active-camera (v:context self)))
-               (slave (slave self))
-               (material (material self)))
-    (with-material material
+               (transform (v:component-by-type (v:actor self) 'transform)))
+    (with-material (material self)
         (:model (v:get-model-matrix self)
          :view (view camera)
          :proj (projection camera)
-         :normal-matrix (m4:rotation-to-mat3
-                         (m4:transpose (m4:invert
-                                        (m4:set-translation
-                                         (m4:* (view camera)
-                                               (v:get-model-matrix self))
-                                         (v3:vec 0 0 0))))))
-
-      (v:on-component-slave-render self slave))))
+         :normal-matrix (resolve-normal-matrix transform))
+      (v:on-component-slave-render self (slave self)))))

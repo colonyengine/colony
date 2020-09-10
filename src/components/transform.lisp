@@ -14,7 +14,9 @@
    (%local :reader local
            :initform (m4:mat 1))
    (%model :reader model
-           :initform (m4:mat 1))))
+           :initform (m4:mat 1))
+   (%normal-matrix :reader normal-matrix
+                   :initform (m4:mat 1))))
 
 (defun add-child (parent child)
   (pushnew child (children parent))
@@ -48,6 +50,15 @@
   (u:when-let ((parent (parent node)))
     (resolve-local node factor)
     (m4:*! (model node) (model parent) (local node))))
+
+(defun resolve-normal-matrix (node)
+  (let ((result (normal-matrix node)))
+    (u:when-let ((camera (v::active-camera (v:context node))))
+      (m4:set-translation! result (model node) v3:+zero+)
+      (m4:*! result (view camera) result)
+      (m4:invert! result result)
+      (m4:transpose! result result))
+    result))
 
 (defun map-nodes (func parent)
   (funcall func parent)
