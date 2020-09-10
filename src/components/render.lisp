@@ -55,7 +55,7 @@ shared material may affect the NEXT rendering call!"
   (u:when-let ((camera (v::active-camera (v:context self)))
                (transform (v:component-by-type (v:actor self) 'transform)))
     (with-material (material self)
-        (:model (v:get-model-matrix self)
+        (:model (model transform)
          :view (view camera)
          :proj (projection camera)
          :normal-matrix (resolve-normal-matrix transform))

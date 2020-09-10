@@ -52,13 +52,22 @@
     (m4:*! (model node) (model parent) (local node))))
 
 (defun resolve-normal-matrix (node)
+  ;; Computes a normal matrix from the camera's view matrix and the supplied
+  ;; transform component's model matrix. Writes the result into the
+  ;; normal-matrix slot of this transform component.
+  ;; NOTE: This is completely a non-consing operation except for the last part
+  ;; to convert the result into a mat3. See if we can do something about this
+  ;; sometime when if it matters.
   (let ((result (normal-matrix node)))
+    ;; Only compute if there is an active camera.
     (u:when-let ((camera (v::active-camera (v:context node))))
       (m4:set-translation! result (model node) v3:+zero+)
       (m4:*! result (view camera) result)
       (m4:invert! result result)
       (m4:transpose! result result))
-    result))
+    ;; Regardless of whether there is an active camera, convert the stored
+    ;; normal-matrix to a mat3, returning this result to the caller.
+    (m4:rotation-to-mat3 result)))
 
 (defun map-nodes (func parent)
   (funcall func parent)
