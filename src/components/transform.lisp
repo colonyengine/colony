@@ -57,7 +57,9 @@
   ;; normal-matrix slot of this transform component.
   ;; NOTE: This is completely a non-consing operation except for the last part
   ;; to convert the result into a mat3. See if we can do something about this
-  ;; sometime when if it matters.
+  ;; sometime when if it matters. The "something to do" is write a mat3 invert
+  ;; for origin which will allow us to reduce the memory load and operations
+  ;; further.
   (let ((result (normal-matrix node)))
     ;; Only compute if there is an active camera.
     (u:when-let ((camera (v::active-camera (v:context node))))
