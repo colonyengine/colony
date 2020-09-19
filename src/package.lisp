@@ -28,7 +28,8 @@
    #:unlit-texture-decal
    #:unlit/vert
    #:unlit/vert-nil
-   #:unlit/vert-only-uv1))
+   #:unlit/vert-only-uv1
+   #:matcap))
 
 (defpackage #:virality.extension
   (:use #:cl)
@@ -39,6 +40,7 @@
   (:export
    #:collider/cuboid
    #:collider/sphere
+   #:matcap
    #:missing-material
    #:sprite
    #:unlit-color
@@ -59,7 +61,30 @@
    #:u-vpt)
   ;; textures
   (:export
-   #:debug-texture)
+   #:debug-texture
+   #:matcap/basic-1
+   #:matcap/basic-2
+   #:matcap/basic-dark
+   #:matcap/basic-side
+   #:matcap/ceramic-dark
+   #:matcap/ceramic-lightbulb
+   #:matcap/check-normal-y
+   #:matcap/check-rim-dark
+   #:matcap/check-rim-light
+   #:matcap/clay-brown
+   #:matcap/clay-muddy
+   #:matcap/clay-studio
+   #:matcap/jade
+   #:matcap/metal-anisotropic
+   #:matcap/metal-carpaint
+   #:matcap/metal-lead
+   #:matcap/metal-shiny
+   #:matcap/pearl
+   #:matcap/reflection-check-horizontal
+   #:matcap/reflection-check-vertical
+   #:matcap/resin
+   #:matcap/skin
+   #:matcap/toon)
   ;; texture profiles
   (:export
    #:clamp-all-edges
@@ -139,7 +164,9 @@
    #:with-storage)
   ;; asset pools
   (:export
-   #:textures)
+   #:meshes
+   #:textures
+   #:matcaps)
   ;; config
   (:export
    #:=allow-screensaver=

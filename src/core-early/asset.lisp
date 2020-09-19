@@ -148,3 +148,7 @@
 (define-asset-pool textures ()
   :path "data/texture"
   :filter "png")
+
+(define-asset-pool matcaps ()
+  :path "data/texture/matcaps"
+  :filter "png")

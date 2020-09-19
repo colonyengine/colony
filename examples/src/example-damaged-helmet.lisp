@@ -270,6 +270,8 @@
 
 ;;; Prefabs
 
+;; TODO: Add a component to swap out matcap and real texture with a key strike.
+
 (v:define-prefab "default-helmet" (:library examples)
   "A base description of the damaged helmet so we can use it easily elsewhere."
   (comp:transform :rotate (q:orient :local :x o:pi/2))

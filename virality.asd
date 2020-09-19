@@ -137,7 +137,8 @@
    (:module "shader"
     :components
     ((:file "texture")
-     (:file "collider")))
+     (:file "collider")
+     (:file "matcap")))
    (:module "core-late"
     :components
     ((:file "opengl")

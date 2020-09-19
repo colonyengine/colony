@@ -66,3 +66,10 @@
               (:maxy 0f0)
               (:minz 0f0)
               (:maxz 0f0))))
+
+;; These are CC-0 from blender.
+(v:define-material matcap
+  (:shader shd:matcap
+   :profiles (u-mvp)
+   :uniforms ((:sampler 'x:matcap/basic-1)
+	      (:normal-matrix (m3:mat 1)))))
