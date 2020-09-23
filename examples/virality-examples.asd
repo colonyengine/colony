@@ -22,6 +22,7 @@
    (:file "shaders/noise")
    (:file "shaders/texture")
    (:file "shaders/font")
+   (:file "shaders/matcap-lookup")
    (:file "example-collision")
    (:file "example-damaged-helmet")
    (:file "example-dynamic-geometry")
