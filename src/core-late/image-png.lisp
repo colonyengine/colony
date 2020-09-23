@@ -3,6 +3,7 @@
 (defun get-png-channel-count (image)
   (ecase (pngload:color-type image)
     (:greyscale 1)
+    (:greyscale-alpha 2)
     (:truecolour 3)
     (:truecolour-alpha 4)))
 
