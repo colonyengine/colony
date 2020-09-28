@@ -41,6 +41,12 @@
 
 (defun make-display (core)
   (sdl2:init :everything)
+  ;; NOTE: We can't call (sdl2:init :everything) because it tries to manage the
+  ;; main thread itself and when there is an ABORT restart in V, will get
+  ;; confused and lock up. Since V does the thread management itself, we the
+  ;; the lower level raw equvalent of it in the SDL2 CFFI.  TODO: Prolly should
+  ;; export this in SDL2.
+  (sdl2::sdl-init #x7f)
   (let* ((refresh-rate (nth-value 3 (sdl2:get-current-display-mode 0)))
          (resolution (v2:vec =window-width= =window-height=))
          (display (make-instance 'display
@@ -59,6 +65,7 @@
   (u:when-let ((display (display core)))
     (sdl2:gl-delete-context (context display))
     (sdl2:destroy-window (window display)))
+  ;; NOTE: Same issue with sdl2:quit as with sdl2:sdl-init above...
   (sdl2:sdl-quit))
 
 ;; TODO: The functions below are not finalized yet. The clock system and
