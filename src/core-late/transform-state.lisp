@@ -78,5 +78,5 @@
 
 (defun transform-node/quaternion (state delta)
   (q:copy! (previous state) (current state))
-  (o:velocity->rotation! (incremental-delta state) (incremental state) delta)
+  (q:from-velocity! (incremental-delta state) (incremental state) delta)
   (q:rotate! (current state) (current state) (incremental-delta state)))

@@ -186,7 +186,7 @@
 
 (defun %translate/velocity (transform axis rate)
   (let ((state (translation transform)))
-    (setf (v::incremental state) (o:make-velocity axis rate))))
+    (setf (v::incremental state) (v3:make-velocity axis rate))))
 
 (defun %rotate (transform quat space replace instant)
   (let ((state (rotation transform)))
@@ -211,7 +211,7 @@
 
 (defun %rotate/velocity (transform axis rate)
   (let ((state (rotation transform)))
-    (setf (v::incremental state) (o:make-velocity axis rate))))
+    (setf (v::incremental state) (v3:make-velocity axis rate))))
 
 (defun %scale (transform vec space replace instant)
   (let ((state (scale transform)))
@@ -236,7 +236,7 @@
 
 (defun %scale/velocity (transform axis rate)
   (let ((state (scale transform)))
-    (setf (v::incremental state) (o:make-velocity axis rate))))
+    (setf (v::incremental state) (v3:make-velocity axis rate))))
 
 (defun %scale-around (target-transform pivot-in-world-space scale-diff
                       &key (min-scale (v3:vec 0f0 0f0 0f0))

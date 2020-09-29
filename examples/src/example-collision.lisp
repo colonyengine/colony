@@ -159,7 +159,7 @@
    (comp:camera (:policy :new-args) :zoom 6f0))
   ("rot-0-center"
    (comp:transform :translate (v3:vec -2f0 0f0 0f0)
-                   :rotate/velocity (o:make-velocity v3:+forward+ o:pi))
+                   :rotate/velocity (v3:make-velocity v3:+forward+ o:pi))
    ("plane-0"
     (comp:transform :translate (v3:vec -2f0 0f0 0f0))
     (comp:mesh :asset '(v::meshes v::primitives)
@@ -173,7 +173,7 @@
                  :slave (v:ref :self :component 'comp:mesh))))
   ("rot-1-center"
    (comp:transform :translate (v3:vec 2f0 0f0 0f0)
-                   :rotate/velocity (o:make-velocity v3:+forward+ (- o:pi)))
+                   :rotate/velocity (v3:make-velocity v3:+forward+ (- o:pi)))
    ("plane-1"
     (comp:transform :translate (v3:vec 2f0 0f0 0f0))
     (comp:mesh :asset '(v::meshes v::primitives)
@@ -273,7 +273,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (comp:transform :translate (v3:vec 0f0 5f0 0f0)
                    :scale 0.5f0
                    :rotate (q:orient :local :x o:pi/2)
-                   :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
+                   :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi)
                    :translate/velocity (v3:vec 0f0 -2f0 0f0))
    (comp:mesh :asset '(meshes damaged-helmet)
               :name "helmet")
@@ -344,7 +344,7 @@ actually are. You have to view the results to see the colliders lighting up."
    (comp:transform :translate (v3:vec)
                    :scale 2f0
                    :rotate (q:orient :local :x o:pi/2)
-                   :rotate/velocity (o:make-velocity (v3:vec 1) o:pi)
+                   :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi)
                    :translate/velocity (v3:vec))
    (comp:mesh :asset '(meshes damaged-helmet)
               :name "helmet")
@@ -367,7 +367,7 @@ actually are. You have to view the results to see the colliders lighting up."
    ("stone-cuboid"
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
     (comp:mesh :asset '(meshes damaged-helmet)
                :name "helmet")
     (comp:cuboid :display-id "Stone"
@@ -389,7 +389,7 @@ actually are. You have to view the results to see the colliders lighting up."
    ("stone-sphere"
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
     (comp:mesh :asset '(meshes damaged-helmet)
                :name "helmet")
     (comp:sphere :display-id "Stone"
@@ -412,7 +412,7 @@ actually are. You have to view the results to see the colliders lighting up."
                     :translate/velocity (v3:vec 0f0 0f0 0f0))
     ("cuboid1"
      (comp:transform :rotate (q:orient :local :z o:pi/4)
-                     :rotate/velocity (o:make-velocity (v3:vec 0 0 1) o:pi/12))
+                     :rotate/velocity (v3:make-velocity (v3:vec 0 0 1) o:pi/12))
      (comp:cuboid :visualize t
                   :on-layer :ground
                   :center (v3:vec))))
@@ -431,7 +431,7 @@ actually are. You have to view the results to see the colliders lighting up."
                     :translate/velocity (v3:vec 0f0 0f0 0f0))
     ("cuboid1"
      (comp:transform :rotate (q:orient :local :z o:pi/4)
-                     :rotate/velocity (o:make-velocity (v3:vec 0 0 1) o:pi/12))
+                     :rotate/velocity (v3:make-velocity (v3:vec 0 0 1) o:pi/12))
      (comp:cuboid :visualize t
                   :on-layer :ground
                   :center (v3:vec))))
@@ -454,7 +454,7 @@ actually are. You have to view the results to see the colliders lighting up."
    ("stone-sphere1"
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
     (comp:mesh :asset '(meshes damaged-helmet)
                :name "helmet")
     (comp:sphere :display-id "Stone"
@@ -471,7 +471,7 @@ actually are. You have to view the results to see the colliders lighting up."
    ("stone-sphere2"
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
     (comp:mesh :asset '(meshes damaged-helmet)
                :name "helmet")
     (comp:sphere :display-id "Stone"
