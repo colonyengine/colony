@@ -278,7 +278,7 @@
                 :slave (v:ref :self :component 'comp:mesh)))
   (("cube-map-array" :copy "/mesh")
    (comp:transform :translate (v3:vec 3f0 -1f0 0f0)
-                   :rotate/velocity (o:make-velocity (v3:vec 1) o:pi/4))
+                   :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/4))
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "cube")
    (comp:render :material 'cubemaparray
