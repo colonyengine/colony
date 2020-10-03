@@ -100,6 +100,7 @@
 (v:define-prefab "ship-group" (:library examples)
   (("camera" :copy "/cameras/perspective"))
   (("ship011" :copy "/default-ship")
+   (comp:mesh :name "Ship_011")
    (comp:transform :rotate/velocity (v3:make-velocity (v3:vec 1) (- o:pi/3))
                    :translate (v3:vec -15 0 0)
                    :scale 4f0))
