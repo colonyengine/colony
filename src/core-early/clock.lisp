@@ -5,11 +5,16 @@
                   (:copier nil))
   ;; Gaffer's "Fix Your Timestep" accumulator
   (accumulator 0d0 :type double-float)
-  ;; TODO: replace average frame rate calculation with weighted average
-  ;; These will then vanish
-  (debug-count 0d0 :type double-float)
-  (debug-interval 5d0 :type double-float)
-  (debug-time 0d0 :type double-float)
+  ;; Average frames per second (weighted average over last 10 seconds)
+  (fps/average/10s 0d0 :type double-float)
+  ;; Average frames per second (weighted average over last 30 seconds)
+  (fps/average/30s 0d0 :type double-float)
+  ;; Average frames per second (weighted average over last 60 seconds)
+  (fps/average/60s 0d0 :type double-float)
+  ;; Average frames per second over all frames since the game was started
+  (fps/average 0d0 :type double-float)
+  ;; Frames per second of the current frame
+  (fps/current 0d0 :type double-float)
   ;; delta time smoothing variables
   (delta-buffer 0d0 :type double-float)
   ;; physics rate
@@ -46,13 +51,11 @@
   (setf (clock-pause-time clock) value))
 
 (defun make-clock (core)
-  (let ((delta-time (float =delta= 1d0))
-        (period-interval (float =period-interval= 1d0))
-        (debug-interval (float =debug-interval= 1d0)))
-    (setf (slot-value core '%clock)
-          (%make-clock :delta-time delta-time
-                       :period-interval period-interval
-                       :debug-interval debug-interval))))
+  (let ((clock (%make-clock)))
+    (setf (clock-start-time clock) (sb-ext:get-time-of-day)
+          (clock-current-time clock) (get-time clock)
+          (clock-delta-time clock) (float =delta= 1d0)
+          (slot-value core '%clock) clock)))
 
 (defun get-time (clock)
   #+sbcl
@@ -62,35 +65,38 @@
   #-sbcl
   (float (/ (get-internal-real-time) internal-time-units-per-second) 1d0))
 
-(defun initialize-frame-time (clock)
-  (setf (clock-start-time clock) (sb-ext:get-time-of-day)
-        (clock-current-time clock) (get-time clock)))
-
 (defun smooth-delta-time (clock refresh-rate)
-  (symbol-macrolet ((frame-time (clock-frame-time clock))
-                    (buffer (clock-delta-buffer clock)))
-    (incf frame-time buffer)
-    (let ((frame-count
-            (max 1d0 (ftruncate (+ 1d0 (* frame-time refresh-rate)))))
+  (symbol-macrolet ((frame-time (clock-frame-time clock)))
+    (incf frame-time (clock-delta-buffer clock))
+    (let ((frame-count (max 1 (truncate (1+ (* frame-time refresh-rate)))))
           (previous frame-time))
-      (setf frame-time (/ frame-count refresh-rate)
-            buffer (- previous frame-time))
+      (setf frame-time (/ frame-count refresh-rate 1d0)
+            (clock-delta-buffer clock) (- previous frame-time))
       nil)))
 
 (defun calculate-frame-rate (clock)
-  (symbol-macrolet ((debug-time (clock-debug-time clock))
-                    (debug-interval (clock-debug-interval clock))
-                    (debug-count (clock-debug-count clock)))
-    (let* ((current-time (get-time clock))
-           (elapsed (- current-time debug-time))
-           (fps (/ debug-count debug-interval)))
-      (when (and (>= elapsed debug-interval)
-                 (plusp fps))
-        #++(:printv "Frame rate: ~,2f fps / ~,3f ms/f" fps (/ 1000 fps))
-        (setf debug-count 0d0
-              debug-time current-time))
-      (incf debug-count)
-      nil)))
+  (let* ((time (clock-frame-time clock))
+         (fps (/ 1d0 time))
+         (alpha10 (- 1 (exp (- (/ time 10)))))
+         (alpha30 (- 1 (exp (- (/ time 30)))))
+         (alpha60 (- 1 (exp (- (/ time 60)))))
+         (frame-count (clock-frame-count clock)))
+    (symbol-macrolet ((average/10s (clock-fps/average/10s clock))
+                      (average/30s (clock-fps/average/30s clock))
+                      (average/60s (clock-fps/average/60s clock))
+                      (average (clock-fps/average clock)))
+      (setf (clock-fps/current clock) fps)
+      (if (> (clock-current-time clock) 3)
+          (setf average/10s (+ (* alpha10 fps) (* (- 1 alpha10) average/10s))
+                average/30s (+ (* alpha30 fps) (* (- 1 alpha30) average/30s))
+                average/60s (+ (* alpha60 fps) (* (- 1 alpha60) average/60s))
+                average (/ (+ fps (* (1- frame-count) average))
+                           frame-count
+                           1d0))
+          (setf average/10s fps
+                average/30s fps
+                average/60s fps
+                average fps)))))
 
 (defun clock-physics-update (core clock)
   (symbol-macrolet ((accumulator (clock-accumulator clock))
@@ -122,7 +128,7 @@
       ;; NOTE: On the _very first frame_, execute physics to give us something
       ;; to interpolate properly in the world BEFORE we accumulate to the first
       ;; delta amount of physics time.
-      (when (< (clock-frame-count clock) 1d0)
+      (when (zerop (clock-frame-count clock))
         (do-physics-update))
 
       ;; Then if enough time had passed, run physics.
@@ -157,4 +163,5 @@
       (smooth-delta-time clock (refresh-rate display)))
     (clock-physics-update core clock)
     (clock-periodic-update clock)
-    (calculate-frame-rate clock)))
+    (when (plusp (clock-frame-count clock))
+      (calculate-frame-rate clock))))

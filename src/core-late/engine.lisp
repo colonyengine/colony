@@ -16,8 +16,8 @@
   (load-graphs core)
   (load-call-flows core)
   (initialize-shaders core)
-  (make-clock core)
   (tex::load-texture-descriptors core)
+  (make-clock core)
   (load-materials core)
   (initialize-collider-system core)
   (make-scene-tree core)
@@ -38,7 +38,6 @@
   ;; dynamically access core's slot values each step of the main game loop.
   (let ((context (context core))
         (input-data (input-data core)))
-    (initialize-frame-time (clock core))
     (with-profiling core
       (u:while (running-p core)
         (with-continuable "Virality Engine"
