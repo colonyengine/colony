@@ -1,8 +1,28 @@
 (in-package #:virality)
 
 (defmacro with-continuable (report &body body)
-  `(restart-case (progn ,@body)
-     (continue () :report ,report)))
+  (u:with-gensyms (debugger-entry-time previous-hook pause-time)
+    (let ((hook #+sbcl 'sb-ext:*invoke-debugger-hook*
+                #-sbcl '*debugger-hook*)
+          ;; TODO: Deal with when somehow *core-debug* is unbound.
+          (clock '(clock *core-debug*)))
+      `(let* ((,debugger-entry-time nil)
+              (,previous-hook ,hook)
+              (,hook
+                (lambda (condition hook)
+                  (declare (ignore hook))
+                  (format t "Entered debugger from ~a~%" ,report)
+                  (setf ,debugger-entry-time (get-time ,clock))
+                  (when ,previous-hook
+                    (funcall ,previous-hook condition ,previous-hook)))))
+         (restart-case (progn ,@body)
+           (continue ()
+             :report ,report
+             (when ,debugger-entry-time
+               (let ((,pause-time (- (get-time ,clock) ,debugger-entry-time)))
+                 (incf (pause-time ,clock) ,pause-time)
+                 (format t "Spent ~d seconds in the debugger."
+                         ,pause-time)))))))))
 
 (flet ((generate-live-support-functions ()
          (let ((repl-package (find-if #'find-package '(:slynk :swank))))
