@@ -40,7 +40,7 @@
         (input-data (input-data core)))
     (with-profiling core
       (u:while (running-p core)
-        (with-continuable "Virality Engine"
+        (with-continuable
           (handle-events input-data)
           (render-frame core)
           ;; TODO: Remove this later when possible.
