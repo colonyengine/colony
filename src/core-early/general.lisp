@@ -9,6 +9,8 @@
 ;;;; outside of game development. This rule will help us should we choose to
 ;;;; lift any of these into external libraries.
 
+(defvar *core-debug*)
+
 (defun posix-argv0 ()
   "Returns the POSIX C equivalent of argv[0],which is typically the program name
 when executing a dumped executable. NOTE: This more than likely does not make
