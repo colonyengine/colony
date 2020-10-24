@@ -161,7 +161,16 @@
           (clock-frame-time clock) (- current previous))
     (when =vsync=
       (smooth-delta-time clock (refresh-rate display)))
+
+    ;; NOTE: On the first frame, we correct however long it took to open the
+    ;; window, load the data, etc, etc.
+    (when (zerop (clock-frame-count clock))
+      ;; This cannot be zero because if someone tries to use the frame-time
+      ;; to compute fps or something, it'll blow up.
+      (setf (clock-frame-time clock) (clock-delta-time clock)))
+
     (clock-physics-update core clock)
+
     (clock-periodic-update clock)
     (when (plusp (clock-frame-count clock))
       (calculate-frame-rate clock))))
