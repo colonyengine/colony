@@ -29,7 +29,6 @@
   (run-epilogue core)
   (shutdown-gamepads core)
   (kill-display core)
-  (sdl2:quit)
   (destroy-thread-pool)
   (makunbound '*core-debug*))
 

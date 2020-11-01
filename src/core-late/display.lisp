@@ -40,7 +40,7 @@
                       :flags '(:opengl)))
 
 (defun make-display (core)
-  (sdl2:init :everything)
+  ;; (sdl2:init :everything)
   ;; NOTE: We can't call (sdl2:init :everything) because it tries to manage the
   ;; main thread itself and when there is an ABORT restart in V, will get
   ;; confused and lock up. Since V does the thread management itself, we the
