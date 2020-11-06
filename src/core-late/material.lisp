@@ -192,6 +192,8 @@ CORE. Return a list of the return values of the FUNC."
    ;; This is the name of the shader as its symbol.
    (%shader :reader shader ;; :writer defined below.
             :initarg :shader)
+   ;; This is the actual compiled shader program for this material.
+   (%shader-program :reader shader-program)
    (%instances :reader instances
                :initarg :instances)
    (%attributes :reader attributes
@@ -284,14 +286,7 @@ CORE. Return a list of the return values of the FUNC."
     (u:do-hash (k v (uniforms mat))
       (when (functionp (semantic-value v))
         (execute-composition/semantic->computed v))
-      ;; NOTE: We use the ACTUAL shader program here as opposed to its name.
-      ;; TODO: Determine if we need to book keep the actual shader program
-      ;; along with the name of it in the material so we don't have to do this
-      ;; lookup all the time. Maybe set it in RESOLVE-MATERIAL assuming shaders
-      ;; have been compiled by then.
-      (let ((shader-program (shadow:find-program (shader (material v))))
-            (cv (computed-value v)))
-        (funcall (binder v) shader-program k cv)))))
+      (funcall (binder v) (shader-program mat) k (computed-value v)))))
 
 (defun bind-material-buffers (mat)
   (when mat
@@ -616,12 +611,14 @@ or if it a vector of the same. Return NIL otherwise."
 the shader program in the material."
   (u:if-found (shader-program (u:href (shaders core)
                                       (shader material-instance)))
-              (progn
-                (annotate-material-uniforms material-instance shader-program)
-                (annotate-material-blocks
-                 material-instance shader-program core))
-              (error "Material ~s uses an undefined shader: ~s."
-                     (id material-instance) (shader material-instance))))
+    (progn
+      (with-slots (%shader-program) material-instance
+        (setf %shader-program shader-program))
+      (annotate-material-uniforms material-instance shader-program)
+      (annotate-material-blocks
+       material-instance shader-program core))
+    (error "Material ~s uses an undefined shader: ~s."
+           (id material-instance) (shader material-instance))))
 
 (defun resolve-all-materials (core)
   "Convert all semantic-values to computed-values for all materials. This must
