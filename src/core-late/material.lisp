@@ -289,7 +289,7 @@ CORE. Return a list of the return values of the FUNC."
       ;; along with the name of it in the material so we don't have to do this
       ;; lookup all the time. Maybe set it in RESOLVE-MATERIAL assuming shaders
       ;; have been compiled by then.
-      (let ((shader-program (shadow::find-program (shader (material v))))
+      (let ((shader-program (shadow:find-program (shader (material v))))
             (cv (computed-value v)))
         (funcall (binder v) shader-program k cv)))))
 
