@@ -284,9 +284,14 @@ CORE. Return a list of the return values of the FUNC."
     (u:do-hash (k v (uniforms mat))
       (when (functionp (semantic-value v))
         (execute-composition/semantic->computed v))
-      (let ((shader (shader (material v)))
+      ;; NOTE: We use the ACTUAL shader program here as opposed to its name.
+      ;; TODO: Determine if we need to book keep the actual shader program
+      ;; along with the name of it in the material so we don't have to do this
+      ;; lookup all the time. Maybe set it in RESOLVE-MATERIAL assuming shaders
+      ;; have been compiled by then.
+      (let ((shader-program (shadow::find-program (shader (material v))))
             (cv (computed-value v)))
-        (funcall (binder v) shader k cv)))))
+        (funcall (binder v) shader-program k cv)))))
 
 (defun bind-material-buffers (mat)
   (when mat
