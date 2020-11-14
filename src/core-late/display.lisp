@@ -68,8 +68,8 @@
   ;; NOTE: Same issue with sdl2:quit as with sdl2:sdl-init above...
   (sdl2:sdl-quit))
 
-;; TODO: The functions below are not finalized yet. The clock system and
-;; rendering pipeline need to be reworked first. ~axion 4/8/2020
+;; TODO: The functions below are not finalized yet. The rendering pipeline need
+;; to be reworked first. ~axion 4/8/2020
 
 (defun clear-screen (core)
   (multiple-value-call #'gl:clear-color

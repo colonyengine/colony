@@ -28,7 +28,7 @@
 ;; geometry definitions. This metadata is stored by `DEFINE-GEOMETRY-LAYOUT`.
 (global-vars:define-global-var =meta/geometry-layouts= (u:dict #'eq))
 
-;; A brief description of this data structure would better be written by
+;; A brief description of this data structure would be better written by
 ;; psilord.
 ;; TODO: Wait for psilord to fill this description in. ~axion 4/8/2020.
 (global-vars:define-global-var =meta/graphs= (u:dict #'eq))

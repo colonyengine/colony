@@ -215,7 +215,8 @@
            (gl:bind-framebuffer ,target 0))
          (progn ,@body))))
 
-;; TODO: ~axion
+;; TODO: Framebuffers aren't used yet, but this is how it was done in Pyx.
+;; ~axion
 #++(on-recompile :framebuffer data ()
      (u:when-let ((spec (find-framebuffer-spec data))
                   (data (find-framebuffer data)))
