@@ -48,7 +48,8 @@ To manually install such that Quicklisp will be able to find ViralityEngine,
 clone this repository into your local-projects directory.
 
 For now, being on the `develop` branch will provide a better experience
-and newer features.
+and newer features. However, it often uses changes to certain dependencies
+that are often newer than what Quicklisp provides.
 
 If you've run ViralityEngine before, and haven't in a while, then
 
@@ -56,16 +57,27 @@ cd ~quicklisp/local-projects
 
 and as long as you aren't using these specifically for yourself:
 
-rm -rf origin doubly-linked-list golden-utils umbra shadow
+rm -rf origin doubly-linked-list golden-utils umbra shadow origin
 
 This next shell script is recommended to help with the depdenencies of
 ViralityEngine.
 
-Put this bash script into local-projects, you might call it
-'update-virality-depdendencies.sh' or something similar.
+Put this bash script into ~/quicklisp/local-projects, (or wherever your
+quicklisp local-projects directory is) you might call it
+'update-virality-depdendencies.sh' or something similar. When updating
+Virality from github it is recommended to also run this script to get current
+changes Virality may need.
+
 
 ```
 #! /bin/bash
+
+
+echo "Updating origin..."
+if [ ! -d ./origin ]; then
+	git clone https://github.com/mfiano/origin.git
+fi
+(cd origin && git pull)
 
 echo "Updating shadow..."
 if [ ! -d ./shadow ]; then

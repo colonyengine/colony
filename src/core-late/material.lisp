@@ -192,6 +192,8 @@ CORE. Return a list of the return values of the FUNC."
    ;; This is the name of the shader as its symbol.
    (%shader :reader shader ;; :writer defined below.
             :initarg :shader)
+   ;; This is the actual compiled shader program for this material.
+   (%shader-program :reader shader-program)
    (%instances :reader instances
                :initarg :instances)
    (%attributes :reader attributes
@@ -284,9 +286,7 @@ CORE. Return a list of the return values of the FUNC."
     (u:do-hash (k v (uniforms mat))
       (when (functionp (semantic-value v))
         (execute-composition/semantic->computed v))
-      (let ((shader (shader (material v)))
-            (cv (computed-value v)))
-        (funcall (binder v) shader k cv)))))
+      (funcall (binder v) (shader-program mat) k (computed-value v)))))
 
 (defun bind-material-buffers (mat)
   (when mat
@@ -459,8 +459,8 @@ that is appropriate for it, such as :texture-2d-array. Do this for all sampler
 types and texture types."
   (u:if-found (texture-type (u:href tex::+sampler-type->texture-type+
                                     sampler-type))
-              texture-type
-              (error "Unknown sampler-type: ~a~%" sampler-type)))
+    texture-type
+    (error "Unknown sampler-type: ~a~%" sampler-type)))
 
 (defun sampler-p (glsl-type)
   "Return T if the GLSL-TYPE is a sampler like :sampler-2d or :sampler-buffer,
@@ -553,37 +553,37 @@ or if it a vector of the same. Return NIL otherwise."
                                   shader-program)
   (u:if-found (type-info (u:href (shadow:uniforms shader-program)
                                  uniform-name))
-              (let ((uniform-type (u:href type-info :type)))
-                ;; 1. Find the uniform in the shader-program and get its
-                ;; type-info. Use that to set the binder function.
-                (setf (binder uniform-value) (determine-binder-function
-                                              material uniform-type))
-                ;; 2. Figure out the semantic->computed composition function
-                ;; for this specific uniform type. This will be the last
-                ;; function executed and will convert the in-flight semantic
-                ;; value into a real computed value for use by the binder
-                ;; function.
-                ;; NOTE: We set it to NIL here because if we're changing the
-                ;; shader on a material, we'll push multiple copies of the this
-                ;; sequence into the list when we resolve-material on that copy
-                ;; with the changed shader--which is wrong. This will now do
-                ;; the right thing in any (I believe) situation.
-                (setf (semantic->computed uniform-value) nil)
-                (push (if (sampler-p uniform-type)
-                          (gen-sampler/sem->com)
-                          (if (force-copy uniform-value)
-                              (gen-default-copy/sem->com)
-                              #'identity/for-material-custom-functions))
-                      (semantic->computed uniform-value))
-                ;; 3. Put the user specified semantic transformer function into
-                ;; the composition sequence before the above.
-                (push (transformer uniform-value)
-                      (semantic->computed uniform-value))
-                ;; 4. Execute the composition function sequence to produce the
-                ;; computed value.
-                (execute-composition/semantic->computed uniform-value))
-              (error "Material ~s uses unknown uniform ~s in shader ~s."
-                     (id material) uniform-name (shader material))))
+    (let ((uniform-type (u:href type-info :type)))
+      ;; 1. Find the uniform in the shader-program and get its
+      ;; type-info. Use that to set the binder function.
+      (setf (binder uniform-value) (determine-binder-function
+                                    material uniform-type))
+      ;; 2. Figure out the semantic->computed composition function
+      ;; for this specific uniform type. This will be the last
+      ;; function executed and will convert the in-flight semantic
+      ;; value into a real computed value for use by the binder
+      ;; function.
+      ;; NOTE: We set it to NIL here because if we're changing the
+      ;; shader on a material, we'll push multiple copies of the this
+      ;; sequence into the list when we resolve-material on that copy
+      ;; with the changed shader--which is wrong. This will now do
+      ;; the right thing in any (I believe) situation.
+      (setf (semantic->computed uniform-value) nil)
+      (push (if (sampler-p uniform-type)
+                (gen-sampler/sem->com)
+                (if (force-copy uniform-value)
+                    (gen-default-copy/sem->com)
+                    #'identity/for-material-custom-functions))
+            (semantic->computed uniform-value))
+      ;; 3. Put the user specified semantic transformer function into
+      ;; the composition sequence before the above.
+      (push (transformer uniform-value)
+            (semantic->computed uniform-value))
+      ;; 4. Execute the composition function sequence to produce the
+      ;; computed value.
+      (execute-composition/semantic->computed uniform-value))
+    (error "Material ~s uses unknown uniform ~s in shader ~s."
+           (id material) uniform-name (shader material))))
 
 (defun annotate-material-uniforms (material shader-program)
   (u:do-hash (k v (uniforms material))
@@ -611,12 +611,14 @@ or if it a vector of the same. Return NIL otherwise."
 the shader program in the material."
   (u:if-found (shader-program (u:href (shaders core)
                                       (shader material-instance)))
-              (progn
-                (annotate-material-uniforms material-instance shader-program)
-                (annotate-material-blocks
-                 material-instance shader-program core))
-              (error "Material ~s uses an undefined shader: ~s."
-                     (id material-instance) (shader material-instance))))
+    (progn
+      (with-slots (%shader-program) material-instance
+        (setf %shader-program shader-program))
+      (annotate-material-uniforms material-instance shader-program)
+      (annotate-material-blocks
+       material-instance shader-program core))
+    (error "Material ~s uses an undefined shader: ~s."
+           (id material-instance) (shader material-instance))))
 
 (defun resolve-all-materials (core)
   "Convert all semantic-values to computed-values for all materials. This must
