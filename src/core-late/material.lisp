@@ -193,7 +193,8 @@ CORE. Return a list of the return values of the FUNC."
    (%shader :reader shader ;; :writer defined below.
             :initarg :shader)
    ;; This is the actual compiled shader program for this material.
-   (%shader-program :reader shader-program)
+   (%shader-program :reader shader-program
+                    :initarg :shader-program)
    (%instances :reader instances
                :initarg :instances)
    (%attributes :reader attributes
@@ -253,6 +254,7 @@ CORE. Return a list of the return values of the FUNC."
         (return-from %deep-copy-material error-value)))
   (let* ((new-id new-mat-name)
          (new-shader (shader current-mat))
+	 (new-shader-program (shader-program current-mat))
          (new-instances (instances current-mat))
          (new-attributes (attributes current-mat))
          (new-uniforms (u:dict #'eq))
@@ -263,6 +265,7 @@ CORE. Return a list of the return values of the FUNC."
            (make-instance 'material
                           :id new-id
                           :shader new-shader
+                          :shader-program new-shader-program
                           :instances new-instances
                           :attributes new-attributes
                           :core (core current-mat)
