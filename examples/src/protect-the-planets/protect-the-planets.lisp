@@ -233,70 +233,70 @@
 ;; materials can be made for the same shader each providing diferent inputs to
 ;; that shader.
 (v:define-material sprite-sheet
-  (:profiles (x:u-mvp)
-   :shader ex/shd:ptp-sprite
-   :attributes (:depth :lequal)
-   :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
-              (:sprite.index 0)
-              (:opacity 1.0))
-   :blocks ((:block-name :ptp-spritesheet
-             :storage-type :buffer
-             :block-alias :ptp-spritesheet
-             :binding-policy :manual))))
+    (:profiles (x:u-mvp)
+     :shader ex/shd:ptp-sprite
+     :attributes (:depth :lequal)
+     :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
+                (:sprite.index 0)
+                (:opacity 1.0))
+     :blocks ((:block-name :ptp-spritesheet
+               :storage-type :buffer
+               :block-alias :ptp-spritesheet
+               :binding-policy :manual))))
 
 (v:define-material title
-  (:profiles (x:u-mvp)
-   :shader shd:unlit-texture-decal
-   :uniforms ((:tex.sampler1 'title)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-              (:max-intensity (v4:vec 1)))))
+    (:profiles (x:u-mvp)
+     :shader shd:unlit-texture-decal
+     :uniforms ((:tex.sampler1 'title)
+                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+                (:max-intensity (v4:vec 1)))))
 
 (v:define-material starfield
-  (:profiles (x:u-mvpt)
-   :shader ex/shd:starfield
-   :uniforms ((:tex 'starfield)
-              (:mix-color (v4:vec 1)))))
+    (:profiles (x:u-mvpt)
+     :shader ex/shd:starfield
+     :uniforms ((:tex 'starfield)
+                (:mix-color (v4:vec 1)))))
 
 (v:define-material warning-mothership
-  (:profiles (x:u-mvp)
-   :shader shd:unlit-texture-decal
-   :uniforms ((:tex.sampler1 'warning-mothership)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-              (:max-intensity (v4:vec 1)))))
+    (:profiles (x:u-mvp)
+     :shader shd:unlit-texture-decal
+     :uniforms ((:tex.sampler1 'warning-mothership)
+                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+                (:max-intensity (v4:vec 1)))))
 
 (v:define-material warning-wave
-  (:profiles (x:u-mvp)
-   :shader shd:unlit-texture-decal
-   :uniforms ((:tex.sampler1 'warning-wave)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-              (:max-intensity (v4:vec 1)))))
+    (:profiles (x:u-mvp)
+     :shader shd:unlit-texture-decal
+     :uniforms ((:tex.sampler1 'warning-wave)
+                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+                (:max-intensity (v4:vec 1)))))
 
 (v:define-material game-over
-  (:profiles (x:u-mvp)
-   :shader shd:unlit-texture-decal
-   :uniforms ((:tex.sampler1 'game-over)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-              (:max-intensity (v4:vec 1)))))
+    (:profiles (x:u-mvp)
+     :shader shd:unlit-texture-decal
+     :uniforms ((:tex.sampler1 'game-over)
+                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+                (:max-intensity (v4:vec 1)))))
 
 (v:define-material level-complete
-  (:profiles (x:u-mvp)
-   :shader shd:unlit-texture-decal
-   :uniforms ((:tex.sampler1 'level-complete)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-              (:max-intensity (v4:vec 1)))))
+    (:profiles (x:u-mvp)
+     :shader shd:unlit-texture-decal
+     :uniforms ((:tex.sampler1 'level-complete)
+                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+                (:max-intensity (v4:vec 1)))))
 
 (v:define-material time-bar
-  (:profiles (x:u-mvp)
-   :shader shd:unlit-texture
-   :uniforms ((:tex.sampler1 'white)
-              (:mix-color (v4:vec 0f0 1f0 0f0 1f0)))))
+    (:profiles (x:u-mvp)
+     :shader shd:unlit-texture
+     :uniforms ((:tex.sampler1 'white)
+                (:mix-color (v4:vec 0f0 1f0 0f0 1f0)))))
 
 (v:define-material pivot
-  (:profiles (x:u-mvp)
-   :shader shd:unlit-texture-decal
-   :uniforms ((:tex.sampler1 'pivot)
-              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-              (:max-intensity (v4:vec 1)))))
+    (:profiles (x:u-mvp)
+     :shader shd:unlit-texture-decal
+     :uniforms ((:tex.sampler1 'pivot)
+                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+                (:max-intensity (v4:vec 1)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
@@ -388,7 +388,7 @@
                 (current-translation (v:get-translation self))
                 (vec (v:clip-movement-vector vec current-translation
                                              region-cuboid)))
-             (v:translate self vec))
+             (v:translate self vec :space :inertial))
            ;; Then we settle the notion of how the player is oriented.  We're
            ;; setting a hard angle of rotation each time so we overwrite the
            ;; previous value.
@@ -436,7 +436,7 @@
                 (pivoting-p right-shoulder))
 
            ;; place myself where I should go.
-           (v:translate self clipped-move)
+           (v:translate self clipped-move :space :inertial)
 
            ;; Implement pivoting system.
            (cond
@@ -465,7 +465,7 @@
                     (v3:copy! this-frame-world-guide-pos guide-world-pos)
 
                     (v:translate new-pivot-guide guide-world-pos
-                                 :instant t :replace t)
+                                 :instant t :replace t :space :inertial)
 
                     ;; Store the reference so we can destroy it later.
                     (setf pivot-actor new-pivot-guide)))
@@ -563,7 +563,8 @@
                         (:-z (v3:negate z)))
                       direction)))
               (move-delta (* velocity (v:delta context))))
-         (v3:scale a move-delta))))))
+         (v3:scale a move-delta))
+       :space :inertial))))
 
 ;; ;;;;;;;;;
 ;; Component: damage-points
@@ -723,7 +724,8 @@
 
     ;; Set the spatial configuration
     (setf (v3:z translation) (dl depth-layer))
-    (v:translate new-projectile translation :instant t :replace t)
+    (v:translate new-projectile translation :instant t :replace t
+                                            :space :inertial)
     ;; XXX This interface needs to take a quat here also
     (v:rotate new-projectile rotation :instant t :replace t)
     ;; And adjust the scale too.
@@ -802,7 +804,8 @@
      ;; Configure the render layer
      (render-layer sketch) render-layer)
     (v:scale new-explosion scale :instant t :replace t)
-    (v:translate new-explosion translation :instant t :replace t)
+    (v:translate new-explosion translation :instant t :replace t
+                                           :space :inertial)
     (v:rotate new-explosion rotation :instant t :replace t)
     ;; By default explosions live a certain amount of time.
     (v:destroy new-explosion :ttl destroy-ttl)
@@ -924,7 +927,7 @@
                                 :name (name self)
                                 :frames (frames self)
                                 :duration (duration self)
-				:repeat (repeat self)
+                                :repeat (repeat self)
                                 :render-layer :player-bullet)))))
 
        ;; Method 2: X button fires in direction ship is pointing
@@ -942,7 +945,7 @@
                             :name (name self)
                             :frames (frames self)
                             :duration (duration self)
-			    :repeat (repeat self)
+                            :repeat (repeat self)
                             :render-layer :player-bullet))))
 
 
@@ -1133,7 +1136,8 @@
       (v:translate
        mockette (v3:vec (* mockette-index (* dir width-increment))
                         -60f0
-                        (dl :mockette)))
+                        (dl :mockette))
+       :space :inertial)
       (setf (aref mockette-refs mockette-index) mockette))))
 
 ;; This is useful if you want to use the prefab in a player1 or player2

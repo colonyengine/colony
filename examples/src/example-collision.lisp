@@ -151,6 +151,54 @@
         (error "TRANSFORM-DIRECTION API Failed!")))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Pick testing, which is testing ray casting with the mouse.
+;; This interface is TBD.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(v:define-component pick-test () ())
+
+(defmethod v:on-component-update ((self pick-test))
+  (let ((context (v:context self))
+        (line-segment (make-instance 'v::line-segment))
+        (picked nil))
+    (when (v:on-button-enter context :mouse :left)
+      (setf picked (v::pick-actor context line-segment)))
+    (when picked
+      (:printv picked)
+      ;; TODO: Uncomment this when sly has send-to-repl in master
+      #++(v::send-to-repl (list picked) :comment "Picked actor"))))
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Some basic models to help us out.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(v:define-prefab "default-rock" (:library examples)
+  ("model"
+   (comp:transform :scale (v3:vec 2f0))
+   (comp:mesh :asset '(meshes rocks)
+              :name "Rock-1")
+   (comp:render :material `(x:matcap ,(gensym "CERAMIC-DARK-")
+                                     :uniforms ((:sampler x:matcap/ceramic-dark)))
+                :slave (v:ref :self :component 'comp:mesh))))
+
+(v:define-prefab "rock-0" (:library examples)
+  (("rock-0" :link "/default-rock")
+   ("model"
+    (comp:mesh :name "Rock-0"))))
+
+(v:define-prefab "rock-1" (:library examples)
+  (("rock-1" :link "/default-rock")
+   ("model"
+    (comp:mesh :name "Rock-1"))))
+
+(v:define-prefab "rock-2" (:library examples)
+  (("rock-2" :link "/default-rock")
+   ("model"
+    (comp:mesh :name "Rock-2"))))
+
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; The test prefabs.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -160,31 +208,23 @@
   ("rot-0-center"
    (comp:transform :translate (v3:vec -2f0 0f0 0f0)
                    :rotate/velocity (v3:make-velocity v3:+forward+ o:pi))
-   ("plane-0"
+   (("stone0" :link "/rock-1")
     (comp:transform :translate (v3:vec -2f0 0f0 0f0))
-    (comp:mesh :asset '(v::meshes v::primitives)
-               :name "plane")
     (comp:sphere :display-id "Player"
                  :visualize t
                  :on-layer :player
                  :center (v3:vec)
-                 :radius 1f0)
-    (comp:render :material '2d-wood
-                 :slave (v:ref :self :component 'comp:mesh))))
+                 :radius 1f0)))
   ("rot-1-center"
    (comp:transform :translate (v3:vec 2f0 0f0 0f0)
                    :rotate/velocity (v3:make-velocity v3:+forward+ (- o:pi)))
-   ("plane-1"
+   (("stone1" :link "/rock-1")
     (comp:transform :translate (v3:vec 2f0 0f0 0f0))
-    (comp:mesh :asset '(v::meshes v::primitives)
-               :name "plane")
     (comp:sphere :display-id "Enemy"
                  :visualize t
                  :on-layer :enemy
                  :center (v3:vec)
-                 :radius 1f0)
-    (comp:render :material '2d-wood
-                 :slave (v:ref :self :component 'comp:mesh)))))
+                 :radius 1f0))))
 
 (v:define-prefab "collision-transform-test-0" (:library examples)
   "This test just prints out the directions of the actor transform. Since
@@ -198,16 +238,12 @@ unit world vector representations of the axis directions as:
   left:     (-1 0 0)
 "
   (("camera" :copy "/cameras/perspective")
-   (comp:camera (:policy :new-args) :zoom 7f0))
+   (comp:camera (:policy :new-args) :zoom 3f0))
 
-  ("thingy"
+  (("thingy" :link "/rock-1")
    ;; NOTE: The 5 0 0 is specific to the unit-test-transform-api tests.
    (comp:transform :translate (v3:vec 5f0 0f0 0f0))
-   (unit-test-transform-api :test-type :test-direction-vectors)
-   (comp:mesh :asset '(v::meshes v::primitives)
-              :name "plane")
-   (comp:render :material '2d-wood
-                :slave (v:ref :self :component 'comp:mesh))))
+   (unit-test-transform-api :test-type :test-direction-vectors)))
 
 ;; TODO: This currently fails. Compute this math by hand and verify if the math
 ;; or the test is correct.
@@ -224,20 +260,47 @@ world space for a particular transform."
     (comp:transform :translate (v3:vec 0f0 1f0 0f0))
     ("back"
      (comp:transform :translate (v3:vec 0f0 0f0 1f0))
-     ("mark"
+     (("mark" :link "/rock-1")
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
       (comp:transform :rotate (q:orient :local :z o:pi/2) :scale 2)
-      (unit-test-transform-api :test-type :test-transform-api)
-      (comp:mesh :asset '(v::meshes v::primitives)
-                 :name "plane")
-      (comp:render :material '2d-wood
-                   :slave (v:ref :self :component 'comp:mesh)))))))
+      (unit-test-transform-api :test-type :test-transform-api))))))
+
+
+
+(v:define-prefab "stone-destroy-when-collide-with-ground" (:library examples)
+  (destroy-my-actor :display-id "destroy-my-actor: stone")
+  (("stone" :link "/default-rock")
+   (comp:sphere :display-id "Stone Collider"
+                :visualize t
+                :on-layer :player
+                ;; TODO: This "../" _happens_ to get the parent which _happens_
+                ;; to be the root of >this< prefab. This works surprisingly and
+                ;; needs cleanup and definition.  It makes sense, but isn't
+                ;; properly defined and tested. I was expecting to use
+                ;; "/stone-destroy-when-collide-with-ground" here for this
+                ;; reference. Also, just like :self, we could have :prefab-root
+                ;; which means "this prefab root actor".
+                ;;
+                ;; PARSE-REFERENCE-PATH/PARENT is prolly the culprit here.
+                :referent (v:ref "../" :component 'destroy-my-actor)
+                :center (v3:vec)
+                :radius 1f0)))
+
+(v:define-prefab "stone-destroy-after-time" (:library examples)
+  (destroy-my-actor :time-to-destroy 2f0)
+  (("stone" :link "/default-rock")
+   (comp:sphere :display-id "Stone Collider"
+                :visualize t
+                :on-layer :player
+                :referent (v:ref "../" :component 'destroy-my-actor)
+                :center (v3:vec)
+                :radius 1f0)))
 
 
 (v:define-prefab "collision-test-0" (:library examples)
   "In this test, you should see two actors with a narrow gap between them and
-ananother actor near the bottom of the screen. These three are unmoving. The
+an another actor near the bottom of the screen. These three are unmoving. The
 green spiral (if VISUALIZE defaults to T in the sphere component) is a sphere
 collider being rendered as a spiral wound around it (it is 3d and you're seeing
 the top of it in the ortho projection). A small actor shows up and moves
@@ -251,154 +314,95 @@ that just spawns stone prefabs so they rain down onto the ground, which should
 be made bigger. to accomodate it. Maybe some fragments too when it hits..."
   (("camera" :copy "/cameras/perspective")
    (comp:camera (:policy :new-args) :zoom 4f0))
-  ("left-gate"
+  (("left-gate" :link "/rock-1")
    (comp:transform :translate (v3:vec -1.15f0 2f0 -.1f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
-              :name "plane")
-   (comp:render :material '2d-wood
-                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Left-Gate"
                 :visualize t
                 :on-layer :ground))
-  ("right-gate"
+  (("right-gate" :link "/rock-2")
    (comp:transform :translate (v3:vec 1.15f0 2f0 -.1f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
-              :name "plane")
-   (comp:render :material '2d-wood
-                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Right-Gate"
                 :visualize t
                 :on-layer :ground))
-  ("stone"
-   (comp:transform :translate (v3:vec 0f0 5f0 0f0)
+
+  (("stone" :link "/stone-destroy-when-collide-with-ground")
+   (comp:transform :translate (v3:vec 0f0 4.5f0 0f0)
                    :scale 0.5f0
-                   :rotate (q:orient :local :x o:pi/2)
-                   :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi)
-                   :translate/velocity (v3:vec 0f0 -2f0 0f0))
-   (comp:mesh :asset '(meshes damaged-helmet)
-              :name "helmet")
-   (destroy-my-actor :display-id "destroy-my-actor: stone")
-   (comp:sphere :display-id "Stone"
-                :visualize t
-                :on-layer :player
-                :referent (v:ref :self
-                                 :component 'destroy-my-actor)
-                :center (v3:vec)
-                :radius 1f0)
-   (comp:render :material 'damaged-helmet
-                :slave (v:ref :self :component 'comp:mesh)))
-  ("ground"
+                   :translate/velocity (v3:vec 0f0 -3f0 0f0)
+                   :rotate/velocity (v3:make-velocity v3:+up+ o:pi)))
+
+  (("ground" :link "/default-rock")
    (comp:transform :translate (v3:vec 0f0 -2f0 0.1f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
-              :name "plane")
    (comp:sphere :display-id "Ground"
                 :visualize t
                 :on-layer :ground
                 :center (v3:vec)
-                :radius 1f0)
-   (comp:render :material '2d-wood
-                :slave (v:ref :self :component 'comp:mesh))))
+                :radius 1f0)))
 
 (v:define-prefab "collision-test-1" (:library examples)
   "This test demonstrates that at frame 0 colliders that should be colliding
 actually are. You have to view the results to see the colliders lighting up."
   (("camera" :copy "/cameras/perspective")
    (comp:camera (:policy :new-args) :zoom 4f0))
-  ("upper-left"
+  (("upper-left" :link "/rock-0")
    (comp:transform :translate (v3:vec -2f0 2f0 -0.1f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
-              :name "plane")
-   (comp:render :material '2d-wood
-                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Upper-Left"
                 :visualize t
                 :on-layer :ground))
-  ("upper-right"
+  (("upper-right" :link "/rock-1")
    (comp:transform :translate (v3:vec 2f0 2f0 -0.1f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
-              :name "plane")
-   (comp:render :material '2d-wood
-                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Upper-Right"
                 :visualize t
                 :on-layer :ground))
-  ("lower-left"
+  (("lower-left" :link "/rock-2")
    (comp:transform :translate (v3:vec -2f0 -2f0 -0.1f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
-              :name "plane")
-   (comp:render :material '2d-wood
-                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Lower-Left"
                 :visualize t
                 :on-layer :ground))
-  ("lower-right"
+  (("lower-right" :link "/rock-0")
    (comp:transform :translate (v3:vec 2f0 -2f0 -0.1f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
-              :name "plane")
-   (comp:render :material '2d-wood
-                :slave (v:ref :self :component 'comp:mesh))
    (comp:sphere :display-id "Lower-Right"
                 :visualize t
                 :on-layer :ground))
-  ("stone"
-   (comp:transform :translate (v3:vec)
-                   :scale 2f0
-                   :rotate (q:orient :local :x o:pi/2)
-                   :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi)
-                   :translate/velocity (v3:vec))
-   (comp:mesh :asset '(meshes damaged-helmet)
-              :name "helmet")
-   (destroy-my-actor :time-to-destroy 2f0)
-   (comp:sphere :display-id "Stone"
-                :visualize t
-                :on-layer :player
-                :center (v3:vec)
-                :radius 1f0)
-   (comp:render :material 'damaged-helmet
-                :slave (v:ref :self :component 'comp:mesh))))
+
+  (("stone" :link "/stone-destroy-after-time")
+   (comp:transform :scale 2f0
+                   :rotate/velocity (v3:make-velocity v3:+up+ o:pi))))
 
 (v:define-prefab "collision-test-2" (:library examples)
   (("camera" :copy "/cameras/perspective")
    (comp:camera (:policy :new-args) :zoom 3f0))
   ("a"
-   (comp:transform :translate (v3:vec -5f0 0f0 0f0)
+   (comp:transform :translate (v3:vec -4f0 0f0 0f0)
                    :translate/velocity (v3:vec 0f0 0f0 0f0)
                    :scale 2f0)
-   ("stone-cuboid"
+   (("stone-cuboid" :link "/rock-1")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
                     :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
-    (comp:mesh :asset '(meshes damaged-helmet)
-               :name "helmet")
     (comp:cuboid :display-id "Stone"
                  :visualize t
                  :on-layer :ground
                  :center (v3:vec)
-                 :minx -1f0
-                 :maxx 1f0
-                 :miny -1f0
-                 :maxy 1f0
-                 :minz -1f0
-                 :maxz 1f0)
-    (comp:render :material 'damaged-helmet
-                 :slave (v:ref :self :component 'comp:mesh))))
+                 :minx -.75f0
+                 :maxx .75f0
+                 :miny -.75f0
+                 :maxy .75f0
+                 :minz -.75f0
+                 :maxz .75f0)))
   ("b"
-   (comp:transform :translate (v3:vec 5f0 0f0 0f0)
+   (comp:transform :translate (v3:vec 4f0 0f0 0f0)
                    :translate/velocity (v3:vec 0f0 0f0 0f0)
                    :scale 2f0)
-   ("stone-sphere"
+   (("stone-sphere" :link "/rock-1")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
                     :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
-    (comp:mesh :asset '(meshes damaged-helmet)
-               :name "helmet")
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground
                  :center (v3:vec)
-                 :radius 1.25f0)
-    (comp:render :material 'damaged-helmet
-                 :slave (v:ref :self :component 'comp:mesh)))))
+                 :radius 1f0))))
 
 (v:define-prefab "collision-test-3" (:library examples)
   (("camera" :copy "/cameras/ortho")
@@ -441,48 +445,41 @@ actually are. You have to view the results to see the colliders lighting up."
                  :on-layer :ground
                  :center (v3:vec)))))
 
-(v:define-component pick-test () ())
-
 (v:define-prefab "collision-test-4" (:library examples)
+  "In this test, we test that the center of the collision sphere is away from
+the actual model and picking still works."
   (("camera" :copy "/cameras/perspective")
    (pick-test)
    (comp:camera (:policy :new-args) :zoom 1f0))
   ("a"
    (comp:transform :translate (v3:vec 5f0 0f0 0f0)
-                   :translate/velocity (v3:vec 0f0 0f0 0f0)
                    :scale 1f0)
-   ("stone-sphere1"
+   (("stone-sphere1" :link "/rock-1")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
                     :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
-    (comp:mesh :asset '(meshes damaged-helmet)
-               :name "helmet")
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground
                  :center (v3:vec 5 0 0)
-                 :radius 1.25f0)
-    (comp:render :material 'damaged-helmet
-                 :slave (v:ref :self :component 'comp:mesh))))
+                 :radius 1f0)))
   ("b"
    (comp:transform :translate (v3:vec -5f0 0f0 0f0)
-                   :translate/velocity (v3:vec 0f0 0f0 0f0)
                    :scale 1f0)
-   ("stone-sphere2"
+   (("stone-sphere2" :link "/rock-2")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
                     :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
-    (comp:mesh :asset '(meshes damaged-helmet)
-               :name "helmet")
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground
                  :center (v3:vec)
-                 :radius 1.25f0)
-    (comp:render :material 'damaged-helmet
-                 :slave (v:ref :self :component 'comp:mesh)))))
+                 :radius 1f0))))
 
 (v:define-prefab "collision-test-5" (:library examples)
+  "This test has very careful geometry which aligns one obb's plane to the
+camera so we see parallel to the plane. Also, the particular variation of
+this math is something that once broke in the internal OBB math."
   (("camera" :copy "/cameras/perspective")
    (pick-test)
    (comp:camera (:policy :new-args) :zoom 1f0))
@@ -490,11 +487,9 @@ actually are. You have to view the results to see the colliders lighting up."
    (comp:transform :translate (v3:vec 15f0 0f0 0f0)
                    :translate/velocity (v3:vec 0f0 0f0 0f0)
                    :scale 1f0)
-   ("stone-obb1"
+   (("stone-obb1" :link "/rock-2")
     (comp:transform :scale 15f0
                     :rotate (q:orient :local :x o:pi/2))
-    (comp:mesh :asset '(meshes damaged-helmet)
-               :name "helmet")
     (comp:cuboid :display-id "Stone"
                  :visualize t
                  :on-layer :ground
@@ -504,18 +499,14 @@ actually are. You have to view the results to see the colliders lighting up."
                  :miny -1f0
                  :maxy 1f0
                  :minz -1f0
-                 :maxz 1f0)
-    (comp:render :material 'damaged-helmet
-                 :slave (v:ref :self :component 'comp:mesh))))
+                 :maxz 1f0)))
   ("b"
    (comp:transform :translate (v3:vec -15f0 0f0 0f0)
                    :translate/velocity (v3:vec 0f0 0f0 0f0)
                    :scale 1f0)
-   ("stone-obb2"
+   (("stone-obb2" :link "/rock-0")
     (comp:transform :scale 15f0
                     :rotate (q:orient :local :z o:pi/4 :x o:pi/2))
-    (comp:mesh :asset '(meshes damaged-helmet)
-               :name "helmet")
     (comp:cuboid :display-id "Stone"
                  :visualize t
                  :on-layer :ground
@@ -525,17 +516,37 @@ actually are. You have to view the results to see the colliders lighting up."
                  :miny -1f0
                  :maxy 1f0
                  :minz -1f0
-                 :maxz 1f0)
-    (comp:render :material 'damaged-helmet
-                 :slave (v:ref :self :component 'comp:mesh)))))
+                 :maxz 1f0))))
 
-(defmethod v:on-component-update ((self pick-test))
-  (let ((context (v:context self))
-        (line-segment (make-instance 'v::line-segment))
-        (picked nil))
-    (when (v:on-button-enter context :mouse :left)
-      (setf picked (v::pick-actor context line-segment)))
-    (when picked
-      (:printv picked)
-      ;; TODO: Uncomment this when sly has send-to-repl in master
-      #++(v::send-to-repl (list picked) :comment "Picked actor"))))
+(v:define-prefab "collision-test-6" (:library examples)
+  "Test that the top stays in collision, and the bottom stay colliding when
+they separate, and while the big one is alive stay collided, but after it goes
+away then become non-collided."
+  (("camera" :copy "/cameras/perspective")
+   (comp:camera (:policy :new-args) :zoom 4f0))
+  (("upper-left" :link "/rock-1")
+   (comp:transform :translate (v3:vec -.5f0 2f0 -0.1f0))
+   (comp:sphere :display-id "Upper-Left"
+                :visualize t
+                :on-layer :ground))
+  (("upper-right" :link "/rock-1")
+   (comp:transform :translate (v3:vec .5f0 2f0 -0.1f0))
+   (comp:sphere :display-id "Upper-Right"
+                :visualize t
+                :on-layer :ground))
+  (("lower-left" :link "/rock-1")
+   (comp:transform :translate (v3:vec -.5f0 -2f0 -0.1f0)
+                   :translate/velocity (v3:make-velocity v3:+left+ .5f0))
+   (comp:sphere :display-id "Lower-Left"
+                :visualize t
+                :on-layer :ground))
+  (("lower-right" :link "/rock-1")
+   (comp:transform :translate (v3:vec .5f0 -2f0 -0.1f0)
+                   :translate/velocity (v3:make-velocity v3:+right+ .5f0))
+   (comp:sphere :display-id "Lower-Right"
+                :visualize t
+                :on-layer :ground))
+
+  (("stone" :link "/stone-destroy-after-time")
+   (comp:transform :scale 2f0
+                   :rotate/velocity (v3:make-velocity v3:+up+ o:pi))))

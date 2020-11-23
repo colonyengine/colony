@@ -1,5 +1,9 @@
 (in-package #:virality-examples)
 
+;; TODO: Remove uses of globals and replace with calls to cfg system.
+;; This is because V should not provide any globals to the user, and also
+;; because the screen size can change.
+
 ;;; Textures
 
 (v:define-texture art5/texture (:texture-2d)

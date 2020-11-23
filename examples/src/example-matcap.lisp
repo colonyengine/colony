@@ -32,11 +32,11 @@
            #((v:matcaps v::basic-1)))))
 
 (v:define-material matcap-lookup
-  (:shader ex/shd::matcap-lookup
-   :profiles (x:u-mvp)
-   :uniforms ((:matcaps 'matcap/lookup)
-              (:normal-matrix (m3:mat 1))
-              (:id-map 'matcap/matcap-map))))
+    (:shader ex/shd::matcap-lookup
+     :profiles (x:u-mvp)
+     :uniforms ((:matcaps 'matcap/lookup)
+                (:normal-matrix (m3:mat 1))
+                (:id-map 'matcap/matcap-map))))
 
 
 (v:define-prefab "default-artblob" (:library examples)
@@ -89,6 +89,10 @@
                :slave (v:ref :self :component 'comp:mesh)))
 
 
+;; ;;;;;;;;;;;;;;;;;;;
+;; The test prefabs
+;; ;;;;;;;;;;;;;;;;;;;
+
 (v:define-prefab "ship01" (:library examples)
   (("camera" :copy "/cameras/perspective")
    (comp:camera (:policy :new-args)
@@ -96,6 +100,13 @@
   (("ship01" :copy "/default-ship")
    (comp:transform :rotate/velocity (v3:make-velocity v3:+forward+ (- o:pi/6))
                    :scale 4f0)))
+
+(v:define-prefab "ship01-interactive" (:library examples)
+  (("camera" :copy "/cameras/perspective")
+   (comp:camera (:policy :new-args)))
+  (("ship01" :copy "/default-ship")
+   (comp:transform :scale 4f0)
+   (simple-mouse-rotator :clamp-p t)))
 
 (v:define-prefab "ship-group" (:library examples)
   (("camera" :copy "/cameras/perspective"))
@@ -108,10 +119,3 @@
    (comp:mesh :name "Ship_012")
    (comp:transform :translate (v3:vec 15 0 0)
                    :scale 4f0)))
-
-(v:define-prefab "ship01-interactive" (:library examples)
-  (("camera" :copy "/cameras/perspective")
-   (comp:camera (:policy :new-args)))
-  (("ship01" :copy "/default-ship")
-   (comp:transform :scale 4f0)
-   (simple-mouse-rotator :clamp-p t)))

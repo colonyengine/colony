@@ -7,7 +7,7 @@
   :license "MIT"
   :version "0.1.0"
   :depends-on (#:virality
-	       #:net.mfiano.lisp.golden-utils
+               #:net.mfiano.lisp.golden-utils
                #:net.mfiano.lisp.origin)
   :pathname "src"
   :serial t
@@ -23,8 +23,8 @@
    (:file "shaders/texture")
    (:file "shaders/font")
    (:file "shaders/matcap-lookup")
-   (:file "example-collision")
    (:file "example-damaged-helmet")
+   (:file "example-collision")
    (:file "example-dynamic-geometry")
    (:file "example-geometric-volumes")
    (:file "example-graph")

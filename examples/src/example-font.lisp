@@ -8,17 +8,17 @@
 ;;; Materials
 
 (v:define-material font
-  (:shader ex/shd:font
-   :profiles (x:u-mvp)
-   :uniforms
-   ((:sampler 'font)
-    (:color (v4:vec 0 1 0 0.75)))))
+    (:shader ex/shd:font
+     :profiles (x:u-mvp)
+     :uniforms
+     ((:sampler 'font)
+      (:color (v4:vec 0 1 0 0.75)))))
 
 ;;; Prefabs
 
 ;; The basic reusable text-display, :copy or :link this into other prefabs and
 ;; make changes as needed.
-(v:define-prefab "text-display" (:library examples)
+(v:define-prefab "default-text-display" (:library examples)
   ("text-container"
    (comp:geometry :name 'comp::text)
    (comp:font :asset '(metadata font)
@@ -27,17 +27,17 @@
                 :slave (v:ref :self :component 'comp:geometry))))
 
 ;; Example use of the above prefab.
-(v:define-prefab "example-text-display" (:library examples)
+(v:define-prefab "text-wall-clock-time" (:library examples)
   (("camera" :copy "/cameras/ortho"))
 
-  (("sign" :copy "/text-display")
+  (("sign" :copy "/default-text-display")
    (comp:transform :scale (v3:vec 5f0)
                    :translate (v3:vec 0f0 256f0 0f0))
    ;; override child component info
    ("text-container"
     (comp:font :text "Wall Clock Time")))
 
-  (("wall-clock-time" :copy "/text-display")
+  (("wall-clock-time" :copy "/default-text-display")
    (comp:transform :scale (v3:vec 5f0))
    ;; override child component info
    ("text-container"
