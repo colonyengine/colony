@@ -21,7 +21,7 @@
                        :context-minor-version minor
                        :context-profile-mask 1
                        :multisamplebuffers 1
-                       :multisamplesamples 4)))
+                       :multisamplesamples 16)))
 
 (defun make-opengl-context (display)
   (let ((context (sdl2:gl-create-context (window display))))
