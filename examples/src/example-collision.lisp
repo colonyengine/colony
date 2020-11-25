@@ -178,8 +178,9 @@
    (comp:transform :scale (v3:vec 2f0))
    (comp:mesh :asset '(meshes rocks)
               :name "Rock-1")
-   (comp:render :material `(x:matcap ,(gensym "CERAMIC-DARK-")
-                                     :uniforms ((:sampler x:matcap/ceramic-dark)))
+   (comp:render :material `(x:matcap ceramic-dark
+                                     :uniforms
+                                     ((:sampler x:matcap/ceramic-dark)))
                 :slave (v:ref :self :component 'comp:mesh))))
 
 (v:define-prefab "rock-0" (:library examples)

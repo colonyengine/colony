@@ -41,4 +41,5 @@
     ((:file "hacked-components")
      (:file "common")
      (:file "protect-the-planets")))
+   (:file "example-selector") ;; must be last: run any official example.
    (:file "examples")))

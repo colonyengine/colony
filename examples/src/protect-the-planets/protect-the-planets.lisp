@@ -2206,7 +2206,7 @@ NIL if no such list exists."
     ;; TODO: when 'time-bar is mis-spelled in the material,
     ;; I don't get the debug material, why?
     ;; TODO: I think this material is leaked when this object is destroyed.
-    (sketch :material `(time-bar ,(gensym "TIME-BAR-MATERIAL-"))
+    (sketch :material `(time-bar time-bar-material)
             :render-layer :time-keeper
             :slave (v:ref :self :component 'comp:mesh)))))
 

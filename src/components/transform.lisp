@@ -85,6 +85,27 @@
   (dolist (child (children parent))
     (map-nodes func child)))
 
+;; TODO: This needs to live in a better place, but I'm not sure where.
+;; It IS technically a feature of the transform component since it keeps track
+;; if the actual links between actors.
+(defun map-actors (func parent &optional context)
+  "Call the FUNC on the actor PARENT and on all of its actor children in a root
+to leaf ordering. If PARENT is the keyword :universe then the CONTEXT reference
+MUST be also supplied. If so, then this will map the FUNC across all actors
+in the scene tree EXCEPT the universe actor itself."
+  (flet ((apply-as-actor (transform)
+           (funcall func (v:actor transform))))
+    (if (eq parent :universe)
+        (let* ((core (v::core context))
+               (universe (v::scene-tree core))
+               (universe-transform
+                 (v:component-by-type universe 'comp:transform)))
+          ;; NOTE: Don't apply function to universe itself!
+          (dolist (child (children universe-transform))
+            (map-nodes #'apply-as-actor child)))
+        (map-nodes #'apply-as-actor
+                   (v:component-by-type parent 'comp:transform)))))
+
 (defun interpolate-transforms (core)
   (let ((factor (float (v::clock-interpolation-factor (v::clock core)) 1f0)))
     (map-nodes
