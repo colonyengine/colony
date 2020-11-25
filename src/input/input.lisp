@@ -43,11 +43,13 @@
      (:x x :y y :xrel dx :yrel dy)
      (on-mouse-move data x y dx dy))
     (:keyup
-     (:keysym keysym)
-     (on-key-up data (aref +key-names+ (sdl2:scancode-value keysym))))
+     (:keysym keysym :repeat repeat)
+     (when (zerop repeat)
+       (on-key-up data (aref +key-names+ (sdl2:scancode-value keysym)))))
     (:keydown
-     (:keysym keysym)
-     (on-key-down data (aref +key-names+ (sdl2:scancode-value keysym))))
+     (:keysym keysym :repeat repeat)
+     (when (zerop repeat)
+       (on-key-down data (aref +key-names+ (sdl2:scancode-value keysym)))))
     (:controllerdeviceadded
      (:which gamepad-id)
      (%on-gamepad-attach data gamepad-id))
