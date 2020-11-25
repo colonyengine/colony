@@ -4,7 +4,7 @@
   ((%asset :reader asset
            :initarg :asset
            :initform nil)
-   (%text :reader text
+   (%text :accessor text
           :initarg :text
           :initform "")
    (%position :reader font-position
