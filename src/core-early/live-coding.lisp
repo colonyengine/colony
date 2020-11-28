@@ -6,21 +6,22 @@
                 #-sbcl '*debugger-hook*)
           ;; TODO: Deal with when somehow *core-debug* is unbound.
           (clock '(clock *core-debug*)))
-      `(let* ((,debugger-entry-time nil)
-              (,previous-hook ,hook)
+      `(let* ((,previous-hook ,hook)
               (,hook
                 (lambda (condition hook)
                   (declare (ignore hook))
-                  (setf ,debugger-entry-time (get-time ,clock))
-                  (when ,previous-hook
-                    (funcall ,previous-hook condition ,previous-hook)))))
+                  (let ((,debugger-entry-time (get-time ,clock)))
+                    (unwind-protect
+                         (when ,previous-hook
+                           (funcall ,previous-hook condition ,previous-hook))
+                      (let ((,pause-time (- (get-time ,clock)
+                                            ,debugger-entry-time)))
+                        (incf (pause-time ,clock) ,pause-time)
+                        (format t "Spent ~3$ seconds in the debugger.~%"
+                                ,pause-time)))))))
          (restart-case (progn ,@body)
            (abort ()
-             :report "Skip processing the currently executing frame"
-             (when ,debugger-entry-time
-               (let ((,pause-time (- (get-time ,clock) ,debugger-entry-time)))
-                 (incf (pause-time ,clock) ,pause-time)
-                 (format t "Spent ~3$ seconds in the debugger.~%" ,pause-time)))))))))
+             :report "Skip processing the currently executing frame"))))))
 
 (flet ((generate-live-support-functions ()
          (let ((repl-package (find-if #'find-package '(:slynk :swank))))
@@ -51,8 +52,8 @@
                 ;; TODO: uncomment and remove constantly line above when Sly
                 ;; merges in send-to-repl to master.
                 #++`(lambda (values &key (comment "Sent from Pyx"))
-                   (,(find-symbol "COPY-TO-REPL-IN-EMACS" :slynk-mrepl)
-                    values :blurb comment :pop-to-buffer nil))
+                      (,(find-symbol "COPY-TO-REPL-IN-EMACS" :slynk-mrepl)
+                       values :blurb comment :pop-to-buffer nil))
                 (constantly nil))))))
   (generate-live-support-functions))
 
