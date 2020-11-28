@@ -164,8 +164,6 @@
             (spawn-selected-prefab self))))))
     nil))
 
-
-
 (v:define-prefab "selector-text-display" (:library examples)
   ("text-container"
    (comp:geometry :name 'comp::text)
@@ -184,7 +182,7 @@
    :selector-text-renderer (v:ref "/example-selector/options/text-container"
                                   :component 'comp:render)
    :selector-prefabs #(("damaged-helmet" examples)
-                       ("damaged-helmet-interactive" examples)
+                       ("damaged-helmet-turn-table" examples)
                        ("flying-helmet" examples)
                        ("collision-smoke-test" examples)
                        ("collision-transform-test-0" examples)

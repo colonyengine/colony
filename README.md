@@ -125,7 +125,7 @@ following in your REPL:
 ;; To show the GLTF damaged helmet (mouse will drag and move it around.)
 (virality:start
        :project :virality-examples
-       :scene '(("damaged-helmet-interactive" examples)))
+       :scene '(("damaged-helmet-turn-table" examples)))
 
 ;; To run the Protect the Planets game (requires a gamepad to play)
 ;; Directions:

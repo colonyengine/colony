@@ -1,5 +1,12 @@
 (in-package #:virality)
 
+;; TODO: Make this picking code general to support arbitrary line segments in
+;; world space etc.
+
+;; TODO: last-picked-actor in core should be a collection of some sort, 1 picked
+;; actor per camera. This implies a picking component that is attached to any
+;; camera that wants to pick from view space.
+
 (defclass line-segment ()
   ((%start-point :reader start-point
                  :initform (v3:vec))
@@ -94,6 +101,9 @@
              (actor (actor collider)))
         (setf (last-picked-actor core-state) actor)
         actor))))
+
+(defun unpick-actor (context)
+  (setf (last-picked-actor (core context)) nil))
 
 (defun actor-picked-p (actor)
   (eq actor (last-picked-actor (core (context actor)))))
