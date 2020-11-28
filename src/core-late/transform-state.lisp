@@ -71,10 +71,11 @@
 (defun interpolate-quaternion (state factor)
   (q:slerp! (interpolated state) (previous state) (current state) factor))
 
-(defun transform-node/vector (state delta)
+(defun transform-node/vector (state delta &optional (func #'identity))
   (v3:copy! (previous state) (current state))
   (v3:scale! (incremental-delta state) (incremental state) delta)
-  (v3:+! (current state) (current state) (incremental-delta state)))
+  (v3:+! (current state) (current state)
+	 (funcall func (incremental-delta state))))
 
 (defun transform-node/quaternion (state delta)
   (q:copy! (previous state) (current state))

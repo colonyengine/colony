@@ -10,6 +10,9 @@
    (%material :accessor material
               :initarg :material
               :annotation (v::material))
+   (%render-p :accessor render-p
+              :initarg :render-p
+              :initform t)
    (%slave :reader slave
            :initarg :slave
            :initform nil)))
@@ -52,11 +55,12 @@ shared material may affect the NEXT rendering call!"
     (setf %transform (v:component-by-type (v:actor self) 'transform))))
 
 (defmethod v:on-component-render ((self render))
-  (u:when-let ((camera (v::active-camera (v:context self)))
-               (transform (v:component-by-type (v:actor self) 'transform)))
-    (with-material (material self)
-        (:model (model transform)
-         :view (view camera)
-         :proj (projection camera)
-         :normal-matrix (resolve-normal-matrix transform))
-      (v:on-component-slave-render self (slave self)))))
+  (when (render-p self)
+    (u:when-let ((camera (v::active-camera (v:context self)))
+                 (transform (v:component-by-type (v:actor self) 'transform)))
+      (with-material (material self)
+          (:model (model transform)
+           :view (view camera)
+           :proj (projection camera)
+           :normal-matrix (resolve-normal-matrix transform))
+        (v:on-component-slave-render self (slave self))))))

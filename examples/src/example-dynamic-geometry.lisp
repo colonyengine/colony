@@ -19,8 +19,10 @@
    :shader ex/shd:dynamic-geometry))
 
 (v:define-prefab "dynamic-geometry" (:library examples)
+  ;; TODO: This test is actually broken, we shouldn't see the backside of
+  ;; the geometry, but we do! Probably a shader error.
   (("camera" :copy "/cameras/perspective"))
-  (("plane")
+  ("plane"
    (comp:transform :rotate/velocity (v3:make-velocity v3:+right+ o:pi)
                    :scale (v3:vec 20f0 20f0 20f0))
    (comp:geometry :name 'tile)

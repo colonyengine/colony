@@ -193,7 +193,8 @@ CORE. Return a list of the return values of the FUNC."
    (%shader :reader shader ;; :writer defined below.
             :initarg :shader)
    ;; This is the actual compiled shader program for this material.
-   (%shader-program :reader shader-program)
+   (%shader-program :reader shader-program
+                    :initarg :shader-program)
    (%instances :reader instances
                :initarg :instances)
    (%attributes :reader attributes
@@ -253,6 +254,7 @@ CORE. Return a list of the return values of the FUNC."
         (return-from %deep-copy-material error-value)))
   (let* ((new-id new-mat-name)
          (new-shader (shader current-mat))
+         (new-shader-program (shader-program current-mat))
          (new-instances (instances current-mat))
          (new-attributes (attributes current-mat))
          (new-uniforms (u:dict #'eq))
@@ -263,6 +265,7 @@ CORE. Return a list of the return values of the FUNC."
            (make-instance 'material
                           :id new-id
                           :shader new-shader
+                          :shader-program new-shader-program
                           :instances new-instances
                           :attributes new-attributes
                           :core (core current-mat)
@@ -715,7 +718,8 @@ applied in an overlay manner while defining a material."
        (destructuring-bind (base-mat-sym new-mat-sym
                             &key shader instances uniforms blocks)
            mat-val
-         (let* ((base-mat (lookup-material base-mat-sym context))
+         (let* ((new-mat-sym (u:make-gensym new-mat-sym))
+                (base-mat (lookup-material base-mat-sym context))
                 (copy-mat (copy-material base-mat new-mat-sym)))
            (when blocks
              (error "Material override: :blocks not implemented yet."))

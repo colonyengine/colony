@@ -32,7 +32,16 @@
 (defun transform-node (node)
   (v::transform-node/vector (scale node) v:=delta=)
   (v::transform-node/quaternion (rotation node) v:=delta=)
-  (v::transform-node/vector (translation node) v:=delta=))
+  (v::transform-node/vector
+   (translation node) v:=delta=
+   (lambda (incremental-translation-delta)
+     ;; TODO: Remove memory allocation. Add a mat3 to transform-state we can
+     ;; reuse at opportune times--but could mess up threading...
+     (let ((rot (m4:rotation-to-mat3 (local node))))
+       ;; View the incremental delta in terms of a fly vector in the rotated
+       ;; local space of this transform.
+       (m3:*v3! incremental-translation-delta rot
+                incremental-translation-delta)))))
 
 (defun resolve-local (node factor)
   (with-slots (%local) node
@@ -75,6 +84,27 @@
   (funcall func parent)
   (dolist (child (children parent))
     (map-nodes func child)))
+
+;; TODO: This needs to live in a better place, but I'm not sure where.
+;; It IS technically a feature of the transform component since it keeps track
+;; if the actual links between actors.
+(defun map-actors (func parent &optional context)
+  "Call the FUNC on the actor PARENT and on all of its actor children in a root
+to leaf ordering. If PARENT is the keyword :universe then the CONTEXT reference
+MUST be also supplied. If so, then this will map the FUNC across all actors
+in the scene tree EXCEPT the universe actor itself."
+  (flet ((apply-as-actor (transform)
+           (funcall func (v:actor transform))))
+    (if (eq parent :universe)
+        (let* ((core (v::core context))
+               (universe (v::scene-tree core))
+               (universe-transform
+                 (v:component-by-type universe 'comp:transform)))
+          ;; NOTE: Don't apply function to universe itself!
+          (dolist (child (children universe-transform))
+            (map-nodes #'apply-as-actor child)))
+        (map-nodes #'apply-as-actor
+                   (v:component-by-type parent 'comp:transform)))))
 
 (defun interpolate-transforms (core)
   (let ((factor (float (v::clock-interpolation-factor (v::clock core)) 1f0)))
@@ -166,7 +196,10 @@
 (defun %translate (transform vec space replace instant)
   (let ((state (translation transform)))
     (ecase space
-      (:local
+      (:inertial
+       ;; NOTE: The interial frame is always in reference to the parent and
+       ;; does not take into consideration (by design) the local orientation of
+       ;; the transform.
        (v3:+! (v::current state)
               (cond
                 (replace
@@ -180,6 +213,24 @@
             (declare (ignore core))
             (v3:copy! (v::previous state) (v::current state)))
           (v::end-of-frame-work (v::core transform)))))
+
+      (:local
+       ;; NOTE: The movement vector is always rotated to match the local
+       ;; orientation of the transform before translating in that direction.
+       (let ((local-vec (m3:*v3 (m4:rotation-to-mat3 (local transform)) vec)))
+         (v3:+! (v::current state)
+                (cond
+                  (replace
+                   (update-replace-count transform state :translate)
+                   v3:+zero+)
+                  (t (v::current state)))
+                local-vec)
+         (when instant
+           (push
+            (lambda (core)
+              (declare (ignore core))
+              (v3:copy! (v::previous state) (v::current state)))
+            (v::end-of-frame-work (v::core transform))))))
       (:model (error "TRANSLATE not yet implemented for world space.")))
     ;; side-effects only; return T
     t))
@@ -254,7 +305,7 @@
          ;; coordinate frame.
          (c (v3:- a b))
          ;; Get the local scale of the target
-         (s (%get-scale target-transform t))
+         (s (%get-scale target-transform :local))
          ;; And what that scale would be if we performed the scale-diff.
          (asd (v3:+ s scale-diff)))
     ;; If any component of the scale dips down below or above the extents,
@@ -277,7 +328,7 @@
           (%scale target-transform scale-diff :local nil nil)
           ;; And adjust the target's translation vector from the parent to
           ;; put the pivot point into the same place as the target scales.
-          (%translate target-transform fp :local t nil))))
+          (%translate target-transform fp :inertial t nil))))
     ;; side-effects only; return T
     t))
 

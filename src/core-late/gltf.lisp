@@ -260,7 +260,7 @@
   (loop :for mesh :in (get-gltf-property gltf "meshes")
         :for index :from 0
         :for name = (or (get-gltf-property gltf "name" mesh)
-                        (format nil "~a~d" (name gltf) index))
+                        (format nil "~a~d" (file-name gltf) index))
         :for primitives = (map
                            'vector
                            (lambda (x)

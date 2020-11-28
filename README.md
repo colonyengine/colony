@@ -147,6 +147,13 @@ following in your REPL:
        :project :virality-examples
        :scene '(("art6" examples)))
 
+;; To run a menu selector for all examples including those above:
+;; And ensure to pay attention to the keyboard interface to move in and
+;; out of the examples.
+(virality:start
+       :project :virality-examples
+       :scene '(("example-selector" examples)))
+
 ;; ESC exits
 ```
 

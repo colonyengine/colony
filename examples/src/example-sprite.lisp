@@ -27,7 +27,8 @@
       (v:translate self
                    (v3:+ (v3:vec -400f0 0f0 0f0) vec)
                    :replace t
-                   :instant instant-p)
+                   :instant instant-p
+                   :space :inertial)
       (unless (= rx ry 0f0)
         (let* ((angle (atan (- rx) ry))
                (angle (if (minusp angle)
@@ -49,12 +50,9 @@
     (setf %transform (v:component-by-type (v:actor self) 'comp:transform))))
 
 (defmethod v:on-component-update ((self shot-mover))
-  (v:translate
-   self
-   (let ((a (v3:normalize (m4:rotation-axis-to-vec3
-                           (comp:local (transform self)) :y)))
-         (move-delta (* (velocity self) (v:frame-time (v:context self)))))
-     (v3:scale a move-delta))))
+  (v:translate self
+               (v3:scale v3:+up+
+                         (* (velocity self) (v:frame-time (v:context self))))))
 
 (v:define-component shot-emitter ()
   ((%transform :reader transform)))
@@ -85,7 +83,7 @@
              (render (v:make-component context
                                        'comp:render
                                        :material `(x:sprite
-                                                   ,(u:make-gensym '#:sprite)
+                                                   sprite
                                                    :uniforms
                                                    ((:sprite.sampler sprites)))
                                        :slave sprite)))
@@ -106,7 +104,7 @@
     (comp:sprite :spec '(metadata sprites)
                  :name "ship29")
     (comp:render :material `(x:sprite
-                             ,(u:make-gensym '#:sprite)
+                             sprite
                              :uniforms ((:sprite.sampler sprites)))
                  :slave (v:ref :self :component'comp:sprite))
     ("exhaust"
@@ -116,6 +114,6 @@
                   :frames 8
                   :duration 0.75)
      (comp:render :material `(x:sprite
-                              ,(u:make-gensym '#:sprite)
+                              sprite
                               :uniforms ((:sprite.sampler sprites)))
                   :slave (v:ref :self :component'comp:sprite))))))

@@ -123,7 +123,8 @@
   ;; render
   (:export
    #:material
-   #:render)
+   #:render
+   #:render-p)
   ;; sprite
   (:export
    #:frames
@@ -135,6 +136,7 @@
   (:export
    #:add-child
    #:local
+   #:map-actors
    #:model
    #:remove-child
    #:transform))

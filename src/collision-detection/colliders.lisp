@@ -353,15 +353,15 @@ had--and update all other faces too."
 ;; Here is a collision system: (notice :scenery collides with nothing)
 ;; (NOTE: :p represents the keyword :planet, it was too long to fit)
 ;;
-;;               :ground :player :player-bullet :enemy :enemy-bullet :scenery :p
-;;                --------------------------------------------------------------
-;; :ground        | X       @           @          @         @           @     @
-;; :player        | X                   @          @         @           @     @
-;; :player-bullet | X                              @         @           @     @
-;; :enemy         | X       X           X                    @           @     @
-;; :enemy-bullet  | X       X           X                                @     @
-;; :scenery       |
-;; :planet        |                                X
+;;              :ground :player :player-bullet :enemy :enemy-bullet :scenery :p
+;;               --------------------------------------------------------------
+;; :ground       | X       @           @          @         @           @     @
+;; :player       | X                   @          @         @           @     @
+;; :player-bullet| X                              @         @           @     @
+;; :enemy        | X       X           X                    @           @     @
+;; :enemy-bullet | X       X           X                                @     @
+;; :scenery      |
+;; :planet       |                                X
 ;;
 ;; Then, the collision plan is an sparse representation of which columns for
 ;; each row are marked X.
