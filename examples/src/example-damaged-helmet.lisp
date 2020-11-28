@@ -227,18 +227,17 @@
         (when (or (null x) (null y))
           ;; TODO: Figure out how this even happens.
           (return-from v:on-component-update))
-        ;; TODO: Drag detection and handling is very primitive and prolly should
-        ;; be done elsewhere.
-        ;; NOTE: We get this ONCE and then the entire rotation of the object is
-        ;; dynamically built as an persistent orientation offset from this origin
-        ;; orientation.
+        ;; TODO: Drag detection and handling is very primitive and prolly
+        ;; should be done elsewhere.  NOTE: We get this ONCE and then the
+        ;; entire rotation of the object is dynamically built as an persistent
+        ;; orientation offset from this origin orientation.
         (unless orig-orient
           (setf orig-orient (v:get-rotation self)))
         (unless rv
-          ;; RV represents a persistent 2D point we'll be moving around with the
-          ;; mouse--even across multiple drag events. This RV 2D point represents
-          ;; the persistent orientation difference we're going to apply to the
-          ;; original-orientation
+          ;; RV represents a persistent 2D point we'll be moving around with
+          ;; the mouse--even across multiple drag events. This RV 2D point
+          ;; represents the persistent orientation difference we're going to
+          ;; apply to the original-orientation
           (setf rv (v2:copy start-drag-point)))
         (when lm-start-drag-p
           (setf start-drag-point (v2:vec x y)
@@ -247,12 +246,12 @@
         (when dragging
           (setf drag-point (v2:vec x y))
           (let* ((dv (v2:- drag-point start-drag-point)))
-            ;; TODO: This mathematical concept here is slightly clunky, so fixup
-            ;; the transform API to make this a lot easier to do.
+            ;; TODO: This mathematical concept here is slightly clunky, so
+            ;; fixup the transform API to make this a lot easier to do.
             (let* (;; This is built by adding the new drag vector to RV. Sirnce
-                   ;; RV represents (as a 2d point) the offset from the
-                   ;; original orientation, when a new drag event happens it'll
-                   ;; smoothly start from RV in the new drag.
+		   ;; RV represents (as a 2d point) the offset from the
+		   ;; original orientation, when a new drag event happens it'll
+		   ;; smoothly start from RV in the new drag.
                    (x-rot (+ (v2:x rv) (* (v2:x dv) rot-speed)))
                    (y-rot (- (+ (v2:y rv) (* (v2:y dv) rot-speed))))
                    (y-rot (if clamp-p (u:clamp y-rot (- range) range) y-rot))
@@ -263,17 +262,17 @@
                    ;; original orientation that takes into consideration the
                    ;; new orientation indicated by dv-rot
                    (putative-rot (q:rotate dv-rot orig-orient)))
-              ;; Now, preview it to the user (remember, the orig-orientation was
-              ;; the orientation BEFORE the dragging started). So when the user
-              ;; lets go of the LMB, this BECOMES the new orientation for the
-              ;; next drag attempt.
+              ;; Now, preview it to the user (remember, the orig-orientation
+              ;; was the orientation BEFORE the dragging started). So when the
+              ;; user lets go of the LMB, this BECOMES the new orientation for
+              ;; the next drag attempt.
               (v:rotate self putative-rot :replace t))))
         (when lm-stop-drag-p
           (setf dragging nil
                 end-drag-point (v2:vec x y))
-          ;; Update RV to its final position at the end of the drag wrt where RV
-          ;; used to be.  This allows the NEXT drag to start at the same place the
-          ;; previous drag ended.
+          ;; Update RV to its final position at the end of the drag wrt where
+          ;; RV used to be.  This allows the NEXT drag to start at the same
+          ;; place the previous drag ended.
           (let* ((dv (v2:- end-drag-point start-drag-point)))
             (v2:with-components ((r rv) (d dv))
               (incf rx (* dx rot-speed))
