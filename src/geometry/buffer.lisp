@@ -63,8 +63,9 @@
 
 (defun fill-geometry-buffer (geometry buffer-name data
                              &key (usage :dynamic-draw))
-  (with-geometry-buffer (ptr size (u:flatten-numbers data))
-    (let ((buffer (u:href (buffer-names geometry) buffer-name)))
-      (gl:bind-buffer :array-buffer buffer)
-      (%gl:buffer-data :array-buffer size ptr usage)
-      (gl:bind-buffer :array-buffer 0))))
+  (let ((data (u:flatten-numbers data)))
+    (with-geometry-buffer (ptr size data)
+      (let ((buffer (u:href (buffer-names geometry) buffer-name)))
+        (gl:bind-buffer :array-buffer buffer)
+        (%gl:buffer-data :array-buffer size ptr usage)
+        (gl:bind-buffer :array-buffer 0)))))
