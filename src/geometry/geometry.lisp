@@ -13,7 +13,8 @@
   (gl:bind-vertex-array (id geometry))
   (%gl:draw-arrays-instanced (primitive geometry)
                              0
-                             (vertex-count geometry)
+                             (* (primitive-count geometry)
+                                (vertex-count geometry))
                              instance-count)
   (gl:bind-vertex-array 0))
 
