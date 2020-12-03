@@ -41,6 +41,9 @@
   :serial t
   :components
   ((:file "package")
+   (:module "structures"
+    :components
+    ((:file "structures")))
    (:module "core-early"
     :components
     ((:file "general")

@@ -146,19 +146,19 @@ in the scene tree EXCEPT the universe actor itself."
 
 (defun update-replace-count (transform state transform-type)
   (let ((actor (v::actor transform)))
-    (when (and (plusp (v::replace-count state))
-               (null (v::replace-warned-p state)))
+    (when (and (plusp (v::transform-state-replace-count state))
+               (null (v::transform-state-replace-warned-p state)))
       (warn (format nil "Attempted to replace transform state ~s more than ~
                          once in a physics step or frame, for actor ~s."
                     transform-type
                     actor))
-      (setf (v::replace-warned-p state) t))
-    (incf (v::replace-count state))))
+      (setf (v::transform-state-replace-warned-p state) t))
+    (incf (v::transform-state-replace-count state))))
 
 (defun reset-transform-replace-count (transform)
-  (setf (v::replace-count (translation transform)) 0
-        (v::replace-count (rotation transform)) 0
-        (v::replace-count (scale transform)) 0)
+  (setf (v::transform-state-replace-count (translation transform)) 0
+        (v::transform-state-replace-count (rotation transform)) 0
+        (v::transform-state-replace-count (scale transform)) 0)
   (values))
 
 (defun process-deferred-instant-transform-updates (core)
@@ -206,36 +206,37 @@ in the scene tree EXCEPT the universe actor itself."
        ;; NOTE: The interial frame is always in reference to the parent and
        ;; does not take into consideration (by design) the local orientation of
        ;; the transform.
-       (v3:+! (v::current state)
+       (v3:+! (v::transform-state-current state)
               (cond
                 (replace
                  (update-replace-count transform state :translate)
                  v3:+zero+)
-                (t (v::current state)))
+                (t (v::transform-state-current state)))
               vec)
        (when instant
          (push
           (lambda (core)
             (declare (ignore core))
-            (v3:copy! (v::previous state) (v::current state)))
+            (v3:copy! (v::transform-state-previous state)
+                      (v::transform-state-current state)))
           (v::end-of-frame-work (v::core transform)))))
 
       (:local
        ;; NOTE: The movement vector is always rotated to match the local
        ;; orientation of the transform before translating in that direction.
        (let ((local-vec (m3:*v3 (m4:rotation-to-mat3 (local transform)) vec)))
-         (v3:+! (v::current state)
+         (v3:+! (v::transform-state-current state)
                 (cond
                   (replace
                    (update-replace-count transform state :translate)
                    v3:+zero+)
-                  (t (v::current state)))
+                  (t (v::transform-state-current state)))
                 local-vec)
          (when instant
            (push
             (lambda (core)
               (declare (ignore core))
-              (v3:copy! (v::previous state) (v::current state)))
+              (v3:copy! (v::transform-state-previous state) (v::transform-state-current state)))
             (v::end-of-frame-work (v::core transform))))))
       (:model (error "TRANSLATE not yet implemented for world space.")))
     ;; side-effects only; return T
@@ -243,24 +244,24 @@ in the scene tree EXCEPT the universe actor itself."
 
 (defun %translate/velocity (transform axis rate)
   (let ((state (translation transform)))
-    (setf (v::incremental state) (v3:make-velocity axis rate))))
+    (setf (v::transform-state-incremental state) (v3:make-velocity axis rate))))
 
 (defun %rotate (transform quat space replace instant)
   (let ((state (rotation transform)))
     (ecase space
       (:local
-       (q:rotate! (v::current state)
+       (q:rotate! (v::transform-state-current state)
                   (cond
                     (replace
                      (update-replace-count transform state :rotate)
                      q:+id+)
-                    (t (v::current state)))
+                    (t (v::transform-state-current state)))
                   quat)
        (when instant
          (push
           (lambda (core)
             (declare (ignore core))
-            (q:copy! (v::previous state) (v::current state)))
+            (q:copy! (v::transform-state-previous state) (v::transform-state-current state)))
           (v::end-of-frame-work (v::core transform)))))
       (:model (error "ROTATE not yet implemented for world space.")))
     ;; side-effects only; return T
@@ -268,24 +269,24 @@ in the scene tree EXCEPT the universe actor itself."
 
 (defun %rotate/velocity (transform axis rate)
   (let ((state (rotation transform)))
-    (setf (v::incremental state) (v3:make-velocity axis rate))))
+    (setf (v::transform-state-incremental state) (v3:make-velocity axis rate))))
 
 (defun %scale (transform vec space replace instant)
   (let ((state (scale transform)))
     (ecase space
       (:local
-       (v3:+! (v::current state)
+       (v3:+! (v::transform-state-current state)
               (cond
                 (replace
                  (update-replace-count transform state :scale)
                  v3:+zero+)
-                (t (v::current state)))
+                (t (v::transform-state-current state)))
               vec)
        (when instant
          (push
           (lambda (core)
             (declare (ignore core))
-            (v3:copy! (v::previous state) (v::current state)))
+            (v3:copy! (v::transform-state-previous state) (v::transform-state-current state)))
           (v::end-of-frame-work (v::core transform)))))
       (:model (error "SCALE not yet implemented for world space.")))
     ;; side-effects only; return T
@@ -293,7 +294,7 @@ in the scene tree EXCEPT the universe actor itself."
 
 (defun %scale/velocity (transform axis rate)
   (let ((state (scale transform)))
-    (setf (v::incremental state) (v3:make-velocity axis rate))))
+    (setf (v::transform-state-incremental state) (v3:make-velocity axis rate))))
 
 (defun %scale-around (target-transform pivot-in-world-space scale-diff
                       &key (min-scale (v3:vec 0f0 0f0 0f0))
