@@ -51,9 +51,15 @@
       (v::interpolate-vector scale factor)
       (v::interpolate-quaternion rotation factor)
       (v::interpolate-vector translation factor)
-      (m4:copy! %local (q:to-mat4 (v::interpolated rotation)))
-      (m4:*! %local %local (m4:set-scale m4:+id+ (v::interpolated scale)))
-      (m4:set-translation! %local %local (v::interpolated translation)))))
+      (q:to-mat4! %local (v::transform-state-interpolated rotation))
+      ;; TODO: This next code needs a temporary to reduce garbage, but I don't
+      ;; want to store it in the transform since that causes that amount of
+      ;; space addition for each transform used only for this. See if there is
+      ;; another way before doing that option.
+      (m4:*! %local %local
+             (m4:set-scale m4:+id+ (v::transform-state-interpolated scale)))
+      (m4:set-translation! %local %local
+                           (v::transform-state-interpolated translation)))))
 
 (defun resolve-model (node factor)
   (u:when-let ((parent (parent node)))
