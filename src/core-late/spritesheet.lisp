@@ -1,30 +1,20 @@
 (in-package #:virality)
 
-(defclass spritesheet ()
-  ((%name :reader name
-          :initarg :name)
-   (%block-alias :reader block-alias
-                 :initarg :block-alias)
-   (%spec :reader spec
-          :initarg :spec)
-   (%geometry :reader geometry
-              :initarg :geometry)
-   (%sprites :reader sprites
-             :initform (u:dict #'equalp))))
+;;;; NOTE: Implementation of defstruct SPRITESHEET
 
 (defun make-spritesheet-buffer (spritesheet)
-  (with-slots (%name) spritesheet
-    ;; TODO: This 1 is hardcoded because virality doesn't have an allocation
-    ;; system for these integers.
-    (shadow:bind-block (block-alias spritesheet) 1)
-    (shadow:create-buffer %name (block-alias spritesheet))
-    ;; TODO: Have materials automatically calculate a binding point instead of
-    ;; hard-coding.
-    (shadow:bind-buffer %name 1)))
+  ;; TODO: This 1 is hardcoded because virality doesn't have an allocation
+  ;; system for these integers.
+  (shadow:bind-block (spritesheet-block-alias spritesheet) 1)
+  (shadow:create-buffer (spritesheet-name spritesheet)
+                        (spritesheet-block-alias spritesheet))
+  ;; TODO: Have materials automatically calculate a binding point instead of
+  ;; hard-coding.
+  (shadow:bind-buffer (spritesheet-name spritesheet) 1))
 
 (defun update-spritesheet-buffer (spritesheet)
-  (loop :with name = (name spritesheet)
-        :with spec = (spec spritesheet)
+  (loop :with name = (spritesheet-name spritesheet)
+        :with spec = (spritesheet-spec spritesheet)
         :with count = (length spec)
         :with pos = (make-array count)
         :with size = (make-array count)
@@ -36,24 +26,24 @@
                 ;; TODO: Make sure y-flip math is correct
                 (setf (aref pos i) (vector x (if y-flipped (- 1 y h) y))
                       (aref size i) (vector w h)
-                      (u:href (sprites spritesheet) id) i)))
+                      (u:href (spritesheet-sprites spritesheet) id) i)))
         :finally (shadow:write-buffer-path name :pos pos)
                  (shadow:write-buffer-path name :size size)))
 
 (defun find-sprite (spritesheet name)
-  (or (u:href (sprites spritesheet) name)
+  (or (u:href (spritesheet-sprites spritesheet) name)
       (error "Sprite ~s not found in spritesheet ~s."
              name
-             (name spritesheet))))
+             (spritesheet-name spritesheet))))
 
 (defun make-spritesheet (context spec block-alias)
   (let ((path (v::resolve-path spec)))
     (v:with-asset-cache context block-alias spec
-      (let ((spritesheet (make-instance 'spritesheet
-                                        :name spec
-                                        :block-alias block-alias
-                                        :spec (u:safe-read-file-form path)
-                                        :geometry (gl:gen-vertex-array))))
+      (let ((spritesheet (%make-spritesheet
+                          :name spec
+                          :block-alias block-alias
+                          :spec (u:safe-read-file-form path)
+                          :geometry (gl:gen-vertex-array))))
         (make-spritesheet-buffer spritesheet)
         (update-spritesheet-buffer spritesheet)
         spritesheet))))

@@ -68,6 +68,6 @@
   (let ((instance-count (v::instances (comp:material master))))
     (with-material (comp:material master)
         (:sprite.index (index self))
-      (gl:bind-vertex-array (v::geometry (spritesheet self)))
+      (gl:bind-vertex-array (v::spritesheet-geometry (spritesheet self)))
       (gl:draw-arrays-instanced :triangle-strip 0 4 instance-count)
       (gl:bind-vertex-array 0))))
