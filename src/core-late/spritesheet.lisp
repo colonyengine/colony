@@ -3,14 +3,15 @@
 ;;;; NOTE: Implementation of defstruct SPRITESHEET
 
 (defun make-spritesheet-buffer (spritesheet)
-  ;; TODO: This 1 is hardcoded because virality doesn't have an allocation
-  ;; system for these integers.
-  (shadow:bind-block (spritesheet-block-alias spritesheet) 1)
-  (shadow:create-buffer (spritesheet-name spritesheet)
-                        (spritesheet-block-alias spritesheet))
-  ;; TODO: Have materials automatically calculate a binding point instead of
-  ;; hard-coding.
-  (shadow:bind-buffer (spritesheet-name spritesheet) 1))
+  (let ((name (spritesheet-name spritesheet))
+	(block-alias (spritesheet-block-alias spritesheet)))
+    ;; TODO: This 1 is hardcoded because virality doesn't have an allocation
+    ;; system for these integers.
+    (shadow:bind-block block-alias 1)
+    (shadow:create-buffer name block-alias)
+    ;; TODO: Have materials automatically calculate a binding point instead of
+    ;; hard-coding.
+    (shadow:bind-buffer name 1)))
 
 (defun update-spritesheet-buffer (spritesheet)
   (loop :with name = (spritesheet-name spritesheet)
