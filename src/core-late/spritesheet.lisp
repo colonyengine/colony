@@ -4,7 +4,7 @@
 
 (defun make-spritesheet-buffer (spritesheet)
   (let ((name (spritesheet-name spritesheet))
-	(block-alias (spritesheet-block-alias spritesheet)))
+        (block-alias (spritesheet-block-alias spritesheet)))
     ;; TODO: This 1 is hardcoded because virality doesn't have an allocation
     ;; system for these integers.
     (shadow:bind-block block-alias 1)
