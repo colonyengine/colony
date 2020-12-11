@@ -1,11 +1,5 @@
 (in-package #:virality)
 
-(defclass material-value ()
-  ;; This is a back reference to the material that owns this
-  ;; material-uniform-value.
-  ((%material :accessor material
-              :initarg :material)))
-
 ;;; The value of a uniform is this type in the material. It holds the original
 ;;; semantic value and any transformation of it that is actually the usable
 ;;; material value.
@@ -13,8 +7,15 @@
 ;;; Basically, we need to be able to copy pre-annotated material values from
 ;;; profiles BEFORE we annotate them for real when reaolving all the materials.
 
-(defclass material-uniform-value (material-value)
-  (;; This is the semantic value for a uniform. In the case of a :sampler-2d it
+;; TODO: Refactor the %material field out into a base material-value structure.
+(defclass material-uniform-value ()
+  (
+   ;; This is a back reference to the material that owns this
+   ;; material-uniform-value.
+   (%material :accessor material
+              :initarg :material)
+
+   ;; This is the semantic value for a uniform. In the case of a :sampler-2d it
    ;; is a string to a texture found on disk, etc.
    (%semantic-value :accessor semantic-value
                     :initarg :semantic-value
@@ -58,11 +59,18 @@
             :initarg :binder
             :initform (constantly nil))))
 
+;; TODO: Refactor the %material field out into a base material-value structure.
 ;; Shader interface blocks get a wildly different material-value implementation
 ;; and semantics.
-(defclass material-block-value (material-value)
-  ;; Store which block-name this originated from for debugging
-  ((%block-name :reader block-name
+(defclass material-block-value ()
+  (
+   ;; This is a back reference to the material that owns this
+   ;; material-uniform-value.
+   (%material :accessor material
+              :initarg :material)
+
+   ;; Store which block-name this originated from for debugging
+   (%block-name :reader block-name
                 :initarg :block-name)
    ;; The storage type of the block-alias for which this is a value. Useful for
    ;; error messages.
