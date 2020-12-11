@@ -145,6 +145,7 @@
    (:module "core-late"
     :components
     ((:file "opengl")
+     (:file "display-defs")
      (:file "display")
      (:file "image")
      (:file "image-png")

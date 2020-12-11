@@ -1,15 +1,6 @@
 (in-package #:virality)
 
-(defclass display ()
-  ((%window :reader window
-            :initarg :window)
-   (%context :accessor context
-             :initarg :context
-             :initform nil)
-   (%resolution :reader resolution
-                :initarg :resolution)
-   (%refresh-rate :reader refresh-rate
-                  :initarg :refresh-rate)))
+;;;; implementation of DISPLAY structure
 
 (defun parse-opengl-version ()
   (mapcar #'parse-integer
