@@ -151,6 +151,7 @@
      (:file "image")
      (:file "image-png")
      (:file "image-hdr")
+     (:file "gltf-defs")
      (:file "gltf")
      (:file "material-defs")
      (:file "material-values")
