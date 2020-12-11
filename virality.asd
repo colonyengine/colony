@@ -147,6 +147,7 @@
     ((:file "opengl")
      (:file "display-defs")
      (:file "display")
+     (:file "image-defs")
      (:file "image")
      (:file "image-png")
      (:file "image-hdr")

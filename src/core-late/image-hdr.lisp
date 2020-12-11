@@ -1,14 +1,7 @@
 (in-package #:virality)
 
-(defclass hdr-image-buffer ()
-  ((%stream :reader buffer-stream
-            :initarg :stream)
-   (%position :accessor buffer-position
-              :initform 0)
-   (%end :accessor end
-         :initform 0)
-   (%data :reader data
-          :initarg :data)))
+;;;; Implementation of IMAGE structure for HDR images
+;;;; Uses HDR-IMAGE-BUFFER structure
 
 (defun hdr-image-buffer-empty-p (buffer)
   (>= (buffer-position buffer)

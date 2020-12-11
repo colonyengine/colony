@@ -1,22 +1,6 @@
 (in-package #:virality)
 
-(defclass image ()
-  ((%path :reader path
-          :initarg :path
-          :initform nil)
-   (%width :reader width
-           :initarg :width)
-   (%height :reader height
-            :initarg :height)
-   (%pixel-format :reader pixel-format
-                  :initarg :pixel-format)
-   (%pixel-type :reader pixel-type
-                :initarg :pixel-type)
-   (%internal-format :reader internal-format
-                     :initarg :internal-format)
-   (%data :reader data
-          :initarg :data
-          :initform nil)))
+;;;; Implementation of IMAGE structure generics
 
 (defun get-image-type (path)
   (u:make-keyword (string-upcase (pathname-type path))))

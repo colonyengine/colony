@@ -1,5 +1,7 @@
 (in-package #:virality)
 
+;;;; Implementation of IMAGE structure for PNG images
+
 (defun get-png-channel-count (image)
   (ecase (pngload:color-type image)
     (:greyscale 1)
