@@ -1,6 +1,10 @@
 (in-package #:virality)
 
 (defmacro with-continuable (&body body)
+  ;; NOTE: Be very aware of the use of the 'hook' variable and the ,hook
+  ;; aspects of it. It is special so sometimes the rebind thast doesn't use it
+  ;; could be surprising to look at. INVOKE-DEBUGGER ultimately uses the rebind
+  ;; later in the function.
   (u:with-gensyms (debugger-entry-time previous-hook pause-time)
     (let ((hook #+sbcl 'sb-ext:*invoke-debugger-hook*
                 #-sbcl '*debugger-hook*)
@@ -10,10 +14,9 @@
               (,hook
                 (lambda (condition hook)
                   (declare (ignore hook))
-                  (let ((,debugger-entry-time (get-time ,clock)))
-                    (unwind-protect
-                         (when ,previous-hook
-                           (funcall ,previous-hook condition ,previous-hook))
+                  (let ((,debugger-entry-time (get-time ,clock))
+                        (,hook ,previous-hook))
+                    (unwind-protect (invoke-debugger condition)
                       (let ((,pause-time (- (get-time ,clock)
                                             ,debugger-entry-time)))
                         (incf (pause-time ,clock) ,pause-time)
