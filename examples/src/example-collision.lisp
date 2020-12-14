@@ -61,12 +61,12 @@
         #++(:printv "RIGHT Vector -> ~a" right)
         #++(:printv "LEFT Vector -> ~a" left)
         ;; NOTE: This expects the actor to be unrotated wrt the universe.
-        (unless (and (v3:~ forward (v3:vec 0f0 0f0 -1f0))
-                     (v3:~ backward (v3:vec 0f0 0f0 1f0))
-                     (v3:~ up (v3:vec 0f0 1f0 0f0))
-                     (v3:~ down (v3:vec 0f0 -1f0 0f0))
-                     (v3:~ right (v3:vec 1f0 0f0 0f0))
-                     (v3:~ left (v3:vec -1f0 0f0 0f0)))
+        (unless (and (v3:= forward (v3:vec 0f0 0f0 -1f0))
+                     (v3:= backward (v3:vec 0f0 0f0 1f0))
+                     (v3:= up (v3:vec 0f0 1f0 0f0))
+                     (v3:= down (v3:vec 0f0 -1f0 0f0))
+                     (v3:= right (v3:vec 1f0 0f0 0f0))
+                     (v3:= left (v3:vec -1f0 0f0 0f0)))
           (error "The Transform Axis Direction API didn't match expectations!"))
         (setf (u:href (test-performed self) test-type) t)))))
 
@@ -88,8 +88,8 @@
                                           world-space-point
                                           :space :model)))
     ;; See if transform-point works.
-    (let ((result-0 (v3:~ local->world world-space-point))
-          (result-1 (v3:~ world->local object-space-point)))
+    (let ((result-0 (v3:= local->world world-space-point))
+          (result-1 (v3:= world->local object-space-point)))
       (unless (and result-0 result-1)
         (unless result-0
           #++(:printv
@@ -111,17 +111,17 @@
                                            :space :model)))
     ;; See if transform-vector works.
     (let ((result-0
-            (v3:~ local->world world-space-vector))
+            (v3:= local->world world-space-vector))
           (result-1
-            (v3:~ world->local object-space-vector)))
+            (v3:= world->local object-space-vector)))
       (unless (and result-0 result-1)
         (unless result-0
           #++(:printv
-              "FAILED: (v3:~~ local->world:~a world-space-vector: ~a) -> ~a"
+              "FAILED: (v3:= local->world:~a world-space-vector: ~a) -> ~a"
               local->world world-space-vector result-0))
         (unless result-1
           #++(:printv
-              "FAILED: (v3:~~ world->local:~a object-space-vector: ~a) -> ~a"
+              "FAILED: (v3:= world->local:~a object-space-vector: ~a) -> ~a"
               world->local object-space-vector result-1))
         (error "TRANSFORM-VECTOR API Failed!")))))
 
@@ -136,17 +136,17 @@
                                               :space :model)))
     ;; See if transform-direction works.
     (let ((result-0
-            (v3:~ local->world world-space-direction))
+            (v3:= local->world world-space-direction))
           (result-1
-            (v3:~ world->local object-space-direction)))
+            (v3:= world->local object-space-direction)))
       (unless (and result-0 result-1)
         (unless result-0
           #++(:printv
-              "FAILED: (v3:~~ local->world:~a world-space-direction: ~a) -> ~a"
+              "FAILED: (v3:= local->world:~a world-space-direction: ~a) -> ~a"
               local->world world-space-direction result-0))
         (unless result-1
           #++(:printv
-              "FAILED: (v3:~~ world->local:~a object-space-direction: ~a) -> ~a"
+              "FAILED: (v3:= world->local:~a object-space-direction: ~a) -> ~a"
               world->local object-space-direction result-1))
         (error "TRANSFORM-DIRECTION API Failed!")))))
 

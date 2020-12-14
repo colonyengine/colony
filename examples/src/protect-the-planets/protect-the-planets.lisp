@@ -419,7 +419,7 @@
                                    (if right v3:+right+ v3:+zero+))
                              (v3:+ (if up v3:+up+ v3:+zero+)
                                    (if down v3:+down+ v3:+zero+))))
-                (move (if (v3:~ move v3:+zero+)
+                (move (if (v3:= move v3:+zero+)
                           v3:+zero+
                           (v3:normalize move)))
 
