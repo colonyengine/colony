@@ -145,24 +145,24 @@
 ;;; Materials
 
 (v:define-material damaged-helmet
-    (:shader ex/shd:damaged-helmet
-     :profiles (x:u-mvp)
-     :uniforms
-     ((:light.direction (v3:vec -0.7399 -0.6428 -0.1983))
-      (:light.color (v3:vec 1))
-      (:light.intensity 2)
-      (:sampler 'damaged-helmet/mesh)
-      (:base-color-factor (v4:vec 1))
-      (:metallic-factor 1)
-      (:roughness-factor 1)
-      (:normal-scale 1)
-      (:normal-matrix (m3:mat 1))
-      (:occlusion-strength 1)
-      (:emissive-factor 1)
-      (:brdf-lut 'brdf-lut)
-      (:environment-sampler 'helipad)
-      (:use-punctual t)
-      (:use-ibl t))))
+  (:shader ex/shd:damaged-helmet
+   :profiles (x:u-mvp)
+   :uniforms
+   ((:light.direction (v3:vec -0.7399 -0.6428 -0.1983))
+    (:light.color (v3:vec 1))
+    (:light.intensity 2)
+    (:sampler 'damaged-helmet/mesh)
+    (:base-color-factor (v4:vec 1))
+    (:metallic-factor 1)
+    (:roughness-factor 1)
+    (:normal-scale 1)
+    (:normal-matrix (m3:mat 1))
+    (:occlusion-strength 1)
+    (:emissive-factor 1)
+    (:brdf-lut 'brdf-lut)
+    (:environment-sampler 'helipad)
+    (:use-punctual t)
+    (:use-ibl t))))
 
 ;; NOTE: This simple mouse rotator will NOT work correctly if the actor's
 ;; transform is having other updates applied to it over time. This includes
@@ -249,9 +249,9 @@
             ;; TODO: This mathematical concept here is slightly clunky, so
             ;; fixup the transform API to make this a lot easier to do.
             (let* (;; This is built by adding the new drag vector to RV. Sirnce
-		   ;; RV represents (as a 2d point) the offset from the
-		   ;; original orientation, when a new drag event happens it'll
-		   ;; smoothly start from RV in the new drag.
+                   ;; RV represents (as a 2d point) the offset from the
+                   ;; original orientation, when a new drag event happens it'll
+                   ;; smoothly start from RV in the new drag.
                    (x-rot (+ (v2:x rv) (* (v2:x dv) rot-speed)))
                    (y-rot (- (+ (v2:y rv) (* (v2:y dv) rot-speed))))
                    (y-rot (if clamp-p (u:clamp y-rot (- range) range) y-rot))
@@ -299,7 +299,7 @@
    (comp:camera (:policy :new-args)
                 :free-look t))
   (("helmet" :copy "/default-helmet")
-   (comp:transform :rotate/velocity (v3:make-velocity v3:+up+ o:pi/6)
+   (comp:transform :rotate/velocity (v3:velocity v3:+up+ o:pi/6)
                    :scale 17f0)))
 
 (v:define-prefab "damaged-helmet-group" (:library examples)
@@ -308,7 +308,7 @@ There used to be a bug where they wouldn't update properly. It was obviously
 wrong."
   (("camera" :copy "/cameras/perspective"))
   (("helmet1" :copy "/default-helmet")
-   (comp:transform :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/3)
+   (comp:transform :rotate/velocity (v3:velocity (v3:vec 1) o:pi/3)
                    :translate (v3:vec -15 0 0)
                    :scale 15))
   (("helmet2" :copy "/default-helmet")
@@ -345,6 +345,6 @@ wrong."
                 :free-look t))
   (("helmet" :copy "/default-helmet")
    (comp:transform
-    :rotate/velocity (v3:make-velocity v3:+up+ o:pi/6)
-    :translate/velocity (v3:make-velocity v3:+forward+ 1f0)
+    :rotate/velocity (v3:velocity v3:+up+ o:pi/6)
+    :translate/velocity (v3:velocity v3:+forward+ 1f0)
     :scale 7f0)))

@@ -42,19 +42,19 @@
 
 (defmethod make-projection (camera (mode (eql :perspective)))
   (with-slots (%projection %fov-y %zoom %clip-near %clip-far) camera
-    (m4:set-projection/perspective! %projection
-                                    (/ %fov-y %zoom)
-                                    (float
-                                     (/ v:=window-width= v:=window-height=)
-                                     1f0)
-                                    %clip-near
-                                    %clip-far)))
+    (m4:perspective! %projection
+                     (/ %fov-y %zoom)
+                     (float
+                      (/ v:=window-width= v:=window-height=)
+                      1f0)
+                     %clip-near
+                     %clip-far)))
 
 (defmethod make-projection (camera (mode (eql :orthographic)))
   (with-slots (%projection %zoom %clip-near %clip-far) camera
     (let ((w (/ v:=window-width= %zoom 2f0))
           (h (/ v:=window-height= %zoom 2f0)))
-      (m4:set-projection/orthographic!
+      (m4:ortho!
        %projection (- w) w (- h) h %clip-near %clip-far))))
 
 (defun compute-camera-view (camera)
@@ -64,7 +64,7 @@
              (eye (m4:get-translation model))
              (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3 model :z))))
              (up (m4:rotation-axis-to-vec3 model :y)))
-        (m4:set-view! %view eye target up)))))
+        (m4:look-at! %view eye target up)))))
 
 (defun find-active-camera (context)
   (dolist (camera (v::cameras (v::core context)))

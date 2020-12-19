@@ -51,15 +51,15 @@
       (v::interpolate-vector scale factor)
       (v::interpolate-quaternion rotation factor)
       (v::interpolate-vector translation factor)
-      (q:to-mat4! %local (v::transform-state-interpolated rotation))
+      (q:to-mat4! %local (v::interpolated rotation))
       ;; TODO: This next code needs a temporary to reduce garbage, but I don't
       ;; want to store it in the transform since that causes that amount of
       ;; space addition for each transform used only for this. See if there is
       ;; another way before doing that option.
       (m4:*! %local %local
-             (m4:set-scale m4:+id+ (v::transform-state-interpolated scale)))
+             (m4:set-scale m4:+id+ (v::interpolated scale)))
       (m4:set-translation! %local %local
-                           (v::transform-state-interpolated translation)))))
+                           (v::interpolated translation)))))
 
 (defun resolve-model (node factor)
   (u:when-let ((parent (parent node)))
@@ -243,7 +243,7 @@ in the scene tree EXCEPT the universe actor itself."
 
 (defun %translate/velocity (transform axis rate)
   (let ((state (translation transform)))
-    (setf (v::incremental state) (v3:make-velocity axis rate))))
+    (setf (v::incremental state) (v3:velocity axis rate))))
 
 (defun %rotate (transform quat space replace instant)
   (let ((state (rotation transform)))
@@ -268,7 +268,7 @@ in the scene tree EXCEPT the universe actor itself."
 
 (defun %rotate/velocity (transform axis rate)
   (let ((state (rotation transform)))
-    (setf (v::incremental state) (v3:make-velocity axis rate))))
+    (setf (v::incremental state) (v3:velocity axis rate))))
 
 (defun %scale (transform vec space replace instant)
   (let ((state (scale transform)))
@@ -293,7 +293,7 @@ in the scene tree EXCEPT the universe actor itself."
 
 (defun %scale/velocity (transform axis rate)
   (let ((state (scale transform)))
-    (setf (v::incremental state) (v3:make-velocity axis rate))))
+    (setf (v::incremental state) (v3:velocity axis rate))))
 
 (defun %scale-around (target-transform pivot-in-world-space scale-diff
                       &key (min-scale (v3:vec 0f0 0f0 0f0))
@@ -341,7 +341,7 @@ in the scene tree EXCEPT the universe actor itself."
 (defun %transform-point (transform point space)
   (let ((model (model transform)))
     (v3:with-components ((v point))
-      (~:.xyz
+      (v3:vec
        (ecase space
          (:local (m4:*v4 model (v4:vec vx vy vz 1)))
          (:model (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
@@ -350,7 +350,7 @@ in the scene tree EXCEPT the universe actor itself."
   (let ((model (m4:copy (model transform))))
     (v3:with-components ((v vector))
       (m4:set-translation! model model v3:+zero+)
-      (~:.xyz
+      (v3:vec
        (ecase space
          (:local (m4:*v4 model (v4:vec vx vy vz 1)))
          (:model (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
@@ -360,7 +360,7 @@ in the scene tree EXCEPT the universe actor itself."
     (v3:with-components ((v direction))
       (m4:set-translation! model model v3:+zero+)
       (m4:normalize-rotation! model model)
-      (~:.xyz
+      (v3:vec
        (ecase space
          (:local (m4:*v4 model (v4:vec vx vy vz 1)))
          (:model (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))

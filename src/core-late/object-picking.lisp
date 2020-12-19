@@ -84,8 +84,10 @@
                   (proj (comp::projection camera)))
       (v2:with-components ((r (resolution (display core-state))))
         (let ((viewport (v4:vec 0 0 rx ry)))
-          (o:unproject! start (v3:vec x y 0) view proj viewport)
-          (o:unproject! end (v3:vec x y 1) view proj viewport)
+          (v3:copy! start
+                    (p3:unproject (v3:vec x y 0) view proj viewport))
+          (v3:copy! end
+                    (p3:unproject (v3:vec x y 1) view proj viewport))
           t)))))
 
 (defun pick-actor (context line-segment)

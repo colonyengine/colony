@@ -4,7 +4,7 @@
 
 (v:define-prefab "isometric-view" (:library examples)
   ("camera-handle"
-   (comp:transform :rotate/velocity (v3:make-velocity v3:+up+ o:pi/4))
+   (comp:transform :rotate/velocity (v3:velocity v3:+up+ o:pi/4))
    ("iso"
     (comp:transform :rotate (q:orient :local
                                       :x (float (- (atan (/ (sqrt 2)))) 1f0)
