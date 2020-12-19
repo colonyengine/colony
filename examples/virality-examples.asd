@@ -36,6 +36,7 @@
    (:file "example-scale-around")
    (:file "example-font")
    (:file "example-matcap")
+   (:file "example-bricked")
    (:module "protect-the-planets"
     :components
     ((:file "hacked-components")
