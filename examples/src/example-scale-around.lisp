@@ -12,7 +12,7 @@
 (defmethod v:on-component-update ((self demo-scale-around))
   (let ((context (v:context self))
         (self-world-coords
-          (~:.xyz (v:transform-point self (v3:vec 0f0 0f0 0f0)))))
+          (v3:vec (v:transform-point self (v3:vec 0f0 0f0 0f0)))))
 
     ;; TODO: If you change the (v:ref "/scale-around/holder" to just "holder"
     ;; this will happen.
@@ -49,46 +49,46 @@
   ("holder"
    (("cube0" :copy "/mesh")
     (comp:transform :translate (v3:vec -5f0 5f0 0f0)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/2))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/2))
     (comp:mesh :name "cube"))
 
    (("cube1" :copy "/mesh")
     (comp:transform :translate (v3:vec 0f0 5f0 0f0)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/2))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/2))
     (comp:mesh :name "cube"))
 
    (("cube2" :copy "/mesh")
     (comp:transform :translate (v3:vec 5f0 5f0 0f0)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/2))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/2))
     (comp:mesh :name "cube"))
 
    (("cube3" :copy "/mesh")
     (comp:transform :translate (v3:vec -5f0 0f0 0f0)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/2))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/2))
     (comp:mesh :name "cube"))
    (("cube4" :copy "/mesh")
     (comp:transform :translate (v3:vec 0f0 0f0 0f0)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/2))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/2))
     (comp:mesh :name "cube"))
 
    (("cube5" :copy "/mesh")
     (comp:transform :translate (v3:vec 5f0 0f0 0f0)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/2))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/2))
     (comp:mesh :name "cube"))
 
    (("cube6" :copy "/mesh")
     (comp:transform :translate (v3:vec -5f0 -5f0 0f0)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/2))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/2))
     (comp:mesh :name "cube"))
 
    (("cube7" :copy "/mesh")
     (comp:transform :translate (v3:vec 0f0 -5f0 0f0)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/2))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/2))
     (comp:mesh :name "cube"))
 
    (("cube8" :copy "/mesh")
     (comp:transform :translate (v3:vec 5f0 -5f0 0f0)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/2))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/2))
     (comp:mesh :name "cube"))
 
 

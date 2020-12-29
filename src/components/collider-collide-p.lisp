@@ -12,7 +12,7 @@
       ;; NOTE: This code path is here for testing the collider system when
       ;; not running V properly. It should be removed when we figure out how
       ;; to test V's collision system better.
-      (let ((distance/2 (/ (v3:distance (v:center fist)
+      (let ((distance/2 (/ (p3:distance (v:center fist)
                                         (v:center face)) 2f0)))
         (or (<= distance/2 (v:radius fist))
             (<= distance/2 (v:radius face))))
@@ -40,7 +40,7 @@
              ;; check it here, but it should be checked somewhere.
 
              ;; Compute the half way point between the two colliders.
-             (distance (v3:distance fist-collider-world-center
+             (distance (p3:distance fist-collider-world-center
                                     face-collider-world-center)))
         ;; Now, compute the collision is the common world space we converted
         ;; everything into.

@@ -122,4 +122,4 @@
   (u:when-let ((referent (referent self)))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
-    (v:on-collision-continue referent other-collider)))
+    (v:on-collision-exit referent other-collider)))

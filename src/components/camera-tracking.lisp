@@ -24,4 +24,4 @@
          (target (m4:get-translation (v:get-model-matrix
                                       (target-transform self))))
          (up (v3:vec 0f0 1f0 0f0)))
-    (m4:set-view! (view slave) eye target up)))
+    (m4:look-at! (view slave) eye target up)))

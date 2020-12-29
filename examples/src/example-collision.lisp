@@ -208,7 +208,7 @@
    (comp:camera (:policy :new-args) :zoom 6f0))
   ("rot-0-center"
    (comp:transform :translate (v3:vec -2f0 0f0 0f0)
-                   :rotate/velocity (v3:make-velocity v3:+forward+ o:pi))
+                   :rotate/velocity (v3:velocity v3:+forward+ o:pi))
    (("stone0" :link "/rock-1")
     (comp:transform :translate (v3:vec -2f0 0f0 0f0))
     (comp:sphere :display-id "Player"
@@ -218,7 +218,7 @@
                  :radius 1f0)))
   ("rot-1-center"
    (comp:transform :translate (v3:vec 2f0 0f0 0f0)
-                   :rotate/velocity (v3:make-velocity v3:+forward+ (- o:pi)))
+                   :rotate/velocity (v3:velocity v3:+forward+ (- o:pi)))
    (("stone1" :link "/rock-1")
     (comp:transform :translate (v3:vec 2f0 0f0 0f0))
     (comp:sphere :display-id "Enemy"
@@ -330,7 +330,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (comp:transform :translate (v3:vec 0f0 4.5f0 0f0)
                    :scale 0.5f0
                    :translate/velocity (v3:vec 0f0 -3f0 0f0)
-                   :rotate/velocity (v3:make-velocity v3:+up+ o:pi)))
+                   :rotate/velocity (v3:velocity v3:+up+ o:pi)))
 
   (("ground" :link "/default-rock")
    (comp:transform :translate (v3:vec 0f0 -2f0 0.1f0))
@@ -368,7 +368,7 @@ actually are. You have to view the results to see the colliders lighting up."
 
   (("stone" :link "/stone-destroy-after-time")
    (comp:transform :scale 2f0
-                   :rotate/velocity (v3:make-velocity v3:+up+ o:pi))))
+                   :rotate/velocity (v3:velocity v3:+up+ o:pi))))
 
 (v:define-prefab "collision-test-2" (:library examples)
   (("camera" :copy "/cameras/perspective")
@@ -380,7 +380,7 @@ actually are. You have to view the results to see the colliders lighting up."
    (("stone-cuboid" :link "/rock-1")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/6))
     (comp:cuboid :display-id "Stone"
                  :visualize t
                  :on-layer :ground
@@ -398,7 +398,7 @@ actually are. You have to view the results to see the colliders lighting up."
    (("stone-sphere" :link "/rock-1")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/6))
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground
@@ -417,7 +417,7 @@ actually are. You have to view the results to see the colliders lighting up."
                     :translate/velocity (v3:vec 0f0 0f0 0f0))
     ("cuboid1"
      (comp:transform :rotate (q:orient :local :z o:pi/4)
-                     :rotate/velocity (v3:make-velocity (v3:vec 0 0 1) o:pi/12))
+                     :rotate/velocity (v3:velocity (v3:vec 0 0 1) o:pi/12))
      (comp:cuboid :visualize t
                   :on-layer :ground
                   :center (v3:vec))))
@@ -436,7 +436,7 @@ actually are. You have to view the results to see the colliders lighting up."
                     :translate/velocity (v3:vec 0f0 0f0 0f0))
     ("cuboid1"
      (comp:transform :rotate (q:orient :local :z o:pi/4)
-                     :rotate/velocity (v3:make-velocity (v3:vec 0 0 1) o:pi/12))
+                     :rotate/velocity (v3:velocity (v3:vec 0 0 1) o:pi/12))
      (comp:cuboid :visualize t
                   :on-layer :ground
                   :center (v3:vec))))
@@ -458,7 +458,7 @@ the actual model and picking still works."
    (("stone-sphere1" :link "/rock-1")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/6))
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground
@@ -470,7 +470,7 @@ the actual model and picking still works."
    (("stone-sphere2" :link "/rock-2")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (v3:make-velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/6))
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground
@@ -537,17 +537,17 @@ away then become non-collided."
                 :on-layer :ground))
   (("lower-left" :link "/rock-1")
    (comp:transform :translate (v3:vec -.5f0 -2f0 -0.1f0)
-                   :translate/velocity (v3:make-velocity v3:+left+ .5f0))
+                   :translate/velocity (v3:velocity v3:+left+ .5f0))
    (comp:sphere :display-id "Lower-Left"
                 :visualize t
                 :on-layer :ground))
   (("lower-right" :link "/rock-1")
    (comp:transform :translate (v3:vec .5f0 -2f0 -0.1f0)
-                   :translate/velocity (v3:make-velocity v3:+right+ .5f0))
+                   :translate/velocity (v3:velocity v3:+right+ .5f0))
    (comp:sphere :display-id "Lower-Right"
                 :visualize t
                 :on-layer :ground))
 
   (("stone" :link "/stone-destroy-after-time")
    (comp:transform :scale 2f0
-                   :rotate/velocity (v3:make-velocity v3:+up+ o:pi))))
+                   :rotate/velocity (v3:velocity v3:+up+ o:pi))))
