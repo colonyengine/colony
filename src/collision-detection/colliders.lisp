@@ -360,7 +360,7 @@ had--and update all other faces too."
 ;; :player-bullet| X                              @         @           @     @
 ;; :enemy        | X       X           X                    @           @     @
 ;; :enemy-bullet | X       X           X                                @     @
-;; :scenery      |
+;; :scenery      |                                                            @
 ;; :planet       |                                X
 ;;
 ;; Then, the collision plan is an sparse representation of which columns for
