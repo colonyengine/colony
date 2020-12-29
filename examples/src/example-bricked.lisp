@@ -123,48 +123,9 @@
 ;;   Ball/brick collisions might tunnel or do sordid things.
 ;;    so watch out for it in the math.
 
-(v:define-prefab "brick" (:library examples)
-  (comp:cuboid :visualize t
-               :on-layer :ground
-               :center (v3:vec)
-               :minx -1f0
-               :maxx 1f0
-               :miny -.5f0
-               :maxy .5f0
-               :minz -1f0
-               :maxz 1f0))
-;; Layout: 01234
-(v:define-prefab "brick-group" (:library examples)
-  (("brick-0" :copy "/brick")
-   (comp:transform :translate (v3:vec -4f0 0f0 0f0)))
-  (("brick-1" :copy "/brick")
-   (comp:transform :translate (v3:vec -2f0 0f0 0f0)))
-  (("brick-2" :copy "/brick")
-   (comp:transform :translate (v3:vec)))
-  (("brick-3" :copy "/brick")
-   (comp:transform :translate (v3:vec 2f0 0f0 0f0)))
-  (("brick-4" :copy "/brick")
-   (comp:transform :translate (v3:vec 4f0 0f0 0f0)))
-  )
-
-(v:define-prefab "level-0" (:library examples)
-  (("bg-0" :copy "/brick-group")
-   (comp:transform :translate (v3:vec 0f0 1f0 0f0)))
-  (("bg-1" :copy "/brick-group")
-   (comp:transform :translate (v3:vec 1f0 0f0 0f0)))
-  (("bg-2" :copy "/brick-group")
-   (comp:transform :translate (v3:vec 0f0 -1f0 0f0)))
-  )
-
-;; THe toplevel prefab to load the example.
-(v:define-prefab "bricked" (:library examples)
-  (("camera" :copy "/cameras/ortho")
-   (comp:camera :zoom 25f0))
-  (("level-0" :link "/level-0")))
-
-
-
-;; Simple map mode idea in ASCII.
+;; Simple map mode idea in ASCII for easy level (or sections of levels)
+;; specification.
+#++
 "
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !           #####################        !
@@ -191,3 +152,90 @@
 !     PPPPPPP                            !
 !                                        !
 "
+
+(v:define-component brick ()
+  ((%hp :accessor hp
+        :initarg :hp
+        :initform 1)
+   ))
+
+(v:define-component ball ()
+  ((%velocity :accessor velocity
+              :initarg :velocity
+              :initform (v3:vec 0))
+   (%contacts :accessor contacts
+              :initarg :contacts
+              :initform nil)))
+
+(defmethod v:on-collision-enter ((self ball) face)
+  (format t "Ball entered collision: ball ~A with actor ~A~%"
+          self (v:actor face))
+  (push (v:actor face) (contacts self)))
+
+(defmethod v:on-collision-exit ((self ball) face)
+  (format t "Ball exited collision: ball ~A with actor ~A~%"
+          self (v:actor face)))
+
+;; Out of all bricks hit, react properly, but only destroy one of them.
+(defmethod v:on-component-physics-update ((self ball))
+  (when (contacts self)
+    (format t "Ball: Would have processed: ~A~%" (contacts self))
+    (setf (contacts self) nil))
+
+  )
+
+(v:define-prefab "brick" (:library examples)
+  (brick)
+  (comp:cuboid :visualize t
+               :referent (v:ref :self :component 'brick)
+               :on-layer :enemy
+               :center (v3:vec)
+               :minx -1f0
+               :maxx 1f0
+               :miny -.5f0
+               :maxy .5f0
+               :minz -1f0
+               :maxz 1f0))
+
+
+(v:define-prefab "ball" (:library examples)
+  (ball)
+  (comp:sphere :visualize t
+               :referent (v:ref :self :component 'ball)
+               :on-layer :player
+               :center (v3:vec)
+               :radius .2f0))
+
+
+;; Layout: 01234
+(v:define-prefab "brick-group" (:library examples)
+  (("brick-0" :copy "/brick")
+   (comp:transform :translate (v3:vec -4f0 0f0 0f0)))
+  (("brick-1" :copy "/brick")
+   (comp:transform :translate (v3:vec -2f0 0f0 0f0)))
+  (("brick-2" :copy "/brick")
+   (comp:transform :translate (v3:vec)))
+  (("brick-3" :copy "/brick")
+   (comp:transform :translate (v3:vec 2f0 0f0 0f0)))
+  (("brick-4" :copy "/brick")
+   (comp:transform :translate (v3:vec 4f0 0f0 0f0)))
+  )
+
+(v:define-prefab "level-0" (:library examples)
+  (("bg-0" :copy "/brick-group")
+   (comp:transform :translate (v3:vec 0f0 1f0 0f0)))
+  (("bg-1" :copy "/brick-group")
+   (comp:transform :translate (v3:vec 1f0 0f0 0f0)))
+  (("bg-2" :copy "/brick-group")
+   (comp:transform :translate (v3:vec 0f0 -1f0 0f0)))
+  )
+
+;; The toplevel prefab to load the example.
+(v:define-prefab "bricked" (:library examples)
+  (("camera" :copy "/cameras/ortho")
+   (comp:camera :zoom 25f0))
+  (("level-0" :link "/level-0"))
+  (("ball-0" :link "/ball")
+   (comp:transform
+    :translate (v3:vec 0f0 -10f0 0f0)
+    :translate/velocity (v3:velocity v3:+up+ 10f0))))
