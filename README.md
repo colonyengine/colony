@@ -26,6 +26,9 @@ them each frame.
 
 ## Install
 
+**NOTE: You may have better luck with the `develop` branch for the time being! The master
+branch is a bit crusty.**
+
 This system is not yet available to be installed automatically with Quicklisp.
 
 NOTE: cl-opengl has a feature in it to work around an INTEL GPU bug that causes
