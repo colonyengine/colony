@@ -2,13 +2,7 @@
 
 (global-vars:define-global-var =thread-pool= nil)
 
-(defclass thread-pool ()
-  ((%worker-count :reader worker-count
-                  :initarg :worker-count)
-   (%channels :reader channels
-              :initform (u:dict #'eq))
-   (%queues :reader queues
-            :initform (u:dict #'eq))))
+;; Implementation of THREAD-POOL
 
 (defun make-thread-pool ()
   (let* ((worker-count (or =threads= =cpu-count=))

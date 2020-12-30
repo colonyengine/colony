@@ -1,20 +1,19 @@
 (in-package #:virality)
 
-(defclass component (kernel)
-  ((%type :reader component-type
-          :initarg :type)
-   (%actor :accessor actor
-           :initarg :actor
-           :initform nil)
-   (%initializer :accessor initializer
-                 :initarg :initializer
-                 :initform nil)
-   (%attach/detach-event-queue :accessor attach/detach-event-queue
-                               :initarg :attach/detach-event-queue
-                               :initform (queues:make-queue :simple-queue)))
-  (:metaclass component-class))
+;;;; Implementation of the datatype COMPONENT and how it moves through the
+;;;; core book keeping tables.
 
+;; NOTE: This is a toplevel form for this class!
 (clear-annotations 'component)
+
+;; TODO: Move to component.lisp
+(defmethod register-kernel-id ((kernel component))
+  (u:when-let ((table (components-by-id (tables (core kernel)))))
+    (register-kernel-id-in-table kernel table)))
+
+(defmethod deregister-kernel-id ((kernel component))
+  (u:when-let ((table (components-by-id (tables (core kernel)))))
+    (deregister-kernel-id-from-table kernel table)))
 
 (defmethod initialize-instance :after ((instance component) &key)
   (register-kernel-uuid instance)
@@ -82,6 +81,16 @@ DEFINE-COMPONENT form."
       (enqueue-detach-event component actor)
       (setf (actor component) nil
             components (remove-if (lambda (x) (eq x component)) components)))))
+
+(defmethod destroy ((kernel component) &key (ttl 0))
+  (let ((table (u:href (component-predestroy-view (tables (core kernel))))))
+    ;; TODO: Fix this. TTL is never nill so this won't do what we expect.
+    (setf (ttl kernel) (and ttl (max 0 ttl)))
+    (if ttl
+        (setf (u:href table kernel) kernel)
+        ;; If the TTL is stopped, we want to remove the component from the
+        ;; pre-destroy view!
+        (remhash kernel table))))
 
 (defun component-by-type (actor type)
   "Get the first component of type COMPONENT-TYPE for the given ACTOR.

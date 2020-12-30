@@ -1,13 +1,14 @@
 (in-package #:virality)
 
-(defclass actor (kernel)
-  ((%components :reader components
-                :initform (u:dict #'eq))
-   (%components-by-type :reader %components-by-type
-                        :initform (u:dict #'eq))
-   (%prefab-node :reader prefab-node
-                 :initarg :prefab-node
-                 :initform nil)))
+;;;; Implementation of datatype ACTOR
+
+(defmethod register-kernel-id ((kernel actor))
+  (u:when-let ((table (actors-by-id (tables (core kernel)))))
+    (register-kernel-id-in-table kernel table)))
+
+(defmethod deregister-kernel-id ((kernel actor))
+  (u:when-let ((table (actors-by-id (tables (core kernel)))))
+    (deregister-kernel-id-from-table kernel table)))
 
 (defun make-actor (context &rest args &key &allow-other-keys)
   (let ((actor (apply #'make-instance 'actor :context context args)))
@@ -46,6 +47,20 @@ reference which will be the parent of the spawning actor. It defaults to
           (unless (u:href preinit-by-type key)
             (setf (u:href preinit-by-type key) (u:dict #'eq)))
           (setf (u:href preinit-by-type key v) v))))))
+
+(defmethod destroy ((kernel actor) &key (ttl 0))
+  (let* ((core (core kernel))
+         (table (actor-predestroy-view (tables core))))
+    (when (eq (id kernel) 'universe)
+      (error "Cannot destroy the scene tree root."))
+    ;; TODO: this needs fixing because TTL is never nil
+    (setf (ttl kernel) (and ttl (max 0 ttl)))
+    ;; TODO: Same for this
+    (if ttl
+        (setf (u:href table kernel) kernel)
+        ;; If the TTL is stopped, we want to remove the actor from the
+        ;; pre-destroy view!
+        (remhash kernel table))))
 
 (defun actor/preinit->init (actor)
   (let ((tables (tables (core actor))))

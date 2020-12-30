@@ -1,5 +1,8 @@
 (in-package #:virality)
 
+;;;; Implementation of datatypes: GAMEPAD, GAMEPAD-ATTACH-STATE,
+;;;; GAMEPAD-ANALOG-STATE
+
 (u:define-constant +gamepad-axis-names+
     #((:left-stick :x) (:left-stick :y) (:right-stick :x) (:right-stick :y)
       (:triggers :x) (:triggers :y))
@@ -10,27 +13,6 @@
       :left-shoulder :right-shoulder :up :down :left :right)
   :test #'equalp)
 
-(defstruct (gamepad
-            (:predicate nil)
-            (:copier nil))
-  id
-  instance
-  name
-  handle)
-
-(defstruct (gamepad-attach-state
-            (:predicate nil)
-            (:copier nil))
-  enter
-  enabled
-  exit)
-
-(defstruct (gamepad-analog-state
-            (:predicate nil)
-            (:copier nil))
-  x
-  y
-  deadzone)
 
 (defun gamepad-attach-transition-in (data gamepad-id)
   (let ((input (list :attach gamepad-id)))
@@ -139,41 +121,41 @@
 (defmethod get-gamepad-analog (context (deadzone (eql :axial)) input)
   (let ((data (input-data (core context))))
     (u:if-found (state (u:href (states data) input))
-                (let ((x (gamepad-analog-state-x state))
-                      (y (gamepad-analog-state-y state))
-                      (deadzone (gamepad-analog-state-deadzone state)))
-                  (values (if (< (abs x) deadzone) 0f0 x)
-                          (if (< (abs y) deadzone) 0f0 y)))
-                (values 0f0 0f0))))
+      (let ((x (gamepad-analog-state-x state))
+            (y (gamepad-analog-state-y state))
+            (deadzone (gamepad-analog-state-deadzone state)))
+        (values (if (< (abs x) deadzone) 0f0 x)
+                (if (< (abs y) deadzone) 0f0 y)))
+      (values 0f0 0f0))))
 
 (defmethod get-gamepad-analog (context (deadzone (eql :radial)) input)
   (let ((data (input-data (core context))))
     (u:if-found (state (u:href (states data) input))
-                (let ((x (gamepad-analog-state-x state))
-                      (y (gamepad-analog-state-y state))
-                      (deadzone (gamepad-analog-state-deadzone state)))
-                  (v2:with-components ((v (v2:vec x y)))
-                    (if (< (v2:length v) deadzone)
-                        (values 0f0 0f0)
-                        (values vx vy))))
-                (values 0f0 0f0))))
+      (let ((x (gamepad-analog-state-x state))
+            (y (gamepad-analog-state-y state))
+            (deadzone (gamepad-analog-state-deadzone state)))
+        (v2:with-components ((v (v2:vec x y)))
+          (if (< (v2:length v) deadzone)
+              (values 0f0 0f0)
+              (values vx vy))))
+      (values 0f0 0f0))))
 
 (defmethod get-gamepad-analog (context (deadzone (eql :radial-scaled)) input)
   (let ((data (input-data (core context))))
     (u:if-found (state (u:href (states data) input))
-                (let ((x (gamepad-analog-state-x state))
-                      (y (gamepad-analog-state-y state))
-                      (deadzone (gamepad-analog-state-deadzone state)))
-                  (v2:with-components ((v (v2:vec x y)))
-                    (let ((length (v2:length v)))
-                      (if (< length deadzone)
-                          (values 0f0 0f0)
-                          (progn
-                            (v2:scale! v
-                                       (v2:normalize v)
-                                       (/ (- length deadzone) (- 1 deadzone)))
-                            (values vx vy))))))
-                (values 0f0 0f0))))
+      (let ((x (gamepad-analog-state-x state))
+            (y (gamepad-analog-state-y state))
+            (deadzone (gamepad-analog-state-deadzone state)))
+        (v2:with-components ((v (v2:vec x y)))
+          (let ((length (v2:length v)))
+            (if (< length deadzone)
+                (values 0f0 0f0)
+                (progn
+                  (v2:scale! v
+                             (v2:normalize v)
+                             (/ (- length deadzone) (- 1 deadzone)))
+                  (values vx vy))))))
+      (values 0f0 0f0))))
 
 (defun on-gamepad-analog-move (data instance axis value)
   (destructuring-bind (sub-device axis) axis

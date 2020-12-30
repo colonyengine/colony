@@ -1,14 +1,6 @@
 (in-package #:virality)
 
-(defclass context ()
-  ((%core :reader core
-          :initarg :core)
-   (%active-camera :accessor active-camera
-                   :initform nil)
-   (%storage :reader storage
-             :initform (u:dict #'eq))
-   (%state :accessor state
-           :initform nil)))
+;;;; Implementation of the CONTEXT structure.
 
 (defun make-context (core)
   (setf (slot-value core '%context) (make-instance 'context :core core)))

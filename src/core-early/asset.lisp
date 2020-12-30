@@ -1,14 +1,6 @@
 (in-package #:virality)
 
-;;; spec
-
-(defclass asset-spec ()
-  ((%pool :reader pool
-          :initarg :pool)
-   (%name :reader name
-          :initarg :name)
-   (%path :reader path
-          :initarg :path)))
+;;; implementation of ASSET-SPEC
 
 (u:define-printer (asset-spec stream :type nil)
   (format stream "~s (pool: ~s)" (name asset-spec) (pool asset-spec)))
@@ -69,13 +61,13 @@
                 (file-name (file-namestring x))
                 (spec (list asset-name file-name)))
            (u:if-found (existing (u:href pool asset-name))
-                       (error "Asset pool ~s has ambiguously named assets:~%~
+             (error "Asset pool ~s has ambiguously named assets:~%~
                                File 1: ~a~%File 2: ~a~%Normalized name: ~a"
-                              pool-name
-                              file-name
-                              (file-namestring (path existing))
-                              asset-name)
-                       (make-asset-spec pool-name path spec))))
+                    pool-name
+                    file-name
+                    (file-namestring (path existing))
+                    asset-name)
+             (make-asset-spec pool-name path spec))))
        :test (lambda (x) (if filter (asset-path-collect-p x filter) t))
        :recursive-p nil))))
 

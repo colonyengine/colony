@@ -1,11 +1,6 @@
 (in-package #:virality)
 
-(defstruct (button-state
-            (:predicate nil)
-            (:copier nil))
-  enter
-  enabled
-  exit)
+;;;; Implementation of datatype BUTTON-STATE
 
 (defun button-transition-in (data input)
   (symbol-macrolet ((state (u:href (states data) input)))
