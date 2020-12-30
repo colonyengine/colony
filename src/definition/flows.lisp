@@ -1,4 +1,4 @@
-(in-package #:virality.engine)
+(in-package #:virality)
 
 (define-call-flow :default ()
   (flow initialize-phase
@@ -41,7 +41,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-preinit-db (tables core)))))
-                    (action #'actor::preinit->init)
+                    (action #'actor/preinit->init)
                     (transition protocol-initialize-components))
         ;; 3
         (flow-state protocol-initialize-components :reset ()
@@ -65,7 +65,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-init-db (tables core)))))
-                    (action #'actor::init->active)
+                    (action #'actor/init->active)
                     (transition while-initialize-phase))
         ;; 6
         (flow-state while-initialize-phase :reset ()
@@ -91,6 +91,10 @@
                     (selector nil)
                     (action nil)
                     (transition physics-loop))
+        ;; NOTE: We don't call comp::process-deferred-instant-transform-updates
+        ;; in the "physics-loop" flow-state below because that should happen at
+        ;; the end of the transform updating, OR the end of the frame after the
+        ;; user code has ran (and in this case, before component destruction).
         (flow-state physics-loop :reset ()
                     (selector
                      (lambda (core)
@@ -99,7 +103,7 @@
                     (action
                      (lambda (core)
                        (clock-tick core)
-                       (c/xform::interpolate-transforms core)))
+                       (comp::interpolate-transforms core)))
                     (transition make-active-camera-view))
         ;; NOTE: This flow-state is invoked deep inside of TICK in the
         ;; flow-state physics loop. Its purpose is to be called every time the
@@ -125,8 +129,8 @@
                     (action (lambda (core)
                               (let ((cs (collider-system core)))
                                 ;; NOTE: This order is required.
-                                (col::compute-stable-collisions cs)
-                                (col::compute-registering-collisions cs))))
+                                (compute-stable-collisions cs)
+                                (compute-registering-collisions cs))))
                     (transition nil))
         ;; TODO: Should I run flow destroy-phase just before this next
         ;; flow-state so that those actors/components aren't even drawn?
@@ -139,12 +143,12 @@
                      (lambda (core)
                        (let ((context (context core)))
                          (symbol-macrolet ((camera (active-camera context)))
-                           (unless (and camera (c/cam:active-p camera))
-                             (setf camera (c/cam:find-active-camera
+                           (unless (and camera (comp:active-p camera))
+                             (setf camera (comp:find-active-camera
                                            context)))
                            (values :identity-policy
                                    camera)))))
-                    (action #'c/cam:compute-camera-view)
+                    (action #'comp:compute-camera-view)
                     (transition protocol-attach/detach-components))
         (flow-state protocol-attach/detach-components :reset ()
                     (selector
@@ -224,7 +228,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-predestroy-view (tables core)))))
-                    (action #'actor::init-or-active->destroy)
+                    (action #'actor/init-or-active->destroy)
                     (transition destroy-actor-children))
         ;; 3
         (flow-state destroy-actor-children :reset ()
@@ -233,7 +237,7 @@
                        (values :identity-policy
                                (u:hash-keys (actor-destroy-db (tables core))))))
                     ;; NOTE: See selector for this flow-state.
-                    (action #'actor::destroy-descendants)
+                    (action #'actor/destroy-descendants)
                     (transition decrement-component-destroy-timer))
         ;; 4 A
         (flow-state decrement-component-destroy-timer :reset ()
@@ -249,7 +253,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-predestroy-view (tables core)))))
-                    (action #'actor::countdown-to-destruction)
+                    (action #'actor/countdown-to-destruction)
                     (transition pending-destroy-tasks))
         ;; 5
         (flow-state pending-destroy-tasks :reset ()
@@ -283,7 +287,7 @@
                     (action
                      (lambda (core)
                        (let ((cs (collider-system core)))
-                         (col::compute-deregistering-collisions cs))))
+                         (compute-deregistering-collisions cs))))
                     (transition protocol-destroy-component))
         ;; 6
         (flow-state protocol-destroy-component :reset ()
@@ -299,7 +303,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-destroy-db (tables core)))))
-                    (action #'actor::disconnect)
+                    (action #'actor/disconnect)
                     (transition release-components))
         ;; 8
         (flow-state release-components :reset ()
@@ -315,7 +319,7 @@
                      (lambda (core)
                        (values :identity-policy
                                (actor-destroy-db (tables core)))))
-                    (action #'actor::destroy->released)
+                    (action #'actor/destroy->released)
                     (transition restart-predestroy-phase))
         ;; 10
         (flow-state restart-predestroy-phase :reset ()
@@ -386,6 +390,12 @@
                                      'entry/active-phase
                                      :come-from-state-name
                                      :ef-active-phase)))
+                    (transition eof-work))
+        (flow-state eof-work :reset ()
+                    (selector
+                     (lambda (core)
+                       (values :identity-policy core)))
+                    (action #'comp::process-deferred-instant-transform-updates)
                     (transition destroy-phase))
         (flow-state destroy-phase :reset ()
                     (selector

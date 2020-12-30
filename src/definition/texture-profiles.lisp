@@ -1,4 +1,4 @@
-(in-package #:virality.extensions.textures)
+(in-package #:virality.extension)
 
 (tex:define-texture-profile default-profile
   ;; texparameter stuff, opengl defaults
@@ -7,7 +7,7 @@
   ;; something else entirely.
   (:depth-stencil-texture-mode :depth-component) ;; note: opengl 4.3 or greater
   (:texture-base-level 0)
-  (:texture-border-color (v4:zero))
+  (:texture-border-color (v4:vec))
   (:texture-compare-func :lequal)
   (:texture-compare-mode :none)
   (:texture-lod-bias 0.0)
@@ -49,9 +49,3 @@
   (:texture-wrap-s :clamp-to-edge)
   (:texture-wrap-t :clamp-to-edge)
   (:texture-wrap-r :clamp-to-edge))
-
-;; TODO: Initial exploratory support for framebuffers.
-(tex:define-texture-profile framebuffer
-  (:texture-min-filter :linear)
-  (:texture-mag-filter :linear)
-  (:data nil))

@@ -1,41 +1,49 @@
-(in-package #:virality.extensions.materials)
+(in-package #:virality.extension)
 
-(mat:define-material-profile u-model
+(v:define-material-profile u-model
   (:uniforms
-   ((:model (m4:id)))))
+   ((:model (m4:mat 1)))))
 
-(mat:define-material-profile u-view
+(v:define-material-profile u-view
   (:uniforms
-   ((:view (m4:id)))))
+   ((:view (m4:mat 1)))))
 
-(mat:define-material-profile u-proj
+(v:define-material-profile u-proj
   (:uniforms
-   ((:proj (m4:id)))))
+   ((:proj (m4:mat 1)))))
 
-(mat:define-material-profile u-time
+(v:define-material-profile u-time
   (:uniforms
    ((:time #'v:total-time))))
 
-(mat:define-material-profile u-mvp
+(v:define-material-profile u-mvp
   (:uniforms
-   ((:model (m4:id))
-    (:view (m4:id))
-    (:proj (m4:id)))))
+   ((:model (m4:mat 1))
+    (:view (m4:mat 1))
+    (:proj (m4:mat 1)))))
 
-(mat:define-material-profile u-vp
+(v:define-material-profile u-vp
   (:uniforms
-   ((:view (m4:id))
-    (:proj (m4:id)))))
+   ((:view (m4:mat 1))
+    (:proj (m4:mat 1)))))
 
-(mat:define-material-profile u-mvpt
+(v:define-material-profile u-mvpt
   (:uniforms
-   ((:model (m4:id))
-    (:view (m4:id))
-    (:proj (m4:id))
+   ((:model (m4:mat 1))
+    (:view (m4:mat 1))
+    (:proj (m4:mat 1))
     (:time #'v:total-time))))
 
-(mat:define-material-profile u-vpt
+(v:define-material-profile u-mvptr
   (:uniforms
-   ((:view (m4:id))
-    (:proj (m4:id))
+   ((:model (m4:mat 1))
+    (:view (m4:mat 1))
+    (:proj (m4:mat 1))
+    (:time #'v:total-time)
+    (:res #'v:screen-resolution))))
+
+(v:define-material-profile u-vpt
+  (:uniforms
+   ((:view (m4:mat 1))
+    (:proj (m4:mat 1))
     (:time #'v:total-time))))
