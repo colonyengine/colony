@@ -41,7 +41,7 @@
   :serial t
   :components
   ((:file "package")
-   (:module "structures"
+   (:module "datatype"
     :components
     ((:file "thread-pool-defs")
      (:file "uuid-defs")
