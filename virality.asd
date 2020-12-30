@@ -67,7 +67,7 @@
      (:file "layout-defs")
      (:file "texture-defs")
      (:file "common-defs")
-     (:file "structures")
+     (:file "component-support-defs")
      (:file "reference-defs")
      (:file "display-defs")
      (:file "image-defs")
