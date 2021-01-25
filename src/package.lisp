@@ -347,9 +347,9 @@
   (defvar *package-nicknames*
     '((:3b-bmfont :font)
       (:net.mfiano.lisp.golden-utils :u)
-      (:net.mfiano.lisp.origin :o)
-      (:net.mfiano.lisp.origin.point2d :p2)
-      (:net.mfiano.lisp.origin.point3d :p3)
+      (:net.mfiano.lisp.origin.constants :o)
+      (:net.mfiano.lisp.origin.geometry.point2d :p2)
+      (:net.mfiano.lisp.origin.geometry.point3d :p3)
       (:net.mfiano.lisp.origin.vec2 :v2)
       (:net.mfiano.lisp.origin.vec3 :v3)
       (:net.mfiano.lisp.origin.vec4 :v4)
