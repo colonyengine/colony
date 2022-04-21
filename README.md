@@ -43,8 +43,8 @@ performance problem will still happen. cl-opengl will probably be fixed to
 change this behavior in a future commit, but until then this is a fix for a
 performance problem.
 
-
 To manually install such that Quicklisp will be able to find ViralityEngine,
+
 clone this repository into your local-projects directory.
 
 For now, being on the `develop` branch will provide a better experience
