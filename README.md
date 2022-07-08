@@ -3,22 +3,22 @@
 A component based game engine written in Common Lisp for modern OpenGL (4.3+).
 
 NOTE: This engine is still in construction, however, it is almost ready for
-game making. The developers (psilord and mfiano) hang out in #bufferswap on
-freenode, and sometimes #lispgames on freenode. Stop by if you want to help
+making games. The developers (psilord and mfiano) hang out in #bufferswap on
+irc.libera.chat, and sometimes #lispgames on irc.libera.chat. Stop by if you want to help
 or see how to run what we currently have, or just to say hello.
 
 ## Overview
 
-Writing a game is a difficult thing. So we've created a system and work flow
-that helps you describe the elements needed to write 2d or 3d games. We
+Writing a game is a difficult thing. So we've created a system and workflow
+that helps you describe the elements needed to write 2D or 3D games. We
 designed several domain specific languages that make it easier to describe,
-manipulate, and use assets commonly found in game making. Such assets are, but
-not limited to, textures, materials, shader programs, and scene trees of actors
+manipulate, and use assets commonly found in game making. Such assets include (but
+are not limited to) textures, materials, shader programs, and scene trees of actors
 that are available for instantiation. Virality Engine also knows how to accept
 input from keyboards and most joysticks and gamepads.
 
 The component system is a hybrid model between an ECS and an object model. The
-components are defined similar to CLOS defclass, and regular generic methods
+components are defined similar to CLOS `defclass`, and regular generic methods
 can be used with them. Components are added to Actors which represent game
 concepts like players, scenery, effects, etc. We define a component protocol
 invoked by Virality Engine to move your components to the next state and render
@@ -31,18 +31,18 @@ branch is a bit crusty.**
 
 This system is not yet available to be installed automatically with Quicklisp.
 
-NOTE: cl-opengl has a feature in it to work around an INTEL GPU bug that causes
+NOTE: `cl-opengl` has a feature in it to work around an Intel GPU bug that causes
 a severe performance problem in most cases where people aren't using the buggy
-intel driver. While you aren't required to perform the actions in this note if
-you do the performance of V will be much better. V disables this feature in V's
-asd file.  However, if there are cl-opengl fasls which have been pre-cached,
-they need to be recompiled. So, first recursively remove ~/.cache/common-lisp/*
-or wherever you store your fasls.  Then ensure that V is _FIRST_ in any
-:depends-on line for your V projects. Then, load a V project as the first thing
-you do with in a REPL with the removed fasls and cl-opengl will be required by
-V's asd which will turn off the feature. If you try and load something other
-than V that requires cl-opengl, then the feature won't be turned off and the
-performance problem will still happen. cl-opengl will probably be fixed to
+Intel driver. While you aren't required to perform the actions in this note, if
+you do, Virality's performance will be much better. Virality disables this feature in Virality's
+ASD file.  However, if there are `cl-opengl` FASLs which have been pre-cached,
+they need to be recompiled. So, first recursively remove `~/.cache/common-lisp/*`
+or wherever you store your FASLs.  Then, ensure that Virality is _FIRST_ in any
+`:depends-on` line for your Virality projects. Then, load a Virality project as the first thing
+you do with in a REPL with the removed FASLs, so that `cl-opengl` is required by
+Virality's ASD, which will turn off the feature. If you try and load something other
+than Virality that requires `cl-opengl`, then the feature won't be turned off and the
+performance problem will still happen. `cl-opengl` will probably be fixed to
 change this behavior in a future commit, but until then this is a fix for a
 performance problem.
 
@@ -56,18 +56,18 @@ that are often newer than what Quicklisp provides.
 
 If you've run ViralityEngine before, and haven't in a while, then
 
-cd ~quicklisp/local-projects
+`cd ~quicklisp/local-projects`
 
 and as long as you aren't using these specifically for yourself:
 
-rm -rf origin doubly-linked-list golden-utils umbra shadow origin
+`rm -rf origin doubly-linked-list golden-utils umbra shadow origin`
 
 This next shell script is recommended to help with the depdenencies of
 ViralityEngine.
 
-Put this bash script into ~/quicklisp/local-projects, (or wherever your
-quicklisp local-projects directory is) you might call it
-'update-virality-depdendencies.sh' or something similar. When updating
+Put this bash script into `~/quicklisp/local-projects`, (or wherever your
+Quicklisp local-projects directory is) you might call it
+`update-virality-depdendencies.sh` or something similar. When updating
 Virality from github it is recommended to also run this script to get current
 changes Virality may need.
 
@@ -107,12 +107,12 @@ fi
 (cd algae && git pull)
 ```
 
-Then chmod 700 the script and run it while in the ~quicklisp/local-projects
+Then `chmod 700` the script and run it while in the `~quicklisp/local-projects`
 directory.
 
-Every now and then, when pulling ViralityEngine, ensure to re-run that
+Every now and then, when pulling ViralityEngine, make sure to re-run that
 shell script to get any matching code changes. It is expected that those
-dependencies will work generally only with ViralityEngine on the 'develop'
+dependencies will generally work only with ViralityEngine on the `develop`
 branch.
 
 ## Usage
