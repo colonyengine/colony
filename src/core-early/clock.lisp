@@ -112,8 +112,19 @@
   (let* ((display (display core))
          (clock (clock core))
          (pause (clock-pause-time clock))
-         (previous (+ (clock-current-time clock) pause))
-         (current (- (get-time clock) pause)))
+         (previous (clock-current-time clock))
+         (current (get-time clock)))
+    ;; When the pause time is non-zero, increment the previous time and decrement the current time
+    ;; by the pause time, and then set pause time to zero. This fixes a nasty bug where the current
+    ;; time and previous time drift farther and farther apart due to accumulation error. In the live
+    ;; coding module, we no longer increment pause time; we setf it to the explicit pause time.
+    ;; Another side effect of this bug was that the delta-buffer time used for delta time smoothing
+    ;; would decrement itself VERY quickly, easily reaching negative 10,000 seconds in the blink of
+    ;; an eye after accumulating a large enough pause time.
+    (unless (zerop pause)
+      (incf previous pause)
+      (decf current pause)
+      (setf (clock-pause-time clock) 0d0))
     (setf (clock-previous-time clock) previous
           (clock-current-time clock) current
           (clock-frame-time clock) (- current previous))

@@ -19,7 +19,7 @@
                     (unwind-protect (invoke-debugger condition)
                       (let ((,pause-time (- (get-time ,clock)
                                             ,debugger-entry-time)))
-                        (incf (pause-time ,clock) ,pause-time)
+                        (setf (pause-time ,clock) ,pause-time)
                         (format t "Spent ~3$ seconds in the debugger.~%"
                                 ,pause-time)))))))
          (restart-case (progn ,@body)
