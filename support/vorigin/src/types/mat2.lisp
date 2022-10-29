@@ -3,7 +3,7 @@
 (defpackage #:vorigin.mat2
   (:local-nicknames
    (#:com #:vorigin.common)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v2 #:vorigin.vec2))
   (:use #:cl)
   (:shadow

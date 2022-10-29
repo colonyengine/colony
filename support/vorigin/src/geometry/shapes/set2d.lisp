@@ -18,7 +18,7 @@
    (#:circle #:vorigin.geometry.circle)
    (#:orect #:vorigin.geometry.oriented-rect)
    (#:rect #:vorigin.geometry.rect)
-   (#:u #:mfiano-utils))
+   (#:u #:vutils))
   (:use #:cl)
   (:export
    #:circles

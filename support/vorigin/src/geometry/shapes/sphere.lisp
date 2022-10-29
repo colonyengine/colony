@@ -5,7 +5,7 @@
 (defpackage #:vorigin.geometry.sphere
   (:local-nicknames
    (#:point3d #:vorigin.geometry.point3d)
-   (#:u #:mfiano-utils))
+   (#:u #:vutils))
   (:use #:cl)
   (:export
    #:origin

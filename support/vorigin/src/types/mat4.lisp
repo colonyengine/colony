@@ -5,7 +5,7 @@
    (#:com #:vorigin.common)
    (#:m2 #:vorigin.mat2)
    (#:m3 #:vorigin.mat3)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v3 #:vorigin.vec3)
    (#:v4 #:vorigin.vec4))
   (:use #:cl)

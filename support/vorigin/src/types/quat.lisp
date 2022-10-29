@@ -6,7 +6,7 @@
    (#:const #:vorigin.constants)
    (#:m3 #:vorigin.mat3)
    (#:m4 #:vorigin.mat4)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v3 #:vorigin.vec3)
    (#:v4 #:vorigin.vec4))
   (:use #:cl)

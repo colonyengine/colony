@@ -18,7 +18,7 @@
    (#:rect #:vorigin.geometry.rect)
    (#:shape-set-2d #:vorigin.geometry.shape-set-2d)
    (#:sphere #:vorigin.geometry.sphere)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v2 #:vorigin.vec2)
    (#:v3 #:vorigin.vec3))
   (:use #:cl)

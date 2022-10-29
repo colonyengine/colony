@@ -25,7 +25,7 @@
                #:global-vars
                #:jsown
                #:lparallel
-               #:mfiano-utils
+               #:vutils
                #:vorigin
                #:net.mfiano.lisp.shadow
                #:net.mfiano.lisp.umbra

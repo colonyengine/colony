@@ -4,7 +4,7 @@
   (:local-nicknames
    (#:com #:vorigin.common)
    (#:const #:vorigin.constants)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v2 #:vorigin.vec2))
   (:use #:cl)
   (:shadow

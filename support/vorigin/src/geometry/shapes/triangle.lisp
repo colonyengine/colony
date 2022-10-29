@@ -3,7 +3,7 @@
 (defpackage #:vorigin.geometry.triangle
   (:local-nicknames
    (#:point3d #:vorigin.geometry.point3d)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v3 #:vorigin.vec3))
   (:use #:cl)
   (:export

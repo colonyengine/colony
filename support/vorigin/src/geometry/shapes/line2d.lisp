@@ -7,7 +7,7 @@
 (defpackage #:vorigin.geometry.line2d
   (:local-nicknames
    (#:point2d #:vorigin.geometry.point2d)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v2 #:vorigin.vec2))
   (:use #:cl)
   (:shadow

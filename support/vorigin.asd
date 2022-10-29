@@ -6,7 +6,7 @@
   :version "0.1.0"
   :encoding :utf-8
   :depends-on
-  (#:mfiano-utils)
+  (#:vutils)
   :in-order-to ((asdf:test-op (asdf:test-op #:vorigin.test)))
   :pathname "vorigin/src"
   :serial t

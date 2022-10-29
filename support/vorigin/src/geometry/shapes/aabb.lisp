@@ -5,7 +5,7 @@
 (defpackage #:vorigin.geometry.aabb
   (:local-nicknames
    (#:point3d #:vorigin.geometry.point3d)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v2 #:vorigin.vec2)
    (#:v3 #:vorigin.vec3))
   (:use #:cl)

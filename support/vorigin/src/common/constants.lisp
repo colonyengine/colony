@@ -2,7 +2,7 @@
 
 (defpackage #:vorigin.constants
   (:local-nicknames
-   (#:u #:mfiano-utils))
+   (#:u #:vutils))
   (:use #:cl)
   (:shadow
    #:pi)

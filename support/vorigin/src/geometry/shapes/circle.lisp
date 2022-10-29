@@ -5,7 +5,7 @@
 (defpackage #:vorigin.geometry.circle
   (:local-nicknames
    (#:point2d #:vorigin.geometry.point2d)
-   (#:u #:mfiano-utils))
+   (#:u #:vutils))
   (:use #:cl)
   (:export
    #:circle

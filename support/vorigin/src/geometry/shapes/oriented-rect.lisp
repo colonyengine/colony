@@ -8,7 +8,7 @@
    (#:m2 #:vorigin.mat2)
    (#:point2d #:vorigin.geometry.point2d)
    (#:rect #:vorigin.geometry.rect)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v2 #:vorigin.vec2))
   (:use #:cl)
   (:export

@@ -330,7 +330,7 @@
 
 (defpackage #:virality.nicknames
   (:local-nicknames
-   (#:u #:mfiano-utils))
+   (#:u #:vutils))
   (:use #:cl)
   (:import-from
    #+sbcl #:sb-ext
@@ -346,7 +346,7 @@
 (u:eval-always
   (defvar *package-nicknames*
     '((:3b-bmfont :font)
-      (:mfiano-utils :u)
+      (:vutils :u)
       (:vorigin.constants :o)
       (:vorigin.geometry.point2d :p2)
       (:vorigin.geometry.point3d :p3)

@@ -3,7 +3,7 @@
 (defpackage #:vorigin.shaping
   (:local-nicknames
    (#:const #:vorigin.constants)
-   (#:u #:mfiano-utils))
+   (#:u #:vutils))
   (:use #:cl)
   ;; shaping
   (:export

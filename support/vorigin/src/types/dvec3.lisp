@@ -5,7 +5,7 @@
    (#:com #:vorigin.common)
    (#:const #:vorigin.constants)
    (#:dv2 #:vorigin.dvec2)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v3 #:vorigin.vec3))
   (:use #:cl)
   (:shadow

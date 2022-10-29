@@ -14,7 +14,7 @@
 
 (defpackage #:vorigin.geometry.shape-set-3d
   (:local-nicknames
-   (#:u #:mfiano-utils))
+   (#:u #:vutils))
   (:use #:cl)
   (:export
    #:aabbs

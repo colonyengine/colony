@@ -6,7 +6,7 @@
   (:local-nicknames
    (#:m3 #:vorigin.mat3)
    (#:point3d #:vorigin.geometry.point3d)
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v2 #:vorigin.vec2)
    (#:v3 #:vorigin.vec3))
   (:use #:cl)

@@ -7,7 +7,7 @@
    (#:dv2 #:vorigin.dvec2)
    (#:dv3 #:vorigin.dvec3)
    (#:m3 #:vorigin.mat3)
-   (#:u #:mfiano-utils))
+   (#:u #:vutils))
   (:use #:cl)
   (:shadow
    #:=

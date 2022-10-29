@@ -4,7 +4,7 @@
 
 (defpackage #:vorigin.geometry.point3d
   (:local-nicknames
-   (#:u #:mfiano-utils)
+   (#:u #:vutils)
    (#:v3 #:vorigin.vec3)
    (#:v4 #:vorigin.vec4)
    (#:m4 #:vorigin.mat4))

@@ -2,7 +2,7 @@
 
 (defpackage #:vorigin.common
   (:local-nicknames
-   (#:u #:mfiano-utils))
+   (#:u #:vutils))
   (:use #:cl)
   (:shadow
    #:=)
