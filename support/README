@@ -1,0 +1,9 @@
+These are generally entirely complete independent systems that have been
+brought into the Virality codebase to make packaging, evolution, debugging, and
+maintenance of Virality easier. This fundamentally forks them from their
+original repos and without the previous history.
+
+vorigin/
+	Derived from Michael Fiano's origin math library.
+	http://github.com/mfiano/origin.git 
+	master @ 5f143c0

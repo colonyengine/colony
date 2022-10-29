@@ -22,7 +22,8 @@
   (("camera" :copy "/cameras/ortho"))
   (("graph" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
-                                  (/ v:=window-height= 2f0)))
+                                  (/ v:=window-height= 2f0)
+				  0f0))
    (comp:render :material 'graph
                 :slave (v:ref :self :component 'comp:mesh))))
 

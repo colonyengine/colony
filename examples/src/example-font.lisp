@@ -8,11 +8,11 @@
 ;;; Materials
 
 (v:define-material font
-    (:shader ex/shd:font
-     :profiles (x:u-mvp)
-     :uniforms
-     ((:sampler 'font)
-      (:color (v4:vec 0 1 0 0.75)))))
+  (:shader ex/shd:font
+   :profiles (x:u-mvp)
+   :uniforms
+   ((:sampler 'font)
+    (:color (v4:vec 0f0 1f0 0f0 0.75f0)))))
 
 ;;; Prefabs
 
@@ -31,14 +31,14 @@
   (("camera" :copy "/cameras/ortho"))
 
   (("sign" :copy "/default-text-display")
-   (comp:transform :scale (v3:vec 5f0)
+   (comp:transform :scale (v3:uniform 5f0)
                    :translate (v3:vec 0f0 256f0 0f0))
    ;; override child component info
    ("text-container"
     (comp:font :text "Wall Clock Time")))
 
   (("wall-clock-time" :copy "/default-text-display")
-   (comp:transform :scale (v3:vec 5f0))
+   (comp:transform :scale (v3:uniform 5f0))
    ;; override child component info
    ("text-container"
     (comp:font :rate 0

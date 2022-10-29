@@ -25,8 +25,8 @@
                #:global-vars
                #:jsown
                #:lparallel
-               #:net.mfiano.lisp.golden-utils
-               #:net.mfiano.lisp.origin
+               #:mfiano-utils
+               #:vorigin
                #:net.mfiano.lisp.shadow
                #:net.mfiano.lisp.umbra
                #:pngload

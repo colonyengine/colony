@@ -28,8 +28,8 @@
   ;; should convert this code to that cause it'll be like 4 lines.
   (let ((axes1 (axes obb1))
         (axes2 (axes obb2)))
-    (m3:with-components ((a (m3:mat 1))
-                         (b (m3:mat 1)))
+    (m3:with-components ((a (m3:id))
+                         (b (m3:id)))
       (psetf a00 (v3:dot (m3:get-column axes1 0) (m3:get-column axes2 0))
              a10 (v3:dot (m3:get-column axes1 1) (m3:get-column axes2 0))
              a20 (v3:dot (m3:get-column axes1 2) (m3:get-column axes2 0))

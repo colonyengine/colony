@@ -249,41 +249,41 @@
      :shader shd:unlit-texture-decal
      :uniforms ((:tex.sampler1 'title)
                 (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:vec 1)))))
+                (:max-intensity (v4:ones)))))
 
 (v:define-material starfield
     (:profiles (x:u-mvpt)
      :shader ex/shd:starfield
      :uniforms ((:tex 'starfield)
-                (:mix-color (v4:vec 1)))))
+                (:mix-color (v4:ones)))))
 
 (v:define-material warning-mothership
     (:profiles (x:u-mvp)
      :shader shd:unlit-texture-decal
      :uniforms ((:tex.sampler1 'warning-mothership)
                 (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:vec 1)))))
+                (:max-intensity (v4:ones)))))
 
 (v:define-material warning-wave
     (:profiles (x:u-mvp)
      :shader shd:unlit-texture-decal
      :uniforms ((:tex.sampler1 'warning-wave)
                 (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:vec 1)))))
+                (:max-intensity (v4:ones)))))
 
 (v:define-material game-over
     (:profiles (x:u-mvp)
      :shader shd:unlit-texture-decal
      :uniforms ((:tex.sampler1 'game-over)
                 (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:vec 1)))))
+                (:max-intensity (v4:ones)))))
 
 (v:define-material level-complete
     (:profiles (x:u-mvp)
      :shader shd:unlit-texture-decal
      :uniforms ((:tex.sampler1 'level-complete)
                 (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:vec 1)))))
+                (:max-intensity (v4:ones)))))
 
 (v:define-material time-bar
     (:profiles (x:u-mvp)
@@ -296,7 +296,7 @@
      :shader shd:unlit-texture-decal
      :uniforms ((:tex.sampler1 'pivot)
                 (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:vec 1)))))
+                (:max-intensity (v4:ones)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
@@ -370,7 +370,7 @@
                 ;; vector.
                 (vec (v3:vec lx ly 0f0))
                 (vec (if (> (v3:length vec) 1) (v3:normalize vec) vec))
-                (vec (if (< (v3:length vec) translate-deadzone) (v3:vec) vec))
+                (vec (if (< (v3:length vec) translate-deadzone) (v3:zero) vec))
                 ;; Right trigger modifies speed. pull to lerp from full speed
                 ;; to half speed.
                 (ty (nth-value 1 (v:get-gamepad-analog
@@ -700,7 +700,7 @@
 (defun make-projectile (context translation rotation physics-layer depth-layer
                         &key
                           (parent nil)
-                          (scale (v3:vec 1))
+                          (scale (v3:ones))
                           (destroy-ttl 2f0)
                           (velocity 1000f0)
                           (direction :+y)
@@ -778,7 +778,7 @@
           :initform "explode01-01")
    (%scale :accessor scale
            :initarg :scale
-           :initform (v3:vec 1))
+           :initform (v3:ones))
    (%frames :accessor frames
             :initarg :frames
             :initform 15)))
@@ -1333,7 +1333,7 @@ NIL if no such list exists."
                                   :initform 3)
    (%explosion-region :accessor explosion-region
                       :initarg :explosion-region
-                      :initform (v:make-region-ellipsoid (v3:vec)
+                      :initform (v:make-region-ellipsoid (v3:zero)
                                                          100f0 100f0 0f0))
    (%level-manager :accessor level-manager
                    :initarg :level-manager
@@ -2014,7 +2014,7 @@ NIL if no such list exists."
   (comp:sprite :spec '(metadata sprites)
                :block-alias :ptp-spritesheet
                :duration 0.5)
-  (comp:sphere :center (v3:vec)
+  (comp:sphere :center (v3:zero)
                :on-layer :enemy-bullet
                :referent (v:ref :self :component 'hit-points)
                :radius 15f0)
@@ -2036,7 +2036,7 @@ NIL if no such list exists."
               :invulnerability-timer 1f0)
   (player-movement :move-type :dpad-pivot
                    :pivot-prefab '(("pivot-guide" ptp)))
-  (comp:sphere :center (v3:vec)
+  (comp:sphere :center (v3:zero)
                :on-layer :player
                :referent (v:ref :self :component 'hit-points)
                :radius 30f0)
@@ -2087,7 +2087,7 @@ NIL if no such list exists."
               :render-layer :planet-explosion)
   (explosion :name "explode03-01" :frames 15
              :scale (v3:vec 3f0 3f0 3f0))
-  (comp:sphere :center (v3:vec)
+  (comp:sphere :center (v3:zero)
                :on-layer :planet
                :referent (v:ref :self :component 'planet)
                :visualize t
@@ -2291,7 +2291,7 @@ NIL if no such list exists."
 (v:define-prefab "protect-the-planets" (:library ptp)
   "The top most level prefab which has the component which drives the game
 sequencing."
-  (comp:transform :scale (v3:vec 1))
+  (comp:transform :scale (v3:ones))
   (delayed-render :layer-order *render-layer-order*)
   (tags :tags '(:delayed-render-system))
   (director :level-holder (v:ref "/protect-the-planets/current-level")

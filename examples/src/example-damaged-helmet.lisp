@@ -148,15 +148,15 @@
   (:shader ex/shd:damaged-helmet
    :profiles (x:u-mvp)
    :uniforms
-   ((:light.direction (v3:vec -0.7399 -0.6428 -0.1983))
-    (:light.color (v3:vec 1))
+   ((:light.direction (v3:vec -0.7399f0 -0.6428f0 -0.1983f0))
+    (:light.color (v3:ones))
     (:light.intensity 2)
     (:sampler 'damaged-helmet/mesh)
-    (:base-color-factor (v4:vec 1))
+    (:base-color-factor (v4:ones))
     (:metallic-factor 1)
     (:roughness-factor 1)
     (:normal-scale 1)
-    (:normal-matrix (m3:mat 1))
+    (:normal-matrix (m3:id))
     (:occlusion-strength 1)
     (:emissive-factor 1)
     (:brdf-lut 'brdf-lut)
@@ -223,7 +223,7 @@
                  (x y (v:get-mouse-position context))
                  (lm-start-drag-p (v:on-button-enter context :mouse :left))
                  (lm-stop-drag-p (v:on-button-exit context :mouse :left))
-                 (range (- o:pi/2 .001)))
+                 (range (- o:pi/2 .001f0)))
         (when (or (null x) (null y))
           ;; TODO: Figure out how this even happens.
           (return-from v:on-component-update))
@@ -240,11 +240,11 @@
           ;; apply to the original-orientation
           (setf rv (v2:copy start-drag-point)))
         (when lm-start-drag-p
-          (setf start-drag-point (v2:vec x y)
-                drag-point (v2:vec x y)
+          (setf start-drag-point (v2:vec* x y)
+                drag-point (v2:vec* x y)
                 dragging t))
         (when dragging
-          (setf drag-point (v2:vec x y))
+          (setf drag-point (v2:vec* x y))
           (let* ((dv (v2:- drag-point start-drag-point)))
             ;; TODO: This mathematical concept here is slightly clunky, so
             ;; fixup the transform API to make this a lot easier to do.
@@ -269,7 +269,7 @@
               (v:rotate self putative-rot :replace t))))
         (when lm-stop-drag-p
           (setf dragging nil
-                end-drag-point (v2:vec x y))
+                end-drag-point (v2:vec* x y))
           ;; Update RV to its final position at the end of the drag wrt where
           ;; RV used to be.  This allows the NEXT drag to start at the same
           ;; place the previous drag ended.
@@ -308,12 +308,12 @@ There used to be a bug where they wouldn't update properly. It was obviously
 wrong."
   (("camera" :copy "/cameras/perspective"))
   (("helmet1" :copy "/default-helmet")
-   (comp:transform :rotate/velocity (v3:velocity (v3:vec 1) o:pi/3)
-                   :translate (v3:vec -15 0 0)
-                   :scale 15))
+   (comp:transform :rotate/velocity (v3:velocity (v3:ones) o:pi/3)
+                   :translate (v3:vec -15f0 0f0 0f0)
+                   :scale 15f0))
   (("helmet2" :copy "/default-helmet")
-   (comp:transform :translate (v3:vec 15 0 0)
-                   :scale 15)))
+   (comp:transform :translate (v3:vec 15f0 0f0 0f0)
+                   :scale 15f0)))
 
 (v:define-prefab "damaged-helmet-interactive" (:library examples)
   (("helmet" :copy "/default-helmet")

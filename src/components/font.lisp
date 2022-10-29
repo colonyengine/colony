@@ -12,7 +12,7 @@
               :initform nil)
    (%offset :reader offset
             :initarg :offset
-            :initform (v2:vec))
+            :initform (v2:zero))
    (%rate :reader rate
           :initarg :rate
           :initform 0.5)
@@ -23,7 +23,7 @@
    (%buffer-data :accessor buffer-data
                  :initform nil)
    (%dimensions :accessor dimensions
-                :initform (v2:vec))))
+                :initform (v2:zero))))
 
 (v:define-geometry text ()
   (:layout x:2d
@@ -78,7 +78,7 @@
             (setf fdx width fdy height))
           (v:update-geometry (geometry geometry) :data (buffer-data self))
           (v:translate actor
-                       (v3:vec (- (* sx width)) (* sy height) 0)
+                       (v3:vec (- (* sx width)) (* sy height) 0f0)
                        :replace t)))
       (setf (buffer-data self) nil
             (update-time self) time))))

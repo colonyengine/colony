@@ -12,11 +12,11 @@
    (%scale :reader scale
            :initform (v::make-scale-state))
    (%local :reader local
-           :initform (m4:mat 1))
+           :initform (m4:id))
    (%model :reader model
-           :initform (m4:mat 1))
+           :initform (m4:id))
    (%normal-matrix :reader normal-matrix
-                   :initform (m4:mat 1))))
+                   :initform (m4:id))))
 
 (defun add-child (parent child)
   (pushnew child (children parent))
@@ -178,26 +178,20 @@ in the scene tree EXCEPT the universe actor itself."
 (defun %get-translation (transform space)
   (m4:get-translation
    (ecase space
-     (:local
-      (local transform))
-     (:model
-      (model transform)))))
+     (:local (local transform))
+     (:model (model transform)))))
 
 (defun %get-rotation (transform space)
   (q:from-mat4
    (ecase space
-     (:local
-      (local transform))
-     (:model
-      (model transform)))))
+     (:local (local transform))
+     (:model (model transform)))))
 
 (defun %get-scale (transform space)
   (m4:get-scale
    (ecase space
-     (:local
-      (local transform))
-     (:model
-      (model transform)))))
+     (:local (local transform))
+     (:model (model transform)))))
 
 (defun %translate (transform vec space replace instant)
   (let ((state (translation transform)))
@@ -222,22 +216,22 @@ in the scene tree EXCEPT the universe actor itself."
           (v::end-of-frame-work (v::core transform)))))
 
       (:local
-       ;; NOTE: The movement vector is always rotated to match the local
-       ;; orientation of the transform before translating in that direction.
-       (let ((local-vec (m3:*v3 (m4:rotation-to-mat3 (local transform)) vec)))
-         (v3:+! (v::transform-state-current state)
-                (cond
-                  (replace
-                   (update-replace-count transform state :translate)
-                   v3:+zero+)
-                  (t (v::transform-state-current state)))
-                local-vec)
-         (when instant
-           (push
-            (lambda (core)
-              (declare (ignore core))
-              (v3:copy! (v::transform-state-previous state) (v::transform-state-current state)))
-            (v::end-of-frame-work (v::core transform))))))
+        ;; NOTE: The movement vector is always rotated to match the local
+        ;; orientation of the transform before translating in that direction.
+        (let ((local-vec (m3:*v3 (m4:rotation-to-mat3 (local transform)) vec)))
+          (v3:+! (v::transform-state-current state)
+                 (cond
+                   (replace
+                    (update-replace-count transform state :translate)
+                    v3:+zero+)
+                   (t (v::transform-state-current state)))
+                 local-vec)
+          (when instant
+            (push
+             (lambda (core)
+               (declare (ignore core))
+               (v3:copy! (v::transform-state-previous state) (v::transform-state-current state)))
+             (v::end-of-frame-work (v::core transform))))))
       (:model (error "TRANSLATE not yet implemented for world space.")))
     ;; side-effects only; return T
     t))
@@ -250,19 +244,19 @@ in the scene tree EXCEPT the universe actor itself."
   (let ((state (rotation transform)))
     (ecase space
       (:local
-       (q:rotate! (v::transform-state-current state)
-                  (cond
-                    (replace
-                     (update-replace-count transform state :rotate)
-                     q:+id+)
-                    (t (v::transform-state-current state)))
-                  quat)
-       (when instant
-         (push
-          (lambda (core)
-            (declare (ignore core))
-            (q:copy! (v::transform-state-previous state) (v::transform-state-current state)))
-          (v::end-of-frame-work (v::core transform)))))
+        (q:rotate! (v::transform-state-current state)
+                   (cond
+                     (replace
+                      (update-replace-count transform state :rotate)
+                      q:+id+)
+                     (t (v::transform-state-current state)))
+                   quat)
+        (when instant
+          (push
+           (lambda (core)
+             (declare (ignore core))
+             (q:copy! (v::transform-state-previous state) (v::transform-state-current state)))
+           (v::end-of-frame-work (v::core transform)))))
       (:model (error "ROTATE not yet implemented for world space.")))
     ;; side-effects only; return T
     t))
@@ -275,19 +269,19 @@ in the scene tree EXCEPT the universe actor itself."
   (let ((state (scale transform)))
     (ecase space
       (:local
-       (v3:+! (v::transform-state-current state)
-              (cond
-                (replace
-                 (update-replace-count transform state :scale)
-                 v3:+zero+)
-                (t (v::transform-state-current state)))
-              vec)
-       (when instant
-         (push
-          (lambda (core)
-            (declare (ignore core))
-            (v3:copy! (v::transform-state-previous state) (v::transform-state-current state)))
-          (v::end-of-frame-work (v::core transform)))))
+        (v3:+! (v::transform-state-current state)
+               (cond
+                 (replace
+                  (update-replace-count transform state :scale)
+                  v3:+zero+)
+                 (t (v::transform-state-current state)))
+               vec)
+        (when instant
+          (push
+           (lambda (core)
+             (declare (ignore core))
+             (v3:copy! (v::transform-state-previous state) (v::transform-state-current state)))
+           (v::end-of-frame-work (v::core transform)))))
       (:model (error "SCALE not yet implemented for world space.")))
     ;; side-effects only; return T
     t))
@@ -341,30 +335,24 @@ in the scene tree EXCEPT the universe actor itself."
 
 (defun %transform-point (transform point space)
   (let ((model (model transform)))
-    (v3:with-components ((v point))
-      (v3:vec
-       (ecase space
-         (:local (m4:*v4 model (v4:vec vx vy vz 1)))
-         (:model (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
+    (ecase space
+      (:local (m4:*v3 model point))
+      (:model (m4:*v3 (m4:invert model) point)))))
 
-(defun %transform-vector (transform vector space)
+(defun %transform-vector (transform vec space)
   (let ((model (m4:copy (model transform))))
-    (v3:with-components ((v vector))
-      (m4:set-translation! model model v3:+zero+)
-      (v3:vec
-       (ecase space
-         (:local (m4:*v4 model (v4:vec vx vy vz 1)))
-         (:model (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
+    (m4:set-translation! model model v3:+zero+)
+    (ecase space
+      (:local (m4:*v3 model vec))
+      (:model (m4:*v3 (m4:invert model) vec)))))
 
 (defun %transform-direction (transform direction space)
   (let ((model (m4:copy (model transform))))
-    (v3:with-components ((v direction))
-      (m4:set-translation! model model v3:+zero+)
-      (m4:normalize-rotation! model model)
-      (v3:vec
-       (ecase space
-         (:local (m4:*v4 model (v4:vec vx vy vz 1)))
-         (:model (m4:*v4 (m4:invert model) (v4:vec vx vy vz 1))))))))
+    (m4:set-translation! model model v3:+zero+)
+    (m4:normalize-rotation! model model)
+    (ecase space
+      (:local (m4:*v3 model direction))
+      (:model (m4:*v3 (m4:invert model) direction)))))
 
 (defun %transform-forward (transform)
   (v3:negate (m4:rotation-axis-to-vec3 (model transform) :z)))

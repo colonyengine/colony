@@ -44,7 +44,7 @@
 (v:define-material art6
   (:profiles (x:u-mvptr)
    :shader ex/shd:art6
-   :uniforms ((:mouse (v2:vec)))))
+   :uniforms ((:mouse (v2:zero)))))
 
 ;;; Components
 
@@ -55,7 +55,7 @@
    (%material-retrieved-p :reader material-retrieved-p
                           :initform nil)
    (%mouse :reader mouse
-           :initform (v2:vec))))
+           :initform (v2:zero))))
 
 (defmethod v:on-component-initialize ((self mouse-shader-input))
   (with-slots (%renderer) self
@@ -83,7 +83,8 @@
   (("camera" :copy "/cameras/ortho"))
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
-                                  (/ v:=window-height= 2f0)))
+                                  (/ v:=window-height= 2f0)
+				  0f0))
    (comp:render :material 'art1
                 :slave (v:ref :self :component 'comp:mesh))))
 
@@ -91,7 +92,8 @@
   (("camera" :copy "/cameras/ortho"))
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
-                                  (/ v:=window-height= 2f0)))
+                                  (/ v:=window-height= 2f0)
+				  0f0))
    (comp:render :material 'art2
                 :slave (v:ref :self :component 'comp:mesh))))
 
@@ -99,7 +101,8 @@
   (("camera" :copy "/cameras/ortho"))
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
-                                  (/ v:=window-height= 2f0)))
+                                  (/ v:=window-height= 2f0)
+				  0f0))
    (comp:render :material 'art3
                 :slave (v:ref :self :component 'comp:mesh))))
 
@@ -107,7 +110,8 @@
   (("camera" :copy "/cameras/ortho"))
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
-                                  (/ v:=window-height= 2f0)))
+                                  (/ v:=window-height= 2f0)
+				  0f0))
    (comp:render :material 'art4
                 :slave (v:ref :self :component 'comp:mesh))))
 
@@ -115,7 +119,8 @@
   (("camera" :copy "/cameras/ortho"))
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
-                                  (/ v:=window-height= 2f0)))
+                                  (/ v:=window-height= 2f0)
+				  0f0))
    (comp:render :material 'art5
                 :slave (v:ref :self :component 'comp:mesh))))
 
@@ -124,6 +129,7 @@
   (("screen" :copy "/mesh")
    (mouse-shader-input)
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
-                                  (/ v:=window-height= 2f0)))
+                                  (/ v:=window-height= 2f0)
+				  0f0))
    (comp:render :material 'art6
                 :slave (v:ref :self :component 'comp:mesh))))

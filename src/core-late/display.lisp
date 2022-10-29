@@ -39,7 +39,7 @@
   ;; export this in SDL2 and/or make it easier to use.
   (sdl2::sdl-init #xf231)
   (let* ((refresh-rate (nth-value 3 (sdl2:get-current-display-mode 0)))
-         (resolution (v2:vec =window-width= =window-height=))
+         (resolution (v2:vec* =window-width= =window-height=))
          (display (make-instance 'display
                                  :window (make-window)
                                  :refresh-rate refresh-rate

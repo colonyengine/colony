@@ -9,9 +9,9 @@
 
 (defclass line-segment ()
   ((%start-point :reader start-point
-                 :initform (v3:vec))
+                 :initform (v3:zero))
    (%end-point :reader end-point
-               :initform (v3:vec))))
+               :initform (v3:zero))))
 
 (defgeneric line-segment-cast (line-segment shape)
   (:method (line-segment shape)))
@@ -26,7 +26,7 @@
          (b (v3:dot m d))
          (world-radius (v3:length
                         (transform-vector transform
-                                          (v3:vec (radius collider) 0 0))))
+                                          (v3:vec (radius collider) 0f0 0f0))))
          (c (- (v3:dot m m) (expt world-radius 2))))
     (unless (and (plusp c) (plusp b))
       (let ((discriminant (- (expt b 2) c)))
@@ -83,11 +83,11 @@
                   (view (comp::view camera))
                   (proj (comp::projection camera)))
       (v2:with-components ((r (resolution (display core-state))))
-        (let ((viewport (v4:vec 0 0 rx ry)))
+        (let ((viewport (v4:vec 0f0 0f0 rx ry)))
           (v3:copy! start
-                    (p3:unproject (v3:vec x y 0) view proj viewport))
+                    (p3:unproject (v3:vec* x y 0f0) view proj viewport))
           (v3:copy! end
-                    (p3:unproject (v3:vec x y 1) view proj viewport))
+                    (p3:unproject (v3:vec* x y 1f0) view proj viewport))
           t)))))
 
 (defun pick-actor (context line-segment)

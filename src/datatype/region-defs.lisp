@@ -3,7 +3,7 @@
 (defclass region ()
   ((%center :accessor center
             :initarg :center
-            :initform (v3:vec))))
+            :initform (v3:zero))))
 
 (defclass region-cuboid (region)
   ((%minx :accessor minx

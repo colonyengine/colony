@@ -116,7 +116,7 @@ shared material may affect the NEXT rendering call!"
                               (m4:set-translation
                                (m4:* (comp:view camera)
                                      (v:get-model-matrix self))
-                               (v3:vec 0 0 0)))))))
+                               (v3:zero)))))))
 
 
 

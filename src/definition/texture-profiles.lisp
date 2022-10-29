@@ -7,10 +7,10 @@
   ;; something else entirely.
   (:depth-stencil-texture-mode :depth-component) ;; note: opengl 4.3 or greater
   (:texture-base-level 0)
-  (:texture-border-color (v4:vec))
+  (:texture-border-color (v4:zero))
   (:texture-compare-func :lequal)
   (:texture-compare-mode :none)
-  (:texture-lod-bias 0.0)
+  (:texture-lod-bias 0f0)
   ;; The next one below is :nearest-mipmap-linear default in ogl. But, this one
   ;; is almost surely what you actually want. Also, it will downconvert to
   ;; :nearest or :linear as apprpriate if you turn of mipmaps for a texture.

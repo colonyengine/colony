@@ -5,9 +5,9 @@
               :initarg :active-p
               :initform nil)
    (%view :reader view
-          :initform (m4:mat 1))
+          :initform (m4:id))
    (%projection :reader projection
-                :initform (m4:mat 1))
+                :initform (m4:id))
    (%mode :reader mode
           :initarg :mode
           :initform :perspective)

@@ -12,20 +12,20 @@
   (:shader shd:unlit-texture
    :profiles (u-mvp)
    :uniforms ((:tex.sampler1 'x:debug-texture)
-              (:mix-color (v4:vec 1)))))
+              (:mix-color (v4:ones)))))
 
 (v:define-material unlit-texture-decal
   (:shader shd:unlit-texture-decal
    :profiles (u-mvp)
-   :uniforms ((:min-intensity (v4:vec))
-              (:max-intensity (v4:vec 1))
+   :uniforms ((:min-intensity (v4:zero))
+              (:max-intensity (v4:ones))
               (:tex.sampler1 'x:debug-texture))))
 
 (v:define-material unlit-texture-decal-bright
   (:shader shd:unlit-texture-decal
    :profiles (u-mvp)
    :uniforms ((:min-intensity (v4:vec 0.1f0 0.1f0 0.1f0 0.1f0))
-              (:max-intensity (v4:vec 1))
+              (:max-intensity (v4:ones))
               (:tex.sampler1 'x:debug-texture))))
 
 (v:define-material sprite
@@ -47,7 +47,7 @@
 (v:define-material collider/sphere
   (:shader shd:collider/sphere
    :profiles (u-mvp)
-   :uniforms ((:collider-local-center (v3:vec))
+   :uniforms ((:collider-local-center (v3:zero))
               (:in-contact-color (v4:vec 1f0 0f0 0f0 1f0))
               (:not-in-contact-color (v4:vec 0f0 1f0 0f0 .5f0))
               (:in-contact-p nil)
@@ -56,7 +56,7 @@
 (v:define-material collider/cuboid
   (:shader shd:collider/cuboid
    :profiles (u-mvp)
-   :uniforms ((:collider-local-center (v3:vec))
+   :uniforms ((:collider-local-center (v3:zero))
               (:in-contact-color (v4:vec 1f0 0f0 0f0 1f0))
               (:not-in-contact-color (v4:vec 0f0 1f0 0f0 .5f0))
               (:in-contact-p nil)
@@ -72,4 +72,4 @@
   (:shader shd:matcap
    :profiles (u-mvp)
    :uniforms ((:sampler 'x:matcap/basic-1)
-	      (:normal-matrix (m3:mat 1)))))
+	      (:normal-matrix (m3:id)))))

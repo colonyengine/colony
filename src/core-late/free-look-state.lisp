@@ -8,7 +8,7 @@
    (%initial-state :accessor initial-state
                    :initform nil)
    (%initial-orientation :accessor initial-orientation
-                         :initform (m4:mat 1))
+                         :initform (m4:id))
    (%key-state :reader key-state
                :initform (u:dict #'eq))
    (%key-speed :reader key-speed

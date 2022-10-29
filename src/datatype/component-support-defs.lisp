@@ -7,15 +7,15 @@
 
 ;; NOTE: Used by V's transform component.
 (defstruct transform-state
-  (previous (v3:vec) :type (or v3:vec q:quat))
-  (current (v3:vec) :type (or v3:vec q:quat))
+  (previous (v3:zero) :type (or v3:vec q:quat))
+  (current (v3:zero) :type (or v3:vec q:quat))
   ;; TODO: Determine if we actually need FUTURE for the change about to
   ;; happen before the next physics update. Currently not implemented.
   ;;
-  ;; (future (v3:vec) :type (or v3:vec q:quat))
-  (incremental (v3:vec) :type v3:vec)
-  (incremental-delta (v3:vec) :type (or v3:vec q:quat))
-  (interpolated (v3:vec) :type (or v3:vec q:quat))
+  ;; (future (v3:zero) :type (or v3:vec q:quat))
+  (incremental (v3:zero) :type v3:vec)
+  (incremental-delta (v3:zero) :type (or v3:vec q:quat))
+  (interpolated (v3:zero) :type (or v3:vec q:quat))
   (replace-count 0 :type fixnum)
   (replace-warned-p nil :type boolean))
 

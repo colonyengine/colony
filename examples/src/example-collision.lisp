@@ -175,7 +175,7 @@
 
 (v:define-prefab "default-rock" (:library examples)
   ("model"
-   (comp:transform :scale (v3:vec 2f0))
+   (comp:transform :scale (v3:uniform 2f0))
    (comp:mesh :asset '(meshes rocks)
               :name "Rock-1")
    (comp:render :material `(x:matcap ceramic-dark
@@ -214,7 +214,7 @@
     (comp:sphere :display-id "Player"
                  :visualize t
                  :on-layer :player
-                 :center (v3:vec)
+                 :center (v3:zero)
                  :radius 1f0)))
   ("rot-1-center"
    (comp:transform :translate (v3:vec 2f0 0f0 0f0)
@@ -224,7 +224,7 @@
     (comp:sphere :display-id "Enemy"
                  :visualize t
                  :on-layer :enemy
-                 :center (v3:vec)
+                 :center (v3:zero)
                  :radius 1f0))))
 
 (v:define-prefab "collision-transform-test-0" (:library examples)
@@ -264,7 +264,7 @@ world space for a particular transform."
      (("mark" :link "/rock-1")
       ;; Origin sitting at 1,1,1 wrt the universe, but +90deg rotation around
       ;; "mark" Z axis.
-      (comp:transform :rotate (q:orient :local :z o:pi/2) :scale 2)
+      (comp:transform :rotate (q:orient :local :z o:pi/2) :scale 2f0)
       (unit-test-transform-api :test-type :test-transform-api))))))
 
 
@@ -285,7 +285,7 @@ world space for a particular transform."
                 ;;
                 ;; PARSE-REFERENCE-PATH/PARENT is prolly the culprit here.
                 :referent (v:ref "../" :component 'destroy-my-actor)
-                :center (v3:vec)
+                :center (v3:zero)
                 :radius 1f0)))
 
 (v:define-prefab "stone-destroy-after-time" (:library examples)
@@ -295,7 +295,7 @@ world space for a particular transform."
                 :visualize t
                 :on-layer :player
                 :referent (v:ref "../" :component 'destroy-my-actor)
-                :center (v3:vec)
+                :center (v3:zero)
                 :radius 1f0)))
 
 
@@ -337,7 +337,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
    (comp:sphere :display-id "Ground"
                 :visualize t
                 :on-layer :ground
-                :center (v3:vec)
+                :center (v3:zero)
                 :radius 1f0)))
 
 (v:define-prefab "collision-test-1" (:library examples)
@@ -375,16 +375,16 @@ actually are. You have to view the results to see the colliders lighting up."
    (comp:camera (:policy :new-args) :zoom 3f0))
   ("a"
    (comp:transform :translate (v3:vec -4f0 0f0 0f0)
-                   :translate/velocity (v3:vec 0f0 0f0 0f0)
+                   :translate/velocity (v3:zero)
                    :scale 2f0)
    (("stone-cuboid" :link "/rock-1")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:velocity (v3:ones) o:pi/6))
     (comp:cuboid :display-id "Stone"
                  :visualize t
                  :on-layer :ground
-                 :center (v3:vec)
+                 :center (v3:zero)
                  :minx -.75f0
                  :maxx .75f0
                  :miny -.75f0
@@ -393,16 +393,16 @@ actually are. You have to view the results to see the colliders lighting up."
                  :maxz .75f0)))
   ("b"
    (comp:transform :translate (v3:vec 4f0 0f0 0f0)
-                   :translate/velocity (v3:vec 0f0 0f0 0f0)
+                   :translate/velocity (v3:zero)
                    :scale 2f0)
    (("stone-sphere" :link "/rock-1")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:velocity (v3:ones) o:pi/6))
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground
-                 :center (v3:vec)
+                 :center (v3:zero)
                  :radius 1f0))))
 
 (v:define-prefab "collision-test-3" (:library examples)
@@ -417,15 +417,15 @@ actually are. You have to view the results to see the colliders lighting up."
                     :translate/velocity (v3:vec 0f0 0f0 0f0))
     ("cuboid1"
      (comp:transform :rotate (q:orient :local :z o:pi/4)
-                     :rotate/velocity (v3:velocity (v3:vec 0 0 1) o:pi/12))
+                     :rotate/velocity (v3:velocity (v3:vec 0f0 0f0 1f0) o:pi/12))
      (comp:cuboid :visualize t
                   :on-layer :ground
-                  :center (v3:vec))))
+                  :center (v3:zero))))
    ("cuboid2"
     (comp:transform :translate (v3:vec 0.5f0 0f0 0f0))
     (comp:cuboid :visualize t
                  :on-layer :ground
-                 :center (v3:vec))))
+                 :center (v3:zero))))
   ("test-case-gap"
    (comp:transform :translate (v3:vec 2f0 0f0 0f0))
    ("a"
@@ -433,18 +433,18 @@ actually are. You have to view the results to see the colliders lighting up."
     ;; gap and so both should turn green to represent no collision during that
     ;; small gap.
     (comp:transform :translate (v3:vec -.51f0 0f0 0f0)
-                    :translate/velocity (v3:vec 0f0 0f0 0f0))
+                    :translate/velocity (v3:zero))
     ("cuboid1"
      (comp:transform :rotate (q:orient :local :z o:pi/4)
-                     :rotate/velocity (v3:velocity (v3:vec 0 0 1) o:pi/12))
+                     :rotate/velocity (v3:velocity (v3:vec 0f0 0f0 1f0) o:pi/12))
      (comp:cuboid :visualize t
                   :on-layer :ground
-                  :center (v3:vec))))
+                  :center (v3:zero))))
    ("cuboid2"
     (comp:transform :translate (v3:vec 0.5f0 0f0 0f0))
     (comp:cuboid :visualize t
                  :on-layer :ground
-                 :center (v3:vec)))))
+                 :center (v3:zero)))))
 
 (v:define-prefab "collision-test-4" (:library examples)
   "In this test, we test that the center of the collision sphere is away from
@@ -458,11 +458,11 @@ the actual model and picking still works."
    (("stone-sphere1" :link "/rock-1")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:velocity (v3:ones) o:pi/6))
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground
-                 :center (v3:vec 5 0 0)
+                 :center (v3:vec 5f0 0f0 0f0)
                  :radius 1f0)))
   ("b"
    (comp:transform :translate (v3:vec -5f0 0f0 0f0)
@@ -470,11 +470,11 @@ the actual model and picking still works."
    (("stone-sphere2" :link "/rock-2")
     (comp:transform :scale 2f0
                     :rotate (q:orient :local :x o:pi/2)
-                    :rotate/velocity (v3:velocity (v3:vec 1) o:pi/6))
+                    :rotate/velocity (v3:velocity (v3:ones) o:pi/6))
     (comp:sphere :display-id "Stone"
                  :visualize t
                  :on-layer :ground
-                 :center (v3:vec)
+                 :center (v3:zero)
                  :radius 1f0))))
 
 (v:define-prefab "collision-test-5" (:library examples)
@@ -494,7 +494,7 @@ this math is something that once broke in the internal OBB math."
     (comp:cuboid :display-id "Stone"
                  :visualize t
                  :on-layer :ground
-                 :center (v3:vec)
+                 :center (v3:zero)
                  :minx -1f0
                  :maxx 1f0
                  :miny -1f0
@@ -503,7 +503,7 @@ this math is something that once broke in the internal OBB math."
                  :maxz 1f0)))
   ("b"
    (comp:transform :translate (v3:vec -15f0 0f0 0f0)
-                   :translate/velocity (v3:vec 0f0 0f0 0f0)
+                   :translate/velocity (v3:zero)
                    :scale 1f0)
    (("stone-obb2" :link "/rock-0")
     (comp:transform :scale 15f0
@@ -511,7 +511,7 @@ this math is something that once broke in the internal OBB math."
     (comp:cuboid :display-id "Stone"
                  :visualize t
                  :on-layer :ground
-                 :center (v3:vec)
+                 :center (v3:zero)
                  :minx -1f0
                  :maxx 1f0
                  :miny -1f0

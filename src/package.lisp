@@ -330,7 +330,7 @@
 
 (defpackage #:virality.nicknames
   (:local-nicknames
-   (#:u #:net.mfiano.lisp.golden-utils))
+   (#:u #:mfiano-utils))
   (:use #:cl)
   (:import-from
    #+sbcl #:sb-ext
@@ -346,17 +346,23 @@
 (u:eval-always
   (defvar *package-nicknames*
     '((:3b-bmfont :font)
-      (:net.mfiano.lisp.golden-utils :u)
-      (:net.mfiano.lisp.origin.constants :o)
-      (:net.mfiano.lisp.origin.geometry.point2d :p2)
-      (:net.mfiano.lisp.origin.geometry.point3d :p3)
-      (:net.mfiano.lisp.origin.vec2 :v2)
-      (:net.mfiano.lisp.origin.vec3 :v3)
-      (:net.mfiano.lisp.origin.vec4 :v4)
-      (:net.mfiano.lisp.origin.mat2 :m2)
-      (:net.mfiano.lisp.origin.mat3 :m3)
-      (:net.mfiano.lisp.origin.mat4 :m4)
-      (:net.mfiano.lisp.origin.quat :q)
+      (:mfiano-utils :u)
+      (:vorigin.constants :o)
+      (:vorigin.geometry.point2d :p2)
+      (:vorigin.geometry.point3d :p3)
+      (:vorigin.vec2 :v2)
+      (:vorigin.vec3 :v3)
+      (:vorigin.vec4 :v4)
+      (:vorigin.dvec2 :dv2)
+      (:vorigin.dvec3 :dv3)
+      (:vorigin.dvec4 :dv4)
+      (:vorigin.mat2 :m2)
+      (:vorigin.mat3 :m3)
+      (:vorigin.mat4 :m4)
+      (:vorigin.dmat2 :dm2)
+      (:vorigin.dmat3 :dm3)
+      (:vorigin.dmat4 :dm4)
+      (:vorigin.quat :q)
       (:net.mfiano.lisp.shadow :shadow)
       (:net.mfiano.lisp.umbra.color :umbra.color)
       (:net.mfiano.lisp.umbra.graphing :umbra.graphing)
