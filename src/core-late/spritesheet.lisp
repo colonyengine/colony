@@ -28,8 +28,8 @@
                 (setf (aref pos i) (vector x (if y-flipped (- 1 y h) y))
                       (aref size i) (vector w h)
                       (u:href (spritesheet-sprites spritesheet) id) i)))
-        :finally (shadow:write-buffer-path name :pos pos)
-                 (shadow:write-buffer-path name :size size)))
+        :finally (shadow:write-buffer-path name :path :pos :index 0 :value pos)
+                 (shadow:write-buffer-path name :path :size :index 0 :value size)))
 
 (defun find-sprite (spritesheet name)
   (or (u:href (spritesheet-sprites spritesheet) name)

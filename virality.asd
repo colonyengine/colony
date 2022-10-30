@@ -27,8 +27,8 @@
                #:lparallel
                #:vutils
                #:vorigin
-               #:net.mfiano.lisp.shadow
-               #:net.mfiano.lisp.umbra
+               #:vshadow
+               #:vumbra
                #:pngload
                #:printv
                #:queues.simple-queue

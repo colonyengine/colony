@@ -16,8 +16,8 @@
 
 (uiop:define-package #:virality.shader
   (:use-reexport
-   #:net.mfiano.lisp.shadow.glsl
-   #:net.mfiano.lisp.umbra.common)
+   #:vumbra.common
+   #:vshadow.glsl)
   ;; shaders
   (:export
    #:collider/cuboid
@@ -363,18 +363,18 @@
       (:vorigin.dmat3 :dm3)
       (:vorigin.dmat4 :dm4)
       (:vorigin.quat :q)
-      (:net.mfiano.lisp.shadow :shadow)
-      (:net.mfiano.lisp.umbra.color :umbra.color)
-      (:net.mfiano.lisp.umbra.graphing :umbra.graphing)
-      (:net.mfiano.lisp.umbra.noise :umbra.noise)
-      (:net.mfiano.lisp.umbra.sdf :umbra.sdf)
-      (:net.mfiano.lisp.umbra.sprite :umbra.sprite)
+      (:vumbra.color :umbra.color)
+      (:vumbra.graphing :umbra.graphing)
+      (:vumbra.noise :umbra.noise)
+      (:vumbra.sdf :umbra.sdf)
+      (:vumbra.sprite :umbra.sprite)
       (:virality.component :comp)
       (:virality :v)
       (:virality.extension :x)
       (:virality.prefab :prefab)
       (:virality.shader :shd)
-      (:virality.texture :tex))))
+      (:virality.texture :tex)
+      (:vshadow :shadow))))
 
 (macrolet ((define-nicknames/internal ()
              `(progn
