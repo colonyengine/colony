@@ -80,6 +80,14 @@ just use it for a project.
 
 ## Usage
 
+**NOTE: SBCL's default memory heap size is insufficient to run all the
+examples. Please ensure that your SBCL (either on the console, or in your SLIME
+or SLY configuration) is started with the command line argument
+`--dynamic-space-size 24000` (24GB) or a memory amount that is the size of your
+RAM on your machine. Leaving it at the default value will cause Virality Engine
+to eventually fail with a heap exhaustion error (often while loading
+textures).***
+
 To start an example that is already present in Virality Engine, issue the
 following in your REPL:
 
