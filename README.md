@@ -86,7 +86,7 @@ or SLY configuration) is started with the command line argument
 `--dynamic-space-size 24000` (24GB) or a memory amount that is the size of your
 RAM on your machine. Leaving it at the default value will cause Virality Engine
 to eventually fail with a heap exhaustion error (often while loading
-textures).***
+textures).**
 
 To start an example that is already present in Virality Engine, issue the
 following in your REPL:
