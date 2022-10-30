@@ -2,10 +2,11 @@
 
 A component based game engine written in Common Lisp for modern OpenGL (4.3+).
 
-NOTE: This engine is still in construction, however, it is almost ready for
-game making. The developers (psilord and mfiano) hang out in #bufferswap on
-freenode, and sometimes #lispgames on freenode. Stop by if you want to help
-or see how to run what we currently have, or just to say hello.
+NOTE: This engine is still in construction--but is far enough that certain
+simple classes of games can be made with it.  The developers (`psilord`,
+`mfiano`, `|3b|`, and `jgl`) hang out in #bufferswap on freenode, and sometimes
+#lispgames on freenode. Stop by if you want to help or see how to run what we
+currently have, or just to say hello.
 
 ## Overview
 
@@ -30,7 +31,7 @@ This system is not yet available to be installed automatically with Quicklisp.
 
 NOTE: cl-opengl has a feature in it to work around an INTEL GPU bug that causes
 a severe performance problem in most cases where people aren't using the buggy
-intel driver. While you aren't required to perform the actions in this note if
+intel driver. While you aren't required to perform the actions in this note, if
 you do the performance of V will be much better. V disables this feature in V's
 asd file.  However, if there are cl-opengl fasls which have been pre-cached,
 they need to be recompiled. So, first recursively remove ~/.cache/common-lisp/*
@@ -44,73 +45,29 @@ change this behavior in a future commit, but until then this is a fix for a
 performance problem.
 
 To manually install such that Quicklisp will be able to find ViralityEngine,
-
 clone this repository into your local-projects directory.
 
-For now, being on the `develop` branch will provide a better experience
-and newer features. However, it often uses changes to certain dependencies
-that are often newer than what Quicklisp provides.
+``` cd ~/quicklisp/local-projects git clone
+https://github.com/bufferswap/ViralityEngine cd ViralityEngine git checkout
+develop ```
 
-If you've run ViralityEngine before, and haven't in a while, then
+For now, being on the `develop` branch will provide a better experience and
+newer features.
 
-cd ~quicklisp/local-projects
-
-and as long as you aren't using these specifically for yourself:
-
-rm -rf origin doubly-linked-list golden-utils umbra shadow origin
-
-This next shell script is recommended to help with the depdenencies of
-ViralityEngine.
-
-Put this bash script into ~/quicklisp/local-projects, (or wherever your
-quicklisp local-projects directory is) you might call it
-'update-virality-depdendencies.sh' or something similar. When updating
-Virality from github it is recommended to also run this script to get current
-changes Virality may need.
-
+If you've cloned and run ViralityEngine before Oct 29th, 2022 then as long as
+you aren't using these specifically for yourself, remove these directories:
 
 ```
-#! /bin/bash
-
-
-echo "Updating origin..."
-if [ ! -d ./origin ]; then
-	git clone https://github.com/mfiano/origin.git
-fi
-(cd origin && git pull)
-
-echo "Updating shadow..."
-if [ ! -d ./shadow ]; then
-	git clone https://github.com/mfiano/shadow.git
-fi
-(cd shadow && git pull)
-
-echo "Updating umbra..."
-if [ ! -d ./umbra ]; then
-	git clone https://github.com/mfiano/umbra.git
-fi
-(cd umbra && git pull)
-
-echo "Updating golden-utils..."
-if [ ! -d ./golden-utils ]; then
-	git clone https://github.com/mfiano/golden-utils.git
-fi
-(cd golden-utils && git pull)
-
-echo "Updating algae..."
-if [ ! -d ./algae ]; then
-	git clone https://github.com/mfiano/algae.git
-fi
-(cd algae && git pull)
+cd ~/quicklisp/local-projects
+rm -rf origin doubly-linked-list golden-utils mfiano-utils umbra shadow origin algae
 ```
 
-Then chmod 700 the script and run it while in the ~quicklisp/local-projects
-directory.
-
-Every now and then, when pulling ViralityEngine, ensure to re-run that
-shell script to get any matching code changes. It is expected that those
-dependencies will work generally only with ViralityEngine on the 'develop'
-branch.
+After Oct 29th, 2022, Virality subsumed a collection of what used to be
+seperate (but highly related) libraries into itself to decrease maintenance
+costs and make it easier to evolve the game engine. This makes Virality a
+single checkout codebase that just uses common (or slowly changing) libraries
+in Quicklisp. It also makes it much easier for other users of the engine to
+just use it for a project.
 
 ## Usage
 
@@ -118,16 +75,23 @@ To start an example that is already present in Virality Engine, issue the
 following in your REPL:
 
 ```lisp
+;; Done once to ensure Quicklisp finds all Virality asd files.
+(ql:register-local-projects)
+
 (ql:quickload :virality-examples)
 
 (in-package :virality-examples)
+
+
+;; ESC will exit the engine when running these examples....
+
 
 ;; To show the GLTF damaged helmet (mouse will drag and move it around.)
 (virality:start
        :project :virality-examples
        :scene '(("damaged-helmet-turn-table" examples)))
 
-;; To run the Protect the Planets game (requires a gamepad to play)
+;; To run the Protect the Planets game (requires an xbox-like gamepad to play)
 ;; Directions:
 ;; Press Start to play.
 ;; Use d-pad to move around 8-way.
@@ -150,6 +114,11 @@ following in your REPL:
 ;; To run a menu selector for all examples including those above:
 ;; And ensure to pay attention to the keyboard interface to move in and
 ;; out of the examples.
+;;
+;; NOTE: Due to an unfinished feature the sprite example and the
+;; protect-the-planets example cannot be run in the same session. You'll have
+;; to exit Virality and restart it if you ran either the protect-the-planets
+;; example, or the sprite example, and would like to run the other one.
 (virality:start
        :project :virality-examples
        :scene '(("example-selector" examples)))
@@ -157,15 +126,19 @@ following in your REPL:
 ;; ESC exits
 ```
 
-There are many more examples.
+The example selector shows many examples.
 
 ## License
 
-Copyright © 2017-2020
+Copyright © 2017-2022
+
+* Bart Botta <00003b at gmail.com>
 
 * Michael Fiano <mail@mfiano.net>
 
 * Peter Keller <psilord@cs.wisc.edu>
+
+* Jack Ladwig <ladwi035@gmail.com>
 
 Licensed under the MIT License.
 
