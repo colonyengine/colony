@@ -162,7 +162,7 @@
 (v:define-component ball ()
   ((%velocity :accessor velocity
               :initarg :velocity
-              :initform (v3:vec 0))
+              :initform (v3:zero))
    (%contacts :accessor contacts
               :initarg :contacts
               :initform nil)))
@@ -189,7 +189,7 @@
   (comp:cuboid :visualize t
                :referent (v:ref :self :component 'brick)
                :on-layer :enemy
-               :center (v3:vec)
+               :center (v3:zero)
                :minx -1f0
                :maxx 1f0
                :miny -.5f0
@@ -203,7 +203,7 @@
   (comp:sphere :visualize t
                :referent (v:ref :self :component 'ball)
                :on-layer :player
-               :center (v3:vec)
+               :center (v3:zero)
                :radius .2f0))
 
 
@@ -214,7 +214,7 @@
   (("brick-1" :copy "/brick")
    (comp:transform :translate (v3:vec -2f0 0f0 0f0)))
   (("brick-2" :copy "/brick")
-   (comp:transform :translate (v3:vec)))
+   (comp:transform :translate (v3:zero)))
   (("brick-3" :copy "/brick")
    (comp:transform :translate (v3:vec 2f0 0f0 0f0)))
   (("brick-4" :copy "/brick")

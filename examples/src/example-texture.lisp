@@ -137,21 +137,21 @@
    :profiles (x:u-mvp)
    :uniforms
    ((:tex.sampler1 '1d-gradient)
-    (:mix-color (v4:vec 1)))))
+    (:mix-color (v4:ones)))))
 
 (v:define-material 2d-wood
   (:shader shd:unlit-texture
    :profiles (x:u-mvp)
    :uniforms
    ((:tex.sampler1 '2d-wood)
-    (:mix-color (v4:vec 1)))))
+    (:mix-color (v4:ones)))))
 
 (v:define-material 3d
   (:shader ex/shd:unlit-texture-3d
    :profiles (x:u-mvp)
    :uniforms
    ((:tex.sampler1 '3d)
-    (:mix-color (v4:vec 1))
+    (:mix-color (v4:ones))
     (:uv-z (lambda (context material)
              (declare (ignore material))
              ;; make sin in the range of 0 to 1 for texture coord.
@@ -162,7 +162,7 @@
    :profiles (x:u-mvpt)
    :uniforms
    ((:tex.sampler1 '1d-array)
-    (:mix-color (v4:vec 1))
+    (:mix-color (v4:ones))
     (:num-layers 4))))
 
 (v:define-material 2d-array
@@ -170,7 +170,7 @@
    :profiles (x:u-mvpt)
    :uniforms
    ((:tex.sampler1 '2d-array)
-    (:mix-color (v4:vec 1))
+    (:mix-color (v4:ones))
     (:uv-z (lambda (context material)
              (declare (ignore material))
              ;; make sin in the range of 0 to 1 for texture coord.
@@ -183,22 +183,22 @@
    :uniforms
    ;; any old 2d texture here will do since we overwrite it with noise.
    ((:tex.sampler1 '2d-wood)
-    (:tex.channel0 (v2:vec))
-    (:mix-color (v4:vec 1)))))
+    (:tex.channel0 (v2:zero))
+    (:mix-color (v4:ones)))))
 
 (v:define-material cubemap
   (:shader ex/shd:unlit-texture-cube-map
    :profiles (x:u-mvp)
    :uniforms
    ((:tex.sampler1 'cubemap)
-    (:mix-color (v4:vec 1)))))
+    (:mix-color (v4:ones)))))
 
 (v:define-material cubemaparray
   (:shader ex/shd:unlit-texture-cube-map-array
    :profiles (x:u-mvpt)
    :uniforms
    ((:tex.sampler1 'cubemaparray)
-    (:mix-color (v4:vec 1))
+    (:mix-color (v4:ones))
     (:cube-layer
      (lambda (context material)
        (declare (ignore material))
@@ -214,7 +214,7 @@
    (%material-retrieved-p :reader material-retrieved-p
                           :initform nil)
    (%channel0 :reader channel0
-              :initform (v2:vec))))
+              :initform (v2:zero))))
 
 (defmethod v:on-component-initialize ((self shader-sweep))
   (with-slots (%renderer) self
@@ -278,7 +278,7 @@
                 :slave (v:ref :self :component 'comp:mesh)))
   (("cube-map-array" :copy "/mesh")
    (comp:transform :translate (v3:vec 3f0 -1f0 0f0)
-                   :rotate/velocity (v3:velocity (v3:vec 1) o:pi/4))
+                   :rotate/velocity (v3:velocity (v3:ones) o:pi/4))
    (comp:mesh :asset '(v::meshes v::primitives)
               :name "cube")
    (comp:render :material 'cubemaparray

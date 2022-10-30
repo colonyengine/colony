@@ -223,9 +223,9 @@
   ;; default camera will get activated and deactivated to make room for the one
   ;; in the example.
   (("camera" :link "/cameras/ortho")
-   (comp:transform :translate (v3:vec 0 0 50)))
+   (comp:transform :translate (v3:vec 0f0 0f0 50f0)))
 
   ;; The text display will show all the time (unless I add features to
   ;; turn it on and off.
   (("options" :link "/selector-text-display")
-   (comp:transform :scale (v3:vec .5))))
+   (comp:transform :scale (v3:uniform .5f0))))

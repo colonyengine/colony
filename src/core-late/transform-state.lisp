@@ -4,27 +4,27 @@
 
 (defun make-translate-state ()
   (make-transform-state
-   :previous (v3:vec)
-   :current (v3:vec)
-   :incremental (v3:vec)
-   :incremental-delta (v3:vec)
-   :interpolated (v3:vec)))
+   :previous (v3:zero)
+   :current (v3:zero)
+   :incremental (v3:zero)
+   :incremental-delta (v3:zero)
+   :interpolated (v3:zero)))
 
 (defun make-rotate-state ()
   (make-transform-state
-   :previous (q:quat 1)
-   :current (q:quat 1)
-   :incremental (v3:vec)
-   :incremental-delta (q:quat 1)
-   :interpolated (q:quat 1)))
+   :previous (q:id)
+   :current (q:id)
+   :incremental (v3:zero)
+   :incremental-delta (q:id)
+   :interpolated (q:id)))
 
 (defun make-scale-state ()
   (make-transform-state
-   :previous (v3:vec 1)
-   :current (v3:vec 1)
-   :incremental (v3:vec)
-   :incremental-delta (v3:vec)
-   :interpolated (v3:vec)))
+   :previous (v3:ones)
+   :current (v3:ones)
+   :incremental (v3:zero)
+   :incremental-delta (v3:zero)
+   :interpolated (v3:zero)))
 
 (defun initialize-translation (state &optional initial velocity)
   (when initial
@@ -44,9 +44,10 @@
 
 (defun initialize-scale (state &optional initial velocity)
   (when initial
-    (setf (transform-state-current state) (etypecase initial
-                                            (v3:vec initial)
-                                            (real (v3:vec initial)))
+    (setf (transform-state-current state)
+	  (etypecase initial
+	    (v3:vec initial)
+	    (real (v3:uniform initial)))
           (transform-state-previous state)
           (v3:copy (transform-state-current state))))
   (when velocity
