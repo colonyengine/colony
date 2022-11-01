@@ -4,7 +4,7 @@ A component based game engine written in Common Lisp for modern OpenGL (4.3+).
 
 NOTE: This engine is still in construction--but is far enough that certain
 simple classes of games can be made with it.  The developers (`psilord`,
-`mfiano`, `|3b|`, and `jgl`) hang out in #bufferswap on irc.libera.char, and
+`mfiano`, `|3b|`, and `jgl`) hang out in #bufferswap on irc.libera.chat, and
 sometimes #lispgames on irc.libera.chat. Stop by if you want to help or see how
 to run what we currently have, or just to say hello.
 
