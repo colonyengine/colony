@@ -76,7 +76,7 @@
    (:module "core-early"
     :components
     ((:file "general")
-     (:file "metadata")
+     (:file "metadata") ;; keep going vutil refactor
      (:file "config")
      (:file "hardware")
      (:file "thread-pool")
