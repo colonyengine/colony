@@ -110,9 +110,9 @@ NOTE: These are already in the resource-cache."
     ;; Then copy over the attributes, we support SIMPLE values such as: string,
     ;; array, list, vector, and symbol.
     (u:do-hash (key value (attributes texdesc))
-      (setf (u:href (attributes new-texdesc) key) (v::copy value)))
+      (setf (u:href (attributes new-texdesc) key) (u:copy-sequence-tree value)))
     (u:do-hash (key value (applied-attributes texdesc))
-      (setf (u:href (applied-attributes new-texdesc) key) (v::copy value)))
+      (setf (u:href (applied-attributes new-texdesc) key) (u:copy-sequence-tree value)))
     new-texdesc))
 
 ;; The texture descriptor as read from the define-texture DSL form. This records

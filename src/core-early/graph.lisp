@@ -73,10 +73,10 @@ return them as a list."
   (cond
     ((and (consp syntax-symbol)
           (consp form))
-     (eql* (first syntax-symbol) (first form)))
+     (u:symbol-name= (first syntax-symbol) (first form)))
     ((and (symbolp syntax-symbol)
           (symbolp form))
-     (eql* syntax-symbol form))
+     (u:symbol-name= syntax-symbol form))
     ;; maybe other cases needed?
     (t nil)))
 
@@ -115,7 +115,7 @@ null, and contains hyper edges, return values: list of hyper-edge pairs,
 :hyperedges"
   (let* ((canonical-form (canonicalize-dependency-form category form))
          (x (split-sequence:split-sequence
-             '-> canonical-form :test #'eql*))
+             '-> canonical-form :test #'u:symbol-name=))
          ;; cut into groups of two with rolling window
          (connections
            (loop :for (k j . nil) :in (maplist #'identity x)

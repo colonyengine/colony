@@ -94,10 +94,12 @@ of them corresponding in order to the input."
                context :texture (tex::canonicalize-texture-name sv)))
             semantic-value)))))
 
+;; TODO: Check the performance of this returned function, especially related to
+;; the use of COPY-SEQUENCE-TREE.
 (defun gen-default-copy/sem->com ()
   (lambda (semantic-value context mat)
     (declare (ignore context mat))
-    (copy semantic-value)))
+    (u:copy-sequence-tree semantic-value)))
 
 (defun identity/for-material-custom-functions (semval context material)
   "This is effectively IDENTITY in that it returns SEMVAL unchanged, but

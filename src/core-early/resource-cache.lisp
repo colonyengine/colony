@@ -6,18 +6,18 @@
 (defmethod resource-cache-peek (context (entry-type symbol) &rest keys)
   (with-slots (%resource-cache) (core context)
     ;; NOTE: 'eq is for the resource-cache table ;; itself.
-    (ensure-nested-hash-table %resource-cache
-                              (list* 'eq (resource-cache-layout entry-type))
-                              (list* entry-type keys))
+    (u:ensure-nested-hash-table %resource-cache
+                                (list* 'eq (resource-cache-layout entry-type))
+                                (list* entry-type keys))
     (apply #'u:href %resource-cache (list* entry-type keys))))
 
 ;; This might call resource-cache-construct if needed.
 (defmethod resource-cache-lookup (context (entry-type symbol) &rest keys)
   (with-slots (%resource-cache) (core context)
     ;; NOTE: 'eq is for the resource-cache table itself.
-    (ensure-nested-hash-table %resource-cache
-                              (list* 'eq (resource-cache-layout entry-type))
-                              (list* entry-type keys))
+    (u:ensure-nested-hash-table %resource-cache
+                                (list* 'eq (resource-cache-layout entry-type))
+                                (list* entry-type keys))
     (multiple-value-bind (value found-p)
         (apply #'u:href %resource-cache (list* entry-type keys))
       (unless found-p

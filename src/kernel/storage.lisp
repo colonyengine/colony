@@ -14,7 +14,7 @@
                  (package-name (symbol-package name))
                  "[no package: component does not exist!]")))
     (assert (= (length tests) (length keys)))
-    (ensure-nested-hash-table (storage context) new-tests new-keys)
+    (u:ensure-nested-hash-table (storage context) new-tests new-keys)
     (apply #'u:href (storage context) new-keys)))
 
 (defun (setf %storage) (new-value context component-name namespace &rest keys)
@@ -22,7 +22,7 @@
          (tests (cdr (storage-metadata name namespace)))
          (new-keys (list* name namespace keys)))
     (assert (= (length tests) (length keys)))
-    (ensure-nested-hash-table (storage context) (list* 'eq 'eql tests) new-keys)
+    (u:ensure-nested-hash-table (storage context) (list* 'eq 'eql tests) new-keys)
     (apply #'(setf u:href) new-value (storage context) new-keys)))
 
 (defun %generate-storage-get/set (context bindings body)

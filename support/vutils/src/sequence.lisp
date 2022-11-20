@@ -47,3 +47,17 @@ all sequence types."
   (if test-not
       (apply #'remove item sequence :test-not (complement test-not) args)
       (apply #'remove item sequence :test (complement test) args)))
+
+(defun copy-sequence-tree (object)
+  "Perform a pseudo-deep copy of `OBJECT`. If `OBJECT` is a value type such as a
+number or symbol, returns that object as-is. If `OBJECT` is a sequence such as a
+list, string, or array, recursively copies the elements of that sequence,
+returning a new sequence without shared structure. Note, that this does not
+perform a full deep copy, as that is difficult to generalize and we do not need
+that functionality. This will only recurse until a non-sequence is hit. This
+means a sequence that has an instance of a structure-object, standard-object,
+hash-table, or other non-sequence will be a terminal condition for that
+recursion, and be copied by reference."
+  (if (typep object 'sequence)
+      (map-into (copy-seq object) #'copy-sequence-tree object)
+      object))

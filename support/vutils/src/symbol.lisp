@@ -25,7 +25,14 @@
   (values
    (alexandria:make-keyword
     (etypecase object
-      ((or string symbol)
+      ((or character string symbol)
        object)
       (number
        (format nil "~a" object))))))
+
+(defun symbol-name= (x y)
+  "Return T if X and Y are symbols with the same name."
+  (cond
+    ((eql x y) t)
+    ((and (symbolp x) (symbolp y))
+     (string= (symbol-name x) (symbol-name y)))))

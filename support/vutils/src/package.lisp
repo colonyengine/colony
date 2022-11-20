@@ -63,7 +63,8 @@
   (:export
    #:collect-external-symbols
    #:collect-symbols
-   #:make-keyword)
+   #:make-keyword
+   #:symbol-name=)
   ;; Numbers
   (:export
    #:count-digits)
@@ -94,6 +95,7 @@
    #:make-ub32-array)
   ;; Strings
   (:export
+   #:split-string
    #:string->keyword
    #:string-ends-with-p
    #:string-explode
@@ -102,6 +104,7 @@
    #:string-trim-whitespace)
   ;; Sequences
   (:export
+   #:copy-sequence-tree
    #:do-seq
    #:enumerate
    #:find-all
@@ -159,6 +162,10 @@
    #:hash->alist
    #:hash->plist
    #:href)
+  ;; Hash tables nested
+  (:export
+   #:ensure-nested-hash-table
+   #:make-nested-dict)
   ;; Filesystem
   (:export
    #:file->string
@@ -176,6 +183,12 @@
    #:degrees->radians
    #:map-domain
    #:radians->degrees)
+  ;; OS
+  (:export
+   #:parse-argv0)
+  ;; Random
+  (:export
+   #:initialize-rng)
   ;; Misc
   (:export
    #:doc

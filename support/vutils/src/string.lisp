@@ -29,3 +29,10 @@
 (defun string->keyword (string)
   "Convert `STRING` to a keyword symbol."
   (alexandria:format-symbol :keyword "~@:(~a~)" string))
+
+(defun split-string (string delimiter)
+  "Split `STRING` into a list of two parts; everything before the first
+`DELIMITER` character, and everything after it."
+  (let ((pos (position delimiter string)))
+    (list (subseq string 0 pos)
+          (subseq string (1+ pos)))))

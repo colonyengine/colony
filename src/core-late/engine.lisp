@@ -7,7 +7,7 @@
 (defun initialize (core project scene-name)
   (load-config project)
   (setup-repl)
-  (initialize-rng)
+  (u:initialize-rng)
   (prepare-gamepads)
   (make-display core)
   (make-input-data core)
