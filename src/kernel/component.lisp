@@ -6,7 +6,6 @@
 ;; NOTE: This is a toplevel form for this class!
 (clear-annotations 'component)
 
-;; TODO: Move to component.lisp
 (defmethod register-kernel-id ((kernel component))
   (u:when-let ((table (components-by-id (tables (core kernel)))))
     (register-kernel-id-in-table kernel table)))

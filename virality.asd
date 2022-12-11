@@ -76,9 +76,9 @@
    (:module "core-early"
     :components
     ((:file "general")
-     (:file "metadata") ;; keep going vutil refactor
+     (:file "metadata")
      (:file "config")
-     (:file "hardware")
+     (:file "hardware")    ;; Put into new GPU abstraction support lib.
      (:file "thread-pool")
      (:file "live-coding")
      (:file "debug")
@@ -87,7 +87,7 @@
      (:file "deployment")
      (:file "asset")
      (:file "graph")
-     (:file "flow")
+     (:file "flow") ;; maybe lift binding-pattern if used elsewhere.
      (:file "protocol")
      (:file "resource-cache")
      (:file "clock")
@@ -109,7 +109,7 @@
      (:file "component-mop")
      (:file "component")
      (:file "storage")))
-   (:module "input"
+   (:module "input"       ;;;; KEEP GOING for vutils refactor.
     :components
     ((:file "data")
      (:file "keyboard")

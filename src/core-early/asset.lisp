@@ -86,6 +86,9 @@
 
 ;;; implementation
 
+;;; TODO: The below code feels really wrong and has a fundamental flaw. It needs
+;;; inspection wrt to live coding vs deployed binary contexts.
+
 (defun find-asset (context type key)
   (u:href (assets (core context)) type key))
 

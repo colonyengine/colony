@@ -308,6 +308,9 @@
           ;; We need the ACTUAL slot name, so the % prefixed one.
           :collect `(,name ,anno)))
 
+;; TODO: This is sort of a scary location to put DEFINE-COMPONENT. Can we break
+;; up this component and MOP code to not be so scary? Or we could at least move
+;; DEFINE-COMPONENT into kernel/component.lisp. :)
 
 (defmacro define-component (name super-classes &body body)
   (destructuring-bind (slots &optional storage-metadata) body

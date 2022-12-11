@@ -2,6 +2,9 @@
 
 ;;;; Implementation of datatype KERNEL
 
+;;;; A KERNEL is the base of an ACTOR or COMPONENT type. It it used for bookeeping
+;;;; those objects, of which there may be MANY in a game.
+
 ;; NOTE: This ensures that all kernels have a core so we don't have to go
 ;; through the context to get it all over the codebase.
 (defmethod initialize-instance :after ((instance kernel) &key)
@@ -15,12 +18,11 @@
 (defun register-kernel-uuid (kernel)
   (u:if-let ((table (kernels-by-uuid (tables (core kernel))))
              (uuid (uuid kernel)))
-    (symbol-macrolet ((found (u:href table uuid)))
-      (u:if-found (found (u:href table uuid))
-        (error "A UUID collision occured between the following ~
+    (u:if-found (found (u:href table uuid))
+      (error "A UUID collision occured between the following ~
                            kernels:~%~s~%~s."
-               found kernel)
-        (setf (u:href table uuid) kernel)))
+             found kernel)
+      (setf (u:href table uuid) kernel))
     (error "Kernel ~s has no UUID. This is a bug and should be reported."
            kernel)))
 

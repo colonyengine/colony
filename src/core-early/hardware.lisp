@@ -9,6 +9,10 @@
 (global-vars:define-global-var =max-texture-size= 0)
 (global-vars:define-global-var =max-ssbo-bindings= 0)
 
+;;;; TODO: CONSTRUT NEW GPU HARDWARE ABSTRACTION UTIL SYSTEM AND PUT MOST OF
+;;;; THIS THERE.
+
+
 (defun get-gpu-parameter (name)
   (or (handler-case (gl:get* name)
         (error (e)
@@ -45,6 +49,9 @@
 
 (defun get-gpu/max-ssbo-bindings ()
   (get-gpu-parameter :max-shader-storage-buffer-bindings))
+
+
+;;;; TODO: This part stays in the engine code cause it uses the abstraction.
 
 (defun load-hardware-info ()
   (setf =cpu= (machine-version)
