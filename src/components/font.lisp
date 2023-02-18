@@ -38,7 +38,7 @@
           (path (v::resolve-path %asset)))
       (setf %spec (v:with-asset-cache context :font path
                     (with-open-file (in path)
-                      (3b-bmfont-json:read-bmfont-json in)))))))
+                      (font:read-bmfont in)))))))
 
 (defun resolve-font-text (font)
   (with-slots (%text) font
