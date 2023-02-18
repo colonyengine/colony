@@ -114,7 +114,6 @@
   (:export
    #:combinations/repetition
    #:interleave
-   #:prependf
    #:tree-leaves
    #:zip)
   ;; Association lists

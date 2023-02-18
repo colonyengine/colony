@@ -31,6 +31,3 @@ From Let Over Lambda by Doug Hoyte."
         (if (funcall test tree)
             (funcall result tree)
             tree))))
-
-(defmacro prependf (place &rest rest)
-  `(setf ,place (list* ,@rest ,place)))
