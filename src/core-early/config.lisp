@@ -10,8 +10,25 @@
       (error "~s is not a valid config option. Valid options:~%~{~s~%~}"
              x (u:hash-keys =meta/config/default=)))))
 
+(defun find-config (project-name)
+  (when project-name
+    (return-from find-config
+      (u:href =meta/config/project= project-name)))
+
+  (let ((results nil))
+    (u:do-hash-values (options =meta/config/project=)
+      (when (u:href options :default)
+        (push options results)))
+    (cond
+      ((> (length results) 1)
+       (error "There were two or more configs with :default t in them, there can be only one. The offending configs are: ~A" results))
+      ((= (length results) 1)
+       (return-from find-config (car results)))
+      (t
+       (error "Cannot find a default config because no config has a :default t!")))))
+
 (defun load-config (project-name &rest args)
-  (u:do-hash (k v (u:href =meta/config/project= project-name))
+  (u:do-hash (k v (find-config project-name))
     (let ((global (get-config-option-name k)))
       (setf (symbol-value global) v)))
   (u:do-plist (k v args)
@@ -27,13 +44,18 @@
                      :for name = (get-config-option-name k)
                      :collect `(global-vars:define-global-parameter ,name ,v)))
            `((validate-config-options ',body)
-             (setf (u:href =meta/config/project= ,project-name)
+             (when (keywordp ',project-name)
+               (error
+                "~S is not a valid config name. Keyword names are reserved!"
+                ',project-name))
+             (setf (u:href =meta/config/project= ',project-name)
                    (u:hash-merge =meta/config/default= (u:dict ,@body)))))))
 
 (define-config :virality ()
+  :default nil
   :allow-screensaver nil
   :anti-alias-level 4
-  :delta 1/30
+  :delta (float 1/30 1f0)
   :debug-interval 5
   :initial-scene nil
   :log-level :debug
