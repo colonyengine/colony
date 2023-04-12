@@ -26,6 +26,7 @@
    #:unlit-color-decal
    #:unlit-texture
    #:unlit-texture-decal
+   #:unlit-texture-invert
    #:unlit/vert
    #:unlit/vert-nil
    #:unlit/vert-only-uv1
@@ -47,6 +48,7 @@
    #:unlit-color-decal
    #:unlit-texture
    #:unlit-texture-decal
+   #:unlit-texture-invert
    #:unlit-texture-decal-bright)
   ;; material profiles
   (:export

@@ -14,6 +14,12 @@
    :uniforms ((:tex.sampler1 'x:debug-texture)
               (:mix-color (v4:ones)))))
 
+(v:define-material unlit-texture-invert
+  (:shader shd:unlit-texture-invert
+   :profiles (u-mvp)
+   :uniforms ((:tex.sampler1 'x:debug-texture)
+              (:mix-color (v4:ones)))))
+
 (v:define-material unlit-texture-decal
   (:shader shd:unlit-texture-decal
    :profiles (u-mvp)
@@ -72,4 +78,4 @@
   (:shader shd:matcap
    :profiles (u-mvp)
    :uniforms ((:sampler 'x:matcap/basic-1)
-	      (:normal-matrix (m3:id)))))
+              (:normal-matrix (m3:id)))))

@@ -49,6 +49,19 @@
   (let ((tex-color (texture (sampler1 tex) uv1)))
     (* tex-color mix-color)))
 
+(defun unlit-texture-invert/frag ((color :vec4)
+                                  (uv1 :vec2)
+                                  &uniforms
+                                  (tex texture-struct)
+                                  (mix-color :vec4))
+  (let* ((tex-color (texture (sampler1 tex) uv1))
+         (tex-color-invert (vec4 (- (vec3 1 1 1)
+                                    (vec3 (.r tex-color)
+                                          (.g tex-color)
+                                          (.b tex-color)))
+                                 (.a tex-color))))
+    (* tex-color-invert mix-color)))
+
 (defun make-fragment-filter ((filter (function (:vec4) :bool)))
   (lambda ((color :vec4))
     (if (funcall filter color)
@@ -86,6 +99,10 @@
 (define-shader unlit-texture ()
   (:vertex (unlit/vert mesh-attrs))
   (:fragment (unlit-texture/frag :vec4 :vec2)))
+
+(define-shader unlit-texture-invert ()
+  (:vertex (unlit/vert mesh-attrs))
+  (:fragment (unlit-texture-invert/frag :vec4 :vec2)))
 
 (define-shader unlit-texture-decal ()
   (:vertex (unlit/vert mesh-attrs))
