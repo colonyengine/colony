@@ -46,9 +46,9 @@
           (when (on-button-enter context :key :escape)
             (stop core)))))))
 
-(defun start (&key project scene)
-  (let ((core (make-core project)))
-    (unwind-protect (initialize core project scene)
+(defun start (&key config scene)
+  (let ((core (make-core config)))
+    (unwind-protect (initialize core config scene)
       (deinitialize core))))
 
 (defun stop (core)

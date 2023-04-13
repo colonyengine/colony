@@ -106,7 +106,7 @@ following in your REPL:
 
 ;; To show the GLTF damaged helmet (mouse will drag and move it around.)
 (virality:start
-       :project :virality-examples
+       :config :virality-examples
        :scene '(("damaged-helmet-turn-table" examples)))
 
 ;; To run the Protect the Planets game (requires an xbox-like gamepad to play)
@@ -118,7 +118,7 @@ following in your REPL:
 ;; Hold A (or whatever mapped to A) button to fire.
 ;; Esc on keyboard quits.
 (virality:start
-       :project :virality-examples
+       :config :virality-examples
        :scene '(("protect-the-planets" ptp)))
 
 ;; To run some interesting art that mfiano
@@ -126,7 +126,7 @@ following in your REPL:
 ;;
 ;; NOTE: Use mouse (drag LMB) to look around!
 (virality:start
-       :project :virality-examples
+       :config :virality-examples
        :scene '(("art6" examples)))
 
 ;; To run a menu selector for all examples including those above:
@@ -139,10 +139,17 @@ following in your REPL:
 ;; protect-the-planets example, or the sprite example, and would like to run
 ;; the other one.
 (virality:start
-       :project :virality-examples
+       :config :virality-examples
        :scene '(("example-selector" examples)))
 
 ;; ESC exits
+
+;; A project may have multiple configurations when it executes, such as
+;; different resolutions, physics update speeds, or different prefabs in the
+;; initial scene, etc, etc.  To find and start the default configuration for a
+;; project, simply:
+(virality:start)
+
 ```
 
 The example selector shows many examples.

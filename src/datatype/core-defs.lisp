@@ -35,8 +35,8 @@
 ;; The main structure holding the information for a single executing game
 ;; instance.
 (defclass core ()
-  ((%project :reader project
-             :initarg :project)
+  ((%config :reader config
+             :initarg :config)
    (%assets :reader assets
             :initform (u:dict #'eq))
    (%running-p :accessor running-p

@@ -38,9 +38,9 @@ structures in CORE."
                   :come-from-state-name 'ef-make-scene-tree)
     (setf (slot-value core '%scene-tree) actor)))
 
-(defun make-core (project)
+(defun make-core (config)
   (let ((core (make-instance 'core
-                             :project project
+                             :config config
                              :tables (make-instance 'bookkeeping-tables))))
     (setf *core-debug* core)
     (make-context core)

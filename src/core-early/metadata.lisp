@@ -12,11 +12,11 @@
 (global-vars:define-global-var =meta/call-flows= (u:dict #'eq))
 
 ;; Configuration options, stored by `DEFINE-CONFIG`. We have two tables, one for
-;; engine defaults, and one for per project overlays. The per-project
+;; engine defaults, and one for per config overlays. The per-config
 ;; configurations are the result of a left-to-right merge of the defaults and
 ;; the overlays.
 (global-vars:define-global-var =meta/config/default= (u:dict #'eq))
-(global-vars:define-global-var =meta/config/project= (u:dict #'eq))
+(global-vars:define-global-var =meta/config/config= (u:dict #'eq))
 
 ;; Framebuffer specifications, stored by `DEFINE-FRAMEBUFFER`.
 (global-vars:define-global-var =meta/framebuffers= (u:dict #'eq))

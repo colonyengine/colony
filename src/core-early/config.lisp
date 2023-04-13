@@ -10,13 +10,13 @@
       (error "~s is not a valid config option. Valid options:~%~{~s~%~}"
              x (u:hash-keys =meta/config/default=)))))
 
-(defun find-config (project-name)
-  (when project-name
+(defun find-config (config-name)
+  (when config-name
     (return-from find-config
-      (u:href =meta/config/project= project-name)))
+      (u:href =meta/config/config= config-name)))
 
   (let ((results nil))
-    (u:do-hash-values (options =meta/config/project=)
+    (u:do-hash-values (options =meta/config/config=)
       (when (u:href options :default)
         (push options results)))
     (cond
@@ -27,30 +27,32 @@
       (t
        (error "Cannot find a default config because no config has a :default t!")))))
 
-(defun load-config (project-name &rest args)
-  (u:do-hash (k v (find-config project-name))
+(defun load-config (config-name &rest args)
+  (u:do-hash (k v (find-config config-name))
     (let ((global (get-config-option-name k)))
       (setf (symbol-value global) v)))
   (u:do-plist (k v args)
     (let ((global (get-config-option-name k)))
       (setf (symbol-value global) v))))
 
-(defmacro define-config (project-name options &body body)
+(defmacro define-config (config-name options &body body)
   (declare (ignore options))
   `(progn
-     ,@(if (eq project-name :virality)
+     ,@(if (eq config-name :virality)
            `((setf =meta/config/default= (u:dict ,@body))
              ,@(loop :for (k v) :on body :by #'cddr
                      :for name = (get-config-option-name k)
                      :collect `(global-vars:define-global-parameter ,name ,v)))
            `((validate-config-options ',body)
-             (when (keywordp ',project-name)
+             (when (keywordp ',config-name)
                (error
                 "~S is not a valid config name. Keyword names are reserved!"
-                ',project-name))
-             (setf (u:href =meta/config/project= ',project-name)
+                ',config-name))
+             (setf (u:href =meta/config/config= ',config-name)
                    (u:hash-merge =meta/config/default= (u:dict ,@body)))))))
 
+;; NOTE: All other define-config forms implicitly inherit their keys from this
+;; config.
 (define-config :virality ()
   :default nil
   :allow-screensaver nil

@@ -1,10 +1,11 @@
 (in-package #:virality-examples)
 
 (v:define-config :virality-examples ()
+  :default t
   :window-width 1920 ;; 1280
   :window-height 1080 ;; 720
   :delta (float 1/120 1f0)
-  :initial-scene '(("geometric-volumes" examples)))
+  :initial-scene '(("example-selector" examples)))
 
 (v:define-asset-pool metadata ()
   :path "data/metadata")
