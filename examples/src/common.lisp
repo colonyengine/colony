@@ -1,6 +1,6 @@
 (in-package #:virality-examples)
 
-(v:define-config :virality-examples ()
+(v:define-config virality-examples ()
   :default t
   :window-width 1920 ;; 1280
   :window-height 1080 ;; 720
