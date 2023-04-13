@@ -72,7 +72,8 @@
      (:file "display-defs")
      (:file "image-defs")
      (:file "gltf-defs")
-     (:file "material-defs")))
+     (:file "material-defs")
+     (:file "make-project-defs")))
    (:module "core-early"
     :components
     ((:file "general")
@@ -84,6 +85,7 @@
      (:file "debug")
      (:file "parser")
      (:file "uuid")
+     (:file "make-project")
      (:file "deployment")
      (:file "asset")
      (:file "graph")

@@ -160,6 +160,7 @@
    #:refresh-rate
    #:id
    #:make-actor
+   #:make-project
    #:screen-resolution
    #:spawn-actor
    #:start
