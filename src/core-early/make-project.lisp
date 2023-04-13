@@ -230,10 +230,11 @@ system that would be loaded or NIL if that's not possible."
 
 
     ;; FIRST: try quicklisp to see if it can find it.
-    (funcall register-local-projects-func)
-    (u:when-let ((where (funcall where-is-system-func system-name)))
-      (return-from perform-system-registration
-        (values msg-ql-load (verify-system full-path where) where)))
+    (when ql-package
+      (funcall register-local-projects-func)
+      (u:when-let ((where (funcall where-is-system-func system-name)))
+        (return-from perform-system-registration
+          (values msg-ql-load (verify-system full-path where) where))))
 
     ;; NEXT: Let's see if ASDF finds it
     (u:when-let ((where (asdf:system-source-directory system-name)))
