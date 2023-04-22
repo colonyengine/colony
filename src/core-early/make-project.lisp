@@ -175,9 +175,8 @@ of them and returns a representation string suitable for inclusion in the
                    raw-package-names))
          (package-string-names
            (mapcar (lambda (decorated-name)
-                     (if (car decorated-name)
-                         (format nil "~(~S~)" (cadr decorated-name))
-                         (format nil "~S" (cadr decorated-name))))
+                     (let ((fmt (if (car decorated-name) "~(~S~)" "~S")))
+                       (format nil fmt (cadr decorated-name))))
                    decorated-package-names)))
 
     (format nil "~A" package-string-names)))
