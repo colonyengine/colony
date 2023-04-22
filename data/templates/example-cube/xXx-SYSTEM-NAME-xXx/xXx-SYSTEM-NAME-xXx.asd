@@ -14,7 +14,7 @@
   :maintainer "xXx-MAINTAINER-xXx"
   :license "xXx-LICENSE-xXx"
   :version "xXx-VERSION-xXx"
-  :depends-on (#:virality)
+  :depends-on xXx-DEPENDS-ON-xXx
   :pathname "src"
   :serial t
   :components
