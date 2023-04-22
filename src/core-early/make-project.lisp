@@ -151,15 +151,11 @@ path on the filesystem."
                                         (apply-template str param)))
           (uiop:copy-file template-file target-file)))))
 
-
 (defun gen-depends-on (depends-on)
   "This function may take a single designation package name or symbol or a list
 of them and returns a representation string suitable for inclusion in the
 :depends-on line in an asd file."
-  (let* ((depends-on (cons "VIRALITY"
-                           (if (listp depends-on)
-                               depends-on
-                               (list depends-on))))
+  (let* ((depends-on (cons "VIRALITY" (u:ensure-list depends-on)))
          (raw-package-names
            (remove-duplicates
             (mapcar (lambda (x)
