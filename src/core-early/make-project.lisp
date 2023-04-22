@@ -198,10 +198,6 @@ system that would be loaded or NIL if that's not possible."
            (find-package "QUICKLISP"))
          (full-path
            (probe-file destination-path))
-         (register-local-projects-func
-           (find-symbol "REGISTER-LOCAL-PROJECTS" ql-package))
-         (where-is-system-func
-           (find-symbol "WHERE-IS-SYSTEM" ql-package))
          (sysname
            (format nil ":~A" system-name))
          (msg-ql-load
@@ -223,13 +219,16 @@ system that would be loaded or NIL if that's not possible."
               (format nil ";; or~%~A~%;;~%" msg-ql-load))
             (format nil ";; as appropriate to your environment."))))
 
-
     ;; FIRST: try quicklisp to see if it can find it.
     (when ql-package
-      (funcall register-local-projects-func)
-      (u:when-let ((where (funcall where-is-system-func system-name)))
-        (return-from perform-system-registration
-          (values msg-ql-load (verify-system full-path where) where))))
+      (let ((register-local-projects-func
+              (find-symbol "REGISTER-LOCAL-PROJECTS" ql-package))
+            (where-is-system-func
+              (find-symbol "WHERE-IS-SYSTEM" ql-package)))
+        (funcall register-local-projects-func)
+        (u:when-let ((where (funcall where-is-system-func system-name)))
+          (return-from perform-system-registration
+            (values msg-ql-load (verify-system full-path where) where)))))
 
     ;; NEXT: Let's see if ASDF finds it
     (u:when-let ((where (asdf:system-source-directory system-name)))
