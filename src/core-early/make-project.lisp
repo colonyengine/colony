@@ -245,11 +245,15 @@ system that would be loaded or NIL if that's not possible."
                        (copyright "Copyright (from-date - to-date), Your Name")
                        (depends-on nil) ;; a list of package names.
                        (description "Specify project description here.")
+                       ;; TODO add license keywords or just a string. This
+		       ;; would also be related to config file stuff as below.
                        (license "Specify license here.")
                        (maintainer "A Name <a.name@example.com>")
                        (version "0.1.0")
                        (template :base)
 
+                       ;; TODO Make a config file for the template and jam this
+                       ;; stuff in there.
                        (author-pattern "xXx-AUTHOR-xXx")
                        (copyright-pattern "xXx-COPYRIGHT-xXx")
                        (depends-on-pattern "xXx-DEPENDS-ON-xXx")
