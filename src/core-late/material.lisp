@@ -204,8 +204,10 @@
       ;; the composition sequence before the above.
       (push (transformer uniform-value)
             (semantic->computed uniform-value))
-      ;; 4. Execute the composition function sequence to produce the
-      ;; computed value.
+      ;; 4. Execute the composition function sequence to produce the computed
+      ;; value. NOTE: This will cause a texture to be looked up in the resource
+      ;; cache right here (which may bring it in from disk and put it on the
+      ;; GPU if that has already not been done).
       (execute-composition/semantic->computed uniform-value))
     (error "Material ~s uses unknown uniform ~s in shader ~s."
            (id material) uniform-name (shader material))))
