@@ -25,6 +25,10 @@
               (apply #'u:href %resource-cache (list* entry-type keys)) value))
       value)))
 
+(defmethod resource-cache-dispose (context entry-type removed-value)
+  (error "resource-cache-dispose: Cannot dispose unknown entry-type: ~A"
+         entry-type))
+
 ;; This might call resource-cache-dispose if needed.
 (defmethod resource-cache-remove (context (entry-type symbol) &rest keys)
   (with-slots (%resource-cache) (core context)
