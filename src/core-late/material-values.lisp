@@ -37,6 +37,13 @@
            :computed-value nil
            :binder (binder material-uniform-value))))
     ;; NOTE: Repair the nil computed-value!
+    ;;
+    ;; TODO: It is the case that the re-execution of this pipeline might not
+    ;; result in an identical computed-value from the original (depending on
+    ;; edge cases like gamedev supplied uniform value functions). This should
+    ;; be documented and possibly a new flag (that we must implement) specified
+    ;; in the define-material form if you want this pipeline to re-execute on
+    ;; deep copies.
     (execute-composition/semantic->computed copy-mat-value)
     copy-mat-value))
 
