@@ -816,42 +816,6 @@ multiplication of MAT * T."
   (declare (optimize speed))
   (invert! (id) mat))
 
-(u:fn-> look-at! (mat v3:vec v3:vec v3:vec) mat)
-(defun look-at! (out eye target up)
-  (declare (optimize speed))
-  (with-components ((o out))
-    (let* ((z (v3:- target eye))
-           (x (v3:cross z up))
-           (y (v3:cross x z)))
-      (declare (dynamic-extent x y z))
-      (v3:with-components ((x x) (y y) (z z))
-        (v3:normalize! x x)
-        (v3:normalize! y y)
-        (v3:normalize! z z)
-        (setf o00 xx
-              o01 xy
-              o02 xz
-              o03 (cl:- (v3:dot x eye))
-              o10 yx
-              o11 yy
-              o12 yz
-              o13 (cl:- (v3:dot y eye))
-              o20 (cl:- zx)
-              o21 (cl:- zy)
-              o22 (cl:- zz)
-              o23 (v3:dot z eye)
-              o30 0f0
-              o31 0f0
-              o32 0f0
-              o33 1f0))))
-  out)
-
-(u:fn-> look-at (v3:vec v3:vec v3:vec) mat)
-(declaim (inline look-at))
-(defun look-at (eye target up)
-  (declare (optimize speed))
-  (look-at! (id) eye target up))
-
 (u:fn-> ortho! (mat u:f32 u:f32 u:f32 u:f32 u:f32 u:f32) mat)
 (defun ortho! (out left right bottom top near far)
   (declare (optimize speed))

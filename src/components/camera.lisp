@@ -64,7 +64,7 @@
              (eye (m4:get-translation model))
              (target (v3:+ eye (v3:negate (m4:rotation-axis-to-vec3 model :z))))
              (up (m4:rotation-axis-to-vec3 model :y)))
-        (m4:look-at! %view eye target up)))))
+        (t3:look-at! %view eye target up)))))
 
 (defun find-active-camera (context)
   (dolist (camera (v::cameras (v::core context)))

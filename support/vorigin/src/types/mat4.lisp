@@ -99,8 +99,6 @@
    #:invert-orthogonal
    #:invert!
    #:invert
-   #:look-at!
-   #:look-at
    #:ortho!
    #:ortho
    #:perspective!

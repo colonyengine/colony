@@ -342,7 +342,7 @@
                     4f0 8f0 12f0 16f0))
       (eq nil))))
 
-(define-test m4/look-at
+(define-test t3/look-at
   (let ((o (m4:id))
         (r (m4:mat -0.7071068f0 0f0 0.7071068f0 0f0
                    0f0 1f0 0f0 0f0
@@ -353,23 +353,23 @@
                     -0.19245008f0 0.8229512f0 0.5345225f0 0f0
                     -0.19245008f0 -0.5657789f0 0.80178374f0 0f0
                     -2.3841858f-7 -9.536743f-7 -18.708286f0 1f0)))
-    (true (m4:= (m4:look-at! o
+    (true (m4:= (t3:look-at! o
                              (v3:vec 1f0 0f0 0f0)
                              (v3:vec 0f0 0f0 1f0)
                              (v3:vec 0f0 1f0 0f0))
               r))
     (true (m4:= o r))
-    (true (m4:= (m4:look-at (v3:vec 1f0 0f0 0f0)
+    (true (m4:= (t3:look-at (v3:vec 1f0 0f0 0f0)
                             (v3:vec 0f0 0f0 1f0)
                             (v3:vec 0f0 1f0 0f0))
               r))
-    (true (m4:= (m4:look-at! o2
+    (true (m4:= (t3:look-at! o2
                              (v3:vec 5f0 10f0 15f0)
                              (v3:vec 0f0 0f0 0f0)
                              (v3:vec 0f0 1f0 -1f0))
               r2))
     (true (m4:= o2 r2))
-    (true (m4:= (m4:look-at (v3:vec 5f0 10f0 15f0)
+    (true (m4:= (t3:look-at (v3:vec 5f0 10f0 15f0)
                             (v3:vec 0f0 0f0 0f0)
                             (v3:vec 0f0 1f0 -1f0))
               r2))))

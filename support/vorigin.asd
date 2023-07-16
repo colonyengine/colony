@@ -28,6 +28,7 @@
    (:file "types/dmat4")
    (:file "types/quat")
    (:file "types/dquat")
+   (:file "types/transform3d")
    (:file "operations/vec2")
    (:file "operations/vec3")
    (:file "operations/vec4")

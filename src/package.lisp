@@ -366,6 +366,9 @@
       (:vorigin.dmat3 :dm3)
       (:vorigin.dmat4 :dm4)
       (:vorigin.quat :q)
+      ;; adds t3 pacakge name to all of virality
+      ;; game devs use this as their APIs
+      (:vorigin.transform3d :t3)
       (:vumbra.color :umbra.color)
       (:vumbra.graphing :umbra.graphing)
       (:vumbra.noise :umbra.noise)

@@ -2,6 +2,7 @@
 
 (defpackage #:vorigin.geometry
   (:local-nicknames
+   (#:t3 #:vorigin.transform3d)
    (#:aabb #:vorigin.geometry.aabb)
    (#:com #:vorigin.common)
    (#:circle #:vorigin.geometry.circle)

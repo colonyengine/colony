@@ -7,6 +7,7 @@
    (#:m3 #:vorigin.mat3)
    (#:m4 #:vorigin.mat4)
    (#:q #:vorigin.quat)
+   (#:t3 #:vorigin.transform3d)
    (#:v2 #:vorigin.vec2)
    (#:v3 #:vorigin.vec3)
    (#:v4 #:vorigin.vec4))
