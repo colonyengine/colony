@@ -11,6 +11,11 @@
                                 (list* entry-type keys))
     (apply #'u:href %resource-cache (list* entry-type keys))))
 
+(defmethod resource-cache-construct (context entry-type &rest keys)
+  (declare (ignore context keys))
+  (error "resource-cache-construct: Cannot construct unknown entry-type: ~A"
+         entry-type))
+
 ;; This might call resource-cache-construct if needed.
 (defmethod resource-cache-lookup (context (entry-type symbol) &rest keys)
   (with-slots (%resource-cache) (core context)
@@ -26,6 +31,7 @@
       value)))
 
 (defmethod resource-cache-dispose (context entry-type removed-value)
+  (declare (ignore context removed-value))
   (error "resource-cache-dispose: Cannot dispose unknown entry-type: ~A"
          entry-type))
 
