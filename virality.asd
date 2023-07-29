@@ -1,7 +1,7 @@
 ;; Turn off a cl-opengl bug fix for buggy intel drivers that cause a severe
 ;; performance problem for those not using the buggy intel gpu. See the
 ;; See the README concerning this line.
-(push :cl-opengl-no-masked-traps *features*)
+(pushnew :cl-opengl-no-masked-traps *features*)
 
 (asdf:defsystem #:virality
   :description "An experimental game engine."
