@@ -46,17 +46,17 @@ long the thing has yet to live, with NIL meaning infinity."))
 
 ;;; Resource Cache
 
-(defgeneric resource-cache-layout (entry-type))
+(defgeneric resource-cache-layout (domain))
 
-(defgeneric resource-cache-peek (context entry-type &rest keys))
+(defgeneric resource-cache-peek (context domain &rest keys))
 
-(defgeneric resource-cache-lookup (context entry-type &rest keys))
+(defgeneric resource-cache-lookup (context domain &rest keys))
 
-(defgeneric resource-cache-construct (context entry-type &rest keys))
+(defgeneric resource-cache-construct (context domain &rest keys))
 
-(defgeneric resource-cache-remove (context entry-type &rest keys))
+(defgeneric resource-cache-remove (context domain &rest keys))
 
-(defgeneric resource-cache-dispose (context entry-type removed-value))
+(defgeneric resource-cache-dispose (context domain removed-value))
 
 ;;; Prologue/Epilogue
 
