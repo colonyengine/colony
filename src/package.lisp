@@ -2,9 +2,50 @@
 
 (defpackage #:virality.texture
   (:use #:cl)
+  ;; texture-descriptor
   (:export
+   #:applied-attributes
+   #:attributes
+   #:copy-texture-descriptor
+   #:make-texture-descriptor
+   #:name
+   #:profile-overlay-names
+   #:texture-descriptor
+   #:texture-type)
+  ;; texture-profile
+  (:export
+   #:attributes
+   #:define-texture-profile
+   #:make-texture-profile
+   #:name
+   #:parse-texture-profile
+   #:texture-profile)
+  ;; texture
+  (:export
+   #:computed-texdesc
    #:define-texture
-   #:define-texture-profile))
+   #:name
+   #:semantic-texdesc
+   #:texid
+   #:texture))
+
+(defpackage #:virality.texture.texture-table
+  (:use #:cl)
+  (:export
+   #:add-semantic-texture-descriptor
+   #:add-texture-profile
+   #:add-unrealized-texture
+   #:find-semantic-texture-descriptor
+   #:get-procedural-texture-descriptors
+   #:get-unrealized-textures
+   #:make-texture-table
+   #:profiles
+   #:remove-semantic-texture-descriptor
+   #:remove-texture-profile
+   #:remove-unrealized-texture
+   #:semantic-texture-descriptors
+   #:texture-table
+   #:unrealized-procedural-textures))
 
 (defpackage #:virality.prefab
   (:use #:cl)
@@ -376,6 +417,7 @@
       (:virality.extension :x)
       (:virality.prefab :prefab)
       (:virality.shader :shd)
+      (:virality.texture.texture-table :textab)
       (:virality.texture :tex)
       (:vshadow :shadow))))
 

@@ -137,6 +137,7 @@
     :components
     ((:file "common")
      (:file "texture")
+     (:file "texture-table")
      (:file "1d")
      (:file "2d")
      (:file "3d")

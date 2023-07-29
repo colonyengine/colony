@@ -36,7 +36,7 @@
 ;; instance.
 (defclass core ()
   ((%config :reader config
-             :initarg :config)
+            :initarg :config)
    (%assets :reader assets
             :initform (u:dict #'eq))
    (%running-p :accessor running-p
@@ -55,9 +55,9 @@
    (%framebuffers :reader framebuffers
                   :initform (u:dict #'eq))
    (%materials :accessor materials
-               :initform (make-materials-table))
+               :initarg :materials)
    (%textures :accessor textures
-              :initform (tex::make-textures-table))
+              :initarg :textures)
    (%context :reader context)
    (%tables :reader tables
             :initarg :tables)

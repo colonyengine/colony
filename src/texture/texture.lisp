@@ -1,97 +1,51 @@
 (in-package #:virality.texture)
 
-;;;; Implementation of datatype TEXTURE-TABLE
+;; -------------------------------------------------------------------------
+;; NOTE: The candidate API functions in here are in the wrong spot, named
+;; wrongly, and might not even have to exist. :) They are here because I'm
+;; doing layering work to break up tangled up code. No one calls these.
 
-(defun make-textures-table (&rest init-args)
-  (apply #'make-instance 'textures-table init-args))
+;; TODO: Candidate for public Core API
+(defun core/add-semantic-texture-descriptor (texdesc core)
+  (textab:add-semantic-texture-descriptor texdesc (v::textures core)))
 
-;; TODO: Candidate for public API
-(defun add-texture-profile (profile core)
-  (setf (u:href (profiles (v::textures core)) (name profile)) profile))
+;; TODO: Candidate for public Core API
+(defun core/remove-semantic-texture-descriptor (texdesc core)
+  (textab:remove-semantic-texture-descriptor texdesc (v::textures core)))
 
-;; TODO: Candidate for public API
-(defun remove-texture-profile (profile-name core)
-  (remhash profile-name (profiles (v::textures core))))
-
-;; TODO: Candidate for public API
-(defun add-semantic-texture-descriptor (texdesc core)
-  (setf (u:href (semantic-texture-descriptors (v::textures core))
-                (name texdesc))
-        texdesc))
-
-;; TODO: Candidate for public API
-(defun remove-semantic-texture-descriptor (texdesc core)
-  (remhash texdesc (semantic-texture-descriptors (v::textures core))))
-
-;; TODO: Candidate for public API
-(defun add-unrealized-texture (texture context)
+;; TODO: Candidate for public Context API
+(defun context/add-unrealized-texture (texture context)
   "Add a TEXTURE, which only has defined an opengl texid, to core. This book
 keeps unrealized textures for the user to finalize before the game starts."
-  (setf (u:href (unrealized-procedural-textures (v::textures (v::core context)))
-                (name texture))
-        texture))
+  (textab::add-unrealized-texture texture (v::textures (v::core context))))
 
-;; TODO: Candidate for public API
-(defun remove-unrealized-texture (texture context)
-  "Remove the unrealized TEXTURE from the texture tables. It is assumed that you
-have just realized it by setting its opengl parameters and uploading data or
-declaring storage of some kind to the GPU."
-  (remhash (name texture)
-           (unrealized-procedural-textures (v::textures (v::core context)))))
+;; TODO: Candidate for public Context API
+(defun context/remove-unrealized-texture (texture context)
+  "Remove the unrealized TEXTURE from the texture tables. It is assumed that
+you have just realized it by setting its opengl parameters and uploading data
+or declaring storage of some kind to the GPU."
+  (textab:remove-unrealized-texture texture (v::textures (v::core context))))
 
-;; TODO: Candidate for public API
-(defun get-unrealized-textures (context)
+;; TODO: Candidate for public Context API
+(defun context/get-unrealized-textures (context)
   "Return a list of textures that are specified in materials, but haven't been
 completed (no opengl parameters set for them, or data loaded into GPU).
 NOTE: These are already in the resource-cache."
-  (u:hash-values
-   (unrealized-procedural-textures
-    (v::textures (v::core context)))))
+  (textab:get-unrealized-textures (v::textures (v::core context))))
 
-;; TODO: Candidate for public API.
-(defun get-procedural-texture-descriptors (context)
+;; TODO: Candidate for public Context API.
+(defun context/get-procedural-texture-descriptors (context)
   "Return a list of all procedural texture descriptors."
-  (let (results)
-    (u:do-hash-values (texdesc (semantic-texture-descriptors
-                                (v::textures (v::core context))))
-      (when (eq (texture-type texdesc) :procedural)
-        (push texdesc results)))
-    (nreverse results)))
+  (textab:get-procedural-texture-descriptors (v::textures (v::core context))))
 
-;; TODO: Candidate for public API
-(defun find-semantic-texture-descriptor (semantic-texture-name context)
-  (u:href (semantic-texture-descriptors (v::textures (v::core context)))
-          semantic-texture-name))
+;; TODO: Candidate for public Context API
+(defun context/find-semantic-texture-descriptor (semantic-texture-name context)
+  (textab:find-semantic-texture-descriptor semantic-texture-name
+                                           (v::textures (v::core context))))
+;; -------------------------------------------------------------------------
 
-;; TODO: Candidate for public API
-(defclass texture-profile ()
-  ((%name :reader name
-          :initarg :name)
-   (%attributes :reader attributes
-                :initarg :attributes
-                :initform (u:dict #'eq))))
 
-;; TODO: Candidate for public API
-(defun make-texture-profile (&rest init-args)
-  (apply #'make-instance 'texture-profile init-args))
-
-;; TODO: Candidate for public API
-(defclass texture-descriptor ()
-  ((%name :accessor name
-          :initarg :name)
-   ;; Procedural textures have :procedural as a texture-type!
-   (%texture-type :accessor texture-type
-                  :initarg :texture-type)
-   (%profile-overlay-names :accessor profile-overlay-names
-                           :initarg :profile-overlay-names)
-   ;; Attribute specified in the define-texture form
-   (%attributes :accessor attributes
-                :initarg :attributes
-                :initform (u:dict #'eq))
-   ;; Up to date attributes once the profiles have been applied.
-   (%applied-attributes :accessor applied-attributes
-                        :initarg :applied-attributes
-                        :initform (u:dict #'eq))))
+;; Implementation of TEXTURE-DESCRIPTOR
 
 ;; TODO candidate for public API
 (defun make-texture-descriptor (&rest init-args)
@@ -115,32 +69,33 @@ NOTE: These are already in the resource-cache."
       (setf (u:href (applied-attributes new-texdesc) key) (u:copy-sequence-tree value)))
     new-texdesc))
 
-;; The texture descriptor as read from the define-texture DSL form. This records
-;; the original values for that texture definition which may include that it is
-;; procedural or not. This texdesc is a reference to the only copy of it as read
-;; from the DSL and stored in the texture-table in core.
-(defclass texture ()
-  ((%semantic-texdesc :accessor semantic-texdesc
-                      :initarg :semantic-texdesc)
-   ;; The texture descriptor as finally computed from the semantic texture
-   ;; descriptor before we load/procedurally create the texture data or storage
-   ;; on the GPU. Here, the texture-type must be valid among other aspects of
-   ;; the texdesc. In the case of a non procedural texture, this can be computed
-   ;; automatically, but in the case of a procedural texture, the user
-   ;; ultimately must set the slots to valid things. This texdesc is unique to
-   ;; this texture instance. This means, suppose in the case of a procedural
-   ;; texture, that each texture instance contains a unique computed copy of
-   ;; that the semantic-texdesc that directly describes this version of that
-   ;; texture.
-   (%computed-texdesc :accessor computed-texdesc
-                      :initarg :computed-texdesc)
-   ;; The name of the texture might be generated off the texdesc name for
-   ;; procedural textures.
-   (%name :reader name
-          :initarg :name)
-   ;; The allocated opengl texture id.
-   (%texid :accessor texid
-           :initarg :texid)))
+
+
+;; Implementation of TEXTURE-PROFILE
+
+;; TODO: Candidate for public API
+(defun make-texture-profile (&rest init-args)
+  (apply #'make-instance 'texture-profile init-args))
+
+(defun parse-texture-profile (name body-form)
+  (u:with-gensyms (texprof)
+    `(let* ((,texprof (make-texture-profile :name ',name)))
+       (setf ,@(loop :for (attribute value) :in body-form
+                     :appending `((u:href (attributes ,texprof) ,attribute)
+                                  ,value)))
+       ,texprof)))
+
+(defmacro define-texture-profile (name &body body)
+  "Define a set of attribute defaults that can be applied while defining a
+texture."
+  (u:with-gensyms (profile)
+    `(let ((,profile ,(parse-texture-profile name body)))
+       (setf (u:href v::=meta/texture-profiles= (name ,profile)) ,profile))))
+
+
+
+;; Implementation of TEXTURE
+
 
 (u:define-printer (texture stream :type t)
   (format stream "id: ~s" (texid texture)))
@@ -180,8 +135,8 @@ NOTE: These are already in the resource-cache."
                             putative-parameter
                             value))))))
 
-;;; TODO: These are cut into individual functions for their context. Maybe later
-;;; I'll see about condensing them to be more concise.
+;;; TODO: These are cut into individual functions for their context. Maybe
+;;; later I'll see about condensing them to be more concise.
 
 (defgeneric load-texture-data (texture-type texture context)
   (:documentation "Load actual data described in the TEXTURE's texdesc of ~
@@ -396,36 +351,38 @@ assign it to the computed texture descriptor slot in TEXTURE."
   ;; Unload the current texid and shove back into a new texid whatever the
   ;; new texture descriptor for the texture-name indicates.
   (with-accessors ((texid texid)) texture
-    (unload-texture context texture)
-    (let((semantic-texdesc
-           (find-semantic-texture-descriptor
-            (semantic-texture-name texture-name) context))
-         (id (gl:gen-texture)))
-      (setf (semantic-texdesc texture) semantic-texdesc
-            texid id)
-      (upload-texture context texture))))
+    (let ((texture-table (v::textures (v::core context))))
+      (unload-texture context texture)
+      (let((semantic-texdesc
+             (textab:find-semantic-texture-descriptor
+              (semantic-texture-name texture-name) texture-table))
+           (id (gl:gen-texture)))
+        (setf (semantic-texdesc texture) semantic-texdesc
+              texid id)
+        (upload-texture context texture)))))
 
 (defun load-texture (context texture-name)
   "Return a TEXTURE instance that represents the loading of the images required
 for TEXTURE-NAME from disk (or elsewhere) and the uploading of it to the GPU.
 If TEXTURE-NAME does not resolve to a known semantic texture descriptor then
 return the TEXTURE instance for the debug-texture."
-  (u:if-let ((semantic-texdesc
-              (find-semantic-texture-descriptor
-               (semantic-texture-name texture-name) context)))
-    (let* ((id (gl:gen-texture))
-           ;; TODO: tex-name is wrong here. It shoudl be what the material
-           ;; believed it to be or the canonicalname of it if only a symbol.
-           (texture (make-instance 'texture
-                                   :name texture-name
-                                   :semantic-texdesc semantic-texdesc
-                                   :texid id)))
-      (values (upload-texture context texture) t))
+  (let ((texture-table (v::textures (v::core context))))
+    (u:if-let ((semantic-texdesc
+                (textab:find-semantic-texture-descriptor
+                 (semantic-texture-name texture-name) texture-table)))
+      (let* ((id (gl:gen-texture))
+             ;; TODO: tex-name is wrong here. It shoudl be what the material
+             ;; believed it to be or the canonicalname of it if only a symbol.
+             (texture (make-instance 'texture
+                                     :name texture-name
+                                     :semantic-texdesc semantic-texdesc
+                                     :texid id)))
+        (values (upload-texture context texture) t))
 
-    (values (v::resource-cache-lookup
-             context :texture
-             (canonicalize-texture-name 'x:debug-texture))
-            nil)))
+      (values (v::resource-cache-lookup
+               context :texture
+               (canonicalize-texture-name 'x:debug-texture))
+              nil))))
 
 (defun upload-texture (context texture)
   (cond
@@ -442,27 +399,13 @@ return the TEXTURE instance for the debug-texture."
     ;; assigned above. It is up to the user to define all the opengl
     ;; parameters and GPU data for this texture.
     (t
-     (add-unrealized-texture texture context)
+     (textab:add-unrealized-texture texture (v::textures (v::core context)))
      ;; TODO: Possibly record a note that someone asked for this specific
      ;; texture name, so in the prologue function, the gamedev can know the
      ;; entire set they need to create that is eagerly going to be used.
      nil))
   texture)
 
-(defun parse-texture-profile (name body-form)
-  (u:with-gensyms (texprof)
-    `(let* ((,texprof (make-texture-profile :name ',name)))
-       (setf ,@(loop :for (attribute value) :in body-form
-                     :appending `((u:href (attributes ,texprof) ,attribute)
-                                  ,value)))
-       ,texprof)))
-
-(defmacro define-texture-profile (name &body body)
-  "Define a set of attribute defaults that can be applied while defining a
-texture."
-  (u:with-gensyms (profile)
-    `(let ((,profile ,(parse-texture-profile name body)))
-       (setf (u:href v::=meta/texture-profiles= (name ,profile)) ,profile))))
 
 (defun update-texture (context old-descriptor new-descriptor)
   (v::push-queue
@@ -470,21 +413,25 @@ texture."
    (list
     :texture
     (lambda (core)
-      (if old-descriptor
-          (let* ((old-name (canonicalize-texture-name (name old-descriptor)))
-                 (old-texture (v::resource-cache-peek
-                               (v::context core)
-                               :texture old-name)))
-            (remove-semantic-texture-descriptor old-descriptor core)
-            ;; NOTE: Can't refactor the two lines below cause it needs the
-            ;; remove-semantic-texture-descriptor to have been called.
-            (add-semantic-texture-descriptor new-descriptor core)
-            (resolve-semantic-texture-descriptor core new-descriptor)
-            (refresh-texture context old-texture old-name))
-          (let ((new-name (canonicalize-texture-name (name new-descriptor))))
-            (add-semantic-texture-descriptor new-descriptor core)
-            (resolve-semantic-texture-descriptor core new-descriptor)
-            (v::resource-cache-lookup context :texture new-name)))))))
+      (with-accessors ((texture-table v::textures)) core
+        (if old-descriptor
+            (let* ((old-name (canonicalize-texture-name (name old-descriptor)))
+                   (old-texture (v::resource-cache-peek
+                                 (v::context core)
+                                 :texture old-name)))
+              (textab:remove-semantic-texture-descriptor old-descriptor
+                                                         texture-table)
+              ;; NOTE: Can't refactor the two lines below cause it needs the
+              ;; remove-semantic-texture-descriptor to have been called.
+              (textab:add-semantic-texture-descriptor new-descriptor
+                                                      texture-table)
+              (resolve-semantic-texture-descriptor core new-descriptor)
+              (refresh-texture context old-texture old-name))
+            (let ((new-name (canonicalize-texture-name (name new-descriptor))))
+              (textab:add-semantic-texture-descriptor new-descriptor
+                                                      texture-table)
+              (resolve-semantic-texture-descriptor core new-descriptor)
+              (v::resource-cache-lookup context :texture new-name))))))))
 
 (defun update-texture/interactively (old-descriptor new-descriptor)
   (when (boundp 'v::*core-debug*)
@@ -508,7 +455,7 @@ texture."
          (update-texture/interactively ,old-desc ,new-desc)))))
 
 (defun resolve-semantic-texture-descriptor (core texture-descriptor)
-  (symbol-macrolet ((profiles (profiles (v::textures core)))
+  (symbol-macrolet ((profiles (textab:profiles (v::textures core)))
                     (default-profile-name 'x:default-profile))
     ;; 1. Check for x:default-profile
     (unless (u:href profiles default-profile-name)
@@ -558,7 +505,8 @@ texture."
 3. All currently known about texture descriptors have valid profile references.
 4. All images specified by paths actually exist at that path.
 5. The texture type is valid."
-  (u:do-hash-values (v (semantic-texture-descriptors (v::textures core)))
+  (u:do-hash-values (v (textab:semantic-texture-descriptors
+                        (v::textures core)))
     (resolve-semantic-texture-descriptor core v)))
 
 ;; public API
@@ -610,9 +558,10 @@ semantic name of it which was specified with a DEFINE-TEXTURE."
       texture-name))
 
 (defun load-texture-descriptors (core)
-  (gl:pixel-store :unpack-alignment 1)
-  (u:do-hash-values (profile v::=meta/texture-profiles=)
-    (add-texture-profile profile core))
-  (u:do-hash-values (desc v::=meta/textures=)
-    (add-semantic-texture-descriptor desc core))
-  (resolve-all-semantic-texture-descriptors core))
+  (with-accessors ((texture-table v::textures)) core
+    (gl:pixel-store :unpack-alignment 1)
+    (u:do-hash-values (profile v::=meta/texture-profiles=)
+      (textab:add-texture-profile profile texture-table))
+    (u:do-hash-values (desc v::=meta/textures=)
+      (textab:add-semantic-texture-descriptor desc texture-table))
+    (resolve-all-semantic-texture-descriptors core)))
