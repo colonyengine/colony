@@ -5,7 +5,7 @@
     (make-prefab-instance core scene-name)))
 
 (defun initialize (core project scene-name)
-  (load-config project)
+  (declare (ignore project)) ;; NOTE: We still might use this...
   (setup-repl)
   (u:initialize-rng)
   (prepare-gamepads)
@@ -17,6 +17,9 @@
   (load-call-flows core)
   (initialize-shaders core)
   (tex::load-texture-descriptors core)
+  ;; NOTE: make-clock is here because it initializes the clock AFTER the
+  ;; configuration for the project is loaded. This ensures the right
+  ;; =delta= is chosen for the clock system.
   (make-clock core)
   (load-materials core)
   (initialize-collider-system core)
@@ -47,6 +50,7 @@
             (stop core)))))))
 
 (defun start (&key config scene)
+  (load-config config)
   (let ((core (make-core config)))
     (unwind-protect (initialize core config scene)
       (deinitialize core))))
