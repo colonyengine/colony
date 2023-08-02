@@ -17,10 +17,6 @@
   (load-call-flows core)
   (initialize-shaders core)
   (tex::load-texture-descriptors core)
-  ;; NOTE: make-clock is here because it initializes the clock AFTER the
-  ;; configuration for the project is loaded. This ensures the right
-  ;; =delta= is chosen for the clock system.
-  (make-clock core)
   (load-materials core)
   (initialize-collider-system core)
   (make-scene-tree core)

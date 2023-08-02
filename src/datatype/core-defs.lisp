@@ -44,6 +44,7 @@
    (%resource-cache :reader resource-cache
                     :initform (u:dict #'eq))
    (%clock :reader clock
+           :initarg :clock
            :initform nil)
    (%display :reader display
              :initform nil)

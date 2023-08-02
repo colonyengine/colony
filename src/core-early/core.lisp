@@ -44,6 +44,7 @@ structures in CORE."
   ;; done. When it is remove this comment. CL is ok with this, but from a code
   ;; understandability point of view it is horrible.
   (let ((core (make-instance 'core
+                             :clock (make-clock)
                              :config config
                              :materials (make-materials-table)
                              :tables (make-instance 'bookkeeping-tables)
