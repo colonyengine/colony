@@ -233,70 +233,70 @@
 ;; materials can be made for the same shader each providing diferent inputs to
 ;; that shader.
 (v:define-material sprite-sheet
-    (:profiles (x:u-mvp)
-     :shader ex/shd:ptp-sprite
-     :attributes (:depth :lequal)
-     :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
-                (:sprite.index 0)
-                (:opacity 1.0))
-     :blocks ((:block-name :ptp-spritesheet
-               :storage-type :buffer
-               :block-alias :ptp-spritesheet
-               :binding-policy :manual))))
+  (:profiles (x:u-mvp)
+   :shader ex/shd:ptp-sprite
+   :attributes (:depth :lequal)
+   :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
+              (:sprite.index 0)
+              (:opacity 1.0))
+   :blocks ((:block-name :ptp-spritesheet
+             :storage-type :buffer
+             :block-alias :ptp-spritesheet
+             :binding-policy :manual))))
 
 (v:define-material title
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'title)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'title)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
 (v:define-material starfield
-    (:profiles (x:u-mvpt)
-     :shader ex/shd:starfield
-     :uniforms ((:tex 'starfield)
-                (:mix-color (v4:ones)))))
+  (:profiles (x:u-mvpt)
+   :shader ex/shd:starfield
+   :uniforms ((:tex 'starfield)
+              (:mix-color (v4:ones)))))
 
 (v:define-material warning-mothership
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'warning-mothership)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'warning-mothership)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
 (v:define-material warning-wave
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'warning-wave)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'warning-wave)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
 (v:define-material game-over
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'game-over)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'game-over)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
 (v:define-material level-complete
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'level-complete)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'level-complete)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
 (v:define-material time-bar
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture
-     :uniforms ((:tex.sampler1 'white)
-                (:mix-color (v4:vec 0f0 1f0 0f0 1f0)))))
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture
+   :uniforms ((:tex.sampler1 'white)
+              (:mix-color (v4:vec 0f0 1f0 0f0 1f0)))))
 
 (v:define-material pivot
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'pivot)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'pivot)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
@@ -1622,7 +1622,7 @@ NIL if no such list exists."
   ;; if we have zero planets technically none of them are dead.
   (and (plusp (reporting-planets level-manager))
        (= (dead-planets level-manager)
-          (reporting-planets level-manager))))
+           (reporting-planets level-manager))))
 
 ;; ;;;;;;;;;
 ;; Component: director
