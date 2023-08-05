@@ -1,81 +1,86 @@
-(in-package #:virality)
-
-(global-vars:define-global-var =thread-pool= nil)
+(in-package #:virality.thread-pool)
 
 ;; Implementation of THREAD-POOL
 
-(defun make-thread-pool ()
-  (let* ((worker-count (or =threads= =cpu-count=))
-         (thread-pool (make-instance 'thread-pool :worker-count worker-count)))
-    (setf lparallel:*kernel* (lparallel:make-kernel worker-count)
-          =thread-pool= thread-pool)))
+(defmacro %with-thread-kernel ((thread-pool) &body body)
+  `(let ((lparallel:*kernel* (kernel ,thread-pool)))
+     ,@body))
 
-(defun destroy-thread-pool ()
-  (lparallel:end-kernel)
-  (when =thread-pool=
-    (setf lparallel:*kernel* nil
-          =thread-pool= nil)))
+(defun make-thread-pool (worker-count)
+  (make-instance 'thread-pool
+                 :worker-count worker-count
+                 :kernel (lparallel:make-kernel worker-count)))
 
-(defun ensure-channel (purpose)
-  (let ((channels (channels =thread-pool=)))
-    (u:ensure-gethash purpose channels (lparallel:make-channel))))
+(defun destroy-thread-pool (thread-pool)
+  (%with-thread-kernel (thread-pool)
+    (lparallel:end-kernel)))
 
-(defun ensure-queue (purpose)
-  (let ((queues (queues =thread-pool=)))
-    (u:ensure-gethash purpose queues (lparallel.queue:make-queue))))
+(defun ensure-channel (thread-pool purpose)
+  (%with-thread-kernel (thread-pool)
+    (let ((channels (channels thread-pool)))
+      (u:ensure-gethash purpose channels (lparallel:make-channel)))))
 
-(defun submit-job (purpose job &optional (priority :default))
-  (when =thread-pool=
-    (let ((channel (ensure-channel purpose))
+(defun ensure-queue (thread-pool purpose)
+  (%with-thread-kernel (thread-pool)
+    (let ((queues (queues thread-pool)))
+      (u:ensure-gethash purpose queues (lparallel.queue:make-queue)))))
+
+(defun submit-job (thread-pool purpose job &optional (priority :default))
+  (%with-thread-kernel (thread-pool)
+    (let ((channel (ensure-channel thread-pool purpose))
           (lparallel:*task-priority* priority)
           (lparallel:*task-category* purpose))
       (lparallel:submit-task channel job))))
 
-(defun get-job-results (purpose)
-  (when =thread-pool=
-    (let ((channel (ensure-channel purpose)))
+(defun get-job-results (thread-pool purpose)
+  (%with-thread-kernel (thread-pool)
+    (let ((channel (ensure-channel thread-pool purpose)))
       (lparallel:receive-result channel))))
 
-(defun kill-jobs (purpose)
-  (lparallel:kill-tasks purpose))
+(defun kill-jobs (thread-pool purpose)
+  (%with-thread-kernel (thread-pool)
+    (lparallel:kill-tasks purpose)))
 
-(defun enqueue (purpose data)
-  (when =thread-pool=
-    (let ((queue (ensure-queue purpose)))
+(defun enqueue (thread-pool purpose data)
+  (let ((queue (ensure-queue thread-pool purpose)))
+    (%with-thread-kernel (thread-pool)
       (lparallel.queue:push-queue data queue))))
 
-(defun dequeue (purpose)
-  (when =thread-pool=
-    (let ((queue (ensure-queue purpose)))
+(defun dequeue (thread-pool purpose)
+  (let ((queue (ensure-queue thread-pool purpose)))
+    (%with-thread-kernel (thread-pool)
       (lparallel.queue:pop-queue queue))))
 
-(defun queue-empty-p (purpose)
-  (let ((queue (ensure-queue purpose)))
-    (lparallel.queue:queue-empty-p queue)))
+(defun queue-empty-p (thread-pool purpose)
+  (let ((queue (ensure-queue thread-pool purpose)))
+    (%with-thread-kernel (thread-pool)
+      (lparallel.queue:queue-empty-p queue))))
 
 ;;; TODO: The below functions are not fully baked yet. The live recompilation
 ;;; queue needs some work to make it more generic and easier to work with. See
 ;;; how I did it in Pyx when it comes time to fix this later. ~axion 4/8/2020
 
-(defun push-queue (purpose data)
-  (when =thread-pool=
-    (let ((queue (ensure-queue purpose)))
+(defun push-queue (thread-pool purpose data)
+  (let ((queue (ensure-queue thread-pool purpose)))
+    (%with-thread-kernel (thread-pool)
       (lparallel.queue:push-queue data queue))))
 
-(defun pop-queue (purpose)
-  (when =thread-pool=
-    (let ((queue (ensure-queue purpose)))
+(defun pop-queue (thread-pool purpose)
+  (let ((queue (ensure-queue thread-pool purpose)))
+    (%with-thread-kernel (thread-pool)
       (unless (lparallel.queue:queue-empty-p queue)
         (let ((result (lparallel.queue:pop-queue queue)))
           (values result t))))))
 
-(defun process-queue (purpose)
-  (u:while (and =thread-pool= (not (queue-empty-p purpose)))
-    (destructuring-bind (&optional event-type data) (dequeue purpose)
+(defun process-queue (thread-pool purpose)
+  (u:while (not (queue-empty-p thread-pool purpose))
+    (destructuring-bind (&optional event-type data)
+        (dequeue thread-pool purpose)
       (when event-type
         (handle-queued-event purpose event-type data)))))
 
-(defgeneric handle-queued-event (purpose event-type data)
-  (:method (purpose event-type data)
-    (error "Unhandled queue event type ~s for queue purpose ~a."
-           event-type purpose)))
+(defgeneric handle-queued-event (purpose event-type data))
+
+(defmethod handle-queued-event (purpose event-type data)
+  (error "Unhandled queue event type ~s for queue purpose ~a."
+         event-type purpose))

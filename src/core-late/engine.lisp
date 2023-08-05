@@ -4,15 +4,13 @@
   (let ((scene-name (or scene-name =initial-scene=)))
     (make-prefab-instance core scene-name)))
 
-(defun initialize (core project scene-name)
-  (declare (ignore project)) ;; NOTE: We still might use this...
+(defun initialize (core scene-name)
   (setup-repl)
   (u:initialize-rng)
   (prepare-gamepads)
   (make-display core)
   (make-input-data core)
   (load-hardware-info)
-  (make-thread-pool)
   (load-graphs core)
   (load-call-flows core)
   (initialize-shaders core)
@@ -28,8 +26,8 @@
   (run-epilogue core)
   (shutdown-gamepads core)
   (kill-display core)
-  (destroy-thread-pool)
-  (makunbound '*core-debug*))
+  (tpool:destroy-thread-pool (thread-pool core))
+  (setf *core-debug* *no-core-value*))
 
 (defun start-game-loop (core)
   ;; Note: We let-bind the following variables so that we don't have to
@@ -48,7 +46,7 @@
 (defun start (&key config scene)
   (load-config config)
   (let ((core (make-core config)))
-    (unwind-protect (initialize core config scene)
+    (unwind-protect (initialize core scene)
       (deinitialize core))))
 
 (defun stop (core)

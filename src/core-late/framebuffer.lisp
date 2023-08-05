@@ -56,7 +56,8 @@
       (destructuring-bind (name &key &allow-other-keys) x
         (let ((attachment-spec (make-framebuffer-attachment-spec x)))
           (setf (u:href (attachment-specs spec) name) attachment-spec))))
-    (enqueue :recompile (list :framebuffer name))))
+    (tpool:enqueue (thread-pool *core-debug*)
+                   :recompile (list :framebuffer name))))
 
 (defun make-framebuffer-spec (name mode attachments)
   (let ((spec (make-instance 'framebuffer-spec :name name)))
@@ -218,8 +219,8 @@
 ;; TODO: Framebuffers aren't used yet, but this is how it was done in Pyx.
 ;; ~axion
 #++(on-recompile :framebuffer data ()
-     (u:when-let ((spec (find-framebuffer-spec data))
-                  (data (find-framebuffer data)))
-       (framebuffer-attach-all data)
-       (dolist (material (materials spec))
-         (enqueue :recompile (list :material material)))))
+                 (u:when-let ((spec (find-framebuffer-spec data))
+                              (data (find-framebuffer data)))
+                   (framebuffer-attach-all data)
+                   (dolist (material (materials spec))
+                     (enqueue :recompile (list :material material)))))

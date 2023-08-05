@@ -5,4 +5,5 @@
     (setf (shaders core) (shadow:load-shaders modify-hook))))
 
 (defun generate-shader-modify-hook ()
-  (lambda (x) (push-queue :recompile (list :shader x))))
+  (lambda (x) (tpool:push-queue (thread-pool *core-debug*)
+                                :recompile (list :shader x))))

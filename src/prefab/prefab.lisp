@@ -59,18 +59,20 @@
     (doc prefab)))
 
 (defun update-prefab/interactively (spec)
-  (v::push-queue
-   :recompile
-   (list
-    :prefab
-    (lambda (core)
-      (dolist (entity (u:href (v::prefab-entities core) spec))
-        (let* ((transform (v:component-by-type entity 'comp:transform))
-               (parent (comp::parent transform)))
-          (declare (ignore parent))
-          ;; TODO: Figure out why parenting isn't working
-          (v::destroy entity)
-          (load-prefab core spec nil)))))))
+  (when (v:core-bound-p v::*core-debug*)
+    (tpool:push-queue
+     (v::thread-pool v::*core-debug*)
+     :recompile
+     (list
+      :prefab
+      (lambda (core)
+        (dolist (entity (u:href (v::prefab-entities core) spec))
+          (let* ((transform (v:component-by-type entity 'comp:transform))
+                 (parent (comp::parent transform)))
+            (declare (ignore parent))
+            ;; TODO: Figure out why parenting isn't working
+            (v::destroy entity)
+            (load-prefab core spec nil))))))))
 
 (defmacro define-prefab (name (&key library (context 'context) policy)
                          &body body)

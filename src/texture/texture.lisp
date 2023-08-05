@@ -408,7 +408,8 @@ return the TEXTURE instance for the debug-texture."
 
 
 (defun update-texture (context old-descriptor new-descriptor)
-  (v::push-queue
+  (tpool:push-queue
+   (v::thread-pool v::*core-debug*)
    :recompile
    (list
     :texture
@@ -434,7 +435,7 @@ return the TEXTURE instance for the debug-texture."
               (v::resource-cache-lookup context :texture new-name))))))))
 
 (defun update-texture/interactively (old-descriptor new-descriptor)
-  (when (boundp 'v::*core-debug*)
+  (when (v:core-bound-p v::*core-debug*)
     (let ((context (v:context v::*core-debug*)))
       (update-texture context old-descriptor new-descriptor))))
 

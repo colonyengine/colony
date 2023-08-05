@@ -39,16 +39,19 @@ structures in CORE."
     (setf (slot-value core '%scene-tree) actor)))
 
 (defun make-core (config)
-  ;; TODO: The stuff the core uses should already be loaded into the image--BUT
-  ;; IT ISN'T because the layering is messed up. It is being fixed, but is not
-  ;; done. When it is remove this comment. CL is ok with this, but from a code
-  ;; understandability point of view it is horrible.
-  (let ((core (make-instance 'core
-                             :clock (make-clock)
-                             :config config
-                             :materials (make-materials-table)
-                             :tables (make-instance 'bookkeeping-tables)
-                             :textures (textab:make-texture-table))))
+  ;; TODO: LOAD-CONFIG should have been executed before this. Write a small
+  ;; piece of code that can check this fact.
+  (let ((core
+          (make-instance 'core
+                         ;; NOTE: It is possible the ordering of this
+                         ;; initialization may be significant.
+                         :config config
+                         :tables (make-instance 'bookkeeping-tables)
+                         :materials (make-materials-table)
+                         :textures (textab:make-texture-table)
+                         :thread-pool (tpool:make-thread-pool (or =threads=
+                                                                  =cpu-count=))
+                         :clock (make-clock))))
     (setf *core-debug* core)
     (make-context core)
     core))

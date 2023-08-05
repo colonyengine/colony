@@ -1,5 +1,30 @@
 (in-package #:cl-user)
 
+(defpackage #:virality.thread-pool
+  (:use #:cl)
+  ;; thread-pool
+  (:export
+   #:channels
+   #:dequeue
+   #:destroy-thread-pool
+   #:enqueue
+   #:ensure-channel
+   #:ensure-queue
+   #:get-job-results
+   #:handle-queued-event
+   #:kernel
+   #:kill-jobs
+   #:make-thread-pool
+   #:pop-queue
+   #:process-queue
+   #:push-queue
+   #:queue-empty-p
+   #:queues
+   #:submit-job
+   #:thread-pool
+   #:worker-count
+   ))
+
 (defpackage #:virality.texture
   (:use #:cl)
   ;; texture-descriptor
@@ -189,6 +214,7 @@
   (:export
    #:actor
    #:context
+   #:core-bound-p
    #:define-annotation
    #:define-call-flow
    #:define-config
@@ -417,6 +443,7 @@
       (:virality.extension :x)
       (:virality.prefab :prefab)
       (:virality.shader :shd)
+      (:virality.thread-pool :tpool)
       (:virality.texture.texture-table :textab)
       (:virality.texture :tex)
       (:vshadow :shadow))))

@@ -9,4 +9,8 @@
 ;;;; scenarios outside of game development. This rule will help us should we
 ;;;; choose to lift any of these into external libraries.
 
-(defvar *core-debug*)
+(defvar *no-core-value* :no-core-available)
+(defvar *core-debug* *no-core-value*)
+
+(defun core-bound-p (core)
+  (not (eq core *no-core-value*)))

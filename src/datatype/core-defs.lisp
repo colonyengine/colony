@@ -37,6 +37,8 @@
 (defclass core ()
   ((%config :reader config
             :initarg :config)
+   (%thread-pool :reader thread-pool
+		 :initarg :thread-pool)
    (%assets :reader assets
             :initform (u:dict #'eq))
    (%running-p :accessor running-p
