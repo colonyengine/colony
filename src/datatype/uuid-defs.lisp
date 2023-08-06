@@ -2,7 +2,7 @@
 
 (defstruct (uuid
             (:constructor %make-uuid)
-	    (:conc-name nil)
+            (:conc-name nil)
             (:predicate nil)
             (:copier nil))
   (version 4 :type fixnum)
