@@ -55,7 +55,7 @@
     (setf %id value)
     (register-kernel-id kernel)))
 
-(defmethod find-by-uuid (context (uuid uuid))
+(defmethod find-by-uuid (context (uuid uuid:uuid))
   "Return the kernel instance with the given `UUID` object."
   (let ((table (kernels-by-uuid (tables (core context)))))
     (u:href table uuid)))
@@ -63,7 +63,7 @@
 (defmethod find-by-uuid (context (uuid string))
   "Return the kernel instance with the given `UUID` string representation."
   (let ((table (kernels-by-uuid (tables (core context)))))
-    (u:href table (string->uuid uuid))))
+    (u:href table (uuid:string->uuid uuid))))
 
 (defun find-actors-by-id (context id)
   "Return a list of all actor instances with the given `ID`."

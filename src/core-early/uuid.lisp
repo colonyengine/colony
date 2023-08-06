@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:virality.uuid)
 
 ;; Implementation of UUID (gotten and modified from mfiano's random-uuid
 ;; project).
@@ -28,8 +28,8 @@
                                               (ldb (byte 4 ,(- bits (* i 4)))
                                                    ,word))))))
     (let ((hextable "0123456789abcdef")
-          (high (uuid-high uuid))
-          (low (uuid-low uuid))
+          (high (high uuid))
+          (low (low uuid))
           (string (make-string 36 :element-type 'base-char)))
       (psetf (aref string 8) #\-
              (aref string 13) #\-

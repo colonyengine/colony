@@ -1,5 +1,21 @@
 (in-package #:cl-user)
 
+(defpackage #:virality.uuid
+  (:use #:cl)
+  ;; uuid defstruct
+  (:export
+   #:uuid
+   #:high
+   #:low
+   #:variant
+   #:version)
+  ;; uuid API
+  (:export
+   #:make-uuid
+   #:string->uuid
+   #:uuid->string
+   #:valid-string-p))
+
 (defpackage #:virality.thread-pool
   (:use #:cl)
   ;; thread-pool
@@ -444,6 +460,7 @@
       (:virality.prefab :prefab)
       (:virality.shader :shd)
       (:virality.thread-pool :tpool)
+      (:virality.uuid :uuid)
       (:virality.texture.texture-table :textab)
       (:virality.texture :tex)
       (:vshadow :shadow))))
