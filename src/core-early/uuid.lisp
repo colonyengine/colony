@@ -68,7 +68,7 @@
                   :low low
                   :high high))))
 
-(u:fn-> make-uuid (&optional function) uuid)
+(u:fn-> make-uuid (&optional (or null function)) uuid)
 (defun make-uuid (&optional generator)
   "Construct a new RFC-4122 v4 UUID. GENERATOR is a function that takes two
 values, a min and max integer, and generates a number inclusive to that
