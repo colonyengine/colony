@@ -7,14 +7,16 @@
 
 (defun uuid->string (uuid)
   (declare (optimize speed))
-  (macrolet ((%write (string count offset bits word)
-               `(setf ,@(loop :for i :below count
+  (macrolet ((%write (string hextable count offset bits word)
+               (declare (type fixnum count offset bits))
+               `(setf ,@(loop :for i :of-type fixnum :below count
                               :collect `(aref ,string ,(+ offset i))
-                              :collect `(aref "0123456789ABCDEF"
+                              :collect `(aref ,hextable
                                               (ldb (byte 4 ,(- bits (* i 4)))
                                                    ,word))))))
     (check-type uuid uuid)
-    (let ((high (uuid-high uuid))
+    (let ((hextable "0123456789ABCDEF")
+          (high (uuid-high uuid))
           (low (uuid-low uuid))
           (string (make-string 36 :element-type 'base-char)))
       (locally (declare (optimize (safety 0)))
@@ -22,11 +24,11 @@
                (aref string 13) #\-
                (aref string 18) #\-
                (aref string 23) #\-)
-        (%write string 8 0 60 high)
-        (%write string 4 9 28 high)
-        (%write string 4 14 12 high)
-        (%write string 4 19 60 low)
-        (%write string 12 24 44 low))
+        (%write string hextable 8 0 60 high)
+        (%write string hextable 4 9 28 high)
+        (%write string hextable 4 14 12 high)
+        (%write string hextable 4 19 60 low)
+        (%write string hextable 12 24 44 low))
       string)))
 
 (defun string->uuid (string)
