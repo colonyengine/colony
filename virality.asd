@@ -42,6 +42,7 @@
   :components
   ((:file "package")
    (:module "datatype"
+    :serial t
     :components
     ((:file "thread-pool-defs")
      (:file "uuid-defs")
@@ -75,6 +76,7 @@
      (:file "material-defs")
      (:file "make-project-defs")))
    (:module "core-early"
+    :serial t
     :components
     ((:file "general")
      (:file "metadata")
@@ -100,11 +102,13 @@
    ;; This module houses files that are still being worked out and not
    ;; integrated into the core yet.
    (:module "flux"
+    :serial t
     :components
     ((:file "attributes")
      ;; TODO: Fix this file so it loads. ~axion 4/17/2020
      #++(:file "meta-graphs")))
    (:module "kernel"
+    :serial t
     :components
     ((:file "kernel")
      (:file "actor")
@@ -112,6 +116,7 @@
      (:file "component")
      (:file "storage")))
    (:module "input"       ;;;; KEEP GOING for vutils refactor.
+    :serial t
     :components
     ((:file "data")
      (:file "keyboard")
@@ -121,11 +126,13 @@
      (:file "button")
      (:file "input")))
    (:module "collision-detection"
+    :serial t
     :components
     ((:file "region")
      (:file "bounding-volume-obb")
      (:file "colliders")))
    (:module "geometry"
+    :serial t
     :components
     ((:file "spec")
      (:file "attribute")
@@ -134,6 +141,7 @@
      (:file "buffer")
      (:file "geometry")))
    (:module "texture"
+    :serial t
     :components
     ((:file "common")
      (:file "texture")
@@ -148,6 +156,7 @@
      (:file "rectangle")
      (:file "buffer")))
    (:module "components"
+    :serial t
     :components
     ((:file "transform")
      (:file "camera")
@@ -162,6 +171,7 @@
      (:file "collider-cuboid")
      (:file "collider-collide-p")))
    (:module "prefab"
+    :serial t
     :components
     ((:file "common")
      (:file "checks")
@@ -171,11 +181,13 @@
      (:file "prefab")))
    ;; datatypes in module "shader" are not CL datatypes. They stay here.
    (:module "shader"
+    :serial t
     :components
     ((:file "texture")
      (:file "collider")
      (:file "matcap")))
    (:module "core-late"
+    :serial t
     :components
     ((:file "opengl")
      (:file "display")
@@ -196,6 +208,7 @@
      (:file "object-picking")
      (:file "engine")))
    (:module "definition"
+    :serial t
     :components
     ((:file "graphs")
      (:file "flows")
