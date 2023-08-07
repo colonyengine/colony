@@ -50,6 +50,7 @@
      (:file "graph-defs")
      (:file "flow-defs")
      (:file "clock-defs")
+     (:file "resource-cache-defs")
      (:file "context-defs")
      (:file "core-defs")
      (:file "kernel-defs")

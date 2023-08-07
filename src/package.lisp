@@ -1,5 +1,11 @@
 (in-package #:cl-user)
 
+(defpackage #:virality.resource-cache
+  (:use #:cl)
+  (:export
+   ;; TODO: Fill me in.
+   ))
+
 (defpackage #:virality.uuid
   (:use #:cl)
   ;; uuid defstruct
@@ -459,6 +465,7 @@
       (:virality.extension :x)
       (:virality.prefab :prefab)
       (:virality.shader :shd)
+      (:virality.resource-cache :rc)
       (:virality.thread-pool :tpool)
       (:virality.uuid :uuid)
       (:virality.texture.texture-table :textab)
