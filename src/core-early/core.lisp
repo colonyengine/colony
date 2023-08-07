@@ -42,16 +42,18 @@ structures in CORE."
   ;; TODO: LOAD-CONFIG should have been executed before this. Write a small
   ;; piece of code that can check this fact.
   (let ((core
-          (make-instance 'core
-                         ;; NOTE: It is possible the ordering of this
-                         ;; initialization may be significant.
-                         :config config
-                         :tables (make-instance 'bookkeeping-tables)
-                         :materials (make-materials-table)
-                         :textures (textab:make-texture-table)
-                         :thread-pool (tpool:make-thread-pool (or =threads=
-                                                                  =cpu-count=))
-                         :clock (make-clock))))
-    (setf *core-debug* core)
-    (make-context core)
+          (make-instance
+           'core
+           ;; NOTE: It is possible the ordering of this
+           ;; initialization may be significant.
+           :config config
+           :tables (make-instance 'bookkeeping-tables)
+           :materials (make-materials-table)
+           :textures (textab:make-texture-table)
+           :thread-pool (tpool:make-thread-pool (or =threads= =cpu-count=))
+           :context (make-context)
+           :clock (make-clock))))
+
+    (setf (slot-value (context core) '%core) core
+          *core-debug* core)
     core))
