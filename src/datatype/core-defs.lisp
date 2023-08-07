@@ -38,7 +38,7 @@
   ((%config :reader config
             :initarg :config)
    (%thread-pool :reader thread-pool
-		 :initarg :thread-pool)
+                 :initarg :thread-pool)
    (%assets :reader assets
             :initform (u:dict #'eq))
    (%running-p :accessor running-p
@@ -61,7 +61,8 @@
                :initarg :materials)
    (%textures :accessor textures
               :initarg :textures)
-   (%context :reader context)
+   (%context :reader context
+             :initarg :context)
    (%tables :reader tables
             :initarg :tables)
    (%call-flows :reader call-flows
