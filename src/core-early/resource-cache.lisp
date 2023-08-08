@@ -57,54 +57,60 @@
 
 ;; Implementation of CACHE-DOMAIN
 
-(defun make-cache-domain (domain &optional layout)
-  "Return a cache domain object for the DOMAIN using the LAYOUT which describes
-a possibly nested hash table schema for this domain. The LAYOUT is a list of
-test functions in which only EQ, EQL, EQUAL, and EQUALP are valid.  Later the
-layout will be paired with a set of keys. If layout is NIL, it will default to
-a single depth hash table with a default test of EQL."
+(defun make-cache-domain (domain-id &optional layout)
+  "Return a cache domain object for the DOMAIN-ID using the LAYOUT which
+describes a possibly nested hash table schema for this domain. The LAYOUT is a
+list of test functions in which only EQ, EQL, EQUAL, and EQUALP are valid.
+Later the layout will be paired with a set of keys. If layout is NIL, it will
+default to a single depth hash table with a default test of EQL."
   (let* ((layout (if layout layout `(,#'eql)))
          (cache (u:dict (car layout))))
-    (%make-cache-domain :domain domain :layout layout :cache cache)))
+    (%make-cache-domain :domain-id domain-id :layout layout :cache cache)))
 
-(defun cdref (cd &rest keys)
-  "Query the nested cache-domain CD at the index KEYS and return two values as
+(defun cdref (cache-domain &rest keys)
+  "Query the nested CACHE-DOMAIN at the index KEYS and return two values as
 in GETHASH. The length of KEYS must be at least one, and equal to or less than
-the length of the LAYOUT in the CD."
-  (u:ensure-nested-hash-table (cache cd)
-                              (layout cd)
+the length of the LAYOUT in the CACHE-DOMAIN."
+  (u:ensure-nested-hash-table (cache cache-domain)
+                              (layout cache-domain)
                               keys)
   (multiple-value-bind (result present)
-      (apply #'u:href (cache cd) keys)
+      (apply #'u:href (cache cache-domain) keys)
     (if present
-        (incf (hits cd))
-        (incf (misses cd)))
+        (incf (hits cache-domain))
+        (incf (misses cache-domain)))
     (values result present)))
 
-(defun (setf cdref) (new-obj cd &rest keys)
-  "Insert the NEW-OBJ at the index KEYS in the cache-domain CD. Return
-NEW-OBJ. KEYS may be at least one in length, but not more than the length of
-LAYOUT in the cache-domain."
-  (u:ensure-nested-hash-table (cache cd)
-                              (layout cd)
+(defun (setf cdref) (new-obj cache-domain &rest keys)
+  "Insert the NEW-OBJ at the index KEYS in the CACHE-DOMAIN. Return
+NEW-OBJ. KEYS must be at least one in length, but not more than the length of
+LAYOUT in the CACHE-DOMAIN."
+  (u:ensure-nested-hash-table (cache cache-domain)
+                              (layout cache-domain)
                               keys)
-  (incf (inserts cd))
-  (setf (apply #'u:href (cache cd) keys) new-obj))
+  (incf (inserts cache-domain))
+  (setf (apply #'u:href (cache cache-domain) keys) new-obj))
 
-(defun cdrem (cd &rest keys)
-  "Remove the value in the cache-domain CD indexed by KEYS.
-Return two values: the first value is the removed value or NIL if not present
-and the second value is T or NIL if it was present in the cache-domain or not."
-  (u:ensure-nested-hash-table (cache cd)
-                              (layout cd)
+(defun cdrem (cache-domain &rest keys)
+  "Remove the value in the CACHE-DOMAIN indexed by KEYS.
+Return two values: the first value is T or NIL if it was present in the
+CACHE-DOMAIN or not. The second value is the removed value or NIL if not
+present."
+  (u:ensure-nested-hash-table (cache cache-domain)
+                              (layout cache-domain)
                               keys)
-  (loop :with table = (cache cd)
+  (loop :with table = (cache cache-domain)
         :for (key . rest) :on keys
         :unless rest
-          :return (progn (incf (removes cd))
+          :return (progn (incf (removes cache-domain))
                          (multiple-value-bind (value present)
                              (gethash key table)
-                           (remhash key table)
+                           (when present
+                             (remhash key table))
+                           ;; TODO: Maybe keep a stack of hash tables down to
+                           ;; here, and then remove the ones which are empty in
+                           ;; reverse order. Decide if cleaning up memory is
+                           ;; more useful than live leaking it over time.
                            (values value present)))
         :do (setf table (gethash key table))))
 
@@ -122,7 +128,7 @@ and the second value is T or NIL if it was present in the cache-domain or not."
     (flet ((emit (cd &rest keys)
              (multiple-value-bind (value present)
                  (apply #'cdref cd keys)
-               (format t "(cdref cd ~{~A ~})-> value: ~A, present: ~A~%"
+               (format t "(cdref cd ~{~S ~})-> value: ~S, present: ~A~%"
                        keys value present))))
 
       (emit cd key0)
@@ -146,15 +152,13 @@ and the second value is T or NIL if it was present in the cache-domain or not."
 
 ;; Implementation of RESOURCE-CACHE
 
-(defun ensure-cache-domain (rc domain &optional layout)
+(defun ensure-cache-domain (resource-cache domain-id &optional layout)
   "If the cache-domain under the DOMAIN id exists in resource-cache RC, ignore
 LAYOUT and do nothing. If the cache-domain does not exist, construct one with
-the LAYOUT and insert it into RC. Return the cache-domain."
-  (multiple-value-bind (cd present) (u:href (domains rc) domain)
-    (if present
-        cd
-        (setf (u:href (domains rc) domain)
-              (make-cache-domain domain layout)))))
+the LAYOUT and insert it into RC. See MAKE-RESOURCE-CACHE for a description of
+the LAYOUT format.Return the cache-domain."
+  (u:ensure-gethash domain-id (domains resource-cache)
+                    (make-cache-domain domain-id layout)))
 
 (defun make-resource-cache (&optional domain-warmups)
   "Construct a RESOURCE-CACHE and return it. If DOMAIN-WARMUPS are supplied,
@@ -165,26 +169,84 @@ these forms:
   (domain-id (layout0))
   (domain-id (layout0 ... layoutN))
 where domain-id is an EQUAL comparable object, and layout0 .. layoutN are one
-of the functions EQ, EQL, EQUAL, EQUALP."
+of the functions EQ, EQL, EQUAL, EQUALP. If the LAYOUT is NIL, then the
+default layout will be `(,#'EQL)."
   (let ((rc (%make-resource-cache)))
-    (loop :for (domain layout) :in domain-warmups
-          :do (ensure-cache-domain rc domain layout))
+    (loop :for (domain-id layout) :in domain-warmups
+          :do (ensure-cache-domain rc domain-id layout))
     rc))
 
-(defun rcref (rc domain &rest keys)
-  (let ((cd (ensure-cache-domain rc domain)))
-    (apply #'cdref cd keys)))
+(defun rcref (resource-cache domain-id &rest keys)
+  "Lookup the value associated with the KEYS in the specified DOMAIN-ID.
+Return two values: the first value is the value or nil if not present, the
+second value is if the value is present in the specified domain. If the domain
+doesn't exist, return (values nil nil)."
+  (multiple-value-bind (cache-domain present)
+      (gethash domain-id (domains resource-cache))
+    (if present
+        (apply #'cdref cache-domain keys)
+        (values nil nil))))
 
-(defun (setf rcref) (new-obj rc domain &rest keys)
-  (let ((cd (ensure-cache-domain rc domain)))
+(defun (setf rcref) (new-obj resource-cache domain-id &rest keys)
+  "Ensure there is a cache-domain for the DOMAIN-ID and then setf the NEW-OBJ
+at the index KEYS in that domain. NOTE: If the cache-domain doesn't exist, it
+will be constructed with the default LAYOUT. See MAKE-RESOURCE-CACHE."
+  (let ((cd (ensure-cache-domain resource-cache domain-id)))
     (setf (apply #'cdref cd keys) new-obj)))
 
-(defun rcrem (rc domain &rest keys)
-  (let ((cd (ensure-cache-domain rc domain)))
-    (apply #'cdrem cd keys)))
+(defun rcrem (resource-cache domain-id &rest keys)
+  "Return two values: the first value is T or NIL of the value was removed or
+not removed at the KEYS index in the cache-domain specified by DOMAIN-ID. The
+second value is the value that was removed or NIL otherwise."
+  (multiple-value-bind (cache-domain present)
+      (gethash domain-id (domains resource-cache))
+    (if present
+        (apply #'cdrem cache-domain keys)
+        (values nil nil))))
 
-;; KEEP GOING: Implement rcremd (for domains). Implement a basic test for rc.
+(defun rcrefd (resource-cache domain-id)
+  "Return a reference to the cache-domain for DOMAIN-ID. Return two values:
+the first value is the cache-domain object or NIL if not present, and the
+second value is T if the cache-domain existed and NIL if not."
+  (gethash domain-id (domains resource-cache)))
 
-(defun rcremd (rc domain)
-  (declare (ignore rc domain))
-  nil)
+;; NOTE: There is no (setf rcrefd) function because you can either create the
+;; cache-domain, or remove it, but it should not be changed once it is made.
+
+(defun rcremd (resource-cache domain)
+  "Remove the cache-domain DOMAIN from the RESOURCE-CACHE. Return two
+values: The first value is T or NIL if the cache-domain existed or not, and
+the second is the cache-domain object if it did exist or NIL otherwise."
+  (multiple-value-bind (cache-domain present)
+      (gethash domain (domains resource-cache))
+    (when present
+      (remhash domain (domains resource-cache)))
+    (values present cache-domain)))
+
+
+;; TODO: move over to a unit test.
+(defun rctest ()
+  (let ((rc (make-resource-cache `((:foo (,#'eql ,#'eql))))))
+    (ensure-cache-domain rc :bar `(,#'equal))
+
+    (flet ((emit (rc domain-id &rest keys)
+             (multiple-value-bind (value present)
+                 (apply #'rcref rc domain-id keys)
+               (format t "(rcref rc ~S ~{~S ~})-> value: ~S, present: ~A~%"
+                       domain-id keys value present))))
+
+      (emit rc :foo :a 10)
+      (setf (rcref rc :foo :a 10) "a/b/c")
+      (emit rc :foo :a 10)
+      (rcrem rc :foo :a 10)
+      (emit rc :foo :a 10)
+
+      (format t "--------------~%")
+
+      (let ((key "/file/path"))
+        (emit rc :bar key)
+        (setf (rcref rc :bar key) 100)
+        (emit rc :bar key)
+        (rcrem rc :bar key)
+        (emit rc :bar key))
+      )))

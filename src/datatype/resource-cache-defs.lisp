@@ -6,10 +6,10 @@
             (:predicate nil)
             (:copier nil))
   ;; The domain identifier under which this cache stores unique items. A domain
-  ;; value is anything that can compare under EQUAL. Usually symbols are
+  ;; id value is anything that can compare under EQUAL. Usually symbols are
   ;; used. Domains represent a kind of association between a key index and a
   ;; value.
-  domain
+  domain-id
 
   ;; This represents a list of test functions used in a path to the deepest
   ;; nested hash table stored in the cache slot. Set upon construction. The
