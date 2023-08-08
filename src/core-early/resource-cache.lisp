@@ -213,14 +213,14 @@ second value is T if the cache-domain existed and NIL if not."
 ;; NOTE: There is no (setf rcrefd) function because you can either create the
 ;; cache-domain, or remove it, but it should not be changed once it is made.
 
-(defun rcremd (resource-cache domain)
+(defun rcremd (resource-cache domain-id)
   "Remove the cache-domain DOMAIN from the RESOURCE-CACHE. Return two
 values: The first value is T or NIL if the cache-domain existed or not, and
 the second is the cache-domain object if it did exist or NIL otherwise."
   (multiple-value-bind (cache-domain present)
-      (gethash domain (domains resource-cache))
+      (gethash domain-id (domains resource-cache))
     (when present
-      (remhash domain (domains resource-cache)))
+      (remhash domain-id (domains resource-cache)))
     (values present cache-domain)))
 
 
@@ -240,6 +240,9 @@ the second is the cache-domain object if it did exist or NIL otherwise."
       (emit rc :foo :a 10)
       (rcrem rc :foo :a 10)
       (emit rc :foo :a 10)
+      (format t "cache-domain for :foo is: ~S~%" (rcrefd rc :foo))
+      (rcremd rc :foo)
+      (format t "cache-domain for :foo is: ~S~%" (rcrefd rc :foo))
 
       (format t "--------------~%")
 
@@ -249,4 +252,8 @@ the second is the cache-domain object if it did exist or NIL otherwise."
         (emit rc :bar key)
         (rcrem rc :bar key)
         (emit rc :bar key))
+
+      (format t "cache-domain for :bar is: ~S~%" (rcrefd rc :bar))
+      (rcremd rc :bar)
+      (format t "cache-domain for :bar is: ~S~%" (rcrefd rc :bar))
       )))
