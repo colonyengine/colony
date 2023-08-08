@@ -2,9 +2,28 @@
 
 (defpackage #:virality.resource-cache
   (:use #:cl)
+  ;; CACHE-DOMAIN
   (:export
-   ;; TODO: Fill me in.
-   ))
+   #:cache
+   #:cache-domain
+   #:cdref
+   #:cdrem
+   #:domain-id
+   #:hits
+   #:inserts
+   #:layout
+   #:make-cache-domain
+   #:misses
+   #:removes)
+  ;; RESOURCE-CACHE
+  (:export
+   #:domains
+   #:ensure-cache-domain
+   #:make-resource-cache
+   #:rcref
+   #:rcrefd
+   #:rcrem
+   #:resource-cache))
 
 (defpackage #:virality.uuid
   (:use #:cl)
