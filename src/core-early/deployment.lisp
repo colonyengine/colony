@@ -7,13 +7,13 @@
 
 (defvar *deployed-p* nil)
 
-(defun deploy-binary (file-name project scene &key compress-p)
+(defun deploy-binary (file-name config scene &key compress-p)
   #+sbcl
   (progn
     (setf *deployed-p* t)
     (sb-ext:save-lisp-and-die
      file-name
-     :toplevel (lambda () (start :project project :scene scene))
+     :toplevel (lambda () (start :config config :scene scene))
      :executable t
      :compression (when compress-p 9)))
   #-sbcl
