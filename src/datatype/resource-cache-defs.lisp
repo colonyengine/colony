@@ -54,7 +54,7 @@
   ;; id value is anything that can compare under EQL. Usually symbols are
   ;; used. Domains represent a kind of association between a key index and a
   ;; value.
-  domain-id
+  did
 
   ;; This represents a list of test functions used in a path to the deepest
   ;; nested hash table stored in the cache slot. Set upon construction. The
@@ -104,21 +104,22 @@
 ;;;; allow high throughput concurrent resolution and loading of the desired
 ;;;; data into the resource-cache.
 
-;; This doesn't get derived normally. An instance will get passed back and
-;; forth through a threaded dataflow as various methods fill in each portion as
-;; needed.
+;; This will often be derived to be a specific kind of caching type which makes
+;; the protocol run smoother. It doesn't HAVE to be derived, though, as long as
+;; the protocol for this base class type is also specified.
 (defclass caching-task ()
   ( ;; the key that ends up in the resource-cache as the lookup id for the
    ;; value this caching-task ultimately computes.
    (%key :accessor key :initarg :key)
    (%opaque-data :accessor opaque-data :initarg :opaque-data)
+   (%domain-id :reader domain-id :initarg :domain-id)
 
    ;; One of:
    ;; :discard (keep the current cache entry and discard this caching task),
    ;; NOTE: :discard knows about reservations!
    ;;
    ;; :supersede (finish computing the value and replace the cache entry)
-   ;; NOTE: If multiple tasks want to overwrite the same cache entry, the
+   ;; NOTE: If multiple tasks want to supersede the same cache entry, the
    ;; last one wins. TODO: Should I record when this happens and let the main
    ;; thread know when the executor returns? Sort of seems like a situation
    ;; that we should try to minimize. Also race conditions vs live-coding and
@@ -138,16 +139,19 @@
    ;; how much work it actually has to do.
    (%state-p :accessor state-p :initarg :state-p :initform :reserved)
 
+   ;; Ultimate form of the key converted into the value.
    (%value :accessor value :initarg :value)
 
-   (%core :reader core :initarg core)
+   (%core :reader core :initarg :core)
    ))
 
+;; TODO: This object probably goes into the CORE as a slot.
 ;; This is responsible for scheduling across all warmers inserted into it.  It
 ;; can decide to schedule tasks in the order necessary and mix and match
 ;; between warmers to maintain high throughput.
 (defclass resource-cache-scheduler ()
-  (;; KEY is domain-id, VALUE is unordered linked list of caching-tasks
+  (;; KEY is domain-id, VALUE is hash-table.
+   ;; In second hash table, KEY is ref of caching task, VALUE is caching-task.
    (%unscheduled-tasks :reader unscheduled-tasks
                        :initarg :unscheduled-tasks
                        :initform (u:dict #'eql))
@@ -166,32 +170,36 @@
 ;; Step 0: Not expected to be specialized or written by the user.
 ;; Ask the resource scheduler for a caching-task which is returned by this
 ;; and that we will fill in.
-(defgeneric acquire-caching-task (resource-cache-scheduler domain-id))
+(defgeneric acquire-caching-task (resource-cache-scheduler task-type
+                                  domain-id))
 
 ;; executed on main thread
-;; Step 1: Expected to be specialized on domain-id
+;; Step 1: Expected to be specialized on caching-task
 ;; Must return the caching-task
-(defgeneric init-caching-task (caching-task domain-id &key &allow-other-keys))
+(defgeneric init-caching-task (caching-task &rest init-args
+                               &key &allow-other-keys))
 
 ;; executed on main thread
-;; Step 2: Expected to be specialized on domain-id
+;; Step 2: Expected to be specialized on caching-task
 ;; Mark the task if it should be discarded or not.
+;; Actually put a reservation in the place where it should go (often the
+;; resource-cache) if we want to reserve the spot for this task.
 ;; Must return the caching-task
-(defgeneric reserve-or-discard-caching-task-p (caching-task domain-id))
+(defgeneric reserve-or-discard-caching-task-p (caching-task))
 
 ;; These would be executed in the thread pool. It is expected that if locking
 ;; needs to happen here it is done here.
-;; Step 3: Expected to be specialized on domain-id
+;; Step 3: Expected to be specialized on caching-task
 ;; The code which computes the value of the caching-task.
 ;; Must return the caching-task
-(defgeneric compute-caching-task-value (caching-task domain-id))
+(defgeneric compute-caching-task-value (caching-task))
 
 ;; executed on main thread, value is inserted into cache, or discard dealt
 ;; with.
-;; Step 4: Expected to be specialized on domain-id
+;; Step 4: Expected to be specialized on caching-task
 ;; Usually the code that inserts the entry into the resource-cache.
 ;; Must return caching-task
-(defgeneric finalize-caching-task (caching-task domain-id))
+(defgeneric finalize-caching-task (caching-task))
 
 ;; executed on main-thread
 ;; Step 5: Not expected to be specialized or written by user.
@@ -210,13 +218,18 @@
 ;;;; The executor API.
 ;;;; --------------------------------------------------------------------------
 
+;; TODO: This object probably goes into the CORE as a slot.
 ;; The executor speaks to the scheduler and arranges for the caching-tasks to
 ;; be completed.
-(defclass resource-cache-executor () ())
+(defclass resource-cache-executor ()
+  ((%core :reader core :initarg :core)))
 (defclass sequential-resource-cache-executor (resource-cache-executor) ())
 (defclass concurrent-resource-cache-executor (resource-cache-executor) ())
 
 ;; NOTE: The game engine is expected to specialize this on sequential or
-;; concurrent excecutors. It queries a schedule from the scheduler and
-;; them forms the work necessary to complete the work.
+;; concurrent excecutors. It queries a schedule from the scheduler and them
+;; forms the work necessary to complete the work. Returns how many tasks were
+;; processed. It is expected that this returns when all the work is
+;; finished. It return how many tasks were processed (and maybe in how much
+;; time too?)
 (defgeneric execute (resource-cache-executor resource-cache-scheduler))

@@ -1,5 +1,9 @@
 (in-package #:virality)
 
+;; -------------------------------------------------------------------------
+;; NOTE: The current resource-cache algorithm that we're getting rid of.
+;; -------------------------------------------------------------------------
+
 (defmethod resource-cache-layout (domain)
   ;; Only the 4 types are allowed: EQ EQL EQUAL EQUALP
   '(eql))
@@ -52,8 +56,23 @@
 
 ;; -------------------------------------------------------------------------
 ;; TODO: Slowly replace the above with the below.
+;; -------------------------------------------------------------------------
 
 (in-package #:virality.resource-cache)
+
+;; Implementation of base CACHE-ITEM.
+
+(defun make-cache-item (&rest init-args)
+  "Produce a base CACHE-ITEM and return it. The INIT-ARGS may contain keyword
+value pairs for these slots:
+ :tag val - An arbitrary user specified tag ignored by the resource-cache API.
+ :policy val - One of: :unlocked, or :locked. Describes if this entry can be
+               evicted.
+ :location val - One of: :cl-heap, :ffi-heap, :gpu-memory, :disk. The :disk
+                 is used only for writing cached items to disk.
+ :size val - Size in bytes of the associated value, if applicable.
+ :value val - The actual representation of the cached item."
+  (apply #'make-instance 'cache-item init-args))
 
 ;; Implementation of CACHE-DOMAIN
 
@@ -65,7 +84,7 @@ Later the layout will be paired with a set of keys. If layout is NIL, it will
 default to a single depth hash table with a default test of EQL."
   (let* ((layout (if layout layout `(,#'eql)))
          (cache (u:dict (car layout))))
-    (%make-cache-domain :domain-id domain-id :layout layout :cache cache)))
+    (%make-cache-domain :did domain-id :layout layout :cache cache)))
 
 (defun cdref (cache-domain &rest keys)
   "Query the nested CACHE-DOMAIN at the index KEYS and return two values as
@@ -257,3 +276,167 @@ the second is the cache-domain object if it did exist or NIL otherwise."
       (rcremd rc :bar)
       (format t "cache-domain for :bar is: ~S~%" (rcrefd rc :bar))
       )))
+
+;; -------------------------------------------------------------------------
+;; The Cache Warming API
+;; -------------------------------------------------------------------------
+
+(defun make-resource-cache-scheduler (core &rest init-args)
+  (apply #'make-instance 'resource-cache-scheduler :core core init-args))
+
+(defmethod acquire-caching-task (resource-cache-scheduler task-type domain-id)
+  "Return a CACHING-TASK of type TASK-TYPE for DOMAIN-ID. This instance may or
+may not have been recycled."
+  (let* ((ct (make-instance task-type
+                            :domain-id domain-id
+                            :core (core resource-cache-scheduler)))
+         (ttt (u:ensure-gethash task-type
+                                (unscheduled-tasks resource-cache-scheduler)
+                                (make-hash-table)))
+         (dht (u:ensure-gethash domain-id ttt (make-hash-table))))
+    (u:ensure-gethash ct dht ct)))
+
+(defmethod init-caching-task (caching-task &rest init-args
+                              &key &allow-other-keys)
+  (declare (ignore caching-task init-args))
+  (error "This method needs to be specialized on caching-task."))
+
+(defmethod reserve-or-discard-caching-task-p (caching-task)
+  (declare (ignore caching-task))
+  (error "This method needs to be specialized on caching-task."))
+
+(defmethod compute-caching-task-value (caching-task)
+  (declare (ignore caching-task))
+  (error "This method needs to be specialized on caching-task."))
+
+(defmethod finalize-caching-task (caching-task)
+  (declare (ignore caching-task))
+  (error "This method needs to be specialized on caching-task."))
+
+(defmethod release-caching-task (resource-cache-scheduler caching-task)
+  ;; If the caching-task is in the scheduler, remove it. In both cases just
+  ;; drop the reference to it from the resource-cache API's point of view and
+  ;; let the GC collect it.
+  (let* ((task-type (class-name (class-of caching-task)))
+         (ttt (u:ensure-gethash task-type
+                                (unscheduled-tasks resource-cache-scheduler)
+                                (make-hash-table)))
+         (dht (u:ensure-gethash (domain-id caching-task) ttt
+                                (make-hash-table))))
+    (remhash caching-task dht)
+    nil))
+
+;; --------------------------------------------------------------------------
+;; The resource cache scheduling API
+;; --------------------------------------------------------------------------
+
+;; Ultimately, this must lock the resource-cache-scheduler.
+;; TODO: For now, only the main thread can call this.
+;;
+;; Return a list of all the caching-tasks out of order.
+(defmethod schedule (resource-cache-scheduler &key &allow-other-keys)
+  "Return an out of order list of all the available caching-tasks. The
+caching-tasks are removed from the scheduler's ownership."
+  (let ((scheduled-tasks nil)
+        (unscheduled-tasks (unscheduled-tasks resource-cache-scheduler)))
+    (u:do-hash-values (dht unscheduled-tasks)
+      (u:do-hash-values (tasks dht)
+        (u:do-hash-values (task tasks)
+          (push task scheduled-tasks))
+        (clrhash tasks)))
+    scheduled-tasks))
+
+;; --------------------------------------------------------------------------
+;; The executor API.
+;; --------------------------------------------------------------------------
+
+(defun make-sequential-resource-cache-executor (core &rest init-args)
+  (apply #'make-instance 'sequential-resource-cache-executor
+         :core core init-args))
+
+(defun make-concurrent-resource-cache-executor (core &rest init-args)
+  (apply #'make-instance 'concurrent-resource-cache-executor
+         :core core init-args))
+
+(defun make-resource-cache-executor (kind core &rest init-args)
+  (ecase kind
+    (:sequential
+     (apply #'make-sequential-resource-cache-executor core init-args))
+    (:concurrent
+     (apply #'make-concurrent-resource-cache-executor core init-args))))
+
+(defmethod execute (resource-cache-executor resource-cache-scheduler)
+  (error "Unknown executor algorithm!"))
+
+(defmethod execute ((resource-cache-executor
+                     sequential-resource-cache-executor)
+                    resource-cache-scheduler)
+  (let ((total-processed 0))
+    ;; In case the body puts more tasks in, we catch it in this loop.
+    (loop :for task :in (schedule resource-cache-scheduler)
+          :do (reserve-or-discard-caching-task-p task)
+              (unless (eq :discarded (state-p task))
+                (compute-caching-task-value task))
+              (finalize-caching-task task)
+              (release-caching-task resource-cache-scheduler task)
+              (incf total-processed))
+    total-processed))
+
+;; TODO: It is for sure that the thread synchronization of this control path is
+;; incorrect and we need to lock more things than we believe--both in the
+;; queues to manage the work and also in accesses to the CORE or other things.
+(defmethod execute ((resource-cache-executor
+                     concurrent-resource-cache-executor)
+                    resource-cache-scheduler)
+  (error "Not implemented yet!")
+  nil)
+
+;; --------------------------------------------------------------------------
+;; Testing the warming API
+;; --------------------------------------------------------------------------
+
+;; The caching task test is to convert a key which is a string to a value which
+;; is the length of the string.
+(defclass warmer-test-caching-task (caching-task) ())
+
+(defmethod init-caching-task ((caching-task warmer-test-caching-task)
+                              &rest init-args &key name)
+  (declare (ignore init-args))
+  (setf (key caching-task) name)
+  caching-task)
+
+(defmethod reserve-or-discard-caching-task-p
+    ((caching-task warmer-test-caching-task))
+  (setf (state-p caching-task) :reserved)
+  caching-task)
+
+(defmethod compute-caching-task-value ((caching-task warmer-test-caching-task))
+  (setf (value caching-task) (length (key caching-task)))
+  caching-task)
+
+(defmethod finalize-caching-task ((caching-task warmer-test-caching-task))
+  (assert (= (value caching-task) (length (key caching-task))))
+  (format t "Finalized caching-task: key: ~S, value: ~A~%"
+          (key caching-task)
+          (value caching-task))
+  caching-task)
+
+(defun warmer-test ()
+  (let* ((scheduler (make-resource-cache-scheduler nil))
+         (executor (make-resource-cache-executor :sequential nil))
+         (db #("hi-there-" "stuff-" "foo-"))
+         (db-len (length db)))
+    ;; allocate the tasks
+    (loop :repeat 10
+          :do (let ((task (acquire-caching-task scheduler
+                                                'warmer-test-caching-task
+                                                :test-domain)))
+                (init-caching-task task
+                                   :name
+                                   (string-downcase
+                                    (symbol-name
+                                     (gensym (aref db (random db-len))))))))
+
+    ;; execute them
+    (let ((total (execute executor scheduler)))
+      (format t "Total caching-tasks processed: ~A~%" total))))
