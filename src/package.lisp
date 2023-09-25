@@ -2,20 +2,31 @@
 
 (defpackage #:virality.resource-cache
   (:use #:cl)
-  ;; CACHE-DOMAIN
+  ;; CACHE-ITEM API
+  (:export
+   #:cache-item
+   #:location
+   #:make-cache-item
+   #:policy
+   #:size
+   #:tag
+   #:value
+   )
+  ;; CACHE-DOMAIN API
   (:export
    #:cache
    #:cache-domain
    #:cdref
    #:cdrem
-   #:domain-id
+   #:did
    #:hits
    #:inserts
    #:layout
    #:make-cache-domain
    #:misses
-   #:removes)
-  ;; RESOURCE-CACHE
+   #:removes
+   )
+  ;; RESOURCE-CACHE API
   (:export
    #:domains
    #:ensure-cache-domain
@@ -23,7 +34,46 @@
    #:rcref
    #:rcrefd
    #:rcrem
-   #:resource-cache))
+   #:resource-cache
+   )
+  ;; CACHING-TASK API
+  (:export
+   #:caching-task
+   #:core
+   #:domain-id
+   #:if-exists
+   #:if-not-exits
+   #:key
+   #:opaque-data
+   #:statep
+   #:value
+   )
+  ;; RESOURCE-CACHE-SCHEDULER API
+  (:export
+   #:core
+   #:make-resource-cache-scheduler
+   #:schedule
+   #:unscheduled-tasks
+   )
+  ;; The Cache Warming Protocol (move to a better protocol definition place).
+  (:export
+   #:acquire-caching-task
+   #:compute-caching-task-value
+   #:finalize-caching-task
+   #:init-caching-task
+   #:release-caching-task
+   #:reserve-or-discard-caching-task-p
+   )
+  ;; RESOURCE-CACHE-EXECUTOR API
+  (:export
+   #:concurrent-resource-cache-executor
+   #:execute
+   #:make-concurrent-resource-cache-executor
+   #:make-resource-cache-executor
+   #:make-sequential-resource-cache-executor
+   #:resource-cache-executor
+   #:sequential-resource-cache-executor
+   ))
 
 (defpackage #:virality.uuid
   (:use #:cl)
@@ -33,13 +83,15 @@
    #:high
    #:low
    #:variant
-   #:version)
+   #:version
+   )
   ;; uuid API
   (:export
    #:make-uuid
    #:string->uuid
    #:uuid->string
-   #:valid-string-p))
+   #:valid-string-p
+   ))
 
 (defpackage #:virality.thread-pool
   (:use #:cl)

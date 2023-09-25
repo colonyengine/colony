@@ -137,7 +137,7 @@
    ;; Set to :reserved if we processed the task and :discarded if we don't want
    ;; to process the task. The finalizer looks at this to determine what and
    ;; how much work it actually has to do.
-   (%state-p :accessor state-p :initarg :state-p :initform :reserved)
+   (%statep :accessor statep :initarg :statep :initform :reserved)
 
    ;; Ultimate form of the key converted into the value.
    (%value :accessor value :initarg :value)

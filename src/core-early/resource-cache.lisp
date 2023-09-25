@@ -277,12 +277,36 @@ the second is the cache-domain object if it did exist or NIL otherwise."
       (format t "cache-domain for :bar is: ~S~%" (rcrefd rc :bar))
       )))
 
-;; -------------------------------------------------------------------------
-;; The Cache Warming API
-;; -------------------------------------------------------------------------
+;;; --------------------------------------------------------------------------
+;;; The cache warming (scheduler/executor) API
+;;; --------------------------------------------------------------------------
+
+;; --------------------------------------------------------------------------
+;; The resource cache scheduling API
+;; --------------------------------------------------------------------------
 
 (defun make-resource-cache-scheduler (core &rest init-args)
   (apply #'make-instance 'resource-cache-scheduler :core core init-args))
+
+;; Ultimately, this must lock the resource-cache-scheduler.
+;; TODO: For now, only the main thread can call this.
+;;
+;; Return a list of all the caching-tasks out of order.
+(defmethod schedule (resource-cache-scheduler &key &allow-other-keys)
+  "Return an out of order list of all the available caching-tasks. The
+caching-tasks are removed from the scheduler's ownership."
+  (let ((scheduled-tasks nil)
+        (unscheduled-tasks (unscheduled-tasks resource-cache-scheduler)))
+    (u:do-hash-values (dht unscheduled-tasks)
+      (u:do-hash-values (tasks dht)
+        (u:do-hash-values (task tasks)
+          (push task scheduled-tasks))
+        (clrhash tasks)))
+    scheduled-tasks))
+
+;; -------------------------------------------------------------------------
+;; The Cache Warming Protocol
+;; -------------------------------------------------------------------------
 
 (defmethod acquire-caching-task (resource-cache-scheduler task-type domain-id)
   "Return a CACHING-TASK of type TASK-TYPE for DOMAIN-ID. This instance may or
@@ -327,26 +351,6 @@ may not have been recycled."
     nil))
 
 ;; --------------------------------------------------------------------------
-;; The resource cache scheduling API
-;; --------------------------------------------------------------------------
-
-;; Ultimately, this must lock the resource-cache-scheduler.
-;; TODO: For now, only the main thread can call this.
-;;
-;; Return a list of all the caching-tasks out of order.
-(defmethod schedule (resource-cache-scheduler &key &allow-other-keys)
-  "Return an out of order list of all the available caching-tasks. The
-caching-tasks are removed from the scheduler's ownership."
-  (let ((scheduled-tasks nil)
-        (unscheduled-tasks (unscheduled-tasks resource-cache-scheduler)))
-    (u:do-hash-values (dht unscheduled-tasks)
-      (u:do-hash-values (tasks dht)
-        (u:do-hash-values (task tasks)
-          (push task scheduled-tasks))
-        (clrhash tasks)))
-    scheduled-tasks))
-
-;; --------------------------------------------------------------------------
 ;; The executor API.
 ;; --------------------------------------------------------------------------
 
@@ -375,7 +379,7 @@ caching-tasks are removed from the scheduler's ownership."
     ;; In case the body puts more tasks in, we catch it in this loop.
     (loop :for task :in (schedule resource-cache-scheduler)
           :do (reserve-or-discard-caching-task-p task)
-              (unless (eq :discarded (state-p task))
+              (unless (eq :discarded (statep task))
                 (compute-caching-task-value task))
               (finalize-caching-task task)
               (release-caching-task resource-cache-scheduler task)
@@ -407,7 +411,7 @@ caching-tasks are removed from the scheduler's ownership."
 
 (defmethod reserve-or-discard-caching-task-p
     ((caching-task warmer-test-caching-task))
-  (setf (state-p caching-task) :reserved)
+  (setf (statep caching-task) :reserved)
   caching-task)
 
 (defmethod compute-caching-task-value ((caching-task warmer-test-caching-task))
