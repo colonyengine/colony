@@ -94,6 +94,9 @@
      (:file "graph")
      (:file "flow") ;; maybe lift binding-pattern if used elsewhere.
      (:file "protocol")
+     (:file "image")
+     (:file "image-png")
+     (:file "image-hdr")
      (:file "resource-cache")
      (:file "clock")
      (:file "shaders")
@@ -192,9 +195,6 @@
     :components
     ((:file "opengl")
      (:file "display")
-     (:file "image")
-     (:file "image-png")
-     (:file "image-hdr")
      (:file "gltf")
      (:file "material-values")
      (:file "material")
