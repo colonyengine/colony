@@ -1,5 +1,18 @@
 (in-package #:cl-user)
 
+(defpackage #:virality.image
+  (:use #:cl)
+  ;; IMAGE API
+  (:export
+   #:data
+   #:height
+   #:internal-format
+   #:load-image
+   #:pixel-format
+   #:pixel-type
+   #:width
+   ))
+
 (defpackage #:virality.resource-cache
   (:use #:cl)
   ;; CACHE-ITEM API
@@ -541,6 +554,7 @@
       (:virality.uuid :uuid)
       (:virality.texture.texture-table :textab)
       (:virality.texture :tex)
+      (:virality.image :img)
       (:vshadow :shadow))))
 
 (macrolet ((define-nicknames/internal ()
