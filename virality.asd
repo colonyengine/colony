@@ -101,8 +101,9 @@
      (:file "clock")
      (:file "shaders")
      (:file "annotations")
-     (:file "context")
-     (:file "core")))
+     (:file "context") ;; TODO: This depends on above, move to higher layer.
+     (:file "core") ;; TODO: This depends on above, move to higher layer.
+     ))
    ;; This module houses files that are still being worked out and not
    ;; integrated into the core yet.
    (:module "flux"
