@@ -6,7 +6,9 @@ mathematics, algorithms, etc.
 Every book, paper, or other that we find that helps us in our quest shall be
 recorded here. We try to grade the references from easiest to hardest in each
 section for easier learning of the material. These set of references is an ever
-growing work.
+growing work. We try to give a real link to the book often from the author or
+publisher's site, but occasionally for the older books the link goes to Amazon.
+We don't get any kickbacks if you buy the book from there or anywhere else.
 
 # Common Lisp
 
@@ -16,10 +18,14 @@ growing work.
  - Weitz, Edmund (2015). [Common Lisp Recipes: A Problem-Solution Approach][CLR-Weitz]. Apress. ISBN 1484211774. [Errata][CLR-Err-Weitz]
  - Norvig, Peter (1992). [Paradigms of Artificial Intelligence Programming][PAIP-Norvig]. Morgan Kaufmen Publishers. ISBN 1-55860-191-0. [Errata][PAIP-Err-Norvig]
  - [Common Lisp Hyperspec][CLHS].
+ - Kiczales, Gregor, and des Rivieres, Jim, and Bobrow, Daniel G. (1991). [The Art of the Metaobject Protocol][AMOP-Kiczales]. The MIT Press. ISBN 978-0262610742.
+ - Queinnec, Christian (2003). [Lisp in Small Pieces][LiSP-Queinnec]. Cambridge University Press. ISBN 978-0521545662.
 
-# Graphics APIS
+# Graphics APIs
 
  - Kessenich John M., and Sellers, Graham, and Shreiner, Dave (2016). [OpenGL Programming Guide: The Official Guide to Learning OpenGL, Version 4.5 with SPIR-V, Ninth Edition][OGL9]. Addison-Wesley Professional. ISBN 978-0134495491.
+ - Rost, Randi J. (2009). [OpenGL Shading Language, Third Edition][OGLSL3-Rost]. Addison-Wesley Professional. ISBN 978-0321637635.
+ - Wolff, Daniel (2011). [OpenGL 4 Shading Language Cookbook, Second Edition][OGL4SLC2-Wolff]. Packt Publishing. ISBN 978-1849514767.
 
 # Game Engine Design and Methodology
 
@@ -39,6 +45,8 @@ talks about (or for what we used it), even though it likely could go into
 multiple different sections.
 
  - Ericson, Christer (2004). [Real-Time Collision Detection][RTCD-Ericson]. CRC Press. ISBN 1558607323. [Errata][RTCD-Err-Ericson]
+ - Watt, Alan (1999). [3D Computer Graphics, Third Edition][3DCG-Watt]. Addison-Wesley. ISBN 978-0201398557.
+ - Watt, Alan, and Watt, Mark (1992). [Advanced Animation and Rendering Techniques: Theory and Practice][AARTTP-Watt]. Addison-Wesley. ISBN 978-0201544121.
 
 # Algorithms
 
@@ -73,3 +81,9 @@ multiple different sections.
 [PAIP-Err-Norvig]: https://norvig.com/paip-errata.html
 [OOPCL-Keene]: https://www.amazon.com/Object-Oriented-Programming-COMMON-LISP-Programmers/dp/0201175894
 [OGL9]: http://www.opengl-redbook.com/
+[OGL4SLC2-Wolff]: https://www.packtpub.com/product/opengl-40-shading-language-cookbook/9781849514767
+[3DCG-Watt]: https://www.amazon.com/Alan-Watt-Computer-Graphics-third/dp/B002LCHUSK
+[AARTTP-Watt]: https://www.amazon.com/Advanced-Animation-Rendering-Techniques-Alan/dp/0201544121
+[AMOP-Kiczales]: https://mitpress.mit.edu/9780262610742/the-art-of-the-metaobject-protocol/
+[OGLSL3-Rost]: https://www.amazon.com/OpenGL-Shading-Language-Randi-Rost/dp/0321334892
+[LiSP-Queinnec]: https://www.cambridge.org/core/books/lisp-in-small-pieces/66FD2BE3EDDDC68CA87D652C82CF849E
