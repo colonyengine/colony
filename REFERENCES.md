@@ -5,8 +5,8 @@ mathematics, algorithms, etc.
 
 Every book, paper, or other that we find that helps us in our quest shall be
 recorded here. We try to grade the references from easiest to hardest in each
-section for easier learning of the material. These set of references is an
-ever growing work.
+section for easier learning of the material. These set of references is an ever
+growing work.
 
 # Common Lisp
 
@@ -29,16 +29,28 @@ geometry, rigid body transformations, etc), computational geometry (mesh
 generation, signed distance functions, voronoi maps, etc), noise (turbulence,
 procedural generation, Perlin noise, etc), object intersections (bounding box
 against bounding box, sphere against bounding box, etc), physics simulation
-(kinematics, inverse kinematics, fluid, sterring, etc), etc. As this section
-grows, we will categorize a reference by the main topic it talks about (or for
-what we used it), even though it likely could go into multiple different
-sections.
+(kinematics, inverse kinematics, fluid, car steering, etc), etc. As this
+section grows, we will categorize a reference by the main topic it talks about
+(or for what we used it), even though it likely could go into multiple
+different sections.
 
  - Ericson, Christer (2004). [Real-Time Collision Detection][RTCD-Ericson]. CRC Press. ISBN 1558607323. [Errata][RTCD-Err-Ericson]
 
 # Algorithms
 
  - Cormen, Thomas H. and Leiserson, Charles E. and Rivest, Ronald L. and Stein, Clifford (2009). [Introduction to Algorithms, Third Edition][IA-Cormen]. The MIT Press. ISBN 0262033844 [Errata][IA-Err-Cormen]
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
