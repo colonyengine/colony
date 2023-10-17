@@ -67,4 +67,4 @@ multiple different sections.
 [IA-Err-Cormen]: https://www.cs.dartmouth.edu/~thc/clrs-bugs/bugs-3e.php
 [PAIP-Norvig]: https://github.com/norvig/paip-lisp
 [PAIP-Err-Norvig]: https://norvig.com/paip-errata.html
-[OOPCL-Keene]: [https://www.amazon.com/Object-Oriented-Programming-COMMON-LISP-Programmers/dp/0201175894]
+[OOPCL-Keene]: https://www.amazon.com/Object-Oriented-Programming-COMMON-LISP-Programmers/dp/0201175894
