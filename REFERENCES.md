@@ -17,6 +17,10 @@ growing work.
  - Norvig, Peter (1992). [Paradigms of Artificial Intelligence Programming][PAIP-Norvig]. Morgan Kaufmen Publishers. ISBN 1-55860-191-0. [Errata][PAIP-Err-Norvig]
  - [Common Lisp Hyperspec][CLHS].
 
+# Graphics APIS
+
+ - Kessenich John M., and Sellers, Graham, and Shreiner, Dave (2016). [OpenGL Programming Guide: The Official Guide to Learning OpenGL, Version 4.5 with SPIR-V, Ninth Edition][OGL9]. Addison-Wesley Professional. ISBN 978-0134495491.
+
 # Game Engine Design and Methodology
 
  - Gregory, Jason (2018). [Game Engine Architecture, Third Edition][GEA3-Gregory]. CRC Press. ISBN 978-1-13803-545-4
@@ -68,3 +72,4 @@ multiple different sections.
 [PAIP-Norvig]: https://github.com/norvig/paip-lisp
 [PAIP-Err-Norvig]: https://norvig.com/paip-errata.html
 [OOPCL-Keene]: https://www.amazon.com/Object-Oriented-Programming-COMMON-LISP-Programmers/dp/0201175894
+[OGL9]: http://www.opengl-redbook.com/
