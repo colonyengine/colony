@@ -30,9 +30,9 @@ generation, signed distance functions, voronoi maps, etc), noise (turbulence,
 procedural generation, Perlin noise, etc), object intersections (bounding box
 against bounding box, sphere against bounding box, etc), physics simulation
 (kinematics, inverse kinematics, fluid, car steering, etc), etc. As this
-section grows, we will categorize a reference by the main topic it talks about
-(or for what we used it), even though it likely could go into multiple
-different sections.
+section grows, we will begin to categorize a reference by the main topic it
+talks about (or for what we used it), even though it likely could go into
+multiple different sections.
 
  - Ericson, Christer (2004). [Real-Time Collision Detection][RTCD-Ericson]. CRC Press. ISBN 1558607323. [Errata][RTCD-Err-Ericson]
 
