@@ -142,7 +142,153 @@ texture."
   (:documentation "Load actual data described in the TEXTURE's texdesc of ~
 TEXTURE-TYPE into the texture memory."))
 
+(defun resolve-image-path (context type asset)
+  "Given a CONTEXT and a TYPE of asset-cache, resolve the ASSET into a full
+path into the filesystem to that asset. Return this path."
+  (v:with-asset-cache context type asset
+    (v::resolve-path asset)))
 
+;; TODO: candidate for method.
+(defun assert-valid-cube-map-layout (cube-data)
+  ;; TODO: Make this check that the :opengl layout has the images in exactly
+  ;; the right ordering too.
+  (let ((valid-layouts '((:layout :six) (:layout :opengl))))
+    (unless (member (first cube-data) valid-layouts :test 'equal)
+      (error "assert-valid-cube-map-data: ~
+                     :texture-cub-map, invalid :layout ~s, ~
+                     it must be one of ~A at this time."
+             (first cube-data) valid-layouts))))
+
+;; TODO: candidate for method.
+(defun map-cube-layout (func cube-layout)
+  "Map FUNC across the items for a single CUBE-LAYOUT no matter what kind of
+valid cube layout it is. Return the same layout with the result of the FUNC for
+each item."
+  (unless (listp cube-layout)
+    (error "map-cube-layout: Unknown cube map layout: ~S!" cube-layout))
+
+  (let ((layout (first cube-layout)))
+    (ecase (second layout)
+      ((:six :opengl)
+       (list layout
+             (map 'vector
+                  (lambda (item)
+                    (destructuring-bind (face mipmaps) item
+                      (list face (map 'vector func mipmaps))))
+                  (second cube-layout)))))))
+
+(defun map-cube-map-data (func cube-data)
+  "No matter the kind of layout, map FUNC over the items in the CUBE-DATA and
+return the mapped items in the same layout."
+  (map 'vector (lambda (l) (map-cube-layout func l)) cube-data))
+
+(defun test-map-cube-layout ()
+  (values
+   (map-cube-layout
+    ;; Simple conversion of item to a system string.
+    (lambda (x) (format nil "~(~S~)" x))
+    '((:layout :six)
+      #((:+X
+         #((environments helipad-diffuse-right)))
+        (:-X
+         #((environments helipad-diffuse-left)))
+        (:+Y
+         #((environments helipad-diffuse-top)))
+        (:-Y
+         #((environments helipad-diffuse-bottom)))
+        (:+Z
+         #((environments helipad-diffuse-front)))
+        (:-Z
+         #((environments helipad-diffuse-back))))))
+
+   (map-cube-layout
+    ;; Simple conversion of item to a system string.
+    (lambda (x) (format nil "~(~S~)" x))
+    ;; For this layout, the elements must be in the exact order specified.
+    '((:layout :opengl)
+      #((:texture-cube-map-positive-x
+         #((environments helipad-diffuse-right)))
+        (:texture-cube-map-negative-x
+         #((environments helipad-diffuse-left)))
+        (:texture-cube-map-positive-y
+         #((environments helipad-diffuse-top)))
+        (:texture-cube-map-negative-y
+         #((environments helipad-diffuse-bottom)))
+        (:texture-cube-map-positive-z
+         #((environments helipad-diffuse-front)))
+        (:texture-cube-map-negative-z
+         #((environments helipad-diffuse-back))))))))
+
+(defun convert-cube-map-layout-to-opengl (cube-data)
+  (let ((layout (first cube-data)))
+    (cond
+      ((equal '(:layout :opengl) layout)
+       ;; It already is, so just return it.
+       cube-data)
+      ((equal '(:layout :six) layout)
+       (list '(:layout :opengl)
+             (map 'vector
+                  (lambda (x)
+                    (list (canonicalize-cube-map-face-signfier (first x))
+                          (second x)))
+                  ;; sort the faces for loading in the right order.
+                  (stable-sort
+                   (second cube-data)
+                   #'sort-cube-map-faces-func :key #'first))))
+      (t
+       (error "convert-cube-map-layout-to-opengl: Imaplement me for layout: ~A"
+              layout)))))
+
+(defun test-convert-cube-map-layout-to-opengl ()
+  (convert-cube-map-layout-to-opengl
+   '((:layout :six)
+     #((:+X
+        #((environments helipad-diffuse-right)))
+       (:+Y
+        #((environments helipad-diffuse-top)))
+       (:+Z
+        #((environments helipad-diffuse-front)))
+       (:-X
+        #((environments helipad-diffuse-left)))
+       (:-Y
+        #((environments helipad-diffuse-bottom)))
+       (:-Z
+        #((environments helipad-diffuse-back)))))))
+
+;; TODO: Strong candidate for a method
+(defun resolve-mipmap-images (context data use-mipmaps-p kind)
+  "Return a new form in the same format as DATA but with the asset forms
+replaced by fully qualified paths to their location (on disk, etc).
+If USE-MIPMAPS-P is true, then resolve all images, otherwise only resolve
+and return the first logical image out of the mipmap sequence."
+
+  (flet ((resolve-image-path-contextually (asset)
+           (resolve-image-path context :texture asset)))
+    (if use-mipmaps-p
+        ;; Processing contained mipmaps
+        (ecase kind
+          ((:1d :2d)
+           (map 'vector #'resolve-image-path-contextually data))
+          ((:1d-array :2d-array :3d)
+           (map 'vector
+                (lambda (x)
+                  (map 'vector #'resolve-image-path-contextually x))
+                data))
+          ((:cube-map :cube-map-array)
+           (map-cube-map-data #'resolve-image-path-contextually data)))
+
+        ;; Processing only the first image location (mipmap 0)
+        (ecase kind
+          ((:1d :2d)
+           (vector (resolve-image-path-contextually (aref data 0))))
+          ((:1d-array :2d-array :3d)
+           (vector (map 'vector #'resolve-image-path-contextually
+                        (aref data 0))))
+          ((:cube-map :cube-map-array)
+           (map-cube-map-data #'resolve-image-path-contextually
+                              (vector (aref data 0))))))))
+
+;; TODO: Strong candidate for a method
 (defun read-mipmap-images (context data use-mipmaps-p kind flip-y)
   "Read the images described in the mipmap location array DATA into main memory.
 If USE-MIPMAPS-P is true, then load all of the mipmaps, otherwise only load the
@@ -151,72 +297,32 @@ slot value. Return a vector of image structure from the function
 IMG:LOAD-IMAGE.
 
 If KIND is :1d or :2d, then DATA must be an array of location descriptors like:
-#((:project \"a/b/c/foo.png\") (:local \"a/b/c/foo.png\"))
+#((:project \"a/b/c/foo.png\") (:local \"a/b/c/foo.png\") ...)
 
 If KIND is :1d-array, :2d-array, :3d, then DATA must be an array of slices of
-mipmap images: #(#((:project \"a/b/c/slice0-mip0.png\") (:local
-\"a/b/c/slice1-mip0.png\"))) The same vector structure is returned but with the
-local descriptor lists replaced by actual IMAGE instances of the loaded
-images."
-  (flet ((read-image-contextually (asset)
-           (v:with-asset-cache context :texture asset
-             (img:load-image (v::resolve-path asset) :flip-y flip-y)))
-         (process-cube-map-mipmaps (cube-data choice-func)
-           ;; Process only one cube map right now... when this works, edit it to
-           ;; process many cube maps.
-           (unless (equal '(:layout :six) (first cube-data))
-             (error "read-mipmap-images: :texture-cub-map, invalid :layout ~s, ~
-                     it must be :six at this time."
-                    (first cube-data)))
-           ;; canonicalize the face name.
-           (map 'vector
-                (lambda (x)
-                  (list (canonicalize-cube-map-face-signfier (first x))
-                        (second x)))
-                ;; sort the faces for loading in the right order.
-                (stable-sort
-                 ;; convert vector of path-locations to image instances.
-                 (map 'vector
-                      (lambda (x)
-                        (let ((face-signifier (first x))
-                              (mipmaps (second x)))
-                          (list face-signifier (funcall choice-func mipmaps))))
-                      (second cube-data))
-                 #'sort-cube-map-faces-func :key #'first))))
-    (if use-mipmaps-p
-        ;; Processing contained mipmaps
-        (ecase kind
-          ((:1d :2d)
-           (map 'vector #'read-image-contextually data))
-          ((:1d-array :2d-array :3d)
-           (map 'vector
-                (lambda (x)
-                  (map 'vector #'read-image-contextually x))
-                data))
-          ((:cube-map :cube-map-array)
-           (map 'vector
-                (lambda (x)
-                  (process-cube-map-mipmaps
-                   x
-                   (lambda (x)
-                     (map 'vector #'read-image-contextually x))))
-                data)))
-        ;; Processing only the first image location (mipmap 0)
-        (ecase kind
-          ((:1d :2d)
-           (vector (read-image-contextually (aref data 0))))
-          ((:1d-array :2d-array :3d)
-           (vector (map 'vector #'read-image-contextually (aref data 0))))
-          ((:cube-map :cube-map-array)
-           ;; TODO: Test this path.
-           (map 'vector
-                (lambda (x)
-                  (process-cube-map-mipmaps
-                   x
-                   (lambda (x)
-                     (map 'vector #'read-image-contextually
-                          (vector (aref x 0))))))
-                data))))))
+mipmap images:
+ #(#((:project \"a/b/c/slice0-mip0.png\") (:local\"a/b/c/slice1-mip0.png\")))
+
+The same vector structure is returned but with the local descriptor lists
+replaced by actual IMAGE instances of the loaded images."
+
+  ;; NOTE: resolve-image-path-contextually will restrict the number of images
+  ;; for mipmaps depending on value of use-mipmaps-p.
+  (let ((data (resolve-mipmap-images context data use-mipmaps-p kind)))
+    (flet ((read-image-contextually (asset-path)
+             (img:load-image asset-path :flip-y flip-y)))
+      ;; Processing contained mipmaps
+      (ecase kind
+        ((:1d :2d)
+         (map 'vector #'read-image-contextually data))
+        ((:1d-array :2d-array :3d)
+         (map 'vector
+              (lambda (x)
+                (map 'vector #'read-image-contextually x))
+              data))
+        ((:cube-map :cube-map-array)
+         (map 'vector #'convert-cube-map-layout-to-opengl
+              (map-cube-map-data #'read-image-contextually data)))))))
 
 (defun validate-mipmap-images (images texture expected-mipmaps
                                expected-resolutions)

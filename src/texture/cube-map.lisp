@@ -16,23 +16,24 @@
          (images (read-mipmap-images
                   context data use-mipmaps-p :cube-map flip-y))
          (first-cube (aref images 0))
-         (first-image (aref (second (aref first-cube 0)) 0))
+         (first-image (aref (second (aref (second first-cube) 0)) 0))
          ;; TODO: This is not safe, need to check all of them.
-         (num-mipmaps (length (second (aref first-cube 0)))))
+         (num-mipmaps (length (second (aref (second first-cube) 0)))))
     #++(:printv "Loading :texture-cube-map images = ~a" images)
     ;; Check to ensure they all fit into texture memory.
     ;; TODO: Refactor out of each method into validate-mipmap-images and
     ;; generalize.
     (loop :with max-size = v::=max-texture-size=
-          :for (placement mipmaps) :across first-cube
+          :for (placement mipmaps) :across (second first-cube)
           :for image = (aref mipmaps 0)
-          :do (when (> (max (img:height image) (img:width image))
-                       max-size)
-                ;; TODO: print out the location of the failing image.
-                (error "An Image for texture ~a is too big to be loaded onto ~
+          :do
+             (when (> (max (img:height image) (img:width image))
+                      max-size)
+               ;; TODO: print out the location of the failing image.
+               (error "An Image for texture ~a is too big to be loaded onto ~
                         this card. Max resolution is ~a in either dimension."
-                       (name texture)
-                       max-size)))
+                      (name texture)
+                      max-size)))
     ;; Figure out the ideal mipmap count from the base resolution.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
         ;; TODO: This might need work with cube-maps.
@@ -52,11 +53,12 @@
                               (img:width first-image)
                               (img:height first-image))))
       ;; Insert all cube faces plus mipmaps into the GPU.
-      (loop :for cube :across images ;; only 1 cube available.
+      (loop :for (layout cube) :across images ;; only 1 cube available.
             :do (dotimes (idx (if use-mipmaps-p num-mipmaps 1))
                   (loop :with level = (+ texture-base-level idx)
                         :for (face-signifier mipmaps) :across cube
-                        :do (let ((image (aref mipmaps idx)))
+                        :do (assert (equal layout '(:layout :opengl)))
+                            (let ((image (aref mipmaps idx)))
                               (if immutable-p
                                   (gl:tex-sub-image-2d
                                    face-signifier

@@ -15,11 +15,11 @@
          (images (read-mipmap-images
                   context data use-mipmaps-p :cube-map-array flip-y))
          (first-cube (aref images 0))
-         (first-image (aref (second (aref first-cube 0)) 0))
+         (first-image (aref (second (aref (second first-cube) 0)) 0))
          ;; TODO: This is not safe, need to check all of them.
          ;; TODO: We assume all cube maps have the same mipmap number. I don't
          ;; know if this is a reuirements or not.
-         (num-mipmaps (length (second (aref first-cube 0)))))
+         (num-mipmaps (length (second (aref (second first-cube) 0)))))
     #++(:printv "Loading :texture-cube-map-array images = ~a" images)
     ;; Figure out the ideal mipmap count from the base resolution.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
@@ -53,9 +53,10 @@
                               ;; not number of layer like in cube-maps!
                               (* (length data) 6))))
       ;; Insert all cubes plus mipmaps into the GPU.
-      (loop :for cube :across images
+      (loop :for (layout cube) :across images
             :for cube-idx :below (length images)
-            :do (dotimes (idx (if use-mipmaps-p num-mipmaps 1))
+            :do (assert (equal layout '(:layout :opengl)))
+                (dotimes (idx (if use-mipmaps-p num-mipmaps 1))
                   (let ((level (+ texture-base-level idx)))
                     (loop :for (face-signifier mipmaps) :across cube
                           ;; NOTE: face-idx works cause I sorted the faces
