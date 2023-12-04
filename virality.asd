@@ -67,6 +67,7 @@
      (:file "attribute-defs")
      (:file "group-defs")
      (:file "layout-defs")
+     (:file "texture-map-defs")
      (:file "texture-defs")
      (:file "common-defs")
      (:file "component-support-defs")
@@ -145,6 +146,12 @@
      (:file "layout")
      (:file "buffer")
      (:file "geometry")))
+   (:module "texture-map"
+    :serial t
+    :components
+    ((:file "common")
+     (:file "map-parser")
+     (:file "texture-map")))
    (:module "texture"
     :serial t
     :components

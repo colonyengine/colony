@@ -1,14 +1,148 @@
 (in-package #:virality-examples)
 
-;;; Textures
+;; Experimental v:define-texture-map description.
+;;
+;; The v:define-texture-map DSL is a means to define how texture maps are
+;; stored and organized. In this discussion, a "texture-map" is all of the data
+;; associated with an opengl texture. A 2d texture map, for example, can have
+;; many mipmaps associated with it. A 3d texture maps has mipmaps of a
+;; different format than a 2d texture. A cube map has 6 faces, each a
+;; texture-map, and each face might also have mipmaps.
+;;
+;;
+;; In this gist, I show using the "named" form of V:DEFINE-TEXTURE-MAP and also
+;; the anonymous form of (:texture-map ...) in the various examples. The use
+;; of PROGN in the examples is simply to allow #++ to behave nicely since I
+;; was producing this in a live lisp file and lifted it to a gist.
 
+;; The general high level form for the named texture-map form:
+#++
+(v:define-texture-map NAME DATA-MODEL-FORM
+  PROPERTY-FORM*
+  DATA-FORM* which can be (depending on data-model) on of these groups:
+  exactly 6 of (:FACE dirsym (:TEXTURE-MAP ...) or texture-map-name)
+  1 or more of (:MIPMAP () ...)
+  1 or more of (:IMAGE () ...)
+  exactly 1 of (:NAME () ...)
+  form)
+
+;; The general high level syntax for the anonymous form of define-texture-map.
+;; This form can be embedded directly into a define-texture form in the :data
+;; section.
+#++
+(:texture-map DATA-MODEL-FORM
+              PROPERTY-FORM*
+              :FACE{6} or :MIPMAP+ or :IMAGE{1} or :NAME{1} form)
+
+;; The exhaustive options for define-texture-map. Some of the data models, like
+;; (:buffer <name>) and (:rect :unique) are 80% understood, but it is good to
+;; implement now.
+#++
+(v:define-texture-map name (:single :unique) ;; The data model
+
+  ;; The data model consists of a form: (MODEL STYLE STORE)
+  ;; The MODEL is either: :single, :rect, :buffer, :voxel, :cube.
+  ;; The STYLE is either: :unique, :combined.
+  ;; The STORE form can vary quite a bit, be a list, and depends on
+  ;; MODEL and STYLE.
+  ;;
+  ;; One of these data models MAY be specified (there is a default)
+  ;;
+  ;; () - use the default model of (:single :combined :common)
+  ;;
+  ;; ;; NOTE: 1d, 2d texture maps are ":single" texture maps.
+  ;;  (:single :unique) - A single texture map as individual AAA mipmaps
+  ;;
+  ;;D (:single :combined AAA) - all mipmaps in one file (in a common format)
+  ;;      AAA can be
+  ;;      :common - The common packed format into one file.
+  ;;      etc - Other layouts systems of the combined mipmaps in a file.
+  ;;
+  ;;  ;; NOTE: Rectangle storage. 2d only. Only 1 (:image () ...) form
+  ;;  (:rect :unique)
+  ;;
+  ;;  ;; NOTE: Buffer storage, one buffer only. 1d only. No mipmap forms.
+  ;;  ;; Later there is a (:name NAME)
+  ;;  (:buffer :unique)
+  ;;
+  ;;  ;; NOTE: A 3d texture maps as unique mipmaped voxels.
+  ;;  (:voxel :unique (:slices :back-to-front)) - a 3d mimap
+  ;;
+  ;;  ;; NOTE: cube texture maps (there are sub-texture-maps)
+  ;;  (:cube :unique AAA) - cube map faces as separate texture-maps
+  ;;    AAA (the syntax & semantics of the rest of the form) can be
+  ;;      :six
+  ;;      :opengl
+  ;;    Each :face can themselves have combined or unique mipmaps.
+  ;;  (:cube :combined AAA) - cube map where all faces are encoded in a
+  ;;                          single image possibly under :mipmap scaling.
+  ;;    AAA can be: (and there can be MANY of these)
+  ;;      :auto ;; (the default) determine the combined format, even custom..
+  ;;      :vcross-top
+  ;;      :hcross-left
+  ;;      :column
+  ;;      :row
+  ;;      :equirect
+  ;;      (:custom <one of some unknown number and undetermined layout format>)
+  ;;    Each combined image may have a mipmap of smaller combined images.
+
+  ;; Now come one or more of these property forms: (cube maps ignore these)
+  ;;
+  ;; :origin - where to consider the origin of the mipmap
+  ;;   :{top,bottom}-{left,right}(-{back,front})?
+  ;; D :top-left
+  ;; D :bottom-left-back when :storage is (:voxel ...)!
+  ;;
+  ;; :channel-layout - How the channels are laid out in storage
+  ;; D :combined - color channels are right next to each other
+  ;;   (:plane :rgb-0) - Color planes split (only :rgb-0 supported)
+
+  ;; Now comes 1 (:image ...), or 1 (:name ...), or 1 or more (:mipmap ...), or
+  ;; 6 (face-symbol (:texture-map ...))  forms depending on the data
+  ;; model. These must be last. The :image and :mipmap forms can override a
+  ;; particular property for that specific image, mipmap, or texture.
+
+  (:mipmap () (textures texture-gradient-1d)))
+
+;; NOTE: The texture-map property of :base-level really is a property of
+;; TEXTURE.
+
+
+;;;
+;;; Textures
+;;;
+
+;; TODO: Make the define-texture return the name.
 (v:define-texture 1d-gradient
     (:texture-1d x:clamp-all-edges)
   (:data #((textures texture-gradient-1d))))
 
+;; Experimental
+#++
+(progn
+  ;; NOTE: The full declarative form of v:define-texture-map
+  (v:define-texture-map 1d-gradient (:single :unique)
+    (:mipmap () (textures texture-gradient-1d)))
+
+  (v:define-texture 1d-gradient
+      (:texture-1d x:clamp-all-edges)
+    (:data 1d-gradient))
+  )
+
 (v:define-texture 2d-wood
     (:texture-2d x:clamp-all-edges)
   (:data #((textures wood))))
+
+;; Experimental
+#++
+(progn
+  ;; NOTE: Uses the embedded format for define-texture-map.
+  (v:define-texture 2d-wood
+      (:texture-2d x:clamp-all-edges)
+    (:data (:texture-map (:single :unique)
+                         (mipmap () (textures wood)))))
+  )
+
 
 (v:define-texture 3d
     (:texture-3d x:clamp-all-edges)
@@ -16,7 +150,7 @@
   ;; directly match the default of opengl.
   (:layout `((:origin :left-back-bottom)
              (:shape (:slices :back-to-front))))
-  ;; TODO: Maybe I shuld implement pattern specification of mipmaps.
+  ;; TODO: Maybe I should implement pattern specification of mipmaps.
   (:data #(#((textures 3d-slice-0-0)
              (textures 3d-slice-1-0)
              (textures 3d-slice-2-0)
@@ -32,6 +166,45 @@
            #((textures 3d-slice-0-2)
              (textures 3d-slice-1-2))
            #((textures 3d-slice-0-3)))))
+
+;; Experimental
+#++
+(progn
+
+  (v:define-texture-map 3d (:voxel :unique (:slices :back-to-front))
+    ;; mipmap level 0
+    (:mipmap ()
+             (textures 3d-slice-0-0)
+             (textures 3d-slice-1-0)
+             (textures 3d-slice-2-0)
+             (textures 3d-slice-3-0)
+             (textures 3d-slice-4-0)
+             (textures 3d-slice-5-0)
+             (textures 3d-slice-6-0)
+             (textures 3d-slice-7-0))
+
+    ;; mipmap level 1
+    (:mipmap ()
+             (textures 3d-slice-0-1)
+             (textures 3d-slice-1-1)
+             (textures 3d-slice-2-1)
+             (textures 3d-slice-3-1))
+
+    ;; mipmap level 2
+    (:mipamp ()
+             (textures 3d-slice-0-2)
+             (textures 3d-slice-1-2))
+
+    ;; mipmap level 3
+    (:mipmap ()
+             (textures 3d-slice-0-3)))
+
+  (v:define-texture 3d
+      (:texture-3d x:clamp-all-edges)
+    ;; TODO: Maybe I should implement pattern specification of mipmaps.
+    (:data 3d))
+
+  )
 
 (v:define-texture 1d-array
     (:texture-1d-array x:clamp-all-edges)
@@ -53,6 +226,38 @@
              (textures white-line-1)
              (textures white-line-2)
              (textures white-line-3)))))
+
+;; Experimental
+#++
+(progn
+
+  ;; Embedded texture-maps in an array
+  (v:define-texture 1d-array
+      (:texture-1d-array x:clamp-all-edges)
+    ;; If there are multiple images in each list, they are mipmaps. Since this
+    ;; is a test, each mip_0 image is 8 width x 1 height
+    (:data #((:texture-map (:single :unique)
+              (:mipmap () (textures red-line-0))
+              (:mipmap () (textures red-line-1))
+              (:mipmap () (textures red-line-2))
+              (:mipmap () (textures red-line-3)))
+             (:texture-map (:single :unique)
+              (:mipmap () (textures green-line-0))
+              (:mipmap () (textures green-line-1))
+              (:mipmap () (textures green-line-2))
+              (:mipmap () (textures green-line-3)))
+             (:texture-map (:single :unique)
+              (:mipmap () (textures blue-line-0))
+              (:mipmap () (textures blue-line-1))
+              (:mipmap () (textures blue-line-2))
+              (:mipmap () (textures blue-line-3)))
+             (:texture-map (:single :unique)
+              (:mipmap () (textures white-line-0))
+              (:mipmap () (textures white-line-1))
+              (:mipmap () (textures white-line-2))
+              (:mipmap () (textures white-line-3))))))
+
+  )
 
 (v:define-texture 2d-array
     (:texture-2d-array x:clamp-all-edges)
@@ -102,9 +307,70 @@
              (textures wiggles-9)
              (textures wiggles-10)))))
 
+;; Experimental
+#++
+(progn
+
+  (v:define-texture-map blue-fur (:single :unique)
+    (:mipmap () (textures blue-fur-0))
+    (:mipmap () (textures blue-fur-1))
+    (:mipmap () (textures blue-fur-2))
+    (:mipmap () (textures blue-fur-3))
+    (:mipmap () (textures blue-fur-4))
+    (:mipmap () (textures blue-fur-5))
+    (:mipmap () (textures blue-fur-6))
+    (:mipmap () (textures blue-fur-7))
+    (:mipmap () (textures blue-fur-8))
+    (:mipmap () (textures blue-fur-9))
+    (:mipmap () (textures blue-fur-10)))
+
+  (v:define-texture-map bark (:single :unique)
+    (:mipmap () (textures bark-0))
+    (:mipmap () (textures bark-1))
+    (:mipmap () (textures bark-2))
+    (:mipmap () (textures bark-3))
+    (:mipmap () (textures bark-4))
+    (:mipmap () (textures bark-5))
+    (:mipmap () (textures bark-6))
+    (:mipmap () (textures bark-7))
+    (:mipmap () (textures bark-8))
+    (:mipmap () (textures bark-9))
+    (:mipmap () (textures bark-10)))
+
+  (v:define-texture-map rock (:single :unique)
+    (:mipmap () (textures rock-0))
+    (:mipmap () (textures rock-1))
+    (:mipmap () (textures rock-2))
+    (:mipmap () (textures rock-3))
+    (:mipmap () (textures rock-4))
+    (:mipmap () (textures rock-5))
+    (:mipmap () (textures rock-6))
+    (:mipmap () (textures rock-7))
+    (:mipmap () (textures rock-8))
+    (:mipmap () (textures rock-9))
+    (:mipmap () (textures rock-10)))
+
+  (v:define-texture-map wiggles (:single :unique)
+    (:mipmap () (textures wiggles-0))
+    (:mipmap () (textures wiggles-1))
+    (:mipmap () (textures wiggles-2))
+    (:mipmap () (textures wiggles-3))
+    (:mipmap () (textures wiggles-4))
+    (:mipmap () (textures wiggles-5))
+    (:mipmap () (textures wiggles-6))
+    (:mipmap () (textures wiggles-7))
+    (:mipmap () (textures wiggles-8))
+    (:mipmap () (textures wiggles-9))
+    (:mipmap () (textures wiggles-10)))
+
+  (v:define-texture 2d-array
+      (:texture-2d-array x:clamp-all-edges)
+    (:data #(blue-fur bark rock wiggles)))
+  )
+
 (v:define-texture cubemap (:texture-cube-map)
   (:data
-   ;; TODO: Only :six (individual images) is supported currently.
+   ;; TODO: Only :six and :opengl (individual images) is supported currently.
    #(((:layout :six) ;; :equirectangular, :skybox, etc, etc.
       #((:+x #((textures cube-map-right)))
         (:-x #((textures cube-map-left)))
@@ -112,6 +378,31 @@
         (:-y #((textures cube-map-bottom)))
         (:+z #((textures cube-map-back)))
         (:-z #((textures cube-map-front))))))))
+
+;; Experimental
+#++
+(v:define-texture cubemap (:texture-cube-map)
+  (:data
+   (:texture-map
+    (:cube :unique :six)
+    (:face ((:dir :+x))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-right))))
+    (:face ((:dir :-x))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-left))))
+    (:face ((:dir :+y))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-top))))
+    (:face ((:dir :-y))
+           (:texture-map (:single :unqiue)
+                         (:mipmap () (textures cube-map-bottom))))
+    (:face ((:dir :+z))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-back))))
+    (:face ((:dir :-z))
+           (:texture-map (:single :unqiue)
+                         (:mipmap () (textures cube-map-front)))))))
 
 (v:define-texture cubemaparray (:texture-cube-map-array)
   (:data
@@ -129,6 +420,133 @@
         (:-y #((textures cube-map-bottom-2)))
         (:+z #((textures cube-map-back-2)))
         (:-z #((textures cube-map-front-2))))))))
+
+
+;; Experimental
+;; NOTE: Here we use the embedded form to describe the texture-maps for
+;; cube maps.
+#++
+(progn
+
+  (v:define-texture-map cube-map (:cube :unique :six)
+    (:face ((:dir :+x))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-right))))
+    (:face ((:dir :-x))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-left))))
+    (:face ((:dir :+y))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-top))))
+    (:face ((:dir :-y))
+           (:texture-map (:single :unqiue)
+                         (:mipmap () (textures cube-map-bottom))))
+    (:face ((:dir:+z))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-back))))
+    (:face ((:dir :-z))
+           (:texture-map (:single :unqiue)
+                         (:mipmap () (textures cube-map-front)))))
+
+  (v:define-texture-map cube-map-2 (:cube :unique :six)
+    (:face ((:dir :+x))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-right-2))))
+    (:face ((:dir :-x))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-left-2))))
+    (:face ((:dir :+y))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-top-2))))
+    (:face ((:dir :-y))
+           (:texture-map (:single :unqiue)
+                         (:mipmap () (textures cube-map-bottom-2))))
+    (:face ((:dir :+z))
+           (:texture-map (:single :unique)
+                         (:mipmap () (textures cube-map-back-2))))
+    (:face ((:dir :-z))
+           (:texture-map (:single :unqiue)
+                         (:mipmap () (textures cube-map-front-2)))))
+
+  (v:define-texture cubemaparray (:texture-cube-map-array)
+    (:data #(cube-map cube-map-2)))
+
+  )
+
+;; NOTE: But, it also can be done like this too where if the cube map is
+;; uniquely defined in its faces, we can assemble it from other texture-maps.
+;; Of course, the entire thing must be valid when done (like the textures are
+;; exactly square and each face is the same effective size).
+
+;; Experimental
+#++
+(progn
+
+  ;; NOTE: When we use :unique for the cube-map, we can supply individual
+  ;; texture-maps for each face.
+
+  (v:define-texture-map cube-map-right (:single :unique)
+    (:mipmap () (textures cube-map-right)))
+
+  (v:define-texture-map cube-map-left (:single :unique)
+    (:mipmap () (textures cube-map-left)))
+
+  (v:define-texture-map cube-map-top (:single :unique)
+    (:mipmap () (textures cube-map-top)))
+
+  (v:define-texture-map cube-map-bottom (:single :unique)
+    (:mipmap () (textures cube-map-bottom)))
+
+  (v:define-texture-map cube-map-back (:single :unique)
+    (:mipmap () (textures cube-map-back)))
+
+  (v:define-texture-map cube-map-front (:single :unique)
+    (:mipmap () (textures cube-map-front)))
+
+  (v:define-texture-map cube-map (:cube :unique :six)
+    (:face ((:dir :+x)) cube-map-right)
+    (:face ((:dir :-x)) cube-map-left)
+    (:face ((:dir :+y)) cube-map-top)
+    (:face ((:dir :-y)) cube-map-bottom)
+    (:face ((:dir :+z)) cube-map-back)
+    (:face ((:dir :-z)) cube-map-front))
+
+  ;; NOTE: When we use :unique for the cube-map, we can supply individual
+  ;; texture-maps for each face.
+
+  (v:define-texture-map cube-map-right-2 (:single :unique)
+    (:mipmap () (textures cube-map-right)))
+
+  (v:define-texture-map cube-map-left-2 (:single :unique)
+    (:mipmap () (textures cube-map-left-2)))
+
+  (v:define-texture-map cube-map-top-2 (:single :unique)
+    (:mipmap () (textures cube-map-top-2)))
+
+  (v:define-texture-map cube-map-bottom-2 (:single :unique)
+    (:mipmap () (textures cube-map-bottom-2)))
+
+  (v:define-texture-map cube-map-back-2 (:single :unique)
+    (:mipmap () (textures cube-map-back-2)))
+
+  (v:define-texture-map cube-map-front-2 (:single :unique)
+    (:mipmap () (textures cube-map-front-2)))
+
+  (v:define-texture-map cube-map-2 (:cube :unique :six)
+    (:face ((:dir :+x)) cube-map-right-2)
+    (:face ((:dir :-x)) cube-map-left-2)
+    (:face ((:dir :+y)) cube-map-top-2)
+    (:face ((:dir :-y)) cube-map-bottom-2)
+    (:face ((:dir :+z)) cube-map-back-2)
+    (:face ((:dir :-z)) cube-map-front-2))
+
+  ;; And finally, the cube-map array.
+
+  (v:define-texture cubemaparray (:texture-cube-map-array)
+    (:data #(cube-map cube-map-2)))
+
+  )
+
 
 ;;; Materials
 

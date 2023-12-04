@@ -131,6 +131,11 @@
    #:worker-count
    ))
 
+(defpackage #:virality.texture-map
+  (:use #:cl)
+  (:export
+   #:define-texture-map))
+
 (defpackage #:virality.texture
   (:use #:cl)
   ;; texture-descriptor
@@ -158,7 +163,9 @@
    #:name
    #:semantic-texdesc
    #:texid
-   #:texture))
+   #:texture
+   #:reify-texture-profiles
+   #:reify-texture-descriptors))
 
 (defpackage #:virality.texture.texture-table
   (:use #:cl)
@@ -334,6 +341,7 @@
    #:id
    #:make-actor
    #:make-project
+   #:mcmnt
    #:screen-resolution
    #:spawn-actor
    #:start
@@ -374,6 +382,12 @@
    #:find-prefab
    #:make-prefab-instance
    #:ref)
+  ;; texture-maps
+  (:import-from
+   #:virality.texture-map
+   #:define-texture-map)
+  (:export
+   #:define-texture-map)
   ;; textures
   (:import-from
    #:virality.texture
@@ -554,6 +568,7 @@
       (:virality.uuid :uuid)
       (:virality.texture.texture-table :textab)
       (:virality.texture :tex)
+      (:virality.texture-map :texmap)
       (:virality.image :img)
       (:vshadow :shadow))))
 

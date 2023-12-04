@@ -75,7 +75,7 @@
       ;; TODO: Make this higher order.
       (loop :for idx :below (if use-mipmaps-p num-mipmaps 1)
             :for level = (+ texture-base-level idx)
-            ;; Construct the entire 2d array image of these 1d image pieces.
+            ;; Construct the entire 2d array image of these image pieces.
             :do (dotimes (i num-layers)
                   (let ((image (aref (aref all-layers idx) i)))
                     (gl:tex-sub-image-3d

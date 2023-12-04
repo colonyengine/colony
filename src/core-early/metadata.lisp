@@ -45,6 +45,10 @@
 ;; `DEFINE-PREFAB`.
 (global-vars:define-global-var =meta/prefabs= (u:dict #'eq))
 
+;; Texture maps represent CPU/file image/data assets which can be uploaded into
+;; GPU textures.
+(global-vars:define-global-var =meta/texture-maps= (u:dict #'eq))
+
 ;; Textures for mapping image assets to GPU data structures for rendering. This
 ;; metadata is stored by `DEFINE-TEXTURE`.
 (global-vars:define-global-var =meta/textures= (u:dict #'eq))

@@ -20,6 +20,7 @@
     (apply #'gl:enable +enabled-capabilities+)
     (apply #'gl:disable +disabled-capabilities+)
     (apply #'gl:blend-func +blend-mode+)
+    (gl:pixel-store :unpack-alignment 1)
     (gl:depth-func +depth-mode+)))
 
 (defun make-window ()

@@ -549,8 +549,31 @@ return the TEXTURE instance for the debug-texture."
     (let ((context (v:context v::*core-debug*)))
       (update-texture context old-descriptor new-descriptor))))
 
-(defmacro define-texture (name (textype &rest profile-overlay-names) &body body)
+(defmacro define-texture (name (textype &rest profile-overlay-names)
+                          &body body)
   "Construct a semantic TEXTURE-DESCRIPTOR. "
+
+  ;; TODO: It is the case that we could observe when we're not in a running
+  ;; core and indicate a "previously defined" warning.
+  ;;
+  ;; Behold if we put this form into this macro:
+  ;;
+  ;; (format t "*load-true-name: ~A, *compile-file-truename*: ~A~%"
+  ;;         *load-truename* *compile-file-truename*)
+  ;;
+  ;; Notice under these conditions:
+  ;; *ltn* *cft* Observation
+  ;;  NIL   NIL  Typed by hand in REPL
+  ;;  TMP   NIL  LOAD called and you get true filename in a tmp location.
+  ;;  PAT   NIL  LOAD called with a file in the system itself.
+  ;;  NIL   TMP  COMPILE-FILE called and path to true filename in tmp location.
+  ;;  NIL   PAT  COMPILE-FILE to file in the system itself.
+  ;;
+  ;; Using the above, we can determine when C-c C-c is performed, or typing in
+  ;; a form at the REPL, or when loading/compiling the system itself. Given
+  ;; this we can give proper "X is a duplicate of Y" warnings when loading and
+  ;; compiling but not when live coding (if desired).
+
   (u:with-gensyms (desc-lookup old-desc new-desc)
     `(symbol-macrolet ((,desc-lookup (u:href v::=meta/textures= ',name)))
        (let ((,new-desc (make-texture-descriptor
@@ -668,11 +691,214 @@ semantic name of it which was specified with a DEFINE-TEXTURE."
       (first texture-name)
       texture-name))
 
-(defun load-texture-descriptors (core)
+(defun reify-texture-profiles (core)
   (with-accessors ((texture-table v::textures)) core
-    (gl:pixel-store :unpack-alignment 1)
     (u:do-hash-values (profile v::=meta/texture-profiles=)
-      (textab:add-texture-profile profile texture-table))
+      (textab:add-texture-profile profile texture-table))))
+
+(defun reify-texture-descriptors (core)
+  (with-accessors ((texture-table v::textures)) core
     (u:do-hash-values (desc v::=meta/textures=)
       (textab:add-semantic-texture-descriptor desc texture-table))
     (resolve-all-semantic-texture-descriptors core)))
+
+
+;; -----------------------------------------------------------------------
+;; Explicit algorithm for texture related information handling:
+;;
+;; DEFINE-TEXTURE-PROFILE
+;; At compile/load macro-expansion time, live coding C-c C-c, or REPL time:
+;; 0. Lookup the NAME in =meta/texture-profiles=, if present A0, else B0.
+;; A0. TODO describe me.
+;; B0. make texture-profile and store into =meta/texture-profiles=.
+;;
+;; DEFINE-TEXTURE
+;; At compile/load macro-expansion time, live coding C-c C-c, or REPL time:
+;; 0. Lookup the NAME in =meta/textures=. If present A0, else B0.
+;; A0. TODO describe me.
+;; B0. make texture-descriptor with supplied info and store
+;;     into =meta/textures=. State of texture-descriptor is :abstract.
+;;
+;; When all define-texture forms are processed, =meta/textures= will contain
+;; all of them.
+;;
+;; ---
+;;
+;; At engine start time:
+;; 0. Reify texture-descriptors from =meta/textures= into core's texture-table.
+;; NOTE: All of them is ALL of them, there no currently no way to indicate a
+;; subset.
+;;   For each texture-descriptor in =meta/textures=:
+;;    0a. make empty applied-attributes
+;;    0a. overlay all profile attributes left to right.
+;;    0b. overlay texture-desdcriptor attributes last.
+;;    0c. store a ref to the =meta/textures/ texture-desc into
+;;        core's texture-table.
+;; KEEP GOING
+
+
+;; -----------------------------------------------------------------------
+;; TEXTURE-DESCRIPTOR:
+;; TODO: Add error states (be able to distingsuish with debug texture).
+;; Add a locked state which is probably independent of these two.
+;; Locked would mean "don't upload this to the GPU until it changes state
+;; again"
+;; State transitions (held in texture-descriptor, the texture delegates to it):
+;; main memory state:
+;;   :abstract -> :reified -> :unrealized -> :partially-realized -> :realized
+;; gpu state:
+;;   :not-stored-on-gpu -> :partially-stored-on-gpu -> :stored-on-gpu
+;;
+;; :abstract is when it is stored in =meta/textures= OR when the gamedev
+;;           calls MAKE-TEXTURE-DESCRIPTOR and makes a "free floating"
+;;           texture descriptor which hasn't yet been given to the engine.
+;;
+;; :reified is when the attributes are resolved and it is stored in a core
+;;          in the texture-table. There can be no texure objects created from
+;;          the texture-descriptor yet.
+;;
+;; At this point we can only go farther by constructing an actual TEXTURE
+;; object of some kind which references the texture-descriptor. Once this
+;; texture is made, we can go farther down the state machine. It is the case
+;; that making certain types of textures (like procedural ones) MIGHT cause a
+;; whole new texture-descriptor to be duplicated from the "mother descriptor"
+;; and that copy used. Otherwise, all TEXTURE objects constructed from the same
+;; name will be exactly the same object. A TEXTURE object is mostly a facade on
+;; the TEXTURE-DESCRIPTOR so we can tinker with the backend representation
+;; without disturbing the API later.
+;;
+;; TEXTURE (made from a TEXTURE-DESCRIPTOR--same ref returned for multiple
+;;          makes of the same TEXTURE-DESCRIPTOR):
+;;
+;; :unrealized means a texture object has been created but there is no image
+;;             data in main memory for this texture.
+;; :partially-realized is when some, but not all, of the texture data is
+;;                     loaded/computed/whatever (and it is in main memory).
+;; :realized is when the texture data has been loaded/computed/whatever and
+;;           the data is in main memory.
+;; :not-stored-on-gpu is when NO data exists on the gpu.
+;; :partially-stored-on-gpu is when some, but not all, of the realized data
+;;                         has been written to the GPU
+;; :stored-on-gpu is when the texture data has been loaded into the GPU.
+
+;; NOTE: data-form holds the original form, a resolved form of it, and then the
+;; loaded/computed/whatever datum (a real image or a key into a cache, etc)
+;; representing it.
+
+;; Gamedev (and internally used) Texture Protocol:
+;; Make a free floating texture-descriptor:
+;; F (tex:make-texture-descriptor name type profile-list &rest attr-plist)
+;;     -> td
+;;
+;; Reify it (insert into =meta/textures= or a valid core, or both?). This will
+;; apply the profiles to build the most current set of attributes. Also deal
+;; with when the app is running or not, etc.
+;; F (tex:reify td)
+;;
+;; Return a new/ref (type factory) texture instance for a texture-descriptor.
+;; This texture is immediately bound into the texture-table (and probably
+;; referenced counted). IN ADDITION, the texture reference, if placed into a
+;; material at this point, will be automatically realized and materialized at
+;; the end of the frame to be ready for the next frame.
+;; F (tex:make-texture name) -> texture
+;;
+;; Realize the texture (create/load the image data required for texture).  This
+;; is written in pieces to help me do it concurrently by using the internal
+;; calls inside tex:realize in the engine itself, otherwise the tex:realize
+;; call will do all of the load(s) right then. The actual realization occurs
+;; in the texture-descriptor but the texture acts as a facade for it (and
+;; grants generic function ability to deal with the different texture types).
+;; M (tex:realize texture)
+;;     The returned data-form holds a reference to the texture and knows how
+;;     to return each element (or all of them) including iterate over all of
+;;     them.
+;; M   (tex:data-form texture) -> data-form structure (holds original :data)
+;;     Iterate over the data-form groups:
+;; M     (tex:resolve-data-form-group texture data-form-element)
+;;         Iterate over the data-form elements in the group:
+;;           This next three may interact with the resource-cache....
+;; M         (tex:resolve-data-form-element texture data-form-element)
+;;             -> resolved-element stored in data-form-element
+;;           If the resolved-element is already cached, probably ignore
+;;           the rest.
+;;           NOTE: Don't assume that files are located on the file system.
+;; M         (tex:compute-data-form-element texture data-form-element)
+;;             -> compute/load-ed elem stored in data-form-element
+;;           The realization probably stores it into the cache and markes this
+;;           piece as realized. If all of them are realized, then the entire
+;;           texture becomes :realized. This might up a reference count on the
+;;           materialized data.
+;; M         (tex:realize-data-form-element texture data-form-element)
+
+;; TODO: Deal with handle acquiring in parallel (basically asking for N handles
+;; via gl:gen-textures). Currently the code will ask one at a time.
+;;
+;; Materializing the texture can be carefully intermixed with realizing steps
+;; in order to realize an image into main memory, then immediately write it to
+;; the GPU, then unrealize the main memory version. The way it is written
+;; here, materialization comes after full realization. But in truth, a texture
+;; can be partially realized and also partially materialized while single
+;; images are loaded from disk into main memory, then into the GPU, then
+;; discarded from main memory and so on.
+;; NOTE: Normally this is not ever called by the gamedev and the engine does
+;; it manually.
+;; NOTE: This should not be called in render-component!
+;; M (tex:store-on-gpu texture)
+;;     This next call allocates the gpu texture handle (gl:gen-texture).
+;;     NOTE: This method has potential to be used for many other things.
+;; M   (unless (tex:gpu-handle-p texture)
+;;       Make the acquire call setfable. It either returns a valid one it
+;;       already has or allocateds a new one and then returns it. If it is
+;;       setfable, then I can get them all in parallel for many textures and
+;;       set them all at once with one opengl call.
+;; M     (tex:gpu-acquire-handle texture)) -> handle stored in texture
+;;     This next call allocates the space required in the gpu for the texture.
+;;     Examples are: gl:tex-storage-2d or gl:tex-image-2d, etc.
+;;     NOTE: This method has potential to be used for many other things.
+;; M   (tex:gpu-allocate-space texture)
+;; M   (tex:data-form texture) -> data-form
+;;     Iterate over the data-form groups:
+;;       Iterate over the data-form elements in the group:
+;;         This actually copies the data from main memory to the gpu
+;;         with gl:tex-sub-image-2d or gl:tex-image-2d, etc.
+;;         NOTE: This method has potential to be used for many other things.
+;; M       (tex:gpu-write-data-form-element texture data-form-element)
+;;         Mark this element as materialized and if all of them are, deal with
+;;         the gpu state in the texture-descriptor.
+;; M       (tex:gpu-is-stored-data-form-element texture data-form-element)
+
+;; NOTE: If the gpu- functions are async then we'd need to supply a barrier
+;; fucntion too for users to use.
+
+;; KEEP GOING (freeing stuff, unrealizing/deallocating stuff, removing it from
+;; the gpu, etc, etc)
+
+;; NOTE: This API is for removing texture instances and the data associated
+;; with them (which may be stored in the texture-descriptor).
+;;   Remove everything about a texture except the texture-descriptor.
+;; M (tex:dispose texture)
+;;     Often means gl:delete-texture. Deallocate gpu space too.
+;; M   (tex:gpu-remove-storage texture)
+;;     (tex:unrealize texture)
+;; M     (tex:data-form texture) -> data-form
+;;       Iterate over the data-form groups:
+;;         Iterate over the data-form elements in the group:
+;;           Drop the reference count, if goes to zero, deallocate (if needed)
+;;           the realized item and then drop all references to it so the GC
+;;           gets it.
+;; M         (tex:unrealize-data-form-element texture data-form-element)
+
+;; NOTE: This is a separate API to deal with removing texture-descriptors.
+;;   Remove the texture-descriptor and set all textures using it to the
+;;   "I'm broken" (and unremovable) texture-descriptor immediately.
+;; M (tex:dispose texture-descriptor)
+;;       TODO: I believe we store the data-form in the texture-descriptor
+;;       and in the above calls it is delegated through the texture slots. So
+;;       ensure to figure that out right here.
+;; M     (tex:data-form texture-descriptor) -> data-form
+;;       Iterate over the data-form groups:
+;;         Iterate over the data-form elements in the group:
+;;           Drop the reference count, if goes to zero, deallocate (if needed)
+;;           the realized item and then drop all references to it so the GC
+;;           gets it.
+;; M         (tex:unrealize-data-form-element texture data-form-element)
