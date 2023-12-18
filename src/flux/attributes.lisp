@@ -26,15 +26,15 @@
 ;;; ------------------------------------------------------------------------
 
 (defun dump-attribute-bag (bag)
-  (format t "Attribute bag:~%")
+  (format t "Attribute bag~%")
   (do-attr bag
     (lambda (name av)
-      (format t " name: ~S~%" name)
-      (format t "  attr semantic value is ~S, computed value is ~S~%"
-              (if (slot-boundp av '%semantic)
+      (format t " ~S -> (~S | ~S)~%"
+              name
+              (if (semantic-value-bound-p av)
                   (semantic av)
                   "<UNBOUND>")
-              (if (slot-boundp av '%computed)
+              (if (computed-value-bound-p av)
                   (computed av)
                   "<UNBOUND>")))))
 
@@ -162,15 +162,21 @@ Returns BAG after the overlay procedure is complete.
 (defun make-attribute-value (&rest init-args)
   (apply #'make-instance 'attribute-value init-args))
 
+(defun semantic-value-bound-p (attr-value)
+  (slot-boundp attr-value '%semantic))
+
+(defun computed-value-bound-p (attr-value)
+  (slot-boundp attr-value '%computed))
+
 ;; Copy an attribute value by allocating a new attribute-value. Use the
 ;; COPIER-FUNC on the semantic and computed values when copying them into the
 ;; new attribute-value.
 (defun copy-attribute-value (original-attr-value &key (copier-func #'identity))
   (let ((new-attr-value (make-attribute-value)))
-    (when (slot-boundp original-attr-value '%semantic)
+    (when (semantic-value-bound-p original-attr-value)
       (setf (semantic new-attr-value)
             (funcall copier-func (semantic original-attr-value))))
-    (when (slot-boundp original-attr-value '%computed)
+    (when (computed-value-bound-p original-attr-value)
       (setf (computed new-attr-value)
             (funcall copier-func (computed original-attr-value))))
     new-attr-value))
