@@ -106,9 +106,13 @@ Returns BAG after the overlay procedure is complete.
                                       (setf (attr bag name)
                                             (copy-attribute-value av))))))
 
-             ;; Figure out what to do given what the ag actually is when it is
-             ;; decidable.
+             ;; Figure out what to do given what the container actually is when
+             ;; it is decidable. This allows us to not necessarily have to
+             ;; specify types of things.
              (attempt-absorb-container (container)
+               ;; TODO: Should I change the current-type or just absorb the
+               ;; thing for which type I can guarantee and just let it go back
+               ;; to the current-type to process more things?
                (cond
                  ((hash-table-p container)
                   (setf current-type :hash-table)
