@@ -1,5 +1,11 @@
 (in-package #:cl-user)
 
+(defpackage #:virality.attribute-bag
+  (:use #:cl)
+  (:export
+   ))
+
+
 (defpackage #:virality.image
   (:use #:cl)
   ;; IMAGE API
@@ -558,6 +564,7 @@
       (:vumbra.noise :umbra.noise)
       (:vumbra.sdf :umbra.sdf)
       (:vumbra.sprite :umbra.sprite)
+      (:virality.attribute-bag :abag)
       (:virality.component :comp)
       (:virality :v)
       (:virality.extension :x)
