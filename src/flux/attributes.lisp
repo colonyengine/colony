@@ -44,10 +44,10 @@ FIRST time a name is found in the ARGS list, it is placed into the newly
 created attr-bag (even if it already exists in the attr-bag), but if it is
 encountered again, it is ignored. If :supersede, it means the name/value is
 ALWAYS written into the bag no matter how many times it is encountered in
-ARGS. Except for attribute-bags in the merging, all values are assumed to be
-semantic values only.
+CONTAINERS. Except for attribute-bags in the merging, all values are assumed to
+be semantic values only.
 
-ARGS can be a list of one or more:
+CONTAINERS can be a list of one or more:
 :plist AAA ... ZZZ of the form AAA is (:a 0 :b 2 ... :z 25)
 :alist AAA ... ZZZ of the form AAA is ((:a . 0) (:b . 1) ... (:z . 25))
 :alist-big AAA ... ZZZ of the form AAA is ((:a 0) (:b 1) ... (:z 25))
