@@ -27,16 +27,16 @@
 
 (defun dump-attribute-bag (bag)
   (format t "Attribute bag:~%")
-  (maphash (lambda (name av)
-             (format t " name: ~S~%" name)
-             (format t "  attr semantic value is ~S, computed value is ~S~%"
-                     (if (slot-boundp av '%semantic)
-                         (semantic av)
-                         "<UNBOUND>")
-                     (if (slot-boundp av '%computed)
-                         (computed av)
-                         "<UNBOUND>")))
-           (attributes bag)))
+  (do-attr bag
+    (lambda (name av)
+      (format t " name: ~S~%" name)
+      (format t "  attr semantic value is ~S, computed value is ~S~%"
+              (if (slot-boundp av '%semantic)
+                  (semantic av)
+                  "<UNBOUND>")
+              (if (slot-boundp av '%computed)
+                  (computed av)
+                  "<UNBOUND>")))))
 
 (defmethod overlay (policy (bag attribute-bag) &rest containers)
   "POLICY can be :once-only or :supersede. If :once-only it means that the
