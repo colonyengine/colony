@@ -2,9 +2,31 @@
 
 (defpackage #:virality.attribute-bag
   (:use #:cl)
+  ;; ATTRIBUTE-VALUE API
   (:export
+   #:attribute-value
+   #:computed
+   #:computed-value-bound-p
+   #:copy-attribute-value
+   #:dirty
+   #:make-attribute-value
+   #:semantic
+   #:semantic-value-bound-p
+   )
+  ;; ATTRIBUTE-BAG API
+  (:export
+   #:attr
+   #:attribute-bag
+   #:cattr
+   #:clear-attrs
+   #:do-attr
+   #:do-cattr
+   #:do-sattr
+   #:dump-attribute-bag
+   #:make-attribute-bag
+   #:overlay
+   #:sattr
    ))
-
 
 (defpackage #:virality.image
   (:use #:cl)
