@@ -1,7 +1,35 @@
 (in-package #:virality.attribute-bag)
 
 ;;; ------------------------------------------------------------------------
-;; Attribute Bag Construction/Merging/Overlay API
+;; Attribute Value API
+;; An API to get and set attribute-values instances in the attribute-bag.
+;;; ------------------------------------------------------------------------
+
+;; Construct an attribute-value.
+(defun make-attribute-value (&rest init-args)
+  (apply #'make-instance 'attribute-value init-args))
+
+(defun semantic-value-bound-p (attr-value)
+  (slot-boundp attr-value '%semantic))
+
+(defun computed-value-bound-p (attr-value)
+  (slot-boundp attr-value '%computed))
+
+;; Copy an attribute value by allocating a new attribute-value. Use the
+;; COPIER-FUNC on the semantic and computed values when copying them into the
+;; new attribute-value.
+(defun copy-attribute-value (original-attr-value &key (copier-func #'identity))
+  (let ((new-attr-value (make-attribute-value)))
+    (when (semantic-value-bound-p original-attr-value)
+      (setf (semantic new-attr-value)
+            (funcall copier-func (semantic original-attr-value))))
+    (when (computed-value-bound-p original-attr-value)
+      (setf (computed new-attr-value)
+            (funcall copier-func (computed original-attr-value))))
+    new-attr-value))
+
+;;; ------------------------------------------------------------------------
+;; Attribute Bag API
 ;;; ------------------------------------------------------------------------
 
 (defun dump-attribute-bag (bag)
@@ -170,34 +198,9 @@ Returns BAG after the overlay procedure is complete.
 (defun make-attribute-bag (&rest args)
   (apply #'overlay (make-instance 'attribute-bag) args))
 
-;;; ------------------------------------------------------------------------
-;; Attribute Value API
-;; An API to get and set attribute-values instances in the attribute-bag.
-;;; ------------------------------------------------------------------------
-
-;; Construct an attribute-value.
-(defun make-attribute-value (&rest init-args)
-  (apply #'make-instance 'attribute-value init-args))
-
-(defun semantic-value-bound-p (attr-value)
-  (slot-boundp attr-value '%semantic))
-
-(defun computed-value-bound-p (attr-value)
-  (slot-boundp attr-value '%computed))
-
-;; Copy an attribute value by allocating a new attribute-value. Use the
-;; COPIER-FUNC on the semantic and computed values when copying them into the
-;; new attribute-value.
-(defun copy-attribute-value (original-attr-value &key (copier-func #'identity))
-  (let ((new-attr-value (make-attribute-value)))
-    (when (semantic-value-bound-p original-attr-value)
-      (setf (semantic new-attr-value)
-            (funcall copier-func (semantic original-attr-value))))
-    (when (computed-value-bound-p original-attr-value)
-      (setf (computed new-attr-value)
-            (funcall copier-func (computed original-attr-value))))
-    new-attr-value))
-
+;;; ----
+;; Contained Attribute Value API
+;;; ----
 
 ;; Return two values.
 ;; First Value: the attribute-value instance if it exists or NIL.
@@ -218,7 +221,7 @@ Returns BAG after the overlay procedure is complete.
 ;; iteration. The :copier-func function, which defaults to cl:identity,
 ;; processes the attr-value before storage into the copied hash table. Through
 ;; this, one could deep copy the attribute-values if desired. FUNC is passed
-;; the name and the attr-value.
+;; the name and the attr-value. Return attr-bag.
 (defmethod do-attr ((attr-bag attribute-bag) func
                     &key copy-table (copier-func #'identity))
   (let* ((attr-table (attributes attr-bag))
@@ -226,11 +229,12 @@ Returns BAG after the overlay procedure is complete.
                          (u:copy-hash-table attr-table :key copier-func)
                          attr-table)))
     (u:do-hash (name attr-value attr-table)
-      (funcall func name attr-value))))
+      (funcall func name attr-value)))
+  attr-bag)
 
-;;; ------------------------------------------------------------------------
+;;; ----
 ;; Semantic Attribute API
-;;; ------------------------------------------------------------------------
+;;; ----
 
 ;; Return two values. The first value is the semantic attribute value for the
 ;; given name or NIL if there was no attribute with this name. The second value
@@ -264,11 +268,12 @@ Returns BAG after the overlay procedure is complete.
                          (u:copy-hash-table attr-table :key copier-func)
                          attr-table)))
     (u:do-hash (name attr-value attr-table)
-      (funcall func name (semantic attr-value)))))
+      (funcall func name (semantic attr-value))))
+  attr-bag)
 
-;;; ------------------------------------------------------------------------
+;;; ----
 ;; Computed Attribute API
-;;; ------------------------------------------------------------------------
+;;; ----
 
 ;; Return two values. The first value is the computed attribute value for the
 ;; given name or NIL if there was no attribute with this name. The second value
@@ -299,4 +304,5 @@ Returns BAG after the overlay procedure is complete.
                          (u:copy-hash-table attr-table :key copier-func)
                          attr-table)))
     (u:do-hash (name attr-value attr-table)
-      (funcall func name (computed attr-value)))))
+      (funcall func name (computed attr-value))))
+  attr-bag)
