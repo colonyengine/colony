@@ -13,6 +13,9 @@
   (;; The original value of this attribute.
    (%semantic :accessor semantic
               :initarg :semantic)
+   ;; When the semantic value is set, this becomes NIL, otherwise it is T.
+   (%dirty :accessor dirty
+           :initarg :dirty)
    ;; A (once or more) post processed evaluation of the semantic value.
    (%computed :accessor computed
               :initarg :computed)))
@@ -24,4 +27,4 @@
                 :initarg :attributes
                 :initform (u:dict #'equal))))
 
-(defgeneric overlay (policy attribute-bag &rest containers))
+(defgeneric overlay (attribute-bag &rest containers))
