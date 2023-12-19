@@ -44,7 +44,8 @@
    (:module "datatype"
     :serial t
     :components
-    ((:file "thread-pool-defs")
+    ((:file "attribute-bag-defs")
+     (:file "thread-pool-defs")
      (:file "uuid-defs")
      (:file "asset-defs")
      (:file "graph-defs")
@@ -80,7 +81,8 @@
    (:module "core-early"
     :serial t
     :components
-    ((:file "general")
+    ((:file "attribute-bag")
+     (:file "general")
      (:file "metadata")
      (:file "config")
      (:file "hardware")    ;; Put into new GPU abstraction support lib.
@@ -110,8 +112,7 @@
    (:module "flux"
     :serial t
     :components
-    ((:file "attributes")
-     ;; TODO: Fix this file so it loads. ~axion 4/17/2020
+    (;; TODO: Fix this file so it loads. ~axion 4/17/2020
      #++(:file "meta-graphs")))
    (:module "kernel"
     :serial t
