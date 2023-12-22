@@ -1,120 +1,43 @@
 (in-package #:virality.texture-map)
 
+;; The texture-map internal protocol. Prolly needs some improvement!
+(defgeneric parse-data-model (data-model))
+(defgeneric parse-name (name model style store))
+(defgeneric parse-attribute-form (model style store bag form))
+(defgeneric parse-attribute-forms (model style store bag attribute-forms))
+(defgeneric parse-data-element (model style store tag element))
+(defgeneric parse-data-elements (model style store tag dstore elements))
+(defgeneric parse-data-form (model style store tag attributes elements
+                             tmap-var))
+(defgeneric parse-data-forms (model style store data-store-forms dstore-place
+                              tmap-var))
+(defgeneric parse-body (model style store tmap-var body))
 (defgeneric parse-texture-map (name model style store body))
-(defgeneric parse-body (model style store tmap-var propdefs body))
-(defgeneric parse-data-form (model style store tag properties elements
-                             default-channel-layout))
-(defgeneric parse-property-form (model style store propdefs form))
-(defgeneric default-model-properties (model style store))
-(defgeneric property-form-p (model style store form))
+(defgeneric default-model-attributes (model style store))
 (defgeneric data-store-form-p (model style store form))
-(defgeneric property-name-to-slot-symbol (model style store property-name))
 (defgeneric texture-map-class-name (model style store))
 (defgeneric data-store-class-name (model style store tag))
+(defgeneric data-store-after-initialize (model style store dstore))
 
 ;;; -----------------------------------------------------------------------
 ;; Methods for processing of any texture-map type
 ;;; -----------------------------------------------------------------------
 
-;; So far, all textures have these two properties.
-(defmethod property-form-p (model style store form)
-  (when (listp form)
-    (member (first form) '(:origin :channel-layout))))
+;; return a form which additionally initializes the dstore after its creation.
+(defmethod data-store-after-initialize (model style store dstore)
+  nil)
 
-(defmethod parse-body (model style store tmap-var propdefs body)
-  ;; We separate out the property-forms from the data-form since we must
-  ;; process the property forms first.
-  (multiple-value-bind (data-store-forms property-forms)
-      (loop :for form :in body
-            :when (property-form-p model style store form)
-              :collect form :into pforms
-            :when (data-store-form-p model style store form)
-              :collect form :into dforms
-            :finally
-               (return (values dforms pforms)))
+;; Return a form which sets the attribute data into the bag treating the bag
+;; like an attribute-bag instance.
+(defmethod parse-attribute-form (model style store bag form)
+  (destructuring-bind (attr-name value) form
+    `(setf (abag:sattr ,bag ,attr-name) ,value)))
 
-    ;; Process the locally specified property forms first.
-    (let ((properties (u:dict)))
-
-      ;; Build a table of the manually specified properties defined in
-      ;; the body form.
-      (dolist (prop-form property-forms)
-        (parse-property-form model style store properties prop-form))
-
-      ;; Produce a list of the store forms for the propdefs into the
-      ;; texture-map provided there isn't a properties form that changes its
-      ;; value.
-      `((u:comment "Allocate the texture-map general data-store instance.")
-        (setf (data-store ,tmap-var)
-              (make-data-store 'data-store ,(length data-store-forms)))
-
-        (u:comment "Default properties.")
-        ,@(when propdefs
-            (loop :for prop-name :being :the :hash-keys :in propdefs
-                    :using (hash-value value)
-                  :when (or (null properties)
-                            (not (nth-value 1 (u:href properties
-                                                      prop-name))))
-                    :collect `(setf (,(property-name-to-slot-symbol
-                                       model style store prop-name)
-                                     ,tmap-var)
-                                    ,value)))
-
-        (u:comment "Manually specified properties.")
-        ,@(loop :for prop-name :being :the :hash-keys :in properties
-                  :using (hash-value value)
-                :collect `(setf (,(property-name-to-slot-symbol
-                                   model style store prop-name)
-                                 ,tmap-var)
-                                ,value))
-
-        (u:comment "Individual data-store forms."
-          "and store it into the appropriate spot in the texture-map's"
-          "data-store slot.")
-        ,@(when data-store-forms
-            ;; TODO: This hash merge on mprops is a little cheeky since I
-            ;; don't do it above and elect to maintain the difference
-            ;; between the defprops and properties hash for the texture-map.
-            (loop :with mprops = (u:hash-merge (u:dict) propdefs properties)
-                  :for dsform :in data-store-forms
-                  :for index :from 0
-                  :collect `(setf (aref (data-elements (data-store ,tmap-var))
-                                        ,index)
-                                  ,(destructuring-bind
-                                       (tag properties . elements) dsform
-                                     (parse-data-form
-                                      model style store tag properties
-                                      elements mprops)))))))))
-
-
-;; parse the form into a key/value pair and store it in properties.
-(defmethod parse-property-form (model style store properties form)
-  (setf (u:href properties (first form)) (second form)))
-
-;; The returned symbol will be used as a slot-name to set the property in the
-;; texture-map instance.
-(defmethod property-name-to-slot-symbol (model style store property-name)
-  (ecase property-name
-    (:origin 'origin)
-    (:channel-layout 'channel-layout)))
-
-(defmethod parse-texture-map (name model style store body)
-  (let ((propdefs (default-model-properties model style store)))
-    ;; Generate the texture-map object and add property information.
-    (u:with-gensyms (tmap)
-      `(let ((,tmap
-               ;; Create the specific texture map instance we need.
-               (make-texture-map
-                ',(texture-map-class-name model style store)
-                :name ',name
-                :model ,model
-                :style ,style
-                :store ',store)))
-
-         ;; Inline whatever I get back from parsing the body.
-         ,@(parse-body model style store tmap propdefs body)
-
-         ,tmap))))
+;; Return a list of setf forms which set each attribute into the appropriate
+;; slot on the var.
+(defmethod parse-attribute-forms (model style store bag attribute-forms)
+  (loop :for attr-form :in attribute-forms
+        :collect (parse-attribute-form model style store bag attr-form)))
 
 ;;; -----------------------------------------------------------------------
 ;; For any texture-maps that use the (tag (prop*) data-elements*) data-store
@@ -122,54 +45,174 @@
 ;; deviates from this generalized parsing, we implement a specialization.
 ;;; -----------------------------------------------------------------------
 
+;; A data element is often a form interpreted later at runtime. It is usually a
+;; symbol or asset form and it is expected to be quoted. The second expression
+;; in the values is the AST of the element, if one can be computed. Currently
+;; there is only one place where thic can happen--when processing the
+;; data-elements for cube maps which contains a define-texture-map definition.
+;; Please see the appropriate parse-data-element method for this scenario.
+(defmethod parse-data-element (model style store tag element)
+  `(values (make-data-element :original ',element) nil))
+
+;; Return a form that stores each data-element into the appropriate index in
+;; the data store. When evaluated this form should produce a list of the AST
+;; forms which may have been generated when processing the elements.
+(defmethod parse-data-elements (model style store tag dstore elements)
+  (u:with-gensyms (asts)
+    `(let ((,asts nil))
+       ,@(loop
+           :for elem :in elements
+           :for index :from 0
+           :collect (u:with-gensyms (e ast)
+                      `(multiple-value-bind (,e ,ast)
+                           ,(parse-data-element model style store tag elem)
+                         (setf (aref (data-elements ,dstore) ,index) ,e)
+                         (when ,ast
+                           (push ,ast ,asts)))))
+       (nreverse ,asts))))
+
 ;; return a lisp form which sets up and initializes the data-store and puts the
 ;; data-elements into it.
-(defmethod parse-data-form (model style store tag properties elements propdefs)
-  (let ((data-store-properties (u:dict)))
-    (dolist (prop-form properties)
-      (parse-property-form model style store data-store-properties prop-form))
+(defmethod parse-data-form (model style store tag attributes elements tmap-var)
+  (u:with-gensyms (dstore asts)
+    `(let ((,dstore (make-data-store
+                     ',(data-store-class-name model style store tag)
+                     ,(length elements))))
 
-    (u:with-gensyms (dstore)
+       ,@(data-store-after-initialize model style store dstore)
 
-      `(let ((,dstore (make-data-store
-                       ',(data-store-class-name model style store tag)
-                       ,(length elements))))
+       ;; Overlay all known attributes from tmap into data-store.
+       (abag:overlay ,dstore ,tmap-var)
 
-         ;; TODO: Parse the data-store form specific properties into a hash.
+       ;; Fill in the attributes specific to this data-store form.
+       ,@(parse-attribute-forms model style store dstore attributes)
 
-         ;; Store the propdef defaults into the data-store first unless the
-         ;; properties table doesn't exist or doesn't already has something for
-         ;; that property.
-         ,@(when propdefs
-             (loop :for prop-name :being :the :hash-keys :in propdefs
-                     :using (hash-value value)
-                   :when (or (null properties)
-                             (not (nth-value 1 (u:href data-store-properties
-                                                       prop-name))))
-                     :collect `(setf (,(property-name-to-slot-symbol
-                                        model style store prop-name)
-                                      ,dstore)
-                                     ,value)))
+       ;; Finally, store all the discovered data-elements into the data-store
+       ;; and percolate the collected ASTs to the evaluator of this form.
+       (let ((,asts
+               ,(parse-data-elements model style store tag dstore elements)))
+         (values ,dstore ,asts)))))
 
-         ;; Now fill in the properties specific to this data-store form.
-         ,@(when properties
-             (loop :for prop-name :being :the :hash-keys
-                     :in data-store-properties
-                       :using (hash-value value)
-                   :collect `(setf (,(property-name-to-slot-symbol
-                                      model style store prop-name)
-                                    ,dstore)
-                                   ,value)))
+;; Return a form which parses the data-store-forms (whatever they loo like)
+;; and stores them into the tmap-var. The returned form must return two values
+;; when it is evaluated. The first value is the tmap-var, and the second is
+;; a list of collected ASTs from data-elements that specifically defined
+;; new texture-maps.
 
-         ;; Finally, store all the discovered data-elements into the
-         ;; data-store.
-         ,@(when elements
-             (loop
-               :for elem :in elements
+(defmethod parse-data-forms (model style store data-store-forms
+                             dstore-place tmap-var)
+  (u:with-gensyms (all-asts)
+    `(let ((,all-asts nil))
+       ,@(loop :for dsform :in data-store-forms
                :for index :from 0
-               :collect `(setf (aref (data-elements ,dstore) ,index)
-                               (make-data-element :original ',elem))))
-         ,dstore))))
+               :collect
+               (u:with-gensyms (dstore ast asts)
+                 `(multiple-value-bind (,dstore ,asts)
+                      ,(destructuring-bind (ds-tag ds-attributes
+                                            . ds-elements)
+                           dsform
+                         (parse-data-form model style store
+                                          ds-tag ds-attributes
+                                          ds-elements
+                                          tmap-var))
+                    (u:comment "Store specific data store into tmap's dstore")
+                    (setf (aref (data-elements
+                                 ,dstore-place)
+                                ,index)
+                          ,dstore)
+                    (u:comment "Save off any ASTs we computed.")
+                    (dolist (,ast ,asts)
+                      (push ,ast ,all-asts)))))
+       (values ,tmap-var ,all-asts))))
+
+;; dstore-place -> (data-store ,tmap-var)
+
+
+(defmethod parse-body (model style store tmap-var body)
+  ;; We separate out the attribute-forms from the data-form since we must
+  ;; process the attribute forms first.
+  (multiple-value-bind (attribute-forms data-store-forms)
+      (loop :for form :in body
+            :for data-form-p = (data-store-form-p model style store form)
+            :when data-form-p
+              :collect form :into data-forms
+            :when (not data-form-p)
+              :collect form :into attr-forms
+            :finally
+               (return (values attr-forms data-forms)))
+
+    (format t "attribute-forms: ~S~%" attribute-forms)
+    (format t "data-store-forms: ~S~%" data-store-forms)
+
+    (let ((default-attr-setter-forms
+            (parse-attribute-forms model style store tmap-var
+                                   (default-model-attributes model style
+                                                             store)))
+          (user-attr-setter-forms
+            (parse-attribute-forms model style store tmap-var
+                                   attribute-forms)))
+
+      (format t "default-attr-setter-forms: ~S~%" default-attr-setter-forms)
+      (format t "user-attr-setter-forms: ~S~%" user-attr-setter-forms)
+
+      ;; The list of store forms which side effect the DSL's data into the
+      ;; texture-map and its data store.
+      `(
+        (u:comment "Allocate the texture-map general data-store instance.")
+        (setf (data-store ,tmap-var)
+              (make-data-store 'data-store ,(length data-store-forms)))
+
+        (u:comment "Default texture-map attributes.")
+        ,@default-attr-setter-forms
+
+        (u:comment "User specified texture-map attributes.")
+        ,@user-attr-setter-forms
+
+        (u:comment "Individual data-store forms."
+          "Store each one into the appropriate spot in the texture-map's"
+          "data-store slot.")
+        ,(parse-data-forms model style store data-store-forms
+                           `(data-store ,tmap-var) tmap-var)
+
+        ))))
+
+
+;; Perform a transformation on the texture-map name.
+;; Return two values: First value is the canonical name as a transformation of
+;; the passed in name. When name is NIL, this will be a gensym'ed name.
+;; Currently it must be a symbol. The second value is T if the name was the
+;; anonymous name of NIL or the result if NIL otherwise.
+(defmethod parse-name (name model style store)
+  (if name
+      (values name nil)
+      (values (gensym "ANON-TEX-MAP") t)))
+
+;; This basically must be for all texture-map kinds.
+(defmethod parse-data-model (data-model)
+  (destructuring-bind (model style . store)
+      (or data-model '(:single :combined))
+    (values model style store)))
+
+(defmethod parse-texture-map (name model style store body)
+  ;; Generate the texture-map object and add attribute information.
+  (u:with-gensyms (canon-name anonymous-p tmap)
+    `(multiple-value-bind (,canon-name ,anonymous-p)
+         (parse-name ',name ',model ',style ',store)
+       (let ((,tmap
+               ;; Create the specific texture map instance we need that
+               ;; represents the processing of this texture-map.
+               (make-texture-map ',(texture-map-class-name model style store)
+                                 :name ,canon-name
+                                 :anonymous-p ,anonymous-p
+                                 :model ',model
+                                 :style ',style
+                                 :store ',store)))
+
+         ;; Inline whatever I get back from parsing the body.
+         ;; The toplevel form of this will be a VALUES that must conform
+         ;; to the requirements of parse-texture-map.
+         ,@(parse-body model style store tmap body)))))
+
 
 ;;; -----------------------------------------------------------------------
 ;; Processing of :single texture-maps
@@ -184,11 +227,11 @@
                                   (tag (eql :mipmap)))
   'mipmap-store)
 
-;; Return a newly constructed hash table holding property names as keys
-;; and default values as values.
-(defmethod default-model-properties ((model (eql :single)) style store)
-  (u:dict :origin :top-left
-          :channel-layout :combined))
+;; Return an alist-big of attributes and their default values.
+(defmethod default-model-attributes ((model (eql :single)) style store)
+  '((:context nil)
+    (:origin :top-left)
+    (:channel-layout :combined)))
 
 ;; Return generalized boolean if form is a data-form, or NIL otherwise.
 (defmethod data-store-form-p ((model (eql :single)) style store form)
@@ -236,9 +279,10 @@
                                   (tag (eql :image)))
   'image-store)
 
-(defmethod default-model-properties ((model (eql :rect)) style store)
-  (u:dict :origin :top-left
-          :channel-layout :combined))
+(defmethod default-model-attributes ((model (eql :rect)) style store)
+  `((:context nil)
+    (:origin :top-left)
+    (:channel-layout :combined)))
 
 (defmethod data-store-form-p ((model (eql :rect)) style store form)
   (when (listp form)
@@ -262,8 +306,8 @@
                                   (tag (eql :name)))
   'buffer-name-store)
 
-(defmethod default-model-properties ((model (eql :buffer)) style store)
-  (u:dict))
+(defmethod default-model-attributes ((model (eql :buffer)) style store)
+  `())
 
 (defmethod data-store-form-p ((model (eql :buffer)) style store form)
   (when (listp form)
@@ -287,9 +331,10 @@
                                   (tag (eql :mipmap)))
   'mipmap-store)
 
-(defmethod default-model-properties ((model (eql :voxel)) style store)
-  (u:dict :origin :bottom-left-back
-          :channel-layout :combined))
+(defmethod default-model-attributes ((model (eql :voxel)) style store)
+  `((:context nil)
+    (:origin :bottom-left-back)
+    (:channel-layout :combined)))
 
 (defmethod data-store-form-p ((model (eql :voxel)) style store form)
   (when (listp form)
@@ -319,13 +364,14 @@
                (textures 3d-slice-3-1))
 
       ;; mipmap level 2
-      (:mipamp ()
+      (:mipmap ()
                (textures 3d-slice-0-2)
                (textures 3d-slice-1-2))
 
       ;; mipmap level 3
       (:mipmap ()
                (textures 3d-slice-0-3)))))
+
 
 ;;; -----------------------------------------------------------------------
 ;; Processing of :cube texture-maps
@@ -341,144 +387,147 @@
 (defmethod data-store-class-name ((model (eql :cube)) style store tag)
   'cube-store)
 
+(defmethod data-store-after-initialize ((model (eql :cube)) style store
+                                        (dstore cube-store))
+  `((setf (style ,dstore) ,style
+          (store ,dstore) ,store)))
 
 ;;; ----
 ;; These methods support specialized :unique style cube maps that use :face
 ;; data-store forms.
 ;;; ----
 
-(defmethod property-name-to-slot-symbol ((model (eql :cube))
-                                         (style (eql :unique))
-                                         store property-name)
-  ;; So far, we only support this one as a property.
-  (ecase property-name
-    (:dir 'dir)))
-
-(defmethod default-model-properties ((model (eql :cube)) (style (eql :unique))
+(defmethod default-model-attributes ((model (eql :cube)) (style (eql :unique))
                                      store)
-  (u:dict))
+  `())
 
 (defmethod data-store-form-p ((model (eql :cube)) (style (eql :unique))
                               store form)
   (when (listp form)
     (member (first form) '(:face))))
 
-;; Returrn a form which initializes a cube face with the right property and
-;; name.
-(defmethod parse-data-form ((model (eql :cube)) (style (eql :unique))
-                            store (tag (eql :face)) properties elements
-                            propdefs)
-  (let ((data-store-properties (u:dict)))
-    (dolist (prop-form properties)
-      (parse-property-form model style store data-store-properties prop-form))
+(defmethod data-store-class-name ((model (eql :cube)) (style (eql :unique))
+                                  store (tag (eql :face)))
+  'face-store)
 
-    ;; TODO: If the eleemnts is a (:texture-map ...) form, process it right
-    ;; here.
+;; A :cube :unique data-element can be a name for a previously defined
+;; texture-map or an entire anonymous texture-map defined in place. So we
+;; specialize on it to handle that functionality here.
+(defmethod parse-data-element ((model (eql :cube)) (style (eql :unique))
+                               store (tag (eql :face)) element)
 
-    (assert (= (length elements) 1))
+  (u:with-gensyms (data-element sub-tmap sub-extra-tmap-list)
+    `(let* ((,data-element (make-data-element)))
+       ,@(cond
+           ;; Just a simple texture-map name, we're done!
+           ((symbolp element)
+            `((setf (original ,data-element) ',element)
+              (values ,data-element nil)))
 
-    (u:with-gensyms (face)
-      `(let ((,face (make-cube-face)))
+           ;; A complete define-texture-map form, handle appropriately.
+           ((and (listp element)
+                 (eq (first element) 'define-texture-map))
 
-         ;; Now fill in the properties specific to this sube-face.
-         ,@(when properties
-             (loop :for prop-name :being :the :hash-keys
-                     :in data-store-properties
-                       :using (hash-value value)
-                   :collect `(setf (,(property-name-to-slot-symbol
-                                      model style store prop-name)
-                                    ,face)
-                                   ,value)))
+            ;; Process the define-texture-map and handle the results of it.
+            (format t "About to destructure: ~S~%" element)
+            (destructuring-bind (sub-tag sub-name
+                                 (sub-model sub-style . sub-store)
+                                 . sub-body)
+                element
+              (declare (ignore sub-tag))
+              `((u:comment "Parse the sub texture-map for this face.")
+                (multiple-value-bind (,sub-tmap ,sub-extra-tmap-list)
+                    ,(parse-texture-map
+                      (parse-name sub-name sub-model sub-style
+                                  sub-store)
+                      sub-model sub-style sub-store
+                      sub-body)
 
-         ;; Fow now, we just support a single thing in the :face elements.
-         ;; TODO: Call parse-texture-map here of there is a (:texture-map ...)
-         ;; form.
-         (setf (name ,face) ',(first elements))
-         (make-data-element :original ,face)))))
+                  (u:comment "Store reference to texture map name.")
+                  (setf (original ,data-element) (texmap::name ,sub-tmap))
+                  ;; NOTE: In this situation, a cube map cannot recursively
+                  ;; define cube maps or other such things. So we're expecting
+                  ;; the sub-extra-tmap-list to be empty here.
+                  (assert (null ,sub-extra-tmap-list))
+                  (values ,data-element ,sub-tmap)))))
 
-;; TODO: Convert to cube map to handle :unique situations.
+           (t (error "parse-data-element: Unknown element form: ~A"
+                     element))))))
+
 (defmethod parse-body ((model (eql :cube)) (style (eql :unique)) store
-                       tmap-var propdefs body)
-  ;; We separate out the property-forms from the data-form since we must
-  ;; process the property forms first.
-  (multiple-value-bind (data-store-forms property-forms)
+                       tmap-var body)
+  ;; We separate out the attribute-forms from the data-form since we must
+  ;; process the attribute forms first.
+  (multiple-value-bind (attribute-forms data-store-forms)
       (loop :for form :in body
-            :when (property-form-p model style store form)
-              :collect form :into pforms
-            :when (data-store-form-p model style store form)
-              :collect form :into dforms
+            :for data-form-p = (data-store-form-p model style store form)
+            :when data-form-p
+              :collect form :into data-forms
+            :when (not data-form-p)
+              :collect form :into attr-forms
             :finally
-               (return (values dforms pforms)))
+               (return (values attr-forms data-forms)))
 
     ;; TODO: Error handling needs to be better, but basically, a :unique style
     ;; requires 6 face data-store forms.
     (assert (= (length body) 6))
 
-    ;; Process the locally specified property forms first.
-    (let ((properties (u:dict)))
+    ;; Process the locally specified attribute forms first.
+    (let ((default-attr-setter-forms
+            (parse-attribute-forms model style store tmap-var
+                                   (default-model-attributes model style
+                                                             store)))
+          (user-attr-setter-forms
+            (parse-attribute-forms model style store tmap-var
+                                   attribute-forms)))
 
-      ;; Build a table of the manually specified properties defined in
-      ;; the body form.
-      (dolist (prop-form property-forms)
-        (parse-property-form model style store properties prop-form))
-
-      (u:with-gensyms (cube-store cs-data-elements)
+      (u:with-gensyms (cube-store)
         `((u:comment "Allocate the texture-map general data-store instance.")
           (setf (data-store ,tmap-var)
                 (make-data-store 'data-store 1))
 
           (u:comment "Allocate a single cube-store to hold all faces.")
-          (let ((,cube-store (make-data-store 'cube-store 6
-                                              :style ,style
-                                              :store ,store)))
+          (let ((,cube-store (make-data-store 'cube-store 6)))
+            ,@(data-store-after-initialize model style store cube-store)
+
+            (u:comment "Arrange to store the cube-store instance.")
             (setf (aref (data-elements (data-store ,tmap-var)) 0)
                   ,cube-store)
 
-            (u:comment "Default properties.")
-            ,@(when propdefs
-                (loop :for prop-name :being :the :hash-keys :in propdefs
-                        :using (hash-value value)
-                      :when (or (null properties)
-                                (not (nth-value 1 (u:href properties
-                                                          prop-name))))
-                        :collect `(setf (,(property-name-to-slot-symbol
-                                           model style store prop-name)
-                                         ,tmap-var)
-                                        ,value)))
+            (u:comment "Default attributes.")
+            ,@default-attr-setter-forms
 
-            (u:comment "Manually specified properties.")
-            ,@(loop :for prop-name :being :the :hash-keys :in properties
-                      :using (hash-value value)
-                    :collect `(setf (,(property-name-to-slot-symbol
-                                       model style store prop-name)
-                                     ,tmap-var)
-                                    ,value))
+            (u:comment "User specified attributes.")
+            ,@user-attr-setter-forms
 
             (u:comment "Store each of the 6 faces into the cube-store.")
-            ;; TODO: This hash merge on mprops is a little cheeky since I
-            ;; don't do it above and elect to maintain the difference
-            ;; between the defprops and properties hash for the texture-map.
-            (let ((,cs-data-elements (data-elements ,cube-store)))
-              ,@(loop :with mprops = (u:hash-merge (u:dict) propdefs
-                                                   properties)
-                      :for dsform :in data-store-forms
-                      :for index :from 0 :by 1
-                      :collect
-                      `(setf (aref ,cs-data-elements ,index)
-                             ,(destructuring-bind
-                                  (tag properties . elements) dsform
-                                (parse-data-form
-                                 model style store tag properties
-                                 elements mprops)))))))))))
+            ,(parse-data-forms model style store data-store-forms
+                               cube-store
+                               tmap-var)
+            ))))))
 
+;;`(setf (aref (data-elements ,cube-store) ,index)
+
+#|
 ;;; ----
 ;; These methods support specialized :combined cube maps where all faces are
 ;; encoded into a single image (which may have mipmaps). These data-forms use
 ;; the :mipmap form.
 ;;; ----
 
-;; TODO KEEP GOING
+;; TODO: Should this just exist for all kinds of :cubes?
+(defmethod default-model-attributes ((model (eql :cube))
+(style (eql :combined))
+store)
+(u:dict))
 
+;; Return generalized boolean if form is a data-form, or NIL otherwise.
+(defmethod data-store-form-p ((model (eql :cube))
+(style (eql :combined))
+store form)
+(when (listp form)
+(member (first form) '(:mipmap))))
+|#
 
 
 ;;; -----------------------------------------------------------------------
@@ -497,6 +546,33 @@
       (:face ((:dir :+z)) cube-map-back)
       (:face ((:dir :-z)) cube-map-front))))
 
+(defun test-cube-unique-six-1 ()
+  (with-tmap-test-form
+    (v:define-texture-map cube-map (:cube :unique :six)
+      ;; A single cube-store instance holds the array of data-elements and each
+      ;; element is a cube-face instance.  The source of the data in the DSL is
+      ;; a symbol of another texture-map, or a (:texture-map ...) anonmyous
+      ;; definition.
+      (:face ((:dir :+x))
+             (v:define-texture-map nil (:single :unique)
+               (:mipmap () (textures map-right))))
+      (:face ((:dir :-x))
+             (v:define-texture-map nil (:single :unique)
+               (:mipmap () (textures map-left))))
+      (:face ((:dir :+y))
+             (v:define-texture-map nil (:single :unique)
+               (:mipmap () (textures map-top))))
+      (:face ((:dir :-y))
+             (v:define-texture-map nil (:single :unique)
+               (:mipmap () (textures map-bottom))))
+      (:face ((:dir :+z))
+             (v:define-texture-map nil (:single :unique)
+               (:mipmap () (textures map-back))))
+      (:face ((:dir :-z))
+             (v:define-texture-map nil (:single :unique)
+               (:mipmap () (textures map-front)))))))
+
+
 (defun test-cube-unique-opengl-0 ()
   (with-tmap-test-form
     (v:define-texture-map cube-map (:cube :unique :opengl)
@@ -509,6 +585,7 @@
       (:face ((:dir :texture-cube-map-positive-z)) cube-map-back)
       (:face ((:dir :texture-cube-map-negative-z)) cube-map-front))))
 
+
 (defun test-cube-combined-vcross-top-0 ()
   (with-tmap-test-form
     (v:define-texture-map cube-map (:cube :combined :vcross-top)
@@ -517,6 +594,7 @@
       ;; image is a scaled mipmap going down to each image being a 1x1 image
       ;; embedded into a vcross-top image. Or however many mipmaps are
       ;; provided as long as they are in a contiguous set in mipmap levels.
+      ;; There may NOT be a (:texture-map ...) form in here.
       (:mipmap () (envs town-0))
       (:mipmap () (envs town-1))
       (:mipmap () (envs town-2))

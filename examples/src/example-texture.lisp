@@ -16,6 +16,7 @@
 ;; was producing this in a live lisp file and lifted it to a gist.
 
 ;; The general high level form for the named texture-map form:
+;; NOTE: If NAME is NIL, then it is an anonymous texture-map.
 #++
 (v:define-texture-map NAME DATA-MODEL-FORM
   PROPERTY-FORM*
@@ -26,13 +27,6 @@
   exactly 1 of (:NAME () ...)
   form)
 
-;; The general high level syntax for the anonymous form of define-texture-map.
-;; This form can be embedded directly into a define-texture form in the :data
-;; section.
-#++
-(:texture-map DATA-MODEL-FORM
-              PROPERTY-FORM*
-              :FACE{6} or :MIPMAP+ or :IMAGE{1} or :NAME{1} form)
 
 ;; The exhaustive options for define-texture-map. Some of the data models, like
 ;; (:buffer <name>) and (:rect :unique) are 80% understood, but it is good to
@@ -87,6 +81,8 @@
   ;;    Each combined image may have a mipmap of smaller combined images.
 
   ;; Now come one or more of these property forms: (cube maps ignore these)
+  ;; :context CONTEXT - a place to automatically store anonymous texture-maps
+  ;; if it is specified.
   ;;
   ;; :origin - where to consider the origin of the mipmap
   ;;   :{top,bottom}-{left,right}(-{back,front})?
