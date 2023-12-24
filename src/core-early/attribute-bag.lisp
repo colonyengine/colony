@@ -10,22 +10,32 @@
   (apply #'make-instance 'attribute-value init-args))
 
 (defun semantic-value-bound-p (attr-value)
+  "Return true if the semantic value in the ATTR-VALUE is bound.
+NIL otherwise."
   (slot-boundp attr-value '%semantic))
 
 (defun computed-value-bound-p (attr-value)
+  "Return true if the computed value in the ATTR-VALUE is bound.
+NIL otherwise."
   (slot-boundp attr-value '%computed))
 
-;; Copy an attribute value by allocating a new attribute-value. Use the
-;; COPIER-FUNC on the semantic and computed values when copying them into the
-;; new attribute-value.
-(defun copy-attribute-value (original-attr-value &key (copier-func #'identity))
+(defun copy-attribute-value (original-attr-value
+                             &key (semantic-copier-func #'identity)
+                               (computed-copier-func #'identity))
+  "Copy ORIGINAL-ATTR-VALUE by allocating a new attribute-value. Use the
+SEMANTIC-COPIER-FUNC on the semantic value and the COMPUTED-COPIER-FUNC on the
+computed values when copying them into the new attribute-value. Both of them
+default to CL:IDENTITY. Return the copied attribute-value."
   (let ((new-attr-value (make-attribute-value)))
     (when (semantic-value-bound-p original-attr-value)
       (setf (semantic new-attr-value)
-            (funcall copier-func (semantic original-attr-value))))
+            (funcall semantic-copier-func (semantic original-attr-value))))
+
+    (setf (dirty new-attr-value) (dirty original-attr-value))
+
     (when (computed-value-bound-p original-attr-value)
       (setf (computed new-attr-value)
-            (funcall copier-func (computed original-attr-value))))
+            (funcall computed-copier-func (computed original-attr-value))))
     new-attr-value))
 
 ;;; ------------------------------------------------------------------------
@@ -193,37 +203,43 @@ Returns BAG after the overlay procedure is complete.
 
       bag)))
 
-;; Make a base level attribute-bag. Since attribute-bags are mostly derived,
-;; this is not a commonly used function. Uses the overlay argument syntax.
 (defun make-attribute-bag (&rest args)
+  "Allocate and return a base level attribute-bag. Since attribute-bags are
+mostly derived, this is not a commonly used function. Apply the OVERLAY
+function to ARGS."
   (apply #'overlay (make-instance 'attribute-bag) args))
 
 ;;; ----
 ;; Contained Attribute Value API
 ;;; ----
 
-;; Return two values.
-;; First Value: the attribute-value instance if it exists or NIL.
-;; Second value: T if the attribute-value instance exists or NIL.
 (defmethod attr ((attr-bag attribute-bag) name)
+  "Return two values. The first value is the attribute-value instance if it
+exists or NIL. The second value is T if the attribute-value existed or NIL if
+it didn't."
   (u:href (attributes attr-bag) name))
 
-;; Associate an attribute-value with a name. Forget about the old one if it
-;; existed.
 (defmethod (setf attr) (new-attr-value (attr-bag attribute-bag) name)
+  "Associate the NEW-ATTR-VALUE with the NAME in ATTR-BAG. Forget about the old
+attribute-value if it existed. Return NEW-ATTR-VALUE."
   (setf (u:href (attributes attr-bag) name) new-attr-value))
 
-;; Wipe out the entire attribute hash table. Very destructive.
 (defmethod clear-attrs ((attr-bag attribute-bag))
+  "Clear attribute hash table. All attribute-values and their semantic and
+computed values are forgotten about. Very destructive."
   (clrhash (attributes attr-bag)))
 
-;; Copy the table only copies the hash table for the purposes of the
-;; iteration. The :copier-func function, which defaults to cl:identity,
-;; processes the attr-value before storage into the copied hash table. Through
-;; this, one could deep copy the attribute-values if desired. FUNC is passed
-;; the name and the attr-value. Return attr-bag.
 (defmethod do-attr ((attr-bag attribute-bag) func
-                    &key copy-table (copier-func #'identity))
+                    &key copy-table (copier-func #'identity)
+                    &allow-other-keys)
+  "Iterate the FUNC over each attribute-value contained in the ATTR-BAG. Return
+the ATTR-BAG. If the keyword argument :COPY-TABLE is true, then copy the
+internal ATTR-BAF hash table using the value of the keyword argument
+:COPIER-FUNC as the copy function for the attribute-values and iterate over
+that copy instead.  The :COPIER-FUNC function, which defaults to cl:identity,
+processes the attr-value before storage into the copied hash table. Through
+this, one could deep copy the attribute-values if desired. The copied table is
+lost after this function returns. FUNC is passed the name and the attr-value."
   (let* ((attr-table (attributes attr-bag))
          (attr-table (if copy-table
                          (u:copy-hash-table attr-table :key copier-func)
@@ -236,25 +252,27 @@ Returns BAG after the overlay procedure is complete.
 ;; Semantic Attribute API
 ;;; ----
 
-;; Return two values. The first value is the semantic attribute value for the
-;; given name or NIL if there was no attribute with this name. The second value
-;; is the attribute-value instance if the attribute-value exists or NIL if it
-;; didn't.
-(defmethod sattr ((attr-bag attribute-bag) name)
+(defmethod sattr ((attr-bag attribute-bag) name &optional (not-found nil))
+  "If there is an attribute-value associated with NAME in the ATTR-BAG, then
+return two values. The first is the semantic value of the attribute-value and
+the second is the attribute-value itself.  If the attribute value does not
+exist, return a values with the first value being NOT-FOUND, which defaults to
+NIL, and the second value being NIL."
   (u:mvlet ((attr-value presentp (attr attr-bag name)))
     (if presentp
         (values (semantic attr-value) attr-value)
-        (values NIL NIL))))
+        (values not-found NIL))))
 
-;; If the attribute-value exists, update the semantic value (and just forget
-;; about the previous one if it exists). Otherwise, create and insert an
-;; attribute-value and then update the semantic value. Returns the
-;; new-semantic-value.
 (defmethod (setf sattr) (new-semantic-value (attr-bag attribute-bag) name)
+  "If the attribute-value exists, update the semantic value, forget about the
+previous semantic value, and dirty the attribute value. Otherwise, create and
+insert an attribute-value associated with NAME into ATTR-BAG, update the
+semantic value, and dirty the new attribute-value. Returns the
+new-semantic-value. Return the NEW-SEMANTIC-VALUE."
   (u:mvlet ((attr-value presentp (attr attr-bag name)))
     (if presentp
-        (setf (semantic attr-value) new-semantic-value
-              (dirty attr-value) T)
+        (setf (dirty attr-value) T
+              (semantic attr-value) new-semantic-value)
         (let ((new-attr-value
                 (make-attribute-value :semantic new-semantic-value
                                       :dirty T)))
@@ -263,6 +281,16 @@ Returns BAG after the overlay procedure is complete.
 
 (defmethod do-sattr ((attr-bag attribute-bag) func
                      &key copy-table (copier-func #'identity))
+
+  "Iterate over the attribute-values contained in the ATTR-BAG. For each
+attribute-value, FUNC is passed the name and the semantic value of the
+attribute-value. Return the ATTR-BAG. If the keyword argument :COPY-TABLE is
+true, then copy the internal ATTR-BAF hash table using the value of the keyword
+argument :COPIER-FUNC as the copy function for the attribute-values and iterate
+over that copy instead.  The :COPIER-FUNC function, which defaults to
+cl:identity, processes the attr-value before storage into the copied hash
+table. Through this, one could deep copy the attribute-values if desired. The
+copied table is lost after this function returns."
   (let* ((attr-table (attributes attr-bag))
          (attr-table (if copy-table
                          (u:copy-hash-table attr-table :key copier-func)
@@ -275,30 +303,53 @@ Returns BAG after the overlay procedure is complete.
 ;; Computed Attribute API
 ;;; ----
 
-;; Return two values. The first value is the computed attribute value for the
-;; given name or NIL if there was no attribute with this name. The second value
-;; is the attribute-value instance if the attribute-value exists or NIL if it
-;; didn't.
-(defmethod cattr ((attr-bag attribute-bag) name)
+(defmethod cattr ((attr-bag attribute-bag) name &optional (not-found nil))
+  "If there is an attribute-value associated with NAME in the ATTR-BAG, then
+return two values. The first is the computed value of the attribute-value and
+the second is the attribute-value itself.  If the attribute value does not
+exist, return a values with the first value being NOT-FOUND, which defaults to
+NIL, and the second value being NIL."
   (u:mvlet ((attr-value presentp (attr attr-bag name)))
     (if presentp
         (values (computed attr-value) attr-value)
-        (values NIL NIL))))
+        (values not-found NIL))))
 
-;; If the attribute-value exists, update the computed value (and just forget
-;; about the previous one if it exists). Otherwise, it is an error to try and
-;; set a computed attribute value for an attribute that doesn't exist.  Return
-;; the new-computed-value.
-(defmethod (setf cattr) (new-computed-value (attr-bag attribute-bag) name)
+(defmethod (setf cattr) (new-computed-value (attr-bag attribute-bag) name
+                         &optional (default-semval NIL default-semval-supp-p))
+  "If the attribute-value associated with NAME in the ATTR-BAG exists, update
+the computed value and make the attribute not dirty. Any previous computed
+value reference is simply lost. If the attribute-value does not exist, it is an
+error to try and set a computed attribute value for an attribute that doesn't
+exist--unless the caller specifies the optional DEFAULT-SEMVAL argument which
+defines what the semval should be for the new attribute.  If the attribute does
+exist, ignore the DEFAULT-SEMVAL and just update the dirty flag and computed
+value. Return the NEW-COMPUTED-VALUE."
   (u:mvlet ((attr-value presentp (attr attr-bag name)))
     (if presentp
-        (setf (computed attr-value) new-computed-value
-              (dirty attr-value) NIL)
-        (error "(setf cattr): There is no attribute-value for name: ~S"
-               name))))
+        (setf (dirty attr-value) NIL
+              (computed attr-value) new-computed-value)
+        (if default-semval-supp-p
+            (progn
+              (setf (attr attr-bag name)
+                    (make-attribute-value :semantic default-semval
+                                          :dirty nil
+                                          :computed new-computed-value))
+              new-computed-value)
+            (error "(setf cattr): There is no attribute-value for name: ~S"
+                   name)))))
 
 (defmethod do-cattr ((attr-bag attribute-bag) func
-                     &key copy-table (copier-func #'identity))
+                     &key copy-table (copier-func #'identity)
+                     &allow-other-keys)
+  "Iterate over the attribute-values contained in the ATTR-BAG. For each
+attribute-value, FUNC is passed the name and the computed value of the
+attribute-value. Return the ATTR-BAG. If the keyword argument :COPY-TABLE is
+true, then copy the internal ATTR-BAF hash table using the value of the keyword
+argument :COPIER-FUNC as the copy function for the attribute-values and iterate
+over that copy instead.  The :COPIER-FUNC function, which defaults to
+cl:identity, processes the attr-value before storage into the copied hash
+table. Through this, one could deep copy the attribute-values if desired. The
+copied table is lost after this function returns."
   (let* ((attr-table (attributes attr-bag))
          (attr-table (if copy-table
                          (u:copy-hash-table attr-table :key copier-func)

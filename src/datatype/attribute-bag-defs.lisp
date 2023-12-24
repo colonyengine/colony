@@ -28,4 +28,19 @@
                 :initarg :attributes
                 :initform (u:dict #'equal))))
 
+
 (defgeneric overlay (attribute-bag &rest containers))
+(defgeneric attr (attr-bag name))
+(defgeneric (setf attr) (new-attr-value attr-bag name))
+(defgeneric clear-attrs (attr-bag))
+(defgeneric do-attr (attr-bag func &key copy-table copier-func
+                     &allow-other-keys))
+(defgeneric sattr (attr-bag name &optional not-found))
+(defgeneric (setf sattr) (new-semantic-value attr-bag name))
+(defgeneric do-sattr (attr-bag func &key copy-table copier-func
+                      &allow-other-keys))
+(defgeneric cattr (attr-bag name &optional not-found))
+(defgeneric (setf cattr) (new-computed-value attr-bag name
+                          &optional default-semval))
+(defgeneric do-cattr (attr-bag func &key copy-table copier-func
+                      &allow-other-keys))
