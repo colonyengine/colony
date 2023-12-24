@@ -15,7 +15,8 @@
               :initarg :semantic)
    ;; When the semantic value is set, this becomes NIL, otherwise it is T.
    (%dirty :accessor dirty
-           :initarg :dirty)
+           :initarg :dirty
+           :initform T)
    ;; A (once or more) post processed evaluation of the semantic value.
    (%computed :accessor computed
               :initarg :computed)))
