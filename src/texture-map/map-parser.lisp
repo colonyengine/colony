@@ -585,7 +585,6 @@
       (:face ((:dir :texture-cube-map-negative-z)) cube-map-front))))
 
 
-;; TODO: This one seems broken.
 (defun test-cube-combined-vcross-top-0 ()
   (with-tmap-test-form
     (v:define-texture-map cube-map (:cube :combined :vcross-top)
