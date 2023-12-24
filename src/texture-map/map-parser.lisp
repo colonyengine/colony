@@ -79,7 +79,7 @@
                      ',(data-store-class-name model style store tag)
                      ,(length elements))))
 
-       ,@(data-store-after-initialize model style store dstore)
+       (data-store-after-initialize ',model ',style ',store ,dstore)
 
        ;; Overlay all known attributes from tmap into data-store.
        (abag:overlay ,dstore ,tmap-var)
@@ -124,8 +124,6 @@
                     (dolist (,ast ,asts)
                       (push ,ast ,all-asts)))))
        (values ,tmap-var ,all-asts))))
-
-;; dstore-place -> (data-store ,tmap-var)
 
 
 (defmethod parse-body (model style store tmap-var body)
@@ -384,13 +382,10 @@
 (defmethod texture-map-class-name ((model (eql :cube)) style store)
   'texture-map-cube)
 
-(defmethod data-store-class-name ((model (eql :cube)) style store tag)
-  'cube-store)
-
 (defmethod data-store-after-initialize ((model (eql :cube)) style store
                                         (dstore cube-store))
-  `((setf (style ,dstore) ,style
-          (store ,dstore) ,store)))
+  (setf (style dstore) style
+        (store dstore) store))
 
 ;;; ----
 ;; These methods support specialized :unique style cube maps that use :face
@@ -488,7 +483,8 @@
 
           (u:comment "Allocate a single cube-store to hold all faces.")
           (let ((,cube-store (make-data-store 'cube-store 6)))
-            ,@(data-store-after-initialize model style store cube-store)
+
+            (data-store-after-initialize ',model ',style ',store ,cube-store)
 
             (u:comment "Arrange to store the cube-store instance.")
             (setf (aref (data-elements (data-store ,tmap-var)) 0)
@@ -506,9 +502,8 @@
                                tmap-var)
             ))))))
 
-;;`(setf (aref (data-elements ,cube-store) ,index)
 
-#|
+
 ;;; ----
 ;; These methods support specialized :combined cube maps where all faces are
 ;; encoded into a single image (which may have mipmaps). These data-forms use
@@ -517,17 +512,21 @@
 
 ;; TODO: Should this just exist for all kinds of :cubes?
 (defmethod default-model-attributes ((model (eql :cube))
-(style (eql :combined))
-store)
-(u:dict))
+                                     (style (eql :combined))
+                                     store)
+  `())
+
+(defmethod data-store-class-name ((model (eql :cube)) (style (eql :combined))
+                                  store (tag (eql :mipmap)))
+  'mipmap-store)
 
 ;; Return generalized boolean if form is a data-form, or NIL otherwise.
 (defmethod data-store-form-p ((model (eql :cube))
-(style (eql :combined))
-store form)
-(when (listp form)
-(member (first form) '(:mipmap))))
-|#
+                              (style (eql :combined))
+                              store form)
+  (when (listp form)
+    (member (first form) '(:mipmap))))
+
 
 
 ;;; -----------------------------------------------------------------------
@@ -586,6 +585,7 @@ store form)
       (:face ((:dir :texture-cube-map-negative-z)) cube-map-front))))
 
 
+;; TODO: This one seems broken.
 (defun test-cube-combined-vcross-top-0 ()
   (with-tmap-test-form
     (v:define-texture-map cube-map (:cube :combined :vcross-top)
@@ -606,3 +606,77 @@ store form)
       (:mipmap () (envs town-8))
       (:mipmap () (envs town-9))
       (:mipmap () (envs town-10)))))
+
+
+;;; -----------------------------------------------------------------------
+;; Debugging methods to print out a texture-map AST.  This design and output is
+;; not entirely great, but it is sufficient for debugging.
+;;; -----------------------------------------------------------------------
+
+(defun logit (fmt &rest args)
+  (apply #'format t fmt args))
+
+(defun logiti (indent fmt &rest args)
+  (apply #'format t (concatenate 'string "~A" fmt)
+         (make-string indent :initial-element #\Space)
+         args))
+
+(defun logattri (indent obj)
+  "Dump out the attributes of the attribute-bag OBJ at indent."
+  (abag:do-attr obj
+    ;; TODO: Make printing out of this not duplicate code with
+    ;; abag:dump-attribute-bag.
+    (lambda (name av)
+      ;; d is not dirty, D is dirty.
+      (logiti indent "@ ~S -> ~:[d~;D~] ~S "
+              name
+              (abag:dirty av)
+              (if (abag:semantic-value-bound-p av)
+                  (abag:semantic av)
+                  "<UNBOUND>"))
+      (if (abag:computed-value-bound-p av)
+          (format t "=> ~S~%" (abag:computed av))
+          (format t "=|~%")))))
+
+(defmethod dump (indent (obj data-element))
+  (logiti indent "DE: O: ~S, R: ~S, C: ~S~%"
+          (if (slot-boundp obj '%original)
+              (original obj)
+              '<ubnd>)
+          (if (slot-boundp obj '%resolved)
+              (resolved obj)
+              '<ubnd>)
+          (if (slot-boundp obj '%computed)
+              (computed obj)
+              '<ubnd>)))
+
+(defmethod dump (indent (obj data-store))
+  (logiti indent "DS[~S]: ~A elem~%"
+          (type-of obj) (length (data-elements obj)))
+  (loop :for i :below (length (data-elements obj))
+        :do (logiti (1+ indent) "[~A]:~%" i)
+            (dump (+ indent 2) (aref (data-elements obj) i))))
+
+(defmethod dump (indent (obj attributed-data-store))
+  (logiti indent "ADS[~S]: ~A elem~%"
+          (type-of obj) (length (data-elements obj)))
+  (logattri (1+ indent) obj)
+  (loop :for i :below (length (data-elements obj))
+        :do (logiti (1+ indent) "[~A]:~%" i)
+            (dump (+ indent 2) (aref (data-elements obj) i))))
+
+(defmethod dump (indent (obj cube-store))
+  (logiti indent "ADS[~S]: ~A elem (style: ~S, store: ~S)~%"
+          (type-of obj) (length (data-elements obj))
+          (style obj) (store obj))
+  (logattri (1+ indent) obj)
+  (loop :for i :below (length (data-elements obj))
+        :do (logiti (1+ indent) "[~A]:~%" i)
+            (dump (+ indent 2) (aref (data-elements obj) i))))
+
+(defmethod dump (indent (obj texture-map))
+  (logiti indent "[~A]: ~S ~A | ~S ~S ~S~%"
+          (type-of obj) (name obj) (anonymous-p obj)
+          (model obj) (style obj) (store obj))
+  (logattri (1+ indent) obj)
+  (dump (1+ indent) (data-store obj)))
