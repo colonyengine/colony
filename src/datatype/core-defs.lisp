@@ -59,6 +59,8 @@
                   :initform (u:dict #'eq))
    (%materials :accessor materials
                :initarg :materials)
+   (%texture-maps :accessor texture-maps
+                  :initarg :texture-maps)
    (%textures :accessor textures
               :initarg :textures)
    (%context :reader context

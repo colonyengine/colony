@@ -140,9 +140,9 @@ be executed after all the shader programs have been compiled."
 
 
 (defun update-material/interactively (name func)
-  (when (core-bound-p *core-debug*)
+  (v:with-selected-interactive-core (core)
     (tpool:push-queue
-     (thread-pool *core-debug*)
+     (thread-pool core)
      :recompile
      (list
       :material

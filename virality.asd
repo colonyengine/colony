@@ -151,6 +151,7 @@
     :serial t
     :components
     ((:file "common")
+     (:file "texture-map-table")
      (:file "map-parser")
      (:file "texture-map")))
    (:module "texture"

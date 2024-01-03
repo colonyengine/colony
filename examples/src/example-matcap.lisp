@@ -8,13 +8,35 @@
 ;; Also, the regular matcap shader still has the (- 1 y). So confusion all
 ;; around for a little bit.
 
+(v:define-texture-map matcap/matcap-map (:single :unique)
+  (:mipmap () (textures matcap-map)))
+
 (v:define-texture matcap/matcap-map (:texture-2d x:clamp-all-edges)
   ;; TODO: This is commented out because the gltf2 uvs have a different origin
   ;;(:flip-y t) ;; removed 1 - y from shader.
   (:texture-min-filter :nearest)
   (:texture-mag-filter :nearest)
+  ;; TODO: TMAP Convert :data to reference texture-map name.
   (:data #((textures matcap-map))))
 
+;; TODO: possibly set :origin for these images to deal with the matcap shader.
+(v:define-texture-map matcap/basic-dark (:single :unique)
+  (:mipmap () (v:matcaps v::basic-dark)))
+
+(v:define-texture-map matcap/metal-carpaint (:single :unique)
+  (:mipmap () (v:matcaps v::metal-carpaint)))
+
+(v:define-texture-map matcap/jade (:single :unique)
+  (:mipmap () (v:matcaps v::jade)))
+
+(v:define-texture-map matcap/basic-1 (:single :unique)
+  (:mipmap () (v:matcaps v::basic-1)))
+
+(v:define-texture-map matcap/metal-shiny (:single :unique)
+  (:mipmap () (v:matcaps v::metal-shiny)))
+
+(v:define-texture-map matcap/metal-lead (:single :unique)
+  (:mipmap () (v:matcaps v::metal-lead)))
 
 ;; TOOD: make basic-dark an RGB greyscale image. Check the others too.
 (v:define-texture matcap/lookup (:texture-2d-array x:clamp-all-edges)
@@ -22,6 +44,7 @@
   ;; Confusing, no? I think the "upside downness" of the matcap/matcap-map
   ;; and these are actually different on disk....
   (:flip-y t) ;; removed 1 - y from shader.
+  ;; TODO: TMAP Convert :data to use the texture-map name.
   (:data #(#((v:matcaps v::basic-dark)) ;; inside engine
            #((v:matcaps v::metal-carpaint)) ;; body base color
            #((v:matcaps v::jade)) ;; windshield

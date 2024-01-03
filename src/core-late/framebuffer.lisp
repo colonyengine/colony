@@ -56,8 +56,9 @@
       (destructuring-bind (name &key &allow-other-keys) x
         (let ((attachment-spec (make-framebuffer-attachment-spec x)))
           (setf (u:href (attachment-specs spec) name) attachment-spec))))
-    (tpool:enqueue (thread-pool *core-debug*)
-                   :recompile (list :framebuffer name))))
+    (v:with-selected-interactive-core (core)
+      (tpool:enqueue (thread-pool core)
+                     :recompile (list :framebuffer name)))))
 
 (defun make-framebuffer-spec (name mode attachments)
   (let ((spec (make-instance 'framebuffer-spec :name name)))

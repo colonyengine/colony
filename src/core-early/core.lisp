@@ -40,15 +40,20 @@ structures in CORE."
 
 (defun make-core (config)
   ;; TODO: LOAD-CONFIG should have been executed before this. Write a small
-  ;; piece of code that can check this fact.
+  ;; piece of code that can check this fact right here.
   (let ((core
           (make-instance
            'core
-           ;; NOTE: It is possible the ordering of this
-           ;; initialization may be significant.
+           ;; NOTE: It is possible the ordering of this initialization may be
+           ;; significant.
+           ;;
+           ;; NOTE: It is debatable that we should move these out of this
+           ;; function and into the engine.lisp INITIALIZE function so we can
+           ;; finely control the initialization of everything.
            :config config
            :tables (make-instance 'bookkeeping-tables)
            :materials (make-materials-table)
+           :texture-maps (texmaptab:make-texture-map-table)
            :textures (textab:make-texture-table)
            :thread-pool (tpool:make-thread-pool (or =threads= =cpu-count=))
            :context (make-context)

@@ -519,7 +519,7 @@ return the TEXTURE instance for the debug-texture."
 
 (defun update-texture (context old-descriptor new-descriptor)
   (tpool:push-queue
-   (v::thread-pool v::*core-debug*)
+   (v::thread-pool (v::core context))
    :recompile
    (list
     :texture
@@ -545,9 +545,8 @@ return the TEXTURE instance for the debug-texture."
               (v::resource-cache-lookup context :texture new-name))))))))
 
 (defun update-texture/interactively (old-descriptor new-descriptor)
-  (when (v:core-bound-p v::*core-debug*)
-    (let ((context (v:context v::*core-debug*)))
-      (update-texture context old-descriptor new-descriptor))))
+  (v:with-selected-interactive-core (core)
+    (update-texture (v:context core) old-descriptor new-descriptor)))
 
 (defmacro define-texture (name (textype &rest profile-overlay-names)
                           &body body)

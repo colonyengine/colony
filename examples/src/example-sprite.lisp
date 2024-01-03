@@ -2,7 +2,11 @@
 
 ;;; Textures
 
+(v:define-texture-map sprites (:single :unique)
+  (:mipmap () (textures sprites)))
+
 (v:define-texture sprites (:texture-2d)
+  ;; TODO: TMAP Convert :data to be texture-map name.
   (:data #((textures sprites))))
 
 ;;; Components

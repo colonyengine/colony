@@ -185,23 +185,56 @@
 (in-package #:virality-examples)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Textures
+;; Texture Maps
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; We only use a single sprite sheet atlas that contains all of our textures.
-;; This one is invluded with FL
-(v:define-texture sprite-atlas (:texture-2d)
-  (:data #((textures sprites))))
+;; We only use a single sprite sheet atlas that contains all of our sub texture
+;; maps.  This one is included with the engine.
+(v:define-texture-map sprite-atlas (:single :unique)
+  (:mipmap () (textures sprites)))
 
 ;; This background image was downloaded off the web here:
 ;; https://www.wikitree.com/photo/jpg/Tileable_Background_Images
 ;; And the url for the license is 404, but the wayback machine found it:
 ;; https://web.archive.org/web/20180723233810/http://webtreats.mysitemyway.com/terms-of-use/
 ;; Which says it can be used for any purpose.
+(v:define-texture-map starfield (:single :unique)
+  (:mipmap () (ptp-textures starfield)))
+
+;; This texture was created by Pixel_Outlaw for use in this game.
+(v:define-texture-map warning-wave (:single :unique)
+  (:mipmap () (ptp-textures warning-wave)))
+
+;; This texture was created by Pixel_Outlaw for use in this game.
+(v:define-texture-map warning-mothership (:single :unique)
+  (:mipmap () (ptp-textures warning-mothership)))
+
+(v:define-texture-map game-over (:single :unique)
+  (:mipmap () (ptp-textures game-over)))
+
+(v:define-texture-map title (:single :unique)
+  (:mipmap () (ptp-textures title)))
+
+(v:define-texture-map level-complete (:single :unique)
+  (:mipmap () (ptp-textures level-complete)))
+
+(v:define-texture-map white (:single :unique)
+  (:mipmap () (ptp-textures white)))
+
+(v:define-texture-map pivot (:single :unique)
+  (:mipmap () (ptp-textures transpivot)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Textures
+;; TODO: TMAP Fix all define-texture DSL forms to use name of texture-map.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(v:define-texture sprite-atlas (:texture-2d)
+  (:data #((textures sprites))))
+
 (v:define-texture starfield (:texture-2d)
   (:data #((ptp-textures starfield))))
 
-;; These two textures were created by Pixel_Outlaw for use in this game.
 (v:define-texture warning-wave (:texture-2d)
   (:data #((ptp-textures warning-wave))))
 

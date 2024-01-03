@@ -59,9 +59,9 @@
     (doc prefab)))
 
 (defun update-prefab/interactively (spec)
-  (when (v:core-bound-p v::*core-debug*)
+  (v:with-selected-interactive-core (core)
     (tpool:push-queue
-     (v::thread-pool v::*core-debug*)
+     (v::thread-pool core)
      :recompile
      (list
       :prefab
@@ -91,10 +91,10 @@
            ;; created for each component initarg value. We use it later to
            ;; adjust which actors and components are available for V:REF when
            ;; forcing the argument thunk. We COULD have made an
-           ;; INJECTABLE-REF-VALUE-THUNK for EACH argument value, but that would
-           ;; generate more garbage than this method. So, unless we find we have
-           ;; to do that, we'll just do it for all the components in this prefab
-           ;; itself.
+           ;; INJECTABLE-REF-VALUE-THUNK for EACH argument value, but that
+           ;; would generate more garbage than this method. So, unless we find
+           ;; we have to do that, we'll just do it for all the components in
+           ;; this prefab itself.
            (inject-ref-environment
              (u:mvlet* ((,data (preprocess-spec
                                 ,name ,context ,policy ,body))

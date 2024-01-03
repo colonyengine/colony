@@ -6,7 +6,11 @@
 
 ;;; Textures
 
+(v:define-texture-map art5/texture (:single :unique)
+  (:mipmap () (textures city)))
+
 (v:define-texture art5/texture (:texture-2d)
+  ;; TODO: TMAP Convert :data to use texture-map name.
   (:data #((textures city))))
 
 ;;; Materials
@@ -84,7 +88,7 @@
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)
-				  0f0))
+                                  0f0))
    (comp:render :material 'art1
                 :slave (v:ref :self :component 'comp:mesh))))
 
@@ -93,7 +97,7 @@
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)
-				  0f0))
+                                  0f0))
    (comp:render :material 'art2
                 :slave (v:ref :self :component 'comp:mesh))))
 
@@ -102,7 +106,7 @@
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)
-				  0f0))
+                                  0f0))
    (comp:render :material 'art3
                 :slave (v:ref :self :component 'comp:mesh))))
 
@@ -111,7 +115,7 @@
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)
-				  0f0))
+                                  0f0))
    (comp:render :material 'art4
                 :slave (v:ref :self :component 'comp:mesh))))
 
@@ -120,7 +124,7 @@
   (("screen" :copy "/mesh")
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)
-				  0f0))
+                                  0f0))
    (comp:render :material 'art5
                 :slave (v:ref :self :component 'comp:mesh))))
 
@@ -130,6 +134,6 @@
    (mouse-shader-input)
    (comp:transform :scale (v3:vec (/ v:=window-width= 2f0)
                                   (/ v:=window-height= 2f0)
-				  0f0))
+                                  0f0))
    (comp:render :material 'art6
                 :slave (v:ref :self :component 'comp:mesh))))

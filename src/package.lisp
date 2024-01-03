@@ -161,8 +161,31 @@
 
 (defpackage #:virality.texture-map
   (:use #:cl)
+  ;; The macro API
   (:export
-   #:define-texture-map))
+   #:define-texture-map
+   )
+  ;; texture-map-descriptor API
+  (:export
+   #:ast
+   #:extra-asts
+   #:make-texture-map-descriptor
+   #:name
+   #:texture-map-descriptor
+   #:user-form
+   ))
+
+(defpackage #:virality.texture-map.texture-map-table
+  (:use #:cl)
+  ;; texture-map-table API
+  (:export
+   #:add-semantic-texture-map-descriptor
+   #:find-semantic-texture-map-descriptor
+   #:make-texture-map-table
+   #:remove-semantic-texture-map-descriptor
+   #:semantic-texture-map-descriptors
+   #:texture-map-table
+   ))
 
 (defpackage #:virality.texture
   (:use #:cl)
@@ -375,6 +398,7 @@
    #:start
    #:stop
    #:total-time
+   #:with-selected-interactive-core
    #:with-storage)
   ;; asset pools
   (:export
@@ -595,9 +619,10 @@
       (:virality.resource-cache :rc)
       (:virality.thread-pool :tpool)
       (:virality.uuid :uuid)
+      (:virality.texture-map.texture-map-table :texmaptab)
+      (:virality.texture-map :texmap)
       (:virality.texture.texture-table :textab)
       (:virality.texture :tex)
-      (:virality.texture-map :texmap)
       (:virality.image :img)
       (:vshadow :shadow))))
 

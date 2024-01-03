@@ -66,6 +66,14 @@
            :collect (u:with-gensyms (e ast)
                       `(multiple-value-bind (,e ,ast)
                            ,(parse-data-element model style store tag elem)
+                         ;; NOTE: The macro generation can produce code that
+                         ;; binds a NIL to ,ast, in which case the compiler
+                         ;; will infer that the later (push ,ast ,asts) is dead
+                         ;; code. While it is right, it is unhelpful and the
+                         ;; notes are distracting. So we turn off that compiler
+                         ;; note in this small code section to avoid the note.
+                         #+sbcl (declare (sb-ext:muffle-conditions
+                                          sb-ext:code-deletion-note))
                          (setf (aref (data-elements ,dstore) ,index) ,e)
                          (when ,ast
                            (push ,ast ,asts)))))
@@ -139,9 +147,6 @@
             :finally
                (return (values attr-forms data-forms)))
 
-    (format t "attribute-forms: ~S~%" attribute-forms)
-    (format t "data-store-forms: ~S~%" data-store-forms)
-
     (let ((default-attr-setter-forms
             (parse-attribute-forms model style store tmap-var
                                    (default-model-attributes model style
@@ -149,9 +154,6 @@
           (user-attr-setter-forms
             (parse-attribute-forms model style store tmap-var
                                    attribute-forms)))
-
-      (format t "default-attr-setter-forms: ~S~%" default-attr-setter-forms)
-      (format t "user-attr-setter-forms: ~S~%" user-attr-setter-forms)
 
       ;; The list of store forms which side effect the DSL's data into the
       ;; texture-map and its data store.
@@ -424,7 +426,6 @@
                  (eq (first element) 'define-texture-map))
 
             ;; Process the define-texture-map and handle the results of it.
-            (format t "About to destructure: ~S~%" element)
             (destructuring-bind (sub-tag sub-name
                                  (sub-model sub-style . sub-store)
                                  . sub-body)

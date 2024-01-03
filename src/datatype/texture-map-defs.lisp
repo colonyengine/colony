@@ -1,5 +1,10 @@
 (in-package #:virality.texture-map)
 
+;;;; These types exist both at macro expansion time and at engine runtime.
+;;;; It is inteded they are the products of define-texture-map and also the
+;;;; runtime API for generating this stuff at runtime and giving it to the
+;;;; engine.
+
 ;; A representation of a single loadable/computable data element for a
 ;; texture-map.
 (defclass data-element ()
@@ -102,20 +107,26 @@
 (defclass texture-map-descriptor ()
   ((%name :accessor name
           :initarg :name)
-   ;; The data model form
-   (%data-model :accessor data-model
-                :initarg :data-model)
-   ;; Hash table.
-   ;; Key(EQUAL) is policy key form.
-   ;; VALUE is policy value form.
-   (%policy-attributes :accessor policy-attributes
-                       :initarg :policy-attributes)
-   ;; an array of 1 (:image ...) form or 1+ (:mipmap ...) form or
-   ;; 1 (:buffer-name ...) form or an unprocessed cube map layout form.
-   (%store-attributes :accessor store-attributes
-                      :initarg :store-attributes)
-   ;; The body form as written by the user for debugging.
+   (%ast :accessor ast
+         :initarg :ast)
+   ;; This descriptor might include additional texture-maps that were generated
+   ;; on behalf of this texture (currently only cube maps can do this). It is
+   ;; up to the reifier to ensure that the extra-asts are they are handled
+   ;; properly wrt anonymity or interactive update, etc.
+   (%extra-asts :accessor extra-asts
+                :initarg :extra-asts)
+   ;; The original form as written by the user for debugging.
    (%user-form :accessor user-form
                :initarg :user-form)))
 
 ;; --------------------------------------------------------------------------
+
+(in-package #:virality.texture-map.texture-map-table)
+
+;; This datatype is used in the CORE type to maintain the texture-map state.
+(defclass texture-map-table ()
+  (;; All texture-map-descriptors from DEFINE-TEXTURE-MAP are stored here.
+   (%semantic-texture-map-descriptors
+    :reader semantic-texture-map-descriptors
+    :initarg :semantic-texture-map-descriptors
+    :initform (u:dict #'equal))))

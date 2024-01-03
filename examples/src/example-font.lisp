@@ -1,8 +1,12 @@
 (in-package #:virality-examples)
 
-;;; Textures
+;;; Texture Maps
+(v:define-texture-map font (:single :unique)
+  (:mipmap () (textures font)))
 
+;;; Textures
 (v:define-texture font (:texture-2d)
+  ;; TODO: TMAP Fix to accept texture-map name.
   (:data #((textures font))))
 
 ;;; Materials
