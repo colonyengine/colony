@@ -19,6 +19,9 @@ NIL otherwise."
 NIL otherwise."
   (slot-boundp attr-value '%computed))
 
+#|
+;; TODO: Replace calls with below CLONE code.
+;; OK CLONE seems to work.
 (defun copy-attribute-value (original-attr-value
                              &key (semantic-copier-func #'identity)
                                (computed-copier-func #'identity))
@@ -37,6 +40,41 @@ default to CL:IDENTITY. Return the copied attribute-value."
       (setf (computed new-attr-value)
             (funcall computed-copier-func (computed original-attr-value))))
     new-attr-value))
+|#
+
+(defmethod clone:clone ((object attribute-value)
+                        (policy clone:allocating-clone)
+                        &key (semantic-copier-func #'identity)
+                          (computed-copier-func #'identity))
+  "Copy ORIGINAL-ATTR-VALUE by allocating a new attribute-value. Use the
+SEMANTIC-COPIER-FUNC on the semantic value and the COMPUTED-COPIER-FUNC on the
+computed values when copying them into the new attribute-value. Both of them
+default to CL:IDENTITY. Return the copied attribute-value."
+  (let ((cloned-object (make-attribute-value)))
+    (clone:clone-object cloned-object object policy
+                        :semantic-copier-func semantic-copier-func
+                        :computed-copier-func computed-copier-func)))
+
+;; We only implement deep copy
+(defmethod clone:clone-object progn ((cloned-object attribute-value)
+                                     (original-object attribute-value)
+                                     (policy clone:deep-clone)
+                                     &key semantic-copier-func
+                                       computed-copier-func)
+  (when (semantic-value-bound-p original-object)
+    (setf (semantic cloned-object)
+          (clone:clone
+           (funcall semantic-copier-func (semantic original-object))
+           policy)))
+  (setf (dirty cloned-object)
+        (clone:clone (dirty original-object) policy))
+  (when (computed-value-bound-p original-object)
+    (setf (computed cloned-object)
+          (clone:clone
+           (funcall computed-copier-func (computed original-object))
+           policy)))
+  cloned-object)
+
 
 ;;; ------------------------------------------------------------------------
 ;; Attribute Bag API
@@ -155,10 +193,17 @@ Returns BAG after the overlay procedure is complete.
              ;; TODO: Maybe do a little better here wrt allowing the user to
              ;; specify a copier function for copy-attribute-value.
              (absorb-attr-bag (container)
-               (do-attr container (lambda (name av)
-                                    (when (allow-insert-p name)
-                                      (setf (attr bag name)
-                                            (copy-attribute-value av))))))
+               (do-attr container
+                 (lambda (name av)
+                   (when (allow-insert-p name)
+                     ;; TODO: Good. This seems to work.
+                     (setf (attr bag name)
+                           (clone:clone-deep av))
+                     ;; TODO: If deep cloning works, remove
+                     ;; this ignored form and the
+                     ;; COPY-ATTRIBUTE-VALUE fnction.
+                     #++(setf (attr bag name)
+                              (copy-attribute-value av))))))
 
              ;; Figure out what to do given what the container actually is when
              ;; it is decidable. This allows us to not necessarily have to

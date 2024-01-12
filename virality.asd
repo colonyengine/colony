@@ -44,7 +44,8 @@
    (:module "datatype"
     :serial t
     :components
-    ((:file "attribute-bag-defs")
+    ((:file "clone-defs")
+     (:file "attribute-bag-defs")
      (:file "thread-pool-defs")
      (:file "uuid-defs")
      (:file "asset-defs")
@@ -81,7 +82,8 @@
    (:module "core-early"
     :serial t
     :components
-    ((:file "attribute-bag")
+    ((:file "clone")
+     (:file "attribute-bag")
      (:file "general")
      (:file "metadata")
      (:file "config")

@@ -1,5 +1,31 @@
 (in-package #:cl-user)
 
+(defpackage #:virality.clone
+  (:use #:cl)
+  ;; CLONE-POLICY API
+  (:export
+   #:allocating-clone
+   #:clone-policy
+   #:deep-clone
+   #:identity-clone
+   #:shallow-clone
+   )
+  ;; CLONE API
+  (:export
+   #:*deep*
+   #:*identity*
+   #:*shallow*
+   #:clone
+   #:clone-deep
+   #:clone-identity
+   #:clone-object
+   #:clone-shallow
+   #:make-deep-clone
+   #:make-identity-clone
+   #:make-shallow-clone
+   )
+  )
+
 (defpackage #:virality.attribute-bag
   (:use #:cl)
   ;; ATTRIBUTE-VALUE API
@@ -610,6 +636,7 @@
       (:vumbra.noise :umbra.noise)
       (:vumbra.sdf :umbra.sdf)
       (:vumbra.sprite :umbra.sprite)
+      (:virality.clone :clone)
       (:virality.attribute-bag :abag)
       (:virality.component :comp)
       (:virality :v)
