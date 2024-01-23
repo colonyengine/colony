@@ -35,7 +35,7 @@
 ;; the cloning function.
 (defclass identity-clone (clone-policy) ())
 
-;; An ALLOCATING-CLONE policy generally will cause a memory allocation and the
+;; An ALLOCATING-CLONE policy generally may cause a memory allocation and the
 ;; subsequent cloning of the aggregate pieces of the object to occur (elements
 ;; of an array, or slots in a class instance or structure, etc). This policy is
 ;; refined and controlled by derived types of this class.
@@ -45,28 +45,55 @@
 ;; collection and then process the elements of the collection with the
 ;; IDENTITY-CLONE policy.
 ;;
-;; Here, collection is a loose term meaning any sequence like lists, vectors,
+;; Here, collection is a loose term meaning any sequence like vectors,
 ;; or arrays, or aggregate type like hash tables.  User defined types like
 ;; structure or classes are left to have an individual method for them to
-;; ensure the right semantics happen.
+;; ensure the right semantics happen. Lists/cons are dealt with via a more
+;; specialized type that has shallow-clone as a parent.
 (defclass shallow-clone (allocating-clone) ())
+
+;; This is for anything relating to shallow clones of list/cons structure.
+;; CLONE and CLONE-OBJECT will specialize on CONS only
+;; only for these policies and LIST is left unspecialized.
+(defclass shallow-clone-cons (shallow-clone) ())
+(defclass shallow-clone-list (shallow-clone) ())
+(defclass shallow-clone-alist (shallow-clone) ())
+(defclass shallow-clone-tree (shallow-clone) ())
 
 ;; A DEEP-CLONE will, when given a collection, allocate a new copy of that
 ;; collection and then process the elements of the collection recursively
-;; passing the same policy given to CLONE.
+;; passing the same policy given to CLONE. Deep clone always copies everything
+;; and as deeply as possible.
 (defclass deep-clone (allocating-clone) ())
+
+
+;;; The EQL-MAP representation and API.
+
+;; This class builds a map between original objects and their clones. It is
+;; used to replicate referential graph structure between a set of objects
+;; (which could bne cons cells, hash tables, structures, classes, arrays, etc).
+(defclass eql-map ()
+  (;; Key: Original object
+   ;; Value: cloned object (if appropriate, could be the same object too).
+   (%transition-table :allocation :class
+                      :accessor transition-table
+                      :initarg :transition-table
+                      :initform (u:dict #'eql))))
 
 ;;; The CLONE API.
 
 ;;; The CLONE generic function which is how a clone of something is requested.
-(defgeneric clone (object clone-policy &key &allow-other-keys))
+(defgeneric clone (object clone-policy eql-map &key &allow-other-keys)
+  (:documentation "CLONE the OBJECT according to the CLONE-POLICY. Clone
+policies of shallow-clone and deep-clone (and those derived from them) will
+cause memory to be allocated at least for OBJECT under most circumstances."))
 
-;;; The CLONE-OBJET API.
+;;; The CLONE-OBJECT API.
 
 ;; The CLONE-OBJECT generic function which, from least specific to most, copies
 ;; the data from the original object into the cloned object (as dictated by the
 ;; CLONE-POLICY). This does the work of the actual cloning once the memory had
 ;; been allocated by CLONE.
-(defgeneric clone-object (cloned-object original-object clone-policy
+(defgeneric clone-object (cloned-object original-object clone-policy eql-map
                           &key &allow-other-keys)
   (:method-combination progn :most-specific-last))

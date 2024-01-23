@@ -19,7 +19,7 @@ NIL otherwise."
 NIL otherwise."
   (slot-boundp attr-value '%computed))
 
-#|
+
 ;; TODO: Replace calls with below CLONE code.
 ;; OK CLONE seems to work.
 (defun copy-attribute-value (original-attr-value
@@ -40,8 +40,8 @@ default to CL:IDENTITY. Return the copied attribute-value."
       (setf (computed new-attr-value)
             (funcall computed-copier-func (computed original-attr-value))))
     new-attr-value))
-|#
 
+#|
 (defmethod clone:clone ((object attribute-value)
                         (policy clone:allocating-clone)
                         &key (semantic-copier-func #'identity)
@@ -74,7 +74,7 @@ default to CL:IDENTITY. Return the copied attribute-value."
            (funcall computed-copier-func (computed original-object))
            policy)))
   cloned-object)
-
+|#
 
 ;;; ------------------------------------------------------------------------
 ;; Attribute Bag API
@@ -197,12 +197,12 @@ Returns BAG after the overlay procedure is complete.
                  (lambda (name av)
                    (when (allow-insert-p name)
                      ;; TODO: Good. This seems to work.
-                     (setf (attr bag name)
+                     #++(setf (attr bag name)
                            (clone:clone-deep av))
                      ;; TODO: If deep cloning works, remove
                      ;; this ignored form and the
                      ;; COPY-ATTRIBUTE-VALUE fnction.
-                     #++(setf (attr bag name)
+                     (setf (attr bag name)
                               (copy-attribute-value av))))))
 
              ;; Figure out what to do given what the container actually is when

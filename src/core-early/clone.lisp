@@ -7,29 +7,88 @@
 (defun make-shallow-clone ()
   (make-instance 'shallow-clone))
 
+(defun make-shallow-clone-cons ()
+  (make-instance 'shallow-clone-cons))
+
+(defun make-shallow-clone-list ()
+  (make-instance 'shallow-clone-list))
+
+(defun make-shallow-clone-alist ()
+  (make-instance 'shallow-clone-alist))
+
+(defun make-shallow-clone-tree ()
+  (make-instance 'shallow-clone-tree))
+
 (defun make-deep-clone ()
   (make-instance 'deep-clone))
 
-;; TODO: Get rid of these if possible. Maybe a function that returns the same
-;; instance? These are currently exported and make me cry.
 (defparameter *identity* (make-identity-clone))
 (defparameter *shallow* (make-shallow-clone))
+(defparameter *shallow-cons* (make-shallow-clone-cons))
+(defparameter *shallow-list* (make-shallow-clone-list))
+(defparameter *shallow-alist* (make-shallow-clone-alist))
+(defparameter *shallow-tree* (make-shallow-clone-tree))
 (defparameter *deep* (make-deep-clone))
 
 ;; Shortcut API for very common cloning policies.
-(defun clone-identity (object)
+(defun clone-identity (object &optional (eql-map nil eql-map-supp-p))
   "Perform an identity clone of the OBJECT. The clone is a nop and the OBJECT
 is returned."
-  (clone object *identity*))
+  (clone object *identity* (if eql-map-supp-p eql-map (make-eql-map))))
 
-(defun clone-deep (object)
-  "Perform a deep clone of the OBJECT and return a copy."
-  (clone object *deep*))
-
-(defun clone-shallow (object)
+(defun clone-shallow (object &optional (eql-map nil eql-map-supp-p))
   "Perform a deep clone of the OBJECT and return a copy. Note that lists are
 copied as if by COPY-LIST in a shallow copy."
-  (clone object *shallow*))
+  (clone object *shallow* (if eql-map-supp-p eql-map (make-eql-map))))
+
+(defun clone-shallow-cons (object &optional (eql-map nil eql-map-supp-p))
+  "Perform a deep clone of the OBJECT and return a copy. Note that lists only
+have their very first cons cell shallow copied and that's it!"
+  (clone object *shallow-cons* (if eql-map-supp-p eql-map (make-eql-map))))
+
+(defun clone-shallow-list (object &optional (eql-map nil eql-map-supp-p))
+  "Perform a deep clone of the OBJECT and return a copy. Note that lists only
+have their toplevel cons cells shallow copied!"
+  (clone object *shallow-list* (if eql-map-supp-p eql-map (make-eql-map))))
+
+(defun clone-shallow-alist (object &optional (eql-map nil eql-map-supp-p))
+  "Perform a deep clone of the OBJECT and return a copy. Note that lists are
+treated as alists and only the alist structure is shallow copied!"
+  (clone object *shallow-list* (if eql-map-supp-p eql-map (make-eql-map))))
+
+(defun clone-shallow-tree (object &optional (eql-map nil eql-map-supp-p))
+  "Perform a deep clone of the OBJECT and return a copy. Note that lists are
+treated as trees and only the entire tree structure is shallow copied which
+will produce a new tree whose non-cons car values are simply copied!"
+  (clone object *shallow-tree* (if eql-map-supp-p eql-map (make-eql-map))))
+
+(defun clone-deep (object &optional (eql-map nil eql-map-supp-p))
+  "Perform a deep clone of the OBJECT and return a copy."
+  (clone object *deep* (if eql-map-supp-p eql-map (make-eql-map))))
+
+;;; -------------------------------
+;; The EQL-MAP API
+;;; -------------------------------
+
+(defun make-eql-map ()
+  (make-instance 'eql-map))
+
+(defun eql-map-initialize (eql-map)
+  (clrhash (transition-table eql-map)))
+
+(defun eql-map-ref (eql-map original-object)
+  (u:href (transition-table eql-map) original-object))
+
+(defun (setf eql-map-ref) (cloned-object eql-map original-object)
+  (setf (u:href (transition-table eql-map) original-object) cloned-object))
+
+(defun eql-map-transition (eql-map original-object)
+  "If the ORIGINAL-OBJECT does not have a mapping in EQL-MAP, then return
+ORIGINAL-OBJECT. If it does have a transition, return the object to which it
+transitioned."
+  (u:mvlet ((object-trfm object-trfm-present-p
+                         (eql-map-ref eql-map original-object)))
+    (if object-trfm-present-p object-trfm original-object)))
 
 ;;; The CLONE API and CLONE-OBJECT API methods.  CLONE is the entry point to
 ;;; clone an object and must allocate the memory for the new object, if
@@ -47,47 +106,91 @@ copied as if by COPY-LIST in a shallow copy."
 ;; symbols, characters, functions/closures, numbers, and atomic things which
 ;; are not collections.
 ;;; -------------------------------
-(defmethod clone (object (policy identity-clone) &key)
+(defmethod clone (object (policy identity-clone) eql-map &key)
   object)
+
+;; If it is a clone of an unknown type, return the transition if there is one.
+(defmethod clone (object (policy allocating-clone) eql-map &key)
+  (eql-map-transition eql-map object))
 
 ;;; -------------------------------
 ;; Cloning a pathname
 ;;; -------------------------------
 
+;; Since you can't seem to modify a pathname once constructed, we ignore
+;; and just treat them as purely atomic and they return simply themselves.
 
 ;;; -------------------------------
 ;; Cloning a cons cell (or a list).
 ;;; -------------------------------
-(defmethod clone ((object cons) (policy allocating-clone) &key)
+(defmethod clone ((object cons) (policy allocating-clone) eql-map &key)
   (let ((cloned-object (cons nil nil)))
-    (clone-object cloned-object object policy)))
+    (setf (eql-map-ref eql-map object) cloned-object)
+    (clone-object cloned-object object policy eql-map)))
 
-;; Shallow clone.
-;;
-;; TODO: Fixme to distinguish between a shallow clone of a cons cell, a list,
-;; and list of lists (of lists). Prolly different policies like
-;; shallow-clone-cons for the SINGLE cons only, shallow-clone-tree for
-;; everything, and shallow-clone as it is now, for lists like COPY-LIST.
+;; shallow-clone-cons shallow clones the SINGLE cons cell given to it with
+;; no recursion what-so-ever.
 (defmethod clone-object progn ((cloned-object cons)
                                (original-object cons)
-                               (policy shallow-clone)
+                               (policy shallow-clone-cons)
+                               eql-map
+                               &key)
+
+  (destructuring-bind (l . r) original-object
+    (setf (car cloned-object) (eql-map-transition eql-map l)
+          (cdr cloned-object) (eql-map-transition eql-map r)))
+  cloned-object)
+
+;; shallow-clone-list clones the toplevel list structure ONLY.
+(defmethod clone-object progn ((cloned-object cons)
+                               (original-object cons)
+                               (policy shallow-clone-list)
+                               eql-map
                                &key)
   (destructuring-bind (l . r) original-object
-    ;; We always shallow copy the car.
-    (setf (car cloned-object) l)
+    ;; We always shallow copy the car no matter what it was.
+    (setf (car cloned-object) (eql-map-transition eql-map l))
+
     (if (consp r)
-        ;; If we're in a list, manually copy the rest of it here in a shallow
-        ;; copying manner. Much faster than iterative CLONE calls on the cdr.
+        ;; If we're in a list (or list-like thing, maybe it is an improper
+        ;; list), manually copy the rest of it here in a shallow copying
+        ;; manner. This is much faster than recursive CLONE calls on the cdr
+        ;; and won't blow the stack.
         (loop :with end = cloned-object
-              :for cell :on r
-              :for v = (cdr cell)
-              :do (let ((new-cons (cons (car cell) (if (consp v) nil v))))
-                    (setf (cdr end) new-cons
-                          end new-cons)))
+              :for original-cell :on r
+              :do (let* ((new-cell (cons nil nil))
+                         (l-original (car original-cell))
+                         (r-original (cdr original-cell))
+                         (list-continues-p (consp r-original)))
+                    ;; Insert the cons clone into the eql-map.
+                    (setf (eql-map-ref eql-map original-cell) new-cell)
+                    ;; Set the values of the new cons cell, which might use
+                    ;; the transition we just inserted.
+                    (setf
+                     (car new-cell) (eql-map-transition eql-map l-original)
+
+                     (cdr new-cell) (if list-continues-p
+                                        nil
+                                        (eql-map-transition eql-map
+                                                            r-original)))
+                    ;; Extend the end of the shallow copied list and get loop
+                    ;; ready for the next cons cell clone.
+                    (setf (cdr end) new-cell
+                          end new-cell)))
+
         ;; else, we just keep what we already found for the cdr!
-        (setf (cdr cloned-object) r))
+        (setf (cdr cloned-object) (eql-map-transition eql-map r)))
     cloned-object))
 
+;;; KEEP GOING -------------------------------------------------------------
+
+;; Do shallow-clone-alist
+;; Do shallow-clone-tree
+
+
+
+
+#|
 ;; Deep clone.
 (defmethod clone-object progn ((cloned-object cons)
                                (original-object cons)
@@ -409,3 +512,4 @@ copied as if by COPY-LIST in a shallow copy."
          )
 
      )
+|#
