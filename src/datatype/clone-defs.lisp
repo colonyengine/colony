@@ -45,18 +45,25 @@
 ;; collection and then process the elements of the collection with the
 ;; IDENTITY-CLONE policy.
 ;;
-;; Here, collection is a loose term meaning any sequence like vectors,
-;; or arrays, or aggregate type like hash tables.  User defined types like
-;; structure or classes are left to have an individual method for them to
+;; Here, collection is a loose term meaning any sequence like vectors, or
+;; arrays, or aggregate type like hash tables.  User defined types like
+;; structures or classes are left to have an individual method for them to
 ;; ensure the right semantics happen. Lists/cons are dealt with via a more
 ;; specialized type that has shallow-clone as a parent.
 (defclass shallow-clone (allocating-clone) ())
 
-;; This is for anything relating to shallow clones of list/cons structure.
-;; CLONE and CLONE-OBJECT will specialize on CONS only
-;; only for these policies and LIST is left unspecialized.
+;; Shallow copy a single CONS cell. This means the car and cdr of the cell
+;; are blindly copied form the original cons cell. If there are recursive
+;; links, they will point to the _original_ cons cell.
 (defclass shallow-clone-cons (shallow-clone) ())
+
+;; Shallow copy the list structure itself, including cdr based cycles. But the
+;; car of each list structure cons cell will be a simple copy from the
+;; original.  Hence list cycles based on the cdr will be honored, but if the
+;; car is self referential into the list, it will point to the _original_ list.
 (defclass shallow-clone-list (shallow-clone) ())
+
+;; Keep describing.
 (defclass shallow-clone-alist (shallow-clone) ())
 (defclass shallow-clone-tree (shallow-clone) ())
 
@@ -75,8 +82,7 @@
 (defclass eql-map ()
   (;; Key: Original object
    ;; Value: cloned object (if appropriate, could be the same object too).
-   (%transition-table :allocation :class
-                      :accessor transition-table
+   (%transition-table :accessor transition-table
                       :initarg :transition-table
                       :initform (u:dict #'eql))))
 
@@ -84,9 +90,10 @@
 
 ;;; The CLONE generic function which is how a clone of something is requested.
 (defgeneric clone (object clone-policy eql-map &key &allow-other-keys)
-  (:documentation "CLONE the OBJECT according to the CLONE-POLICY. Clone
-policies of shallow-clone and deep-clone (and those derived from them) will
-cause memory to be allocated at least for OBJECT under most circumstances."))
+  (:documentation "CLONE the OBJECT according to the CLONE-POLICY and return
+two values, the cloned object and the EQL-MAP. Clone policies of shallow-clone
+and deep-clone (and those derived from them) will cause memory to be allocated
+at least for OBJECT under most circumstances."))
 
 ;;; The CLONE-OBJECT API.
 

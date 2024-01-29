@@ -12,9 +12,6 @@
    )
   ;; CLONE API
   (:export
-   #:*deep*
-   #:*identity*
-   #:*shallow*
    #:clone
    #:clone-deep
    #:clone-identity
