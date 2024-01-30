@@ -649,11 +649,66 @@ values: the object to which it transitioned and T."
       (format t "Passed.~%")
       t)))
 
-;; KEEP GOING.
-;; Write more alist tests for:
-;; 2. not quite an alist, but stll proper list.
-;; 3. not quite an alist, but improper list.
+;; 2. not quite an alist, but still proper list.
+(defun test-clone-shallow-alist-4 ()
+  "An alist with additional non-kv cells entries in it and no cycles."
+  (let* ((o (list (cons 1 2) 'foo (cons 3 4) 42))
+         (c (clone-shallow-alist o)))
+    (format t "Original: ~S~%" o)
+    (format t "Cloned: ~S~%" c)
+    (finish-output)
 
+    ;; Check that the list structure was cloned.
+    (loop :for o-cell :on o
+          :for c-cell :on c
+          :do (assert (not (eq o-cell c-cell))))
+
+    ;; Check that if the entry in the list was a cons, it was cloned, but
+    ;; if not, they are eql.
+    (loop :for o-entry :in o
+          :for c-entry :in c
+          :do (cond
+                ;; if the entries are cons cells, then they must have been
+                ;; cloned.
+                ((and (consp o-entry) (consp c-entry))
+                 (assert (not (eq o-entry c-entry))))
+                ;; but of not, then they must be eql.
+                ((and (not (consp o-entry)) (not (consp c-entry)))
+                 (assert (eql o-entry c-entry)))
+                ;; Otherwise omething went wrong.
+                (t (assert nil))))
+
+    (format t "Passed.~%")
+    t))
+
+
+(defun test-clone-shallow-alist-5 ()
+  "An alist with additional non-kv cells entries it ending improperly."
+  (let ((o (list (cons 1 2) 'foo 42)))
+    (setf (cdr (cddr o)) 77)
+    (let ((c (clone-shallow-alist o)))
+      (format t "Original: ~S~%" o)
+      (format t "Cloned: ~S~%" c)
+      (finish-output)
+
+      ;; Check that the list structure was cloned.
+      (loop :for o-cell :on o
+            :for c-cell :on c
+            :do (assert (not (eq o-cell c-cell))))
+
+      ;; check contents of first element cons cell.
+      (assert (and (eql (caar o) (caar c))))
+      (assert (and (eql (cdar o) (cdar c))))
+
+      ;; check second element
+      (assert (eq (nth 1 o) (nth 1 c)))
+
+      ;; check third element improper cons cell.
+      (assert (eql (car (cddr o)) (car (cddr c))))
+      (assert (eql (cdr (cddr o)) (cdr (cddr c))))
+
+      (format t "Passed.~%")
+      t))))
 
 
 ;;; KEEP GOING -------------------------------------------------------------
@@ -675,27 +730,27 @@ values: the object to which it transitioned and T."
 #|
 ;; Deep clone.
 (defmethod clone-object progn ((cloned-object cons)
-(original-object cons)
-(policy deep-clone)
-&key)
-(destructuring-bind (l . r) original-object
-;; We always deep copy the car.
-(setf (car cloned-object) (clone l policy))
-(if (consp r)
-;; If we're in a list, manually copy the rest of it here in a deep
-;; copying manner. Much faster than iterative CLONE calls on the cdr.
-(loop :with end = cloned-object
-:for cell :on r
-:for v = (cdr cell)
-:do (let ((new-cons (cons (clone (car cell) policy)
-(if (consp v)
-nil
-(clone v policy)))))
-(setf (cdr end) new-cons
-end new-cons)))
-;; else, we just deep copy what we already found for the cdr!
-(setf (cdr cloned-object) (clone r policy)))
-cloned-object))
+                               (original-object cons)
+                               (policy deep-clone)
+                               &key)
+  (destructuring-bind (l . r) original-object
+    ;; We always deep copy the car.
+    (setf (car cloned-object) (clone l policy))
+    (if (consp r)
+        ;; If we're in a list, manually copy the rest of it here in a deep
+        ;; copying manner. Much faster than iterative CLONE calls on the cdr.
+        (loop :with end = cloned-object
+              :for cell :on r
+              :for v = (cdr cell)
+              :do (let ((new-cons (cons (clone (car cell) policy)
+                                        (if (consp v)
+                                            nil
+                                            (clone v policy)))))
+                    (setf (cdr end) new-cons
+                          end new-cons)))
+        ;; else, we just deep copy what we already found for the cdr!
+        (setf (cdr cloned-object) (clone r policy)))
+    cloned-object))
 
 ;;; -------------------------------
 ;; Cloning an array of any kind. The type of the array (simple or not, etc)
@@ -708,33 +763,33 @@ cloned-object))
 ;; from the original.
 ;;; -------------------------------
 (defmethod clone ((object array) (policy allocating-clone) &key)
-(multiple-value-bind (displaced-to displaced-index-offset)
-(array-displacement object)
-(unless (and (null displaced-to)
-(eql  displaced-index-offset 0))
-(error "Cloning displaced arrays is not yet supported.")))
+  (multiple-value-bind (displaced-to displaced-index-offset)
+      (array-displacement object)
+    (unless (and (null displaced-to)
+                 (eql  displaced-index-offset 0))
+      (error "Cloning displaced arrays is not yet supported.")))
 
-(let ((cloned-object
-(make-array (array-dimensions object)
-:element-type (array-element-type object)
-:adjustable (adjustable-array-p object))))
-(clone-object cloned-object object policy)))
+  (let ((cloned-object
+          (make-array (array-dimensions object)
+                      :element-type (array-element-type object)
+                      :adjustable (adjustable-array-p object))))
+    (clone-object cloned-object object policy)))
 
 ;; Shallow clone
 (defmethod clone-object progn ((cloned-object array) (original-object array)
-(policy shallow-clone) &key)
-(dotimes (index (array-total-size original-object))
-(setf (row-major-aref cloned-object index)
-(row-major-aref original-object index)))
-cloned-object)
+                               (policy shallow-clone) &key)
+  (dotimes (index (array-total-size original-object))
+    (setf (row-major-aref cloned-object index)
+          (row-major-aref original-object index)))
+  cloned-object)
 
 ;; Deep clone
 (defmethod clone-object progn ((cloned-object array) (original-object array)
-(policy deep-clone) &key)
-(dotimes (index (array-total-size original-object))
-(setf (row-major-aref cloned-object index)
-(clone (row-major-aref original-object index) policy)))
-cloned-object)
+                               (policy deep-clone) &key)
+  (dotimes (index (array-total-size original-object))
+    (setf (row-major-aref cloned-object index)
+          (clone (row-major-aref original-object index) policy)))
+  cloned-object)
 
 ;;; -------------------------------
 ;; Cloning a hash table
@@ -746,33 +801,33 @@ cloned-object)
 ;; from the original.
 ;;; -------------------------------
 (defmethod clone ((object hash-table) (policy allocating-clone) &key)
-(let ((cloned-object
-(make-hash-table
-:test (hash-table-test object)
-:size (hash-table-size object)
-:rehash-size (hash-table-rehash-size object)
-:rehash-threshold (hash-table-rehash-threshold object))))
-(clone-object cloned-object object policy)))
+  (let ((cloned-object
+          (make-hash-table
+           :test (hash-table-test object)
+           :size (hash-table-size object)
+           :rehash-size (hash-table-rehash-size object)
+           :rehash-threshold (hash-table-rehash-threshold object))))
+    (clone-object cloned-object object policy)))
 
 ;; Shallow clone
 (defmethod clone-object progn ((cloned-object hash-table)
-(original-object hash-table)
-(policy shallow-clone)
-&key)
-(u:do-hash (key value original-object)
-(setf (u:href key cloned-object)
-value))
-cloned-object)
+                               (original-object hash-table)
+                               (policy shallow-clone)
+                               &key)
+  (u:do-hash (key value original-object)
+    (setf (u:href key cloned-object)
+          value))
+  cloned-object)
 
 ;; Deep clone
 (defmethod clone-object progn ((cloned-object hash-table)
-(original-object hash-table)
-(policy deep-clone)
-&key)
-(u:do-hash (key value original-object)
-(setf (u:href (clone key policy) cloned-object)
-(clone value policy)))
-cloned-object)
+                               (original-object hash-table)
+                               (policy deep-clone)
+                               &key)
+  (u:do-hash (key value original-object)
+    (setf (u:href (clone key policy) cloned-object)
+          (clone value policy)))
+  cloned-object)
 
 
 ;;; -------------------------------
@@ -781,217 +836,217 @@ cloned-object)
 
 ;; Functions (expected identity clone)
 (defun test-clone/function/shallow ()
-(let* (;; Type Function
-(val #'cl:identity)
-(cval (clone-shallow val)))
-(assert (eq cval val))))
+  (let* (;; Type Function
+         (val #'cl:identity)
+         (cval (clone-shallow val)))
+    (assert (eq cval val))))
 
 (defun test-clone/function/deep ()
-(let* (;; Type Function
-(val #'cl:identity)
-(cval (clone-deep val)))
-(assert (eq cval val))))
+  (let* (;; Type Function
+         (val #'cl:identity)
+         (cval (clone-deep val)))
+    (assert (eq cval val))))
 
 ;; CHaracters
 (defun test-clone/character/shallow ()
-(let* (;; Type Character
-(val #\A)
-(cval (clone-shallow val)))
-(assert (eql cval val))))
+  (let* (;; Type Character
+         (val #\A)
+         (cval (clone-shallow val)))
+    (assert (eql cval val))))
 
 (defun test-clone/character/deep ()
-(let* (;; Type Character
-(val #\A)
-(cval (clone-deep val)))
-(assert (eql cval val))))
+  (let* (;; Type Character
+         (val #\A)
+         (cval (clone-deep val)))
+    (assert (eql cval val))))
 
 ;; Pathnames
 ;; NOTE: For now, we treat them as atoms with no structure.
 (defun test-clone/pathname/shallow ()
-(let* (;; Type Pathname
-(val #P"/tmp/foo.txt")
-(cval (clone-shallow val)))
-(assert (equal cval val))))
+  (let* (;; Type Pathname
+         (val #P"/tmp/foo.txt")
+         (cval (clone-shallow val)))
+    (assert (equal cval val))))
 
 ;; TODO: Can actually be copied, implement me.
 ;; NOTE: For now, we treat them as atoms with no structure.
 (defun test-clone/pathname/deep ()
-(let* (;; Type Pathname
-(val #P"/tmp/foo.txt")
-(cval (clone-deep val)))
-(assert (equal cval val))))
+  (let* (;; Type Pathname
+         (val #P"/tmp/foo.txt")
+         (cval (clone-deep val)))
+    (assert (equal cval val))))
 
 ;; Sumbols
 (defun test-clone/symbol/shallow ()
-(let* (;; Type Symbol
-(val 'foobar)
-(cval (clone-shallow val)))
-(assert (eq cval val))))
+  (let* (;; Type Symbol
+         (val 'foobar)
+         (cval (clone-shallow val)))
+    (assert (eq cval val))))
 
 (defun test-clone/symbol/deep ()
-(let* (;; Type Symbol
-(val 'foobar)
-(cval (clone-deep val)))
-(assert (eq cval val))))
+  (let* (;; Type Symbol
+         (val 'foobar)
+         (cval (clone-deep val)))
+    (assert (eq cval val))))
 
 ;; Simple Strings
 (defun test-clone/simple-string/shallow ()
-(let* (;; Type SIMPLE-STRING aka (SIMPLE-ARRAY CHARACTER *)
-(val (make-sequence 'simple-string 8 :initial-element #\a))
-(cval (clone-shallow val)))
+  (let* (;; Type SIMPLE-STRING aka (SIMPLE-ARRAY CHARACTER *)
+         (val (make-sequence 'simple-string 8 :initial-element #\a))
+         (cval (clone-shallow val)))
 
-(assert (not (eq cval val)))))
+    (assert (not (eq cval val)))))
 
 (defun test-clone/simple-string/deep ()
-(let* (;; Type SIMPLE-STRING aka (SIMPLE-ARRAY CHARACTER *)
-(val (make-sequence 'simple-string 8 :initial-element #\a))
-(cval (clone-deep val)))
-(assert (not (eq cval val)))))
+  (let* (;; Type SIMPLE-STRING aka (SIMPLE-ARRAY CHARACTER *)
+         (val (make-sequence 'simple-string 8 :initial-element #\a))
+         (cval (clone-deep val)))
+    (assert (not (eq cval val)))))
 
 ;; Simple Bit Vectors
 (defun test-clone/simple-bit-vector/shallow ()
-(let* (;; Type SIMPLE-BIT-VECTOR
-(val (make-sequence '(vector bit) 8 :initial-element 0))
-(cval (clone-shallow val)))
-(assert (not (eq cval val)))))
+  (let* (;; Type SIMPLE-BIT-VECTOR
+         (val (make-sequence '(vector bit) 8 :initial-element 0))
+         (cval (clone-shallow val)))
+    (assert (not (eq cval val)))))
 
 (defun test-clone/simple-bit-vector/deep ()
-(let* (;; Type SIMPLE-BIT-VECTOR
-(val (make-sequence '(vector bit) 8 :initial-element 0))
-(cval (clone-deep val)))
-(assert (not (eq cval val)))))
+  (let* (;; Type SIMPLE-BIT-VECTOR
+         (val (make-sequence '(vector bit) 8 :initial-element 0))
+         (cval (clone-deep val)))
+    (assert (not (eq cval val)))))
 
 ;; Bit Vectors
 (defun test-clone/bit-vector/shallow ()
-(let* (;; Type BIT-VECTOR
-(val (make-array 8 :element-type 'bit
-:adjustable t
-:initial-element 0))
-(cval (clone-shallow val)))
-(assert (not (eq cval val)))))
+  (let* (;; Type BIT-VECTOR
+         (val (make-array 8 :element-type 'bit
+                            :adjustable t
+                            :initial-element 0))
+         (cval (clone-shallow val)))
+    (assert (not (eq cval val)))))
 
 (defun test-clone/bit-vector/deep ()
-(let* (;; Type BIT-VECTOR
-(val (make-array 8 :element-type 'bit
-:adjustable t
-:initial-element 0))
-(cval (clone-deep val)))
-(assert (not (eq cval val)))))
+  (let* (;; Type BIT-VECTOR
+         (val (make-array 8 :element-type 'bit
+                            :adjustable t
+                            :initial-element 0))
+         (cval (clone-deep val)))
+    (assert (not (eq cval val)))))
 
 ;; Simple Array, elements not shared.
 (defun test-clone/simple-array-unique/shallow ()
-(let* (;; Type SIMPLE-ARRAY
-(val (make-array 3 :element-type '(unsigned-byte 8)
-:initial-element 0))
-(cval (clone-shallow val)))
-(assert (not (eq cval val)))))
+  (let* (;; Type SIMPLE-ARRAY
+         (val (make-array 3 :element-type '(unsigned-byte 8)
+                            :initial-element 0))
+         (cval (clone-shallow val)))
+    (assert (not (eq cval val)))))
 
 (defun test-clone/simple-array-unique/deep ()
-(let* (;; Type SIMPLE-ARRAY
-(val (make-array 3 :element-type '(unsigned-byte 8)
-:initial-element 0))
-(cval (clone-deep val)))
-(assert (not (eq cval val)))))
+  (let* (;; Type SIMPLE-ARRAY
+         (val (make-array 3 :element-type '(unsigned-byte 8)
+                            :initial-element 0))
+         (cval (clone-deep val)))
+    (assert (not (eq cval val)))))
 
 ;; Simple Array, elements shared.
 (defun test-clone/simple-array-shared/shallow ()
-(let* ((item (cons 1 2))
-;; Type SIMPLE-ARRAY
-(val (make-array 3 :element-type 'cons
-:initial-element item))
-(cval (clone-shallow val)))
-(assert (and (eq (aref val 0) (aref val 1))
-(not (eq cval val))
-(eq (aref cval 0) (aref cval 1))))))
+  (let* ((item (cons 1 2))
+         ;; Type SIMPLE-ARRAY
+         (val (make-array 3 :element-type 'cons
+                            :initial-element item))
+         (cval (clone-shallow val)))
+    (assert (and (eq (aref val 0) (aref val 1))
+                 (not (eq cval val))
+                 (eq (aref cval 0) (aref cval 1))))))
 
 (defun test-clone/simple-array-shared/deep ()
-(let* ((item (cons 1 2))
-;; Type SIMPLE-ARRAY
-(val (make-array 3 :element-type 'cons
-:initial-element item))
-(cval (clone-deep val)))
+  (let* ((item (cons 1 2))
+         ;; Type SIMPLE-ARRAY
+         (val (make-array 3 :element-type 'cons
+                            :initial-element item))
+         (cval (clone-deep val)))
 
-(assert (and (eq (aref val 0) (aref val 1))
-(not (eq cval val))
-(eq (aref cval 0) (aref cval 1))))))
+    (assert (and (eq (aref val 0) (aref val 1))
+                 (not (eq cval val))
+                 (eq (aref cval 0) (aref cval 1))))))
 
 ;; KEEP GOING
 
 
 
 (defun test-clone ()
-(test-clone/function/shallow)
-(test-clone/function/deep)
+  (test-clone/function/shallow)
+  (test-clone/function/deep)
 
-(test-clone/character/shallow)
-(test-clone/character/deep)
+  (test-clone/character/shallow)
+  (test-clone/character/deep)
 
-(test-clone/pathname/shallow)
-(test-clone/pathname/deep)
+  (test-clone/pathname/shallow)
+  (test-clone/pathname/deep)
 
-(test-clone/symbol/shallow)
-(test-clone/symbol/deep)
+  (test-clone/symbol/shallow)
+  (test-clone/symbol/deep)
 
-(test-clone/simple-string/shallow)
-(test-clone/simple-string/deep)
+  (test-clone/simple-string/shallow)
+  (test-clone/simple-string/deep)
 
-(test-clone/simple-bit-vector/shallow)
-(test-clone/simple-bit-vector/deep)
+  (test-clone/simple-bit-vector/shallow)
+  (test-clone/simple-bit-vector/deep)
 
-(test-clone/bit-vector/shallow)
-(test-clone/bit-vector/deep)
+  (test-clone/bit-vector/shallow)
+  (test-clone/bit-vector/deep)
 
-(test-clone/simple-array-unique/shallow)
-(test-clone/simple-array-unique/deep)
+  (test-clone/simple-array-unique/shallow)
+  (test-clone/simple-array-unique/deep)
 
-(test-clone/simple-array-shared/shallow)
-;; TODO: This one fails, need to go up to EQL in structure preservation.
-;;(test-clone/simple-array-shared/deep)
+  (test-clone/simple-array-shared/shallow)
+  ;; TODO: This one fails, need to go up to EQL in structure preservation.
+  ;;(test-clone/simple-array-shared/deep)
 
-t)
+  t)
 
 
 #++(let (
 
 
-;; Type SIMPLE-VECTOR, elements not shared.
-(val-simple-vector-unique
-(make-array 8 :initial-element 0))
+         ;; Type SIMPLE-VECTOR, elements not shared.
+         (val-simple-vector-unique
+           (make-array 8 :initial-element 0))
 
-;; Type SIMPLE-VECTOR, elements shared.
-(val-simple-vector-shared
-(let ((v (cons 1 2)))
-(make-array 8 :initial-element v)))
+         ;; Type SIMPLE-VECTOR, elements shared.
+         (val-simple-vector-shared
+           (let ((v (cons 1 2)))
+             (make-array 8 :initial-element v)))
 
-;; Type VECTOR, elements unique
-(val-vector-unique
-(make-array 8 :adjustable t :initial-element nil))
+         ;; Type VECTOR, elements unique
+         (val-vector-unique
+           (make-array 8 :adjustable t :initial-element nil))
 
-;; Type VECTOR, elements shared
-(val-vector-shared
-(let ((v (cons 1 2)))
-(make-array 8 :adjustable t :initial-element v)))
+         ;; Type VECTOR, elements shared
+         (val-vector-shared
+           (let ((v (cons 1 2)))
+             (make-array 8 :adjustable t :initial-element v)))
 
-;; Type ARRAY, elements not shared.
-(val-array-unique
-(make-array '(8 8) :adjustable t :initial-element 0))
+         ;; Type ARRAY, elements not shared.
+         (val-array-unique
+           (make-array '(8 8) :adjustable t :initial-element 0))
 
-;; Type ARRAY, elements shared.
-(val-array-unique
-(let ((v (cons 1 2)))
-(make-array '(8 8) :adjustable t :initial-element v)))
+         ;; Type ARRAY, elements shared.
+         (val-array-unique
+           (let ((v (cons 1 2)))
+             (make-array '(8 8) :adjustable t :initial-element v)))
 
-;; Type SIMPLE-BASE-STRING
-(val-simple-base-string
-(make-array 8 :element-type 'base-char
-:initial-element #\a))
+         ;; Type SIMPLE-BASE-STRING
+         (val-simple-base-string
+           (make-array 8 :element-type 'base-char
+                         :initial-element #\a))
 
-;; Type BASE-STRING
-(val-base-string
-(make-array 8 :element-type 'base-char :adjustable t
-:initial-element #\a))
+         ;; Type BASE-STRING
+         (val-base-string
+           (make-array 8 :element-type 'base-char :adjustable t
+                         :initial-element #\a))
 
-)
+         )
 
-)
+     )
 |#
