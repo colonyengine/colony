@@ -83,6 +83,7 @@
     :serial t
     :components
     ((:file "clone")
+     (:file "clone-test")
      (:file "attribute-bag")
      (:file "general")
      (:file "metadata")

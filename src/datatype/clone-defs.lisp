@@ -18,13 +18,59 @@
 ;;;; The CLONE API is split into two pieces: A generic function called CLONE
 ;;;; and generic function called CLONE-OBJECT. The responsibility of CLONE is
 ;;;; to figure out how to allocate an instance of memory (if applicable) that
-;;;; will hold the copy, and CLONE-OBJECT is a progn style from least to most
-;;;; specific generic function which is responsible for actually copying the
-;;;; data from the old object into the new object by recusively calling CLONE
-;;;; on the sub-objects.  What is actually copied is controlled by a
-;;;; CLONE-POLICY instance passed to CLONE and subsequently to CLONE-OBJECT.
+;;;; will hold the copy, and CLONE-OBJECT is a progn style generic function
+;;;; from least to most specific generic which is responsible for actually
+;;;; copying the data from the old object into the new object by recusively
+;;;; calling CLONE on the sub-objects.  What is actually copied is controlled
+;;;; by a CLONE-POLICY instance passed to CLONE and subsequently to
+;;;; CLONE-OBJECT.
 ;;;;
 ;;;; There is a small "shortcut API" too to help cloning with common policies.
+
+
+;;; The INTENTION representation.
+
+;; Intentions are how we'd like to view cloning a particular type. This is
+;; most important when cloning cons cells, because they can be viewed as:
+;;
+;; cons cells not other wise associated with anything,
+;; list structure cells, alist kv cells, and graph cells (which include trees).
+;; Plus cons cells can trivially point to themslves making cycles and other
+;; horrors.
+(defclass intention ()
+  ((%sort-id :reader sort-id
+             :initarg :sort-id
+             :initform 0)))
+(defclass no-specific-intention (intention) ()
+  (:default-initargs :sort-id 1))
+(defclass cons-intention (intention) ()
+  (:default-initargs :sort-id 2))
+(defclass list-intention (intention) ()
+  (:default-initargs :sort-id 3))
+(defclass alist-intention (intention) ()
+  (:default-initargs :sort-id 4))
+(defclass graph-intention (intention) ()
+  (:default-initargs :sort-id 5))
+(defgeneric compare-intention (intention-left intention-right)
+  (:documentation "Intentions can be thought of as identifiers of
+complexity/functionality/etc. This function returns -1 if INTENTION-LEFT is
+'less complex' than INTENTION-RIGHT, or it returns 0 if the 'complexity is the
+same', and 1 if the right side is 'more complex' than the left side.
+Complexity has an undefined general meaning. It is only meaningful to the
+specified types of intention and their contextual use."))
+
+
+;; TODO: Change CLONE and CLONE-OBJECT to additionally take an intention
+;; object. Then fix clone-shallow and such to pass the right intention.  This
+;; makes it so the methods can be finely defined to solve interesting problems
+;; with how the eql-map-entry records the intention for why the transition was
+;; created in the first place. It sorta sucks to increase the interface width,
+;; but it follows KMP's point of view and allows us to better record the
+;; intention in the eql-map-entry.
+
+
+
+
 
 ;;; The CLONE-POLICY representation.
 
@@ -43,53 +89,55 @@
 
 ;; A SHALLOW-CLONE will, when given a collection, allocate a new copy of that
 ;; collection and then process the elements of the collection with the
-;; IDENTITY-CLONE policy.
-;;
-;; Here, collection is a loose term meaning any sequence like vectors, or
-;; arrays, or aggregate type like hash tables.  User defined types like
-;; structures or classes are left to have an individual method for them to
-;; ensure the right semantics happen. Lists/cons are dealt with via a more
-;; specialized type that has shallow-clone as a parent.
+;; IDENTITY-CLONE policy. Shared structure is a bit painful with this policy,
+;; so try not to do that, it does try to at least by cycle aware though.
 (defclass shallow-clone (allocating-clone) ())
-
-;; Shallow copy a single CONS cell. This means the car and cdr of the cell
-;; are blindly copied form the original cons cell. If there are recursive
-;; links, they will point to the _original_ cons cell.
-(defclass shallow-clone-cons (shallow-clone) ())
-
-;; Shallow copy the list structure itself, including cdr based cycles. But the
-;; car of each list structure cons cell will be a simple copy from the
-;; original.  Hence list cycles based on the cdr will be honored, but if the
-;; car is self referential into the list, it will point to the _original_ list.
-(defclass shallow-clone-list (shallow-clone) ())
-
-;; Keep describing.
-(defclass shallow-clone-alist (shallow-clone) ())
-(defclass shallow-clone-tree (shallow-clone) ())
 
 ;; A DEEP-CLONE will, when given a collection, allocate a new copy of that
 ;; collection and then process the elements of the collection recursively
 ;; passing the same policy given to CLONE. Deep clone always copies everything
-;; and as deeply as possible.
+;; (both connection structure and objects) as deeply as possible.
 (defclass deep-clone (allocating-clone) ())
 
 
 ;;; The EQL-MAP representation and API.
 
+(defclass eql-map-entry ()
+  (;; The original object for which this entry exists. By virtue of the
+   ;; eql-map-entry existing, the original object is also considered "visited"
+   ;; when traversing the original structure in which it was found.
+   (%origin :accessor origin
+            :initarg :origin)
+   ;; Is there a transition from the origin to the target?
+   (%transition-p :accessor transition-p
+                  :initarg :transition-p
+                  :initform nil)
+   ;; The target of the cloning transition, usually a clone of the original
+   ;; object.  It isn't _required_ to be a newly allocated clone, but often is.
+   (%target :accessor target
+            :initarg :target)
+   ;; Under what intent was this item cloned? It is a reference to the
+   ;; intention object. This is here because it could be the fact that the same
+   ;; origin might be cloned under a different intention and that might affect
+   ;; how the previous copy is modified.
+   (%intent :accessor intent
+            :initarg :intent)))
+
 ;; This class builds a map between original objects and their clones. It is
-;; used to replicate referential graph structure between a set of objects
-;; (which could bne cons cells, hash tables, structures, classes, arrays, etc).
+;; used to replicate (as needed under the intentions used) referential graph
+;; structure between a set of objects. It is the case that anything inserted
+;; into this table markes the original object as being "visited".
 (defclass eql-map ()
-  (;; Key: Original object
-   ;; Value: cloned object (if appropriate, could be the same object too).
-   (%transition-table :accessor transition-table
-                      :initarg :transition-table
-                      :initform (u:dict #'eql))))
+  (;; Key: original object
+   ;; Value: eql-map-entry instance.
+   (%entry-table :accessor entry-table
+                 :initarg :entry-table
+                 :initform (u:dict #'eql))))
 
 ;;; The CLONE API.
 
 ;;; The CLONE generic function which is how a clone of something is requested.
-(defgeneric clone (object clone-policy eql-map &key &allow-other-keys)
+(defgeneric clone (object clone-policy intenton eql-map &key &allow-other-keys)
   (:documentation "CLONE the OBJECT according to the CLONE-POLICY and return
 two values, the cloned object and the EQL-MAP. Clone policies of shallow-clone
 and deep-clone (and those derived from them) will cause memory to be allocated
@@ -100,7 +148,11 @@ at least for OBJECT under most circumstances."))
 ;; The CLONE-OBJECT generic function which, from least specific to most, copies
 ;; the data from the original object into the cloned object (as dictated by the
 ;; CLONE-POLICY). This does the work of the actual cloning once the memory had
-;; been allocated by CLONE.
-(defgeneric clone-object (cloned-object original-object clone-policy eql-map
+;; been allocated by CLONE. The LAST-KNOWN-INTENTION is used when we encounter
+;; an object we had previously cloned before and we're possibly attempting to
+;; clone again and we need to see if we can just reuse it, or, if the intention
+;; is different, we need to alter the object somehow.
+(defgeneric clone-object (cloned-object original-object clone-policy intention
+                          last-known-intention eql-map
                           &key &allow-other-keys)
   (:method-combination progn :most-specific-last))
