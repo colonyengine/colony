@@ -36,6 +36,10 @@
   (let ((value (compare-intention intention-left intention-right)))
     (= value 1)))
 
+(defun intention/= (intention-left intention-right)
+  (let ((value (compare-intention intention-left intention-right)))
+    (/= value 0)))
+
 ;;;; Creation of INTENTIONs
 (defun make-no-specific-intention ()
   (make-instance 'no-specific-intention))
@@ -154,28 +158,35 @@ return it."
       (setf (eql-map-ref eql-map object)
             (make-eql-map-entry :origin object))))
 
-(defun eql-map-transition-p (eql-map original-object)
-  "Return four values. The first value is T if there is a transition and NIL if
-there is none. The second value is the TARGET of the EQL-MAP if there is a
-transition and NIL otherwise. The third values is the INTENT of the transition
-or NIL if not present. The fourth value is the EQL-MAP-ENTRY associated with
-ORIGINAL-OBJECT or NIL if not present."
-  (u:if-let ((eql-map-entry (eql-map-ref eql-map original-object)))
-    (let* ((transp (transition-p eql-map-entry))
-           (maybe-target (when transp (target eql-map-entry)))
-           (maybe-intent (when transp (intent eql-map-entry))))
-      (values transp maybe-target maybe-intent eql-map-entry))
-    (values nil nil nil nil)))
+#++(defun eql-map-transition-p (eql-map original-object)
+     "Return two values. The first value is T if there is a transition TARGET and
+NIL if there is none. The second value is T if the ORIGINAL-OBJECT had already
+been visited and NIL otherwise."
+     (u:if-let ((eql-map-entry (eql-map-ref eql-map original-object)))
+       (values (transition-p eql-map-entry) t)
+       (values nil nil)))
 
-(defun eql-map-mark-transition (eql-map original-object cloned-object intent)
-  "Visit the ORIGINAL-OBJECT, the mark the transition as present and store the
-CLONED-OBJECT as the TARGET and store the INTENT into the EQL-MAP-ENTRY.
-Return the EQL-MAP-ENTRY."
+#++(defun eql-map-target (eql-map original-object)
+     "Return two values. The first value is the TARGET of the transition or NIL if
+there is no transition. The second value is T if there was a transition and NIL
+otherwise.  Beware that (values NIL T) means there is a transition who target
+is the value NIL."
+     (let ((eql-map-entry (eql-map-ref eql-map original-object)))
+       (u:if-let ((transition-p eql-map-entry))
+         (values (target eql-map-entry) t)
+         (values nil nil))))
+
+(defun eql-map-mark-target (eql-map original-object cloned-object intent)
+  "Visit the ORIGINAL-OBJECT (if not already visited), the mark the transition
+as present and store the CLONED-OBJECT as the TARGET and store the INTENT into
+the EQL-MAP-ENTRY.  Return the CLONED-OBJECT."
   (let ((eql-map-entry (eql-map-mark-visited eql-map original-object)))
     (setf (transition-p eql-map-entry) t
           (target eql-map-entry) cloned-object
           (intent eql-map-entry) intent)
-    eql-map-entry))
+    cloned-object))
+
+
 
 ;; TODO: This is very terrible, only for debugging purposes at this time.
 (defun eql-map-dump (eql-map &optional (strm t))
@@ -278,9 +289,7 @@ Return the EQL-MAP-ENTRY."
   (let ((eql-map-entry (eql-map-mark-visited eql-map object)))
     (if (transition-p eql-map-entry)
         (values (target eql-map-entry) eql-map)
-        (values (progn (eql-map-mark-transition eql-map object object
-                                                intention)
-                       (target eql-map-entry))
+        (values (eql-map-mark-target eql-map object object intention)
                 eql-map))))
 
 ;;; -------------------------------
@@ -290,7 +299,7 @@ Return the EQL-MAP-ENTRY."
                   &key)
   ;; Note: we may have already visited it once in some other control path.
   (let ((eql-map-entry (eql-map-mark-visited eql-map object)))
-    (if (eql-map-transition-p eql-map object)
+    (if (transition-p eql-map-entry)
         ;; We already have a transition...
         (if (intention= intention (intent eql-map-entry))
             ;; then good to go, we can just reuse what we have!
@@ -302,17 +311,18 @@ Return the EQL-MAP-ENTRY."
               ;; encounter this object again in some further recursion from the
               ;; clone-object we are about to call.
               ;;
-              ;; TODO: I'm not ENTIRELY sure changing this before the redo of
-              ;; the clone is done is fully correct--but it follows the same
-              ;; temporal setting of this data wrt when it is newly formed. It
-              ;; may be a mine for my future self to step upon.
-              (setf (intent eql-map-entry) intention)
+              ;; NOTE: This is tricky. We only change the stored intention of
+              ;; the new intention is "more complex". Otherwise, we leave it as
+              ;; we found it and the clone-object can do whatever work is
+              ;; necessary given the intention difference.
+              (when (intention> intention last-intention)
+                (setf (intent eql-map-entry) intention))
               (values (clone-object (target eql-map-entry) object policy
                                     intention last-intention eql-map)
                       eql-map)))
         ;; else formally and newly allocate it and clone the contents.
         (let ((cloned-object (cons nil nil)))
-          (eql-map-mark-transition eql-map object cloned-object intention)
+          (eql-map-mark-target eql-map object cloned-object intention)
           (values (clone-object cloned-object object policy intention
                                 (make-no-specific-intention) eql-map)
                   eql-map)))))
@@ -334,9 +344,10 @@ Return the EQL-MAP-ENTRY."
           (cdr cloned-object) r))
   cloned-object)
 
-;; KEEP GOING
-
-;; shallow-clone-list clones the toplevel list structure ONLY.
+;; shallow-clone + list-intention
+;;
+;; shallow clones the toplevel list structure ONLY. Can handle cycles and
+;; certain kinds of shared structure in the list structure.
 (defmethod clone-object progn ((cloned-object cons)
                                (original-object cons)
                                (policy shallow-clone)
@@ -345,9 +356,7 @@ Return the EQL-MAP-ENTRY."
                                eql-map
                                &key)
 
-  ;; We've technically visited the start of the list already.
-  (eql-map-mark-visited eql-map original-object)
-
+  ;; Note: We've technically visited the start of the list already in CLONE.
   (destructuring-bind (l . r) original-object
     ;; We always shallow copy the car no matter what it was.
     ;; NOTE: if the car points back into the list structure...too bad use
@@ -359,160 +368,177 @@ Return the EQL-MAP-ENTRY."
       (setf (cdr cloned-object) r)
       (return-from clone-object cloned-object))
 
-    ;; But if it was a cons, then the answer is much harder since the cdr can
-    ;; represent: a complete proper list, a currently proper list that then
+    ;; But if the cdr was a cons, then the answer is much harder since the cdr
+    ;; can represent: a complete proper list, a currently proper list that then
     ;; turns into an improper list, or a cycle at some point (including
     ;; immediately).
 
     (loop :with end = cloned-object
           :for original-cell :on r
-          :do
-             (if (eql-map-visited-p eql-map original-cell)
-                 ;; Base case of handling the cycle. We catch it right away.
-                 (progn
-                   (setf (cdr end)
-                         (eql-map-transition eql-map original-cell))
-                   (return))
+          :do (let ((eql-map-entry
+                      (eql-map-mark-visited eql-map original-cell)))
+                (if (transition-p eql-map-entry)
+                    ;; If we encounter a transitioned cons entry in the list
+                    ;; structure, then we consider that it will either be a
+                    ;; cycle, or we're about to traverse data we already
+                    ;; copied. In this case, we just fixate the link to the
+                    ;; transitioned item and call it a day for cloning the
+                    ;; list.
+                    (if (intention= intention (intent eql-map-entry))
+                        (progn (setf (cdr end) (target eql-map-entry))
+                               (return))
+                        (error "Unsupported list intention pair: ~A and ~A"
+                               intention (intent eql-map-entry)))
 
-                 ;; else the original-cell hasn't been encountered before in
-                 ;; the list traversal, so copy it and continue (but beware
-                 ;; the cdr might be an improper list!).
-                 (let* ((new-cell (cons nil nil))
-                        (l-original (car original-cell))
-                        (r-original (cdr original-cell))
-                        (list-continues-p (consp r-original)))
+                    ;; If not a transition, then original-cell hasn't been
+                    ;; cloned (or transitioned) before in the list traversal,
+                    ;; so copy it and continue (but beware the cdr might be an
+                    ;; improper list!).
+                    (let* ((new-cell (cons nil nil))
+                           (l-original (car original-cell))
+                           (r-original (cdr original-cell))
+                           (list-continues-p (consp r-original)))
 
-                   ;; visit the current original-cell we are about to
-                   ;; processing.
-                   (eql-map-mark-visited eql-map original-cell)
+                      ;; The car of the new-cell is an easy fixup since we're
+                      ;; doing a shallow copy. If the car points into the
+                      ;; original list structure, you're going to have a bad
+                      ;; time because you should use deep copy for that.
+                      (setf (car new-cell) l-original)
 
-                   ;; Insert the cons clone into the eql-map.
-                   (setf (eql-map-ref eql-map original-cell) new-cell)
+                      ;; For the cdr, we could discover that we have an
+                      ;; improper list.
+                      (unless list-continues-p
+                        (setf (cdr new-cell) r-original))
 
-                   ;; The car of the new-cell is an easy fixup since we're
-                   ;; doing a shallow copy. If the car points into the
-                   ;; original list structure, you're going to have a bad
-                   ;; time because you should use deep copy for that.
-                   (setf (car new-cell) l-original)
+                      ;; Finally transition the original-cell to the new-cell.
+                      (eql-map-mark-target eql-map original-cell new-cell
+                                           intention)
 
-                   ;; But for the cdr, we could discover that we have an
-                   ;; improper list.
-                   (if list-continues-p
-                       (setf (cdr new-cell) nil)
-                       (setf (cdr new-cell) (eql-map-transition eql-map
-                                                                r-original)))
-                   (setf (cdr end) new-cell
-                         end new-cell))))
+                      ;; Prepare to keep traversing the list structure if need
+                      ;; be.
+                      (setf (cdr end) new-cell
+                            end new-cell)))))
 
+    ;; Return the list structure entry point!
     cloned-object))
 
-;; Do shallow-clone-alist. Shallow copy the list structure and the consp
-;; in the car spot of each list cons cell when available. We do it manually
-;; as opposed to recursive calls cause this needs to be efficient.
+
+;; shallow-clone + alist-intention
+;;
+;; Shallow copy the list structure and the consp in the car spot of each list
+;; cons cell when available. We do it manually as opposed to recursive calls
+;; cause this needs to be efficient.
 (defmethod clone-object progn ((cloned-object cons)
                                (original-object cons)
-                               (policy shallow-clone-alist)
+                               (policy shallow-clone)
+                               (intention alist-intention)
+                               (last-known-intention no-specific-intention)
                                eql-map
                                &key)
 
-  (flet ((clone-kv-cell (original-kv-cell)
-           ;; Clone a key/value cell from the alist.
-           (multiple-value-bind (maybe-cloned-kv-cell present-p)
-               (eql-map-transition eql-map original-kv-cell)
-             ;; However, check to see if the one we're cloning doesn't already
-             ;; have a transition, if so, use that instead!  This covers cases
-             ;; where an alist reused the exact kv cons cell multiple times in
-             ;; the list. We replicate that identical structure in the clone.
-             (if present-p
-                 maybe-cloned-kv-cell
-                 (destructuring-bind (l . r) original-kv-cell
-                   ;; We specifically preserve the original contents in the
-                   ;; shallow clone of the cons cell. If there is
-                   ;; self-referential information here, there will be a
-                   ;; surprise in the clone.
-                   (let ((cloned-kv-cell (cons l r)))
-                     ;; Update the eql-map table.
-                     (setf (eql-map-ref eql-map original-kv-cell)
-                           cloned-kv-cell)
-                     cloned-kv-cell))))))
+  (flet ((clone-maybe-kv-cell (maybe-kv-cell)
+           ;; We specifically preserve the original contents in the shallow
+           ;; clone of the cons cell (or return a previous one we've seen
+           ;; before). If there is self-referential information here, there
+           ;; will be a surprise in the clone!
+           (if (consp maybe-kv-cell)
+               (clone-shallow-cons maybe-kv-cell eql-map)
+               ;; Otherwise, just shallow clone the non-cons cell.
+               maybe-kv-cell)))
 
-    (with-accessors ((visited-table visited-table)) eql-map
-      ;; We've technically visited the start of the list already.
-      (setf (u:href visited-table original-object) t)
+    (destructuring-bind (l . r) original-object
+      ;; We always shallow copy the car no matter what it was.
+      ;; NOTE: if the car points back into the list structure...too bad use
+      ;; deep copy for such a thing.
+      (setf (car cloned-object)
+            (clone-maybe-kv-cell l))
 
-      (destructuring-bind (l . r) original-object
-        ;; Handle first entry in the alist.
-        (setf (car cloned-object)
-              (if (consp l)
-                  ;; We're told it is an alist and should be a key/value cons
-                  ;; cell, so clone it.
-                  (clone-kv-cell l)
-                  ;; oops! not a kv-cell (and not really an alist), but just
-                  ;; shallow copy it and keep going. Note: if it is
-                  ;; self-referential here, there will be surprises since it'll
-                  ;; point to the original alist structures.
-                  l))
+      ;; If the cdr isn't a cons (hence an improper list), the answer is easy.
+      (unless (consp r)
+        (setf (cdr cloned-object) r)
+        (return-from clone-object cloned-object))
 
-        ;; If the cdr if the list structure holding the kv cons cells isn't a
-        ;; cons (hence an improper list), the answer is easy.
-        (unless (consp r)
-          (setf (cdr cloned-object) r)
-          (return-from clone-object cloned-object))
+      ;; But if the cdr was a cons, then the answer is much harder since the
+      ;; cdr can represent: a complete proper list, a currently proper list
+      ;; that then turns into an improper list, or a cycle at some point
+      ;; (including immediately).
 
-        ;; But if it was a cons, then the answer is much harder since the cdr
-        ;; can represent: a complete proper list, a currently proper list that
-        ;; then turns into an improper list, or a cycle at some point
-        ;; (including immediately).
+      (loop :with end = cloned-object
+            :for original-cell :on r
+            :do (let ((eql-map-entry
+                        (eql-map-mark-visited eql-map original-cell)))
+                  (if (transition-p eql-map-entry)
+                      ;; If we encounter a transitioned list structure cons
+                      ;; entry, then we consider that it will either be a
+                      ;; cycle, or we're about to traverse data we already
+                      ;; copied. In this case, we just fixate the link to the
+                      ;; transitioned item and call it a day for cloning the
+                      ;; list.
+                      (if (intention= intention (intent eql-map-entry))
+                          (progn (setf (cdr end) (target eql-map-entry))
+                                 (return))
+                          (error "Unsupported list intention pair: ~A and ~A"
+                                 intention (intent eql-map-entry)))
 
-        (loop :with end = cloned-object
-              :for original-cell :on r
-              :do
-                 (if (u:href visited-table original-cell)
-                     ;; Base case of handling the cycle. We catch it right
-                     ;; away.
-                     (progn
-                       (setf (cdr end)
-                             (eql-map-transition eql-map original-cell))
-                       (return))
+                      ;; If not a transition, then original-cell hasn't been
+                      ;; cloned (or transitioned) before in the list traversal,
+                      ;; so copy it and continue (but beware the cdr might be
+                      ;; an improper list!).
+                      (let* ((new-cell (cons nil nil))
+                             (l-original (car original-cell))
+                             (r-original (cdr original-cell))
+                             (list-continues-p (consp r-original)))
 
-                     ;; else the original-cell hasn't been encountered before
-                     ;; in the list traversal, so copy it and continue (but
-                     ;; beware the cdr might be an improper list!).
-                     (let* ((new-cell (cons nil nil))
-                            (l-original (car original-cell))
-                            (r-original (cdr original-cell))
-                            (list-continues-p (consp r-original)))
+                        ;; Transition the original-cell to the
+                        ;; new-cell.
+                        (eql-map-mark-target eql-map original-cell new-cell
+                                             intention)
 
-                       ;; visit the current original-cell we are about to
-                       ;; processing.
-                       (setf (u:href visited-table original-cell) t)
+                        ;; The car of the new-cell is intended to be a kv cons
+                        ;; cell, so clone it as such. If somehow it isn't then
+                        ;; just copy it over.  If the car points into the
+                        ;; original list structure, you're going to have a bad
+                        ;; time because you should use deep copy for that.
+                        (setf (car new-cell)
+                              (clone-maybe-kv-cell l-original))
 
-                       ;; Insert the list structure cons clone into the
-                       ;; eql-map.
-                       (setf (eql-map-ref eql-map original-cell) new-cell)
+                        ;; For the cdr, we could discover that we have an
+                        ;; improper list.
+                        (unless list-continues-p
+                          (setf (cdr new-cell) r-original))
 
-                       ;; The car of the new-cell is intended to be a kv cons
-                       ;; cell, so clone it as such. If somehow it isn't then
-                       ;; just copy it over.  If the car points into the
-                       ;; original list structure, you're going to have a bad
-                       ;; time because you should use deep copy for that.
-                       (setf (car new-cell)
-                             (if (consp l-original)
-                                 (clone-kv-cell l-original)
-                                 l-original))
 
-                       ;; But for the cdr, we could discover that we have an
-                       ;; improper list.
-                       (if list-continues-p
-                           (setf (cdr new-cell) nil)
-                           (setf (cdr new-cell)
-                                 (eql-map-transition eql-map r-original)))
-                       (setf (cdr end) new-cell
-                             end new-cell))))
-        cloned-object))))
+                        ;; Prepare to keep traversing the list structure if
+                        ;; need be.
+                        (setf (cdr end) new-cell
+                              end new-cell)))))
+
+      ;; Return the list structure entry point!
+      cloned-object)))
+
+;; Helper for shallow clone + alist-intention. When we encounter a certain form
+;; of shared structure: notably when a kv cell is actually part of the list
+;; structure of an alist such as this: (let ((o (cons nil nil))) (setf (car o)
+;; o (cdr o) o)) we attempt to clone (car o) as a cons cell with a
+;; cons-intention -- but it is already cloned as part of the list structure
+;; with alist-intention Since cons-inention is less complex than the
+;; alist-intention of the list structure, we simply return the object
+;; without any changes because the last-known-intention is more complex than
+;; the intention we tried to go to.
+(defmethod clone-object progn ((cloned-object cons)
+                               (original-object cons)
+                               (policy shallow-clone)
+                               (intention cons-intention)
+                               (last-known-intention alist-intention)
+                               eql-map
+                               &key)
+
+  cloned-object)
+
 
 
 ;;; KEEP GOING -------------------------------------------------------------
+;;; This is almost done, just writing unit tests.
 
 ;; Do shallow-clone-tree (technically a graph due to common literal coalescing,
 ;; so we'll have to process the entire thing as a graph). Due to this we must
@@ -520,12 +546,81 @@ Return the EQL-MAP-ENTRY."
 ;; structure  and hence reference the eql-map and cloned.
 (defmethod clone-object progn ((cloned-object cons)
                                (original-object cons)
-                               (policy shallow-clone-graph)
+                               (policy shallow-clone)
+                               (intention graph-intention)
+                               (last-known-intention no-specific-intention)
                                eql-map
                                &key)
 
+  ;; This function not only explores the child nodes, but also clones the grpah
+  ;; cons structure cells and maintains the structural equivalence of the
+  ;; cloned graphed wrt the original graph.
+  (flet ((explore-child-node (parent child setter q)
+           (let ((parent-eql-map-entry (eql-map-visited-p eql-map parent))
+                 (child-eql-map-entry (eql-map-visited-p eql-map child)))
 
-  )
+             (if (not child-eql-map-entry)
+                 ;; If it hadn't been explored, then either it is a cons cell
+                 ;; and we keep cloning and exploring, or it isn't and we're
+                 ;; done with that path (and shallow copy the value!)
+                 (if (consp child)
+                     (let ((new-child (cons nil nil)))
+                       ;; Visit child
+                       (eql-map-mark-visited eql-map child)
+                       ;; Generate the clone target edge.
+                       (eql-map-mark-target eql-map child new-child intention)
+                       ;; Preserve the link structure in the clone
+                       ;; we're making.
+                       (funcall setter
+                                (target parent-eql-map-entry)
+                                new-child)
+                       ;; Finally enqueue the original car/cdr for further
+                       ;; exploration
+                       (queues:qpush q child))
+
+                     ;; If not a cons, we just copy the reference to
+                     ;; express the shallow clone of the original leaf value.
+                     (funcall setter
+                              (target parent-eql-map-entry)
+                              child))
+
+                 ;; NOTE: This case catches certain situations like a graph
+                 ;; consisting of a single cons cell pointing to itself, or
+                 ;; when we're attempting to clone the graph and there are
+                 ;; multiple roots into it. This ensure in those cases that the
+                 ;; graph edge in the cloned graph is present.
+                 ;;
+                 ;; If the child had been explored already, then update cloned
+                 ;; parents's car/cdr to the cloned target to preserve the
+                 ;; graph structure of the clone and we're done with the
+                 ;; car/cdr edge. The BFS graph is keeping track of NODES that
+                 ;; have been explored, not edges! So we ensure it is
+                 ;; preserved.
+                 (funcall setter
+                          (target parent-eql-map-entry)
+                          (target child-eql-map-entry))))))
+
+    ;; Breadth First Search the graph, cloning the cons structure and the
+    ;; graph structure
+    (let ((q (queues:make-queue :simple-queue)))
+      ;; The original-object has already been visited and the memory allocated
+      ;; for the clone, but the cloned memory is not setup yet.
+      (queues:qpush q original-object)
+      (loop :until (zerop (queues:qsize q))
+            :do (let* ((n (queues:qpop q))
+                       (nl (car n))
+                       (nr (cdr n)))
+                  ;;(format t "Processing: ~S~%" n)
+                  ;; Process CAR
+                  ;;(format t " car: ~S~%" nl)
+                  (explore-child-node n nl #'rplaca q)
+
+                  ;; Process CDR
+                  ;;(format t " cdr: ~S~%" nr)
+                  (explore-child-node n nr #'rplacd q)))))
+
+  ;; Then we return the root to the newly cloned graph.
+  cloned-object)
 
 
 
