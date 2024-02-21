@@ -535,15 +535,13 @@ the EQL-MAP-ENTRY.  Return the CLONED-OBJECT."
 
   cloned-object)
 
-
-
-;;; KEEP GOING -------------------------------------------------------------
-;;; This is almost done, just writing unit tests.
-
-;; Do shallow-clone-tree (technically a graph due to common literal coalescing,
-;; so we'll have to process the entire thing as a graph). Due to this we must
-;; treat both car AND cdr, when they are to a cons, to be part of the tree
-;; structure  and hence reference the eql-map and cloned.
+;; shallow-clone + graph-intention
+;;
+;; (technically a tree made from cons cells may be a graph due to common
+;; literal coalescing, so we'll have to process the entire thing as a
+;; graph). Due to this we must treat both car AND cdr, when they are to a cons,
+;; to be part of the graph structure and hence reference the eql-map and
+;; cloned.
 (defmethod clone-object progn ((cloned-object cons)
                                (original-object cons)
                                (policy shallow-clone)
@@ -622,6 +620,7 @@ the EQL-MAP-ENTRY.  Return the CLONED-OBJECT."
   ;; Then we return the root to the newly cloned graph.
   cloned-object)
 
+;;; KEEP GOING -------------------------------------------------------------
 
 
 #|

@@ -471,29 +471,43 @@
 
 (defun test-clone-shallow-graph-2 ()
   "Handle a small tree made with cons cells."
-  (let* ((*print-circle* t)
-         (graph (cons-graph
-                  `((o :l a)
-                    (o :r b)
-                    (a :l (:v 1))
-                    (a :r (:v 2))
-                    (b :l c)
-                    (b :r (:v nil))
-                    (c :l (:v 3))
-                    (c :r (:v 4)))))
-         (o (get-roots graph 'o)))
+  (u:mvlet* ((*print-circle* t)
+             (graph (cons-graph
+                      `((:roots n0 n1 n2 n3)
+                        (n0 :l n1)
+                        (n0 :r n2)
+                        (n1 :l (:v 1))
+                        (n1 :r (:v 2))
+                        (n2 :l n3)
+                        (n2 :r (:v nil))
+                        (n3 :l (:v 3))
+                        (n3 :r (:v 4)))))
+             (n0 n1 n2 n3 (get-roots graph 'n0 'n1 'n2 'n3)))
 
-    (let ((c (clone-shallow-graph o)))
-      (format t "Original: ~S~%" o)
+    (let* ((c (clone-shallow-graph n0))
+           (c0 c)
+           (c1 (car c0))
+           (c2 (cdr c0))
+           (c3 (car c2))
+           (vlc1 (car c1))
+           (vrc1 (cdr c1))
+           (vlc3 (car c3))
+           (vrc3 (cdr c3)))
+      (format t "Original: ~S~%" n0)
       (format t "Cloned: ~S~%" c)
       (finish-output)
 
       ;; The clone must have produced a new starting cons cell.
       ;; Check all cons cells to ensure they are different.
-      (assert (not (eq c o)))
-      (assert (not (eq (car c) (car o))))
-      (assert (not (eq (cdr c) (cdr o))))
-      ;; KEEP GOING.
+      (assert (not (eq c0 n0)))
+      (assert (not (eq c1 n1)))
+      (assert (not (eq c2 n2)))
+      (assert (not (eq c3 n3)))
+      ;; Check that the actual values in the leaves are eql.
+      (assert (eql (car n1) vlc1))
+      (assert (eql (cdr n1) vrc1))
+      (assert (eql (car n3) vlc3))
+      (assert (eql (cdr n3) vrc3))
 
       (format t "Passed.~%")
       t)))
@@ -506,25 +520,21 @@
                     (o :l o)
                     (o :r o))))
          (o (get-roots graph 'o)))
-    ;; A single cons cell representing a graph that has both itself as the
-    ;; first element and a cycle for the rest of the list.
-    (setf (car o) o
-          (cdr o) o)
 
     (let ((c (clone-shallow-graph o)))
       (format t "Original: ~S~%" o)
       (format t "Cloned: ~S~%" c)
       (finish-output)
 
-      (assert (eq o (car o)))
-      (assert (eq o (cdr o)))
+      ;; Check that the original has the property we desire.
+      (assert (eq (car o) o))
+      (assert (eq (cdr o) o))
 
       ;; The clone must have produced a new starting cons cell.
       (assert (not (eq c o)))
-      ;; The car should have preserved the graph structure and point to the NEW
-      ;; starting cons cell.
+      ;; The car and cdr should have preserved the graph structure and point to
+      ;; the NEW starting cons cell.
       (assert (eq (car c) c))
-      ;; Same with the cdr
       (assert (eq (cdr c) c))
 
       (format t "Passed.~%")
@@ -535,76 +545,130 @@
   "Handle a directed acyclic graph with shared structure."
   (flet ((neq (x y)
            (not (eq x y))))
-    (let* ((*print-circle* t)
-           (val 1)
-           (sym 'a)
-           (path #P "/tmp/foo.txt")
-           (str "foo")
-           (ht (make-hash-table))
-           (ch #\a)
-           (graph (cons-graph
-                    `((:roots o oml omr obl obm obr)
-                      (o :l oml :l obl :l (:v ,val))
-                      (o :r omr :r obr :r (:v ,path))
-                      (oml :r obm)
-                      (omr :l obm)
-                      (obl :r (:v ,sym))
-                      (obm :l (:v ,str))
-                      (obm :r (:v ,ch))
-                      (obr :l (:v ,ht))))))
+    (u:mvlet* ((*print-circle* t)
+               (val 1)
+               (sym 'a)
+               (path #P "/tmp/foo.txt")
+               (str "foo")
+               (ht (make-hash-table))
+               (ch #\a)
+               (graph (cons-graph
+                        `((:roots o oml omr obl obm obr)
+                          (o :l oml :l obl :l (:v ,val))
+                          (o :r omr :r obr :r (:v ,path))
+                          (oml :r obm)
+                          (omr :l obm)
+                          (obl :r (:v ,sym))
+                          (obm :l (:v ,str))
+                          (obm :r (:v ,ch))
+                          (obr :l (:v ,ht)))))
+               (obl obm obr oml omr o
+                    (get-roots graph 'obl 'obm 'obr 'oml 'omr 'o))
+               (c (clone-shallow-graph o)))
 
-      (u:mvlet ((obl obm obr oml omr o
-                     (get-roots graph 'obl 'obm 'obr 'oml 'omr 'o)))
-        (let* ((c (clone-shallow-graph o)))
-          (format t "Original: ~S~%" o)
-          (format t "Cloned: ~S~%" c)
-          (finish-output)
+      (format t "Original: ~S~%" o)
+      (format t "Cloned: ~S~%" c)
+      (finish-output)
 
-          (let* ((cml (car c))
-                 (cmr (cdr c))
-                 (cbl (car cml))
-                 (cbm0 (cdr cml))
-                 (cbm1 (car cmr))
-                 (cbr (cdr cmr)))
+      (let* ((cml (car c))
+             (cmr (cdr c))
+             (cbl (car cml))
+             (cbm0 (cdr cml))
+             (cbm1 (car cmr))
+             (cbr (cdr cmr)))
 
-            ;; Check that the cloned nodes exist
-            (assert c)
-            (assert cml)
-            (assert cmr)
-            (assert cbl)
-            (assert cbm0)
-            (assert cbm1)
-            (assert cbr)
+        ;; Check that the cloned nodes exist
+        (assert c)
+        (assert cml)
+        (assert cmr)
+        (assert cbl)
+        (assert cbm0)
+        (assert cbm1)
+        (assert cbr)
 
-            ;; Check that the cloned nodes are actually different from their
-            ;; counter parts
-            (assert (neq o c))
-            (assert (neq obl cbl))
-            (assert (neq obm cbm0))
-            (assert (neq obm cbm1))
-            (assert (neq obr cbr))
-            (assert (neq oml cbl))
-            (assert (neq omr cmr))
-            (assert (neq o c))
+        ;; Check that the cloned nodes are actually different from their
+        ;; counter parts
+        (assert (neq o c))
+        (assert (neq obl cbl))
+        (assert (neq obm cbm0))
+        (assert (neq obm cbm1))
+        (assert (neq obr cbr))
+        (assert (neq oml cbl))
+        (assert (neq omr cmr))
+        (assert (neq o c))
 
-            ;; Check that the original graph's shared structure is present in
-            ;; the clone.
-            (assert (eq cbm0 cbm1))
+        ;; Check that the original graph's shared structure is present in
+        ;; the clone.
+        (assert (eq cbm0 cbm1))
 
-            ;; Check that the leaves are what they purport to be (and are
-            ;; identical to the original graph's leave due to shallow copy).
-            (assert (eql (car obl) (car cbl)))
-            (assert (eql (cdr obl) (cdr cbl)))
-            (assert (eql (car obm) (car cbm0)))
-            (assert (eql (cdr obm) (cdr cbm0)))
-            (assert (eql (car obr) (car cbr)))
-            (assert (eql (cdr obr) (cdr cbr)))
+        ;; Check that the leaves are what they purport to be (and are
+        ;; identical to the original graph's leave due to shallow copy).
+        (assert (eql (car obl) (car cbl)))
+        (assert (eql (cdr obl) (cdr cbl)))
+        (assert (eql (car obm) (car cbm0)))
+        (assert (eql (cdr obm) (cdr cbm0)))
+        (assert (eql (car obr) (car cbr)))
+        (assert (eql (cdr obr) (cdr cbr)))
 
-            (format t "Passed.~%")
+        (format t "Passed.~%")
 
-            t))))))
+        t))))
 
-;; KEEP GOING
+(defun test-clone-shallow-graph-5 ()
+  "Handle a directed cyclic graph with complex shared structure."
+  (flet ((neq (x y)
+           (not (eq x y))))
+    (u:mvlet* ((*print-circle* t)
+               (graph (cons-graph
+                        `((:roots l0 l1 l2 l3 l4)
+                          ;; list structure with cycle
+                          (l0 :r l1 :r l2 :r l3 :r l4 :r l0)
+                          ;; complex shared and cyclic structure
+                          (l0 :l l2)
+                          (l1 :l l3)
+                          (l2 :l l4)
+                          (l3 :l l1)
+                          (l4 :l l0))))
+               (l0 l1 l2 l3 l4
+                   (get-roots graph 'l0 'l1 'l2 'l3 'l4))
+               (c (clone-shallow-graph l0)))
+
+      (format t "Original: ~S~%" l0)
+      (format t "Cloned: ~S~%" c)
+      (finish-output)
+
+      (let* ((c0 c)
+             (c1 (cdr c0))
+             (c2 (cdr c1))
+             (c3 (cdr c2))
+             (c4 (cdr c3)))
+
+        ;; Check that the cloned nodes exist
+        (assert c0)
+        (assert c1)
+        (assert c2)
+        (assert c3)
+        (assert c4)
+
+        ;; Check that the cloned nodes are actually different from their
+        ;; counter parts
+        (assert (neq c0 l0))
+        (assert (neq c1 l1))
+        (assert (neq c2 l2))
+        (assert (neq c3 l3))
+        (assert (neq c4 l4))
+
+        ;; Check that the graph structure is preserved.
+        (assert (eql (car c0) c2))
+        (assert (eql (car c1) c3))
+        (assert (eql (car c2) c4))
+        (assert (eql (car c3) c1))
+        (assert (eql (car c4) c0))
+
+        (format t "Passed.~%")
+
+        t))))
+
 
 ;;; ------------------------------------------------------------
 ;; Higher level testing code.
@@ -632,9 +696,12 @@
   (test-clone-shallow-graph-2)
   (test-clone-shallow-graph-3)
   (test-clone-shallow-graph-4)
+  (test-clone-shallow-graph-5)
 
   t)
 
+;; TODO: Maybe put in vutils?
+;;
 ;; A function to help generate graphs made from cons cells.
 ;; target is either a symbol representing a nodename or the form (:v xxx) where
 ;; xxx is some value we want for the car/cdr of the node. Don't make mistakes
@@ -651,13 +718,35 @@
 ;; All leaf values must be specified otherwise they are considered "unbound"
 ;; and explicitly checked for. TODO: Make an ability to change this default
 ;; to just specifying NIL for anything not otherwise specified.
+;;
+;; Any :l and :r of any cell assigned more than once is flagged as an error
+;; since it is almost certainly a typo in the DSL.
 (defun cons-graph (dsl)
-  (flet ((syntax-roots-p (form)
-           (and (consp form) (eq :roots (first form)))))
+  (labels ((syntax-roots-p (form)
+             (and (consp form) (eq :roots (first form))))
+           (check-unbound (cell-name cell link unbound-value)
+             (ecase link
+               (:l
+                (unless (eq (car cell) unbound-value)
+                  (error "cons-graph: Multiple assignment to car of cell: ~A "
+                         cell-name)))
+               (:r
+                (unless (eq (cdr cell) unbound-value)
+                  (error "cons-graph: Multiple assignment to cdr of cell: ~A "
+                         cell-name)))))
+           (construct-link (cell-name cell link value unbound)
+             ;; NOTE: If we assign the same link multiple times, it is almost
+             ;; surely an error and we stop and complain about the DSL.
+             (check-unbound cell-name cell link unbound)
+             (funcall (ecase link (:l #'rplaca) (:r #'rplacd))
+                      cell value)))
+
     (let ((unbound (gensym "UNBOUND"))
           (table (make-hash-table))
           (specified-roots (make-hash-table))
           (roots (make-hash-table)))
+
+      ;; Convert the DSL into a real graph of cons cells.
       (dolist (form dsl)
         (cond
           ;; Handle special syntax forms
@@ -680,21 +769,20 @@
                              ;; Set the value at the direction requested.
                              (destructuring-bind (sym value) target
                                (assert (eq sym :v))
-                               (ecase link
-                                 (:l (rplaca source-cell value))
-                                 (:r (rplacd source-cell value))))
+                               (construct-link source source-cell link value
+                                               unbound))
                              ;; else ensure the target exists, make the link
                              ;; in the requested direction.
                              (let ((target-cell
                                      (u:ensure-gethash target table
                                                        (cons unbound
                                                              unbound))))
-                               ;; a target can never be a root
+                               ;; a target can never be a root (unless
+                               ;; explicitly made to be a root with a :roots
+                               ;; syntax form)
                                (setf (gethash target roots) nil)
-
-                               (ecase link
-                                 (:l (rplaca source-cell target-cell))
-                                 (:r (rplacd source-cell target-cell)))))))))))
+                               (construct-link source source-cell link
+                                               target-cell unbound)))))))))
 
 
       ;; Now check that no node has an unbound leaf. EVERYTHING must be
@@ -718,6 +806,9 @@
       ;; Manually mark roots if supplied. This will enforce root discovery
       ;; for graphs with no roots due to cycles.
       (u:do-hash-keys (name specified-roots)
+        (unless (nth-value 1 (u:href roots name))
+          (error "Attempt to set a root ~A but there is no node of that name!"
+                 name))
         (setf (u:href roots name) t))
 
       ;; collect the roots
