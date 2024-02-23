@@ -141,18 +141,30 @@ specified types of intention and their contextual use."))
   (:documentation "CLONE the OBJECT according to the CLONE-POLICY and return
 two values, the cloned object and the EQL-MAP. Clone policies of shallow-clone
 and deep-clone (and those derived from them) will cause memory to be allocated
-at least for OBJECT under most circumstances."))
+at least for OBJECT under most (but not all) circumstances."))
+
+(defgeneric clone-allocate (object)
+  (:documentation "This generic function must ONLY allocate a new instance of
+the passed in object. It does not have any responsibility to fill in any values
+beyond the required defaults for the allocation. Anything filled in by this
+generic function will almost certainly be overwritten by CLONE-OBJECT when the
+returned object is passed to that generic function. This function returns a
+newly allocated default instance of OBJECT that maintains any original
+contraints on the original OBJECT. Examples of constraints would be things like
+keeping the hash table test the same, or if an array is adjustable then the
+newly allocated version of it is also adjustable, etc, etc."))
 
 ;;; The CLONE-OBJECT API.
 
-;; The CLONE-OBJECT generic function which, from least specific to most, copies
-;; the data from the original object into the cloned object (as dictated by the
-;; CLONE-POLICY). This does the work of the actual cloning once the memory had
-;; been allocated by CLONE. The LAST-KNOWN-INTENTION is used when we encounter
-;; an object we had previously cloned before and we're possibly attempting to
-;; clone again and we need to see if we can just reuse it, or, if the intention
-;; is different, we need to alter the object somehow.
 (defgeneric clone-object (cloned-object original-object clone-policy intention
                           last-known-intention eql-map
                           &key &allow-other-keys)
-  (:method-combination progn :most-specific-last))
+  (:method-combination progn :most-specific-last)
+  (:documentation "The CLONE-OBJECT generic function which, from least specific
+to most, copies the data from the original object into the cloned object (as
+dictated by the CLONE-POLICY and INTENTION). This does the work of the actual
+cloning once the memory had been allocated by CLONE. The LAST-KNOWN-INTENTION
+is used when we encounter an object we had previously cloned before and we're
+possibly attempting to clone again and we need to see if we can just reuse it,
+or, if the intention is different, we need to alter the object somehow. Returns
+the cloned object."))
