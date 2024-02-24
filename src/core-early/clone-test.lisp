@@ -1627,12 +1627,12 @@
               (list n0 n1 n2 n3)
               (list c0 c1 c2 c3))
         ;; Ensure the structure of the graph was preserved.
-        ;; cyclic list structure
+        ;; 1. cyclic list structure
         (assert (eq (cdr c0) c1))
         (assert (eq (cdr c1) c2))
         (assert (eq (cdr c2) c3))
         (assert (eq (cdr c3) c0))
-        ;; forward references
+        ;; 2. forward references
         (assert (eq (car c0) c1))
         (assert (eq (car c1) c2))
         (assert (eq (car c2) c3))
@@ -1641,9 +1641,143 @@
         (format t "Passed.~%")
         t))))
 
+
+(defun test-clone-deep-cons-4 ()
+  "Hideous backwards referencing shared structure with cycles."
+  (u:mvlet* ((*print-circle* t)
+             (graph (cons-graph
+                      '((:roots n0 n1 n2 n3)
+                        (n0 :r n1 :r n2 :r n3 :r n0)
+                        (n0 :l n3)
+                        (n1 :l n0)
+                        (n2 :l n1)
+                        (n3 :l n2))))
+             (n0 n1 n2 n3
+                 (get-roots graph 'n0 'n1 'n2 'n3)))
+
+    (let ((c (clone-deep n0)))
+      (format t "Original | ~S~%" n0)
+      (format t "Cloned   | ~S~%" c)
+      (finish-output)
+
+      ;; Ensure new memory
+      (assert (not (eq n0 c)))
+
+      (let* ((c0 c)
+             (c1 (cdr c0))
+             (c2 (cdr c1))
+             (c3 (cdr c2)))
+        ;; Ensure that each cons cell was cloned.
+        (mapc (lambda (x y)
+                (assert (not (eq x y))))
+              (list n0 n1 n2 n3)
+              (list c0 c1 c2 c3))
+        ;; Ensure the structure of the graph was preserved.
+        ;; 1. cyclic list structure
+        (assert (eq (cdr c0) c1))
+        (assert (eq (cdr c1) c2))
+        (assert (eq (cdr c2) c3))
+        (assert (eq (cdr c3) c0))
+        ;; 2. backward references
+        (assert (eq (car c0) c3))
+        (assert (eq (car c1) c0))
+        (assert (eq (car c2) c1))
+        (assert (eq (car c3) c2))
+
+        (format t "Passed.~%")
+        t))))
+
+(defun test-clone-deep-cons-5 ()
+  "Hideous forward and backward referencing shared structure with cycles."
+  (u:mvlet* ((*print-circle* t)
+             (graph (cons-graph
+                      '((:roots n0 n1 n2 n3)
+                        (n0 :r n1 :r n2 :r n3 :r n0)
+                        (n0 :l n2)
+                        (n1 :l n3)
+                        (n2 :l n0)
+                        (n3 :l n1))))
+             (n0 n1 n2 n3
+                 (get-roots graph 'n0 'n1 'n2 'n3)))
+
+    (let ((c (clone-deep n0)))
+      (format t "Original | ~S~%" n0)
+      (format t "Cloned   | ~S~%" c)
+      (finish-output)
+
+      ;; Ensure new memory
+      (assert (not (eq n0 c)))
+
+      (let* ((c0 c)
+             (c1 (cdr c0))
+             (c2 (cdr c1))
+             (c3 (cdr c2)))
+        ;; Ensure that each cons cell was cloned.
+        (mapc (lambda (x y)
+                (assert (not (eq x y))))
+              (list n0 n1 n2 n3)
+              (list c0 c1 c2 c3))
+        ;; Ensure the structure of the graph was preserved.
+        ;; 1. cyclic list structure
+        (assert (eq (cdr c0) c1))
+        (assert (eq (cdr c1) c2))
+        (assert (eq (cdr c2) c3))
+        (assert (eq (cdr c3) c0))
+        ;; 2. backward references
+        (assert (eq (car c0) c2))
+        (assert (eq (car c1) c3))
+        (assert (eq (car c2) c0))
+        (assert (eq (car c3) c1))
+
+        (format t "Passed.~%")
+        t))))
+
+
+(defun test-clone-deep-cons-6 ()
+  "Irreducible loop with shared structure and cycles."
+  (u:mvlet* ((*print-circle* t)
+             (graph (cons-graph
+                      '((:roots n0 n1 n2)
+                        (n0 :l n1)
+                        (n0 :r n2)
+                        (n1 :l (:v 1))
+                        (n1 :r n2)
+                        (n2 :l n1)
+                        (n2 :r n1))))
+             (n0 n1 n2
+                 (get-roots graph 'n0 'n1 'n2)))
+
+    (let ((c (clone-deep n0)))
+      (format t "Original | ~S~%" n0)
+      (format t "Cloned   | ~S~%" c)
+      (finish-output)
+
+      ;; Ensure new memory
+      (assert (not (eq n0 c)))
+
+      (let* ((c0 c)
+             (c1 (car c0))
+             (c2 (cdr c0)))
+        ;; Ensure that each cons cell was cloned.
+        (mapc (lambda (x y)
+                (assert (not (eq x y))))
+              (list n0 n1 n2)
+              (list c0 c1 c2))
+        ;; Ensure the structure of the graph was preserved.
+        (assert (eq (car c0) c1))
+        (assert (eq (cdr c0) c2))
+
+        (assert (eql (car c1) 1))
+        (assert (eq (cdr c1) c2))
+
+        (assert (eq (car c2) c1))
+        (assert (eq (cdr c2) c1))
+
+        (format t "Passed.~%")
+        t))))
+
 ;; KEEP GOING
-;; TODO: copy test-clone-deep-cons-3 to 4 and make the references backwards
-;; pointing. Then make a 5 where they are forwards and backwards.
+
 
 ;;; ------------------------------------------------------------
 ;; Aggregate deep cloning testing code.
@@ -1662,6 +1796,9 @@
   (test-clone-deep-cons-1)
   (test-clone-deep-cons-2)
   (test-clone-deep-cons-3)
+  (test-clone-deep-cons-4)
+  (test-clone-deep-cons-5)
+  (test-clone-deep-cons-6)
 
   (format t "Deep clone tests passed!~%")
   t)
