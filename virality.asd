@@ -37,6 +37,7 @@
                #:static-vectors
                #:trivial-features
                #:uiop)
+  :in-order-to ((asdf:test-op (asdf:test-op #:virality.test)))
   :pathname "src"
   :serial t
   :components
