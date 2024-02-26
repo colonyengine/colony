@@ -154,6 +154,18 @@ following in your REPL:
 
 The example selector shows many examples.
 
+# Test Suite
+
+The test suite will eventually test all layers and components of the internal
+engine codes and the support libraries. We currently use `parachute` for our
+testing methodology.
+
+To run the Virality Engine test suite, run this at the repl:
+```
+(asdf:test-system :virality)
+```
+
+
 ## License
 
 Copyright © 2017-2022
