@@ -2166,9 +2166,6 @@
 ;; NOTE: The graphs only use arrays, cons cells, and identity-clone values.
 ;;; ------------------------------------------------------------
 
-
-
-;; KEEP GOING
 (defun test-clone-deep-hash-table-0 ()
   "Can an empty hash table be deep copied and preserve its properties?"
   (let* ((o (u:dict))
@@ -2221,17 +2218,21 @@
         (push k c-key)
         (push v c-value))
 
-      ;; The keys must be identical in the deep copy.
-      ;; This is because they are of identity-policy style values.
-      (assert (eql (first o-key) (first c-key)))
-      ;; The values must be identical in the deep copy.
-      ;; This is because they are of identity-policy style values.
-      (assert (eql (first o-value) (first c-value)))
+      ;; Check that the keys and values are correct, given that they are
+      ;; identity-policy values.
+      (loop :for ok :in o-key
+            :for ov :in o-value
+            :for ck :in c-key
+            :for cv :in c-value
+            :do (assert (eql ck ok))
+                (assert (eql cv ov)))
 
       (format t "Passed.~%")
       t)))
 
-;; TODO: Broken.
+;; KEEP GOING (add more tests for sure).
+
+;; TODO: Broken (because not converted to deep clone semantics).
 (defun test-clone-deep-hash-table-2 ()
   (let* ((key (list 1 2 3))
          (value (list 4 5 6))
@@ -2272,7 +2273,8 @@
 
 
 ;;; ------------------------------------------------------------
-;; clone-deep complex combinatons of types and self-referential structure.
+;; clone-deep complex combinations of types and self-referential structure
+;; including cycles.
 ;;
 ;; NOTE: The graphs are allowed to use any one of the following types:
 ;;
