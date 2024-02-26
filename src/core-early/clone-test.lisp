@@ -1524,7 +1524,9 @@
     t))
 
 ;;; ------------------------------------------------------------
-;; clone-deep cons
+;; clone-deep cons.
+;;
+;; NOTE: The graphs only use cons cells and identity-clone values.
 ;;; ------------------------------------------------------------
 
 (defun test-clone-deep-cons-0 ()
@@ -1778,6 +1780,15 @@
 
 ;; KEEP GOING
 
+;;; ------------------------------------------------------------
+;; clone-deep arrays.
+;;
+;; NOTE: The graphs only use arrays, cons cells, and identity-clone values.
+;;; ------------------------------------------------------------
+
+
+
+
 
 ;;; ------------------------------------------------------------
 ;; Aggregate deep cloning testing code.
@@ -1786,12 +1797,14 @@
 (defun test-clone-deep ()
   (format t "Deep clone tests.~%")
 
+  ;; identity values that are always themselves.
   (test-clone-deep-function-0)
   (test-clone-deep-character-0)
   (test-clone-deep-pathname-0)
   (test-clone-deep-symbol-0)
   (test-clone-deep-integer-0)
 
+  ;; The graphs are only cons cells and identity-like values.
   (test-clone-deep-cons-0)
   (test-clone-deep-cons-1)
   (test-clone-deep-cons-2)
@@ -1799,6 +1812,11 @@
   (test-clone-deep-cons-4)
   (test-clone-deep-cons-5)
   (test-clone-deep-cons-6)
+
+  ;; The arrays may hold references to themselves, to nested arrays, to cons
+  ;; cells, and to identity-like values.
+
+
 
   (format t "Deep clone tests passed!~%")
   t)

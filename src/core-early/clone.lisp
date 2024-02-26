@@ -799,7 +799,6 @@ copy."
   cloned-object)
 
 
-;;; KEEP GOING -------------------------------------------------------------
 
 
 ;;; ---------------------------------------------------------------------------
@@ -877,4 +876,23 @@ copy."
                   (explore-child-node n nr #'rplacd q)))))
 
   ;; Then we return the root to the newly cloned graph.
+  cloned-object)
+
+;;; KEEP GOING -------------------------------------------------------------
+
+;; deep-clone + graph-intention
+(defmethod clone-object progn ((cloned-object array)
+                               (original-object array)
+                               (policy deep-clone)
+                               intention
+                               (last-known-intention no-specific-intention)
+                               eql-map
+                               &key)
+
+  (format t "Clone-object...~%")
+  (dotimes (index (array-total-size original-object))
+    (setf (row-major-aref cloned-object index)
+          (clone (row-major-aref original-object index) policy intention
+                 eql-map)))
+
   cloned-object)
