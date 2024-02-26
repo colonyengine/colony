@@ -1298,6 +1298,27 @@
 ;; clone-shallow hash-table of ANY intention
 ;;; ------------------------------------------------------------
 
+;; helper to compare hash table properties.
+(defun assert-matching-hash-table-properties (clone original)
+  (let (;; Information from original hash table.
+        (o-count (hash-table-count original))
+        (o-test (hash-table-test original))
+        (o-size (hash-table-size original))
+        (o-rehash-size (hash-table-rehash-size original))
+        (o-rehash-threshold (hash-table-rehash-threshold original))
+        ;; Information from cloned hash table.
+        (c-count (hash-table-count clone))
+        (c-test (hash-table-test clone))
+        (c-size (hash-table-size clone))
+        (c-rehash-size (hash-table-rehash-size clone))
+        (c-rehash-threshold (hash-table-rehash-threshold clone)))
+    (assert (= c-count o-count))
+    (assert (eq c-test o-test))
+    (assert (= c-size o-size))
+    (assert (= c-rehash-size o-rehash-size))
+    (assert (= c-rehash-threshold o-rehash-threshold))
+    t))
+
 (defun test-clone-shallow-hash-table-0 ()
   (let* ((o (u:dict))
          (c (clone-shallow o)))
@@ -1307,6 +1328,8 @@
     (finish-output)
 
     (assert (not (eq c o)))
+
+    (assert-matching-hash-table-properties c o)
 
     (format t "Passed.~%")
     t))
@@ -1321,8 +1344,10 @@
     (format t "Cloned   | ~S~%" c)
     (finish-output)
 
-    ;; Wnsure it is newly allocated
+    ;; Ensure it is newly allocated
     (assert (not (eq c o)))
+
+    (assert-matching-hash-table-properties c o)
 
     ;; Ensure the values exist in the clone.
     (assert (u:href c key))
@@ -1342,6 +1367,8 @@
     (finish-output)
 
     (assert (not (eq c o)))
+
+    (assert-matching-hash-table-properties c o)
 
     ;; Ensure the values exist in the clone and the expected shared structure
     ;; too.
@@ -1778,7 +1805,6 @@
         (format t "Passed.~%")
         t))))
 
-;; KEEP GOING
 
 ;;; ------------------------------------------------------------
 ;; clone-deep arrays.
@@ -1786,7 +1812,476 @@
 ;; NOTE: The graphs only use arrays, cons cells, and identity-clone values.
 ;;; ------------------------------------------------------------
 
+(defun test-clone-deep-array-simple-string-0 ()
+  (let* (;; Type SIMPLE-STRING aka (SIMPLE-ARRAY CHARACTER *)
+         (o (make-sequence 'simple-string 8 :initial-element #\a))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
 
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be EQL to each other.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref o i))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-simple-bit-vector-0 ()
+  (let* (;; Type SIMPLE-BIT-VECTOR
+         (o (make-sequence '(vector bit) 8 :initial-element 0))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the bits will be EQL to each other.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref o i))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-bit-vector-0 ()
+  (let* (;; Type BIT-VECTOR
+         (o (make-array 8 :element-type 'bit
+                          :adjustable t
+                          :initial-element 0))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the bits will be EQL to each other.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref o i))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-unique-simple-array-0 ()
+  (let* (;; Type SIMPLE-ARRAY
+         (o (make-array 3 :element-type '(unsigned-byte 8)
+                          :initial-element 0))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the numbers will be EQL to each other.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref o i))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-shared-simple-array-0 ()
+  (let* ((item (cons 1 2))
+         ;; Type SIMPLE-ARRAY
+         (o (make-array 3 :element-type 'cons
+                          :initial-element item))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    (dotimes (i (array-total-size c))
+      (assert (not (eql (row-major-aref c i)
+                        (row-major-aref o i)))))
+
+    ;; Also verify the shared structure in copy.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref c (mod i (array-total-size c))))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-unique-simple-vector-0 ()
+  (let* (;; Type SIMPLE-VECTOR
+         (o (make-array 3 :initial-element 0))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the numbers (which are identity copied)
+    ;; are checked against the original).
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref o i))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-shared-simple-vector-0 ()
+  (let* ((item (cons 1 2))
+         ;; Type SIMPLE-VECTOR
+         (o (make-array 3 :initial-element item))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    (dotimes (i (array-total-size c))
+      (assert (not (eql (row-major-aref c i)
+                        (row-major-aref o i)))))
+
+    ;; Verify the shared structure in copy.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref c (mod i (array-total-size c))))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-unique-vector-0 ()
+  (let* (;; Type VECTOR
+         (o (make-array 3 :adjustable t
+                          :initial-element 0))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; NOTE: The numbers are identity cloned, so we can check against
+    ;; the original.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref o i))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-shared-vector-0 ()
+  (let* ((item (cons 1 2))
+         ;; Type VECTOR
+         (o (make-array 3 :adjustable t
+                          :initial-element item))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    (dotimes (i (array-total-size c))
+      (assert (not (eql (row-major-aref c i)
+                        (row-major-aref o i)))))
+
+    ;; Verify the shared structure in copy.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref c (mod i (array-total-size c))))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-unique-array-0 ()
+  (let* (;; Type ARRAY
+         (o (make-array '(3 4) :adjustable t
+                               :initial-element 0))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; NOTE: They are numbers which are identity copied, so we
+    ;; can check them against the original.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref o i))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-shared-array-0 ()
+  (let* ((item (cons 1 2))
+         ;; Type ARRAY
+         (o (make-array '(3 4) :adjustable t
+                               :initial-element item))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were shallow copied.
+    (dotimes (i (array-total-size c))
+      (assert (not (eql (row-major-aref c i)
+                        (row-major-aref o i)))))
+
+    ;; Verify the shared structure in copy.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref c (mod i (array-total-size c))))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-simple-base-string-0 ()
+  (let* (;; Type SIMPLE-BASE-STRING
+         (o (make-array 3 :element-type 'base-char
+                          :initial-element #\a))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; NOTE: Characters are identity copied, so we can just check
+    ;; against the original.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref o i))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-base-string-0 ()
+  (let* (;; Type BASE-STRING
+         (o (make-array 3 :element-type 'base-char
+                          :adjustable t
+                          :initial-element #\a))
+         ;; All intentions have the same behavior for arrays.
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were shallow copied.
+    ;; NOTE: We're checking against characters which are identity
+    ;; copied, so we can look at the original.
+    (dotimes (i (array-total-size c))
+      (assert (eql (row-major-aref c i)
+                   (row-major-aref o i))))
+
+    (format t "Passed.~%")
+    t))
+
+;;; ------------------------------------------------------------
+;; clone-deep hash-tables.
+;;
+;; NOTE: The graphs only use arrays, cons cells, and identity-clone values.
+;;; ------------------------------------------------------------
+
+
+
+;; KEEP GOING
+(defun test-clone-deep-hash-table-0 ()
+  "Can an empty hash table be deep copied and preserve its properties?"
+  (let* ((o (u:dict))
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    (assert (not (eq c o)))
+    (assert-matching-hash-table-properties c o)
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-hash-table-1 ()
+  "keys and values share no structure and are identity-policy style objects."
+  (let* ((k0 0)
+         (v0 1)
+         (k1 #\a)
+         (v1 #\b)
+         (k2 'foo)
+         (v2 'bar)
+         (k3 (lambda () 100))
+         (v3 (lambda () 200))
+         (k4 #P"/tmp/foo.txt")
+         (v4 #P"/tmp/bar.txt")
+         (o (u:dict #'eql k0 v0 k1 v1 k2 v2 k3 v3 k4 v4))
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated
+    (assert (not (eq c o)))
+    (assert-matching-hash-table-properties c o)
+
+    ;; Ensure the values are what they should be
+    (let ((o-key nil)
+          (o-value nil)
+          (c-key nil)
+          (c-value nil))
+
+      (u:do-hash (k v o)
+        (push k o-key)
+        (push v o-value))
+
+      (u:do-hash (k v c)
+        (push k c-key)
+        (push v c-value))
+
+      ;; The keys must be identical in the deep copy.
+      ;; This is because they are of identity-policy style values.
+      (assert (eql (first o-key) (first c-key)))
+      ;; The values must be identical in the deep copy.
+      ;; This is because they are of identity-policy style values.
+      (assert (eql (first o-value) (first c-value)))
+
+      (format t "Passed.~%")
+      t)))
+
+;; TODO: Broken.
+(defun test-clone-deep-hash-table-2 ()
+  (let* ((key (list 1 2 3))
+         (value (list 4 5 6))
+         (o (u:dict #'equal key value))
+         (c (clone-deep o)))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    (assert (not (eq c o)))
+    (assert-matching-hash-table-properties c o)
+
+    ;; Ensure the values exist in the clone and the expected shared structure
+    ;; too.
+    (assert (u:href c key))
+    (assert (equal (u:href c key) value))
+    (let ((o-key nil)
+          (o-value nil)
+          (c-key nil)
+          (c-value nil))
+
+      (u:do-hash (k v o)
+        (push k o-key)
+        (push v o-value))
+
+      (u:do-hash (k v c)
+        (push k c-key)
+        (push v c-value))
+
+      ;; The keys must be identical in the shallow copy.
+      (assert (eq (first o-key) (first c-key)))
+      ;; The values must be identical in the shallow copy.
+      (assert (eq (first o-value) (first c-value)))
+
+      (format t "Passed.~%")
+      t)))
+
+
+;;; ------------------------------------------------------------
+;; clone-deep complex combinatons of types and self-referential structure.
+;;
+;; NOTE: The graphs are allowed to use any one of the following types:
+;;
+;; numbers, characters, symbols, functions, pathnames, cons cells, arrays (of
+;; any type), and hash tables.
+;;
+;; It is intended to ensure that complex graphs of various objects that refer
+;; to each other can be correctly deep cloned.
+;;; ------------------------------------------------------------
 
 
 
@@ -1815,8 +2310,26 @@
 
   ;; The arrays may hold references to themselves, to nested arrays, to cons
   ;; cells, and to identity-like values.
+  (test-clone-deep-array-simple-string-0)
+  (test-clone-deep-array-simple-bit-vector-0)
+  (test-clone-deep-array-bit-vector-0)
+  (test-clone-deep-array-unique-simple-array-0)
+  (test-clone-deep-array-shared-simple-array-0)
+  (test-clone-deep-array-unique-simple-vector-0)
+  (test-clone-deep-array-shared-simple-vector-0)
+  (test-clone-deep-array-unique-vector-0)
+  (test-clone-deep-array-shared-vector-0)
+  (test-clone-deep-array-unique-array-0)
+  (test-clone-deep-array-shared-array-0)
+  (test-clone-deep-array-simple-base-string-0)
+  (test-clone-deep-array-base-string-0)
+  ;; TODO: Do more of the array ones related to graph/self-referential
+  ;; structure.
 
-
+  ;; These hash tables may use anything applicable as keys and values,
+  ;; including self-referential structure and cycles.
+  (test-clone-deep-hash-table-0)
+  (test-clone-deep-hash-table-1)
 
   (format t "Deep clone tests passed!~%")
   t)
@@ -1825,8 +2338,8 @@
 ;;; ---------------------------------------------------------------------------
 ;; NEW TYPE cloning tests.
 ;;
-;; Herin we construct a couple new types and make shallow and deep clones
-;; of them to ensure things work out.
+;; Herein we construct a couple new types and make shallow and deep clones of
+;; them to ensure things work out.
 ;;; ---------------------------------------------------------------------------
 
 

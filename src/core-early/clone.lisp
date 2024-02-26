@@ -805,6 +805,10 @@ copy."
 ;; Deep cloning of various types section
 ;;; ---------------------------------------------------------------------------
 
+;;; -------------------------------
+;; Deep Cloning cons cells.
+;;; -------------------------------
+
 ;; deep-clone + graph-intention
 (defmethod clone-object progn ((cloned-object cons)
                                (original-object cons)
@@ -878,7 +882,9 @@ copy."
   ;; Then we return the root to the newly cloned graph.
   cloned-object)
 
-;;; KEEP GOING -------------------------------------------------------------
+;;; -------------------------------
+;; Deep Cloning arrays.
+;;; -------------------------------
 
 ;; deep-clone + graph-intention
 (defmethod clone-object progn ((cloned-object array)
@@ -889,10 +895,28 @@ copy."
                                eql-map
                                &key)
 
-  (format t "Clone-object...~%")
   (dotimes (index (array-total-size original-object))
     (setf (row-major-aref cloned-object index)
           (clone (row-major-aref original-object index) policy intention
                  eql-map)))
 
+  cloned-object)
+
+;;; KEEP GOING -------------------------------------------------------------
+
+;;; -------------------------------
+;; Deep Cloning hash tables.
+;;; -------------------------------
+(defmethod clone-object progn ((cloned-object hash-table)
+                               (original-object hash-table)
+                               (policy deep-clone)
+                               intention
+                               (last-known-intention no-specific-intention)
+                               eql-map
+                               &key)
+  (maphash (lambda (key value)
+             (let ((cloned-key (clone key policy intention eql-map))
+                   (cloned-value (clone value policy intention eql-map)))
+               (setf (u:href cloned-object cloned-key) cloned-value)))
+           original-object)
   cloned-object)
