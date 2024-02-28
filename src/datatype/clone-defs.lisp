@@ -132,7 +132,13 @@ specified types of intention and their contextual use."))
    ;; Value: eql-map-entry instance.
    (%entry-table :accessor entry-table
                  :initarg :entry-table
-                 :initform (u:dict #'eql))))
+                 :initform (u:dict #'eql))
+   ;; An EQ hash table, present if stats are being kept.
+   ;; Key is a keyword symbol representing a statistics domain.
+   ;; Value is whatever you want it to be, often another hash table.
+   (%stats :accessor stats
+           :initarg :stats
+           :initform nil)))
 
 ;;; The CLONE API.
 
@@ -143,16 +149,18 @@ two values, the cloned object and the EQL-MAP. Clone policies of shallow-clone
 and deep-clone (and those derived from them) will cause memory to be allocated
 at least for OBJECT under most (but not all) circumstances."))
 
-(defgeneric clone-allocate (object)
+(defgeneric clone-allocate (object eql-map)
   (:documentation "This generic function must ONLY allocate a new instance of
 the passed in object. It does not have any responsibility to fill in any values
 beyond the required defaults for the allocation. Anything filled in by this
 generic function will almost certainly be overwritten by CLONE-OBJECT when the
 returned object is passed to that generic function. This function returns a
 newly allocated default instance of OBJECT that maintains any original
-contraints on the original OBJECT. Examples of constraints would be things like
-keeping the hash table test the same, or if an array is adjustable then the
-newly allocated version of it is also adjustable, etc, etc."))
+contraints on the original OBJECT. The EQL-MAP is used to maintain statistics
+about the allocation, such as how many of what type had been allocated.
+Examples of constraints would be things like keeping the hash table test the
+same, or if an array is adjustable then the newly allocated version of it is
+also adjustable, etc, etc."))
 
 ;;; The CLONE-OBJECT API.
 

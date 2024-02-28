@@ -170,6 +170,166 @@
                          (make-graph-intention) )
     (dump-eql-map eql-map)))
 
+;;; ---------------------------------------------------------------------------
+;; EQL-MAP helper functions for the tests.
+;;; ---------------------------------------------------------------------------
+(defun make-eql-map-with-stats ()
+  (make-eql-map :stats-copy t
+                :stats-allocation t))
+
+(defun eql-map-get-stats-domain (eql-map domain)
+  (u:when-let ((tbl (stats eql-map)))
+    (u:href tbl domain)))
+
+;; TODO: This is sort of cruddy code, and maybe should be moved into
+;; clone.lisp.
+(defun eql-map-dump-stats (eql-map)
+  (when (stats eql-map)
+    (format t "EQL-MAP statistics:~%"))
+
+  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :move)))
+    (format t " Move Stats:~%")
+    (if (plusp (hash-table-count tbl))
+        (u:do-hash (type-name num-moved tbl)
+          (format t "  ~8@A ~S~%" num-moved type-name))
+        (format t "  NONE~%")))
+
+  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :allocation)))
+    (format t " Allocation Stats:~%")
+    (if (plusp (hash-table-count tbl))
+        (u:do-hash (type-name num-allocated tbl)
+          (format t "  ~8@A ~S~%" num-allocated type-name))
+        (format t "  NONE.~%"))))
+
+(defun assert-eql-map-stats (eql-map &rest stat-specs)
+  "Check that the statistics described in the STAT-SPECS rest list in the
+specified domain are exactly as specified in the statistics table of the
+EQL-MAP instance and assert if not. The STAT-SPECS can be NIL or be a list of
+STAT-SPEC forms. The STAT-SPEC format may be one of these:
+
+ ;; Move is when a reference or object (like a fixnum) is SETFed in a plain way
+ ;; somewhere else.
+ (:move (type-name-0 number-0) ... (type-name-N number-N))
+
+ ;; Allocation is when an object is copied via memory allocation.
+ (:allocation (type-name-0 number-0) ... (type-name-N number-N))
+
+The first entry means that in domain-0 the type-name-0 key must have a
+statistic of exactly number-0 and so on. Any keys found in domain-0 that are
+not specified in the STAT-SPEC will cause an assertion to fail. If the same
+type-name-0 occurs in multiple pairs for the same domain, it is coalesced into
+a single pair with the summation of the numbers automatically before processing
+it.
+
+STAT-SPEC forms that look like this:
+
+ (:move)
+ (:allocation)
+
+indicate that that if the domain exists, there must be no statistic entries in
+it. If there are more or less keys in the domain than specified then assert.
+The function signals an assertion failure or an error condition (depending on
+why) if the stats don't match."
+
+  (labels ((signal-error (fmt &rest args)
+             (apply #'error
+                    (concatenate 'string "assert-eql-map-stats: " fmt) args))
+           (error-stats-found (domain)
+             (signal-error
+              "No stats expected for domain ~S, but some found!" domain))
+           (error-missing-stats (domain)
+             (signal-error
+              "Required statistics for domain ~S, but none found!" domain))
+           (error-wrong-stats (domain expected-stats found-stats)
+             (signal-error
+              "Required ~A statistics for domain ~S, but instead found ~A!"
+              expected-stats domain found-stats))
+           (error-missing-stat (domain key)
+             (signal-error
+              "Cannot find statistic key ~S in domain ~S!" key domain))
+           ;; NOTE: A helper to make human specification of the tests easier.
+           ;;
+           ;; The stat-specs might look like this:
+           ;; ((:move (cons 1) (cons 2))
+           ;;  (:allocation (hash-table 1) (cons 3)))
+           ;; and function coalesced ALL spec inside of a list of stat-specs
+           ;; into a form like:
+           ;; ((:move (cons 3))
+           ;;  (:allocation (hash-table 1) (cons 3)))
+           (coalesce-stat-specs (original-stat-specs)
+             (let ((coalesced-stat-specs nil)
+                   (stat-tbl (u:dict #'equal)))
+               (dolist (spec original-stat-specs)
+                 (destructuring-bind (domain . statistics) spec
+                   ;; sum all of the nums for each type-name
+                   (loop :for (tname num) :in statistics
+                         :do (u:ensure-gethash tname stat-tbl 0)
+                             (incf (u:href stat-tbl tname) num))
+                   ;; rebuild the newly coalesced spec and store it off
+                   (push (cons domain
+                               (let ((new-stats nil))
+                                 (u:do-hash (tname num stat-tbl)
+                                   (push (list tname num) new-stats))
+                                 (nreverse new-stats)))
+                         coalesced-stat-specs)
+                   ;; Get ready for next collection of statistics in the next
+                   ;; domain we process.
+                   (clrhash stat-tbl)))
+               coalesced-stat-specs)))
+
+    (let ((processed-domains (u:dict 'eq)))
+      ;; First, coalesce the statistics for each domain in the stat-specs
+      ;; into a new stat-specs form for each domain where each state is
+      ;; specified only once.
+      (let ((coalesced-stat-specs (coalesce-stat-specs stat-specs)))
+        ;; Then, process the coalesced version of stat-specs.
+        (dolist (stat-spec coalesced-stat-specs)
+          (destructuring-bind (domain . statistics) stat-spec
+            (ecase domain
+              ((:move :allocation)
+               ;; Record the fact we processed this domain
+               (setf (u:href processed-domains domain) t)
+
+               (let ((tbl (eql-map-get-stats-domain eql-map domain)))
+                 (cond
+                   ((null statistics)
+                    ;; Ensure there were no stats kept for this domain.
+                    (unless (or (null tbl)
+                                (zerop (hash-table-count tbl)))
+                      (error-stats-found domain)))
+                   (t
+                    ;; Ensure we have a table....
+                    (unless tbl
+                      (error-missing-stats domain))
+                    ;; ... and the right number of keys
+                    (let ((expected-stats (length statistics))
+                          (found-stats (hash-table-count tbl)))
+                      (unless (= expected-stats found-stats)
+                        (error-wrong-stats domain expected-stats found-stats)))
+                    ;; ...and now check that the keys are what we expect!
+                    (dolist (stat statistics)
+                      (destructuring-bind (type-name expected-num) stat
+                        (u:mvlet ((stat-value presentp (u:href tbl type-name)))
+                          (if presentp
+                              (assert (eql stat-value expected-num))
+                              ;; ...oops didn't find expected stat!
+                              (error-missing-stat domain type-name)))))))))))))
+
+      ;; Check to see if there are any non empty domains we didn't process.
+      ;; If so, that's an error.
+      (u:do-hash-keys (domain-key (stats eql-map))
+        (unless (u:href processed-domains domain-key)
+          (ecase domain-key
+            ((:move :allocation)
+             (unless
+                 (zerop (hash-table-count(u:href (stats eql-map) domain-key)))
+               (error-stats-found domain-key)))))))
+    t))
+
+(defun id-type (val)
+  "Return two values. The first value is VAL and the second value is the type
+of VAL."
+  (values val (type-of val)))
 
 ;;; ---------------------------------------------------------------------------
 ;; SHALLOW cloning tests.
@@ -181,16 +341,19 @@
 ;;; ------------------------------------------------------------
 
 (defun test-clone-shallow-function-0 ()
-  (let* (;; Type FUNCTION
-         (o #'cl:identity)
-         ;; NOTE: intention doesn't matter.
-         (c (clone-shallow o)))
+  (u:mvlet* (;; Type FUNCTION
+             (o o-type (id-type #'cl:identity))
+             ;; NOTE: intention doesn't matter.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
     (finish-output)
 
     (assert (eq o c))
+
+    (eql-map-dump-stats eql-map)
+    (assert-eql-map-stats eql-map `(:move (,o-type 1)))
 
     (format t "Passed.~%")
     t))
@@ -200,16 +363,19 @@
 ;;; ------------------------------------------------------------
 
 (defun test-clone-shallow-character-0 ()
-  (let* (;; Type CHARACTER
-         (o #\a)
-         ;; NOTE: intention doesn't matter.
-         (c (clone-shallow o)))
+  (u:mvlet* (;; Type CHARACTER aka STANDARD-CHAR
+             (o o-type (id-type #\a))
+             ;; NOTE: intention doesn't matter.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
     (finish-output)
 
     (assert (eql o c))
+
+    (eql-map-dump-stats eql-map)
+    (assert-eql-map-stats eql-map `(:move (,o-type 1)))
 
     (format t "Passed.~%")
     t))
@@ -219,16 +385,19 @@
 ;;; ------------------------------------------------------------
 
 (defun test-clone-shallow-pathname-0 ()
-  (let* (;; Type PATHNAME
-         (o #P"/tmp/foo.txt")
-         ;; NOTE: intention doesn't matter.
-         (c (clone-shallow o)))
+  (u:mvlet* (;; Type PATHNAME
+             (o o-type (id-type #P"/tmp/foo.txt"))
+             ;; NOTE: intention doesn't matter.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
     (finish-output)
 
     (assert (equal o c))
+
+    (eql-map-dump-stats eql-map)
+    (assert-eql-map-stats eql-map `(:move (,o-type 1)))
 
     (format t "Passed.~%")
     t))
@@ -238,16 +407,19 @@
 ;;; ------------------------------------------------------------
 
 (defun test-clone-shallow-symbol-0 ()
-  (let* (;; Type SYMBOL
-         (o 'a)
-         ;; NOTE: intention doesn't matter.
-         (c (clone-shallow o)))
+  (u:mvlet* (;; Type SYMBOL
+             (o o-type (id-type 'a))
+             ;; NOTE: intention doesn't matter.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
     (finish-output)
 
     (assert (eq o c))
+
+    (eql-map-dump-stats eql-map)
+    (assert-eql-map-stats eql-map `(:move (,o-type 1)))
 
     (format t "Passed.~%")
     t))
@@ -257,16 +429,19 @@
 ;;; ------------------------------------------------------------
 
 (defun test-clone-shallow-integer-0 ()
-  (let* (;; Type INTEGER
-         (o 42)
-         ;; NOTE: intention doesn't matter.
-         (c (clone-shallow o)))
+  (u:mvlet* (;; Type INTEGER
+             (o o-type (id-type 42))
+             ;; NOTE: intention doesn't matter.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
     (finish-output)
 
     (assert (eql o c))
+
+    (eql-map-dump-stats eql-map)
+    (assert-eql-map-stats eql-map `(:move (,o-type 1)))
 
     (format t "Passed.~%")
     t))
@@ -276,8 +451,10 @@
 ;;; ------------------------------------------------------------
 
 (defun test-clone-shallow-cons-0 ()
-  (let* ((o (cons 1 (make-hash-table)))
-         (c (clone-shallow-cons o)))
+  (u:mvlet* ((v0 v0-type (id-type 1))
+             (v1 v1-type (id-type (make-hash-table)))
+             (o o-type (id-type (cons v0 v1)))
+             (c eql-map (clone-shallow-cons o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -290,17 +467,22 @@
     (assert (eql (car c) (car o)))
     (assert (eq (cdr c) (cdr o)))
 
+    (eql-map-dump-stats eql-map)
+    (assert-eql-map-stats eql-map
+                          `(:move (,v0-type 1) (,v1-type 1))
+                          `(:allocation (,o-type 1)))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-shallow-cons-1 ()
-  (let* ((*print-circle* t)
-         (o (cons nil nil)))
+  (u:mvlet* ((*print-circle* t)
+             (o o-type (id-type (cons nil nil))))
     ;; Both car and cdr point to o.
     (setf (car o) o
           (cdr o) o)
 
-    (let ((c (clone-shallow-cons o)))
+    (u:mvlet ((c eql-map (clone-shallow-cons o (make-eql-map-with-stats))))
       (format t "Original | ~S~%" o)
       (format t "Cloned   | ~S~%" c)
       (finish-output)
@@ -315,6 +497,13 @@
       (assert (eq (car c) o))
       (assert (eq (cdr c) o))
 
+      (eql-map-dump-stats eql-map)
+      (assert-eql-map-stats eql-map
+                            ;; NOTE: the move of the original cons cell
+                            ;; reference into the cloned cons cell.
+                            `(:move (,o-type 2))
+                            `(:allocation (,o-type 1)))
+
       (format t "Passed (with expected surprise due to cycle).~%")
       t)))
 
@@ -324,8 +513,15 @@
 
 (defun test-clone-shallow-list-0 ()
   "Test the usual case of a proper list with interesting stuff in it."
-  (let* ((o (list 'a 1 (cons #\a #\b) (make-hash-table) (list 10 20 30)))
-         (c (clone-shallow-list o)))
+  (u:mvlet* ((v0 v0-type (id-type'a))
+             (v1 v1-type (id-type 1))
+             (v2 v2-type (id-type (cons #\a #\a)))
+             (v3 v3-type (id-type (make-hash-table)))
+             (v4 v4-type (id-type (list 10 20 30)))
+             ;; And the implicit end of the list value.
+             (list-end-type (type-of nil))
+             (o o-type (id-type (list v0 v1 v2 v3 v4)))
+             (c eql-map (clone-shallow-list o (make-eql-map-with-stats))))
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
 
@@ -372,15 +568,29 @@
     (assert (eq (nth 3 o) (nth 3 c)))
     (assert (eq (nth 4 o) (nth 4 o)))
 
+    (eql-map-dump-stats eql-map)
+    (assert-eql-map-stats eql-map
+                          `(:move (,v0-type 1)
+                                  (,v1-type 1)
+                                  (,v2-type 1)
+                                  (,v3-type 1)
+                                  (,v4-type 1)
+                                  (,list-end-type 1))
+                          `(:allocation (,o-type 5)))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-shallow-list-1 ()
   "Handle entries in the list which are identical."
-  (let* ((*print-circle* t)
-         (v (cons 1 2))
-         (o (list (cons 'a 'b) v v (cons 'c 'd)))
-         (c (clone-shallow-list o)))
+  (u:mvlet* ((*print-circle* t)
+             (v0 v0-type (id-type (cons 1 2)))
+             (v1 v1-type (id-type (cons 'a 'b)))
+             (v2 v2-type (id-type (cons 'c 'd)))
+             ;; And one for the end of the list.
+             (list-end-type (type-of nil))
+             (o o-type (id-type (list v1 v0 v0 v2)))
+             (c eql-map (clone-shallow-list o (make-eql-map-with-stats))))
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
     (finish-output)
@@ -388,6 +598,7 @@
     (assert (equal o c))
     (assert (every #'consp o))
     (assert (every #'consp c))
+    (assert (eq (second c) (third c)))
 
     ;; The list structure cons cells must be different.
     (loop :for o-cell :on o
@@ -399,19 +610,27 @@
           :for b :in c
           :do (assert (eq a b))) ;; NOTE: expecting all cons cells in list.
 
+    (eql-map-dump-stats eql-map)
+    (assert-eql-map-stats eql-map
+                          `(:move (,v0-type 2)
+                                  (,v1-type 1)
+                                  (,v2-type 1)
+                                  (,list-end-type 1))
+                          `(:allocation (,o-type 4)))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-shallow-list-2 ()
   "Handle a cons cell that references itself in both car and cdr."
-  (let* ((*print-circle* t)
-         (o (cons nil nil)))
+  (u:mvlet* ((*print-circle* t)
+             (o o-type (id-type (cons nil nil))))
     ;; A single cons cell representing a list that has both itself as the first
     ;; element and a cycle for the rest of the list.
     (setf (car o) o
           (cdr o) o)
 
-    (let ((c (clone-shallow-list o)))
+    (u:mvlet ((c eql-map (clone-shallow-list o (make-eql-map-with-stats))))
       (format t "Original | ~S~%" o)
       (format t "Cloned   | ~S~%" c)
       (finish-output)
@@ -426,52 +645,84 @@
       ;; But notice the cdr is pointing into the cloned list structure.
       (assert (eq (cdr c) c))
 
+      (eql-map-dump-stats eql-map)
+      (assert-eql-map-stats eql-map
+                            ;; The car of the clone is a move of the original
+                            ;; cons cell.
+                            `(:move (,o-type 1))
+                            ;; But the cons cell itself was cloned.
+                            `(:allocation (,o-type 1)))
+
       (format t "Passed with expected surprise in list structure.~%")
       t)))
 
 (defun test-clone-shallow-list-3 ()
   "Cdr of last cons cell points to head of list cons in a cycle."
-  (let* ((*print-circle* t)
-         (o (list 1 2 3 nil)))
+  (u:mvlet* ((*print-circle* t)
+             (v0 v0-type (id-type 1))
+             (v1 v1-type (id-type 2))
+             (v2 v2-type (id-type 3))
+             (v3 v3-type (id-type 4))
+             (o o-type (id-type (list v0 v1 v2 v3))))
     ;; Last cons cell cdr points to head of list in a cycle.
-    (setf (cdddr o) o)
+    (setf (cddddr o) o)
     (format t "Original | ~S~%" o)
     (finish-output)
 
-    (let ((c (clone-shallow-list o)))
+    (u:mvlet ((c eql-map (clone-shallow-list o (make-eql-map-with-stats))))
       (format t "Cloned   | ~S~%" c)
       (finish-output)
 
-      (assert (eq o (cdddr o)))
-      (assert (eq c (cdddr c)))
+      (assert (eq o (cddddr o)))
+      (assert (eq c (cddddr c)))
       (assert (not (eq o c)))
-      (assert (not (eq (cdddr o) (cdddr c))))
+      (assert (not (eq (cddddr o) (cdddr c))))
+
+      (eql-map-dump-stats eql-map)
+      (assert-eql-map-stats eql-map
+                            `(:move (,v0-type 1)
+                                    (,v1-type 1)
+                                    (,v2-type 1)
+                                    (,v3-type 1))
+                            `(:allocation (,o-type 4)))
 
       (format t "Passed.~%")
       t)))
 
 (defun test-clone-shallow-list-4 ()
   "Cdr of last cons cell points to middle of list cons in a cycle."
-  (let* ((*print-circle* t)
-         (o (list 1 2 3 nil)))
+  (u:mvlet* ((*print-circle* t)
+             (v0 v0-type (id-type 1))
+             (v1 v1-type (id-type 2))
+             (v2 v2-type (id-type 3))
+             (v3 v3-type (id-type 4))
+             (o o-type (id-type (list v0 v1 v2 v3))))
     ;; Last cons cell cdr points to middle of list in a cycle.
-    (setf (cdddr o) (cdr o))
+    (setf (cddddr o) (cdr o))
     (format t "Original | ~S~%" o)
     (finish-output)
 
-    (let ((c (clone-shallow-list o)))
+    (u:mvlet ((c eql-map (clone-shallow-list o (make-eql-map-with-stats))))
       (format t "Cloned   | ~S~%" c)
       (finish-output)
 
-      (assert (eq (cdr o) (cdddr o)))
-      (assert (eq (cdr c) (cdddr c)))
+      (assert (eq (cdr o) (cddddr o)))
+      (assert (eq (cdr c) (cddddr c)))
       (assert (not (eq o c)))
-      (assert (not (eq (cdddr o) (cdddr c))))
+      (assert (not (eq (cddddr o) (cddddr c))))
       (assert (not (eq (cdr o) (cdr c))))
+
+      (eql-map-dump-stats eql-map)
+      (assert-eql-map-stats eql-map
+                            `(:move (,v0-type 1)
+                                    (,v1-type 1)
+                                    (,v2-type 1)
+                                    (,v3-type 1))
+                            `(:allocation (,o-type 4)))
+
 
       (format t "Passed.~%")
       t)))
-
 
 ;;; ------------------------------------------------------------
 ;; clone-shallow cons of ALIST intention
@@ -479,15 +730,34 @@
 
 (defun test-clone-shallow-alist-0 ()
   "Test a basic well formatted alist in the common form."
-  (let* ((o (list (cons 'a #\a)
-                  (cons 'b 'foo)
-                  (cons 'c 3)
-                  (cons 'd (make-hash-table))
-                  (cons 'e (list 1 2 3))
-                  (cons #\a #\b)
-                  (cons (cons 1 2) (make-array 4))
-                  (cons (make-hash-table) (lambda (x) x))))
-         (c (clone-shallow-alist o)))
+  (u:mvlet* ((v0 v0-type (id-type 'a))
+             (v1 v1-type (id-type #\a))
+             (v2 v2-type (id-type 'b))
+             (v3 v3-type (id-type 'foo))
+             (v4 v4-type (id-type 'c))
+             (v5 v5-type (id-type 3))
+             (v6 v6-type (id-type 'd))
+             (v7 v7-type (id-type (make-hash-table)))
+             (v8 v8-type (id-type 'e))
+             (v9 v9-type (id-type (cons 100 200)))
+             (v10 v10-type (id-type #\a))
+             (v11 v11-type (id-type #\b))
+             (v12 v12-type (id-type (cons 1 2)))
+             (v13 v13-type (id-type (make-array 4)))
+             (v14 v14-type (id-type (make-hash-table)))
+             (v15 v15-type (id-type (lambda (x) x)))
+             (list-end-type (type-of nil))
+             (o o-type
+                (id-type (list (cons v0 v1)
+                               (cons v2 v3)
+                               (cons v4 v5)
+                               (cons v6 v7)
+                               (cons v8 v9)
+                               (cons v10 v11)
+                               (cons v12 v13)
+                               (cons v14 v15))))
+             (c eql-map (clone-shallow-alist o (make-eql-map-with-stats))))
+
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
 
@@ -507,8 +777,32 @@
           :do (assert (and (eql (car o-alist-cell) (car c-alist-cell))
                            (eql (cdr o-alist-cell) (cdr c-alist-cell)))))
 
+    (eql-map-dump-stats eql-map)
+    (assert-eql-map-stats eql-map
+                          `(:move (,v0-type 1)
+                                  (,v1-type 1)
+                                  (,v2-type 1)
+                                  (,v3-type 1)
+                                  (,v4-type 1)
+                                  (,v5-type 1)
+                                  (,v6-type 1)
+                                  (,v7-type 1)
+                                  (,v8-type 1)
+                                  (,v9-type 1)
+                                  (,v10-type 1)
+                                  (,v11-type 1)
+                                  (,v12-type 1)
+                                  (,v13-type 1)
+                                  (,v14-type 1)
+                                  (,v15-type 1)
+                                  (,list-end-type 1))
+                          `(:allocation (,o-type 16)))
+
     (format t "Passed.~%")
     t))
+
+;; KEEP GOING add in more strenuous stats checking.
+;; KEEP GOING adding in eql-map statistics.
 
 (defun test-clone-shallow-alist-1 ()
   "Test reconstruction of shared reference kv cons cells."
@@ -2204,28 +2498,20 @@
     (assert (not (eq c o)))
     (assert-matching-hash-table-properties c o)
 
-    ;; Ensure the values are what they should be
-    (let ((o-key nil)
-          (o-value nil)
-          (c-key nil)
-          (c-value nil))
-
+    ;; Ensure the keys values are what they should be.  These tests are a
+    ;; little odd, but transitively, they do the intention of equality of the
+    ;; source keys and values between themselves and their initial values in
+    ;; the LET bindings. It is written like this because the hash tables can
+    ;; iterate over the key/value pairs in any order.
+    (let ((all-keys (list k0 k1 k2 k3 k4))
+          (all-values (list v0 v1 v2 v3 v4)))
       (u:do-hash (k v o)
-        (push k o-key)
-        (push v o-value))
+        (assert (some (u:curry 'eql k) all-keys))
+        (assert (some (u:curry 'eql v) all-values)))
 
       (u:do-hash (k v c)
-        (push k c-key)
-        (push v c-value))
-
-      ;; Check that the keys and values are correct, given that they are
-      ;; identity-policy values.
-      (loop :for ok :in o-key
-            :for ov :in o-value
-            :for ck :in c-key
-            :for cv :in c-value
-            :do (assert (eql ck ok))
-                (assert (eql cv ov)))
+        (assert (some (u:curry 'eql k) all-keys))
+        (assert (some (u:curry 'eql v) all-values)))
 
       (format t "Passed.~%")
       t)))
@@ -2237,7 +2523,8 @@
   (let* ((key (list 1 2 3))
          (value (list 4 5 6))
          (o (u:dict #'equal key value))
-         (c (clone-deep o)))
+         (eql-map (make-eql-map :stats-alloc (u:dict #'equal)))
+         (c (clone-deep o eql-map)))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
