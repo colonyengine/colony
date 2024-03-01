@@ -619,14 +619,6 @@ copy."
     ;; Return the list structure entry point!
     cloned-object))
 
-
-
-
-
-
-;; KEEP GOING (add in statistics for :move and such) here and below.
-
-
 ;; shallow-clone + alist-intention
 ;;
 ;; Shallow copy the list structure and the consp in the car spot of each list
@@ -785,9 +777,12 @@ copy."
 
                      ;; If not a cons, we just copy the reference to
                      ;; express the shallow clone of the original leaf value.
-                     (funcall setter
-                              (target parent-eql-map-entry)
-                              child))
+                     ;; Do _not_ put the leaf into the queue.
+                     (progn
+                       (eql-map-record eql-map child :move)
+                       (funcall setter
+                                (target parent-eql-map-entry)
+                                child)))
 
                  ;; NOTE: This case catches certain situations like a graph
                  ;; consisting of a single cons cell pointing to itself, or
@@ -795,9 +790,9 @@ copy."
                  ;; multiple roots into it. This ensure in those cases that the
                  ;; graph edge in the cloned graph is present.
                  ;;
-                 ;; If the child had been explored already, then update cloned
-                 ;; parents's car/cdr to the cloned target to preserve the
-                 ;; graph structure of the clone and we're done with the
+                 ;; Since the child had been explored already, update the
+                 ;; cloned parents's car/cdr to the cloned target to preserve
+                 ;; the graph structure of the clone and we're done with the
                  ;; car/cdr edge. The BFS graph is keeping track of NODES that
                  ;; have been explored, not edges! So we ensure it is
                  ;; preserved.
@@ -837,8 +832,10 @@ copy."
                                &key)
 
   (dotimes (index (array-total-size original-object))
-    (setf (row-major-aref cloned-object index)
-          (row-major-aref original-object index)))
+    (let ((original-object-at-index (row-major-aref original-object index)))
+      (eql-map-record eql-map original-object-at-index :move)
+      (setf (row-major-aref cloned-object index)
+            original-object-at-index)))
 
   cloned-object)
 
@@ -859,6 +856,8 @@ copy."
                                &key)
 
   (u:do-hash (key value original-object)
+    (eql-map-record eql-map key :move)
+    (eql-map-record eql-map value :move)
     (setf (u:href cloned-object key)
           value))
 
@@ -874,6 +873,11 @@ copy."
 ;;; -------------------------------
 ;; Deep Cloning cons cells.
 ;;; -------------------------------
+
+
+;; KEEP GOING (add in statistics for :move and such) here and below.
+;; This change is done, but finish testing it with the clone-test unit tests.
+
 
 ;; deep-clone + graph-intention
 (defmethod clone-object progn ((cloned-object cons)
