@@ -63,18 +63,30 @@
 (defun make-eql-map-entry (&rest args)
   (apply #'make-instance 'eql-map-entry args))
 
-(defun make-eql-map (&key stats-copy stats-allocation)
+(defun make-eql-map (&key stats-move-original
+                       stats-move-clone
+                       stats-allocation)
   (let* (;; Disjunction to let us know how to enable any stats.
-         (enable-stats (or stats-copy stats-allocation))
+         (enable-stats (or stats-move-original
+                           stats-move-clone
+                           stats-allocation))
          (stats-table (when enable-stats (u:dict #'eq))))
     ;; initialize each of the requested domains...
     (when stats-table
-      (when stats-copy
-        ;; a table to keep track of moved references/values via setf.
-        ;; This is the :move domain.
+      (when stats-move-original
+        ;; a table to keep track of moved references/values from original
+        ;; data source into a cloned source.
+        ;; This is the :move-original domain.
         ;; Key: type-of form
         ;; Value: integer count of copies
-        (setf (u:href stats-table :move) (u:dict #'equal)))
+        (setf (u:href stats-table :move-original) (u:dict #'equal)))
+      (when stats-move-clone
+        ;; a table to keep track of moved references/values from cloned
+        ;; objects to other cloned objects via setf.
+        ;; This is the :move-cloned domain.
+        ;; Key: type-of form
+        ;; Value: integer count of copies
+        (setf (u:href stats-table :move-clone) (u:dict #'equal)))
       (when stats-allocation
         ;; a table to keep track of actual memory allocations.
         ;; This is the :allocation domain.
@@ -128,14 +140,18 @@ defaults to 1.
 
 The event has this meaning for each domain:
 
- :move
-   EVENT is an integer representing how many moves occurred.
+ :move-original
+   EVENT is an integer representing how many moves of originally encountered
+   data happened.
+ :move-clone
+   EVENT is an integer representing how many moves of cloned data to other
+   cloned data happened.
  :allocation
    EVENT is an integer representing how many allocations occurred."
 
   (u:when-let ((stats (stats eql-map)))
     (ecase domain
-      ((:allocation :move)
+      ((:allocation :move-original :move-clone)
        ;; These domains keep data the exact same way.
        (u:when-let ((alloc-table (u:href stats domain)))
          (let ((key (type-of cloned-object)))
@@ -239,8 +255,14 @@ copy."
 ;;
 ;;; NOTE: In most places where it is intended to so an identity clone, I've not
 ;;; actually written the CLONE call and instead just used the raw value.  This
-;;; is identical behavior and faster because CLONE isn't being resolved and
-;;; used like cl:identity. However, we include it for when you DO need it.
+;;; is because deep cloning things like large single-float arrays would be
+;;; prohibitively expensive.
+;;;
+;;; NOTE: We also only store in eql-map the graph of allocatable things and how
+;;; they reference each other. Value-like things which are not allocatable
+;;; like symbols, functions, numbers, etc, are not represented in the eql-map
+;;; graph. This is to present large slowdown and huge memory use when cloning
+;;; large arrays of single-floats and similar.
 
 ;;; -------------------------------
 ;; catch all for clone-object stuff we haven't implemented.
@@ -290,6 +312,20 @@ copy."
                                map-str)))
       (error output-str))))
 
+(defmethod allocatablep (object)
+  "The default response to any class of OBJECT is that it is not allocatable.
+Various classes must be whitelisted into the cloning system."
+  nil)
+
+(defmethod allocatablep ((object cons))
+  t)
+
+(defmethod allocatablep ((object array))
+  t)
+
+(defmethod allocatablep ((object hash-table))
+  t)
+
 
 ;;; -------------------------------
 ;; Cloning low level value-like non-collection-like things.
@@ -307,13 +343,25 @@ copy."
 ;; Pathnames,
 ;; and other atomic things which are not actually a collections.
 ;;; -------------------------------
-;; TODO: Fixup to record statistics.
 (defmethod clone (object (policy identity-clone) intention eql-map &key)
+  ;; Anything not allocatable is automatically returned and the most minor
+  ;; statistics kept.
+  (unless (allocatablep object)
+    (eql-map-record eql-map object :move-original)
+    (return-from clone (values  object eql-map)))
+
+  ;; For anything allocatable, we make a mark in the eql-map over it to keep
+  ;; better statistics about it.
   (let ((eql-map-entry (eql-map-mark-visited eql-map object)))
-    (values (if (transition-p eql-map-entry)
-                (target eql-map-entry)
-                (eql-map-mark-target eql-map object object intention))
-            eql-map)))
+    (values
+     (cond
+       ((transition-p eql-map-entry)
+        (eql-map-record eql-map (target eql-map-entry) :move-clone)
+        (target eql-map-entry))
+       (t
+        (eql-map-record eql-map object :move-original)
+        (eql-map-mark-target eql-map object object intention)))
+     eql-map)))
 
 ;;; -------------------------------
 ;; Cloning cons/collection/array/etc like things which require actually new
@@ -322,13 +370,33 @@ copy."
 ;;; -------------------------------
 (defmethod clone (object (policy allocating-clone) intention eql-map
                   &key)
+
+  ;; Anything not allocatable is automatically returned as an identity clone.
+  (unless (allocatablep object)
+    (eql-map-record eql-map object :move-original)
+    (return-from clone (values object eql-map)))
+
+  ;; Otherwise it'll get maybe duplicated and visited in the eql-map graph.
+
   ;; Note: we may have already visited it once in some other control path.
   (let ((eql-map-entry (eql-map-mark-visited eql-map object)))
     (if (transition-p eql-map-entry)
         ;; We already have a transition...
         (if (intention= intention (intent eql-map-entry))
             ;; then good to go, we can just reuse what we have!
-            (values (target eql-map-entry) eql-map)
+            (progn
+              (let ((the-value (target eql-map-entry)))
+                ;; NOTE: The first time we likely recorded the cloning of the
+                ;; target into SOME domain, but subsequent times will just be
+                ;; moves since we aren't going to (potentially) allocate it
+                ;; again. This might be a little confusing to people looking at
+                ;; the stats since a (clone-deep (list #1=(cons 1 2) #1# #1#
+                ;; #1#) will have 4 CONS allocations for the list structure
+                ;; plus 1 CONS allocation for the first element, and then 3
+                ;; CONS moves (among other minor stats) for reusing the same
+                ;; reference in the later list structure.
+                (eql-map-record eql-map the-value :move-clone)
+                (values the-value eql-map)))
             ;; else we don't allocate any memory, but allow a "redo" of the
             ;; cloning of the data by picking the appropriate clone-object.
             (let ((last-intention (intent eql-map-entry)))
@@ -356,29 +424,36 @@ copy."
 ;; Allocating different objects section
 ;;; ---------------------------------------------------------------------------
 
+;; Everything in the clone system beyond the types supported in this file must
+;; be whitelisted.
+(defmethod clone-allocate (object (eql-map eql-map))
+  (let ((object-type (type-of object)))
+    (error "clone-allocate: No allocation decision for object of type ~S.~%"
+           object-type)))
+
 ;; Allocating a function just returns itself
 (defmethod clone-allocate ((object function) (eql-map eql-map))
-  (eql-map-record eql-map object :move)
+  (eql-map-record eql-map object :move-original)
   object)
 
 ;; Allocating a character just returns itself
 (defmethod clone-allocate ((object character) (eql-map eql-map))
-  (eql-map-record eql-map object :move)
+  (eql-map-record eql-map object :move-original)
   object)
 
 ;; Allocating a pathname (for now) just returns itself
 (defmethod clone-allocate ((object pathname) (eql-map eql-map))
-  (eql-map-record eql-map object :move)
+  (eql-map-record eql-map object :move-original)
   object)
 
 ;; Allocating a symbol just returns itself
 (defmethod clone-allocate ((object symbol) (eql-map eql-map))
-  (eql-map-record eql-map object :move)
+  (eql-map-record eql-map object :move-original)
   object)
 
 ;; Allocating a number just returns itself (catches the numeric tower).
 (defmethod clone-allocate ((object number) (eql-map eql-map))
-  (eql-map-record eql-map object :move)
+  (eql-map-record eql-map object :move-original)
   object)
 
 ;; How to allocate a new cons cell.
@@ -531,8 +606,8 @@ copy."
                                &key)
 
   (destructuring-bind (l . r) original-object
-    (eql-map-record eql-map l :move)
-    (eql-map-record eql-map r :move)
+    (eql-map-record eql-map l :move-original)
+    (eql-map-record eql-map r :move-original)
     (setf (car cloned-object) l
           (cdr cloned-object) r))
   cloned-object)
@@ -554,12 +629,12 @@ copy."
     ;; We always shallow copy the car no matter what it was.
     ;; NOTE: if the car points back into the list structure...too bad use
     ;; deep copy for such a thing.
-    (eql-map-record eql-map l :move)
+    (eql-map-record eql-map l :move-original)
     (setf (car cloned-object) l)
 
     ;; If the cdr isn't a cons (hence an improper list), the answer is easy.
     (unless (consp r)
-      (eql-map-record eql-map r :move)
+      (eql-map-record eql-map r :move-original)
       (setf (cdr cloned-object) r)
       (return-from clone-object cloned-object))
 
@@ -580,8 +655,11 @@ copy."
                     ;; transitioned item and call it a day for cloning the
                     ;; list.
                     (if (intention= intention (intent eql-map-entry))
-                        (progn (setf (cdr end) (target eql-map-entry))
-                               (return))
+                        (progn
+                          (eql-map-record eql-map (target eql-map-entry)
+                                          :move-clone)
+                          (setf (cdr end) (target eql-map-entry))
+                          (return))
                         (error "Unsupported list intention pair: ~A and ~A"
                                intention (intent eql-map-entry)))
 
@@ -598,13 +676,13 @@ copy."
                       ;; doing a shallow copy. If the car points into the
                       ;; original list structure, you're going to have a bad
                       ;; time because you should use deep copy for that.
-                      (eql-map-record eql-map l-original :move)
+                      (eql-map-record eql-map l-original :move-original)
                       (setf (car new-cell) l-original)
 
                       ;; For the cdr, we could discover that we have an
                       ;; improper list.
                       (unless list-continues-p
-                        (eql-map-record eql-map r-original :move)
+                        (eql-map-record eql-map r-original :move-original)
                         (setf (cdr new-cell) r-original))
 
                       ;; Finally transition the original-cell to the new-cell.
@@ -641,7 +719,7 @@ copy."
                (clone-shallow-cons maybe-kv-cell eql-map)
                ;; Otherwise, just use the non-cons object.
                (progn
-                 (eql-map-record eql-map maybe-kv-cell :move)
+                 (eql-map-record eql-map maybe-kv-cell :move-original)
                  maybe-kv-cell))))
 
     (destructuring-bind (l . r) original-object
@@ -653,7 +731,7 @@ copy."
 
       ;; If the cdr isn't a cons (hence an improper list), the answer is easy.
       (unless (consp r)
-        (eql-map-record eql-map r :move)
+        (eql-map-record eql-map r :move-original)
         (setf (cdr cloned-object) r)
         (return-from clone-object cloned-object))
 
@@ -674,8 +752,11 @@ copy."
                       ;; transitioned item and call it a day for cloning the
                       ;; list.
                       (if (intention= intention (intent eql-map-entry))
-                          (progn (setf (cdr end) (target eql-map-entry))
-                                 (return))
+                          (progn
+                            (eql-map-record eql-map (target eql-map-entry)
+                                            :move-clone)
+                            (setf (cdr end) (target eql-map-entry))
+                            (return))
                           (error "Unsupported list intention pair: ~A and ~A"
                                  intention (intent eql-map-entry)))
 
@@ -704,7 +785,7 @@ copy."
                         ;; For the cdr, we could discover that we have an
                         ;; improper list.
                         (unless list-continues-p
-                          (eql-map-record eql-map r-original :move)
+                          (eql-map-record eql-map r-original :move-original)
                           (setf (cdr new-cell) r-original))
 
                         ;; Prepare to keep traversing the list structure if
@@ -779,7 +860,7 @@ copy."
                      ;; express the shallow clone of the original leaf value.
                      ;; Do _not_ put the leaf into the queue.
                      (progn
-                       (eql-map-record eql-map child :move)
+                       (eql-map-record eql-map child :move-original)
                        (funcall setter
                                 (target parent-eql-map-entry)
                                 child)))
@@ -796,9 +877,16 @@ copy."
                  ;; car/cdr edge. The BFS graph is keeping track of NODES that
                  ;; have been explored, not edges! So we ensure it is
                  ;; preserved.
-                 (funcall setter
-                          (target parent-eql-map-entry)
-                          (target child-eql-map-entry))))))
+
+                 (progn
+                   ;; We KNOW that if it is in the eql-map table, it must have
+                   ;; been cloned--because if how we treat allocatablep
+                   ;; objects--so we're moving a known cloned reference here.
+                   (eql-map-record eql-map (target child-eql-map-entry)
+                                   :move-clone)
+                   (funcall setter
+                            (target parent-eql-map-entry)
+                            (target child-eql-map-entry)))))))
 
     ;; Breadth First Search the graph, cloning the cons structure and the
     ;; graph structure
@@ -833,7 +921,7 @@ copy."
 
   (dotimes (index (array-total-size original-object))
     (let ((original-object-at-index (row-major-aref original-object index)))
-      (eql-map-record eql-map original-object-at-index :move)
+      (eql-map-record eql-map original-object-at-index :move-original)
       (setf (row-major-aref cloned-object index)
             original-object-at-index)))
 
@@ -856,8 +944,8 @@ copy."
                                &key)
 
   (u:do-hash (key value original-object)
-    (eql-map-record eql-map key :move)
-    (eql-map-record eql-map value :move)
+    (eql-map-record eql-map key :move-original)
+    (eql-map-record eql-map value :move-original)
     (setf (u:href cloned-object key)
           value))
 
@@ -873,11 +961,6 @@ copy."
 ;;; -------------------------------
 ;; Deep Cloning cons cells.
 ;;; -------------------------------
-
-
-;; KEEP GOING (add in statistics for :move and such) here and below.
-;; This change is done, but finish testing it with the clone-test unit tests.
-
 
 ;; deep-clone + graph-intention
 (defmethod clone-object progn ((cloned-object cons)
@@ -900,7 +983,7 @@ copy."
                  ;; and we keep cloning and exploring, or it isn't and we're
                  ;; done with that path (and deep copy the value!)
                  (if (consp child)
-                     (let ((new-child (cons nil nil)))
+                     (let ((new-child (clone-allocate child eql-map)))
                        ;; Visit child
                        (eql-map-mark-visited eql-map child)
                        ;; Generate the clone target edge.
@@ -926,15 +1009,15 @@ copy."
                  ;; multiple roots into it. This ensure in those cases that the
                  ;; graph edge in the cloned graph is present.
                  ;;
-                 ;; If the child had been explored already, then update cloned
-                 ;; parents's car/cdr to the cloned target to preserve the
-                 ;; graph structure of the clone and we're done with the
-                 ;; car/cdr edge. The BFS graph is keeping track of NODES that
-                 ;; have been explored, not edges! So we ensure it is
-                 ;; preserved.
-                 (funcall setter
-                          (target parent-eql-map-entry)
-                          (target child-eql-map-entry))))))
+                 ;; We KNOW that the target had to be an allocatablep object to
+                 ;; even be in the eql-map, so this is always a :move-clone
+                 ;; here.
+                 (progn
+                   (eql-map-record eql-map (target child-eql-map-entry)
+                                   :move-clone)
+                   (funcall setter
+                            (target parent-eql-map-entry)
+                            (target child-eql-map-entry)))))))
 
     ;; Breadth First Search the graph, cloning the cons structure and the
     ;; graph structure
@@ -977,6 +1060,11 @@ copy."
 ;; Deep Cloning hash tables.
 ;;; -------------------------------
 
+
+;; KEEP GOING (add in statistics for :move and such) here and below.
+;; This change is done, but finish testing it with the clone-test unit tests.
+
+
 ;; deep-clone + graph-intention
 (defmethod clone-object progn ((cloned-object hash-table)
                                (original-object hash-table)
@@ -985,9 +1073,8 @@ copy."
                                (last-known-intention no-specific-intention)
                                eql-map
                                &key)
-  (maphash (lambda (key value)
-             (let ((cloned-key (clone key policy intention eql-map))
-                   (cloned-value (clone value policy intention eql-map)))
-               (setf (u:href cloned-object cloned-key) cloned-value)))
-           original-object)
+  (u:do-hash (key value original-object)
+    (let ((cloned-key (clone key policy intention eql-map))
+          (cloned-value (clone value policy intention eql-map)))
+      (setf (u:href cloned-object cloned-key) cloned-value)))
   cloned-object)

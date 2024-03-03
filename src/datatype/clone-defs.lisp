@@ -149,6 +149,10 @@ two values, the cloned object and the EQL-MAP. Clone policies of shallow-clone
 and deep-clone (and those derived from them) will cause memory to be allocated
 at least for OBJECT under most (but not all) circumstances."))
 
+(defgeneric allocatablep (object)
+  (:documentation "Return T if the object is an allocatable entity,
+NIL otherwise."))
+
 (defgeneric clone-allocate (object eql-map)
   (:documentation "This generic function must ONLY allocate a new instance of
 the passed in object. It does not have any responsibility to fill in any values

@@ -172,7 +172,8 @@
 ;; EQL-MAP helper functions for the tests.
 ;;; ---------------------------------------------------------------------------
 (defun make-eql-map-with-stats ()
-  (make-eql-map :stats-copy t
+  (make-eql-map :stats-move-original t
+                :stats-move-clone t
                 :stats-allocation t))
 
 (defun eql-map-get-stats-domain (eql-map domain)
@@ -182,18 +183,30 @@
 ;; TODO: This is sort of cruddy code, and maybe should be moved into
 ;; clone.lisp.
 (defun eql-map-dump-stats (eql-map)
-  (when (stats eql-map)
-    (format t "EQL-MAP statistics:~%"))
+  (unless (stats eql-map)
+    (format t "EQL-MAP: No stats available.")
+    (return-from eql-map-dump-stats nil))
 
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :move)))
-    (format t " Move Stats:~%")
+  (format t "EQL-MAP statistics:~%")
+  (format t " Visited Allocatable Nodes: ~A~%"
+          (hash-table-count (entry-table eql-map)))
+
+  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :move-original)))
+    (format t " Domain :move-original~%")
+    (if (plusp (hash-table-count tbl))
+        (u:do-hash (type-name num-moved tbl)
+          (format t "  ~8@A ~S~%" num-moved type-name))
+        (format t "  ~8@A~%" "NONE")))
+
+  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :move-clone)))
+    (format t " Domain :move-clone~%")
     (if (plusp (hash-table-count tbl))
         (u:do-hash (type-name num-moved tbl)
           (format t "  ~8@A ~S~%" num-moved type-name))
         (format t "  ~8@A~%" "NONE")))
 
   (u:when-let ((tbl (eql-map-get-stats-domain eql-map :allocation)))
-    (format t " Allocation Stats:~%")
+    (format t " Domain :allocation~%")
     (if (plusp (hash-table-count tbl))
         (u:do-hash (type-name num-allocated tbl)
           (format t "  ~8@A ~S~%" num-allocated type-name))
@@ -273,8 +286,8 @@ it. If there are more or less keys in the domain than specified then fail."
              (signal-error
               :error-wrong-stat
               domain
-              "In domain ~S, the stat ~S was expected to have value ~A, but actually had value ~A"
-              domain stat-name expected-value actual-value))
+              "In domain ~S, expected (~S ~A) : found (~S ~A)"
+              domain stat-name expected-value stat-name actual-value))
 
            ;; NOTE: A helper to make human specification of the tests easier.
            ;;
@@ -315,7 +328,7 @@ it. If there are more or less keys in the domain than specified then fail."
         (dolist (stat-spec coalesced-stat-specs)
           (destructuring-bind (domain . statistics) stat-spec
             (ecase domain
-              ((:move :allocation)
+              ((:move-original :move-clone :allocation)
                ;; Record the fact we processed this domain
                (setf (u:href processed-domains domain) t)
 
@@ -352,7 +365,7 @@ it. If there are more or less keys in the domain than specified then fail."
       (u:do-hash-keys (domain-key (stats eql-map))
         (unless (u:href processed-domains domain-key)
           (ecase domain-key
-            ((:move :allocation)
+            ((:move-original :move-clone :allocation)
              (unless
                  (zerop (hash-table-count(u:href (stats eql-map) domain-key)))
                (error-stats-found domain-key)))))))
@@ -373,6 +386,11 @@ it. If there are more or less keys in the domain than specified then fail."
   "Return two values. The first value is VAL and the second value is the type
 of VAL."
   (values val (type-of val)))
+
+(defun map-type-of (&rest objects)
+  "Return N values of the TYPE-OF each object in OBJECTS in left to right
+order."
+  (apply #'values (mapcar #'type-of objects)))
 
 ;;; ---------------------------------------------------------------------------
 ;; SHALLOW cloning tests.
@@ -399,7 +417,7 @@ of VAL."
 
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,o-type 1))))
+                            `(:move-original (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -423,7 +441,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,o-type 1))))
+                            `(:move-original (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -446,7 +464,7 @@ of VAL."
 
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
-     (eql-map-stats-match-p eql-map `(:move (,o-type 1))))
+     (eql-map-stats-match-p eql-map `(:move-original (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -470,7 +488,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,o-type 1))))
+                            `(:move-original (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -494,7 +512,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,o-type 1))))
+                            `(:move-original (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -523,7 +541,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 1) (,v1-type 1))
+                            `(:move-original (,v0-type 1) (,v1-type 1))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -556,7 +574,7 @@ of VAL."
        (eql-map-stats-match-p eql-map
                               ;; NOTE: the move of the original cons cell
                               ;; reference into the cloned cons cell.
-                              `(:move (,o-type 2))
+                              `(:move-original (,o-type 2))
                               `(:allocation (,o-type 1))))
 
       (format t "Passed (with expected surprise due to cycle).~%")
@@ -626,12 +644,12 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 1)
-                                    (,v1-type 1)
-                                    (,v2-type 1)
-                                    (,v3-type 1)
-                                    (,v4-type 1)
-                                    (,list-end-type 1))
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1)
+                                             (,v2-type 1)
+                                             (,v3-type 1)
+                                             (,v4-type 1)
+                                             (,list-end-type 1))
                             `(:allocation (,o-type 5))))
 
     (format t "Passed.~%")
@@ -669,10 +687,10 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 2)
-                                    (,v1-type 1)
-                                    (,v2-type 1)
-                                    (,list-end-type 1))
+                            `(:move-original (,v0-type 2) ;; shared structure
+                                             (,v1-type 1)
+                                             (,v2-type 1)
+                                             (,list-end-type 1))
                             `(:allocation (,o-type 4))))
 
     (format t "Passed.~%")
@@ -699,7 +717,7 @@ of VAL."
       (assert (not (eq c o)))
       ;; The car should have been shallow copied to original list.
       (assert (eq (car c) o))
-      ;; But notice the cdr is pointing into the cloned list structure.
+      ;; But we choose that the cdr is pointing into the cloned list structure.
       (assert (eq (cdr c) c))
 
       (eql-map-dump-stats eql-map)
@@ -707,7 +725,10 @@ of VAL."
        (eql-map-stats-match-p eql-map
                               ;; The car of the clone is a move of the original
                               ;; cons cell.
-                              `(:move (,o-type 1))
+                              `(:move-original (,o-type 1))
+                              ;; BUT the cdr of the clone is a move-clone
+                              ;; to preserve the shared list structure.
+                              `(:move-clone (,o-type 1))
                               ;; But the cons cell itself was cloned.
                               `(:allocation (,o-type 1))))
 
@@ -724,6 +745,7 @@ of VAL."
              (o o-type (id-type (list v0 v1 v2 v3))))
     ;; Last cons cell cdr points to head of list in a cycle.
     (setf (cddddr o) o)
+
     (format t "Original | ~S~%" o)
     (finish-output)
 
@@ -739,10 +761,13 @@ of VAL."
       (eql-map-dump-stats eql-map)
       (validate-eql-map-stats
        (eql-map-stats-match-p eql-map
-                              `(:move (,v0-type 1)
-                                      (,v1-type 1)
-                                      (,v2-type 1)
-                                      (,v3-type 1))
+                              `(:move-original (,v0-type 1)
+                                               (,v1-type 1)
+                                               (,v2-type 1)
+                                               (,v3-type 1))
+                              ;; Preserving the shared structure of the cycle
+                              ;; causes this :move-clone to exist.
+                              `(:move-clone (,o-type 1))
                               `(:allocation (,o-type 4))))
 
       (format t "Passed.~%")
@@ -758,6 +783,7 @@ of VAL."
              (o o-type (id-type (list v0 v1 v2 v3))))
     ;; Last cons cell cdr points to middle of list in a cycle.
     (setf (cddddr o) (cdr o))
+
     (format t "Original | ~S~%" o)
     (finish-output)
 
@@ -774,10 +800,13 @@ of VAL."
       (eql-map-dump-stats eql-map)
       (validate-eql-map-stats
        (eql-map-stats-match-p eql-map
-                              `(:move (,v0-type 1)
-                                      (,v1-type 1)
-                                      (,v2-type 1)
-                                      (,v3-type 1))
+                              `(:move-original (,v0-type 1)
+                                               (,v1-type 1)
+                                               (,v2-type 1)
+                                               (,v3-type 1))
+                              ;; Preserving the shared structure of the cycle
+                              ;; causes this :move-clone to exist.
+                              `(:move-clone (,o-type 1))
                               `(:allocation (,o-type 4))))
 
 
@@ -794,9 +823,9 @@ of VAL."
              (v1 v1-type (id-type #\a))
              (v2 v2-type (id-type 'b))
              (v3 v3-type (id-type 'foo))
-             (v4 v4-type (id-type 'c))
+             (v4 v4-type (id-type nil))
              (v5 v5-type (id-type 3))
-             (v6 v6-type (id-type 'd))
+             (v6 v6-type (id-type nil))
              (v7 v7-type (id-type (make-hash-table)))
              (v8 v8-type (id-type 'e))
              (v9 v9-type (id-type (cons 100 200)))
@@ -837,26 +866,28 @@ of VAL."
           :do (assert (and (eql (car o-alist-cell) (car c-alist-cell))
                            (eql (cdr o-alist-cell) (cdr c-alist-cell)))))
 
+    ;; TODO: FIXME! There should be 1 NULL in move original for the first time
+    ;; we see it, and then 2 NULL in move-clone, why isn't that the case?
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 1)
-                                    (,v1-type 1)
-                                    (,v2-type 1)
-                                    (,v3-type 1)
-                                    (,v4-type 1)
-                                    (,v5-type 1)
-                                    (,v6-type 1)
-                                    (,v7-type 1)
-                                    (,v8-type 1)
-                                    (,v9-type 1)
-                                    (,v10-type 1)
-                                    (,v11-type 1)
-                                    (,v12-type 1)
-                                    (,v13-type 1)
-                                    (,v14-type 1)
-                                    (,v15-type 1)
-                                    (,list-end-type 1))
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1)
+                                             (,v2-type 1)
+                                             (,v3-type 1)
+                                             (,v4-type 1)
+                                             (,v5-type 1)
+                                             (,v6-type 1)
+                                             (,v7-type 1)
+                                             (,v8-type 1)
+                                             (,v9-type 1)
+                                             (,v10-type 1)
+                                             (,v11-type 1)
+                                             (,v12-type 1)
+                                             (,v13-type 1)
+                                             (,v14-type 1)
+                                             (,v15-type 1)
+                                             (,list-end-type 1))
                             `(:allocation (,o-type 16))))
 
     (format t "Passed.~%")
@@ -866,14 +897,15 @@ of VAL."
   "Test reconstruction of shared reference kv cons cells."
   (u:mvlet* ((v0 v0-type (id-type (make-array 4)))
              (v1 v1-type (id-type #\b))
-             (v2 (cons v0 v1))
+             (v2 v2-type (id-type (cons v0 v1)))
              (v3 v3-type (id-type 'a))
              (v4 v4-type (id-type 1))
-             (v5 v5-type (id-type #\a))
+             (v5 v5-type (id-type nil))
              (v6 v6-type (id-type (make-hash-table)))
              (o o-type (id-type (list (cons v3 v4) v2 v2 (cons v5 v6))))
              (list-end-type (type-of nil))
              (c eql-map (clone-shallow-alist o (make-eql-map-with-stats))))
+
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
     (finish-output)
@@ -900,15 +932,18 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 1)
-                                    (,v1-type 1)
-                                    ;; v2 will be allocated, not moved.
-                                    (,v3-type 1)
-                                    (,v4-type 1)
-                                    (,v5-type 1)
-                                    (,v6-type 1)
-                                    (,list-end-type 1))
-                            ;; Only 7 because of a shared cons cell!
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1)
+                                             (,v3-type 1)
+                                             (,v4-type 1)
+                                             (,v5-type 1)
+                                             (,v6-type 1)
+                                             (,list-end-type 1))
+                            ;; v2 is shared once, so there should be one move
+                            ;; of its previously cloned data.
+                            `(:move-clone (,v2-type 1))
+                            ;; Only 7 because v2 is a cloned cons cell that was
+                            ;; shared!
                             `(:allocation (,o-type 7))))
 
     (format t "Passed.~%")
@@ -917,6 +952,7 @@ of VAL."
 (defun test-clone-shallow-alist-2 ()
   "Handle a single cons cell alist that references itself in both car and cdr."
   (u:mvlet ((*print-circle* t)
+            ;; The two nils here are wiped out before cloning.
             (o o-type (id-type (cons nil nil))))
 
     ;; A single cons cell representing an alist that has both itself as the
@@ -943,6 +979,10 @@ of VAL."
       (eql-map-dump-stats eql-map)
       (validate-eql-map-stats
        (eql-map-stats-match-p eql-map
+                              ;; The cdr of the cons cell references itself
+                              ;; and we arbitrarily decide to honor that
+                              ;; cycle and preserve it in the clone.
+                              `(:move-clone (,o-type 1))
                               `(:allocation (,o-type 1))))
 
       (format t "Passed.~%")
@@ -955,7 +995,9 @@ of VAL."
              (v1 v1-type (id-type 2))
              (o o-type (id-type (list (cons v0 v1)))))
     (setf (cdr o) o)
+
     (u:mvlet ((c eql-map (clone-shallow-alist o (make-eql-map-with-stats))))
+
       (format t "Original | ~S~%" o)
       (format t "Cloned   | ~S~%" c)
       (finish-output)
@@ -973,8 +1015,11 @@ of VAL."
       (eql-map-dump-stats eql-map)
       (validate-eql-map-stats
        (eql-map-stats-match-p eql-map
-                              `(:move (,v0-type 1)
-                                      (,v1-type 1))
+                              `(:move-original (,v0-type 1)
+                                               (,v1-type 1))
+                              ;; We arbitrarily decide to honor the cycle in
+                              ;; the list structure.
+                              `(:move-clone (,o-type 1))
                               `(:allocation (,o-type 2))))
 
       (format t "Passed.~%")
@@ -982,15 +1027,16 @@ of VAL."
 
 (defun test-clone-shallow-alist-4 ()
   "An alist with additional non-kv cells entries in it and no cycles."
-  (u:mvlet* ((v0 v0-type (id-type 1))
+  (u:mvlet* ((v0 v0-type (id-type nil))
              (v1 v1-type (id-type 2))
              (v2 v2-type (id-type 'foo))
              (v3 v3-type (id-type 3))
-             (v4 v4-type (id-type 4))
+             (v4 v4-type (id-type nil))
              (v5 v5-type (id-type 42.5))
              (list-end-type (type-of nil))
              (o o-type (id-type (list (cons v0 v1) v2 (cons v3 v4) v5)))
              (c eql-map (clone-shallow-alist o (make-eql-map-with-stats))))
+
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
     (finish-output)
@@ -1018,13 +1064,13 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 1)
-                                    (,v1-type 1)
-                                    (,v2-type 1)
-                                    (,v3-type 1)
-                                    (,v4-type 1)
-                                    (,v5-type 1)
-                                    (,list-end-type 1))
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1)
+                                             (,v2-type 1)
+                                             (,v3-type 1)
+                                             (,v4-type 1)
+                                             (,v5-type 1)
+                                             (,list-end-type 1))
                             `(:allocation (,o-type 6))))
 
     (format t "Passed.~%")
@@ -1040,7 +1086,9 @@ of VAL."
              (o o-type (id-type (list (cons v0 v2) v1 v2 v3))))
 
     (setf (cdr (cdddr o)) v4)
+
     (u:mvlet* ((c eql-map (clone-shallow-alist o (make-eql-map-with-stats))))
+
       (format t "Original | ~S~%" o)
       (format t "Cloned   | ~S~%" c)
       (finish-output)
@@ -1065,12 +1113,12 @@ of VAL."
       (eql-map-dump-stats eql-map)
       (validate-eql-map-stats
        (eql-map-stats-match-p eql-map
-                              `(:move (,v0-type 1)
-                                      (,v1-type 1)
-                                      ;; v2 used twice in the original
-                                      (,v2-type 2)
-                                      (,v3-type 1)
-                                      (,v4-type 1))
+                              `(:move-original (,v0-type 1)
+                                               (,v1-type 1)
+                                               ;; v2 used twice in the original
+                                               (,v2-type 2)
+                                               (,v3-type 1)
+                                               (,v4-type 1))
                               `(:allocation (,o-type 5))))
 
 
@@ -1117,8 +1165,8 @@ of VAL."
       (eql-map-dump-stats eql-map)
       (validate-eql-map-stats
        (eql-map-stats-match-p eql-map
-                              `(:move (,v0-type 1)
-                                      (,v1-type 1))
+                              `(:move-original (,v0-type 1)
+                                               (,v1-type 1))
                               `(:allocation (,o-type 1))))
 
       (format t "Passed.~%")
@@ -1152,7 +1200,7 @@ of VAL."
       (eql-map-dump-stats eql-map)
       (validate-eql-map-stats
        (eql-map-stats-match-p eql-map
-                              `(:move (,v0-type 2))
+                              `(:move-original (,v0-type 2))
                               `(:allocation (,o-type 1))))
 
       (format t "Passed.~%")
@@ -1207,11 +1255,11 @@ of VAL."
       (eql-map-dump-stats eql-map)
       (validate-eql-map-stats
        (eql-map-stats-match-p eql-map
-                              `(:move (,v0-type 1)
-                                      (,v1-type 1)
-                                      (,v2-type 1)
-                                      (,v3-type 1)
-                                      (,v4-type 1))
+                              `(:move-original (,v0-type 1)
+                                               (,v1-type 1)
+                                               (,v2-type 1)
+                                               (,v3-type 1)
+                                               (,v4-type 1))
                               `(:allocation (,n0-type 4))))
 
       (format t "Passed.~%")
@@ -1246,6 +1294,10 @@ of VAL."
       (eql-map-dump-stats eql-map)
       (validate-eql-map-stats
        (eql-map-stats-match-p eql-map
+                              ;; One reference for the car, and one for the cdr
+                              ;; of the newly cloned cons cell so it can
+                              ;; reference itself.
+                              `(:move-clone (,o-type 2))
                               `(:allocation (,o-type 1))))
 
       (format t "Passed.~%")
@@ -1324,12 +1376,17 @@ of VAL."
         (eql-map-dump-stats eql-map)
         (validate-eql-map-stats
          (eql-map-stats-match-p eql-map
-                                `(:move (,v0-type 1)
-                                        (,v1-type 1)
-                                        (,v2-type 1)
-                                        (,v3-type 1)
-                                        (,v4-type 1)
-                                        (,v5-type 1))
+                                `(:move-original (,v0-type 1)
+                                                 (,v1-type 1)
+                                                 (,v2-type 1)
+                                                 (,v3-type 1)
+                                                 (,v4-type 1)
+                                                 (,v5-type 1))
+                                ;; The obm cell was cloned and also referenced
+                                ;; by two things. The second time it was
+                                ;; referenced is counted as the first time
+                                ;; here.
+                                `(:move-clone (,o-type 1))
                                 `(:allocation (,o-type 6))))
 
         (format t "Passed.~%")
@@ -1391,6 +1448,8 @@ of VAL."
         (eql-map-dump-stats eql-map)
         (validate-eql-map-stats
          (eql-map-stats-match-p eql-map
+                                ;; All of the shared structure moves...
+                                `(:move-clone (,l0-type 6))
                                 `(:allocation (,l0-type 5))))
 
         (format t "Passed.~%")
@@ -1440,7 +1499,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1472,7 +1531,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1505,7 +1564,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1538,7 +1597,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1575,7 +1634,11 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            ;; Since we never copied any of the elements in the
+                            ;; shallow copy, we don't know they are actually
+                            ;; shared references, so we can only blindy record
+                            ;; them in the :move-original domain.
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1606,7 +1669,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1642,7 +1705,10 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            ;; We are blind to the fact there is shared
+                            ;; structure in this shallow clone, so we record
+                            ;; these into the :move-original domain.
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1674,7 +1740,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1711,7 +1777,10 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            ;; We are blind to the shared structure in the
+                            ;; shallow copy and can only record this into the
+                            ;; :move-original domain.
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1743,7 +1812,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,(array-total-size c)))
+                            `(:move-original (,v0-type ,(array-total-size c)))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1780,7 +1849,10 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,(array-total-size c)))
+                            ;; We are blind to the shared structure in the
+                            ;; shallow clone and can only record these into the
+                            ;; :move-original domain..
+                            `(:move-original (,v0-type ,(array-total-size c)))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1812,7 +1884,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1845,7 +1917,7 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
+                            `(:move-original (,v0-type ,num-elems))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1883,15 +1955,15 @@ of VAL."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 1)
-                                    (,v1-type 1)
-                                    (,v2-type 1)
-                                    (,v3-type 1)
-                                    (,v4-type 1)
-                                    (,v5-type 1)
-                                    (,v6-type 1)
-                                    (,v7-type 1)
-                                    (,v8-type 1))
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1)
+                                             (,v2-type 1)
+                                             (,v3-type 1)
+                                             (,v4-type 1)
+                                             (,v5-type 1)
+                                             (,v6-type 1)
+                                             (,v7-type 1)
+                                             (,v8-type 1))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -1928,7 +2000,7 @@ of VAL."
 that ALL-KEYS are present and ALL-VALUES are present and that each key maps
 properly to each value. Also check that they keys and values were shallow
 copied. Return T if this is the case and NIL otherwise."
-  ;; Al-keys and all values must be present in the original.
+  ;; All-keys and all-values must be present in the original.
   (u:do-hash (k v original-ht)
     (unless (some (u:curry 'eql k) all-keys)
       (return-from ht-shallow-kv-valid-p nil))
@@ -1955,7 +2027,6 @@ copied. Return T if this is the case and NIL otherwise."
       (unless (eql ov v)
         (return-from ht-shallow-kv-valid-p nil))))
   t)
-
 
 (defun test-clone-shallow-hash-table-0 ()
   (u:mvlet* ((o o-type (id-type (u:dict)))
@@ -2002,8 +2073,8 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,k0-type 1)
-                                    (,v0-type 1))
+                            `(:move-original (,k0-type 1)
+                                             (,v0-type 1))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -2032,8 +2103,8 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,k0-type 1)
-                                    (,v0-type 1))
+                            `(:move-original (,k0-type 1)
+                                             (,v0-type 1))
                             `(:allocation (,o-type 1))))
     (format t "Passed.~%")
     t))
@@ -2067,14 +2138,14 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,k0-type 1)
-                                    (,k1-type 1)
-                                    (,k2-type 1)
-                                    (,k3-type 1)
-                                    (,v0-type 1)
-                                    (,v1-type 1)
-                                    (,v2-type 1)
-                                    (,v3-type 1))
+                            `(:move-original (,k0-type 1)
+                                             (,k1-type 1)
+                                             (,k2-type 1)
+                                             (,k3-type 1)
+                                             (,v0-type 1)
+                                             (,v1-type 1)
+                                             (,v2-type 1)
+                                             (,v3-type 1))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
@@ -2147,15 +2218,10 @@ copied. Return T if this is the case and NIL otherwise."
 ;; clone-deep functions of ANY intention
 ;;; ------------------------------------------------------------
 
-
-;; KEEP GOING add in more strenuous stats checking.
-;; KEEP GOING adding in eql-map statistics.
-
-
 (defun test-clone-deep-function-0 ()
-  (let* (;; Type FUNCTION
-         (o #'cl:identity)
-         (c (clone-deep o)))
+  (u:mvlet* (;; Type FUNCTION
+             (o o-type (id-type #'cl:identity))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2163,6 +2229,11 @@ copied. Return T if this is the case and NIL otherwise."
 
     ;; Should return itself.
     (assert (eq o c))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -2172,9 +2243,9 @@ copied. Return T if this is the case and NIL otherwise."
 ;;; ------------------------------------------------------------
 
 (defun test-clone-deep-character-0 ()
-  (let* (;; Type CHARACTER
-         (o #\a)
-         (c (clone-deep o)))
+  (u:mvlet* (;; Type CHARACTER
+             (o o-type (id-type #\a))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2182,6 +2253,11 @@ copied. Return T if this is the case and NIL otherwise."
 
     ;; Should return itself.
     (assert (eql o c))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -2191,9 +2267,9 @@ copied. Return T if this is the case and NIL otherwise."
 ;;; ------------------------------------------------------------
 
 (defun test-clone-deep-pathname-0 ()
-  (let* (;; Type PATHNAME
-         (o #P"/tmp/foo.txt")
-         (c (clone-deep o)))
+  (u:mvlet* (;; Type PATHNAME
+             (o o-type (id-type #P"/tmp/foo.txt"))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2201,6 +2277,11 @@ copied. Return T if this is the case and NIL otherwise."
 
     ;; Should return itself.
     (assert (equal o c))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -2210,9 +2291,9 @@ copied. Return T if this is the case and NIL otherwise."
 ;;; ------------------------------------------------------------
 
 (defun test-clone-deep-symbol-0 ()
-  (let* (;; Type SYMBOL
-         (o 'a)
-         (c (clone-deep o)))
+  (u:mvlet* (;; Type SYMBOL
+             (o o-type (id-type 'a))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2220,6 +2301,11 @@ copied. Return T if this is the case and NIL otherwise."
 
     ;; Should return itself.
     (assert (eq o c))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -2229,9 +2315,9 @@ copied. Return T if this is the case and NIL otherwise."
 ;;; ------------------------------------------------------------
 
 (defun test-clone-deep-integer-0 ()
-  (let* (;; Type INTEGER
-         (o 42)
-         (c (clone-deep o)))
+  (u:mvlet* (;; Type INTEGER
+             (o o-type (id-type 42))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2239,6 +2325,11 @@ copied. Return T if this is the case and NIL otherwise."
 
     ;; Should return itself.
     (assert (eql o c))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -2250,8 +2341,10 @@ copied. Return T if this is the case and NIL otherwise."
 ;;; ------------------------------------------------------------
 
 (defun test-clone-deep-cons-0 ()
-  (let* ((o (cons 1 2))
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type nil))
+             (v1 v1-type (id-type nil))
+             (o o-type (id-type (cons v0 v1)))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2265,60 +2358,121 @@ copied. Return T if this is the case and NIL otherwise."
     (assert (eql (car c) (car o)))
     (assert (eql (cdr c) (cdr o)))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1))
+                            `(:allocation (,o-type 1))))
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-cons-1 ()
-  (let* ((*print-circle* t)
-         (o (cons nil nil)))
-    ;; Both car and cdr point to o.
-    (setf (car o) o
-          (cdr o) o)
+  (u:mvlet* ((v0 v0-type (id-type 1))
+             (v1 v1-type (id-type 2))
+             (o o-type (id-type (cons v0 v1)))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
-    (let ((c (clone-deep o)))
-      (format t "Original | ~S~%" o)
-      (format t "Cloned   | ~S~%" c)
-      (finish-output)
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
 
-      ;; Ensure new memory
-      (assert (not (eq o c)))
+    ;; This part must be cloned.
+    (assert (not (eq o c)))
 
-      ;; Ensure structure is deep cloned.
-      (assert (eq (car c) c))
-      (assert (eq (cdr c) c))
+    ;; but the values of the car and cdr must still be eq/eql to original
+    ;; since they are identity clone objects.
+    (assert (eql (car c) (car o)))
+    (assert (eql (cdr c) (cdr o)))
 
-      (format t "Passed.~%")
-      t)))
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1))
+                            `(:allocation (,o-type 1))))
+    (format t "Passed.~%")
+    t))
 
 (defun test-clone-deep-cons-2 ()
   (u:mvlet* ((*print-circle* t)
              (graph (cons-graph
-                      '((:roots n0 n1 n2 n3)
-                        (n0 :r n1 :r n2 :r n3 :r (:v nil))
-                        (n0 :l (:v 1))
-                        (n1 :l (:v #\a))
-                        (n2 :l (:v #'+))
-                        (n3 :l (:v '+)))))
-             (n0 n1 n2 n3
-                 (get-roots graph 'n0 'n1 'n2 'n3)))
+                      '((:roots o)
+                        (o :r o)
+                        (o :l o))))
+             (o (get-roots graph 'o))
+             (o-type (type-of o))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
-    (let ((c (clone-deep n0)))
-      (format t "Original | ~S~%" n0)
-      (format t "Cloned   | ~S~%" c)
-      (finish-output)
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
 
-      ;; Ensure new memory
-      (assert (not (eq n0 c)))
+    ;; Ensure new memory
+    (assert (not (eq o c)))
 
-      ;; Ensure that each cons cell was cloned.
-      (loop :for o-cell :on n0
-            :for c-cell :on c
-            :do (assert (not (eq o-cell c-cell))))
+    ;; Ensure structure is deep cloned.
+    (assert (eq (car c) c))
+    (assert (eq (cdr c) c))
 
-      (format t "Passed.~%")
-      t)))
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            ;; o's move of the cloned copy reference to itself!
+                            `(:move-clone (,o-type 2))
+                            `(:allocation (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
 
 (defun test-clone-deep-cons-3 ()
+  (u:mvlet* ((*print-circle* t)
+             (v0 v0-type (id-type 1))
+             (v1 v1-type (id-type #\a))
+             (v2 v2-type (id-type #'+))
+             (v3 v3-type (id-type '+))
+             (list-end list-end-type (id-type nil))
+             (graph (cons-graph
+                      `((:roots n0 n1 n2 n3)
+                        (n0 :r n1 :r n2 :r n3 :r (:v ,list-end))
+                        (n0 :l (:v ,v0))
+                        (n1 :l (:v ,v1))
+                        (n2 :l (:v ,v2))
+                        (n3 :l (:v ,v3)))))
+             (n0 n1 n2 n3
+                 (get-roots graph 'n0 'n1 'n2 'n3))
+             (n0-type n1-type n2-type n3-type
+                      (map-type-of n0 n1 n2 n3))
+             (c eql-map (clone-deep n0 (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" n0)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure new memory
+    (assert (not (eq n0 c)))
+
+    ;; Ensure that each cons cell was cloned.
+    (loop :for o-cell :on n0
+          :for c-cell :on c
+          :do (assert (not (eq o-cell c-cell))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1)
+                                             (,v2-type 1)
+                                             (,v3-type 1)
+                                             (,list-end-type 1))
+                            `(:allocation (,n0-type 1)
+                                          (,n1-type 1)
+                                          (,n2-type 1)
+                                          (,n3-type 1))))
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-cons-4 ()
   "Hideous forward referencing shared structure with cycles."
   (u:mvlet* ((*print-circle* t)
              (graph (cons-graph
@@ -2329,42 +2483,55 @@ copied. Return T if this is the case and NIL otherwise."
                         (n2 :l n3)
                         (n3 :l n0))))
              (n0 n1 n2 n3
-                 (get-roots graph 'n0 'n1 'n2 'n3)))
+                 (get-roots graph 'n0 'n1 'n2 'n3))
+             (n0-type n1-type n2-type n3-type
+                      (map-type-of n0 n1 n2 n3))
+             (c eql-map (clone-deep n0 (make-eql-map-with-stats))))
 
-    (let ((c (clone-deep n0)))
-      (format t "Original | ~S~%" n0)
-      (format t "Cloned   | ~S~%" c)
-      (finish-output)
+    (format t "Original | ~S~%" n0)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
 
-      ;; Ensure new memory
-      (assert (not (eq n0 c)))
+    ;; Ensure new memory
+    (assert (not (eq n0 c)))
 
-      (let* ((c0 c)
-             (c1 (cdr c0))
-             (c2 (cdr c1))
-             (c3 (cdr c2)))
-        ;; Ensure that each cons cell was cloned.
-        (mapc (lambda (x y)
-                (assert (not (eq x y))))
-              (list n0 n1 n2 n3)
-              (list c0 c1 c2 c3))
-        ;; Ensure the structure of the graph was preserved.
-        ;; 1. cyclic list structure
-        (assert (eq (cdr c0) c1))
-        (assert (eq (cdr c1) c2))
-        (assert (eq (cdr c2) c3))
-        (assert (eq (cdr c3) c0))
-        ;; 2. forward references
-        (assert (eq (car c0) c1))
-        (assert (eq (car c1) c2))
-        (assert (eq (car c2) c3))
-        (assert (eq (car c3) c0))
+    (let* ((c0 c)
+           (c1 (cdr c0))
+           (c2 (cdr c1))
+           (c3 (cdr c2)))
+      ;; Ensure that each cons cell was cloned.
+      (mapc (lambda (x y)
+              (assert (not (eq x y))))
+            (list n0 n1 n2 n3)
+            (list c0 c1 c2 c3))
+      ;; Ensure the structure of the graph was preserved.
+      ;; 1. cyclic list structure
+      (assert (eq (cdr c0) c1))
+      (assert (eq (cdr c1) c2))
+      (assert (eq (cdr c2) c3))
+      (assert (eq (cdr c3) c0))
+      ;; 2. forward references
+      (assert (eq (car c0) c1))
+      (assert (eq (car c1) c2))
+      (assert (eq (car c2) c3))
+      (assert (eq (car c3) c0))
 
-        (format t "Passed.~%")
-        t))))
+      (eql-map-dump-stats eql-map)
+      (validate-eql-map-stats
+       (eql-map-stats-match-p eql-map
+                              `(:move-clone (,n0-type 2) ;; n0 used twice.
+                                            (,n1-type 1)
+                                            (,n2-type 1)
+                                            (,n3-type 1))
+                              `(:allocation (,n0-type 1)
+                                            (,n1-type 1)
+                                            (,n2-type 1)
+                                            (,n3-type 1))))
 
+      (format t "Passed.~%")
+      t)))
 
-(defun test-clone-deep-cons-4 ()
+(defun test-clone-deep-cons-5 ()
   "Hideous backwards referencing shared structure with cycles."
   (u:mvlet* ((*print-circle* t)
              (graph (cons-graph
@@ -2375,41 +2542,55 @@ copied. Return T if this is the case and NIL otherwise."
                         (n2 :l n1)
                         (n3 :l n2))))
              (n0 n1 n2 n3
-                 (get-roots graph 'n0 'n1 'n2 'n3)))
+                 (get-roots graph 'n0 'n1 'n2 'n3))
+             (n0-type n1-type n2-type n3-type
+                      (map-type-of n0 n1 n2 n3))
+             (c eql-map (clone-deep n0 (make-eql-map-with-stats))))
 
-    (let ((c (clone-deep n0)))
-      (format t "Original | ~S~%" n0)
-      (format t "Cloned   | ~S~%" c)
-      (finish-output)
+    (format t "Original | ~S~%" n0)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
 
-      ;; Ensure new memory
-      (assert (not (eq n0 c)))
+    ;; Ensure new memory
+    (assert (not (eq n0 c)))
 
-      (let* ((c0 c)
-             (c1 (cdr c0))
-             (c2 (cdr c1))
-             (c3 (cdr c2)))
-        ;; Ensure that each cons cell was cloned.
-        (mapc (lambda (x y)
-                (assert (not (eq x y))))
-              (list n0 n1 n2 n3)
-              (list c0 c1 c2 c3))
-        ;; Ensure the structure of the graph was preserved.
-        ;; 1. cyclic list structure
-        (assert (eq (cdr c0) c1))
-        (assert (eq (cdr c1) c2))
-        (assert (eq (cdr c2) c3))
-        (assert (eq (cdr c3) c0))
-        ;; 2. backward references
-        (assert (eq (car c0) c3))
-        (assert (eq (car c1) c0))
-        (assert (eq (car c2) c1))
-        (assert (eq (car c3) c2))
+    (let* ((c0 c)
+           (c1 (cdr c0))
+           (c2 (cdr c1))
+           (c3 (cdr c2)))
+      ;; Ensure that each cons cell was cloned.
+      (mapc (lambda (x y)
+              (assert (not (eq x y))))
+            (list n0 n1 n2 n3)
+            (list c0 c1 c2 c3))
+      ;; Ensure the structure of the graph was preserved.
+      ;; 1. cyclic list structure
+      (assert (eq (cdr c0) c1))
+      (assert (eq (cdr c1) c2))
+      (assert (eq (cdr c2) c3))
+      (assert (eq (cdr c3) c0))
+      ;; 2. backward references
+      (assert (eq (car c0) c3))
+      (assert (eq (car c1) c0))
+      (assert (eq (car c2) c1))
+      (assert (eq (car c3) c2))
 
-        (format t "Passed.~%")
-        t))))
+      (eql-map-dump-stats eql-map)
+      (validate-eql-map-stats
+       (eql-map-stats-match-p eql-map
+                              `(:move-clone (,n0-type 2) ;; n0 used twice.
+                                            (,n1-type 1)
+                                            (,n2-type 1)
+                                            (,n3-type 1))
+                              `(:allocation (,n0-type 1)
+                                            (,n1-type 1)
+                                            (,n2-type 1)
+                                            (,n3-type 1))))
 
-(defun test-clone-deep-cons-5 ()
+      (format t "Passed.~%")
+      t)))
+
+(defun test-clone-deep-cons-6 ()
   "Hideous forward and backward referencing shared structure with cycles."
   (u:mvlet* ((*print-circle* t)
              (graph (cons-graph
@@ -2420,83 +2601,177 @@ copied. Return T if this is the case and NIL otherwise."
                         (n2 :l n0)
                         (n3 :l n1))))
              (n0 n1 n2 n3
-                 (get-roots graph 'n0 'n1 'n2 'n3)))
+                 (get-roots graph 'n0 'n1 'n2 'n3))
+             (n0-type n1-type n2-type n3-type
+                      (map-type-of n0 n1 n2 n3))
+             (c eql-map (clone-deep n0 (make-eql-map-with-stats))))
 
-    (let ((c (clone-deep n0)))
-      (format t "Original | ~S~%" n0)
-      (format t "Cloned   | ~S~%" c)
-      (finish-output)
+    (format t "Original | ~S~%" n0)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
 
-      ;; Ensure new memory
-      (assert (not (eq n0 c)))
+    ;; Ensure new memory
+    (assert (not (eq n0 c)))
 
-      (let* ((c0 c)
-             (c1 (cdr c0))
-             (c2 (cdr c1))
-             (c3 (cdr c2)))
-        ;; Ensure that each cons cell was cloned.
-        (mapc (lambda (x y)
-                (assert (not (eq x y))))
-              (list n0 n1 n2 n3)
-              (list c0 c1 c2 c3))
-        ;; Ensure the structure of the graph was preserved.
-        ;; 1. cyclic list structure
-        (assert (eq (cdr c0) c1))
-        (assert (eq (cdr c1) c2))
-        (assert (eq (cdr c2) c3))
-        (assert (eq (cdr c3) c0))
-        ;; 2. backward references
-        (assert (eq (car c0) c2))
-        (assert (eq (car c1) c3))
-        (assert (eq (car c2) c0))
-        (assert (eq (car c3) c1))
+    (let* ((c0 c)
+           (c1 (cdr c0))
+           (c2 (cdr c1))
+           (c3 (cdr c2)))
+      ;; Ensure that each cons cell was cloned.
+      (mapc (lambda (x y)
+              (assert (not (eq x y))))
+            (list n0 n1 n2 n3)
+            (list c0 c1 c2 c3))
+      ;; Ensure the structure of the graph was preserved.
+      ;; 1. cyclic list structure
+      (assert (eq (cdr c0) c1))
+      (assert (eq (cdr c1) c2))
+      (assert (eq (cdr c2) c3))
+      (assert (eq (cdr c3) c0))
+      ;; 2. backward references
+      (assert (eq (car c0) c2))
+      (assert (eq (car c1) c3))
+      (assert (eq (car c2) c0))
+      (assert (eq (car c3) c1))
 
-        (format t "Passed.~%")
-        t))))
+      (eql-map-dump-stats eql-map)
+      (validate-eql-map-stats
+       (eql-map-stats-match-p eql-map
+                              `(:move-clone (,n0-type 2) ;; used twice
+                                            (,n1-type 1)
+                                            (,n2-type 1)
+                                            (,n3-type 1))
+                              `(:allocation (,n0-type 1)
+                                            (,n1-type 1)
+                                            (,n2-type 1)
+                                            (,n3-type 1))))
 
+      (format t "Passed.~%")
+      t)))
 
-(defun test-clone-deep-cons-6 ()
+(defun test-clone-deep-cons-7 ()
   "Irreducible loop with shared structure and cycles."
   (u:mvlet* ((*print-circle* t)
+             (v0 v0-type (id-type 1))
              (graph (cons-graph
-                      '((:roots n0 n1 n2)
+                      `((:roots n0 n1 n2)
                         (n0 :l n1)
                         (n0 :r n2)
-                        (n1 :l (:v 1))
+                        (n1 :l (:v ,v0))
                         (n1 :r n2)
                         (n2 :l n1)
                         (n2 :r n1))))
              (n0 n1 n2
-                 (get-roots graph 'n0 'n1 'n2)))
+                 (get-roots graph 'n0 'n1 'n2))
+             (n0-type n1-type n2-type
+                      (map-type-of n0 n1 n2))
+             (c eql-map (clone-deep n0 (make-eql-map-with-stats))))
 
-    (let ((c (clone-deep n0)))
-      (format t "Original | ~S~%" n0)
-      (format t "Cloned   | ~S~%" c)
-      (finish-output)
+    (format t "Original | ~S~%" n0)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
 
-      ;; Ensure new memory
-      (assert (not (eq n0 c)))
+    ;; Ensure new memory
+    (assert (not (eq n0 c)))
 
-      (let* ((c0 c)
-             (c1 (car c0))
-             (c2 (cdr c0)))
-        ;; Ensure that each cons cell was cloned.
-        (mapc (lambda (x y)
-                (assert (not (eq x y))))
-              (list n0 n1 n2)
-              (list c0 c1 c2))
-        ;; Ensure the structure of the graph was preserved.
-        (assert (eq (car c0) c1))
-        (assert (eq (cdr c0) c2))
+    (let* ((c0 c)
+           (c1 (car c0))
+           (c2 (cdr c0)))
+      ;; Ensure that each cons cell was cloned.
+      (mapc (lambda (x y)
+              (assert (not (eq x y))))
+            (list n0 n1 n2)
+            (list c0 c1 c2))
+      ;; Ensure the structure of the graph was preserved.
+      (assert (eq (car c0) c1))
+      (assert (eq (cdr c0) c2))
 
-        (assert (eql (car c1) 1))
-        (assert (eq (cdr c1) c2))
+      (assert (eql (car c1) v0))
+      (assert (eq (cdr c1) c2))
 
-        (assert (eq (car c2) c1))
-        (assert (eq (cdr c2) c1))
+      (assert (eq (car c2) c1))
+      (assert (eq (cdr c2) c1))
 
-        (format t "Passed.~%")
-        t))))
+      (eql-map-dump-stats eql-map)
+      (validate-eql-map-stats
+       (eql-map-stats-match-p eql-map
+                              `(:move-original (,v0-type 1))
+                              `(:move-clone (,n1-type 2) ;; shared structure.
+                                            (,n2-type 1))
+                              `(:allocation (,n0-type 1)
+                                            (,n1-type 1)
+                                            (,n2-type 1))))
+
+      (format t "Passed.~%")
+      t)))
+
+(defun test-clone-deep-cons-8 ()
+  "A list of list of lists."
+  (u:mvlet* ((v0 v0-type (id-type 0))
+             (v1 v1-type (id-type 'a))
+             (v2 v2-type (id-type 1))
+             (v3 v3-type (id-type 'b))
+             (v4 v4-type (id-type 2))
+             (v5 v5-type (id-type 'c))
+             (v6 v6-type (id-type 3))
+             (v7 v7-type (id-type 'd))
+             (v8 v8-type (id-type 4))
+             (v9 v9-type (id-type 'e))
+             (v10 v10-type (id-type 5))
+             (v11 v11-type (id-type 'f))
+             (v12 v12-type (id-type 6))
+             (v13 v13-type (id-type 'g))
+             (v14 v14-type (id-type 7))
+             (v15 v15-type (id-type 'h))
+             (v16 v16-type (id-type 8))
+             (v17 v17-type (id-type 'i))
+             (v18 v18-type (id-type 9))
+             (v19 v19-type (id-type 'j))
+             (list-end-type (type-of nil))
+             ;; NOTE: This next list has 35 cons cells.
+             (o o-type (id-type `(((,v0 ,v1) (,v2 ,v3))
+                                  ((,v4 ,v5) (,v6 ,v7))
+                                  ((,v8 ,v9) (,v10 ,v11))
+                                  ((,v12 ,v13) (,v14 ,v15))
+                                  ((,v16 ,v17) (,v18 ,v19)))))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; KEEP GOING Have to actually validate the structure of this thing to
+    ;; ensure the cloned copy had all new cons cells.
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1)
+                                             (,v2-type 1)
+                                             (,v3-type 1)
+                                             (,v4-type 1)
+                                             (,v5-type 1)
+                                             (,v6-type 1)
+                                             (,v7-type 1)
+                                             (,v8-type 1)
+                                             (,v9-type 1)
+                                             (,v10-type 1)
+                                             (,v11-type 1)
+                                             (,v12-type 1)
+                                             (,v13-type 1)
+                                             (,v14-type 1)
+                                             (,v15-type 1)
+                                             (,v16-type 1)
+                                             (,v17-type 1)
+                                             (,v18-type 1)
+                                             (,v19-type 1)
+                                             ;; NIL at end of each list.
+                                             (,list-end-type 16))
+                            `(:allocation (,o-type 35))))
+
+    (format t "Passed.~%")
+    t))
 
 
 ;;; ------------------------------------------------------------
@@ -2506,10 +2781,13 @@ copied. Return T if this is the case and NIL otherwise."
 ;;; ------------------------------------------------------------
 
 (defun test-clone-deep-array-simple-string-0 ()
-  (let* (;; Type SIMPLE-STRING aka (SIMPLE-ARRAY CHARACTER *)
-         (o (make-sequence 'simple-string 8 :initial-element #\a))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type #\a))
+             (num-elems 8)
+             ;; Type SIMPLE-STRING aka (SIMPLE-ARRAY CHARACTER *)
+             (o o-type (id-type (make-sequence 'simple-string num-elems
+                                               :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2526,14 +2804,23 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref o i))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-simple-bit-vector-0 ()
-  (let* (;; Type SIMPLE-BIT-VECTOR
-         (o (make-sequence '(vector bit) 8 :initial-element 0))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type 0))
+             (num-elems 8)
+             ;; Type SIMPLE-BIT-VECTOR
+             (o o-type (id-type (make-sequence '(vector bit) num-elems
+                                               :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2549,17 +2836,25 @@ copied. Return T if this is the case and NIL otherwise."
     (dotimes (i (array-total-size c))
       (assert (eql (row-major-aref c i)
                    (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-bit-vector-0 ()
-  (let* (;; Type BIT-VECTOR
-         (o (make-array 8 :element-type 'bit
-                          :adjustable t
-                          :initial-element 0))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type 0))
+             (num-elems 8)
+             ;; Type BIT-VECTOR
+             (o o-type (id-type (make-array num-elems  :element-type 'bit
+                                                       :adjustable t
+                                                       :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2576,15 +2871,24 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref o i))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-unique-simple-array-0 ()
-  (let* (;; Type SIMPLE-ARRAY
-         (o (make-array 3 :element-type '(unsigned-byte 8)
-                          :initial-element 0))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type 0))
+             (num-elems 8)
+             ;; Type SIMPLE-ARRAY
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(unsigned-byte 8)
+                                            :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2601,16 +2905,26 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref o i))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-shared-simple-array-0 ()
-  (let* ((item (cons 1 2))
-         ;; Type SIMPLE-ARRAY
-         (o (make-array 3 :element-type 'cons
-                          :initial-element item))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type 1))
+             (v1 v1-type (id-type 2))
+             (v2 v2-type (id-type (cons v0 v1)))
+             (num-elems 4)
+             ;; Type SIMPLE-ARRAY
+             (o o-type (id-type (make-array num-elems
+                                            :element-type 'cons
+                                            :initial-element v2)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2631,14 +2945,27 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref c (mod i (array-total-size c))))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type 1)
+                                    (,v1-type 1)
+                                    ;; v2's clone is copied 3 times into the
+                                    ;; array.
+                                    (,v2-type 3))
+                            `(:allocation (,v2-type 1)
+                                          (,o-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-unique-simple-vector-0 ()
-  (let* (;; Type SIMPLE-VECTOR
-         (o (make-array 3 :initial-element 0))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type 0))
+             (num-elems 8)
+             ;; Type SIMPLE-VECTOR
+             (o o-type (id-type (make-array num-elems :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2656,15 +2983,24 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref o i))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-shared-simple-vector-0 ()
-  (let* ((item (cons 1 2))
-         ;; Type SIMPLE-VECTOR
-         (o (make-array 3 :initial-element item))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type 1))
+             (v1 v1-type (id-type 2))
+             (v2 v2-type (id-type (cons v0 v1)))
+             (num-elems 4)
+             ;; Type SIMPLE-VECTOR
+             (o o-type (id-type (make-array num-elems :initial-element v2)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2685,15 +3021,28 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref c (mod i (array-total-size c))))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type 1)
+                                    (,v1-type 1)
+                                    ;; The moved clone of v2
+                                    (,v2-type 3))
+                            `(:allocation (,o-type 1)
+                                          ;; The allocation of v2
+                                          (,v2-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-unique-vector-0 ()
-  (let* (;; Type VECTOR
-         (o (make-array 3 :adjustable t
-                          :initial-element 0))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type 0))
+             (num-elems 4)
+             ;; Type VECTOR
+             (o o-type (id-type (make-array num-elems :adjustable t
+                                                      :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2711,16 +3060,25 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref o i))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-shared-vector-0 ()
-  (let* ((item (cons 1 2))
-         ;; Type VECTOR
-         (o (make-array 3 :adjustable t
-                          :initial-element item))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type 1))
+             (v1 v1-type (id-type 2))
+             (v2 v2-type (id-type (cons v0 v1)))
+             (num-elems 4)
+             ;; Type VECTOR
+             (o o-type (id-type (make-array num-elems :adjustable t
+                                                      :initial-element v2)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2741,15 +3099,26 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref c (mod i (array-total-size c))))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type 1)
+                                    (,v1-type 1)
+                                    (,v2-type 3))
+                            `(:allocation (,o-type 1)
+                                          (,v2-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-unique-array-0 ()
-  (let* (;; Type ARRAY
-         (o (make-array '(3 4) :adjustable t
-                               :initial-element 0))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type 0))
+             (dims '(3 4))
+             ;; Type ARRAY
+             (o o-type (id-type (make-array dims :adjustable t
+                                                 :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2767,16 +3136,25 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref o i))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type ,(array-total-size o)))
+                            `(:allocation (,o-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-shared-array-0 ()
-  (let* ((item (cons 1 2))
-         ;; Type ARRAY
-         (o (make-array '(3 4) :adjustable t
-                               :initial-element item))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type 1))
+             (v1 v1-type (id-type 2))
+             (v2 v2-type (id-type (cons 1 2)))
+             (dims '(3 4))
+             ;; Type ARRAY
+             (o o-type (id-type (make-array dims :adjustable t
+                                                 :initial-element v2)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2797,15 +3175,28 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref c (mod i (array-total-size c))))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type 1)
+                                    (,v1-type 1)
+                                    ;; the clone of v2 is copied this many
+                                    ;; times.
+                                    (,v2-type ,(1- (array-total-size o))))
+                            `(:allocation (,o-type 1)
+                                          (,v2-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-simple-base-string-0 ()
-  (let* (;; Type SIMPLE-BASE-STRING
-         (o (make-array 3 :element-type 'base-char
-                          :initial-element #\a))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type #\a))
+             (num-elems 8)
+             ;; Type SIMPLE-BASE-STRING
+             (o o-type (id-type (make-array num-elems :element-type 'base-char
+                                                      :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2823,16 +3214,24 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref o i))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))))
+
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-base-string-0 ()
-  (let* (;; Type BASE-STRING
-         (o (make-array 3 :element-type 'base-char
-                          :adjustable t
-                          :initial-element #\a))
-         ;; All intentions have the same behavior for arrays.
-         (c (clone-deep o)))
+  (u:mvlet* ((v0 v0-type (id-type #\a))
+             (num-elems 8)
+             ;; Type BASE-STRING
+             (o o-type (id-type (make-array num-elems :element-type 'base-char
+                                                      :adjustable t
+                                                      :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2850,6 +3249,12 @@ copied. Return T if this is the case and NIL otherwise."
       (assert (eql (row-major-aref c i)
                    (row-major-aref o i))))
 
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))))
+
     (format t "Passed.~%")
     t))
 
@@ -2861,33 +3266,39 @@ copied. Return T if this is the case and NIL otherwise."
 
 (defun test-clone-deep-hash-table-0 ()
   "Can an empty hash table be deep copied and preserve its properties?"
-  (let* ((o (u:dict))
-         (c (clone-deep o)))
+  (u:mvlet* ((o o-type (id-type (u:dict)))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
     (finish-output)
 
     (assert (not (eq c o)))
+
     (assert-matching-hash-table-properties c o)
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-hash-table-1 ()
   "keys and values share no structure and are identity-policy style objects."
-  (let* ((k0 0)
-         (v0 1)
-         (k1 #\a)
-         (v1 #\b)
-         (k2 'foo)
-         (v2 'bar)
-         (k3 (lambda () 100))
-         (v3 (lambda () 200))
-         (k4 #P"/tmp/foo.txt")
-         (v4 #P"/tmp/bar.txt")
-         (o (u:dict #'eql k0 v0 k1 v1 k2 v2 k3 v3 k4 v4))
-         (c (clone-deep o)))
+  (u:mvlet* ((k0 k0-type (id-type 0))
+             (v0 v0-type (id-type 1))
+             (k1 k1-type (id-type #\a))
+             (v1 v1-type (id-type #\b))
+             (k2 k2-type (id-type 'foo))
+             (v2 v2-type (id-type 'bar))
+             (k3 k3-type (id-type (lambda () 100)))
+             (v3 v3-type (id-type (lambda () 200)))
+             (k4 k4-type (id-type #P"/tmp/foo.txt"))
+             (v4 v4-type (id-type #P"/tmp/bar.txt"))
+             (o o-type (id-type (u:dict #'eql k0 v0 k1 v1 k2 v2 k3 v3 k4 v4)))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
     (format t "Cloned   | ~S~%" c)
@@ -2897,65 +3308,99 @@ copied. Return T if this is the case and NIL otherwise."
     (assert (not (eq c o)))
     (assert-matching-hash-table-properties c o)
 
-    ;; Ensure the keys values are what they should be.  These tests are a
-    ;; little odd, but transitively, they do the intention of equality of the
-    ;; source keys and values between themselves and their initial values in
-    ;; the LET bindings. It is written like this because the hash tables can
-    ;; iterate over the key/value pairs in any order.
-    (let ((all-keys (list k0 k1 k2 k3 k4))
-          (all-values (list v0 v1 v2 v3 v4)))
-      (u:do-hash (k v o)
-        (assert (some (u:curry 'eql k) all-keys))
-        (assert (some (u:curry 'eql v) all-values)))
+    ;; TODO: I need to write a structure checker on deep cloned key/value
+    ;; pairs. This is not obvious...
 
-      (u:do-hash (k v c)
-        (assert (some (u:curry 'eql k) all-keys))
-        (assert (some (u:curry 'eql v) all-values)))
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,k0-type 1)
+                                    (,k1-type 1)
+                                    (,k2-type 1)
+                                    (,k3-type 1)
+                                    (,k4-type 1)
+                                    (,v0-type 1)
+                                    (,v1-type 1)
+                                    (,v2-type 1)
+                                    (,v3-type 1)
+                                    (,v4-type 1)
+                                    )
+                            `(:allocation (,o-type 1))))
 
-      (format t "Passed.~%")
-      t)))
+    (format t "Passed.~%")
+    t))
 
-;; KEEP GOING (add more tests for sure).
 
-;; TODO: Broken (because not converted to deep clone semantics).
+;; KEEP GOING add in more strenuous stats checking.
+;; KEEP GOING adding in eql-map statistics.
+
+
 (defun test-clone-deep-hash-table-2 ()
-  (let* ((key (list 1 2 3))
-         (value (list 4 5 6))
-         (o (u:dict #'equal key value))
-         (eql-map (make-eql-map :stats-alloc (u:dict #'equal)))
-         (c (clone-deep o eql-map)))
+  "keys and values share no structure and are not identity-policy style values"
+  (u:mvlet* ((e0 e0-type (id-type 42))
+             (k0-elems 8)
+             (k0 k0-type (id-type (make-array k0-elems :initial-element e0)))
+             (v0 v0-type (id-type "Hello World"))
+
+             (e1 e1-type (id-type 10))
+             (e2 e2-type (id-type 20))
+             (e3 e3-type (id-type 30))
+             (k1 k1-type (id-type (list e1 e2 e3)))
+             (v1 v1-type (id-type (make-hash-table)))
+
+             (e4 e4-type (id-type 100))
+             (e5 e5-type (id-type 200))
+             (k2 k2-type (id-type (u:dict)))
+             (v2 v2-type (id-type (cons e4 e5)))
+
+             (e6 e6-type (id-type #'+))
+             (e7 e7-type (id-type #'-))
+             (e8 e8-type (id-type #'*))
+             (e9 e9-type (id-type #'/))
+             (k3 k3-type (id-type (list e6 e7)))
+             (v3 v3-type (id-type (list e8 e9)))
+
+             (e10 e10-type (id-type (u:dict)))
+             (k4 k4-type (id-type #*11011))
+             (v4 v4-type (id-type (list e10)))
+
+             (o o-type (id-type (u:dict #'equal
+                                        k0 v0 k1 v1 k2 v2 k3 v3 k4 v4)))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" o)
+    (u:do-hash (k v o)
+      (format t "         > ~S -> ~S~%" k v))
     (format t "Cloned   | ~S~%" c)
+    (u:do-hash (k v c)
+      (format t "         > ~S -> ~S~%" k v))
     (finish-output)
 
+    ;; Ensure it is newly allocated
     (assert (not (eq c o)))
     (assert-matching-hash-table-properties c o)
 
-    ;; Ensure the values exist in the clone and the expected shared structure
-    ;; too.
-    (assert (u:href c key))
-    (assert (equal (u:href c key) value))
-    (let ((o-key nil)
-          (o-value nil)
-          (c-key nil)
-          (c-value nil))
+    ;; TODO: I need to write a structure checker on deep cloned key/value
+    ;; pairs. This is not obvious...
 
-      (u:do-hash (k v o)
-        (push k o-key)
-        (push v o-value))
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move (,k0-type 1)
+                                    (,k1-type 1)
+                                    (,k2-type 1)
+                                    (,k3-type 1)
+                                    (,k4-type 1)
+                                    (,v0-type 1)
+                                    (,v1-type 1)
+                                    (,v2-type 1)
+                                    (,v3-type 1)
+                                    (,v4-type 1)
+                                    )
+                            `(:allocation (,o-type 1))))
 
-      (u:do-hash (k v c)
-        (push k c-key)
-        (push v c-value))
-
-      ;; The keys must be identical in the shallow copy.
-      (assert (eq (first o-key) (first c-key)))
-      ;; The values must be identical in the shallow copy.
-      (assert (eq (first o-value) (first c-value)))
-
-      (format t "Passed.~%")
-      t)))
+    (format t "Passed.~%")
+    t))
 
 
 ;;; ------------------------------------------------------------
@@ -2995,6 +3440,8 @@ copied. Return T if this is the case and NIL otherwise."
   (test-clone-deep-cons-4)
   (test-clone-deep-cons-5)
   (test-clone-deep-cons-6)
+  (test-clone-deep-cons-7)
+  (test-clone-deep-cons-8)
 
   ;; The arrays may hold references to themselves, to nested arrays, to cons
   ;; cells, and to identity-like values.
