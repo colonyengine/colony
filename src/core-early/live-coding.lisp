@@ -33,7 +33,7 @@
             (if (eq repl-package :slynk)
                 `(lambda ()
                    (,(find-symbol "SEND-PROMPT" :slynk-mrepl)))
-                (constantly nil)))
+                `(lambda () nil)))
            (compile
             'update-repl
             (case repl-package
@@ -47,17 +47,17 @@
                                          (,(find-symbol "DEFAULT-CONNECTION"
                                                         :swank)))))
                     (,(find-symbol "HANDLE-REQUESTS" :swank) repl t))))
-              (t (constantly nil))))
+              (t `(lambda () nil))))
            (compile
             'send-to-repl
             (if (eq repl-package :slynk)
-                (constantly nil)
+                `(lambda () nil)
                 ;; TODO: uncomment and remove constantly line above when Sly
                 ;; merges in send-to-repl to master.
                 #++`(lambda (values &key (comment "Sent from Pyx"))
                       (,(find-symbol "COPY-TO-REPL-IN-EMACS" :slynk-mrepl)
                        values :blurb comment :pop-to-buffer nil))
-                (constantly nil))))))
+                `(lambda () nil))))))
   (generate-live-support-functions))
 
 (defun recompile-queued-items (core)
