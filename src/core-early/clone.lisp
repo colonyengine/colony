@@ -121,9 +121,6 @@
                 :stats-array-clone-speed-slow t))
 
 
-(defun eql-map-initialize (eql-map)
-  (clrhash (entry-table eql-map)))
-
 (defun eql-map-ref (eql-map original-object)
   "Return the EQL-MAP-ENTRY assocated with the ORIGINAL-OBJECT in EQL-MAP
 or NIL if not present."
