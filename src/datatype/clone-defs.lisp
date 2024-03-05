@@ -58,16 +58,24 @@
   (:default-initargs :sort-id 1))
 (defclass cons-intention (intention) ()
   (:default-initargs :sort-id 2))
+;; TODO: Not implemented yet.
+;; NOTE: Don't honor cyclic references in the list structure in shallow clone.
+(defclass list-intention-pedantic (intention) ()
+  (:default-initargs :sort-id 3))
 ;; NOTE: list-intention preserves cyclic structure in the list structure but no
 ;; other shared references in shallow clones. This is least surprising.
 (defclass list-intention (intention) ()
-  (:default-initargs :sort-id 3))
+  (:default-initargs :sort-id 4))
+;; TODO: Not implemented yet.
+;; NOTE: Don't honor cyclic references in the alist structure in shallow clone.
+(defclass alist-intention-pedantic (intention) ()
+  (:default-initargs :sort-id 5))
 ;; NOTE: alist-intention preserves cyclic structure in the list structure but
 ;; no other shared references in shallow clones. This is least surprising.
 (defclass alist-intention (intention) ()
-  (:default-initargs :sort-id 4))
+  (:default-initargs :sort-id 6))
 (defclass graph-intention (intention) ()
-  (:default-initargs :sort-id 5))
+  (:default-initargs :sort-id 7))
 (defgeneric compare-intention (intention-left intention-right)
   (:documentation "Intentions can be thought of as identifiers of
 complexity/functionality/etc. This function returns -1 if INTENTION-LEFT is
