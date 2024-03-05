@@ -2,7 +2,7 @@
 
 (defpackage #:virality.clone
   (:use #:cl)
-  ;; CLONE-POLICY API
+  ;; CLONE-POLICY Classes
   (:export
    #:allocating-clone
    #:clone-policy
@@ -10,13 +10,65 @@
    #:identity-clone
    #:shallow-clone
    )
-  ;; CLONE API
+  ;; INTENTION Classes and API
   (:export
+   #:alist-intention
+   #:compare-intention
+   #:cons-intention
+   #:graph-intention
+   #:intention
+   #:intention/=
+   #:intention<
+   #:intention<=
+   #:intention=
+   #:intention>
+   #:intention>=
+   #:list-intention
+   #:make-alist-intention
+   #:make-cons-intention
+   #:make-graph-intention
+   #:make-list-intention
+   #:make-no-specific-intention
+   #:no-specific-intention
+   )
+  ;; EQL-MAP & EQL-MAP-ENTRY Classes and API
+  ;; TODO: Maybe we can export less around the slot symbols?
+  (:export
+   #:entry-table
+   #:eql-map
+   #:eql-map-dump
+   #:eql-map-dump-stats
+   #:eql-map-entry
+   #:eql-map-get-stats-domain
+   #:eql-map-map-stats-match-p
+   #:eql-map-mark-target
+   #:eql-map-mark-visited
+   #:eql-map-record
+   #:eql-map-ref
+   #:eql-map-visited-p
+   #:intent
+   #:make-eql-map
+   #:make-eql-map-entry
+   #:make-eql-map-with-stats
+   #:origin
+   #:stats
+   #:target
+   #:transition-p
+   #:validate-eql-map-stats
+   )
+  ;; CLONE API (including shortcut API)
+  (:export
+   #:allocatablep
    #:clone
+   #:clone-allocate
    #:clone-deep
    #:clone-identity
    #:clone-object
    #:clone-shallow
+   #:clone-shallow-alist
+   #:clone-shallow-cons
+   #:clone-shallow-graph
+   #:clone-shallow-list
    #:make-deep-clone
    #:make-identity-clone
    #:make-shallow-clone
