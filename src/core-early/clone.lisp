@@ -112,6 +112,14 @@
       )
     (make-instance 'eql-map :stats stats-table)))
 
+(defun make-eql-map-with-stats ()
+  (make-eql-map :stats-move-original t
+                :stats-move-clone t
+                :stats-allocation t
+                :stats-array-clone-speed-fast t
+                :stats-array-clone-speed-slow t))
+
+
 (defun eql-map-initialize (eql-map)
   (clrhash (entry-table eql-map)))
 
@@ -182,6 +190,172 @@ The event has this meaning for each domain:
              (setf (gethash key alloc-table)
                    (+ (gethash key alloc-table 0) event)))))))))
 
+(defun eql-map-get-stats-domain (eql-map domain)
+  (u:when-let ((tbl (stats eql-map)))
+    (u:href tbl domain)))
+
+(defun eql-map-stats-match-p (eql-map &rest stat-specs)
+  "Check that the statistics described in the STAT-SPECS rest list for the
+specified domains are exactly as found in the statistics table of the EQL-MAP
+instance.
+
+Return four values (the last two are NIL if value 0 is T):
+  Value 0: T if the stats matched and NIL otherwise.
+  Value 1: A keyword indicating the reason for the first value.
+           Legal Values are:
+            :ok -  The stats all matched.
+            :error-stats-found -  Unexpected stats found in a domain.
+            :error-empty-domain - An unexpectedly empty domain.
+            :error-wrong-stats - Number of stats don't match for a domain..
+            :error-missing-stat - An expected stat is not present in domain.
+            :error-wrong-stat - Required stat has the wrong value in domain.
+  Value 2: The first domain in which the problem was discovered.
+  Value 3: A fully formed error string describing the problem.
+
+The STAT-SPECS can be NIL or be a list of STAT-SPEC forms. The STAT-SPEC format
+may be one of these:
+
+ ;; Move is when a reference or object (like a fixnum) is SETFed in a plain way
+ ;; somewhere else.
+ (:move (type-name-0 number-0) ... (type-name-N number-N))
+
+ ;; Allocation is when an object is copied via memory allocation.
+ (:allocation (type-name-0 number-0) ... (type-name-N number-N))
+
+The first entry means that in domain-0 the type-name-0 key must have a
+statistic of exactly number-0 and so on. Any keys found in domain-0 that are
+not specified in the STAT-SPEC will cause an assertion to fail. If the same
+type-name-0 occurs in multiple pairs for the same domain, it is coalesced into
+a single pair with the summation of the numbers automatically before processing
+it.
+
+STAT-SPEC forms that look like this:
+
+ (:move)
+ (:allocation)
+
+indicate that that if the domain exists, there must be no statistic entries in
+it. If there are more or less keys in the domain than specified then fail."
+
+  (labels ((signal-error (error-code domain message-fmt &rest args)
+             (return-from eql-map-stats-match-p
+               (values nil
+                       error-code
+                       domain
+                       (apply #'format nil message-fmt args))))
+           (error-stats-found (domain)
+             (signal-error
+              :error-stats-found
+              domain
+              "No stats expected for domain ~S, but some found!" domain))
+           (error-empty-domain (domain)
+             (signal-error
+              :error-empty-domain
+              domain
+              "Required statistics for domain ~S, but none found!" domain))
+           (error-wrong-stats (domain expected-stats found-stats)
+             (signal-error
+              :error-wrong-stats
+              domain
+              "Required ~A statistics for domain ~S, but instead found ~A!"
+              expected-stats domain found-stats))
+           (error-missing-stat (domain key)
+             (signal-error
+              :error-missing-stat
+              domain
+              "Cannot find statistic key ~S in domain ~S!" key domain))
+           (error-wrong-stat (domain stat-name expected-value actual-value)
+             (signal-error
+              :error-wrong-stat
+              domain
+              "In domain ~S, expected (~S ~A) : found (~S ~A)"
+              domain stat-name expected-value stat-name actual-value))
+
+           ;; NOTE: A helper to make human specification of the tests easier.
+           ;;
+           ;; The stat-specs might look like this:
+           ;; ((:move (cons 1) (cons 2))
+           ;;  (:allocation (hash-table 1) (cons 3)))
+           ;; and function coalesced ALL spec inside of a list of stat-specs
+           ;; into a form like:
+           ;; ((:move (cons 3))
+           ;;  (:allocation (hash-table 1) (cons 3)))
+           (coalesce-stat-specs (original-stat-specs)
+             (let ((coalesced-stat-specs nil)
+                   (stat-tbl (u:dict #'equal)))
+               (dolist (spec original-stat-specs)
+                 (destructuring-bind (domain . statistics) spec
+                   ;; sum all of the nums for each type-name
+                   (loop :for (tname num) :in statistics
+                         :do (u:ensure-gethash tname stat-tbl 0)
+                             (incf (u:href stat-tbl tname) num))
+                   ;; rebuild the newly coalesced spec and store it off
+                   (push (cons domain
+                               (let ((new-stats nil))
+                                 (u:do-hash (tname num stat-tbl)
+                                   (push (list tname num) new-stats))
+                                 (nreverse new-stats)))
+                         coalesced-stat-specs)
+                   ;; Get ready for next collection of statistics in the next
+                   ;; domain we process.
+                   (clrhash stat-tbl)))
+               coalesced-stat-specs)))
+
+    (let ((processed-domains (u:dict 'eq)))
+      ;; First, coalesce the statistics for each domain in the stat-specs
+      ;; into a new stat-specs form for each domain where each state is
+      ;; specified only once.
+      (let ((coalesced-stat-specs (coalesce-stat-specs stat-specs)))
+        ;; Then, process the coalesced version of stat-specs.
+        (dolist (stat-spec coalesced-stat-specs)
+          (destructuring-bind (domain . statistics) stat-spec
+            (ecase domain
+              ((:move-original :move-clone :allocation :array-clone-speed-fast
+                :array-clone-speed-slow)
+               ;; Record the fact we processed this domain
+               (setf (u:href processed-domains domain) t)
+
+               (let ((tbl (eql-map-get-stats-domain eql-map domain)))
+                 (cond
+                   ((null statistics)
+                    ;; Ensure there were no stats kept for this domain.
+                    (unless (or (null tbl)
+                                (zerop (hash-table-count tbl)))
+                      (error-stats-found domain)))
+                   (t
+                    ;; Ensure we have a table....
+                    (unless tbl
+                      (error-empty-domain domain))
+                    ;; ... and the right number of keys
+                    (let ((expected-stats (length statistics))
+                          (found-stats (hash-table-count tbl)))
+                      (unless (= expected-stats found-stats)
+                        (error-wrong-stats domain expected-stats found-stats)))
+                    ;; ...and now check that the keys are what we expect!
+                    (dolist (stat statistics)
+                      (destructuring-bind (type-name expected-num) stat
+                        (u:mvlet ((stat-value presentp (u:href tbl type-name)))
+                          (if presentp
+                              (unless (eql stat-value expected-num)
+                                ;; oops stat didn't match!
+                                (error-wrong-stat domain type-name
+                                                  expected-num stat-value))
+                              ;; ...oops didn't find expected stat!
+                              (error-missing-stat domain type-name)))))))))))))
+
+      ;; Check to see if there are any non empty domains we didn't process.
+      ;; If so, that's an error.
+      (u:do-hash-keys (domain-key (stats eql-map))
+        (unless (u:href processed-domains domain-key)
+          (ecase domain-key
+            ((:move-original :move-clone :allocation :array-clone-speed-fast
+              :array-clone-speed-slow)
+             (unless
+                 (zerop (hash-table-count(u:href (stats eql-map) domain-key)))
+               (error-stats-found domain-key)))
+            ))))
+    (values t :ok)))
+
 ;; TODO: This is very terrible, only for debugging purposes at this time.
 (defun eql-map-dump (eql-map &optional (strm t))
   (flet ((safe-slot-value (obj slot-name slot-reader)
@@ -205,6 +379,63 @@ The event has this meaning for each domain:
        (format strm "~%"))
      (entry-table eql-map))))
 
+;; TODO: This is sort of cruddy code, and maybe should be moved into
+;; clone.lisp.
+(defun eql-map-dump-stats (eql-map)
+  (unless (stats eql-map)
+    (format t "EQL-MAP: No stats available.")
+    (return-from eql-map-dump-stats nil))
+
+  (format t "EQL-MAP statistics:~%")
+  (format t " Visited Allocatable Nodes: ~A~%"
+          (hash-table-count (entry-table eql-map)))
+
+  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :move-original)))
+    (format t " Domain :move-original~%")
+    (if (plusp (hash-table-count tbl))
+        (u:do-hash (type-name num-moved tbl)
+          (format t "  ~8@A ~S~%" num-moved type-name))
+        (format t "  ~8@A~%" "NONE")))
+
+  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :move-clone)))
+    (format t " Domain :move-clone~%")
+    (if (plusp (hash-table-count tbl))
+        (u:do-hash (type-name num-moved tbl)
+          (format t "  ~8@A ~S~%" num-moved type-name))
+        (format t "  ~8@A~%" "NONE")))
+
+  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :allocation)))
+    (format t " Domain :allocation~%")
+    (if (plusp (hash-table-count tbl))
+        (u:do-hash (type-name num-allocated tbl)
+          (format t "  ~8@A ~S~%" num-allocated type-name))
+        (format t "  ~8@A~%" "NONE")))
+
+  (u:when-let ((tbl (eql-map-get-stats-domain eql-map
+                                              :array-clone-speed-fast)))
+    (format t " Domain :array-clone-speed-fast~%")
+    (if (plusp (hash-table-count tbl))
+        (u:do-hash (type-name num-allocated tbl)
+          (format t "  ~8@A ~S~%" num-allocated type-name))
+        (format t "  ~8@A~%" "NONE")))
+
+  (u:when-let ((tbl (eql-map-get-stats-domain eql-map
+                                              :array-clone-speed-slow)))
+    (format t " Domain :array-clone-speed-slow~%")
+    (if (plusp (hash-table-count tbl))
+        (u:do-hash (type-name num-allocated tbl)
+          (format t "  ~8@A ~S~%" num-allocated type-name))
+        (format t "  ~8@A~%" "NONE"))))
+
+;; Helper macro for the eql-map statistics tests.
+(defmacro validate-eql-map-stats (match-form)
+  (u:with-gensyms (matchedp reason domain msg)
+    `(u:mvlet* ((,matchedp ,reason ,domain ,msg
+                           ,match-form))
+       (unless ,matchedp
+         (error "eql-map matching failed:~% reason: ~S~% domain: ~S~% msg: ~S"
+                ,reason ,domain ,msg))
+       t)))
 
 ;;;; Creation of CLONE-POLICIES
 (defun make-identity-clone ()

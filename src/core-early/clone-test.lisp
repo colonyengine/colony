@@ -151,7 +151,11 @@
 ;;; ------------------------------------------------------------
 ;; Testing the EQL-MAP API
 ;;; ------------------------------------------------------------
+
+;; TODO: This actually doesn't yet smoke test the EQL-MAP object. Tsk Tsk!
+;; TODO: Write actual unit tests for the EQL-MAP interface itself.
 (defun test-eql-map ()
+  "This should smoke test the EQL-MAP."
   (let ((eql-map (make-eql-map))
         (o0 42)
         (o1 (cons 1 2))
@@ -166,245 +170,12 @@
     (eql-map-mark-visited eql-map o4)
     (eql-map-mark-target eql-map o4 (make-hash-table)
                          (make-graph-intention) )
-    (dump-eql-map eql-map)))
+    (eql-map-dump eql-map)
+    t))
 
 ;;; ---------------------------------------------------------------------------
-;; EQL-MAP helper functions for the tests.
+;; Helper functions for the tests.
 ;;; ---------------------------------------------------------------------------
-(defun make-eql-map-with-stats ()
-  (make-eql-map :stats-move-original t
-                :stats-move-clone t
-                :stats-allocation t
-                :stats-array-clone-speed-fast t
-                :stats-array-clone-speed-slow t))
-
-(defun eql-map-get-stats-domain (eql-map domain)
-  (u:when-let ((tbl (stats eql-map)))
-    (u:href tbl domain)))
-
-;; TODO: This is sort of cruddy code, and maybe should be moved into
-;; clone.lisp.
-(defun eql-map-dump-stats (eql-map)
-  (unless (stats eql-map)
-    (format t "EQL-MAP: No stats available.")
-    (return-from eql-map-dump-stats nil))
-
-  (format t "EQL-MAP statistics:~%")
-  (format t " Visited Allocatable Nodes: ~A~%"
-          (hash-table-count (entry-table eql-map)))
-
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :move-original)))
-    (format t " Domain :move-original~%")
-    (if (plusp (hash-table-count tbl))
-        (u:do-hash (type-name num-moved tbl)
-          (format t "  ~8@A ~S~%" num-moved type-name))
-        (format t "  ~8@A~%" "NONE")))
-
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :move-clone)))
-    (format t " Domain :move-clone~%")
-    (if (plusp (hash-table-count tbl))
-        (u:do-hash (type-name num-moved tbl)
-          (format t "  ~8@A ~S~%" num-moved type-name))
-        (format t "  ~8@A~%" "NONE")))
-
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :allocation)))
-    (format t " Domain :allocation~%")
-    (if (plusp (hash-table-count tbl))
-        (u:do-hash (type-name num-allocated tbl)
-          (format t "  ~8@A ~S~%" num-allocated type-name))
-        (format t "  ~8@A~%" "NONE")))
-
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map
-                                              :array-clone-speed-fast)))
-    (format t " Domain :array-clone-speed-fast~%")
-    (if (plusp (hash-table-count tbl))
-        (u:do-hash (type-name num-allocated tbl)
-          (format t "  ~8@A ~S~%" num-allocated type-name))
-        (format t "  ~8@A~%" "NONE")))
-
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map
-                                              :array-clone-speed-slow)))
-    (format t " Domain :array-clone-speed-slow~%")
-    (if (plusp (hash-table-count tbl))
-        (u:do-hash (type-name num-allocated tbl)
-          (format t "  ~8@A ~S~%" num-allocated type-name))
-        (format t "  ~8@A~%" "NONE")))
-
-
-  )
-
-(defun eql-map-stats-match-p (eql-map &rest stat-specs)
-  "Check that the statistics described in the STAT-SPECS rest list for the
-specified domains are exactly as found in the statistics table of the EQL-MAP
-instance.
-
-Return four values (the last two are NIL if value 0 is T):
-  Value 0: T if the stats matched and NIL otherwise.
-  Value 1: A keyword indicating the reason for the first value.
-           Legal Values are:
-            :ok -  The stats all matched.
-            :error-stats-found -  Unexpected stats found in a domain.
-            :error-empty-domain - An unexpectedly empty domain.
-            :error-wrong-stats - Number of stats don't match for a domain..
-            :error-missing-stat - An expected stat is not present in domain.
-            :error-wrong-stat - Required stat has the wrong value in domain.
-  Value 2: The first domain in which the problem was discovered.
-  Value 3: A fully formed error string describing the problem.
-
-The STAT-SPECS can be NIL or be a list of STAT-SPEC forms. The STAT-SPEC format
-may be one of these:
-
- ;; Move is when a reference or object (like a fixnum) is SETFed in a plain way
- ;; somewhere else.
- (:move (type-name-0 number-0) ... (type-name-N number-N))
-
- ;; Allocation is when an object is copied via memory allocation.
- (:allocation (type-name-0 number-0) ... (type-name-N number-N))
-
-The first entry means that in domain-0 the type-name-0 key must have a
-statistic of exactly number-0 and so on. Any keys found in domain-0 that are
-not specified in the STAT-SPEC will cause an assertion to fail. If the same
-type-name-0 occurs in multiple pairs for the same domain, it is coalesced into
-a single pair with the summation of the numbers automatically before processing
-it.
-
-STAT-SPEC forms that look like this:
-
- (:move)
- (:allocation)
-
-indicate that that if the domain exists, there must be no statistic entries in
-it. If there are more or less keys in the domain than specified then fail."
-
-  (labels ((signal-error (error-code domain message-fmt &rest args)
-             (return-from eql-map-stats-match-p
-               (values nil
-                       error-code
-                       domain
-                       (apply #'format nil message-fmt args))))
-           (error-stats-found (domain)
-             (signal-error
-              :error-stats-found
-              domain
-              "No stats expected for domain ~S, but some found!" domain))
-           (error-empty-domain (domain)
-             (signal-error
-              :error-empty-domain
-              domain
-              "Required statistics for domain ~S, but none found!" domain))
-           (error-wrong-stats (domain expected-stats found-stats)
-             (signal-error
-              :error-wrong-stats
-              domain
-              "Required ~A statistics for domain ~S, but instead found ~A!"
-              expected-stats domain found-stats))
-           (error-missing-stat (domain key)
-             (signal-error
-              :error-missing-stat
-              domain
-              "Cannot find statistic key ~S in domain ~S!" key domain))
-           (error-wrong-stat (domain stat-name expected-value actual-value)
-             (signal-error
-              :error-wrong-stat
-              domain
-              "In domain ~S, expected (~S ~A) : found (~S ~A)"
-              domain stat-name expected-value stat-name actual-value))
-
-           ;; NOTE: A helper to make human specification of the tests easier.
-           ;;
-           ;; The stat-specs might look like this:
-           ;; ((:move (cons 1) (cons 2))
-           ;;  (:allocation (hash-table 1) (cons 3)))
-           ;; and function coalesced ALL spec inside of a list of stat-specs
-           ;; into a form like:
-           ;; ((:move (cons 3))
-           ;;  (:allocation (hash-table 1) (cons 3)))
-           (coalesce-stat-specs (original-stat-specs)
-             (let ((coalesced-stat-specs nil)
-                   (stat-tbl (u:dict #'equal)))
-               (dolist (spec original-stat-specs)
-                 (destructuring-bind (domain . statistics) spec
-                   ;; sum all of the nums for each type-name
-                   (loop :for (tname num) :in statistics
-                         :do (u:ensure-gethash tname stat-tbl 0)
-                             (incf (u:href stat-tbl tname) num))
-                   ;; rebuild the newly coalesced spec and store it off
-                   (push (cons domain
-                               (let ((new-stats nil))
-                                 (u:do-hash (tname num stat-tbl)
-                                   (push (list tname num) new-stats))
-                                 (nreverse new-stats)))
-                         coalesced-stat-specs)
-                   ;; Get ready for next collection of statistics in the next
-                   ;; domain we process.
-                   (clrhash stat-tbl)))
-               coalesced-stat-specs)))
-
-    (let ((processed-domains (u:dict 'eq)))
-      ;; First, coalesce the statistics for each domain in the stat-specs
-      ;; into a new stat-specs form for each domain where each state is
-      ;; specified only once.
-      (let ((coalesced-stat-specs (coalesce-stat-specs stat-specs)))
-        ;; Then, process the coalesced version of stat-specs.
-        (dolist (stat-spec coalesced-stat-specs)
-          (destructuring-bind (domain . statistics) stat-spec
-            (ecase domain
-              ((:move-original :move-clone :allocation :array-clone-speed-fast
-                :array-clone-speed-slow)
-               ;; Record the fact we processed this domain
-               (setf (u:href processed-domains domain) t)
-
-               (let ((tbl (eql-map-get-stats-domain eql-map domain)))
-                 (cond
-                   ((null statistics)
-                    ;; Ensure there were no stats kept for this domain.
-                    (unless (or (null tbl)
-                                (zerop (hash-table-count tbl)))
-                      (error-stats-found domain)))
-                   (t
-                    ;; Ensure we have a table....
-                    (unless tbl
-                      (error-empty-domain domain))
-                    ;; ... and the right number of keys
-                    (let ((expected-stats (length statistics))
-                          (found-stats (hash-table-count tbl)))
-                      (unless (= expected-stats found-stats)
-                        (error-wrong-stats domain expected-stats found-stats)))
-                    ;; ...and now check that the keys are what we expect!
-                    (dolist (stat statistics)
-                      (destructuring-bind (type-name expected-num) stat
-                        (u:mvlet ((stat-value presentp (u:href tbl type-name)))
-                          (if presentp
-                              (unless (eql stat-value expected-num)
-                                ;; oops stat didn't match!
-                                (error-wrong-stat domain type-name
-                                                  expected-num stat-value))
-                              ;; ...oops didn't find expected stat!
-                              (error-missing-stat domain type-name)))))))))))))
-
-      ;; Check to see if there are any non empty domains we didn't process.
-      ;; If so, that's an error.
-      (u:do-hash-keys (domain-key (stats eql-map))
-        (unless (u:href processed-domains domain-key)
-          (ecase domain-key
-            ((:move-original :move-clone :allocation :array-clone-speed-fast
-              :array-clone-speed-slow)
-             (unless
-                 (zerop (hash-table-count(u:href (stats eql-map) domain-key)))
-               (error-stats-found domain-key)))
-            ))))
-    (values t :ok)))
-
-;; Helper macro for the eql-map statistics tests.
-(defmacro validate-eql-map-stats (match-form)
-  (u:with-gensyms (matchedp reason domain msg)
-    `(u:mvlet* ((,matchedp ,reason ,domain ,msg
-                           ,match-form))
-       (unless ,matchedp
-         (error "eql-map matching failed:~% reason: ~S~% domain: ~S~% msg: ~S"
-                ,reason ,domain ,msg))
-       t)))
-
 
 (defun id-type (val)
   "Return two values. The first value is VAL and the second value is the type
@@ -419,7 +190,6 @@ order."
 ;;; ---------------------------------------------------------------------------
 ;; SHALLOW cloning tests.
 ;;; ---------------------------------------------------------------------------
-
 
 ;;; ------------------------------------------------------------
 ;; clone-shallow functions of ANY intention
@@ -1529,6 +1299,348 @@ structure or cycles in the cons cells."
     (assert (eql (fill-pointer c) (fill-pointer o))))
   t)
 
+(defun test-clone-shallow-array-simple-array-single-float-0 ()
+  (u:mvlet* ((v0 v0-type (id-type 1f0))
+             (num-elems 8)
+             ;; Type (SIMPLE-ARRAY SINGLE-FLOAT (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type 'single-float
+                                            :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-shallow-array-simple-array-unsigned-byte-8-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (UNSIGNED-BYTE 8) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(unsigned-byte 8)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((unsigned-byte 8) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-shallow-array-simple-array-signed-byte-8-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (SIGNED-BYTE 8) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(signed-byte 8)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((signed-byte 8) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-shallow-array-simple-array-unsigned-byte-16-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (UNSIGNED-BYTE 16) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(unsigned-byte 16)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((unsigned-byte 16) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-shallow-array-simple-array-signed-byte-16-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (SIGNED-BYTE 16) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(signed-byte 16)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((signed-byte 16) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-shallow-array-simple-array-unsigned-byte-32-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (UNSIGNED-BYTE 32) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(unsigned-byte 32)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((unsigned-byte 32) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-shallow-array-simple-array-signed-byte-32-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (SIGNED-BYTE 32) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(signed-byte 32)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((signed-byte 32) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-shallow-array-simple-array-unsigned-byte-64-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (UNSIGNED-BYTE 64) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(unsigned-byte 64)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((unsigned-byte 64) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-shallow-array-simple-array-signed-byte-64-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (SIGNED-BYTE 64) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(signed-byte 64)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((signed-byte 64) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-shallow-array-simple-array-double-float-0 ()
+  (u:mvlet* ((v0 v0-type (id-type 1d0))
+             (num-elems 8)
+             ;; Type (SIMPLE-ARRAY DOUBLE-FLOAT (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type 'double-float
+                                            :initial-element v0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-shallow o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
 (defun test-clone-shallow-array-simple-string-0 ()
   (u:mvlet* ((v0 v0-type (id-type #\a))
              (num-elems 8)
@@ -1737,8 +1849,6 @@ structure or cycles in the cons cells."
     (format t "Passed.~%")
     t))
 
-;; KEEP GOING adding :array-clone-speed-* stuff.
-
 (defun test-clone-shallow-array-shared-simple-vector-0 ()
   (u:mvlet* ((v0 v0-type (id-type (cons 1 2)))
              (num-elems 4)
@@ -1773,7 +1883,8 @@ structure or cycles in the cons cells."
                             ;; structure in this shallow clone, so we record
                             ;; these into the :move-original domain.
                             `(:move-original (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -1805,7 +1916,8 @@ structure or cycles in the cons cells."
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
                             `(:move-original (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -1845,7 +1957,8 @@ structure or cycles in the cons cells."
                             ;; shallow copy and can only record this into the
                             ;; :move-original domain.
                             `(:move-original (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -1877,7 +1990,8 @@ structure or cycles in the cons cells."
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
                             `(:move-original (,v0-type ,(array-total-size c)))
-                            `(:allocation (,o-type 1))))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -1917,7 +2031,8 @@ structure or cycles in the cons cells."
                             ;; shallow clone and can only record these into the
                             ;; :move-original domain..
                             `(:move-original (,v0-type ,(array-total-size c)))
-                            `(:allocation (,o-type 1))))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -1949,7 +2064,8 @@ structure or cycles in the cons cells."
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
                             `(:move-original (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -1982,7 +2098,8 @@ structure or cycles in the cons cells."
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
                             `(:move-original (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -2028,7 +2145,8 @@ structure or cycles in the cons cells."
                                              (,v6-type 1)
                                              (,v7-type 1)
                                              (,v8-type 1))
-                            `(:allocation (,o-type 1))))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -2224,6 +2342,8 @@ copied. Return T if this is the case and NIL otherwise."
 (defun test-clone-shallow ()
   (format t "Shallow clone tests.~%")
 
+  (test-eql-map)
+
   (test-clone-shallow-function-0)
   (test-clone-shallow-character-0)
   (test-clone-shallow-pathname-0)
@@ -2250,6 +2370,15 @@ copied. Return T if this is the case and NIL otherwise."
   (test-clone-shallow-graph-4)
   (test-clone-shallow-graph-5)
 
+  (test-clone-shallow-array-simple-array-single-float-0)
+  (test-clone-shallow-array-simple-array-unsigned-byte-8-0)
+  (test-clone-shallow-array-simple-array-signed-byte-8-0)
+  (test-clone-shallow-array-simple-array-unsigned-byte-16-0)
+  (test-clone-shallow-array-simple-array-signed-byte-16-0)
+  (test-clone-shallow-array-simple-array-unsigned-byte-32-0)
+  (test-clone-shallow-array-simple-array-signed-byte-32-0)
+  (test-clone-shallow-array-simple-array-unsigned-byte-64-0)
+  (test-clone-shallow-array-simple-array-double-float-0)
   (test-clone-shallow-array-simple-string-0)
   (test-clone-shallow-array-simple-bit-vector-0)
   (test-clone-shallow-array-bit-vector-0)
@@ -2914,6 +3043,41 @@ copied. Return T if this is the case and NIL otherwise."
     (format t "Passed.~%")
     t))
 
+(defun test-clone-deep-array-simple-array-signed-byte-8-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (SIGNED-BYTE 8) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(signed-byte 8)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((signed-byte 8) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+
 (defun test-clone-deep-array-simple-array-unsigned-byte-16-0 ()
   (u:mvlet* ((num-elems 8)
              ;; Type (SIMPLE-ARRAY (UNSIGNED-BYTE 16) (*))
@@ -2947,6 +3111,41 @@ copied. Return T if this is the case and NIL otherwise."
 
     (format t "Passed.~%")
     t))
+
+(defun test-clone-deep-array-simple-array-signed-byte-16-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (SIGNED-BYTE 16) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(signed-byte 16)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((signed-byte 16) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
 
 (defun test-clone-deep-array-simple-array-unsigned-byte-32-0 ()
   (u:mvlet* ((num-elems 8)
@@ -2982,6 +3181,40 @@ copied. Return T if this is the case and NIL otherwise."
     (format t "Passed.~%")
     t))
 
+(defun test-clone-deep-array-simple-array-signed-byte-32-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (SIGNED-BYTE 32) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(signed-byte 32)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((signed-byte 32) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
 (defun test-clone-deep-array-simple-array-unsigned-byte-64-0 ()
   (u:mvlet* ((num-elems 8)
              ;; Type (SIMPLE-ARRAY (UNSIGNED-BYTE 64) (*))
@@ -3010,6 +3243,40 @@ copied. Return T if this is the case and NIL otherwise."
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
                             `(:move-original ((unsigned-byte 64) ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
+
+    (format t "Passed.~%")
+    t))
+
+(defun test-clone-deep-array-simple-array-signed-byte-64-0 ()
+  (u:mvlet* ((num-elems 8)
+             ;; Type (SIMPLE-ARRAY (SIGNED-BYTE 64) (*))
+             (o o-type (id-type (make-array num-elems
+                                            :element-type '(signed-byte 64)
+                                            :initial-element 0)))
+             ;; All intentions have the same behavior for arrays.
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated.
+    (assert (not (eq c o)))
+
+    (assert-matching-array-properties c o)
+
+    ;; Then, ensure all index values were deep copied.
+    ;; In this case, the characters will be = to each other.
+    (dotimes (i (array-total-size c))
+      (assert (= (row-major-aref c i)
+                  (row-major-aref o i))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original ((signed-byte 64) ,num-elems))
                             `(:allocation (,o-type 1))
                             `(:array-clone-speed-fast (,o-type 1))))
 
@@ -3085,16 +3352,6 @@ copied. Return T if this is the case and NIL otherwise."
     (format t "Passed.~%")
     t))
 
-
-
-
-;; KEEP GOING: Add in the new :array-clone-speed-* domain. Also add it to
-;; the shallow-clone stuff for arrays. TODO: Implement the fast/slow copy
-;; for shallow-clone arrays in the same manner I did it for deep clone.
-
-
-
-
 (defun test-clone-deep-array-simple-bit-vector-0 ()
   (u:mvlet* ((v0 v0-type (id-type 0))
              (num-elems 8)
@@ -3122,8 +3379,9 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:move-original (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3156,18 +3414,19 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:move-original (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
 
     (format t "Passed.~%")
     t))
 
 (defun test-clone-deep-array-unique-simple-array-0 ()
-  (u:mvlet* ((v0 v0-type (id-type 0))
+  (u:mvlet* ((v0 v0-type (id-type 23.5))
              (num-elems 8)
              ;; Type SIMPLE-ARRAY
              (o o-type (id-type (make-array num-elems
-                                            :element-type '(unsigned-byte 8)
+                                            :element-type 'single-float
                                             :initial-element v0)))
              ;; All intentions have the same behavior for arrays.
              (c eql-map (clone-deep o (make-eql-map-with-stats))))
@@ -3190,8 +3449,9 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:move-original (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-fast (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3200,9 +3460,9 @@ copied. Return T if this is the case and NIL otherwise."
   (u:mvlet* ((v0 v0-type (id-type 1))
              (v1 v1-type (id-type 2))
              (v2 v2-type (id-type (cons v0 v1)))
-             (num-elems 4)
-             ;; Type SIMPLE-ARRAY
-             (o o-type (id-type (make-array num-elems
+             (dims '(3 4))
+             ;; Type (SIMPLE-ARRAY T (*))
+             (o o-type (id-type (make-array dims
                                             :element-type 'cons
                                             :initial-element v2)))
              ;; All intentions have the same behavior for arrays.
@@ -3230,13 +3490,14 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 1)
-                                    (,v1-type 1)
-                                    ;; v2's clone is copied 3 times into the
-                                    ;; array.
-                                    (,v2-type 3))
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1))
+                            ;; v2's clone is copied 11 additional times into
+                            ;; the array.
+                            `(:move-clone (,v2-type 11))
                             `(:allocation (,v2-type 1)
-                                          (,o-type 1))))
+                                          (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3268,8 +3529,9 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:move-original (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3306,13 +3568,14 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 1)
-                                    (,v1-type 1)
-                                    ;; The moved clone of v2
-                                    (,v2-type 3))
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1))
+                            ;; The moved clone of v2
+                            `(:move-clone (,v2-type 3))
                             `(:allocation (,o-type 1)
                                           ;; The allocation of v2
-                                          (,v2-type 1))))
+                                          (,v2-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3345,8 +3608,9 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:move-original (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3384,11 +3648,12 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 1)
-                                    (,v1-type 1)
-                                    (,v2-type 3))
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1))
+                            `(:move-clone (,v2-type 3))
                             `(:allocation (,o-type 1)
-                                          (,v2-type 1))))
+                                          (,v2-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3421,8 +3686,9 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,(array-total-size o)))
-                            `(:allocation (,o-type 1))))
+                            `(:move-original (,v0-type ,(array-total-size o)))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3460,13 +3726,16 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type 1)
-                                    (,v1-type 1)
-                                    ;; the clone of v2 is copied this many
-                                    ;; times.
-                                    (,v2-type ,(1- (array-total-size o))))
+                            `(:move-original (,v0-type 1)
+                                             (,v1-type 1))
+                            ;; the clone of v2 is copied this many times. 1-
+                            ;; because we only count the additional time beyond
+                            ;; the first one for moving the clone.
+                            `(:move-clone
+                              (,v2-type ,(1- (array-total-size o))))
                             `(:allocation (,o-type 1)
-                                          (,v2-type 1))))
+                                          (,v2-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3499,8 +3768,9 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:move-original (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3534,8 +3804,9 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,v0-type ,num-elems))
-                            `(:allocation (,o-type 1))))
+                            `(:move-original (,v0-type ,num-elems))
+                            `(:allocation (,o-type 1))
+                            `(:array-clone-speed-slow (,o-type 1))))
 
     (format t "Passed.~%")
     t))
@@ -3596,26 +3867,20 @@ copied. Return T if this is the case and NIL otherwise."
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,k0-type 1)
-                                    (,k1-type 1)
-                                    (,k2-type 1)
-                                    (,k3-type 1)
-                                    (,k4-type 1)
-                                    (,v0-type 1)
-                                    (,v1-type 1)
-                                    (,v2-type 1)
-                                    (,v3-type 1)
-                                    (,v4-type 1)
-                                    )
+                            `(:move-original (,k0-type 1)
+                                             (,k1-type 1)
+                                             (,k2-type 1)
+                                             (,k3-type 1)
+                                             (,k4-type 1)
+                                             (,v0-type 1)
+                                             (,v1-type 1)
+                                             (,v2-type 1)
+                                             (,v3-type 1)
+                                             (,v4-type 1))
                             `(:allocation (,o-type 1))))
 
     (format t "Passed.~%")
     t))
-
-
-;; KEEP GOING add in more strenuous stats checking.
-;; KEEP GOING adding in eql-map statistics.
-
 
 (defun test-clone-deep-hash-table-2 ()
   "keys and values share no structure and are not identity-policy style values"
@@ -3628,11 +3893,11 @@ copied. Return T if this is the case and NIL otherwise."
              (e2 e2-type (id-type 20))
              (e3 e3-type (id-type 30))
              (k1 k1-type (id-type (list e1 e2 e3)))
-             (v1 v1-type (id-type (make-hash-table)))
+             (v1 v1-type (id-type (u:dict #'eq)))
 
              (e4 e4-type (id-type 100))
              (e5 e5-type (id-type 200))
-             (k2 k2-type (id-type (u:dict)))
+             (k2 k2-type (id-type (u:dict #'eql)))
              (v2 v2-type (id-type (cons e4 e5)))
 
              (e6 e6-type (id-type #'+))
@@ -3642,10 +3907,11 @@ copied. Return T if this is the case and NIL otherwise."
              (k3 k3-type (id-type (list e6 e7)))
              (v3 v3-type (id-type (list e8 e9)))
 
-             (e10 e10-type (id-type (u:dict)))
+             (e10 e10-type (id-type (u:dict #'equal)))
              (k4 k4-type (id-type #*11011))
              (v4 v4-type (id-type (list e10)))
 
+             (list-end-type (type-of nil))
              (o o-type (id-type (u:dict #'equal
                                         k0 v0 k1 v1 k2 v2 k3 v3 k4 v4)))
              (c eql-map (clone-deep o (make-eql-map-with-stats))))
@@ -3662,27 +3928,92 @@ copied. Return T if this is the case and NIL otherwise."
     (assert (not (eq c o)))
     (assert-matching-hash-table-properties c o)
 
-    ;; TODO: I need to write a structure checker on deep cloned key/value
-    ;; pairs. This is not obvious...
+    ;; TODO: I need to write a better structure checker on deep cloned
+    ;; key/value pairs. This is not obvious...
+    (u:do-hash (k v o)
+      (assert (not (eq k v))))
+    (u:do-hash (k v c)
+      (assert (not (eq k v))))
 
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
-                            `(:move (,k0-type 1)
-                                    (,k1-type 1)
-                                    (,k2-type 1)
-                                    (,k3-type 1)
-                                    (,k4-type 1)
-                                    (,v0-type 1)
-                                    (,v1-type 1)
-                                    (,v2-type 1)
-                                    (,v3-type 1)
-                                    (,v4-type 1)
-                                    )
-                            `(:allocation (,o-type 1))))
+                            `(:move-original (,e0-type ,k0-elems) ;; (int 0 xx)
+                                             (standard-char 11) ;; std-char
+                                             (,e1-type 1) ;; (int 0 xx)
+                                             (,e2-type 1) ;; (int 0 xx)
+                                             (,e3-type 1) ;; (int 0 xx)
+                                             (,e4-type 1) ;; (int 0 xx)
+                                             (,e5-type 1) ;; (int 0 xx)
+                                             (,e6-type 1) ;; COMPILED-FUNCTION
+                                             (,e7-type 1) ;; COMPILED-FUNCTION
+                                             (,e8-type 1) ;; COMPILED-FUNCTION
+                                             (,e9-type 1) ;; COMPILED-FUNCTION
+                                             (bit 5) ;; #* bit vector
+                                             (,list-end-type 4))
+                            `(:allocation (,v1-type 1) ;; HASH-TABLE
+                                          (,k2-type 1) ;; HASH-TABLE
+                                          (,e10-type 1) ;; HASH-TABLE
+                                          (,k1-type 3) ;; CONS
+                                          (,v2-type 1) ;; CONS
+                                          (,k3-type 2) ;; CONS
+                                          (,v3-type 2) ;; CONS
+                                          (,v4-type 1) ;; CONS
+                                          (,k0-type 1) ;; (SIMPLE-VECTOR 8)
+                                          (,v0-type 1) ;; (S-ARRAY CHAR (11))
+                                          (,k4-type 1) ;; (S-BIT-VECTOR 5)
+                                          (,o-type 1)) ;; HASH-TABLE
+                            `(:array-clone-speed-fast (,k4-type 1))
+                            `(:array-clone-speed-slow (,k0-type 1)
+                                                      (,v0-type 1))))
 
     (format t "Passed.~%")
     t))
+
+(defun test-clone-deep-hash-table-3 ()
+  "Key and Value are the identical list causing shared structure in the hash
+table."
+  (u:mvlet* ((e0 e0-type (id-type 0))
+             (e1 e1-type (id-type 10))
+             (list-end-type (type-of nil))
+             (kv0 kv0-type (id-type (list e0 e1)))
+             (o o-type (id-type (u:dict #'eql kv0 kv0)))
+             (c eql-map (clone-deep o (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" o)
+    (format t "Cloned   | ~S~%" c)
+    (finish-output)
+
+    ;; Ensure it is newly allocated
+    (assert (not (eq c o)))
+    (assert-matching-hash-table-properties c o)
+
+    ;; TODO: I need to write a structure checker on deep cloned key/value
+    ;; pairs. This is not obvious...
+    ;; NOTE: This only works with ONE key/value pair and that's ok for now.
+    (loop :for (ok . ov) :in (u:hash->alist o)
+          :for (ck . cv) :in (u:hash->alist c)
+          :do (assert (eq ok ov))
+              (assert (eq ck cv))
+              (assert (not (eq ok ck)))
+              (assert (not (eq ov cv))))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,e0-type 1)
+                                             (,e1-type 1)
+                                             (,list-end-type 1))
+                            `(:move-clone (,kv0-type 1))
+                            `(:allocation (,kv0-type 2)
+                                          (,o-type 1))))
+
+    (format t "Passed.~%")
+    t)
+  )
+
+;; TODO: We can always add more tests.
+
 
 
 ;;; ------------------------------------------------------------
@@ -3707,6 +4038,8 @@ copied. Return T if this is the case and NIL otherwise."
 (defun test-clone-deep ()
   (format t "Deep clone tests.~%")
 
+  (test-eql-map)
+
   ;; identity values that are always themselves.
   (test-clone-deep-function-0)
   (test-clone-deep-character-0)
@@ -3727,6 +4060,16 @@ copied. Return T if this is the case and NIL otherwise."
 
   ;; The arrays may hold references to themselves, to nested arrays, to cons
   ;; cells, and to identity-like values.
+  (test-clone-deep-array-simple-array-single-float-0)
+  (test-clone-deep-array-simple-array-unsigned-byte-8-0)
+  (test-clone-deep-array-simple-array-signed-byte-8-0)
+  (test-clone-deep-array-simple-array-unsigned-byte-16-0)
+  (test-clone-deep-array-simple-array-signed-byte-16-0)
+  (test-clone-deep-array-simple-array-unsigned-byte-32-0)
+  (test-clone-deep-array-simple-array-signed-byte-32-0)
+  (test-clone-deep-array-simple-array-unsigned-byte-64-0)
+  (test-clone-deep-array-simple-array-signed-byte-64-0)
+  (test-clone-deep-array-simple-array-double-float-0)
   (test-clone-deep-array-simple-string-0)
   (test-clone-deep-array-simple-bit-vector-0)
   (test-clone-deep-array-bit-vector-0)
@@ -3747,6 +4090,8 @@ copied. Return T if this is the case and NIL otherwise."
   ;; including self-referential structure and cycles.
   (test-clone-deep-hash-table-0)
   (test-clone-deep-hash-table-1)
+  (test-clone-deep-hash-table-2)
+  (test-clone-deep-hash-table-3)
 
   (format t "Deep clone tests passed!~%")
   t)
@@ -3758,6 +4103,8 @@ copied. Return T if this is the case and NIL otherwise."
 ;; Herein we construct a couple new types and make shallow and deep clones of
 ;; them to ensure things work out.
 ;;; ---------------------------------------------------------------------------
+
+;; TODO Make some!
 
 
 ;;; ------------------------------------------------------------

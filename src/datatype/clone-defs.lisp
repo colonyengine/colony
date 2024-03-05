@@ -15,25 +15,38 @@
 ;;;; cloning methods. Then there is at least a chance of fixing it on a per
 ;;;; type basis.
 ;;;;
-;;;; The CLONE API is split into two pieces: A generic function called CLONE
-;;;; and generic function called CLONE-OBJECT. The responsibility of CLONE is
-;;;; to figure out how to allocate an instance of memory (if applicable) that
-;;;; will hold the copy, and CLONE-OBJECT is a progn style generic function
-;;;; from least to most specific generic which is responsible for actually
-;;;; copying the data from the old object into the new object by recusively
-;;;; calling CLONE on the sub-objects.  What is actually copied is controlled
-;;;; by a CLONE-POLICY instance passed to CLONE and subsequently to
-;;;; CLONE-OBJECT.
+;;;; The CLONE API is split into four pieces: A generic function called CLONE,
+;;;; generic function called CLONE-OBJECT, a generic function called
+;;;; CLONE-ALLOCATE, and a generic function call ALLOCATABLEP.
+;;;;
+;;;; There are two additional classes: CLONE-POLICY and its subtypes, which
+;;;; allow specification of shallow or deep clones, and INTENTION and the
+;;;; subtypes of that, which tell the clone system how to treat cons cells it
+;;;; encounters.
 ;;;;
 ;;;; There is a small "shortcut API" too to help cloning with common policies.
 
 
 ;;; The INTENTION representation.
 
-;; Intentions are how we'd like to view cloning a particular type. This is
-;; most important when cloning cons cells, because they can be viewed as:
+;; Intentions are how we'd like to view cloning a particular type (definitely
+;; required for cons cells, but could be used for other types as needed). One
+;; important feature of the INTENTION is to allow us, when running multiple
+;; CLONE calls of either deep or shallow across different roots into the same
+;; graph, to reason about what happens when we encounter a previously allocated
+;; object _of a different intention_. For example, if a list structure cons
+;; cell is treated like an alist key/value pair in a different list, we can
+;; notice when a list-intention and an alist-intention collide attempting to
+;; reason about the viewpoint of a cons cell. Currently, we implement just one
+;; or two reasonable sopts and left the rest to be filled in as we discover it
+;; and figure out what we want to do in those situations. The current code will
+;; signal a condition when it discovers an intention change that is not already
+;; implemented so at least we can observe it and then have a place to fix it.
 ;;
-;; cons cells not other wise associated with anything,
+;; Intentions are most used when cloning cons cells, because they can be viewed
+;; as:
+;;
+;; cons cells not otherwise associated with anything,
 ;; list structure cells, alist kv cells, and graph cells (which include trees).
 ;; Plus cons cells can trivially point to themslves making cycles and other
 ;; horrors.
@@ -45,8 +58,12 @@
   (:default-initargs :sort-id 1))
 (defclass cons-intention (intention) ()
   (:default-initargs :sort-id 2))
+;; NOTE: list-intention preserves cyclic structure in the list structure but no
+;; other shared references in shallow clones. This is least surprising.
 (defclass list-intention (intention) ()
   (:default-initargs :sort-id 3))
+;; NOTE: alist-intention preserves cyclic structure in the list structure but
+;; no other shared references in shallow clones. This is least surprising.
 (defclass alist-intention (intention) ()
   (:default-initargs :sort-id 4))
 (defclass graph-intention (intention) ()
@@ -58,18 +75,6 @@ complexity/functionality/etc. This function returns -1 if INTENTION-LEFT is
 same', and 1 if the right side is 'more complex' than the left side.
 Complexity has an undefined general meaning. It is only meaningful to the
 specified types of intention and their contextual use."))
-
-
-;; TODO: Change CLONE and CLONE-OBJECT to additionally take an intention
-;; object. Then fix clone-shallow and such to pass the right intention.  This
-;; makes it so the methods can be finely defined to solve interesting problems
-;; with how the eql-map-entry records the intention for why the transition was
-;; created in the first place. It sorta sucks to increase the interface width,
-;; but it follows KMP's point of view and allows us to better record the
-;; intention in the eql-map-entry.
-
-
-
 
 
 ;;; The CLONE-POLICY representation.
@@ -101,6 +106,12 @@ specified types of intention and their contextual use."))
 
 
 ;;; The EQL-MAP representation and API.
+;;;
+;;; The EQL-MAP is a table that holds a mapping from original pieces of
+;;; information in the original structure to their cloned (often allocated)
+;;; counterparts. An entry in the EQL-MAP table also counts as being "visited"
+;;; as in a BFS traversal. The EQL-MAP table can, on request, keep detailed
+;;; statistics about what it found and did.
 
 (defclass eql-map-entry ()
   (;; The original object for which this entry exists. By virtue of the
@@ -147,11 +158,15 @@ specified types of intention and their contextual use."))
   (:documentation "CLONE the OBJECT according to the CLONE-POLICY and return
 two values, the cloned object and the EQL-MAP. Clone policies of shallow-clone
 and deep-clone (and those derived from them) will cause memory to be allocated
-at least for OBJECT under most (but not all) circumstances."))
+at least for OBJECT under most (but not all) circumstances. It is not usually
+the case that one would specialize this method beyond those already
+available."))
 
 (defgeneric allocatablep (object)
-  (:documentation "Return T if the object is an allocatable entity,
-NIL otherwise."))
+  (:documentation "Return T if the object is an allocatable entity, NIL
+otherwise. It is expected that this is a whitelist of object types which
+informs the CLONE system what its catabilities are with different classes and
+types."))
 
 (defgeneric clone-allocate (object eql-map)
   (:documentation "This generic function must ONLY allocate a new instance of
@@ -172,11 +187,11 @@ also adjustable, etc, etc."))
                           last-known-intention eql-map
                           &key &allow-other-keys)
   (:method-combination progn :most-specific-last)
-  (:documentation "The CLONE-OBJECT generic function which, from least specific
-to most, copies the data from the original object into the cloned object (as
-dictated by the CLONE-POLICY and INTENTION). This does the work of the actual
-cloning once the memory had been allocated by CLONE. The LAST-KNOWN-INTENTION
-is used when we encounter an object we had previously cloned before and we're
-possibly attempting to clone again and we need to see if we can just reuse it,
-or, if the intention is different, we need to alter the object somehow. Returns
-the cloned object."))
+  (:documentation "The CLONE-OBJECT generic function is a PROGN method which,
+from least specific to most, copies the data from the original object into the
+cloned object (as dictated by the CLONE-POLICY and INTENTION). This does the
+work of the actual cloning once the memory had been allocated by CLONE. The
+LAST-KNOWN-INTENTION is used when we encounter an object we had previously
+cloned before and we're possibly attempting to clone again and we need to see
+if we can just reuse it, or, if the intention is different, we need to alter
+the object somehow. Returns the cloned object."))
