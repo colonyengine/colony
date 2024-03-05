@@ -27,6 +27,34 @@
 ;;;; There is a small "shortcut API" too to help cloning with common policies.
 
 
+;;; The CLONE-POLICY representation.
+
+;; All clone policies must have this class as a base class.
+(defclass clone-policy () ())
+
+;; An IDENTITY-CLONE policy returns the original object as if IDENTITY had been
+;; the cloning function.
+(defclass identity-clone (clone-policy) ())
+
+;; An ALLOCATING-CLONE policy generally may cause a memory allocation and the
+;; subsequent cloning of the aggregate pieces of the object to occur (elements
+;; of an array, or slots in a class instance or structure, etc). This policy is
+;; refined and controlled by derived types of this class.
+(defclass allocating-clone (identity-clone) ())
+
+;; A SHALLOW-CLONE will, when given a collection, allocate a new copy of that
+;; collection and then process the elements of the collection with the
+;; IDENTITY-CLONE policy. Shared structure is a bit painful with this policy,
+;; so try not to do that, it does try to at least by cycle aware though.
+(defclass shallow-clone (allocating-clone) ())
+
+;; A DEEP-CLONE will, when given a collection, allocate a new copy of that
+;; collection and then process the elements of the collection recursively
+;; passing the same policy given to CLONE. Deep clone always copies everything
+;; (both connection structure and objects) as deeply as possible.
+(defclass deep-clone (allocating-clone) ())
+
+
 ;;; The INTENTION representation.
 
 ;; Intentions are how we'd like to view cloning a particular type (definitely
@@ -43,13 +71,16 @@
 ;; signal a condition when it discovers an intention change that is not already
 ;; implemented so at least we can observe it and then have a place to fix it.
 ;;
-;; Intentions are most used when cloning cons cells, because they can be viewed
-;; as:
+;; Intentions are most used when doing shallow cloning and when cloning cons
+;; cells, because they can be viewed as:
 ;;
 ;; cons cells not otherwise associated with anything,
 ;; list structure cells, alist kv cells, and graph cells (which include trees).
 ;; Plus cons cells can trivially point to themslves making cycles and other
 ;; horrors.
+;;
+;; With a deep clone policy, the GRAPH-INTENTION is the only one supported at
+;; this time..
 (defclass intention ()
   ((%sort-id :reader sort-id
              :initarg :sort-id
@@ -85,41 +116,13 @@ Complexity has an undefined general meaning. It is only meaningful to the
 specified types of intention and their contextual use."))
 
 
-;;; The CLONE-POLICY representation.
-
-;; All clone policies must have this class as a base class.
-(defclass clone-policy () ())
-
-;; An IDENTITY-CLONE policy returns the original object as if IDENTITY had been
-;; the cloning function.
-(defclass identity-clone (clone-policy) ())
-
-;; An ALLOCATING-CLONE policy generally may cause a memory allocation and the
-;; subsequent cloning of the aggregate pieces of the object to occur (elements
-;; of an array, or slots in a class instance or structure, etc). This policy is
-;; refined and controlled by derived types of this class.
-(defclass allocating-clone (identity-clone) ())
-
-;; A SHALLOW-CLONE will, when given a collection, allocate a new copy of that
-;; collection and then process the elements of the collection with the
-;; IDENTITY-CLONE policy. Shared structure is a bit painful with this policy,
-;; so try not to do that, it does try to at least by cycle aware though.
-(defclass shallow-clone (allocating-clone) ())
-
-;; A DEEP-CLONE will, when given a collection, allocate a new copy of that
-;; collection and then process the elements of the collection recursively
-;; passing the same policy given to CLONE. Deep clone always copies everything
-;; (both connection structure and objects) as deeply as possible.
-(defclass deep-clone (allocating-clone) ())
-
-
 ;;; The EQL-MAP representation and API.
-;;;
-;;; The EQL-MAP is a table that holds a mapping from original pieces of
-;;; information in the original structure to their cloned (often allocated)
-;;; counterparts. An entry in the EQL-MAP table also counts as being "visited"
-;;; as in a BFS traversal. The EQL-MAP table can, on request, keep detailed
-;;; statistics about what it found and did.
+;;
+;; The EQL-MAP is a table that holds a mapping from original pieces of
+;; information in the original structure to their cloned (often allocated)
+;; counterparts. An entry in the EQL-MAP table also counts as being "visited"
+;; as in a BFS traversal. The EQL-MAP table can, on request, keep detailed
+;; statistics about what it found and did.
 
 (defclass eql-map-entry ()
   (;; The original object for which this entry exists. By virtue of the
@@ -160,8 +163,12 @@ specified types of intention and their contextual use."))
            :initform nil)))
 
 ;;; The CLONE API.
+;;
+;; This is the main API into the cloning system. It is expected that you
+;; specialize ALLOCATABLEP, CLONE-ALLOCATE, and CLONE-OBJECT for a new type
+;; that the cloning system should know about. It is uncommon to have to
+;; specialize on CLONE.
 
-;;; The CLONE generic function which is how a clone of something is requested.
 (defgeneric clone (object clone-policy intenton eql-map &key &allow-other-keys)
   (:documentation "CLONE the OBJECT according to the CLONE-POLICY and return
 two values, the cloned object and the EQL-MAP. Clone policies of shallow-clone
@@ -188,8 +195,6 @@ about the allocation, such as how many of what type had been allocated.
 Examples of constraints would be things like keeping the hash table test the
 same, or if an array is adjustable then the newly allocated version of it is
 also adjustable, etc, etc."))
-
-;;; The CLONE-OBJECT API.
 
 (defgeneric clone-object (cloned-object original-object clone-policy intention
                           last-known-intention eql-map
