@@ -1361,16 +1361,9 @@ Various classes must be whitelisted into the cloning system."
      (eql-map-record eql-map cloned-object :array-clone-speed-slow)))
   cloned-object)
 
-;;; KEEP GOING -------------------------------------------------------------
-
 ;;; -------------------------------
 ;; Deep Cloning hash tables.
 ;;; -------------------------------
-
-
-;; KEEP GOING (add in statistics for :move and such) here and below.
-;; This change is done, but finish testing it with the clone-test unit tests.
-
 
 ;; deep-clone + graph-intention
 (defmethod clone-object progn ((cloned-object hash-table)
