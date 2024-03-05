@@ -65,11 +65,15 @@
 
 (defun make-eql-map (&key stats-move-original
                        stats-move-clone
-                       stats-allocation)
+                       stats-allocation
+                       stats-array-clone-speed-fast
+                       stats-array-clone-speed-slow)
   (let* (;; Disjunction to let us know how to enable any stats.
          (enable-stats (or stats-move-original
                            stats-move-clone
-                           stats-allocation))
+                           stats-allocation
+                           stats-array-clone-speed-fast
+                           stats-array-clone-speed-slow))
          (stats-table (when enable-stats (u:dict #'eq))))
     ;; initialize each of the requested domains...
     (when stats-table
@@ -92,7 +96,20 @@
         ;; This is the :allocation domain.
         ;; Key: type-of form
         ;; Value: integer count of allocations
-        (setf (u:href stats-table :allocation) (u:dict #'equal))))
+        (setf (u:href stats-table :allocation) (u:dict #'equal)))
+      (when stats-array-clone-speed-fast
+        ;; a table to keep track of arrays we cloned in fast mode.
+        ;; This is the :array-clone-speed-fast domain.
+        ;; Key: type-of form
+        ;; Value: integer count of fast copies
+        (setf (u:href stats-table :array-clone-speed-fast) (u:dict #'equal)))
+      (when stats-array-clone-speed-slow
+        ;; a table to keep track of arrays we cloned in slow mode.
+        ;; This is the :array-clone-speed-slow domain.
+        ;; Key: type-of form
+        ;; Value: integer count of fast copies
+        (setf (u:href stats-table :array-clone-speed-slow) (u:dict #'equal)))
+      )
     (make-instance 'eql-map :stats stats-table)))
 
 (defun eql-map-initialize (eql-map)
@@ -131,12 +148,14 @@ the EQL-MAP-ENTRY.  Return the CLONED-OBJECT."
           (intent eql-map-entry) intent)
     cloned-object))
 
-(defun eql-map-record (eql-map cloned-object domain &key (event 1))
+(defun eql-map-record (eql-map cloned-object domain &key (event 1)
+                                                      (type-of-p t))
   "Record into the EQL-MAP that a statistics EVENT occurred for the
 CLONED-OBJECT in the specified DOMAIN (one of: :move, :allocation). The EVENT
 can be arbitrary and handled by the DOMAIN processing it, but it is often an
 increment of the number of times the event happened in that domain, so it
-defaults to 1.
+defaults to 1. If :TYPE-OF-P is true (the default), then compute the TYPE-OF
+the CLONED-OBJECT for the statistics, if nil then use CLONED-OBJECT directly.
 
 The event has this meaning for each domain:
 
@@ -149,14 +168,19 @@ The event has this meaning for each domain:
  :allocation
    EVENT is an integer representing how many allocations occurred."
 
-  (u:when-let ((stats (stats eql-map)))
-    (ecase domain
-      ((:allocation :move-original :move-clone)
-       ;; These domains keep data the exact same way.
-       (u:when-let ((alloc-table (u:href stats domain)))
-         (let ((key (type-of cloned-object)))
-           (setf (gethash key alloc-table)
-                 (+ (gethash key alloc-table 0) event))))))))
+  (flet ((get-type-of (obj)
+           (if type-of-p
+               (type-of obj)
+               obj)))
+    (u:when-let ((stats (stats eql-map)))
+      (ecase domain
+        ((:allocation :move-original :move-clone :array-clone-speed-fast
+          :array-clone-speed-slow)
+         ;; These domains keep data the exact same way.
+         (u:when-let ((alloc-table (u:href stats domain)))
+           (let ((key (get-type-of cloned-object)))
+             (setf (gethash key alloc-table)
+                   (+ (gethash key alloc-table 0) event)))))))))
 
 ;; TODO: This is very terrible, only for debugging purposes at this time.
 (defun eql-map-dump (eql-map &optional (strm t))
@@ -248,6 +272,26 @@ copy."
   (clone object *deep* *graph-intention*
          (if eql-map-supp-p eql-map (make-eql-map))))
 
+;;; Helper functions
+(defun fast-copyable-array-p (obj)
+  "Return T if the array can be qopied with REPLACE because all of the elements
+are of the same known value type. Return NIL otherwise."
+  (let ((element-type (array-element-type obj)))
+    (some (u:curry #'equal element-type)
+          ;; Check in order of most common occurrance.
+          ;; Try to make this faster...
+          (list 'single-float
+                '(unsigned-byte 8)
+                '(unsigned-byte 32)
+                '(unsigned-byte 64)
+                '(unsigned-byte 16)
+                '(signed-byte 8)
+                '(signed-byte 32)
+                '(signed-byte 64)
+                '(signed-byte 16)
+                'double-float
+                'fixnum
+                'bit))))
 
 ;;; The CLONE API and CLONE-OBJECT API methods.  CLONE is the entry point to
 ;;; clone an object and must allocate the memory for the new object, if
@@ -919,11 +963,27 @@ Various classes must be whitelisted into the cloning system."
                                eql-map
                                &key)
 
-  (dotimes (index (array-total-size original-object))
-    (let ((original-object-at-index (row-major-aref original-object index)))
-      (eql-map-record eql-map original-object-at-index :move-original)
-      (setf (row-major-aref cloned-object index)
-            original-object-at-index)))
+  (cond
+    ((fast-copyable-array-p original-object)
+     ;; These types are all identical, very simple, and liable to be use for
+     ;; graphics programming, textures, vertex arrays, etc. We attempt to
+     ;; make this as fast as we can in the clone.
+     (replace cloned-object original-object)
+     (eql-map-record eql-map (array-element-type original-object)
+                     :move-original :event (length original-object)
+                                    :type-of-p nil)
+     (eql-map-record eql-map cloned-object :array-clone-speed-fast))
+
+    (t
+     ;; Otherwise everything else gets the slow version cause it is hairy or
+     ;; multidimensional or can hold many subtypes and those optimizations are
+     ;; less straight-forward.
+     (dotimes (index (array-total-size original-object))
+       (let ((original-object-at-index (row-major-aref original-object index)))
+         (eql-map-record eql-map original-object-at-index :move-original)
+         (setf (row-major-aref cloned-object index)
+               original-object-at-index)))
+     (eql-map-record eql-map cloned-object :array-clone-speed-slow)))
 
   cloned-object)
 
@@ -1048,10 +1108,26 @@ Various classes must be whitelisted into the cloning system."
                                eql-map
                                &key)
 
-  (dotimes (index (array-total-size original-object))
-    (setf (row-major-aref cloned-object index)
-          (clone (row-major-aref original-object index) policy intention
-                 eql-map)))
+  (cond
+    ((fast-copyable-array-p original-object)
+     ;; These types are all identical, very simple, and liable to be use for
+     ;; graphics programming, textures, vertex arrays, etc. We attempt to
+     ;; make this as fast as we can in the clone.
+     (replace cloned-object original-object)
+     (eql-map-record eql-map (array-element-type original-object)
+                     :move-original :event (length original-object)
+                                    :type-of-p nil)
+     (eql-map-record eql-map cloned-object :array-clone-speed-fast))
+
+    (t
+     ;; Otherwise everything else gets the slow version cause it is hairy or
+     ;; multidimensional or can hold many subtypes and those optimizations are
+     ;; less straight-forward.
+     (dotimes (index (array-total-size original-object))
+       (setf (row-major-aref cloned-object index)
+             (clone (row-major-aref original-object index) policy intention
+                    eql-map)))
+     (eql-map-record eql-map cloned-object :array-clone-speed-slow)))
   cloned-object)
 
 ;;; KEEP GOING -------------------------------------------------------------
