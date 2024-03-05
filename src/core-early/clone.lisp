@@ -352,8 +352,7 @@ it. If there are more or less keys in the domain than specified then fail."
               :array-clone-speed-slow)
              (unless
                  (zerop (hash-table-count(u:href (stats eql-map) domain-key)))
-               (error-stats-found domain-key)))
-            ))))
+               (error-stats-found domain-key)))))))
     (values t :ok)))
 
 ;; TODO: This is very terrible, only for debugging purposes at this time.
@@ -379,8 +378,6 @@ it. If there are more or less keys in the domain than specified then fail."
        (format strm "~%"))
      (entry-table eql-map))))
 
-;; TODO: This is sort of cruddy code, and maybe should be moved into
-;; clone.lisp.
 (defun eql-map-dump-stats (eql-map)
   (unless (stats eql-map)
     (format t "EQL-MAP: No stats available.")
@@ -390,42 +387,15 @@ it. If there are more or less keys in the domain than specified then fail."
   (format t " Visited Allocatable Nodes: ~A~%"
           (hash-table-count (entry-table eql-map)))
 
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :move-original)))
-    (format t " Domain :move-original~%")
-    (if (plusp (hash-table-count tbl))
-        (u:do-hash (type-name num-moved tbl)
-          (format t "  ~8@A ~S~%" num-moved type-name))
-        (format t "  ~8@A~%" "NONE")))
-
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :move-clone)))
-    (format t " Domain :move-clone~%")
-    (if (plusp (hash-table-count tbl))
-        (u:do-hash (type-name num-moved tbl)
-          (format t "  ~8@A ~S~%" num-moved type-name))
-        (format t "  ~8@A~%" "NONE")))
-
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map :allocation)))
-    (format t " Domain :allocation~%")
-    (if (plusp (hash-table-count tbl))
-        (u:do-hash (type-name num-allocated tbl)
-          (format t "  ~8@A ~S~%" num-allocated type-name))
-        (format t "  ~8@A~%" "NONE")))
-
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map
-                                              :array-clone-speed-fast)))
-    (format t " Domain :array-clone-speed-fast~%")
-    (if (plusp (hash-table-count tbl))
-        (u:do-hash (type-name num-allocated tbl)
-          (format t "  ~8@A ~S~%" num-allocated type-name))
-        (format t "  ~8@A~%" "NONE")))
-
-  (u:when-let ((tbl (eql-map-get-stats-domain eql-map
-                                              :array-clone-speed-slow)))
-    (format t " Domain :array-clone-speed-slow~%")
-    (if (plusp (hash-table-count tbl))
-        (u:do-hash (type-name num-allocated tbl)
-          (format t "  ~8@A ~S~%" num-allocated type-name))
-        (format t "  ~8@A~%" "NONE"))))
+  ;; All of these domains can be printed out in the same way.
+  (dolist (domain '(:move-original :move-clone :allocation
+                    :array-clone-speed-fast :array-clone-speed-slow))
+    (u:when-let ((tbl (eql-map-get-stats-domain eql-map domain)))
+      (format t " Domain ~(~S~)~%" domain)
+      (if (plusp (hash-table-count tbl))
+          (u:do-hash (type-name num tbl)
+            (format t "  ~8@A ~S~%" num type-name))
+          (format t "  ~8@A~%" "NONE"))))))
 
 ;; Helper macro for the eql-map statistics tests.
 (defmacro validate-eql-map-stats (match-form)
