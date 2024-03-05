@@ -396,7 +396,7 @@ it. If there are more or less keys in the domain than specified then fail."
       (if (plusp (hash-table-count tbl))
           (u:do-hash (type-name num tbl)
             (format t "  ~8@A ~S~%" num type-name))
-          (format t "  ~8@A~%" "NONE"))))))
+          (format t "  ~8@A~%" "NONE")))))
 
 ;; Helper macro for the eql-map statistics tests.
 (defmacro validate-eql-map-stats (match-form)
