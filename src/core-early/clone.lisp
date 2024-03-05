@@ -41,6 +41,7 @@
     (/= value 0)))
 
 ;;;; Creation of INTENTIONs
+;;;; NOTE: The pedantic versions are completely not implemented yet.
 (defun make-no-specific-intention ()
   (make-instance 'no-specific-intention))
 
