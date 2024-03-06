@@ -4156,7 +4156,7 @@ table."
 
 ;; The test that uses %foo and %bar
 
-(defun test-clone-deep-new-type-%foo/%bar ()
+(defun test-clone-deep-new-type-%foo/%bar-0 ()
   (u:mvlet* ((e0 e0-type (id-type 42))
              (e1 e1-type (id-type 55))
              (%b %b-type (id-type (make-instance '%bar :%junk e0 :%feh e1)))
@@ -4187,7 +4187,7 @@ table."
 (defun test-clone-new-type ()
   (format t "New Type clone tests.~%")
 
-  (test-clone-deep-new-type-%foo/%bar)
+  (test-clone-deep-new-type-%foo/%bar-0)
 
   (format t "New Type clone tests passed!~%")
   t)
