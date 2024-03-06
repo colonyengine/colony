@@ -4104,8 +4104,81 @@ table."
 ;; them to ensure things work out.
 ;;; ---------------------------------------------------------------------------
 
-;; TODO Make some!
+;; %bar class and with clone API
 
+(defclass %foo ()
+  ((%junk :accessor %junk
+          :initarg :%junk
+          :initform 0)))
+
+(defmethod allocatablep ((object %foo))
+  t)
+
+(defmethod clone-allocate ((object %foo) eql-map)
+  (eql-map-record eql-map object :allocation)
+  (make-instance '%foo))
+
+(defmethod clone-object progn ((cloned-object %foo)
+                               (original-object %foo)
+                               (policy deep-clone)
+                               (intention graph-intention)
+                               (last-known-intention no-specific-intention)
+                               eql-map &key)
+
+  (setf (%junk cloned-object)
+        (clone-deep (%junk original-object) eql-map))
+  cloned-object)
+
+;; %foo class and with clone API
+
+(defclass %bar (%foo)
+  ((%feh :accessor %feh
+         :initarg :%feh
+         :initform 0)))
+
+(defmethod allocatablep ((object %bar))
+  t)
+
+(defmethod clone-allocate ((object %bar) eql-map)
+  (eql-map-record eql-map object :allocation)
+  (make-instance '%bar))
+
+(defmethod clone-object progn ((cloned-object %bar)
+                               (original-object %bar)
+                               (policy deep-clone)
+                               (intention graph-intention)
+                               (last-known-intention no-specific-intention)
+                               eql-map &key)
+
+  (setf (%feh cloned-object)
+        (clone-deep (%feh original-object) eql-map))
+  cloned-object)
+
+;; The test that uses %foo and %bar
+
+(defun test-clone-deep-new-type-%foo/%bar ()
+  (u:mvlet* ((e0 e0-type (id-type 42))
+             (e1 e1-type (id-type 55))
+             (%b %b-type (id-type (make-instance '%bar :%junk e0 :%feh e1)))
+             (%c eql-map (clone-deep %b (make-eql-map-with-stats))))
+
+    (format t "Original | ~S~%" %b)
+    (format t "Cloned   | ~S~%" %c)
+    (finish-output)
+
+    (assert (not (eq %b %c)))
+    (assert (= e0 (%junk %b) (%junk %c)))
+    (assert (= e1 (%feh %b) (%feh %c)))
+
+    (eql-map-dump-stats eql-map)
+    (validate-eql-map-stats
+     (eql-map-stats-match-p eql-map
+                            `(:move-original (,e0-type 1)
+                                             (,e1-type 1))
+                            `(:allocation (,%b-type 1))))
+
+    (format t "Passed!~%")
+    t))
 
 ;;; ------------------------------------------------------------
 ;; Aggregate NEW TYPE cloning testing code.
@@ -4114,9 +4187,10 @@ table."
 (defun test-clone-new-type ()
   (format t "New Type clone tests.~%")
 
+  (test-clone-deep-new-type-%foo/%bar)
+
   (format t "New Type clone tests passed!~%")
   t)
-
 
 ;;; ---------------------------------------------------------------------------
 ;; Entry point for entire clone system test.
