@@ -24,7 +24,7 @@
 (defclass attribute-bag ()
   (;; Key is an 'attr-name' which is a form comparable with EQUAL.
    ;; Value is an attribute-value instance.
-   (%attributes :reader attributes
+   (%attributes :accessor attributes
                 :initarg :attributes
                 :initform (u:dict #'equal))))
 

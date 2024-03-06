@@ -20,61 +20,35 @@ NIL otherwise."
   (slot-boundp attr-value '%computed))
 
 
-;; TODO: Replace calls with below CLONE code.
-;; OK CLONE seems to work.
-(defun copy-attribute-value (original-attr-value
-                             &key (semantic-copier-func #'identity)
-                               (computed-copier-func #'identity))
-  "Copy ORIGINAL-ATTR-VALUE by allocating a new attribute-value. Use the
-SEMANTIC-COPIER-FUNC on the semantic value and the COMPUTED-COPIER-FUNC on the
-computed values when copying them into the new attribute-value. Both of them
-default to CL:IDENTITY. Return the copied attribute-value."
-  (let ((new-attr-value (make-attribute-value)))
-    (when (semantic-value-bound-p original-attr-value)
-      (setf (semantic new-attr-value)
-            (funcall semantic-copier-func (semantic original-attr-value))))
+;;; ----
+;; Attribute Value Cloning
+;;; ----
 
-    (setf (dirty new-attr-value) (dirty original-attr-value))
+(defmethod clone:allocatablep ((object attribute-value))
+  t)
 
-    (when (computed-value-bound-p original-attr-value)
-      (setf (computed new-attr-value)
-            (funcall computed-copier-func (computed original-attr-value))))
-    new-attr-value))
+(defmethod clone:clone-allocate ((object attribute-value) eql-map)
+  (clone:eql-map-record eql-map object :allocation)
+  (make-attribute-value))
 
-#|
-(defmethod clone:clone ((object attribute-value)
-                        (policy clone:allocating-clone)
-                        &key (semantic-copier-func #'identity)
-                          (computed-copier-func #'identity))
-  "Copy ORIGINAL-ATTR-VALUE by allocating a new attribute-value. Use the
-SEMANTIC-COPIER-FUNC on the semantic value and the COMPUTED-COPIER-FUNC on the
-computed values when copying them into the new attribute-value. Both of them
-default to CL:IDENTITY. Return the copied attribute-value."
-  (let ((cloned-object (make-attribute-value)))
-    (clone:clone-object cloned-object object policy
-                        :semantic-copier-func semantic-copier-func
-                        :computed-copier-func computed-copier-func)))
-
-;; We only implement deep copy
 (defmethod clone:clone-object progn ((cloned-object attribute-value)
                                      (original-object attribute-value)
                                      (policy clone:deep-clone)
-                                     &key semantic-copier-func
-                                       computed-copier-func)
+                                     (intention clone:graph-intention)
+                                     (last-known-intention
+                                      clone:no-specific-intention)
+                                     eql-map &key)
   (when (semantic-value-bound-p original-object)
     (setf (semantic cloned-object)
-          (clone:clone
-           (funcall semantic-copier-func (semantic original-object))
-           policy)))
+          (clone:clone-deep (semantic original-object) eql-map)))
   (setf (dirty cloned-object)
-        (clone:clone (dirty original-object) policy))
+        (clone:clone-deep (dirty original-object) eql-map))
   (when (computed-value-bound-p original-object)
     (setf (computed cloned-object)
-          (clone:clone
-           (funcall computed-copier-func (computed original-object))
-           policy)))
+          (clone:clone-deep (computed original-object) eql-map)))
+
   cloned-object)
-|#
+
 
 ;;; ------------------------------------------------------------------------
 ;; Attribute Bag API
@@ -99,19 +73,19 @@ default to CL:IDENTITY. Return the copied attribute-value."
   "An item in CONTAINERS can be:
 One or more of these overlay policy keywords:
 :supersede - Change the overlay policy to :supersede for container items
-             processed after this item. Supersede means anytime a name is
-             found with an associated value, accept the new value and store
-             it as the semantic value in the BAG for the current name.
-             This is the default overlay policy if no overlay policy is
-             specified.
+processed after this item. Supersede means anytime a name is
+found with an associated value, accept the new value and store
+it as the semantic value in the BAG for the current name.
+This is the default overlay policy if no overlay policy is
+specified.
 :once-only - Change the overlay policy to :once-only for container items
-             processed after this iterm. Once-only means the FIRST time
-             a name has ever been seen to the right of this item, it is stored
-             in the BAG, but subsequenct times the name is observed ognore it.
-             This memory is preserved across policy changes with :supersede.
+processed after this iterm. Once-only means the FIRST time
+a name has ever been seen to the right of this item, it is stored
+in the BAG, but subsequenct times the name is observed ognore it.
+This memory is preserved across policy changes with :supersede.
 :once-only-clear - Change the overlay policy to :once-only and also clear the
-                   cache of name that have already been seen before processing
-                   the items to the right of this item.
+cache of name that have already been seen before processing
+the items to the right of this item.
 
 Additionally, CONTAINERS can have multiple sequences of items in it that
 specify associations of names to semantic values. These association items are
@@ -121,13 +95,13 @@ symbol indicating its type and then one or more instances of that type. For
 example:
 
 :plist AAA ... ZZZ - One or more property lists of the form:
-                     (:a 0 :b 2 ... :z 25)
+(:a 0 :b 2 ... :z 25)
 :alist AAA ... ZZZ - One or more association lists of the form:
-                     ((:a . 0) (:b . 1) ... (:z . 25))
+((:a . 0) (:b . 1) ... (:z . 25))
 :alist-big AAA ... ZZZ - One or more association lists of the form:
-                         ((:a 0) (:b 1) ... (:z 25))
+((:a 0) (:b 1) ... (:z 25))
 :hash-table AAA ... ZZZ - One of more hash tables of the form:
-                          (u:dict :a 0 ... :z 25) [also regular hash-tables]
+(u:dict :a 0 ... :z 25) [also regular hash-tables]
 :attr-bag AAA ... ZZZ - One or more attribute bag instances.
 
 NOTE: :plist, :alist, :alist-big instance(s) MUST be specified with the keyword
@@ -138,7 +112,7 @@ processing a :plist, :alist, or :alist-big.
 
 An example is:
 
- (overlay bag (u:dict :a 10) :plist '(:b 2 :c 3) (u:dict :d 4) '(:e 5 :f 6))
+(overlay bag (u:dict :a 10) :plist '(:b 2 :c 3) (u:dict :d 4) '(:e 5 :f 6))
 
 Notice how the hash table is jammed in the middle but doesn't disturb the
 fact that :plist is the current-type being parsed.
@@ -190,20 +164,11 @@ Returns BAG after the overlay procedure is complete.
                             (setf (sattr bag name) semval)))
                         container))
 
-             ;; TODO: Maybe do a little better here wrt allowing the user to
-             ;; specify a copier function for copy-attribute-value.
              (absorb-attr-bag (container)
                (do-attr container
                  (lambda (name av)
                    (when (allow-insert-p name)
-                     ;; TODO: Good. This seems to work.
-                     #++(setf (attr bag name)
-                           (clone:clone-deep av))
-                     ;; TODO: If deep cloning works, remove
-                     ;; this ignored form and the
-                     ;; COPY-ATTRIBUTE-VALUE fnction.
-                     (setf (attr bag name)
-                              (copy-attribute-value av))))))
+                     (setf (attr bag name) (clone:clone-deep av))))))
 
              ;; Figure out what to do given what the container actually is when
              ;; it is decidable. This allows us to not necessarily have to
@@ -402,3 +367,30 @@ copied table is lost after this function returns."
     (u:do-hash (name attr-value attr-table)
       (funcall func name (computed attr-value))))
   attr-bag)
+
+;;; ----
+;; Attribute Bag Cloning
+;;; ----
+
+(defmethod clone:allocatablep ((object attribute-bag))
+  t)
+
+(defmethod clone:clone-allocate ((object attribute-bag) eql-map)
+  (clone:eql-map-record eql-map object :allocation)
+  (make-attribute-bag))
+
+(defmethod clone:clone-object progn ((cloned-object attribute-bag)
+                                     (original-object attribute-bag)
+                                     (policy clone:deep-clone)
+                                     (intention clone:graph-intention)
+                                     (last-known-intention
+                                      clone:no-specific-intention)
+                                     eql-map &key)
+  ;; The cloned-object attribute-bag was allocated with a new hash table, so we
+  ;; just need to copy the cloned keys and values over to it.
+  (u:do-hash (attr-name attr-value (attributes original-object))
+    (let ((cloned-attr-name (clone:clone-deep attr-name eql-map))
+          (cloned-attr-value (clone:clone-deep attr-value eql-map)))
+      (setf (u:href (attributes cloned-object) cloned-attr-name)
+            cloned-attr-value)))
+  cloned-object)

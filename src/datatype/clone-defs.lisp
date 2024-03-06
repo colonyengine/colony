@@ -25,6 +25,12 @@
 ;;;; encounters.
 ;;;;
 ;;;; There is a small "shortcut API" too to help cloning with common policies.
+;;;;
+;;;; CRITICAL NOTE: It is usually the case that when one writes the new methods
+;;;; for the cloning of a new type, it is the case that one should pass the
+;;;; EQL-MAP to each new cloning instance in order to keep correct statistics
+;;;; and a homogenous viewpoint of the structure of the entire thing being
+;;;; cloned.
 
 
 ;;; The CLONE-POLICY representation.
@@ -207,4 +213,7 @@ work of the actual cloning once the memory had been allocated by CLONE. The
 LAST-KNOWN-INTENTION is used when we encounter an object we had previously
 cloned before and we're possibly attempting to clone again and we need to see
 if we can just reuse it, or, if the intention is different, we need to alter
-the object somehow. Returns the cloned object."))
+the object somehow. Returns the cloned object. NOTE: An implementor of this
+method will almost surely continue to pass the EQL-MAP to the new calls of
+clone API to both book keep the overall structure of the entire thing being
+cloned and also to maintain correct statistics."))

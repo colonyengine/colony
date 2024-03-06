@@ -12,4 +12,5 @@
   :serial t
   :components
   ((:file "package")
-   (:file "smoke")))
+   (:file "smoke")
+   (:file "attribute-bag")))
