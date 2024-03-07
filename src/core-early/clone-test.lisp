@@ -4109,7 +4109,7 @@ table."
 (defclass %foo ()
   ((%junk :accessor %junk
           :initarg :%junk
-          :initform 0)))
+          :initform nil)))
 
 (defmethod allocatablep ((object %foo))
   t)
@@ -4134,7 +4134,7 @@ table."
 (defclass %bar (%foo)
   ((%feh :accessor %feh
          :initarg :%feh
-         :initform 0)))
+         :initform nil)))
 
 (defmethod allocatablep ((object %bar))
   t)
@@ -4157,9 +4157,13 @@ table."
 ;; The test that uses %foo and %bar
 
 (defun test-clone-deep-new-type-%foo/%bar-0 ()
-  (u:mvlet* ((e0 e0-type (id-type 42))
-             (e1 e1-type (id-type 55))
-             (%b %b-type (id-type (make-instance '%bar :%junk e0 :%feh e1)))
+  (u:mvlet* ((e0 e0-type (id-type 1))
+             (e1 e1-type (id-type 2))
+             (e2 e2-type (id-type 3))
+             (v0 v0-type (id-type (list e0 e1 e2)))
+             (v1 v1-type (id-type (cdr v0)))
+             (list-end-type (type-of nil))
+             (%b %b-type (id-type (make-instance '%bar :%junk v0 :%feh v1)))
              (%c eql-map (clone-deep %b (make-eql-map-with-stats))))
 
     (format t "Original | ~S~%" %b)
@@ -4167,15 +4171,30 @@ table."
     (finish-output)
 
     (assert (not (eq %b %c)))
-    (assert (= e0 (%junk %b) (%junk %c)))
-    (assert (= e1 (%feh %b) (%feh %c)))
+
+    ;; Validate the slots do not share data between the original and clone.
+    (assert (not (eq (%junk %b) (%junk %c))))
+    (assert (not (eq (cdr (%junk %b)) (cdr (%junk %c)))))
+    (assert (not (eq (cddr (%junk %b)) (cddr (%junk %c)))))
+    (assert (not (eq (%feh %b) (%feh %c))))
+
+    ;; Asert the original's structure is correct.
+    (assert (eq (%feh %b) (cdr (%junk %b))))
+
+    ;; ASsert the clone's %feh's struccture was preserved.
+    (assert (eq (%feh %c) (cdr (%junk %c))))
+
 
     (eql-map-dump-stats eql-map)
     (validate-eql-map-stats
      (eql-map-stats-match-p eql-map
                             `(:move-original (,e0-type 1)
-                                             (,e1-type 1))
-                            `(:allocation (,%b-type 1))))
+                                             (,e1-type 1)
+                                             (,e2-type 1)
+                                             (,list-end-type 1))
+                            `(:move-clone (,v1-type 1))
+                            `(:allocation (,%b-type 1)
+                                          (,v0-type 3))))
 
     (format t "Passed!~%")
     t))
