@@ -178,7 +178,7 @@ Copyright © 2017-2024
 
 ## Past Contributors
 
-* Michael Fiano <mail@mfiano.net>
+* Michael Fiano
 
 Licensed under the MIT License.
 
