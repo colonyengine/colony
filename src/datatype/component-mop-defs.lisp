@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;; In the component-class we keep annotation values for annotations that are
 ;; identified by symbol.

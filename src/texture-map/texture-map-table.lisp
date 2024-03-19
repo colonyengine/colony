@@ -1,4 +1,4 @@
-(in-package #:virality.texture-map.texture-map-table)
+(in-package #:colony.texture-map.texture-map-table)
 
 ;;;; Implementation of datatype TEXTURE-MAP-TABLE
 

@@ -1,4 +1,4 @@
-(in-package #:virality.image)
+(in-package #:colony.image)
 
 ;;;; Implementation of IMAGE structure for PNG images
 

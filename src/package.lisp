@@ -1,6 +1,6 @@
 (in-package #:cl-user)
 
-(defpackage #:virality.clone
+(defpackage #:colony.clone
   (:use #:cl)
   ;; CLONE-POLICY Classes
   (:export
@@ -75,7 +75,7 @@
    )
   )
 
-(defpackage #:virality.attribute-bag
+(defpackage #:colony.attribute-bag
   (:use #:cl)
   ;; ATTRIBUTE-VALUE API
   (:export
@@ -103,7 +103,7 @@
    #:sattr
    ))
 
-(defpackage #:virality.image
+(defpackage #:colony.image
   (:use #:cl)
   ;; IMAGE API
   (:export
@@ -116,7 +116,7 @@
    #:width
    ))
 
-(defpackage #:virality.resource-cache
+(defpackage #:colony.resource-cache
   (:use #:cl)
   ;; CACHE-ITEM API
   (:export
@@ -191,7 +191,7 @@
    #:sequential-resource-cache-executor
    ))
 
-(defpackage #:virality.uuid
+(defpackage #:colony.uuid
   (:use #:cl)
   ;; uuid defstruct
   (:export
@@ -209,7 +209,7 @@
    #:valid-string-p
    ))
 
-(defpackage #:virality.thread-pool
+(defpackage #:colony.thread-pool
   (:use #:cl)
   ;; thread-pool
   (:export
@@ -234,7 +234,7 @@
    #:worker-count
    ))
 
-(defpackage #:virality.texture-map
+(defpackage #:colony.texture-map
   (:use #:cl)
   ;; The macro API
   (:export
@@ -250,7 +250,7 @@
    #:user-form
    ))
 
-(defpackage #:virality.texture-map.texture-map-table
+(defpackage #:colony.texture-map.texture-map-table
   (:use #:cl)
   ;; texture-map-table API
   (:export
@@ -262,7 +262,7 @@
    #:texture-map-table
    ))
 
-(defpackage #:virality.texture
+(defpackage #:colony.texture
   (:use #:cl)
   ;; texture-descriptor
   (:export
@@ -293,7 +293,7 @@
    #:reify-texture-profiles
    #:reify-texture-descriptors))
 
-(defpackage #:virality.texture.texture-table
+(defpackage #:colony.texture.texture-table
   (:use #:cl)
   (:export
    #:add-semantic-texture-descriptor
@@ -311,7 +311,7 @@
    #:texture-table
    #:unrealized-procedural-textures))
 
-(defpackage #:virality.prefab
+(defpackage #:colony.prefab
   (:use #:cl)
   (:export
    #:define-prefab
@@ -319,7 +319,7 @@
    #:make-prefab-instance
    #:ref))
 
-(uiop:define-package #:virality.shader
+(uiop:define-package #:colony.shader
   (:use-reexport
    #:vumbra.common
    #:vshadow.glsl)
@@ -337,7 +337,7 @@
    #:unlit/vert-only-uv1
    #:matcap))
 
-(defpackage #:virality.extension
+(defpackage #:colony.extension
   (:use #:cl)
   ;; geometry layouts
   (:export
@@ -397,7 +397,7 @@
    #:clamp-all-edges
    #:default-profile))
 
-(defpackage #:virality.component
+(defpackage #:colony.component
   (:use #:cl)
   ;; camera
   (:export
@@ -448,7 +448,7 @@
    #:remove-child
    #:transform))
 
-(defpackage #:virality
+(defpackage #:colony
   (:use #:cl)
   (:export
    #:actor
@@ -498,26 +498,26 @@
    #:=window-title=)
   ;; prefabs
   (:import-from
-   #:virality.prefab
+   #:colony.prefab
    #:define-prefab
    #:find-prefab
    #:make-prefab-instance
    #:ref)
   (:export
-   #:virality.prefab
+   #:colony.prefab
    #:define-prefab
    #:find-prefab
    #:make-prefab-instance
    #:ref)
   ;; texture-maps
   (:import-from
-   #:virality.texture-map
+   #:colony.texture-map
    #:define-texture-map)
   (:export
    #:define-texture-map)
   ;; textures
   (:import-from
-   #:virality.texture
+   #:colony.texture
    #:define-texture
    #:define-texture-profile)
   (:export
@@ -645,7 +645,7 @@
    #:spritesheet
    #:update-spritesheet-shader))
 
-(defpackage #:virality.nicknames
+(defpackage #:colony.nicknames
   (:local-nicknames
    (#:u #:vutils))
   (:use #:cl)
@@ -658,7 +658,7 @@
    #:add-package-local-nickname)
   (:export #:define-nicknames))
 
-(in-package #:virality.nicknames)
+(in-package #:colony.nicknames)
 
 (u:eval-always
   (defvar *package-nicknames*
@@ -685,21 +685,21 @@
       (:vumbra.noise :umbra.noise)
       (:vumbra.sdf :umbra.sdf)
       (:vumbra.sprite :umbra.sprite)
-      (:virality.clone :clone)
-      (:virality.attribute-bag :abag)
-      (:virality.component :comp)
-      (:virality :v)
-      (:virality.extension :x)
-      (:virality.prefab :prefab)
-      (:virality.shader :shd)
-      (:virality.resource-cache :rc)
-      (:virality.thread-pool :tpool)
-      (:virality.uuid :uuid)
-      (:virality.texture-map.texture-map-table :texmaptab)
-      (:virality.texture-map :texmap)
-      (:virality.texture.texture-table :textab)
-      (:virality.texture :tex)
-      (:virality.image :img)
+      (:colony.clone :clone)
+      (:colony.attribute-bag :abag)
+      (:colony.component :comp)
+      (:colony :c)
+      (:colony.extension :x)
+      (:colony.prefab :prefab)
+      (:colony.shader :shd)
+      (:colony.resource-cache :rc)
+      (:colony.thread-pool :tpool)
+      (:colony.uuid :uuid)
+      (:colony.texture-map.texture-map-table :texmaptab)
+      (:colony.texture-map :texmap)
+      (:colony.texture.texture-table :textab)
+      (:colony.texture :tex)
+      (:colony.image :img)
       (:vshadow :shadow))))
 
 (macrolet ((define-nicknames/internal ()
@@ -712,7 +712,7 @@
                       *package-nicknames*))
                    (remove-if-not
                     (lambda (x)
-                      (search "VIRALITY" x))
+                      (search "COLONY" x))
                     *package-nicknames*
                     :key (lambda (x) (symbol-name (car x))))))))
   (define-nicknames/internal))

@@ -1,4 +1,4 @@
-(in-package #:virality.texture-map)
+(in-package #:colony.texture-map)
 
 
 ;; TODO: Fix this below to figure out what to do with the extra
@@ -11,7 +11,7 @@
 
   ;; COmment this in and finish it.
   #++(tpool:push-queue
-      (v::thread-pool (v::core context))
+      (c::thread-pool (c::core context))
       :recompile
       (list
        :texture-map
@@ -20,8 +20,8 @@
          ))))
 
 (defun update-texture-map/interactively (old-descriptor new-descriptor)
-  (v:with-selected-interactive-core (core)
-    (update-texture-map (v:context core) old-descriptor new-descriptor)))
+  (c:with-selected-interactive-core (core)
+    (update-texture-map (c:context core) old-descriptor new-descriptor)))
 
 ;; NIL is a reserved name which means "anonymous texture-map".
 ;; Return three values:
@@ -82,7 +82,7 @@
                ;; typed into the REPL.  So insert it into the metaspace and/or
                ;; update interactively if possible.
                ((and (not ,context) (not ,anonymous-p))
-                (symbol-macrolet ((,desc-lookup (u:href v::=meta/texture-maps=
+                (symbol-macrolet ((,desc-lookup (u:href c::=meta/texture-maps=
                                                         ,canon-name)))
                   (let ((,new-desc (make-texture-map-descriptor
                                     ,canon-name ,tmap ,extra-tmaps-list

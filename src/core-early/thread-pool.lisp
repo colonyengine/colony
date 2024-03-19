@@ -1,4 +1,4 @@
-(in-package #:virality.thread-pool)
+(in-package #:colony.thread-pool)
 
 ;; Implementation of THREAD-POOL
 

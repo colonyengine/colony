@@ -1,4 +1,4 @@
-(in-package #:virality.texture-map)
+(in-package #:colony.texture-map)
 
 ;; The texture-map internal protocol. Prolly needs some improvement!
 (defgeneric parse-data-model (data-model))
@@ -245,7 +245,7 @@
 
 (defun test-single-unique-0 ()
   (with-tmap-test-form
-    (v:define-texture-map foo (:single :unique)
+    (c:define-texture-map foo (:single :unique)
       (:mipmap () (textures foo-0))
       (:mipmap () (textures foo-1))
       (:mipmap () (textures foo-2))
@@ -260,12 +260,12 @@
 
 (defun test-single-combined-0 ()
   (with-tmap-test-form
-    (v:define-texture-map foo () ;; defaults to (:single :combined)
+    (c:define-texture-map foo () ;; defaults to (:single :combined)
       (:mipmap () (textures foo-mip)))))
 
 (defun test-single-combined-1 ()
   (with-tmap-test-form
-    (v:define-texture-map foo (:single :combined)
+    (c:define-texture-map foo (:single :combined)
       (:mipmap () (textures foo-mip)))))
 
 ;;; -----------------------------------------------------------------------
@@ -292,7 +292,7 @@
 
 (defun test-rect-unique-0 ()
   (with-tmap-test-form
-    (v:define-texture-map foo (:rect :unique)
+    (c:define-texture-map foo (:rect :unique)
       (:image () (textures height-field)))))
 
 ;;; -----------------------------------------------------------------------
@@ -317,7 +317,7 @@
 
 (defun test-buffer-unique-0 ()
   (with-tmap-test-form
-    (v:define-texture-map foo (:buffer :unique)
+    (c:define-texture-map foo (:buffer :unique)
       (:name () :foobar))))
 
 ;;; -----------------------------------------------------------------------
@@ -344,7 +344,7 @@
 
 (defun test-voxel-unique-0 ()
   (with-tmap-test-form
-    (v:define-texture-map 3d (:voxel :unique (:slices :back-to-front))
+    (c:define-texture-map 3d (:voxel :unique (:slices :back-to-front))
       ;; mipmap level 0
       (:mipmap ()
                (textures 3d-slice-0-0)
@@ -534,7 +534,7 @@
 
 (defun test-cube-unique-six-0 ()
   (with-tmap-test-form
-    (v:define-texture-map cube-map (:cube :unique :six)
+    (c:define-texture-map cube-map (:cube :unique :six)
       ;; A single cube-store instance holds the array of data-elements and each
       ;; element is a cube-face instance.  The source of the data in the DSL is
       ;; a symbol of another texture-map, or a (:texture-map ...) anonmyous
@@ -548,34 +548,34 @@
 
 (defun test-cube-unique-six-1 ()
   (with-tmap-test-form
-    (v:define-texture-map cube-map (:cube :unique :six)
+    (c:define-texture-map cube-map (:cube :unique :six)
       ;; A single cube-store instance holds the array of data-elements and each
       ;; element is a cube-face instance.  The source of the data in the DSL is
       ;; a symbol of another texture-map, or a (:texture-map ...) anonmyous
       ;; definition.
       (:face ((:dir :+x))
-             (v:define-texture-map nil (:single :unique)
+             (c:define-texture-map nil (:single :unique)
                (:mipmap () (textures map-right))))
       (:face ((:dir :-x))
-             (v:define-texture-map nil (:single :unique)
+             (c:define-texture-map nil (:single :unique)
                (:mipmap () (textures map-left))))
       (:face ((:dir :+y))
-             (v:define-texture-map nil (:single :unique)
+             (c:define-texture-map nil (:single :unique)
                (:mipmap () (textures map-top))))
       (:face ((:dir :-y))
-             (v:define-texture-map nil (:single :unique)
+             (c:define-texture-map nil (:single :unique)
                (:mipmap () (textures map-bottom))))
       (:face ((:dir :+z))
-             (v:define-texture-map nil (:single :unique)
+             (c:define-texture-map nil (:single :unique)
                (:mipmap () (textures map-back))))
       (:face ((:dir :-z))
-             (v:define-texture-map nil (:single :unique)
+             (c:define-texture-map nil (:single :unique)
                (:mipmap () (textures map-front)))))))
 
 
 (defun test-cube-unique-opengl-0 ()
   (with-tmap-test-form
-    (v:define-texture-map cube-map (:cube :unique :opengl)
+    (c:define-texture-map cube-map (:cube :unique :opengl)
       ;; The source of the data is a symbol of another texture-map, or a
       ;; (:texture-map ...) anonmyous definition.
       (:face ((:dir :texture-cube-map-positive-x)) cube-map-right)
@@ -588,7 +588,7 @@
 
 (defun test-cube-combined-vcross-top-0 ()
   (with-tmap-test-form
-    (v:define-texture-map cube-map (:cube :combined :vcross-top)
+    (c:define-texture-map cube-map (:cube :combined :vcross-top)
       ;; A single cube-store hold a set of mipmaps-stores.
       ;; NOTE: all six faces are encoded into each mipmap image. Then each
       ;; image is a scaled mipmap going down to each image being a 1x1 image

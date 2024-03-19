@@ -1,4 +1,4 @@
-(in-package #:virality.attribute-bag)
+(in-package #:colony.attribute-bag)
 
 ;;; ------------------------------------------------------------------------
 ;; Attribute Value API

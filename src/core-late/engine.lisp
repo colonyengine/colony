@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defun load-initial-scene (core scene-name)
   (let ((scene-name (or scene-name =initial-scene=)))

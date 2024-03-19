@@ -150,26 +150,26 @@
 
 ;; The names in the first position all must be exported.
 (define-graph core
-    (:category v:texture-resolution
+    (:category c:texture-resolution
      :depends-on nil
      :weak-roots (core))
   (search-path core (:x)))
 
 (define-graph core
-    (:category v:material-resolution
+    (:category c:material-resolution
      :depends-on nil
      :weak-roots (core))
   (search-path core (:x)))
 
 (define-graph core
-    (:category v:component-resolution
+    (:category c:component-resolution
      :depends-on nil
      :weak-roots (core))
   (search-path core (:comp)))
 
 ;; component execution order
 (define-graph core
-    (:category v:component-execution
+    (:category c:component-execution
      :depends-on nil
      :weak-roots (core)) ;; if not referenced, becomes a root.
   (execution-order all-unknown-types
@@ -187,27 +187,27 @@
 
 ;; and now, what the user specifies in their project, one for each category
 (define-graph project
-    (:category v:texture-resolution
-     :depends-on ((v:core (core))) ;; v:core is in context of category!
+    (:category c:texture-resolution
+     :depends-on ((c:core (core))) ;; c:core is in context of category!
      :roots (all-textures))
-  (search-path all-textures (:virality-examples -> core)))
+  (search-path all-textures (:colony-examples -> core)))
 
 (define-graph project
-    (:category v:material-resolution
-     :depends-on ((v:core (core)))
+    (:category c:material-resolution
+     :depends-on ((c:core (core)))
      :roots (all-materials))
-  (search-path all-materials (:virality-examples -> core)))
+  (search-path all-materials (:colony-examples -> core)))
 
 (define-graph project
-    (:category v:component-resolution
-     :depends-on ((v:core (core)))
+    (:category c:component-resolution
+     :depends-on ((c:core (core)))
      :roots (all-component))
-  (search-path all-components (-> :virality-examples -> core)))
+  (search-path all-components (-> :colony-examples -> core)))
 
 ;; component execution order
 (define-graph project
-    (:category v:component-execution
-     :depends-on ((v:core (all-unknown-types core)))
+    (:category c:component-execution
+     :depends-on ((c:core (all-unknown-types core)))
      :roots (start))
   (execution-order project ;; placeholder
                    nil)

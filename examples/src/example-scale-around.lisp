@@ -1,32 +1,32 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
 ;; A barely adequate example component to demonstrate scaling a different
 ;; actor around a scaling pivot point.
-(v:define-component demo-scale-around ()
+(c:define-component demo-scale-around ()
   ((%scale-increment :accessor scale-increment
                      :initarg :scale-increment
                      :initform (v3:uniform .01f0))
    (%target-to-scale-around-pivot :accessor target-to-scale-around-pivot
                                   :initarg :target-to-scale-around-pivot)))
 
-(defmethod v:on-component-update ((self demo-scale-around))
-  (let ((context (v:context self))
+(defmethod c:on-component-update ((self demo-scale-around))
+  (let ((context (c:context self))
         (self-world-coords
-          (v:transform-point self (v3:zero))))
+          (c:transform-point self (v3:zero))))
 
-    ;; TODO: If you change the (v:ref "/scale-around/holder" to just "holder"
+    ;; TODO: If you change the (c:ref "/scale-around/holder" to just "holder"
     ;; this will happen.
     (when (null (target-to-scale-around-pivot self))
       (error "Why is target null here?"))
 
-    (v:scale-around (target-to-scale-around-pivot self)
+    (c:scale-around (target-to-scale-around-pivot self)
                     self-world-coords
                     (v3:scale (scale-increment self)
-                              (* 3f0 (sin (* (v:total-time context) 4f0)))))))
+                              (* 3f0 (sin (* (c:total-time context) 4f0)))))))
 
 ;;; Prefabs
 
-(v:define-prefab "scale-around" (:library examples)
+(c:define-prefab "scale-around" (:library examples)
   (("camera" :copy "/cameras/perspective")
    (comp:camera :zoom 3))
 
@@ -43,7 +43,7 @@
                       ;; very confusing. As in sometimes it can just be
                       ;; "holder" in other prefabs. Maybe it matters if it is a
                       ;; :link or :copy versus an inplace definition?
-                      (v:ref "/scale-around/holder")))
+                      (c:ref "/scale-around/holder")))
 
 
   ("holder"

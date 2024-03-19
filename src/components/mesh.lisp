@@ -1,6 +1,6 @@
-(in-package #:virality.component)
+(in-package #:colony.component)
 
-(v:define-component mesh ()
+(c:define-component mesh ()
   ((%asset :reader asset
            :initarg :asset
            :initform nil)
@@ -12,21 +12,21 @@
            :initform 0)
    (%primitive :reader primitive)))
 
-(defmethod v:on-component-initialize ((self mesh))
+(defmethod c:on-component-initialize ((self mesh))
   (with-slots (%asset %name %index %primitive) self
     (unless %asset
       (error "A mesh component must have an asset."))
     (unless %name
       (error "A mesh component must have a name."))
-    (let* ((context (v:context self))
-           (path (v::resolve-path %asset))
-           (gltf (v:with-asset-cache context :mesh path
-                   (v::load-gltf path)))
-           (mesh (u:href (v::meshes gltf) %name)))
+    (let* ((context (c:context self))
+           (path (c::resolve-path %asset))
+           (gltf (c:with-asset-cache context :mesh path
+                   (c::load-gltf path)))
+           (mesh (u:href (c::meshes gltf) %name)))
       (unless mesh
         (error "Mesh name ~s not found in mesh file ~s." %name path))
-      (setf %primitive (aref (v::primitives mesh) %index)))))
+      (setf %primitive (aref (c::primitives mesh) %index)))))
 
-(defmethod v:on-component-slave-render ((master render) (self mesh))
-  (let ((instance-count (v::instances (comp:material master))))
-    (funcall (v::draw-func (primitive self)) instance-count)))
+(defmethod c:on-component-slave-render ((master render) (self mesh))
+  (let ((instance-count (c::instances (comp:material master))))
+    (funcall (c::draw-func (primitive self)) instance-count)))

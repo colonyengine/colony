@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; Implementation of datatypes ANNOTATION-VALUE, COMPONENT-CLASS,
 ;;;; ANNOTATABLE-SLOT
@@ -374,7 +374,7 @@
                        :finally (return composing-value)))))
        ;; A method to locate the metadata in the storage form in this
        ;; class.
-       (defmethod ,(intern "STORAGE-METADATA" :virality)
+       (defmethod ,(intern "STORAGE-METADATA" :colony)
            ((component-name (eql ',name)) &optional namespace)
          (declare (ignore component-name))
          (let ((ss-meta ',storage-metadata))

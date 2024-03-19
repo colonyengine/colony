@@ -1,44 +1,44 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; This is not really a general purpose component. It is just here to help out
 ;; testing how destruction and colliders work together.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(v:define-component destroy-my-actor ()
+(c:define-component destroy-my-actor ()
   ((%time-to-destroy :accessor time-to-destroy
                      :initarg :time-to-destroy
                      :initform 5f0)))
 
-(defmethod v:on-collision-enter ((self destroy-my-actor) other-collider)
+(defmethod c:on-collision-enter ((self destroy-my-actor) other-collider)
   #++(:printv "DESTROY-MY-ACTOR: Actor ~a entered collision with collider ~
              ~a(on actor ~a)"
-              (v:actor self) other-collider (v:actor other-collider))
-  (when (string= (v:display-id other-collider) "Ground")
+              (c:actor self) other-collider (c:actor other-collider))
+  (when (string= (c:display-id other-collider) "Ground")
     #++(:printv "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" ~
                object, so destroy myself!")
-    (v:destroy (v:actor self))))
+    (c:destroy (c:actor self))))
 
-(defmethod v:on-collision-exit ((self destroy-my-actor) other-collider)
+(defmethod c:on-collision-exit ((self destroy-my-actor) other-collider)
   #++(:printv "DESTROY-MY-ACTOR: Actor ~a is exiting collision with ~
              ~a(on actor: ~a)."
-              (v:actor self) other-collider (v:actor other-collider)))
+              (c:actor self) other-collider (c:actor other-collider)))
 
-(defmethod v:on-component-update ((self destroy-my-actor))
-  (decf (time-to-destroy self) (v:frame-time (v:context self)))
+(defmethod c:on-component-update ((self destroy-my-actor))
+  (decf (time-to-destroy self) (c:frame-time (c:context self)))
   (when (<= (time-to-destroy self) 0)
-    (v:destroy (v:actor self))))
+    (c:destroy (c:actor self))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Testing getting the directions from a transform
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(v:define-component unit-test-transform-api ()
+(c:define-component unit-test-transform-api ()
   ((%test-type :reader test-type
                :initarg :test-type
                :initform nil)
    (%test-performed :reader test-performed
                     :initform (u:dict #'eq))))
 
-(defmethod v:on-component-physics-update ((self unit-test-transform-api))
+(defmethod c:on-component-physics-update ((self unit-test-transform-api))
   (ecase (test-type self)
     (:test-direction-vectors
      (test-axis-directions self))
@@ -48,12 +48,12 @@
 (defun test-axis-directions (self)
   (let ((test-type (test-type self)))
     (unless (u:href (test-performed self) test-type)
-      (let ((forward (v:transform-forward self))
-            (backward (v:transform-backward self))
-            (up (v:transform-up self))
-            (down (v:transform-down self))
-            (right (v:transform-right self))
-            (left (v:transform-left self)))
+      (let ((forward (c:transform-forward self))
+            (backward (c:transform-backward self))
+            (up (c:transform-up self))
+            (down (c:transform-down self))
+            (right (c:transform-right self))
+            (left (c:transform-left self)))
         #++(:printv "FORWARD Vector -> ~a" forward)
         #++(:printv "BACKWARD Vector -> ~a" backward)
         #++(:printv "UP Vector -> ~a" up)
@@ -83,8 +83,8 @@
   "Test if TRANSFORM-POINT works."
   (let* ((object-space-point (v3:vec 1f0 0f0 0f0))
          (world-space-point (v3:vec 1f0 3f0 1f0))
-         (local->world (v:transform-point self object-space-point))
-         (world->local (v:transform-point self
+         (local->world (c:transform-point self object-space-point))
+         (world->local (c:transform-point self
                                           world-space-point
                                           :space :model)))
     ;; See if transform-point works.
@@ -105,8 +105,8 @@
   "Test if TRANSFORM-VECTOR works."
   (let* ((object-space-vector (v3:vec 2f0 2f0 0f0))
          (world-space-vector (v3:vec -4f0 4f0 0f0))
-         (local->world (v:transform-vector self object-space-vector))
-         (world->local (v:transform-vector self
+         (local->world (c:transform-vector self object-space-vector))
+         (world->local (c:transform-vector self
                                            world-space-vector
                                            :space :model)))
     ;; See if transform-vector works.
@@ -130,8 +130,8 @@
          ;; so it would be easier to see in your mind's eye.
          (object-space-direction (v3:normalize (v3:vec 1f0 1f0 0f0)))
          (world-space-direction (v3:normalize (v3:vec -1f0 1f0 0f0)))
-         (local->world (v:transform-direction self object-space-direction))
-         (world->local (v:transform-direction self
+         (local->world (c:transform-direction self object-space-direction))
+         (world->local (c:transform-direction self
                                               world-space-direction
                                               :space :model)))
     ;; See if transform-direction works.
@@ -155,25 +155,25 @@
 ;; This interface is TBD.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(v:define-component pick-test () ())
+(c:define-component pick-test () ())
 
-(defmethod v:on-component-update ((self pick-test))
-  (let ((context (v:context self))
-        (line-segment (make-instance 'v::line-segment))
+(defmethod c:on-component-update ((self pick-test))
+  (let ((context (c:context self))
+        (line-segment (make-instance 'c::line-segment))
         (picked nil))
-    (when (v:on-button-enter context :mouse :left)
-      (setf picked (v::pick-actor context line-segment)))
+    (when (c:on-button-enter context :mouse :left)
+      (setf picked (c::pick-actor context line-segment)))
     (when picked
       (:printv picked)
       ;; TODO: Uncomment this when sly has send-to-repl in master
-      #++(v::send-to-repl (list picked) :comment "Picked actor"))))
+      #++(c::send-to-repl (list picked) :comment "Picked actor"))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Some basic models to help us out.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(v:define-prefab "default-rock" (:library examples)
+(c:define-prefab "default-rock" (:library examples)
   ("model"
    (comp:transform :scale (v3:uniform 2f0))
    (comp:mesh :asset '(meshes rocks)
@@ -181,19 +181,19 @@
    (comp:render :material `(x:matcap ceramic-dark
                                      :uniforms
                                      ((:sampler x:matcap/ceramic-dark)))
-                :slave (v:ref :self :component 'comp:mesh))))
+                :slave (c:ref :self :component 'comp:mesh))))
 
-(v:define-prefab "rock-0" (:library examples)
+(c:define-prefab "rock-0" (:library examples)
   (("rock-0" :link "/default-rock")
    ("model"
     (comp:mesh :name "Rock-0"))))
 
-(v:define-prefab "rock-1" (:library examples)
+(c:define-prefab "rock-1" (:library examples)
   (("rock-1" :link "/default-rock")
    ("model"
     (comp:mesh :name "Rock-1"))))
 
-(v:define-prefab "rock-2" (:library examples)
+(c:define-prefab "rock-2" (:library examples)
   (("rock-2" :link "/default-rock")
    ("model"
     (comp:mesh :name "Rock-2"))))
@@ -203,7 +203,7 @@
 ;; The test prefabs.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(v:define-prefab "collision-smoke-test" (:library examples)
+(c:define-prefab "collision-smoke-test" (:library examples)
   (("camera" :copy "/cameras/perspective")
    (comp:camera (:policy :new-args) :zoom 6f0))
   ("rot-0-center"
@@ -227,7 +227,7 @@
                  :center (v3:zero)
                  :radius 1f0))))
 
-(v:define-prefab "collision-transform-test-0" (:library examples)
+(c:define-prefab "collision-transform-test-0" (:library examples)
   "This test just prints out the directions of the actor transform. Since
 the actor is at universe 0,0,0 and has no rotations, we should see the
 unit world vector representations of the axis directions as:
@@ -248,7 +248,7 @@ unit world vector representations of the axis directions as:
 
 ;; TODO: This currently fails. Compute this math by hand and verify if the math
 ;; or the test is correct.
-(v:define-prefab "collision-transform-test-1" (:library examples)
+(c:define-prefab "collision-transform-test-1" (:library examples)
   "This test checks to see if we can move in and out of object space and
 world space for a particular transform."
 
@@ -269,7 +269,7 @@ world space for a particular transform."
 
 
 
-(v:define-prefab "stone-destroy-when-collide-with-ground" (:library examples)
+(c:define-prefab "stone-destroy-when-collide-with-ground" (:library examples)
   (destroy-my-actor :display-id "destroy-my-actor: stone")
   (("stone" :link "/default-rock")
    (comp:sphere :display-id "Stone Collider"
@@ -284,22 +284,22 @@ world space for a particular transform."
                 ;; which means "this prefab root actor".
                 ;;
                 ;; PARSE-REFERENCE-PATH/PARENT is prolly the culprit here.
-                :referent (v:ref "../" :component 'destroy-my-actor)
+                :referent (c:ref "../" :component 'destroy-my-actor)
                 :center (v3:zero)
                 :radius 1f0)))
 
-(v:define-prefab "stone-destroy-after-time" (:library examples)
+(c:define-prefab "stone-destroy-after-time" (:library examples)
   (destroy-my-actor :time-to-destroy 2f0)
   (("stone" :link "/default-rock")
    (comp:sphere :display-id "Stone Collider"
                 :visualize t
                 :on-layer :player
-                :referent (v:ref "../" :component 'destroy-my-actor)
+                :referent (c:ref "../" :component 'destroy-my-actor)
                 :center (v3:zero)
                 :radius 1f0)))
 
 
-(v:define-prefab "collision-test-0" (:library examples)
+(c:define-prefab "collision-test-0" (:library examples)
   "In this test, you should see two actors with a narrow gap between them and
 an another actor near the bottom of the screen. These three are unmoving. The
 green spiral (if VISUALIZE defaults to T in the sphere component) is a sphere
@@ -340,7 +340,7 @@ be made bigger. to accomodate it. Maybe some fragments too when it hits..."
                 :center (v3:zero)
                 :radius 1f0)))
 
-(v:define-prefab "collision-test-1" (:library examples)
+(c:define-prefab "collision-test-1" (:library examples)
   "This test demonstrates that at frame 0 colliders that should be colliding
 actually are. You have to view the results to see the colliders lighting up."
   (("camera" :copy "/cameras/perspective")
@@ -370,7 +370,7 @@ actually are. You have to view the results to see the colliders lighting up."
    (comp:transform :scale 2f0
                    :rotate/velocity (v3:velocity v3:+up+ o:pi))))
 
-(v:define-prefab "collision-test-2" (:library examples)
+(c:define-prefab "collision-test-2" (:library examples)
   (("camera" :copy "/cameras/perspective")
    (comp:camera (:policy :new-args) :zoom 3f0))
   ("a"
@@ -405,7 +405,7 @@ actually are. You have to view the results to see the colliders lighting up."
                  :center (v3:zero)
                  :radius 1f0))))
 
-(v:define-prefab "collision-test-3" (:library examples)
+(c:define-prefab "collision-test-3" (:library examples)
   (("camera" :copy "/cameras/ortho")
    (comp:camera (:policy :new-args) :zoom 140f0))
   ("test-case-always"
@@ -446,7 +446,7 @@ actually are. You have to view the results to see the colliders lighting up."
                  :on-layer :ground
                  :center (v3:zero)))))
 
-(v:define-prefab "collision-test-4" (:library examples)
+(c:define-prefab "collision-test-4" (:library examples)
   "In this test, we test that the center of the collision sphere is away from
 the actual model and picking still works."
   (("camera" :copy "/cameras/perspective")
@@ -477,7 +477,7 @@ the actual model and picking still works."
                  :center (v3:zero)
                  :radius 1f0))))
 
-(v:define-prefab "collision-test-5" (:library examples)
+(c:define-prefab "collision-test-5" (:library examples)
   "This test has very careful geometry which aligns one obb's plane to the
 camera so we see parallel to the plane. Also, the particular variation of
 this math is something that once broke in the internal OBB math."
@@ -519,7 +519,7 @@ this math is something that once broke in the internal OBB math."
                  :minz -1f0
                  :maxz 1f0))))
 
-(v:define-prefab "collision-test-6" (:library examples)
+(c:define-prefab "collision-test-6" (:library examples)
   "Test that the top stays in collision, and the bottom stay colliding when
 they separate, and while the big one is alive stay collided, but after it goes
 away then become non-collided."

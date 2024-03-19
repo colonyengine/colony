@@ -1,8 +1,8 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
 ;;; Prefabs
 
-(v:define-prefab "cameras" (:library ptp-base)
+(c:define-prefab "cameras" (:library ptp-base)
   ("ortho"
    (comp:camera :active-p t
                 :mode :orthographic))
@@ -18,8 +18,8 @@
     (comp:camera :active-p t
                  :mode :orthographic))))
 
-(v:define-prefab "mesh" (:library ptp-base)
-  (comp:mesh :asset '(v::meshes v::primitives)
+(c:define-prefab "mesh" (:library ptp-base)
+  (comp:mesh :asset '(c::meshes c::primitives)
              :name "plane")
   (sketch :material 'x:unlit-texture
-          :slave (v:ref :self :component 'comp:mesh)))
+          :slave (c:ref :self :component 'comp:mesh)))

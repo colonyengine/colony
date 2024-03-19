@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defun %storage (context component-name namespace &rest keys)
   (let* ((name (qualify-component (core context) component-name))

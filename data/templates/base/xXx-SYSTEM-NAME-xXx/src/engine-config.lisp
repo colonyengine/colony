@@ -1,4 +1,4 @@
-(in-package #:xXx-SYSTEM-NAME-xXx)
+/*(in-package #:xXx-SYSTEM-NAME-xXx)*/
 
 ;;; V DSL forms that explain to the engine things about the configuration for
 ;;; how to start the application, where to find physical game assets, and the
@@ -6,17 +6,17 @@
 
 ;;; Config for this project.
 
-;; TODO: Ensure that only one v:define-config has :default true if :default is
+;; TODO: Ensure that only one c:define-config has :default true if :default is
 ;; specified.
 
-(v:define-config start-config-0 ()
+(c:define-config start-config-0 ()
   :default t
   :window-width 800
   :window-height 600
   :delta (float 1/60 1f0)
   :initial-scene '(("initial-scene" lib/main)))
 
-(v:define-config start-config-1 ()
+(c:define-config start-config-1 ()
   :window-width 1920
   :window-height 1080
   :delta (float 1/60 1f0)
@@ -24,22 +24,22 @@
 
 ;;; Asset Pool Definitions
 
-(v:define-asset-pool metadata ()
+(c:define-asset-pool metadata ()
   :path "data/metadata")
 
-(v:define-asset-pool meshes ()
+(c:define-asset-pool meshes ()
   :path "data/mesh"
   :filter "glb")
 
-(v:define-asset-pool textures ()
+(c:define-asset-pool textures ()
   :path "data/texture"
   :filter "png")
 
-(v:define-asset-pool mesh-textures ()
+(c:define-asset-pool mesh-textures ()
   :path "data/texture/mesh"
   :filter "png")
 
-(v:define-asset-pool environments ()
+(c:define-asset-pool environments ()
   :path "data/texture/environment"
   :filter "hdr")
 
@@ -50,7 +50,7 @@
 ;; this DSL is going to be evolved, we should at least fix this since it causes
 ;; great confusion when it goes wrong.
 
-(in-package #:virality)
+(in-package #:colony)
 
 (define-graph :xXx-SYSTEM-NAME-xXx
     (:category component-dependency
@@ -60,7 +60,7 @@
           ((splice core-types)
            -> (splice all-unknown-types))))
 
-(define-graph :virality
+(define-graph :colony
     (:category component-package-order
      :depends-on ((:core-component-order (core-packages)))
      :roots (start-search))

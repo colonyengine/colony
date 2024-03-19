@@ -1,6 +1,6 @@
-(in-package #:virality.component)
+(in-package #:colony.component)
 
-(v:define-component geometry ()
+(c:define-component geometry ()
   ((%name :reader name
           :initarg :name
           :initform nil)
@@ -8,12 +8,12 @@
               :initarg :geometry
               :initform nil)))
 
-(defmethod v:on-component-initialize ((self geometry))
+(defmethod c:on-component-initialize ((self geometry))
   (with-slots (%name %geometry) self
     (unless %name
       (error "A geometry component must have name specified."))
-    (setf %geometry (v::make-geometry %name))))
+    (setf %geometry (c::make-geometry %name))))
 
-(defmethod v:on-component-slave-render ((master render) (self geometry))
-  (let ((instance-count (v::instances (comp:material master))))
-    (v::draw-geometry (geometry self) instance-count)))
+(defmethod c:on-component-slave-render ((master render) (self geometry))
+  (let ((instance-count (c::instances (comp:material master))))
+    (c::draw-geometry (geometry self) instance-count)))

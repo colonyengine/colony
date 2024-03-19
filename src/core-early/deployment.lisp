@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;; TODO: Change *deployed-p* such that it is passed an as argument to START in
 ;; the :toplevel lambda function below. And then default it to NIL otherwise.

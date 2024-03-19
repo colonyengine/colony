@@ -1,4 +1,4 @@
-(in-package #:virality.uuid)
+(in-package #:colony.uuid)
 
 ;; Implementation of UUID (gotten and modified from mfiano's random-uuid
 ;; project).

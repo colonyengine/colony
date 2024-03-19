@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (global-vars:define-global-var =cpu= "Unknown")
 (global-vars:define-global-var =cpu-count= 1)
@@ -64,6 +64,6 @@
         =max-ssbo-bindings= (get-gpu/max-ssbo-bindings)))
 
 (defun get-hardware-info (key)
-  (let ((global (u:format-symbol :virality "=~a=" key)))
+  (let ((global (u:format-symbol :colony "=~a=" key)))
     (when (boundp global)
       (symbol-value global))))

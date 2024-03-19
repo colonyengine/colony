@@ -1,4 +1,4 @@
-(in-package #:virality.texture.texture-table)
+(in-package #:colony.texture.texture-table)
 
 ;;;; Implementation of datatype TEXTURE-TABLE
 

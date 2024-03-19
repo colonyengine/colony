@@ -1,4 +1,4 @@
-(in-package #:virality.test)
+(in-package #:colony.test)
 
 ;;; Test suites.
 (define-test suite/attribute-value)

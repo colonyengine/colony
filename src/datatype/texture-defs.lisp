@@ -1,4 +1,4 @@
-(in-package #:virality.texture)
+(in-package #:colony.texture)
 
 ;; TODO: Does the cache system need a cache-bucket which holds a cache item?
 ;; Cause then people can keep references to the cache bucket and if the value
@@ -82,7 +82,7 @@
 
 
 
-(in-package #:virality.texture.texture-table)
+(in-package #:colony.texture.texture-table)
 
 
 ;; This datatype is used in the CORE type to maintain the texture state.

@@ -1,4 +1,4 @@
-(in-package #:virality.prefab)
+(in-package #:colony.prefab)
 
 (defun parse-prefab (prefab)
   (let (success-p)
@@ -14,7 +14,7 @@
              (update-links prefab)
              (setf success-p t))
         (unless success-p
-          (remhash %name (u:href v::=meta/prefabs= %library)))))))
+          (remhash %name (u:href c::=meta/prefabs= %library)))))))
 
 (defun parse-copy/link (library path target options)
   (destructuring-bind (&key id (display-id target) (copy nil copy-p)

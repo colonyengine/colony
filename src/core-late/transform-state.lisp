@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;; Implementation for the defstruct TRANSFORM-STATE.
 

@@ -1,8 +1,8 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
 ;;; Prefabs
 
-(v:define-prefab "geometric-volumes" (:library examples)
+(c:define-prefab "geometric-volumes" (:library examples)
   (("camera" :copy "/cameras/perspective")
    (comp:camera :zoom 3))
   (("plane" :copy "/mesh")
@@ -24,4 +24,4 @@
                    :rotate/velocity (v3:velocity (v3:ones) o:pi))
    (comp:mesh :name "cone")
    (comp:render :material 'x:unlit-texture-decal-bright
-                :slave (v:ref :self :component 'comp:mesh))))
+                :slave (c:ref :self :component 'comp:mesh))))

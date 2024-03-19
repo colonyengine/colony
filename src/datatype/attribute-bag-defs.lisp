@@ -1,4 +1,4 @@
-(in-package #:virality.attribute-bag)
+(in-package #:colony.attribute-bag)
 
 ;;; The ATTRIBUTE-BAG system is a CLOS object that holds dynamically created
 ;;; associations between EQUAL comparable names and values which are stored as

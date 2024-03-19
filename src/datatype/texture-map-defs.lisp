@@ -1,4 +1,4 @@
-(in-package #:virality.texture-map)
+(in-package #:colony.texture-map)
 
 ;;;; These types exist both at macro expansion time and at engine runtime.
 ;;;; It is inteded they are the products of define-texture-map and also the
@@ -121,7 +121,7 @@
 
 ;; --------------------------------------------------------------------------
 
-(in-package #:virality.texture-map.texture-map-table)
+(in-package #:colony.texture-map.texture-map-table)
 
 ;; This datatype is used in the CORE type to maintain the texture-map state.
 (defclass texture-map-table ()

@@ -2,7 +2,7 @@
 
 ;; Every interval seconds, change the renderer to the next material in the
 ;; array, wrapping to the beginning when the end is reached.
-(v:define-component flip-material ()
+(c:define-component flip-material ()
   ((%renderer :accessor renderer
               :initarg :renderer
               :initform nil)

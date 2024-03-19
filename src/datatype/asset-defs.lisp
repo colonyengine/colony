@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defclass asset-spec ()
   ((%pool :reader pool

@@ -1,4 +1,4 @@
-(in-package #:virality-examples.shader)
+(in-package #:colony-examples.shader)
 
 ;;; Art 1
 ;;; A Truchet effect across a quad grid.

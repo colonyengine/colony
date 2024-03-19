@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defmacro with-continuable (&body body)
   ;; NOTE: Be very aware of the use of the 'hook' variable and the ,hook

@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; The gamedev facing interaface to the CORE abstraction for a running
 ;;;; game instance.

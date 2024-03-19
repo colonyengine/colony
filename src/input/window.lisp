@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (u:define-constant +window-event-names+
     #(nil :show :hide nil :move :resize nil :minimize :maximize :restore

@@ -1,4 +1,4 @@
-(in-package #:virality.image)
+(in-package #:colony.image)
 
 (defclass image ()
   ((%path :reader path

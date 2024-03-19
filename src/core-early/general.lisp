@@ -1,6 +1,6 @@
-(in-package #:virality)
+(in-package #:colony)
 
-;;;; This file houses various general-purpose utilities used across Virality
+;;;; This file houses various general-purpose utilities used across Colony
 ;;;; Engine, that either don't belong in vutils, or just haven't been
 ;;;; cross-ported yet.
 
@@ -28,7 +28,7 @@
 ;; how the code is written), it selects it automatically. If there is no
 ;; interactive core, do nothing.
 (defmacro with-selected-interactive-core ((core-var) &body body)
-  `(when (v:core-bound-p v::*core-debug*)
-     (let ((,core-var v::*core-debug*))
+  `(when (c:core-bound-p c::*core-debug*)
+     (let ((,core-var c::*core-debug*))
        (declare (ignorable ,core-var))
        ,@body)))

@@ -1,4 +1,4 @@
-(in-package #:virality.texture)
+(in-package #:colony.texture)
 
 (defmethod load-texture-data ((texture-type (eql :texture-cube-map))
                               texture context)
@@ -23,7 +23,7 @@
     ;; Check to ensure they all fit into texture memory.
     ;; TODO: Refactor out of each method into validate-mipmap-images and
     ;; generalize.
-    (loop :with max-size = v::=max-texture-size=
+    (loop :with max-size = c::=max-texture-size=
           :for (placement mipmaps) :across (second first-cube)
           :for image = (aref mipmaps 0)
           :do

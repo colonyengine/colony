@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (define-graph :core (:category component-dependency)
   (subdag all-unknown-types ((unknown-types)))

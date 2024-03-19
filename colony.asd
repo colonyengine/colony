@@ -3,14 +3,13 @@
 ;; See the README concerning this line.
 (pushnew :cl-opengl-no-masked-traps *features*)
 
-(asdf:defsystem #:virality
+(asdf:defsystem #:colony
   :description "An experimental game engine."
-  :author ("Michael Fiano <mail@mfiano.net>"
-           "Peter Keller <psilord@cs.wisc.edu>")
+  :author ("Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
-  :homepage "https://github.com/bufferswap/ViralityEngine"
-  :bug-tracker "https://github.com/bufferswap/ViralityEngine/issues"
-  :source-control (:git "https://github.com/bufferswap/ViralityEngine")
+  :homepage "https://github.com/colonyengine/colony"
+  :bug-tracker "https://github.com/colonyengine/colony/issues"
+  :source-control (:git "https://github.com/colonyengine/colony")
   :encoding :utf-8
   :depends-on (#:3b-bmfont
                #:3b-bmfont/json
@@ -37,7 +36,7 @@
                #:static-vectors
                #:trivial-features
                #:uiop)
-  :in-order-to ((asdf:test-op (asdf:test-op #:virality.test)))
+  :in-order-to ((asdf:test-op (asdf:test-op #:colony.test)))
   :pathname "src"
   :serial t
   :components

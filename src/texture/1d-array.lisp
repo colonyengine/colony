@@ -1,4 +1,4 @@
-(in-package #:virality.texture)
+(in-package #:colony.texture)
 
 
 (defmethod load-texture-data ((texture-type (eql :texture-1d-array))

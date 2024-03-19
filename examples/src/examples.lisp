@@ -1,3 +1,3 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
 ;; TODO: Add prologue/epilogue example.

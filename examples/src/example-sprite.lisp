@@ -1,34 +1,34 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
 ;;; Textures
 
-(v:define-texture-map sprites (:single :unique)
+(c:define-texture-map sprites (:single :unique)
   (:mipmap () (textures sprites)))
 
-(v:define-texture sprites (:texture-2d)
+(c:define-texture sprites (:texture-2d)
   ;; TODO: TMAP Convert :data to be texture-map name.
   (:data #((textures sprites))))
 
 ;;; Components
 
-(v:define-component simple-movement ()
+(c:define-component simple-movement ()
   ((%transform :reader transform)))
 
-(defmethod v:on-component-initialize ((self simple-movement))
+(defmethod c:on-component-initialize ((self simple-movement))
   (with-slots (%transform) self
-    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))
-    (v:translate self (v3:vec -400f0 0f0 0f0) :replace t :instant t)))
+    (setf %transform (c:component-by-type (c:actor self) 'comp:transform))
+    (c:translate self (v3:vec -400f0 0f0 0f0) :replace t :instant t)))
 
-(defmethod v:on-component-update ((self simple-movement))
-  (u:mvlet* ((context (v:context self))
-             (lx ly (v:get-gamepad-analog
+(defmethod c:on-component-update ((self simple-movement))
+  (u:mvlet* ((context (c:context self))
+             (lx ly (c:get-gamepad-analog
                      context :radial-scaled '(:gamepad1 :left-stick)))
-             (rx ry (v:get-gamepad-analog
+             (rx ry (c:get-gamepad-analog
                      context :radial-scaled '(:gamepad1 :right-stick)))
-             (instant-p (zerop (v:frame-count context))))
+             (instant-p (zerop (c:frame-count context))))
     (let ((vec (v3:vec lx ly 0f0)))
       (v3:scale! vec (if (> (v3:length vec) 1) (v3:normalize vec) vec) 150f0)
-      (v:translate self
+      (c:translate self
                    (v3:+ (v3:vec -400f0 0f0 0f0) vec)
                    :replace t
                    :instant instant-p
@@ -38,67 +38,67 @@
                (angle (if (minusp angle)
                           (+ o:pi (- o:pi (abs angle)))
                           angle)))
-          (v:rotate self
+          (c:rotate self
                     (q:orient :local :z angle)
                     :replace t
                     :instant instant-p))))))
 
-(v:define-component shot-mover ()
+(c:define-component shot-mover ()
   ((%transform :reader transform)
    (%velocity :reader velocity
               :initarg :velocity
               :initform 0f0)))
 
-(defmethod v:on-component-initialize ((self shot-mover))
+(defmethod c:on-component-initialize ((self shot-mover))
   (with-slots (%transform) self
-    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))))
+    (setf %transform (c:component-by-type (c:actor self) 'comp:transform))))
 
-(defmethod v:on-component-update ((self shot-mover))
-  (v:translate self
+(defmethod c:on-component-update ((self shot-mover))
+  (c:translate self
                (v3:scale v3:+up+
-                         (* (velocity self) (v:frame-time (v:context self))))))
+                         (* (velocity self) (c:frame-time (c:context self))))))
 
-(v:define-component shot-emitter ()
+(c:define-component shot-emitter ()
   ((%transform :reader transform)))
 
-(defmethod v:on-component-initialize ((self shot-emitter))
+(defmethod c:on-component-initialize ((self shot-emitter))
   (with-slots (%transform) self
-    (setf %transform (v:component-by-type (v:actor self) 'comp:transform))))
+    (setf %transform (c:component-by-type (c:actor self) 'comp:transform))))
 
-(defmethod v:on-component-update ((self shot-emitter))
-  (let ((context (v:context self)))
-    (when (or (v:on-button-enter context :gamepad1 :a)
-              (v:on-button-enter context :mouse :left))
-      (let* ((parent-model (v:get-model-matrix self))
+(defmethod c:on-component-update ((self shot-emitter))
+  (let ((context (c:context self)))
+    (when (or (c:on-button-enter context :gamepad1 :a)
+              (c:on-button-enter context :mouse :left))
+      (let* ((parent-model (c:get-model-matrix self))
              (parent-translation (m4:get-translation parent-model))
              (parent-rotation (q:from-mat4 parent-model))
-             (new-actor (v:make-actor context :display-id "Ship bullet"))
-             (transform (v:make-component context
+             (new-actor (c:make-actor context :display-id "Ship bullet"))
+             (transform (c:make-component context
                                           'comp:transform
                                           :translate parent-translation
                                           :rotate parent-rotation))
-             (shot-mover (v:make-component context 'shot-mover
+             (shot-mover (c:make-component context 'shot-mover
                                            :velocity 1000f0))
-             (sprite (v:make-component context
+             (sprite (c:make-component context
                                        'comp:sprite
                                        :spec '(metadata sprites)
                                        :name "bullet01"
                                        :frames 2))
-             (render (v:make-component context
+             (render (c:make-component context
                                        'comp:render
                                        :material `(x:sprite
                                                    sprite
                                                    :uniforms
                                                    ((:sprite.sampler sprites)))
                                        :slave sprite)))
-        (v:attach-components
+        (c:attach-components
          new-actor transform shot-mover sprite render)
-        (v:spawn-actor new-actor)
-        (v:destroy new-actor :ttl 2f0)))))
+        (c:spawn-actor new-actor)
+        (c:destroy new-actor :ttl 2f0)))))
 
 ;;; Prefabs
 
-(v:define-prefab "sprite" (:library examples)
+(c:define-prefab "sprite" (:library examples)
   (("camera" :copy "/cameras/ortho"))
   ("ship"
    (comp:transform :rotate (q:orient :local :z (- o:pi/2)))
@@ -110,7 +110,7 @@
     (comp:render :material `(x:sprite
                              sprite
                              :uniforms ((:sprite.sampler sprites)))
-                 :slave (v:ref :self :component'comp:sprite))
+                 :slave (c:ref :self :component'comp:sprite))
     ("exhaust"
      (comp:transform :translate (v3:vec 0f0 -140f0 0f0))
      (comp:sprite :spec '(metadata sprites)
@@ -120,4 +120,4 @@
      (comp:render :material `(x:sprite
                               sprite
                               :uniforms ((:sprite.sampler sprites)))
-                  :slave (v:ref :self :component'comp:sprite))))))
+                  :slave (c:ref :self :component'comp:sprite))))))

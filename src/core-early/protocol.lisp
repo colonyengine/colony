@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;; NOTE: These protocols should all be generic functions, without any :METHODs
 ;;; defined for them, and never DEFMETHODs. Additionally, do not define any

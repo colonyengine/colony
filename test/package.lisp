@@ -1,6 +1,6 @@
 (in-package #:cl-user)
 
-(defpackage #:virality.test
+(defpackage #:colony.test
   (:local-nicknames
    (#:u #:vutils)
    (#:const #:vorigin.constants)
@@ -11,8 +11,8 @@
    (#:v2 #:vorigin.vec2)
    (#:v3 #:vorigin.vec3)
    (#:v4 #:vorigin.vec4)
-   (#:abag #:virality.attribute-bag)
-   (#:clone #:virality.clone))
+   (#:abag #:colony.attribute-bag)
+   (#:clone #:colony.clone))
   (:use
    #:cl
    #:parachute))

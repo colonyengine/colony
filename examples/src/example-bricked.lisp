@@ -1,4 +1,4 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
 ;; Working Title: Ball Breaker.
 
@@ -153,13 +153,13 @@
 !                                        !
 "
 
-(v:define-component brick ()
+(c:define-component brick ()
   ((%hp :accessor hp
         :initarg :hp
         :initform 1)
    ))
 
-(v:define-component ball ()
+(c:define-component ball ()
   ((%velocity :accessor velocity
               :initarg :velocity
               :initform (v3:zero))
@@ -167,27 +167,27 @@
               :initarg :contacts
               :initform nil)))
 
-(defmethod v:on-collision-enter ((self ball) face)
+(defmethod c:on-collision-enter ((self ball) face)
   (format t "Ball entered collision: ball ~A with actor ~A~%"
-          self (v:actor face))
-  (push (v:actor face) (contacts self)))
+          self (c:actor face))
+  (push (c:actor face) (contacts self)))
 
-(defmethod v:on-collision-exit ((self ball) face)
+(defmethod c:on-collision-exit ((self ball) face)
   (format t "Ball exited collision: ball ~A with actor ~A~%"
-          self (v:actor face)))
+          self (c:actor face)))
 
 ;; Out of all bricks hit, react properly, but only destroy one of them.
-(defmethod v:on-component-physics-update ((self ball))
+(defmethod c:on-component-physics-update ((self ball))
   (when (contacts self)
     (format t "Ball: Would have processed: ~A~%" (contacts self))
     (setf (contacts self) nil))
 
   )
 
-(v:define-prefab "brick" (:library examples)
+(c:define-prefab "brick" (:library examples)
   (brick)
   (comp:cuboid :visualize t
-               :referent (v:ref :self :component 'brick)
+               :referent (c:ref :self :component 'brick)
                :on-layer :enemy
                :center (v3:zero)
                :minx -1f0
@@ -198,17 +198,17 @@
                :maxz 1f0))
 
 
-(v:define-prefab "ball" (:library examples)
+(c:define-prefab "ball" (:library examples)
   (ball)
   (comp:sphere :visualize t
-               :referent (v:ref :self :component 'ball)
+               :referent (c:ref :self :component 'ball)
                :on-layer :player
                :center (v3:zero)
                :radius .2f0))
 
 
 ;; Layout: 01234
-(v:define-prefab "brick-group" (:library examples)
+(c:define-prefab "brick-group" (:library examples)
   (("brick-0" :copy "/brick")
    (comp:transform :translate (v3:vec -4f0 0f0 0f0)))
   (("brick-1" :copy "/brick")
@@ -221,7 +221,7 @@
    (comp:transform :translate (v3:vec 4f0 0f0 0f0)))
   )
 
-(v:define-prefab "level-0" (:library examples)
+(c:define-prefab "level-0" (:library examples)
   (("bg-0" :copy "/brick-group")
    (comp:transform :translate (v3:vec 0f0 1f0 0f0)))
   (("bg-1" :copy "/brick-group")
@@ -231,7 +231,7 @@
   )
 
 ;; The toplevel prefab to load the example.
-(v:define-prefab "bricked" (:library examples)
+(c:define-prefab "bricked" (:library examples)
   (("camera" :copy "/cameras/ortho")
    (comp:camera :zoom 25f0))
   (("level-0" :link "/level-0"))

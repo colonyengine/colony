@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (define-call-flow :default ()
   (flow initialize-phase

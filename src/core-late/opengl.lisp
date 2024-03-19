@@ -1,6 +1,6 @@
-(in-package #:virality)
+(in-package #:colony)
 
-;;;; TODO: This file is currently not used by Virality Engine yet. The contents
+;;;; TODO: This file is currently not used by Colony Engine yet. The contents
 ;;;; of this file will become useful when we have a complete rendering pipeline
 ;;;; with multiple render passes. ~axion 4/8/2020
 
@@ -43,7 +43,7 @@
 ;; used to annotate graphical debugging tools such as RenderDoc with a tree of
 ;; human readable annotations of the call flow.
 (defmacro with-debug-group (name &body body)
-  (if (find :virality.release *features*)
+  (if (find :colony.release *features*)
       `(progn ,@body)
       (u:once-only (name)
         `(progn

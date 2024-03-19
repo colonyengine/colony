@@ -1,4 +1,4 @@
-(in-package #:virality-examples.shader)
+(in-package #:colony-examples.shader)
 
 (defun font/distance ((color :vec3))
   (let ((r (.r color))

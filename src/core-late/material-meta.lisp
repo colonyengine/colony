@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; all code dealing with the material (and profile) DSL parsing and inserting
 ;;;; into the metadata, reification and integration of the material metadata
@@ -140,7 +140,7 @@ be executed after all the shader programs have been compiled."
 
 
 (defun update-material/interactively (name func)
-  (v:with-selected-interactive-core (core)
+  (c:with-selected-interactive-core (core)
     (tpool:push-queue
      (thread-pool core)
      :recompile

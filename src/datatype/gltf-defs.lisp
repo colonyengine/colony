@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defclass gltf ()
   ((%file-name :reader file-name

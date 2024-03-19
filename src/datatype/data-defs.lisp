@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defclass input-data ()
   ((%gamepad-instances :reader gamepad-instances

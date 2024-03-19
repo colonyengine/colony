@@ -1,7 +1,7 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;; This code is related to MAKE-PROJECT, a gamedev facing API for the creation
-;;; of new virality application projects.
+;;; of new colony application projects.
 
 (defun make-template-replacement (pattern value)
   (make-instance 'template-replacement
@@ -155,7 +155,7 @@ path on the filesystem."
   "This function may take a single designation package name or symbol or a list
 of them and returns a representation string suitable for inclusion in the
 :depends-on line in an asd file."
-  (let* ((depends-on (cons "VIRALITY" (u:ensure-list depends-on)))
+  (let* ((depends-on (cons "COLONY" (u:ensure-list depends-on)))
          (raw-package-names
            (remove-duplicates
             (mapcar (lambda (x)
@@ -267,7 +267,7 @@ system that would be loaded or NIL if that's not possible."
                        (whitelist-filenames '("README" "LICENSE"))
 
                        (verbose T))
-  "Create a new Virality Engine system suitable for developing a new project
+  "Create a new Colony Engine system suitable for developing a new project
 whose name and main package is named a slugified version of the last entry in
 DESTINATION-PATH. The DESTINATION-PATH must be a directory that does not
 already exist. It is expected that these keyword arguments should be
@@ -284,7 +284,7 @@ specified, otherwise the specified boring default is chosen.
 Note that the value for the :depends-on keyword argument may be a symbol, a
 designated string name for a package, or a list of either of those. All of
 these packages becomes what the generated system is dependent upon.  Note that
-the :virality package will always be included in the :depends-on value
+the :colony package will always be included in the :depends-on value
 regardless if it is included or not in the :depends-on value.
 
 The template you would like to make is specified with the :template keyword
@@ -417,7 +417,7 @@ Return three values:
                                          generated-system-name)
           (when verbose
             (format t ";; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;~%")
-            (format t ";; Virality Engine Project Created.~%")
+            (format t ";; Colony Engine Project Created.~%")
             (format t ";; Location: ~A~%" destination-path)
             (format t ";; Template Chosen: ~?~%"
                     (if (keywordp template)
@@ -437,7 +437,7 @@ Return three values:
             (format t "~A~%" msg)
             (format t ";; Once it is loaded, start the project's default~%~
                      ;; config like this:~%;;~%")
-            (format t "   (virality:start)~%")
+            (format t "   (colony:start)~%")
             (format t ";;~%")
             (format t ";; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;~%"))
 

@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;; The value of a uniform is this type in the material. It holds the original
 ;;; semantic value and any transformation of it that is actually the usable

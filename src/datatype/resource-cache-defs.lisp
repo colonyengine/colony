@@ -1,4 +1,4 @@
-(in-package #:virality.resource-cache)
+(in-package #:colony.resource-cache)
 
 ;;;; --------------------------------------------------------------------------
 ;;;; The cache-item value representation classes.

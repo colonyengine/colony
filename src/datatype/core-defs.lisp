@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;; Used in the CORE to manage a pile of component flow state in a state
 ;; machine.

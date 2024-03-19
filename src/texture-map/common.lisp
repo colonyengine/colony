@@ -1,4 +1,4 @@
-(in-package #:virality.texture-map)
+(in-package #:colony.texture-map)
 
 (defun make-texture-map (texture-map-type &rest init-args)
   (apply #'make-instance texture-map-type init-args))

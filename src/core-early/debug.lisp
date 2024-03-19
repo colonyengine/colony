@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defvar *profile* nil)
 (defvar *profile-frames* 600)
@@ -7,7 +7,7 @@
 (defmacro with-profiling (core &body body)
   (let ((packages (remove-if-not
                    (lambda (x)
-                     (or (u:string-starts-with-p x "VIRALITY")
+                     (or (u:string-starts-with-p x "COLONY")
                          (u:string-starts-with-p x "VORIGIN")
                          (string= x "VSHADOW")
                          (string= x "VUTILS")

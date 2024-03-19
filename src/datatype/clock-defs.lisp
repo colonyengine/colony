@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defstruct (clock (:constructor %make-clock)
                   (:predicate nil)

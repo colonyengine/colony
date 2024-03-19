@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;; -------------------------------------------------------------------------
 ;; NOTE: The current resource-cache algorithm that we're getting rid of.
@@ -58,7 +58,7 @@
 ;; TODO: Slowly replace the above with the below.
 ;; -------------------------------------------------------------------------
 
-(in-package #:virality.resource-cache)
+(in-package #:colony.resource-cache)
 
 ;; Implementation of base CACHE-ITEM.
 

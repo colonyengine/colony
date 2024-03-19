@@ -1,4 +1,4 @@
-(in-package #:virality.clone)
+(in-package #:colony.clone)
 
 ;;;; This file describes the CLONE API and associated objects. The CLONE API is
 ;;;; a means to duplicate objects like arrays, class instances, structure

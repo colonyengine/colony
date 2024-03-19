@@ -1,4 +1,4 @@
-(in-package #:virality.clone)
+(in-package #:colony.clone)
 
 ;;; -------------------------------
 ;; The INTENTION API
@@ -366,7 +366,7 @@ it. If there are more or less keys in the domain than specified then fail."
        (format strm " k:")
        (print-unreadable-object (original-object strm :type t :identity t)
          (format strm "~S" original-object))
-       (format strm "~%  v:")
+       (format strm "~%  c:")
        (print-unreadable-object (eql-map-entry strm :type t :identity t)
          (format strm "~%    o:  ~S~%    tp: ~S~%    t:  ~S~%    i:  ~S"
                  (safe-slot-value eql-map-entry '%origin #'origin)

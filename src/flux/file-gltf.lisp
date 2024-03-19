@@ -1,4 +1,4 @@
-(in-package #:virality.file.gltf)
+(in-package #:colony.file.gltf)
 
 ;;;; Extensions are not yet supported in this model.
 
@@ -1921,36 +1921,36 @@ allowable inputs below and what is returned.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun test/parse-indices (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (jsown:val
                (jsown:val
                 (nth 1 (jsown:val j "accessors")) "sparse") "indices"))
-         (inst (virality.file.gltf::parse-indices obj)))
+         (inst (colony.file.gltf::parse-indices obj)))
     (describe inst)))
 
 (defun test/parse-values (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (jsown:val
                (jsown:val
                 (nth 1 (jsown:val j "accessors")) "sparse") "values"))
-         (inst (virality.file.gltf::parse-values obj)))
+         (inst (colony.file.gltf::parse-values obj)))
     (describe inst)))
 
 (defun test/parse-sparse (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (jsown:val
                (nth 1 (jsown:val j "accessors")) "sparse"))
-         (inst (virality.file.gltf::parse-sparse obj)))
+         (inst (colony.file.gltf::parse-sparse obj)))
     (describe inst)))
 
 (defun test/parse-accessor (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 1 (jsown:val j "accessors")))
-         (inst (virality.file.gltf::parse-accessor obj)))
+         (inst (colony.file.gltf::parse-accessor obj)))
     (describe inst)))
 
 (defun test/parse-target (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (jsown:val-safe
             (nth 0
@@ -1958,176 +1958,176 @@ allowable inputs below and what is returned.
                   (nth 0 (jsown:val j "animations"))
                   "channels"))
             "target"))
-         (inst (virality.file.gltf::parse-target obj)))
+         (inst (colony.file.gltf::parse-target obj)))
     (describe inst)))
 
 (defun test/parse-channel (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (nth 0
                 (jsown:val-safe
                  (nth 0 (jsown:val j "animations"))
                  "channels")))
-         (inst (virality.file.gltf::parse-channel obj)))
+         (inst (colony.file.gltf::parse-channel obj)))
     (describe inst)))
 
 (defun test/parse-animation-sampler (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (nth 0
                 (jsown:val-safe
                  (nth 0 (jsown:val j "animations"))
                  "samplers")))
-         (inst (virality.file.gltf::parse-animation-sampler obj)))
+         (inst (colony.file.gltf::parse-animation-sampler obj)))
     (describe inst)))
 
 (defun test/parse-animation (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 0 (jsown:val j "animations")))
-         (inst (virality.file.gltf::parse-animation obj)))
+         (inst (colony.file.gltf::parse-animation obj)))
     (describe inst)))
 
 (defun test/parse-asset (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (jsown:val j "asset"))
-         (inst (virality.file.gltf::parse-asset obj)))
+         (inst (colony.file.gltf::parse-asset obj)))
     (describe inst)))
 
 (defun test/parse-buffer (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 0 (jsown:val j "buffers")))
-         (inst (virality.file.gltf::parse-buffer obj)))
+         (inst (colony.file.gltf::parse-buffer obj)))
     (describe inst)))
 
 (defun test/parse-buffer-view (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 1 (jsown:val j "bufferViews")))
-         (inst (virality.file.gltf::parse-buffer-view obj)))
+         (inst (colony.file.gltf::parse-buffer-view obj)))
     (describe inst)))
 
 (defun test/parse-orthographic (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (jsown:val
             (nth 1 (jsown:val j "cameras"))
             "orthographic"))
-         (inst (virality.file.gltf::parse-orthographic obj)))
+         (inst (colony.file.gltf::parse-orthographic obj)))
     (describe inst)))
 
 (defun test/parse-perspective (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (jsown:val
             (nth 0 (jsown:val j "cameras"))
             "perspective"))
-         (inst (virality.file.gltf::parse-perspective obj)))
+         (inst (colony.file.gltf::parse-perspective obj)))
     (describe inst)))
 
 (defun test/parse-camera (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (nth 0 (jsown:val j "cameras")))
-         (inst (virality.file.gltf::parse-camera obj)))
+         (inst (colony.file.gltf::parse-camera obj)))
     (describe inst)))
 
 (defun test/parse-image (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (nth 0 (jsown:val j "images")))
-         (inst (virality.file.gltf::parse-image obj)))
+         (inst (colony.file.gltf::parse-image obj)))
     (describe inst)))
 
 (defun test/parse-normal-texture-info (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (jsown:val
             (nth 0 (jsown:val j "materials"))
             "normalTexture"))
-         (inst (virality.file.gltf::parse-normal-texture-info obj)))
+         (inst (colony.file.gltf::parse-normal-texture-info obj)))
     (describe inst)))
 
 (defun test/parse-occlusion-texture-info (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (jsown:val
             (nth 0 (jsown:val j "materials"))
             "occlusionTexture"))
-         (inst (virality.file.gltf::parse-occlusion-texture-info obj)))
+         (inst (colony.file.gltf::parse-occlusion-texture-info obj)))
     (describe inst)))
 
 (defun test/parse-texture-info (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (jsown:val
             (jsown:val
              (nth 0 (jsown:val j "materials"))
              "pbrMetallicRoughness")
             "baseColorTexture"))
-         (inst (virality.file.gltf::parse-texture-info obj)))
+         (inst (colony.file.gltf::parse-texture-info obj)))
     (describe inst)))
 
 (defun test/parse-pbr-metallic-roughness (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (jsown:val
             (nth 0 (jsown:val j "materials"))
             "pbrMetallicRoughness"))
-         (inst (virality.file.gltf::parse-pbr-metallic-roughness obj)))
+         (inst (colony.file.gltf::parse-pbr-metallic-roughness obj)))
     (describe inst)))
 
 (defun test/parse-material (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 0 (jsown:val j "materials")))
-         (inst (virality.file.gltf::parse-material obj)))
+         (inst (colony.file.gltf::parse-material obj)))
     (describe inst)))
 
 (defun test/parse-primitive (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj
            (nth 0 (jsown:val (nth 0 (jsown:val j "meshes"))
                              "primitives")))
-         (inst (virality.file.gltf::parse-primitive obj)))
+         (inst (colony.file.gltf::parse-primitive obj)))
     (describe inst)))
 
 (defun test/parse-mesh (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 0 (jsown:val j "meshes")))
-         (inst (virality.file.gltf::parse-mesh obj)))
+         (inst (colony.file.gltf::parse-mesh obj)))
     (describe inst)))
 
 (defun test/parse-node (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 0 (jsown:val j "nodes")))
-         (inst (virality.file.gltf::parse-node obj)))
+         (inst (colony.file.gltf::parse-node obj)))
     (describe inst)))
 
 (defun test/parse-sampler (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 0 (jsown:val j "samplers")))
-         (inst (virality.file.gltf::parse-sampler obj)))
+         (inst (colony.file.gltf::parse-sampler obj)))
     (describe inst)))
 
 (defun test/parse-scene (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 0 (jsown:val j "scenes")))
-         (inst (virality.file.gltf::parse-scene obj)))
+         (inst (colony.file.gltf::parse-scene obj)))
     (describe inst)))
 
 (defun test/parse-skin (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 0 (jsown:val j "skins")))
-         (inst (virality.file.gltf::parse-skin obj)))
+         (inst (colony.file.gltf::parse-skin obj)))
     (describe inst)))
 
 (defun test/parse-texture (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
          (obj (nth 0 (jsown:val j "textures")))
-         (inst (virality.file.gltf::parse-texture obj)))
+         (inst (colony.file.gltf::parse-texture obj)))
     (describe inst)))
 
 (defun test/parse-gltf (file)
-  (let* ((j (virality.file.gltf::load-gltf-file file))
-         (inst (virality.file.gltf::parse-gltf j)))
+  (let* ((j (colony.file.gltf::load-gltf-file file))
+         (inst (colony.file.gltf::parse-gltf j)))
     (describe inst)))
 
 (defun test/parse ()
@@ -2284,7 +2284,7 @@ allowable inputs below and what is returned.
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(in-package #:virality.geometry)
+(in-package #:colony.geometry)
 
 (defclass gltf ()
   ((%buffer :reader buffer
@@ -2329,24 +2329,24 @@ allowable inputs below and what is returned.
   (let ((header (make-instance 'gltf-header)))
     (with-slots (%magic %version %length) header
       (let* ((buffer (fast-io:make-input-buffer
-                      :vector (v::read-bytes (buffer gltf) 12)))
-             (magic (v::read-string buffer :bytes 4)))
+                      :vector (c::read-bytes (buffer gltf) 12)))
+             (magic (c::read-string buffer :bytes 4)))
         (if (not (string= magic "glTF"))
             (error "Invalid glTF2 file.")
             (setf %magic magic
-                  %version (v::read-uint-le buffer 4)
-                  %length (v::read-uint-le buffer 4)))))
+                  %version (c::read-uint-le buffer 4)
+                  %length (c::read-uint-le buffer 4)))))
     header))
 
 (defgeneric parse-gltf-chunk-data (gltf chunk-type chunk &key)
   (:method :around (gltf chunk-type chunk &key)
     (let ((buffer (fast-io:make-input-buffer
-                   :vector (v::read-bytes (buffer gltf) (chunk-length chunk)))))
+                   :vector (c::read-bytes (buffer gltf) (chunk-length chunk)))))
       (call-next-method gltf chunk-type chunk :buffer buffer))))
 
 (defmethod parse-gltf-chunk-data (gltf (chunk-type (eql :json-content)) chunk
                                   &key buffer)
-  (let ((data (v::read-string buffer :encoding :utf-8)))
+  (let ((data (c::read-string buffer :encoding :utf-8)))
     (setf (json gltf) (jsown:parse data))
     data))
 
@@ -2357,7 +2357,7 @@ allowable inputs below and what is returned.
         :for data-buffer :in buffers
         :for index :below (length buffers)
         :for size = (get-gltf-property gltf "byteLength" data-buffer)
-        :do (setf (aref data index) (v::read-bytes buffer size))
+        :do (setf (aref data index) (c::read-bytes buffer size))
         :finally (setf (buffers gltf) data))
   nil)
 
@@ -2370,8 +2370,8 @@ allowable inputs below and what is returned.
   (let ((chunk (make-instance 'gltf-chunk))
         (buffer (buffer gltf)))
     (with-slots (%length %type %data) chunk
-      (setf %length (v::read-uint-le buffer 4)
-            %type (v::read-uint-le buffer 4)
+      (setf %length (c::read-uint-le buffer 4)
+            %type (c::read-uint-le buffer 4)
             %data (parse-gltf-chunk-data
                    gltf (get-gltf-chunk-type chunk) chunk)))
     chunk))

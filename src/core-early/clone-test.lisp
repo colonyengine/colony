@@ -1,8 +1,8 @@
-(in-package #:virality.clone)
+(in-package #:colony.clone)
 
 ;;;; TODO: Much of this file should be put into a test package and converted to
 ;;;; parachute and put into its own package, directory system, and be part of
-;;;; the Virality test system.
+;;;; the Colony test system.
 
 ;;; ------------------------------------------------------------
 ;; TODO: Maybe put in vutils?

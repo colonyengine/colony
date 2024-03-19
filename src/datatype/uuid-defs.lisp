@@ -1,4 +1,4 @@
-(in-package #:virality.uuid)
+(in-package #:colony.uuid)
 
 (defstruct (uuid
             (:constructor %make-uuid)
