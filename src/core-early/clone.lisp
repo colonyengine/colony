@@ -555,6 +555,53 @@ are of the same known value type. Return NIL otherwise."
                                map-str)))
       (error output-str))))
 
+(defmethod no-applicable-method ((mthd (eql #'clone)) &rest args)
+  (destructuring-bind (object
+                       policy
+                       intention
+                       eql-map
+                       . key-args)
+      args
+
+    (let* ((c-o-str (format nil "object[type: ~S]: ~S"
+                            (type-of object) object))
+           (pol-str (format nil "policy: ~A" policy))
+           (int-str (format nil "intention: ~A" intention))
+           (map-str (with-output-to-string (s)
+                      (eql-map-dump eql-map s)))
+           (key-str (format nil "keyargs: ~{~S ~}" key-args))
+           (output-str
+             (format nil
+                     (concatenate
+                      'string
+                      "No applicable method error for:~%"
+                      "  ~A~%~%"
+                      "It is unknown how to clone:~%"
+                      " ~A~%"
+                      " ~A~%"
+                      " ~A~%"
+                      " ~A~%"
+                      " ~A~%"
+                      "Concerning the type: ~S~%"
+                      "If you encountered this expecting an IDENTITY~%"
+                      "clone, then you'll have to write a~%"
+                      "CLONE method specializing on this object type and~%"
+                      "IDENTITY-CLONE.~%"
+                      "If you were expecting to perform a SHALLOW or DEEP~%"
+                      "clone, then you'll ALSO HAVE TO add methods for~%"
+                      "ALLOCATABLEP, CLONE-ALLOCATE, and CLONE-OBJECT~%"
+                      "that each specialize on this object type and the~%"
+                      "appropriate cloning policy.~%")
+                     mthd
+                     c-o-str
+                     pol-str
+                     int-str
+                     key-str
+                     map-str
+                     (type-of object))))
+      (error output-str))))
+
+
 (defmethod allocatablep (object)
   "The default response to any class of OBJECT is that it is not allocatable.
 Various classes must be whitelisted into the cloning system."
@@ -586,12 +633,14 @@ Various classes must be whitelisted into the cloning system."
 ;; Pathnames,
 ;; and other atomic things which are not actually a collections.
 ;;; -------------------------------
-(defmethod clone (object (policy identity-clone) intention eql-map &key)
+
+(defun %clone-identity (object policy intention eql-map &key)
+  (declare (ignore policy))
   ;; Anything not allocatable is automatically returned and the most minor
   ;; statistics kept.
   (unless (allocatablep object)
     (eql-map-record eql-map object :move-original)
-    (return-from clone (values  object eql-map)))
+    (return-from %clone-identity (values object eql-map)))
 
   ;; For anything allocatable, we make a mark in the eql-map over it to keep
   ;; better statistics about it.
@@ -606,18 +655,57 @@ Various classes must be whitelisted into the cloning system."
         (eql-map-mark-target eql-map object object intention)))
      eql-map)))
 
+;; NOTE: Explicitly whitelist what we identity clone. The case we're attempting
+;; to catch is that if a user of this library uses a type no one has seen
+;; before, we shouldn't silently identity-clone it. It is almost always the
+;; case they are attempting to deep clone it and will be very surprised if it
+;; just identity cloned magically.
+(defmethod clone ((object function) (policy identity-clone) intention eql-map
+                  &key)
+  (%clone-identity object policy intention eql-map))
+
+(defmethod clone ((object character) (policy identity-clone) intention eql-map
+                  &key)
+  (%clone-identity object policy intention eql-map))
+
+(defmethod clone ((object pathname) (policy identity-clone) intention eql-map
+                  &key)
+  (%clone-identity object policy intention eql-map))
+
+(defmethod clone ((object symbol) (policy identity-clone) intention eql-map
+                  &key)
+  (%clone-identity object policy intention eql-map))
+
+(defmethod clone ((object number) (policy identity-clone) intention eql-map
+                  &key)
+  (%clone-identity object policy intention eql-map))
+
+(defmethod clone ((object cons) (policy identity-clone) intention eql-map
+                  &key)
+  (%clone-identity object policy intention eql-map))
+
+(defmethod clone ((object array) (policy identity-clone) intention eql-map
+                  &key)
+  (%clone-identity object policy intention eql-map))
+
+(defmethod clone ((object hash-table) (policy identity-clone) intention eql-map
+                  &key)
+  (%clone-identity object policy intention eql-map))
+
 ;;; -------------------------------
 ;; Cloning cons/collection/array/etc like things which require actually new
 ;; memory allocation to perform the clone. The work of the memory allocation is
-;; offloaded to CLONE-ALLOCATE. Return a clone of the OBJECT.
+;; offloaded to CLONE-ALLOCATE. Return a clone of the OBJECT.  NOTE: We almost
+;; never specialize on the object and the allocating-clone policy. We only do
+;; it (if ever) in special circumstances).
 ;;; -------------------------------
 (defmethod clone (object (policy allocating-clone) intention eql-map
                   &key)
 
-  ;; Anything not allocatable is automatically returned as an identity clone.
+  ;; Anything not alloctable is passed to the whitelisted identity cloner.
   (unless (allocatablep object)
-    (eql-map-record eql-map object :move-original)
-    (return-from clone (values object eql-map)))
+    (return-from clone
+      (clone object *identity* intention eql-map)))
 
   ;; Otherwise it'll get maybe duplicated and visited in the eql-map graph.
 

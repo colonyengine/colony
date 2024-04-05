@@ -175,13 +175,20 @@ specified types of intention and their contextual use."))
 ;; that the cloning system should know about. It is uncommon to have to
 ;; specialize on CLONE.
 
-(defgeneric clone (object clone-policy intenton eql-map &key &allow-other-keys)
+(defgeneric clone (object clone-policy intention eql-map &key
+                   &allow-other-keys)
+  (:argument-precedence-order clone-policy intention object eql-map)
   (:documentation "CLONE the OBJECT according to the CLONE-POLICY and return
 two values, the cloned object and the EQL-MAP. Clone policies of shallow-clone
 and deep-clone (and those derived from them) will cause memory to be allocated
-at least for OBJECT under most (but not all) circumstances. It is not usually
-the case that one would specialize this method beyond those already
-available."))
+at least for OBJECT under most (but not all) circumstances. It can be the case
+that one would specialize this method with a clone-policy of IDENTIY-CLONE
+for new user defined types. NOTE: Be aware that the argument precedence order
+to compute the applicable method this order:
+  CLONE-POLICY
+  INTENTION
+  OBJECT
+  EQL-MAP"))
 
 (defgeneric allocatablep (object)
   (:documentation "Return T if the object is an allocatable entity, NIL
