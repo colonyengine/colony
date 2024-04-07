@@ -173,7 +173,7 @@ specified types of intention and their contextual use."))
 ;; This is the main API into the cloning system. It is expected that you
 ;; specialize ALLOCATABLEP, CLONE-ALLOCATE, and CLONE-OBJECT for a new type
 ;; that the cloning system should know about. It is uncommon to have to
-;; specialize on CLONE.
+;; specialize on CLONE with an allocating-clone policy.
 
 (defgeneric clone (object clone-policy intention eql-map &key
                    &allow-other-keys)
@@ -184,30 +184,35 @@ and deep-clone (and those derived from them) will cause memory to be allocated
 at least for OBJECT under most (but not all) circumstances. It can be the case
 that one would specialize this method with a clone-policy of IDENTIY-CLONE
 for new user defined types. NOTE: Be aware that the argument precedence order
-to compute the applicable method this order:
+to compute the applicable method is computed in this order:
   CLONE-POLICY
   INTENTION
   OBJECT
-  EQL-MAP"))
+  EQL-MAP
+It is expected to define this for IDENTIY-CLONE policies."))
 
 (defgeneric allocatablep (object)
   (:documentation "Return T if the object is an allocatable entity, NIL
 otherwise. It is expected that this is a whitelist of object types which
 informs the CLONE system what its catabilities are with different classes and
-types."))
+types. It is expected to define this for ALLOCATABLE-CLONE policies."))
 
 (defgeneric clone-allocate (object eql-map)
   (:documentation "This generic function must ONLY allocate a new instance of
 the passed in object. It does not have any responsibility to fill in any values
 beyond the required defaults for the allocation. Anything filled in by this
-generic function will almost certainly be overwritten by CLONE-OBJECT when the
-returned object is passed to that generic function. This function returns a
-newly allocated default instance of OBJECT that maintains any original
-contraints on the original OBJECT. The EQL-MAP is used to maintain statistics
-about the allocation, such as how many of what type had been allocated.
+generic function will almost certainly be overwritten or used by CLONE-OBJECT
+when the returned object is passed to that generic function. This function
+returns a newly allocated default instance of OBJECT that maintains any
+original contraints on the original OBJECT. The EQL-MAP is used to maintain
+statistics about the allocation, such as how many of what type had been
+allocated.  NOTE that there is a default method for STANDARD-CLASS that will
+generally do the right thing. So only define this for your classes if you need
+to do something special beyond the default arguments when allocating that type.
 Examples of constraints would be things like keeping the hash table test the
 same, or if an array is adjustable then the newly allocated version of it is
-also adjustable, etc, etc."))
+also adjustable, etc, etc. It is expected to define this for ALLOCATABLE-CLONE
+policies."))
 
 (defgeneric clone-object (cloned-object original-object clone-policy intention
                           last-known-intention eql-map
@@ -223,4 +228,5 @@ if we can just reuse it, or, if the intention is different, we need to alter
 the object somehow. Returns the cloned object. NOTE: An implementor of this
 method will almost surely continue to pass the EQL-MAP to the new calls of
 clone API to both book keep the overall structure of the entire thing being
-cloned and also to maintain correct statistics."))
+cloned and also to maintain correct statistics. It is expected to define this
+for ALLOCATABLE-CLONE policies."))

@@ -808,6 +808,12 @@ Various classes must be whitelisted into the cloning system."
               :fill-pointer (when (array-has-fill-pointer-p object)
                               (fill-pointer object))))
 
+;; In general, catch ALL defclass types and copy them with their default
+;; init arguments.
+(defmethod clone-allocate ((object standard-class) (eql-map eql-map))
+  (eql-map-record eql-map object :allocation)
+  (make-instance (type-of object)))
+
 
 ;; How to allocate a new hash table (that copies the properties of the
 ;; original).
