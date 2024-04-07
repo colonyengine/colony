@@ -206,13 +206,10 @@ when the returned object is passed to that generic function. This function
 returns a newly allocated default instance of OBJECT that maintains any
 original contraints on the original OBJECT. The EQL-MAP is used to maintain
 statistics about the allocation, such as how many of what type had been
-allocated.  NOTE that there is a default method for STANDARD-CLASS that will
-generally do the right thing. So only define this for your classes if you need
-to do something special beyond the default arguments when allocating that type.
-Examples of constraints would be things like keeping the hash table test the
-same, or if an array is adjustable then the newly allocated version of it is
-also adjustable, etc, etc. It is expected to define this for ALLOCATABLE-CLONE
-policies."))
+allocated. Examples of constraints would be things like keeping the hash table
+test the same, or if an array is adjustable then the newly allocated version of
+it is also adjustable, etc, etc. It is expected to define this for
+ALLOCATABLE-CLONE policies."))
 
 (defgeneric clone-object (cloned-object original-object clone-policy intention
                           last-known-intention eql-map
