@@ -20,6 +20,7 @@
    #:unless-found
    #:until
    #:when-found
+   #:when-slot-boundp
    #:while
    #:with-temp-package)
   ;; Closures
