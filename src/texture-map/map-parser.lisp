@@ -431,7 +431,6 @@
                                  . sub-body)
                 element
               (declare (ignore sub-tag))
-              (format t "sub-name is ~A~%" sub-name)
               `((u:comment "Parse the sub texture-map for this face.")
                 (multiple-value-bind (,sub-tmap ,sub-extra-tmap-list)
                     ,(parse-texture-map
