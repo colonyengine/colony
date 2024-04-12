@@ -19,5 +19,10 @@ slot initargs and values."
 
 (defun make-texture-map-descriptor (name ast extra-asts user-form)
   (make-instance 'texture-map-descriptor
-                 :name name :ast ast :extra-asts extra-asts
-                 :user-form user-form))
+                 :name name
+                 :ast ast
+                 :astp (when ast)
+                 :extra-asts extra-asts
+                 :extra-asts-p (when extra-asts t)
+                 :user-form user-form
+                 :user-form-p (when user-form t)))

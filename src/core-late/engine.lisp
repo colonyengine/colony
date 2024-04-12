@@ -14,13 +14,17 @@
   (load-graphs core)
   (load-call-flows core)
   (initialize-shaders core)
+  (texmap:reify-texture-map-descriptors core)
   (tex:reify-texture-profiles core)
   (tex:reify-texture-descriptors core)
   (load-materials core)
   (initialize-collider-system core)
   (make-scene-tree core)
   (load-initial-scene core scene-name)
+  ;; TODO: Right here, eagerly load any known resources the scene needs
   (run-prologue core)
+  ;; TODO: In the game loop frame execution, we lazily load anything we need
+  ;; when the app attempts to observe/add the asset data.
   (start-game-loop core))
 
 (defun deinitialize (core)

@@ -107,17 +107,30 @@
 (defclass texture-map-descriptor ()
   ((%name :accessor name
           :initarg :name)
+   ;; The AST is a TEXTURE-MAP-* instance that holds data referenced by asset
+   ;; forms. These are "mother" texture-map instances that are copied into
+   ;; live instances (and have their asset data filled in) and the cloned
+   ;; instances are given to the app to use.
    (%ast :accessor ast
          :initarg :ast)
-   ;; This descriptor might include additional texture-maps that were generated
-   ;; on behalf of this texture (currently only cube maps can do this). It is
-   ;; up to the reifier to ensure that the extra-asts are they are handled
-   ;; properly wrt anonymity or interactive update, etc.
+   (%ast-p :accessor astp
+           :initarg :astp
+           :initform nil)
+   ;; This descriptor might include additional TEXTURE-MAP-* instances that
+   ;; were generated on behalf of this texture (currently only cube maps can do
+   ;; this). It is up to the reifier to ensure that the extra-asts are they are
+   ;; handled properly wrt anonymity or interactive update, etc.
    (%extra-asts :accessor extra-asts
                 :initarg :extra-asts)
+   (%extra-asts-p :accessor extra-asts-p
+                  :initarg :extra-asts-p
+                  :initform nil)
    ;; The original form as written by the user for debugging.
    (%user-form :accessor user-form
-               :initarg :user-form)))
+               :initarg :user-form)
+   (%user-form-p :accessor user-form-p
+                 :initarg :user-form-p
+                 :initform nil)))
 
 ;; --------------------------------------------------------------------------
 
@@ -125,8 +138,24 @@
 
 ;; This datatype is used in the CORE type to maintain the texture-map state.
 (defclass texture-map-table ()
-  (;; All texture-map-descriptors from DEFINE-TEXTURE-MAP are stored here.
+  (;; All texture-map-descriptors from DEFINE-TEXTURE-MAP are cloned from the
+   ;; metaspace and stored here at engine start time.
+   ;;
+   ;; Key: name supplied to toplevel define-texture-map.
+   ;; Value: a texture-map-descriptor
    (%semantic-texture-map-descriptors
     :reader semantic-texture-map-descriptors
     :initarg :semantic-texture-map-descriptors
-    :initform (u:dict #'equal))))
+    :initform (u:dict #'equal))
+
+   ;; Resolved texture-maps are cloned from the semantic texture maps.
+   ;; Each texture-map stored in a texture-map-descriptor, including any
+   ;; anonymous texture-maps for cube maps, are lifted to the same level
+   ;; and stored here.
+   ;;
+   ;; Key: name supplied to ANY define-texture-map (or names generated from
+   ;; define-texture-map with a NIL name).
+   ;; Value: A texture-map instance.
+   (%resolved-texture-maps :reader resolved-texture-maps
+                           :initarg :resolved-texture-maps
+                           :initform (u:dict #'equal))))

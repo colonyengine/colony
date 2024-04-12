@@ -1,5 +1,37 @@
 (in-package #:colony.texture-map)
 
+;; NOTES:
+;;
+;; 1. DEFINE-TEXTURE-MAP defines a "metaspace texture-map descriptor" in the
+;;    global metaspace when the form is evaluated at macro time.
+;;
+;; 2. At engine start, the "metaspace texture-map descriptor" is "reified" (via
+;;    deep copy) into a "semantic texture-map descriptor". This is a (usually
+;;    unchanged) clone of the metaspace descriptor into a running core
+;;    instance's data structure tables.
+;;
+;; 3. The "semantic texture-map descriptor" is "resolved" into one or more (in
+;;    the case of cube maps) "resolved texture-maps". A "resolved texture-map"
+;;    is directly visible and manipulable to the appdev, app, textures, or
+;;    other uses of the texture-map.
+;;
+;; 4. A "resolved texture-map's" assets may be, partially or fully,
+;;    "materialized" into main memory in an eager or lazy basis.
+;;
+;; 5. The "materialized" data might persist in main memory and possibly be
+;;    uploaded to the gpu or copied from the gpu to main memory.
+;;
+;; 6. The "materialized" data may be modified repeatedly and repeatedly
+;;    uploaded to the gpu or downloaded from the gpu. Materialized data, unless
+;;    the texture-map marks it persistant, may be "dematerialized" and then
+;;    later "rematerialized" if needed.
+;;
+;; Constraints:
+;;
+;; - Any time the actual texture-map data is accessed and it is not
+;;   materialized, it will IMMEDIATELY materialize. Otherwise it will lazily
+;;   materialize (and possibly concurrently with other materializations).
+
 
 ;; TODO: Fix this below to figure out what to do with the extra
 ;; texture-map instances if they are present. We need to figure
@@ -93,3 +125,17 @@
                     (update-texture-map/interactively ,old-desc ,new-desc)))))
 
              (values ,canon-name ,tmap ,extra-tmaps-list)))))))
+
+
+;; TODO: This code is not finished.
+;; TODO: Move to texmaptab package.
+(defun reify-texture-map-descriptors (core)
+  "Clone all the meta descriptions of the texture-maps into the core."
+  (with-accessors ((texture-map-table c::texture-maps)) core
+    (let ((eql-map (clone::make-eql-map)))
+      (u:do-hash-values (desc c::=meta/texture-maps=)
+        (let ((cloned-desc (clone:clone-deep desc eql-map)))
+          (texmaptab:add-semantic-texture-map-descriptor cloned-desc
+                                                         texture-map-table)))
+      (texmaptab:resolve-all-semantic-texture-map-descriptors
+       texture-map-table))))
