@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; Implementation of the datatype COMPONENT and how it moves through the
 ;;;; core book keeping tables.

@@ -1,40 +1,40 @@
-(in-package #:virality.extension)
+(in-package #:colony.extension)
 
-(v:define-material unlit-color
+(c:define-material unlit-color
   (:shader shd:unlit-color
    :profiles (u-mvp)))
 
-(v:define-material unlit-color-decal
+(c:define-material unlit-color-decal
   (:shader shd:unlit-color-decal
    :profiles (u-mvp)))
 
-(v:define-material unlit-texture
+(c:define-material unlit-texture
   (:shader shd:unlit-texture
    :profiles (u-mvp)
    :uniforms ((:tex.sampler1 'x:debug-texture)
               (:mix-color (v4:ones)))))
 
-(v:define-material unlit-texture-invert
+(c:define-material unlit-texture-invert
   (:shader shd:unlit-texture-invert
    :profiles (u-mvp)
    :uniforms ((:tex.sampler1 'x:debug-texture)
               (:mix-color (v4:ones)))))
 
-(v:define-material unlit-texture-decal
+(c:define-material unlit-texture-decal
   (:shader shd:unlit-texture-decal
    :profiles (u-mvp)
    :uniforms ((:min-intensity (v4:zero))
               (:max-intensity (v4:ones))
               (:tex.sampler1 'x:debug-texture))))
 
-(v:define-material unlit-texture-decal-bright
+(c:define-material unlit-texture-decal-bright
   (:shader shd:unlit-texture-decal
    :profiles (u-mvp)
    :uniforms ((:min-intensity (v4:vec 0.1f0 0.1f0 0.1f0 0.1f0))
               (:max-intensity (v4:ones))
               (:tex.sampler1 'x:debug-texture))))
 
-(v:define-material sprite
+(c:define-material sprite
   (:profiles (u-mvp)
    :shader umbra.sprite:sprite
    :uniforms ((:sprite.sampler 'x:debug-texture)
@@ -45,12 +45,12 @@
              :block-alias :spritesheet
              :binding-policy :manual))))
 
-(v:define-material missing-material
+(c:define-material missing-material
   (:shader shd:unlit-texture
    :profiles (u-mvp)
    :uniforms ((:tex.sampler1 'x:debug-texture))))
 
-(v:define-material collider/sphere
+(c:define-material collider/sphere
   (:shader shd:collider/sphere
    :profiles (u-mvp)
    :uniforms ((:collider-local-center (v3:zero))
@@ -59,7 +59,7 @@
               (:in-contact-p nil)
               (:radius 0f0))))
 
-(v:define-material collider/cuboid
+(c:define-material collider/cuboid
   (:shader shd:collider/cuboid
    :profiles (u-mvp)
    :uniforms ((:collider-local-center (v3:zero))
@@ -74,7 +74,7 @@
               (:maxz 0f0))))
 
 ;; These are CC-0 from blender.
-(v:define-material matcap
+(c:define-material matcap
   (:shader shd:matcap
    :profiles (u-mvp)
    :uniforms ((:sampler 'x:matcap/basic-1)

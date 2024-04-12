@@ -1,4 +1,4 @@
-(in-package #:virality.prefab)
+(in-package #:colony.prefab)
 
 (defun ensure-prefab-name-string (name)
   (unless (stringp name)
@@ -127,7 +127,7 @@
            type path)))
 
 (defun ensure-component-type-exists (type path)
-  (unless (v::get-computed-component-precedence-list type)
+  (unless (c::get-computed-component-precedence-list type)
     (error "Component type ~s does not exist.~%Path: ~s." type path)))
 
 (defun ensure-component-options-plist (type options path)
@@ -158,7 +158,7 @@
             keys and values.~%Path: ~s." type path)))
 
 (defun ensure-component-args-valid (type args path)
-  (loop :with valid-args = (v::compute-component-initargs type)
+  (loop :with valid-args = (c::compute-component-initargs type)
         :for (key nil) :on args :by #'cddr
         :unless (member key valid-args)
           :do (error "Component type ~s has an invalid argument: ~s.~%Path: ~s."

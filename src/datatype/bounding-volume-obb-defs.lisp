@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defclass oriented-bounding-box ()
   ((%center :reader center

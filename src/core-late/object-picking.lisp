@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;; TODO: Make this picking code general to support arbitrary line segments in
 ;; world space etc.

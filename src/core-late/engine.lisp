@@ -1,36 +1,38 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defun load-initial-scene (core scene-name)
   (let ((scene-name (or scene-name =initial-scene=)))
     (make-prefab-instance core scene-name)))
 
-(defun initialize (core project scene-name)
-  (load-config project)
+(defun initialize (core scene-name)
   (setup-repl)
   (u:initialize-rng)
   (prepare-gamepads)
   (make-display core)
   (make-input-data core)
   (load-hardware-info)
-  (make-thread-pool)
   (load-graphs core)
   (load-call-flows core)
   (initialize-shaders core)
-  (tex::load-texture-descriptors core)
-  (make-clock core)
+  (texmap:reify-texture-map-descriptors core)
+  (tex:reify-texture-profiles core)
+  (tex:reify-texture-descriptors core)
   (load-materials core)
   (initialize-collider-system core)
   (make-scene-tree core)
   (load-initial-scene core scene-name)
+  ;; TODO: Right here, eagerly load any known resources the scene needs
   (run-prologue core)
+  ;; TODO: In the game loop frame execution, we lazily load anything we need
+  ;; when the app attempts to observe/add the asset data.
   (start-game-loop core))
 
 (defun deinitialize (core)
   (run-epilogue core)
   (shutdown-gamepads core)
   (kill-display core)
-  (destroy-thread-pool)
-  (makunbound '*core-debug*))
+  (tpool:destroy-thread-pool (thread-pool core))
+  (setf *core-debug* *no-core-value*))
 
 (defun start-game-loop (core)
   ;; Note: We let-bind the following variables so that we don't have to
@@ -47,8 +49,9 @@
             (stop core)))))))
 
 (defun start (&key config scene)
+  (load-config config)
   (let ((core (make-core config)))
-    (unwind-protect (initialize core config scene)
+    (unwind-protect (initialize core scene)
       (deinitialize core))))
 
 (defun stop (core)

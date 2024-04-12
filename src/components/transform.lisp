@@ -1,16 +1,16 @@
-(in-package #:virality.component)
+(in-package #:colony.component)
 
-(v:define-component transform ()
+(c:define-component transform ()
   ((%parent :accessor parent
             :initform nil)
    (%children :accessor children
               :initform nil)
    (%translation :reader translation
-                 :initform (v::make-translate-state))
+                 :initform (c::make-translate-state))
    (%rotation :reader rotation
-              :initform (v::make-rotate-state))
+              :initform (c::make-rotate-state))
    (%scale :reader scale
-           :initform (v::make-scale-state))
+           :initform (c::make-scale-state))
    (%local :reader local
            :initform (m4:id))
    (%model :reader model
@@ -30,10 +30,10 @@
         (parent child) nil))
 
 (defun transform-node (node)
-  (v::transform-node/vector (scale node) v:=delta=)
-  (v::transform-node/quaternion (rotation node) v:=delta=)
-  (v::transform-node/vector
-   (translation node) v:=delta=
+  (c::transform-node/vector (scale node) c:=delta=)
+  (c::transform-node/quaternion (rotation node) c:=delta=)
+  (c::transform-node/vector
+   (translation node) c:=delta=
    (lambda (incremental-translation-delta)
      ;; TODO: Remove memory allocation. Add a mat3 to transform-state we can
      ;; reuse at opportune times--but could mess up threading...
@@ -48,18 +48,18 @@
     (let ((translation (translation node))
           (rotation (rotation node))
           (scale (scale node)))
-      (v::interpolate-vector scale factor)
-      (v::interpolate-quaternion rotation factor)
-      (v::interpolate-vector translation factor)
-      (q:to-mat4! %local (v::transform-state-interpolated rotation))
+      (c::interpolate-vector scale factor)
+      (c::interpolate-quaternion rotation factor)
+      (c::interpolate-vector translation factor)
+      (q:to-mat4! %local (c::transform-state-interpolated rotation))
       ;; TODO: This next code needs a temporary to reduce garbage, but I don't
       ;; want to store it in the transform since that causes that amount of
       ;; space addition for each transform used only for this. See if there is
       ;; another way before doing that option.
       (m4:*! %local %local
-             (m4:set-scale m4:+id+ (v::transform-state-interpolated scale)))
+             (m4:set-scale m4:+id+ (c::transform-state-interpolated scale)))
       (m4:set-translation! %local %local
-                           (v::transform-state-interpolated translation)))))
+                           (c::transform-state-interpolated translation)))))
 
 (defun resolve-model (node factor)
   (u:when-let ((parent (parent node)))
@@ -77,7 +77,7 @@
   ;; further.
   (let ((result (normal-matrix node)))
     ;; Only compute if there is an active camera.
-    (u:when-let ((camera (v::active-camera (v:context node))))
+    (u:when-let ((camera (c::active-camera (c:context node))))
       (m4:set-translation! result (model node) v3:+zero+)
       (m4:*! result (view camera) result)
       (m4:invert! result result)
@@ -100,27 +100,27 @@ to leaf ordering. If PARENT is the keyword :universe then the CONTEXT reference
 MUST be also supplied. If so, then this will map the FUNC across all actors
 in the scene tree EXCEPT the universe actor itself."
   (flet ((apply-as-actor (transform)
-           (funcall func (v:actor transform))))
+           (funcall func (c:actor transform))))
     (if (eq parent :universe)
-        (let* ((core (v::core context))
-               (universe (v::scene-tree core))
+        (let* ((core (c::core context))
+               (universe (c::scene-tree core))
                (universe-transform
-                 (v:component-by-type universe 'comp:transform)))
+                 (c:component-by-type universe 'comp:transform)))
           ;; NOTE: Don't apply function to universe itself!
           (dolist (child (children universe-transform))
             (map-nodes #'apply-as-actor child)))
         (map-nodes #'apply-as-actor
-                   (v:component-by-type parent 'comp:transform)))))
+                   (c:component-by-type parent 'comp:transform)))))
 
 (defun interpolate-transforms (core)
-  (let ((factor (float (v::clock-interpolation-factor (v::clock core)) 1f0)))
+  (let ((factor (float (c::clock-interpolation-factor (c::clock core)) 1f0)))
     (map-nodes
      (lambda (x)
        (resolve-model x factor)
        (reset-transform-replace-count x))
-     (v:component-by-type (v::scene-tree core) 'transform))))
+     (c:component-by-type (c::scene-tree core) 'transform))))
 
-(defmethod v:make-component (context (component-type (eql 'transform))
+(defmethod c:make-component (context (component-type (eql 'transform))
                              &rest args)
   (let ((instance (make-instance component-type
                                  :type component-type
@@ -138,37 +138,37 @@ in the scene tree EXCEPT the universe actor itself."
                                        scale
                                        scale/velocity)
   (with-slots (%translation %rotation %scale) instance
-    (setf (v:actor instance) actor
-          (v::state instance) :initialize)
-    (v::initialize-translation %translation translate translate/velocity)
-    (v::initialize-rotation %rotation rotate rotate/velocity)
-    (v::initialize-scale %scale scale scale/velocity)))
+    (setf (c:actor instance) actor
+          (c::state instance) :initialize)
+    (c::initialize-translation %translation translate translate/velocity)
+    (c::initialize-rotation %rotation rotate rotate/velocity)
+    (c::initialize-scale %scale scale scale/velocity)))
 
 (defun update-replace-count (transform state transform-type)
-  (let ((actor (v::actor transform)))
-    (when (and (plusp (v::transform-state-replace-count state))
-               (null (v::transform-state-replace-warned-p state)))
+  (let ((actor (c::actor transform)))
+    (when (and (plusp (c::transform-state-replace-count state))
+               (null (c::transform-state-replace-warned-p state)))
       (warn (format nil "Attempted to replace transform state ~s more than ~
                          once in a physics step or frame, for actor ~s."
                     transform-type
                     actor))
-      (setf (v::transform-state-replace-warned-p state) t))
-    (incf (v::transform-state-replace-count state))))
+      (setf (c::transform-state-replace-warned-p state) t))
+    (incf (c::transform-state-replace-count state))))
 
 (defun reset-transform-replace-count (transform)
-  (setf (v::transform-state-replace-count (translation transform)) 0
-        (v::transform-state-replace-count (rotation transform)) 0
-        (v::transform-state-replace-count (scale transform)) 0)
+  (setf (c::transform-state-replace-count (translation transform)) 0
+        (c::transform-state-replace-count (rotation transform)) 0
+        (c::transform-state-replace-count (scale transform)) 0)
   (values))
 
 (defun process-deferred-instant-transform-updates (core)
   (map nil (lambda (x) (funcall x core))
-       (nreverse (v::end-of-frame-work core)))
-  (setf (v::end-of-frame-work core) nil))
+       (nreverse (c::end-of-frame-work core)))
+  (setf (c::end-of-frame-work core) nil))
 
 
 ;;; User protocol helper functions The user protocol functions are generic and
-;;; live in the VIRALITY package, but they call out to the helper functions
+;;; live in the colony package, but they call out to the helper functions
 ;;; below.
 
 (defun %get-model-matrix (transform copy)
@@ -200,95 +200,95 @@ in the scene tree EXCEPT the universe actor itself."
        ;; NOTE: The interial frame is always in reference to the parent and
        ;; does not take into consideration (by design) the local orientation of
        ;; the transform.
-       (v3:+! (v::transform-state-current state)
+       (v3:+! (c::transform-state-current state)
               (cond
                 (replace
                  (update-replace-count transform state :translate)
                  v3:+zero+)
-                (t (v::transform-state-current state)))
+                (t (c::transform-state-current state)))
               vec)
        (when instant
          (push
           (lambda (core)
             (declare (ignore core))
-            (v3:copy! (v::transform-state-previous state)
-                      (v::transform-state-current state)))
-          (v::end-of-frame-work (v::core transform)))))
+            (v3:copy! (c::transform-state-previous state)
+                      (c::transform-state-current state)))
+          (c::end-of-frame-work (c::core transform)))))
 
       (:local
         ;; NOTE: The movement vector is always rotated to match the local
         ;; orientation of the transform before translating in that direction.
         (let ((local-vec (m3:*v3 (m4:rotation-to-mat3 (local transform)) vec)))
-          (v3:+! (v::transform-state-current state)
+          (v3:+! (c::transform-state-current state)
                  (cond
                    (replace
                     (update-replace-count transform state :translate)
                     v3:+zero+)
-                   (t (v::transform-state-current state)))
+                   (t (c::transform-state-current state)))
                  local-vec)
           (when instant
             (push
              (lambda (core)
                (declare (ignore core))
-               (v3:copy! (v::transform-state-previous state) (v::transform-state-current state)))
-             (v::end-of-frame-work (v::core transform))))))
+               (v3:copy! (c::transform-state-previous state) (c::transform-state-current state)))
+             (c::end-of-frame-work (c::core transform))))))
       (:model (error "TRANSLATE not yet implemented for world space.")))
     ;; side-effects only; return T
     t))
 
 (defun %translate/velocity (transform axis rate)
   (let ((state (translation transform)))
-    (setf (v::transform-state-incremental state) (v3:velocity axis rate))))
+    (setf (c::transform-state-incremental state) (v3:velocity axis rate))))
 
 (defun %rotate (transform quat space replace instant)
   (let ((state (rotation transform)))
     (ecase space
       (:local
-        (q:rotate! (v::transform-state-current state)
+        (q:rotate! (c::transform-state-current state)
                    (cond
                      (replace
                       (update-replace-count transform state :rotate)
                       q:+id+)
-                     (t (v::transform-state-current state)))
+                     (t (c::transform-state-current state)))
                    quat)
         (when instant
           (push
            (lambda (core)
              (declare (ignore core))
-             (q:copy! (v::transform-state-previous state) (v::transform-state-current state)))
-           (v::end-of-frame-work (v::core transform)))))
+             (q:copy! (c::transform-state-previous state) (c::transform-state-current state)))
+           (c::end-of-frame-work (c::core transform)))))
       (:model (error "ROTATE not yet implemented for world space.")))
     ;; side-effects only; return T
     t))
 
 (defun %rotate/velocity (transform axis rate)
   (let ((state (rotation transform)))
-    (setf (v::transform-state-incremental state) (v3:velocity axis rate))))
+    (setf (c::transform-state-incremental state) (v3:velocity axis rate))))
 
 (defun %scale (transform vec space replace instant)
   (let ((state (scale transform)))
     (ecase space
       (:local
-        (v3:+! (v::transform-state-current state)
+        (v3:+! (c::transform-state-current state)
                (cond
                  (replace
                   (update-replace-count transform state :scale)
                   v3:+zero+)
-                 (t (v::transform-state-current state)))
+                 (t (c::transform-state-current state)))
                vec)
         (when instant
           (push
            (lambda (core)
              (declare (ignore core))
-             (v3:copy! (v::transform-state-previous state) (v::transform-state-current state)))
-           (v::end-of-frame-work (v::core transform)))))
+             (v3:copy! (c::transform-state-previous state) (c::transform-state-current state)))
+           (c::end-of-frame-work (c::core transform)))))
       (:model (error "SCALE not yet implemented for world space.")))
     ;; side-effects only; return T
     t))
 
 (defun %scale/velocity (transform axis rate)
   (let ((state (scale transform)))
-    (setf (v::transform-state-incremental state) (v3:velocity axis rate))))
+    (setf (c::transform-state-incremental state) (v3:velocity axis rate))))
 
 (defun %scale-around (target-transform pivot-in-world-space scale-diff
                       &key (min-scale (v3:vec 0f0 0f0 0f0))

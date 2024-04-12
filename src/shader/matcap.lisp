@@ -1,4 +1,4 @@
-(in-package #:virality.shader)
+(in-package #:colony.shader)
 
 (defun matcap/v ((mesh-attrs mesh-attrs)
                  &uniforms

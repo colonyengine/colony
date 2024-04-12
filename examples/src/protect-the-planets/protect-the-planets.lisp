@@ -1,9 +1,9 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
 ;; To run this game, start your lisp repl, then:
 ;;
-;; (ql:quickload :virality-examples) (virality:start :project
-;; :virality-examples :scene '(("protect-the-planets" ptp)))
+;; (ql:quickload :colony-examples) (colony:start :project
+;; :colony-examples :scene '(("protect-the-planets" ptp)))
 
 ;; "Protect the Planets!"
 ;; by Peter Keller (psilord@cs.wisc.edu)
@@ -34,7 +34,7 @@
 ;; Constants
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; NOTE: Because we don't yet have mesh/sprite rendering order in Virality
+;; NOTE: Because we don't yet have mesh/sprite rendering order in Colony
 ;; Engine, or order independent transparency tools, etc yet, we'll need to use
 ;; a special system only for this game. It consists of using the z axis to
 ;; indicate different spatial layers for things and then two special components
@@ -115,7 +115,7 @@
 ;; symbol name). However, I wanted the ENTIRE codebase to be in one file to
 ;; demonstrate this is possible for a game.
 
-(in-package #:virality-examples.shader)
+(in-package #:colony-examples.shader)
 
 (defun starfield/frag ((color :vec4)
                        (uv1 :vec2)
@@ -182,45 +182,78 @@
 
 
 ;; Back to our regularly scheduled package!
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Textures
+;; Texture Maps
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; We only use a single sprite sheet atlas that contains all of our textures.
-;; This one is invluded with FL
-(v:define-texture sprite-atlas (:texture-2d)
-  (:data #((textures sprites))))
+;; We only use a single sprite sheet atlas that contains all of our sub texture
+;; maps.  This one is included with the engine.
+(c:define-texture-map sprite-atlas (:single :unique)
+  (:mipmap () (textures sprites)))
 
 ;; This background image was downloaded off the web here:
 ;; https://www.wikitree.com/photo/jpg/Tileable_Background_Images
 ;; And the url for the license is 404, but the wayback machine found it:
 ;; https://web.archive.org/web/20180723233810/http://webtreats.mysitemyway.com/terms-of-use/
 ;; Which says it can be used for any purpose.
-(v:define-texture starfield (:texture-2d)
+(c:define-texture-map starfield (:single :unique)
+  (:mipmap () (ptp-textures starfield)))
+
+;; This texture was created by Pixel_Outlaw for use in this game.
+(c:define-texture-map warning-wave (:single :unique)
+  (:mipmap () (ptp-textures warning-wave)))
+
+;; This texture was created by Pixel_Outlaw for use in this game.
+(c:define-texture-map warning-mothership (:single :unique)
+  (:mipmap () (ptp-textures warning-mothership)))
+
+(c:define-texture-map game-over (:single :unique)
+  (:mipmap () (ptp-textures game-over)))
+
+(c:define-texture-map title (:single :unique)
+  (:mipmap () (ptp-textures title)))
+
+(c:define-texture-map level-complete (:single :unique)
+  (:mipmap () (ptp-textures level-complete)))
+
+(c:define-texture-map white (:single :unique)
+  (:mipmap () (ptp-textures white)))
+
+(c:define-texture-map pivot (:single :unique)
+  (:mipmap () (ptp-textures transpivot)))
+
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Textures
+;; TODO: TMAP Fix all define-texture DSL forms to use name of texture-map.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(c:define-texture sprite-atlas (:texture-2d)
+  (:data #((textures sprites))))
+
+(c:define-texture starfield (:texture-2d)
   (:data #((ptp-textures starfield))))
 
-;; These two textures were created by Pixel_Outlaw for use in this game.
-(v:define-texture warning-wave (:texture-2d)
+(c:define-texture warning-wave (:texture-2d)
   (:data #((ptp-textures warning-wave))))
 
-(v:define-texture warning-mothership (:texture-2d)
+(c:define-texture warning-mothership (:texture-2d)
   (:data #((ptp-textures warning-mothership))))
 
-(v:define-texture game-over (:texture-2d)
+(c:define-texture game-over (:texture-2d)
   (:data #((ptp-textures game-over))))
 
-(v:define-texture title (:texture-2d)
+(c:define-texture title (:texture-2d)
   (:data #((ptp-textures title))))
 
-(v:define-texture level-complete (:texture-2d)
+(c:define-texture level-complete (:texture-2d)
   (:data #((ptp-textures level-complete))))
 
-(v:define-texture white (:texture-2d x:clamp-all-edges)
+(c:define-texture white (:texture-2d x:clamp-all-edges)
   (:data #((ptp-textures white))))
 
-(v:define-texture pivot (:texture-2d x:clamp-all-edges)
+(c:define-texture pivot (:texture-2d x:clamp-all-edges)
   (:texture-min-filter :linear-mipmap-linear)
   (:texture-mag-filter :linear)
   (:data #((ptp-textures transpivot))))
@@ -232,71 +265,71 @@
 ;; A material is pre-packaged set of values for a particular shader. Different
 ;; materials can be made for the same shader each providing diferent inputs to
 ;; that shader.
-(v:define-material sprite-sheet
-    (:profiles (x:u-mvp)
-     :shader ex/shd:ptp-sprite
-     :attributes (:depth :lequal)
-     :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
-                (:sprite.index 0)
-                (:opacity 1.0))
-     :blocks ((:block-name :ptp-spritesheet
-               :storage-type :buffer
-               :block-alias :ptp-spritesheet
-               :binding-policy :manual))))
+(c:define-material sprite-sheet
+  (:profiles (x:u-mvp)
+   :shader ex/shd:ptp-sprite
+   :attributes (:depth :lequal)
+   :uniforms ((:sprite.sampler 'sprite-atlas) ;; refer to the above texture.
+              (:sprite.index 0)
+              (:opacity 1.0))
+   :blocks ((:block-name :ptp-spritesheet
+             :storage-type :buffer
+             :block-alias :ptp-spritesheet
+             :binding-policy :manual))))
 
-(v:define-material title
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'title)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+(c:define-material title
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'title)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
-(v:define-material starfield
-    (:profiles (x:u-mvpt)
-     :shader ex/shd:starfield
-     :uniforms ((:tex 'starfield)
-                (:mix-color (v4:ones)))))
+(c:define-material starfield
+  (:profiles (x:u-mvpt)
+   :shader ex/shd:starfield
+   :uniforms ((:tex 'starfield)
+              (:mix-color (v4:ones)))))
 
-(v:define-material warning-mothership
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'warning-mothership)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+(c:define-material warning-mothership
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'warning-mothership)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
-(v:define-material warning-wave
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'warning-wave)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+(c:define-material warning-wave
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'warning-wave)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
-(v:define-material game-over
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'game-over)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+(c:define-material game-over
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'game-over)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
-(v:define-material level-complete
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'level-complete)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+(c:define-material level-complete
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'level-complete)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
-(v:define-material time-bar
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture
-     :uniforms ((:tex.sampler1 'white)
-                (:mix-color (v4:vec 0f0 1f0 0f0 1f0)))))
+(c:define-material time-bar
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture
+   :uniforms ((:tex.sampler1 'white)
+              (:mix-color (v4:vec 0f0 1f0 0f0 1f0)))))
 
-(v:define-material pivot
-    (:profiles (x:u-mvp)
-     :shader shd:unlit-texture-decal
-     :uniforms ((:tex.sampler1 'pivot)
-                (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
-                (:max-intensity (v4:ones)))))
+(c:define-material pivot
+  (:profiles (x:u-mvp)
+   :shader shd:unlit-texture-decal
+   :uniforms ((:tex.sampler1 'pivot)
+              (:min-intensity (v4:vec 0f0 0f0 0f0 0f0))
+              (:max-intensity (v4:ones)))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Components
@@ -310,7 +343,7 @@
 ;; orient the player.
 ;; ;;;;;;;;;
 
-(v:define-component player-movement ()
+(c:define-component player-movement ()
   ((%transform :accessor transform
                :initarg :transform
                :initform nil)
@@ -335,19 +368,19 @@
    ;; The format is minx, maxx, miny, maxy, minz, maxz
    (%region-cuboid :accessor region-cuboid
                    :initarg :region-cuboid
-                   :initform (v:make-region-cuboid
+                   :initform (c:make-region-cuboid
                               (v3:vec 0f0 0f0 0f0)
                               -900f0 900f0 -500f0 500f0 0f0 0f0))))
 
 ;; upon attaching, this component will store find the transform component
 ;; on the actor to which it has been attached and keep a direct reference to it.
-(defmethod v:on-component-attach ((self player-movement) actor)
+(defmethod c:on-component-attach ((self player-movement) actor)
   (declare (ignore actor))
-  (with-accessors ((actor v:actor) (transform transform)) self
-    (setf transform (v:component-by-type actor 'comp:transform))))
+  (with-accessors ((actor c:actor) (transform transform)) self
+    (setf transform (c:component-by-type actor 'comp:transform))))
 
-(defmethod v:on-component-update ((self player-movement))
-  (with-accessors ((context v:context) (max-velocity max-velocity)
+(defmethod c:on-component-update ((self player-movement))
+  (with-accessors ((context c:context) (max-velocity max-velocity)
                    (translate-deadzone translate-deadzone)
                    (rotate-deadzone rotate-deadzone)
                    (region-cuboid region-cuboid)
@@ -356,12 +389,12 @@
                    (pivot-actor pivot-actor))
       self
 
-    (let ((instant-p (zerop (v:frame-count context))))
+    (let ((instant-p (zerop (c:frame-count context))))
 
       (ecase move-type
         (:analog
          ;; Method 1: Left Analog Stick to fly.
-         (u:mvlet ((lx ly (v:get-gamepad-analog
+         (u:mvlet ((lx ly (c:get-gamepad-analog
                            context :radial-scaled '(:gamepad1 :left-stick))))
            ;; First, we settle the notion of how the player translates around
            ;; with left stick
@@ -373,7 +406,7 @@
                 (vec (if (< (v3:length vec) translate-deadzone) (v3:zero) vec))
                 ;; Right trigger modifies speed. pull to lerp from full speed
                 ;; to half speed.
-                (ty (nth-value 1 (v:get-gamepad-analog
+                (ty (nth-value 1 (c:get-gamepad-analog
                                   context :radial-scaled
                                   '(:gamepad1 :triggers))))
                 ;; Compute the actual translation vector related to our frame
@@ -381,14 +414,14 @@
                 (vec (v3:scale
                       vec
                       (float (* (u:lerp ty max-velocity (/ max-velocity 2f0))
-                                (v:frame-time context))
+                                (c:frame-time context))
                              1f0)))
                 ;; and ensure we clip the translation vector so we can't go out
                 ;; of the boundary cube we set.
-                (current-translation (v:get-translation self))
-                (vec (v:clip-movement-vector vec current-translation
+                (current-translation (c:get-translation self))
+                (vec (c:clip-movement-vector vec current-translation
                                              region-cuboid)))
-             (v:translate self vec :space :inertial))
+             (c:translate self vec :space :inertial))
            ;; Then we settle the notion of how the player is oriented.  We're
            ;; setting a hard angle of rotation each time so we overwrite the
            ;; previous value.
@@ -398,7 +431,7 @@
                     (angle (if (minusp angle)
                                (+ o:pi (- o:pi (abs angle)))
                                angle)))
-               (v:rotate self
+               (c:rotate self
                          (q:orient :local :z angle)
                          :replace t
                          :instant instant-p)))))
@@ -407,12 +440,12 @@
          ;; Method 2: normalized dpad to move 8-way, temporary button for
          ;; rotation pivot
 
-         (let* ((left (v:on-button-enabled context :gamepad1 :left))
-                (right (v:on-button-enabled context :gamepad1 :right))
-                (up (v:on-button-enabled context :gamepad1 :up))
-                (down (v:on-button-enabled context :gamepad1 :down))
+         (let* ((left (c:on-button-enabled context :gamepad1 :left))
+                (right (c:on-button-enabled context :gamepad1 :right))
+                (up (c:on-button-enabled context :gamepad1 :up))
+                (down (c:on-button-enabled context :gamepad1 :down))
                 (speed-control
-                  (if (v:on-button-enabled context :gamepad1 :left-shoulder)
+                  (if (c:on-button-enabled context :gamepad1 :left-shoulder)
                       .5f0
                       1f0))
                 (move  (v3:+ (v3:+ (if left v3:+left+ v3:+zero+)
@@ -425,18 +458,18 @@
 
                 (move (v3:scale move (* max-velocity
                                         speed-control
-                                        (v:frame-time context))))
+                                        (c:frame-time context))))
 
-                (current-translation (v:get-translation self))
-                (clipped-move (v:clip-movement-vector move current-translation
+                (current-translation (c:get-translation self))
+                (clipped-move (c:clip-movement-vector move current-translation
                                                       region-cuboid))
                 ;; deal with pivot activation
                 (right-shoulder
-                  (v:on-button-enabled context :gamepad1 :right-shoulder))
+                  (c:on-button-enabled context :gamepad1 :right-shoulder))
                 (pivoting-p right-shoulder))
 
            ;; place myself where I should go.
-           (v:translate self clipped-move :space :inertial)
+           (c:translate self clipped-move :space :inertial)
 
            ;; Implement pivoting system.
            (cond
@@ -448,14 +481,14 @@
                 ;; the ship.
                 (unless pivot-actor
                   (let* ((new-pivot-guide
-                           (first (v:make-prefab-instance (v::core context)
+                           (first (c:make-prefab-instance (c::core context)
                                                           pivot-prefab)))
 
                          ;; TODO: Implement a configurable distance down the
                          ;; front direction of the ship for where the pivot
                          ;; should appear.
                          (guide-world-pos
-                           (v:transform-point self v3:+zero+)))
+                           (c:transform-point self v3:+zero+)))
 
                     ;; stupid rendering "layer"
                     (setf (v3:z guide-world-pos) (dl :pivot-guide)
@@ -464,7 +497,7 @@
                     ;; store where we made it this frame.
                     (v3:copy! this-frame-world-guide-pos guide-world-pos)
 
-                    (v:translate new-pivot-guide guide-world-pos
+                    (c:translate new-pivot-guide guide-world-pos
                                  :instant t :replace t :space :inertial)
 
                     ;; Store the reference so we can destroy it later.
@@ -476,11 +509,11 @@
 
                 (unless guide-created-this-frame
                   (v3:copy! this-frame-world-guide-pos
-                            (v:get-translation pivot-actor :space :model)))
+                            (c:get-translation pivot-actor :space :model)))
 
                 (let* ((world/ship-to-guide-vec
                          (v3:- this-frame-world-guide-pos
-                               (v:transform-point self v3:+zero+))))
+                               (c:transform-point self v3:+zero+))))
 
                   ;; orient the ship in accordance with the world direction
                   ;; to the pivot.
@@ -491,7 +524,7 @@
                              (angle (if (minusp angle)
                                         (+ o:pi (- o:pi (abs angle)))
                                         angle)))
-                        (v:rotate self
+                        (c:rotate self
                                   (q:orient :local :z angle)
                                   :replace t
                                   :instant instant-p)))))))
@@ -499,7 +532,7 @@
              (t ;; not pivoting
 
               (when pivot-actor
-                (v:destroy pivot-actor)
+                (c:destroy pivot-actor)
                 (setf pivot-actor nil))
 
               nil)))
@@ -508,9 +541,9 @@
 
          nil)))))
 
-(defmethod v:on-component-destroy ((self player-movement))
+(defmethod c:on-component-destroy ((self player-movement))
   (when (pivot-actor self)
-    (v:destroy (pivot-actor self))
+    (c:destroy (pivot-actor self))
     (setf (pivot-actor self) nil)))
 
 ;; ;;;;;;;;;
@@ -520,7 +553,7 @@
 ;; not a sophisticated component. We use it to move projectiles.
 ;;;;;;;;;
 
-(v:define-component line-mover ()
+(c:define-component line-mover ()
   ((%direction :accessor direction
                :initarg :direction
                ;; NOTE: may be :+y :-y :+x :-x :+z :-z or a vec3
@@ -532,13 +565,13 @@
               :initarg :velocity
               :initform 0f0)))
 
-(defmethod v:on-component-attach ((self line-mover) actor)
+(defmethod c:on-component-attach ((self line-mover) actor)
   (declare (ignore actor))
-  (with-accessors ((actor v:actor) (transform transform)) self
-    (setf transform (v:component-by-type actor 'comp:transform))))
+  (with-accessors ((actor c:actor) (transform transform)) self
+    (setf transform (c:component-by-type actor 'comp:transform))))
 
-(defmethod v:on-component-physics-update ((self line-mover))
-  (with-accessors ((context v:context)
+(defmethod c:on-component-physics-update ((self line-mover))
+  (with-accessors ((context c:context)
                    (transform transform)
                    (velocity velocity)
                    (direction direction))
@@ -546,7 +579,7 @@
     ;; TODO: Figure out why I need this when physics is faster. It appears I
     ;; can compute a physics frame before components are attached?
     (when transform
-      (v:translate
+      (c:translate
        transform
        (let* ((local (comp:local transform))
               (x (m4:rotation-axis-to-vec3 local :x))
@@ -562,7 +595,7 @@
                         (:+z z)
                         (:-z (v3:negate z)))
                       direction)))
-              (move-delta (* velocity (v:delta context))))
+              (move-delta (* velocity (c:delta context))))
          (v3:scale a move-delta))
        :space :inertial))))
 
@@ -575,7 +608,7 @@
 ;; appropriate actor that has it.
 ;; ;;;;;;;;;
 
-(v:define-component damage-points ()
+(c:define-component damage-points ()
   ((%dp :accessor dp
         :initarg :dp
         :initform 1)))
@@ -587,7 +620,7 @@
 ;; to zero or below.
 ;;;;;;;;;
 
-(v:define-component hit-points ()
+(c:define-component hit-points ()
   ((%hp :accessor hp
         :initarg :hp
         :initform 1)
@@ -609,23 +642,23 @@
                         :initarg :allow-auto-destroy
                         :initform t)))
 
-(defmethod v:on-component-update ((self hit-points))
-  (with-accessors ((context v:context)
+(defmethod c:on-component-update ((self hit-points))
+  (with-accessors ((context c:context)
                    (allow-invulnerability allow-invulnerability)
                    (invulnerability-timer invulnerability-timer))
       self
     (when (and allow-invulnerability (> invulnerability-timer 0f0))
-      (decf invulnerability-timer (v:frame-time context))
+      (decf invulnerability-timer (c:frame-time context))
       (when (<= invulnerability-timer 0f0)
         (setf invulnerability-timer 0f0)))))
 
 (defmethod possibly-accept-damage ((self hit-points) other-collider)
-  (with-accessors ((context v:context)
+  (with-accessors ((context c:context)
                    (allow-auto-destroy allow-auto-destroy)
                    (invulnerability-timer invulnerability-timer))
       self
-    (let ((other-damage-points (v:component-by-type
-                                (v:actor other-collider)
+    (let ((other-damage-points (c:component-by-type
+                                (c:actor other-collider)
                                 'damage-points)))
       (when (> invulnerability-timer 0)
         ;; If we're invulnerable, we cannot take damage.
@@ -643,25 +676,25 @@
         (setf (hp self) 0)))))
 
 (defmethod possibly-auto-destroy ((self hit-points))
-  (with-accessors ((context v:context)
+  (with-accessors ((context c:context)
                    (allow-auto-destroy allow-auto-destroy)
                    (invulnerability-timer invulnerability-timer))
       self
     (when (and allow-auto-destroy (<= (hp self) 0))
       ;; Destroy my actor.
-      (v:destroy (v:actor self))
+      (c:destroy (c:actor self))
       ;; And, if the actor had an explosion component, cause the explosion
       ;; to happen
 
       ;; NOTE: This can be the player or a planet or asteroid, so how do I
       ;; pick the right rendering layer? Something in the actor needs to
       ;; know what it is.
-      (possibly-make-explosion-at-actor (v:actor self)
+      (possibly-make-explosion-at-actor (c:actor self)
                                         ;; TODO: I don't like this solution.
                                         (render-layer self)))))
 
-(defmethod v:on-collision-enter ((self hit-points) other-collider)
-  (with-accessors ((context v:context)
+(defmethod c:on-collision-enter ((self hit-points) other-collider)
+  (with-accessors ((context c:context)
                    (allow-auto-destroy allow-auto-destroy)
                    (invulnerability-timer invulnerability-timer))
       self
@@ -675,7 +708,7 @@
 ;; when it spawns.
 ;;;;;;;;;
 
-(v:define-component projectile ()
+(c:define-component projectile ()
   ((%name :accessor name
           :initarg :name
           :initform nil)
@@ -712,30 +745,30 @@
                           (repeat t repeat-supplied-p)
                           (render-layer nil))
   (let* ((new-projectile
-           (first (v:make-prefab-instance
-                   (v::core context)
+           (first (c:make-prefab-instance
+                   (c::core context)
                    `((,prefab-name ,prefab-library))
                    :parent parent)))
          ;; TODO: I'm expecting the new-projectile to have components here
          ;; without having gone through the flow. BAD!
-         (projectile (v:component-by-type new-projectile 'projectile))
-         (hit-points (v:component-by-type new-projectile 'hit-points))
-         (sketch (v:component-by-type new-projectile 'sketch)))
+         (projectile (c:component-by-type new-projectile 'projectile))
+         (hit-points (c:component-by-type new-projectile 'hit-points))
+         (sketch (c:component-by-type new-projectile 'sketch)))
 
     ;; Set the spatial configuration
     (setf (v3:z translation) (dl depth-layer))
-    (v:translate new-projectile translation :instant t :replace t
+    (c:translate new-projectile translation :instant t :replace t
                                             :space :inertial)
     ;; XXX This interface needs to take a quat here also
-    (v:rotate new-projectile rotation :instant t :replace t)
+    (c:rotate new-projectile rotation :instant t :replace t)
     ;; And adjust the scale too.
-    (v:scale new-projectile scale :instant t :replace t)
+    (c:scale new-projectile scale :instant t :replace t)
     (setf
      ;; Basic identification of the projectile
      (name projectile) name
      (frames projectile) frames
      ;; Give the collider a cheesy name until I get rid of this name feature.
-     (v:display-id (collider projectile)) name
+     (c:display-id (collider projectile)) name
      ;; Set what layer is the collider on?
      ;; TODO: When setting this, ensure I move the collider to the right
      ;; layer in the physics system.
@@ -760,7 +793,7 @@
 
 
     ;; By default projectiles live a certain amount of time.
-    (v:destroy new-projectile :ttl destroy-ttl)
+    (c:destroy new-projectile :ttl destroy-ttl)
     new-projectile))
 
 ;; ;;;;;;;;;
@@ -769,7 +802,7 @@
 ;; Describe an explosion.
 ;;;;;;;;;
 
-(v:define-component explosion ()
+(c:define-component explosion ()
   ((%sprite :accessor sprite
             :initarg :sprite
             :initform nil)
@@ -792,31 +825,31 @@
                          (name "explode01-01")
                          (frames 15))
   (let* ((new-explosion
-           (first (v:make-prefab-instance
-                   (v::core context)
+           (first (c:make-prefab-instance
+                   (c::core context)
                    `((,prefab-name ,prefab-library)))))
-         (explosion (v:component-by-type new-explosion 'explosion))
-         (sketch (v:component-by-type new-explosion 'sketch)))
+         (explosion (c:component-by-type new-explosion 'explosion))
+         (sketch (c:component-by-type new-explosion 'sketch)))
     (setf
      ;; Configure the sprite.
      (comp:name (sprite explosion)) name
      (comp:frames (sprite explosion)) frames
      ;; Configure the render layer
      (render-layer sketch) render-layer)
-    (v:scale new-explosion scale :instant t :replace t)
-    (v:translate new-explosion translation :instant t :replace t
+    (c:scale new-explosion scale :instant t :replace t)
+    (c:translate new-explosion translation :instant t :replace t
                                            :space :inertial)
-    (v:rotate new-explosion rotation :instant t :replace t)
+    (c:rotate new-explosion rotation :instant t :replace t)
     ;; By default explosions live a certain amount of time.
-    (v:destroy new-explosion :ttl destroy-ttl)
+    (c:destroy new-explosion :ttl destroy-ttl)
     new-explosion))
 
 (defun possibly-make-explosion-at-actor (actor render-layer)
-  (let* ((context (v:context actor))
-         (parent-model (v:get-model-matrix actor))
+  (let* ((context (c:context actor))
+         (parent-model (c:get-model-matrix actor))
          (parent-translation (m4:get-translation parent-model))
          (parent-rotation (q:from-mat4 parent-model))
-         (explosion (v:component-by-type actor 'explosion)))
+         (explosion (c:component-by-type actor 'explosion)))
     (when explosion
       (make-explosion context
                       parent-translation
@@ -833,7 +866,7 @@
 ;; This fires the specified projectiles
 ;;;;;;;;;
 
-(v:define-component gun ()
+(c:define-component gun ()
   ((%emitter-transform :accessor emitter-transform
                        :initarg :emitter-transform
                        :initform nil)
@@ -871,13 +904,13 @@
             :initarg :repeat
             :initform t)))
 
-(defmethod v:on-component-attach ((self gun) actor)
+(defmethod c:on-component-attach ((self gun) actor)
   (declare (ignore actor))
-  (with-accessors ((actor v:actor) (emitter-transform emitter-transform)) self
-    (setf emitter-transform (v:component-by-type actor 'comp:transform))))
+  (with-accessors ((actor c:actor) (emitter-transform emitter-transform)) self
+    (setf emitter-transform (c:component-by-type actor 'comp:transform))))
 
-(defmethod v:on-component-update ((self gun))
-  (with-accessors ((context v:context)
+(defmethod c:on-component-update ((self gun))
+  (with-accessors ((context c:context)
                    (rotate-deadzone rotate-deadzone)
                    (fire-period fire-period)
                    (cooldown-time cooldown-time)
@@ -907,10 +940,10 @@
        ;; NOTE: Both methods work simultaneously
 
        ;; Method 1: Right analog stick fires
-       (u:mvlet ((rx ry (v:get-gamepad-analog
+       (u:mvlet ((rx ry (c:get-gamepad-analog
                          context :radial-scaled '(:gamepad1 :right-stick))))
          (let* ((world-spawn-point
-                  (v:transform-point emitter-transform v3:+zero+)))
+                  (c:transform-point emitter-transform v3:+zero+)))
            (unless (or (= rx ry 0f0)
                        (< (v3:length (v3:vec rx ry 0f0)) rotate-deadzone))
              (let* ((angle (atan (- rx) ry))
@@ -931,10 +964,10 @@
                                 :render-layer :player-bullet)))))
 
        ;; Method 2: X button fires in direction ship is pointing
-       (u:when-let ((fire-p (v:on-button-enabled context :gamepad1 :a)))
-         (let* ((current-rotation (v:get-rotation self :space :model))
+       (u:when-let ((fire-p (c:on-button-enabled context :gamepad1 :a)))
+         (let* ((current-rotation (c:get-rotation self :space :model))
                 (world-spawn-point
-                  (v:transform-point emitter-transform v3:+zero+)))
+                  (c:transform-point emitter-transform v3:+zero+)))
 
            (make-projectile context
                             world-spawn-point
@@ -951,7 +984,7 @@
 
       ;; Just accumulate more physics time until we know we can fire again.
       (t
-       (incf cooldown-time (v:frame-time context))))))
+       (incf cooldown-time (c:frame-time context))))))
 
 ;; ;;;;;;;;;
 ;; Component: asteroid-field
@@ -960,7 +993,7 @@
 ;; difficulty.
 ;;;;;;;;;
 
-(v:define-component asteroid-field ()
+(c:define-component asteroid-field ()
   ((%pause-p :accessor pause-p
              :initarg :pause-p
              :initform nil)
@@ -994,7 +1027,7 @@
                  :initarg :scale-range
                  :initform (v2:vec 0.75f0 1.25f0))))
 
-(defmethod v:on-component-update ((self asteroid-field))
+(defmethod c:on-component-update ((self asteroid-field))
   (with-accessors ((spawn-period spawn-period)
                    (cooldown-time cooldown-time)
                    (asteroid-holder asteroid-holder)
@@ -1002,12 +1035,12 @@
                    (difficulty-period difficulty-period)
                    (difficulty-time difficulty-time)
                    (pause-p pause-p)
-                   (context v:context)
+                   (context c:context)
                    (asteroid-db asteroid-db)
                    (scale-range scale-range))
       self
     (when pause-p
-      (return-from v:on-component-update))
+      (return-from c:on-component-update))
     (flet ((ransign (val &optional (offset 0))
              (float (+ (* (random (if (zerop val) 1 val))
                           (if (zerop (random 2)) 1 -1))
@@ -1023,14 +1056,14 @@
                ;; space that we'll convert to world space.
                ;;
                ;; TODO: abstract this to ue a boundary cube.
-               (target (v:transform-point
+               (target (c:transform-point
                         self
                         (v3:vec (ransign 300f0) (ransign 300f0) 0.1f0)))
                (quadrant (random 4)))
            ;; pick an origin point in director space and convert it to world
            ;; space
            (setf origin
-                 (v:transform-point
+                 (c:transform-point
                   self
                   (ecase quadrant
                     ;; left side
@@ -1065,7 +1098,7 @@
                                 :parent asteroid-holder
                                 :render-layer :asteroid)))))
         (t
-         (incf cooldown-time (v:frame-time context))))
+         (incf cooldown-time (c:frame-time context))))
       ;; Now increase difficulty!
       (cond
         ((>= difficulty-time (/ difficulty-period))
@@ -1073,7 +1106,7 @@
                :do (decf difficulty-time (/ difficulty-period)))
          (incf difficulty 1))
         (t
-         (incf difficulty-time (v:frame-time context)))))))
+         (incf difficulty-time (c:frame-time context)))))))
 
 ;; ;;;;;;;;;
 ;; Component: player-stable
@@ -1085,7 +1118,7 @@
 ;; TODO: This component will have a much different form when we're able to
 ;; enable/disable actors.
 
-(v:define-component player-stable ()
+(c:define-component player-stable ()
   ((%max-lives :accessor max-lives
                :initarg :max-lives
                :initform 3)
@@ -1116,7 +1149,7 @@
                      :initarg :width-increment
                      :initform 100)))
 
-(defmethod v:on-component-initialize ((self player-stable))
+(defmethod c:on-component-initialize ((self player-stable))
   (setf (mockette-refs self)
         (make-array (max-lives self) :initial-element nil)))
 
@@ -1128,12 +1161,12 @@
                    (stable stable))
       player-stable
     (let ((dir (ecase direction (:left -1f0) (:right 1f0)))
-          (mockette (first (v:make-prefab-instance
-                            (v::core player-stable)
+          (mockette (first (c:make-prefab-instance
+                            (c::core player-stable)
                             mockette-prefab
                             :parent stable))))
 
-      (v:translate
+      (c:translate
        mockette (v3:vec (* mockette-index (* dir width-increment))
                         -60f0
                         (dl :mockette))
@@ -1149,10 +1182,10 @@
     ;; Initialize the stable under the holder with player-remaining mockettes.
     (dotimes (life lives-remaining)
       (when (aref mockette-refs life)
-        (v:destroy (aref mockette-refs life)))
+        (c:destroy (aref mockette-refs life)))
       (make-mockette player-stable life))))
 
-(defmethod v:on-component-attach ((self player-stable) actor)
+(defmethod c:on-component-attach ((self player-stable) actor)
   (declare (ignore actor))
   (regenerate-lives self))
 
@@ -1168,7 +1201,7 @@ return the lives-remaining after the life has been consumed."
       (return-from consume-life NIL))
     ;; lives-remaining is indexed by one, but the mockettes are indexed by zero.
     (let ((mockette-index (1- lives-remaining)))
-      (v:destroy (aref mockette-refs mockette-index))
+      (c:destroy (aref mockette-refs mockette-index))
       (setf (aref mockette-refs mockette-index) nil)
       (decf lives-remaining))
     lives-remaining))
@@ -1203,7 +1236,7 @@ return the lives-remaining after the life has been consumed."
 ;;
 ;; ;;;;;;;;;
 
-(v:define-component tags ()
+(c:define-component tags ()
   (;; TODO: Technically, this is for initialization only.  I should rename it.
    ;; Also the tags only are present if this component is attached to something.
    ;; So, when looking for "does this component have this tag" I shouldn't just
@@ -1219,7 +1252,7 @@ return the lives-remaining after the life has been consumed."
 ;; private API (probably)
 (defun tags-refs (context)
   ;; Create the DB if not present.
-  (v:with-storage
+  (c:with-storage
       (context context)
       ((tag->actors tag->actors/present-p ('tags :db :tag->actors)
                     ;; key: tag, Value: hash table of actor -> actor
@@ -1229,15 +1262,15 @@ return the lives-remaining after the life has been consumed."
                     (u:dict #'eq)))
     (values tag->actors actor->tags)))
 
-(defmethod v:on-component-initialize ((self tags))
+(defmethod c:on-component-initialize ((self tags))
   ;; Seed the storage cache. We're modifying the tags list, so copy-seq it to
   ;; ensure it isn't a quoted list.
   (setf (tags self) (copy-seq (tags self)))
-  (tags-refs (v:context self)))
+  (tags-refs (c:context self)))
 
 ;; private API
 (defun %tags-add (self &rest adding-tags)
-  (with-accessors ((context v:context) (actor v:actor)) self
+  (with-accessors ((context c:context) (actor c:actor)) self
     (u:mvlet ((tag->actors actor->tags (tags-refs context)))
       (dolist (tag adding-tags)
         ;; Add a tag -> actor set link
@@ -1259,7 +1292,7 @@ must be a TAGS component."
 
 ;; private API
 (defun %tags-remove (self &rest removing-tags)
-  (with-accessors ((context v:context) (actor v:actor)) self
+  (with-accessors ((context c:context) (actor c:actor)) self
     (u:mvlet ((tag->actors actor->tags (tags-refs context)))
       (dolist (tag removing-tags)
         ;; Remove the tag -> actor set link
@@ -1282,15 +1315,15 @@ SELF instance which must be a TAGS component."
 ;; public API
 (defmethod tags-has-tag-p ((self tags) query-tag)
   "Return T if the SELF tags component contains the QUERY-TAG."
-  (with-accessors ((context v:context) (actor v:actor)) self
+  (with-accessors ((context c:context) (actor c:actor)) self
     (u:mvlet ((tag->actors actor->tags (tags-refs context)))
       (u:href actor->tags actor query-tag))))
 
 ;; public API
-(defmethod tags-has-tag-p ((self v:actor) query-tag)
+(defmethod tags-has-tag-p ((self c:actor) query-tag)
   "Return T if there is a tags component on the SELF actor and it also
 contains the QUERY-TAG."
-  (u:when-let ((tags-component (v:component-by-type self 'tags)))
+  (u:when-let ((tags-component (c:component-by-type self 'tags)))
     (tags-has-tag-p tags-component query-tag)))
 
 ;; public API
@@ -1301,14 +1334,14 @@ NIL if no such list exists."
     (u:when-let ((actors (u:href tag->actors query-tag)))
       (u:hash-keys actors))))
 
-(defmethod v:on-component-attach ((self tags) actor)
-  (with-accessors ((context v:context) (actor v:actor) (tags tags)) self
+(defmethod c:on-component-attach ((self tags) actor)
+  (with-accessors ((context c:context) (actor c:actor) (tags tags)) self
     (dolist (tag tags)
       (%tags-add self tag))))
 
-(defmethod v:on-component-detach ((self tags) actor)
+(defmethod c:on-component-detach ((self tags) actor)
   ;; NOTE: all components are detached before they are destroyed.
-  (with-accessors ((context v:context) (actor v:actor) (tags tags)) self
+  (with-accessors ((context c:context) (actor c:actor) (tags tags)) self
     (dolist (tag tags)
       (%tags-remove self tag))))
 
@@ -1321,7 +1354,7 @@ NIL if no such list exists."
 ;; We don't use a hit-points
 ;;;;;;;;;
 
-(v:define-component planet ()
+(c:define-component planet ()
   ((%transform :accessor transform
                :initarg :transform
                :initform nil)
@@ -1333,7 +1366,7 @@ NIL if no such list exists."
                                   :initform 3)
    (%explosion-region :accessor explosion-region
                       :initarg :explosion-region
-                      :initform (v:make-region-ellipsoid (v3:zero)
+                      :initform (c:make-region-ellipsoid (v3:zero)
                                                          100f0 100f0 0f0))
    (%level-manager :accessor level-manager
                    :initarg :level-manager
@@ -1356,7 +1389,7 @@ NIL if no such list exists."
 ;; still would not work out in compoennts in core unless TAGS was made to run
 ;; even before those. Need to think a bit.
 (defun possibly-report-myself-to-level-manager (planet)
-  (with-accessors ((context v:context)
+  (with-accessors ((context c:context)
                    (level-manager level-manager)
                    (reported-to-level-manager reported-to-level-manager))
       planet
@@ -1364,23 +1397,23 @@ NIL if no such list exists."
     (u:when-let ((actor-lvlmgr
                   (first (tags-find-actors-with-tag context :level-manager))))
       (let ((level-manager
-              (v:component-by-type actor-lvlmgr 'level-manager)))
+              (c:component-by-type actor-lvlmgr 'level-manager)))
         (unless reported-to-level-manager
           (setf (level-manager planet) level-manager
                 reported-to-level-manager t)
           (report-planet-alive (level-manager planet)))))))
 
-(defmethod v:on-component-attach ((self planet) actor)
-  (setf (transform self) (v:component-by-type actor 'comp:transform)))
+(defmethod c:on-component-attach ((self planet) actor)
+  (setf (transform self) (c:component-by-type actor 'comp:transform)))
 
-(defmethod v:on-component-physics-update ((self planet))
+(defmethod c:on-component-physics-update ((self planet))
   ;; This might fail for a few frames until things stabilize in the creation of
   ;; the actors and components.  We do it here so it runs at a much slower pace
   ;; than rendering to save effort.
   (possibly-report-myself-to-level-manager self))
 
-(defmethod v:on-component-update ((self planet))
-  (with-accessors ((context v:context)
+(defmethod c:on-component-update ((self planet))
+  (with-accessors ((context c:context)
                    (hit-points hit-points)
                    (hit-point-warning-threshhold hit-point-warning-threshhold)
                    (explosion-region explosion-region)
@@ -1391,7 +1424,7 @@ NIL if no such list exists."
     ;; represent this generically.
     (unless (<= (hp hit-points) hit-point-warning-threshhold)
       (setf warning-explosion-timer 0f0)
-      (return-from v:on-component-update nil))
+      (return-from c:on-component-update nil))
     (cond
       ;; We exceeded our cooldown time, so time to fire!
       ((>= warning-explosion-timer (/ warning-explosion-period))
@@ -1405,24 +1438,24 @@ NIL if no such list exists."
        (flet ((zrandom (val)
                 (if (zerop val) 0f0 (float (random val) 1.0))))
          (let* ((er explosion-region)
-                (cx (v3:x (v:center er)))
-                (cy (v3:y (v:center er)))
+                (cx (v3:x (c:center er)))
+                (cy (v3:y (c:center er)))
                 (xsign (if (zerop (random 2)) 1f0 -1f0))
                 (ysign (if (zerop (random 2)) 1f0 -1f0))
                 (local-location
                   ;; Note: In terms of the coordinate space of the planet!
-                  (v4:vec (+ cx (float (* (zrandom (v:x er)) xsign) 1f0))
-                          (+ cy (float (* (zrandom (v:y er)) ysign) 1f0))
+                  (v4:vec (+ cx (float (* (zrandom (c:x er)) xsign) 1f0))
+                          (+ cy (float (* (zrandom (c:y er)) ysign) 1f0))
                           0f0
                           1f0))
                 ;; Figure out where to put the explosion into world space.
-                (world-location (v:transform-point self local-location))
+                (world-location (c:transform-point self local-location))
                 (world-location (v3:vec (v3:x world-location)
                                         (v3:y world-location)
                                         (dl :planet-warning-explosion)))
                 (random-rotation (q:orient :local :z (random o:2pi)))
                 ;; for now, use the same explosions as the planet itself
-                (explosion (v:component-by-type (v:actor self) 'explosion)))
+                (explosion (c:component-by-type (c:actor self) 'explosion)))
            ;; Fix it so I don't do all the work only to discard it if there
            ;; isn't an explosion component.
            (when explosion
@@ -1434,9 +1467,9 @@ NIL if no such list exists."
                              :name (name explosion)
                              :frames (frames explosion))))))
       (t
-       (incf warning-explosion-timer (v:frame-time context))))))
+       (incf warning-explosion-timer (c:frame-time context))))))
 
-(defmethod v:on-component-destroy ((self planet))
+(defmethod c:on-component-destroy ((self planet))
   (when (level-manager self)
     (report-planet-died (level-manager self))))
 
@@ -1446,7 +1479,7 @@ NIL if no such list exists."
 ;; the planet is about to die when it <= the hit-point-warning-threshhold.
 ;; Currently, the physics layers are set up so that only enemies can hit the
 ;; planet.
-(defmethod v:on-collision-enter ((self planet) other-collider)
+(defmethod c:on-collision-enter ((self planet) other-collider)
   (with-accessors ((hit-points hit-points)
                    (hit-point-warning-threshhold hit-point-warning-threshhold))
       self
@@ -1465,7 +1498,7 @@ NIL if no such list exists."
 ;; time has been all used up.
 ;; ;;;;;;;;;
 
-(v:define-component time-keeper ()
+(c:define-component time-keeper ()
   ((%pause :accessor pause
            :initarg :pause
            :initform t)
@@ -1494,12 +1527,12 @@ NIL if no such list exists."
                           :initarg :time-bar-empty-color
                           :initform (v4:vec 1f0 0f0 0f0 1f0))))
 
-(defmethod v:on-component-initialize ((self time-keeper))
+(defmethod c:on-component-initialize ((self time-keeper))
   (setf (time-left self) (time-max self)))
 
 ;; We really don't need to do this per frame.
-(defmethod v:on-component-physics-update ((self time-keeper))
-  (with-accessors ((context v:context)
+(defmethod c:on-component-physics-update ((self time-keeper))
+  (with-accessors ((context c:context)
                    (pause pause)
                    (time-max time-max)
                    (time-left time-left)
@@ -1511,15 +1544,15 @@ NIL if no such list exists."
                    (time-bar-height-scale time-bar-height-scale))
       self
     (when pause
-      (return-from v:on-component-physics-update nil))
+      (return-from c:on-component-physics-update nil))
     ;; TODO: Bug, it seems a fast physics-update can happen before the user
     ;; protocol is properly set up. Debug why this can be NIL in a 120Hz physics
     ;; update period.
     (unless time-bar-transform
-      (return-from v:on-component-physics-update nil))
+      (return-from c:on-component-physics-update nil))
     (let ((how-far-to-empty (- 1f0 (/ time-left time-max))))
       ;; Size the time bar in accordance to how much time is left.
-      (v:scale time-bar-transform
+      (c:scale time-bar-transform
                (v3:vec time-bar-width
                        (u:lerp how-far-to-empty
                                time-bar-height-scale
@@ -1528,12 +1561,12 @@ NIL if no such list exists."
                :replace t)
       ;; Color the time bar in accordance to how much time is left.
       (let ((material (comp:material time-bar-renderer)))
-        (setf (v:uniform-ref material :mix-color)
+        (setf (c:uniform-ref material :mix-color)
               (v4:lerp time-bar-full-color time-bar-empty-color
                        how-far-to-empty)))
       ;; Account the time that has passed
       ;; TODO: make a utility macro called DECF-CLAMP
-      (decf time-left (v:delta context))
+      (decf time-left (c:delta context))
       (when (<= time-left 0f0)
         (setf time-left 0f0)))))
 
@@ -1550,7 +1583,7 @@ NIL if no such list exists."
 ;;
 ;; ;;;;;;;;;
 
-(v:define-component level-manager ()
+(c:define-component level-manager ()
   ((%time-keeper :accessor time-keeper
                  :initarg :time-keeper
                  :initform nil)
@@ -1622,7 +1655,7 @@ NIL if no such list exists."
   ;; if we have zero planets technically none of them are dead.
   (and (plusp (reporting-planets level-manager))
        (= (dead-planets level-manager)
-          (reporting-planets level-manager))))
+           (reporting-planets level-manager))))
 
 ;; ;;;;;;;;;
 ;; Component: director
@@ -1664,7 +1697,7 @@ NIL if no such list exists."
 ;;   v
 ;; <terminate>
 
-(v:define-component director ()
+(c:define-component director ()
   ((%current-game-state :accessor current-game-state
                         :initarg :current-game-state
                         :initform :waiting-to-play)
@@ -1743,7 +1776,7 @@ NIL if no such list exists."
 (defgeneric process-director-state (director state previous-state))
 
 ;; From here, we dispatch to the state management GF.
-(defmethod v:on-component-update ((self director))
+(defmethod c:on-component-update ((self director))
   (with-accessors ((current-game-state current-game-state)
                    (previous-game-state previous-game-state)
                    (levels levels)
@@ -1761,7 +1794,7 @@ NIL if no such list exists."
 (defmethod process-director-state ((self director)
                                    (state (eql :waiting-to-play))
                                    previous-state)
-  (with-accessors ((context v:context)
+  (with-accessors ((context c:context)
                    (demo-level demo-level)
                    (current-level current-level)
                    (current-level-ref current-level-ref)
@@ -1775,15 +1808,15 @@ NIL if no such list exists."
         ;; 0. If there is a player (like maybe you beat the game), destroy it.
         (u:when-let ((players (tags-find-actors-with-tag context :player)))
           (dolist (player players)
-            (v:destroy player)))
+            (c:destroy player)))
         ;; 1. Spawn the demo-level which includes the PtP sign and press play
         ;; to start.
         (when current-level-ref
           ;; Whatever was previously there, get rid of.
-          (v:destroy current-level-ref))
+          (c:destroy current-level-ref))
         (setf current-level-ref
-              (first (v:make-prefab-instance
-                      (v::core context)
+              (first (c:make-prefab-instance
+                      (c::core context)
                       demo-level
                       :parent level-holder)))
         ;; 2. ensure the lives player1-stable is set to max if not already so.
@@ -1793,7 +1826,7 @@ NIL if no such list exists."
           ;; The TODO is why the WHEN guard is around this line.
           (reset-stable player-1-stable)))
       ;; 3. We always listen for the start button so we can play a game.
-      (when (v:on-button-enter context :gamepad1 :start)
+      (when (c:on-button-enter context :gamepad1 :start)
         (setf current-level 0 ;; start at beginning of level progression
               next-state :level-spawn))
       next-state)))
@@ -1801,7 +1834,7 @@ NIL if no such list exists."
 (defmethod process-director-state ((self director)
                                    (state (eql :level-spawn))
                                    previous-state)
-  (with-accessors ((context v:context)
+  (with-accessors ((context c:context)
                    (current-game-state current-game-state)
                    (levels levels)
                    (demo-level demo-level)
@@ -1813,25 +1846,25 @@ NIL if no such list exists."
       self
     ;; Destroy old level, if any.
     (when current-level-ref
-      (v:destroy current-level-ref)
+      (c:destroy current-level-ref)
       (setf current-level-ref nil))
     ;; spawn current level requested
     (setf current-level-ref
-          (first (v:make-prefab-instance
-                  (v::core context)
+          (first (c:make-prefab-instance
+                  (c::core context)
                   ;; TODO: Odd requirement for the LIST here given how I access
                   ;; this prefab description.
                   (list (nth current-level levels))
                   :parent level-holder)))
     ;; find this level's level-manager and keep a reference to it
-    (let ((lvlmgr (v:component-by-type current-level-ref 'level-manager)))
+    (let ((lvlmgr (c:component-by-type current-level-ref 'level-manager)))
       (setf level-manager lvlmgr))
     :player-spawn))
 
 (defmethod process-director-state ((self director)
                                    (state (eql :player-spawn))
                                    previous-state)
-  (with-accessors ((context v:context)
+  (with-accessors ((context c:context)
                    (current-player-holder current-player-holder)
                    (current-player current-player)
                    (player-1-stable player-1-stable)
@@ -1855,8 +1888,8 @@ NIL if no such list exists."
                       ;; out of players!
                       (setf next-state :game-over)
                       (let ((new-player-instance
-                              (first (v:make-prefab-instance
-                                      (v::core context)
+                              (first (c:make-prefab-instance
+                                      (c::core context)
                                       '(("player-ship" ptp))
                                       :parent current-player-holder))))
                         ;; TODO: make player respawn in same place and
@@ -1865,14 +1898,14 @@ NIL if no such list exists."
                         ;; unchanged next-state.
                         (setf current-player new-player-instance))))
                 (progn
-                  (incf player1-respawn-timer (v:frame-time context))
+                  (incf player1-respawn-timer (c:frame-time context))
                   (setf next-state :player-spawn)))))
       next-state)))
 
 (defmethod process-director-state ((self director)
                                    (state (eql :playing))
                                    previous-state)
-  (with-accessors ((context v:context)
+  (with-accessors ((context c:context)
                    (current-game-state current-game-state)
                    (levels levels)
                    (demo-level demo-level)
@@ -1903,7 +1936,7 @@ NIL if no such list exists."
 (defmethod process-director-state ((self director)
                                    (state (eql :level-complete))
                                    previous-state)
-  (with-accessors ((context v:context)
+  (with-accessors ((context c:context)
                    (levels levels)
                    (demo-level demo-level)
                    (current-level current-level)
@@ -1923,15 +1956,15 @@ NIL if no such list exists."
       ;; Second: Abruptly destroy all :dangerous things.
       (let ((dangerous-actors (tags-find-actors-with-tag context :dangerous)))
         (dolist (dangerous-actor dangerous-actors)
-          (v:destroy dangerous-actor)))
+          (c:destroy dangerous-actor)))
       ;; TODO: If the player is alive, tell it it can't move.
       ;; and possibly reset it to home position.
       ;; Spawn game-over sign and set to destroy in max-time seconds
       (let ((level-complete-sign
-              (first (v:make-prefab-instance
-                      (v::core context)
+              (first (c:make-prefab-instance
+                      (c::core context)
                       '(("level-complete-sign" ptp))))))
-        (v:destroy level-complete-sign
+        (c:destroy level-complete-sign
                    :ttl level-complete-max-wait-time)))
     (cond
       ((>= level-complete-timer level-complete-max-wait-time)
@@ -1952,13 +1985,13 @@ NIL if no such list exists."
           :level-spawn)))
       (t
        ;; Keep waiting for the timer to fire.
-       (incf level-complete-timer (v:frame-time context))
+       (incf level-complete-timer (c:frame-time context))
        :level-complete))))
 
 (defmethod process-director-state ((self director)
                                    (state (eql :game-over))
                                    previous-state)
-  (with-accessors ((context v:context)
+  (with-accessors ((context c:context)
                    (levels levels)
                    (demo-level demo-level)
                    (current-level current-level)
@@ -1970,18 +2003,18 @@ NIL if no such list exists."
     ;; If there is a player then destroy it, we'll let the rest of the state
     ;; machine deal with it resetting the internal state.
     (u:when-let ((player (first (tags-find-actors-with-tag context :player))))
-      (v:destroy player))
+      (c:destroy player))
     (unless (eq state previous-state)
       (setf game-over-timer 0f0)
-      (let ((game-over-sign (first (v:make-prefab-instance
-                                    (v::core context)
+      (let ((game-over-sign (first (c:make-prefab-instance
+                                    (c::core context)
                                     '(("game-over-sign" ptp))))))
-        (v:destroy game-over-sign :ttl game-over-max-wait-time)))
+        (c:destroy game-over-sign :ttl game-over-max-wait-time)))
     (cond
       ((>= game-over-timer game-over-max-wait-time)
        :waiting-to-play)
       (t
-       (incf game-over-timer (v:frame-time context))
+       (incf game-over-timer (c:frame-time context))
        :game-over))))
 
 (defmethod process-director-state ((self director)
@@ -2000,12 +2033,12 @@ NIL if no such list exists."
 ;; Prefabs
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(v:define-prefab "projectile" (:library ptp)
+(c:define-prefab "projectile" (:library ptp)
   "A generic projectile that can be a bullet, or an asteroid, or whatever."
-  (projectile :transform (v:ref :self :component 'comp:transform)
-              :mover (v:ref :self :component 'line-mover)
-              :collider (v:ref :self :component 'comp:sphere)
-              :sprite (v:ref :self :component 'comp:sprite))
+  (projectile :transform (c:ref :self :component 'comp:transform)
+              :mover (c:ref :self :component 'line-mover)
+              :collider (c:ref :self :component 'comp:sphere)
+              :sprite (c:ref :self :component 'comp:sprite))
   (tags :tags '(:dangerous))
   (damage-points :dp 1)
   (explosion :name "explode01-01" :frames 15)
@@ -2016,13 +2049,13 @@ NIL if no such list exists."
                :duration 0.5)
   (comp:sphere :center (v3:zero)
                :on-layer :enemy-bullet
-               :referent (v:ref :self :component 'hit-points)
+               :referent (c:ref :self :component 'hit-points)
                :radius 15f0)
   (sketch :material 'sprite-sheet
           :render-layer nil ;; to be set at prefab instancing time.
-          :slave (v:ref :self :component 'comp:sprite)))
+          :slave (c:ref :self :component 'comp:sprite)))
 
-(v:define-prefab "player-ship" (:library ptp)
+(c:define-prefab "player-ship" (:library ptp)
   "The venerable Player Ship. Controls how it looks, collides, and movement."
   (tags :tags '(:player))
   (explosion :name "explode04-01" :frames 15
@@ -2038,7 +2071,7 @@ NIL if no such list exists."
                    :pivot-prefab '(("pivot-guide" ptp)))
   (comp:sphere :center (v3:zero)
                :on-layer :player
-               :referent (v:ref :self :component 'hit-points)
+               :referent (c:ref :self :component 'hit-points)
                :radius 30f0)
   ("ship-body"
    (comp:sprite :spec '(metadata sprites)
@@ -2046,7 +2079,7 @@ NIL if no such list exists."
                 :name "ship26")
    (sketch :material 'sprite-sheet
            :render-layer :player
-           :slave (v:ref :self :component 'comp:sprite))
+           :slave (c:ref :self :component 'comp:sprite))
    ("front-gun"
     (comp:transform :translate (v3:vec 0f0 50f0 0f0))
     (gun :physics-layer :player-bullet
@@ -2064,32 +2097,32 @@ NIL if no such list exists."
                  :duration 0.5)
     (sketch :material 'sprite-sheet
             :render-layer :player
-            :slave (v:ref :self :component 'comp:sprite)))))
+            :slave (c:ref :self :component 'comp:sprite)))))
 
-(v:define-prefab "player-ship-mockette" (:library ptp)
+(c:define-prefab "player-ship-mockette" (:library ptp)
   "An image of the ship, but no colliders or guns."
   (comp:sprite :spec '(metadata sprites)
                :block-alias :ptp-spritesheet
                :name "ship26")
   (sketch :material 'sprite-sheet
           :render-layer :mockette
-          :slave (v:ref :self :component 'comp:sprite)))
+          :slave (c:ref :self :component 'comp:sprite)))
 
-(v:define-prefab "player-stable" (:library ptp)
+(c:define-prefab "player-stable" (:library ptp)
   ;; TODO: Clarify when we actually need the / infront of the actor name during
-  ;; use of V:REF. Here is seems we DON'T need one, but sometimes we do!
-  (player-stable :stable (v:ref "stable-holder"))
+  ;; use of C:REF. Here is seems we DON'T need one, but sometimes we do!
+  (player-stable :stable (c:ref "stable-holder"))
   ("stable-holder"))
 
-(v:define-prefab "generic-planet" (:library ptp)
-  (planet :hit-points (v:ref :self :component 'hit-points))
+(c:define-prefab "generic-planet" (:library ptp)
+  (planet :hit-points (c:ref :self :component 'hit-points))
   (hit-points :hp 5
               :render-layer :planet-explosion)
   (explosion :name "explode03-01" :frames 15
              :scale (v3:vec 3f0 3f0 3f0))
   (comp:sphere :center (v3:zero)
                :on-layer :planet
-               :referent (v:ref :self :component 'planet)
+               :referent (c:ref :self :component 'planet)
                :visualize t
                :radius 145f0)
   (comp:sprite :spec '(metadata sprites)
@@ -2097,10 +2130,10 @@ NIL if no such list exists."
                :name "planet01")
   (sketch :material 'sprite-sheet
           :render-layer :planet
-          :slave (v:ref :self :component 'comp:sprite)))
+          :slave (c:ref :self :component 'comp:sprite)))
 
-(v:define-prefab "generic-explosion" (:library ptp)
-  (explosion :sprite (v:ref :self :component 'comp:sprite))
+(c:define-prefab "generic-explosion" (:library ptp)
+  (explosion :sprite (c:ref :self :component 'comp:sprite))
   (comp:sprite :spec '(metadata sprites)
                :block-alias :ptp-spritesheet
                ;; TODO: When this is misnamed, the error is extremely obscure
@@ -2110,90 +2143,90 @@ NIL if no such list exists."
                :repeat nil)
   (sketch :material 'sprite-sheet
           :render-layer nil ;; set in the creator of this prefab.
-          :slave (v:ref :self :component 'comp:sprite)))
+          :slave (c:ref :self :component 'comp:sprite)))
 
 ;; TODO: Refactor these signs into a single prefab and a sign component to
 ;; manage the configuration of the prefab.
-(v:define-prefab "warning-wave-sign" (:library ptp)
+(c:define-prefab "warning-wave-sign" (:library ptp)
   "Not used yet."
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "plane")
    (sketch :material 'warning-wave
            :render-layer :sign
-           :slave (v:ref :self :component 'comp:mesh))))
+           :slave (c:ref :self :component 'comp:mesh))))
 
-(v:define-prefab "warning-mothership-sign" (:library ptp)
+(c:define-prefab "warning-mothership-sign" (:library ptp)
   "Not used yet."
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "plane")
    (sketch :material 'warning-mothership
            :render-layer :sign
-           :slave (v:ref :self :component 'comp:mesh))))
+           :slave (c:ref :self :component 'comp:mesh))))
 
-(v:define-prefab "title-sign" (:library ptp)
+(c:define-prefab "title-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "plane")
    (sketch :material 'title
            :render-layer :sign
-           :slave (v:ref :self :component 'comp:mesh))))
+           :slave (c:ref :self :component 'comp:mesh))))
 
 
-(v:define-prefab "pivot-guide" (:library ptp)
+(c:define-prefab "pivot-guide" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 64f0)
   ("pivot"
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "plane")
    (sketch :material 'pivot
            :render-layer :pivot-guide
-           :slave (v:ref :self :component 'comp:mesh))))
+           :slave (c:ref :self :component 'comp:mesh))))
 
-(v:define-prefab "game-over-sign" (:library ptp)
+(c:define-prefab "game-over-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "plane")
    (sketch :material 'game-over
            :render-layer :sign
-           :slave (v:ref :self :component 'comp:mesh))))
+           :slave (c:ref :self :component 'comp:mesh))))
 
-(v:define-prefab "level-complete-sign" (:library ptp)
+(c:define-prefab "level-complete-sign" (:library ptp)
   (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign))
                   :scale 512f0)
   ("sign"
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "plane")
    (sketch :material 'level-complete
            :render-layer :sign
-           :slave (v:ref :self :component 'comp:mesh))))
+           :slave (c:ref :self :component 'comp:mesh))))
 
-(v:define-prefab "starfield" (:library ptp)
+(c:define-prefab "starfield" (:library ptp)
   (comp:transform :scale 960f0
                   ;; NOTE: ortho projection, so we can put starfield way
                   ;; back.
                   :translate (v3:vec 0f0 0f0 (dl :starfield)))
-  (comp:mesh :asset '(v::meshes v::primitives)
+  (comp:mesh :asset '(c::meshes c::primitives)
              :name "plane")
   (sketch :material 'starfield
           :render-layer :starfield
-          :slave (v:ref :self :component 'comp:mesh)))
+          :slave (c:ref :self :component 'comp:mesh)))
 
-(v:define-prefab "time-keeper" (:library ptp)
+(c:define-prefab "time-keeper" (:library ptp)
   (comp:transform :translate (v3:vec 900f0 -512f0 (dl :time-keeper)))
   (time-keeper :time-max 30f0
-               :time-bar-transform (v:ref "time-bar-root"
+               :time-bar-transform (c:ref "time-bar-root"
                                           :component 'comp:transform)
-               :time-bar-renderer (v:ref "time-bar-root/time-display"
+               :time-bar-renderer (c:ref "time-bar-root/time-display"
                                          :component 'sketch))
   ("time-bar-root"
    ;; When we scale the transform for this object, the alignment of the
@@ -2201,31 +2234,31 @@ NIL if no such list exists."
    ;; coordinate frame.
    ("time-display"
     (comp:transform :translate (v3:vec 0f0 1f0 0f0))
-    (comp:mesh :asset '(v::meshes v::primitives)
+    (comp:mesh :asset '(c::meshes c::primitives)
                :name "plane")
     ;; TODO: when 'time-bar is mis-spelled in the material,
     ;; I don't get the debug material, why?
     ;; TODO: I think this material is leaked when this object is destroyed.
     (sketch :material `(time-bar time-bar-material)
             :render-layer :time-keeper
-            :slave (v:ref :self :component 'comp:mesh)))))
+            :slave (c:ref :self :component 'comp:mesh)))))
 
-(v:define-prefab "demo-level" (:library ptp)
-  (level-manager :asteroid-field (v:ref :self :component 'asteroid-field))
+(c:define-prefab "demo-level" (:library ptp)
+  (level-manager :asteroid-field (c:ref :self :component 'asteroid-field))
   (tags :tags '(:level-manager))
-  (asteroid-field :asteroid-holder (v:ref "/demo-level/asteroids"))
+  (asteroid-field :asteroid-holder (c:ref "/demo-level/asteroids"))
 
   (("starfield" :link ("/starfield" :from ptp)))
   ("asteroids")
   (("title" :copy ("/title-sign" :from ptp))
    (comp:transform :translate (v3:vec 0f0 0f0 (dl :sign)))))
 
-(v:define-prefab "level-0" (:library ptp)
-  (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
+(c:define-prefab "level-0" (:library ptp)
+  (level-manager :asteroid-field (c:ref :self :component 'asteroid-field)
                  :time-keeper
-                 (v:ref "time-keeper" :component 'time-keeper))
+                 (c:ref "time-keeper" :component 'time-keeper))
   (tags :tags '(:level-manager))
-  (asteroid-field :asteroid-holder (v:ref "/level-2/asteroids"))
+  (asteroid-field :asteroid-holder (c:ref "/level-2/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp))
@@ -2249,12 +2282,12 @@ NIL if no such list exists."
                 :block-alias :ptp-spritesheet
                 :name "planet03")))
 
-(v:define-prefab "level-1" (:library ptp)
-  (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
+(c:define-prefab "level-1" (:library ptp)
+  (level-manager :asteroid-field (c:ref :self :component 'asteroid-field)
                  :time-keeper
-                 (v:ref "time-keeper" :component 'time-keeper))
+                 (c:ref "time-keeper" :component 'time-keeper))
   (tags :tags '(:level-manager))
-  (asteroid-field :asteroid-holder (v:ref "/level-1/asteroids"))
+  (asteroid-field :asteroid-holder (c:ref "/level-1/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp)))
@@ -2271,12 +2304,12 @@ NIL if no such list exists."
                 :block-alias :ptp-spritesheet
                 :name "planet02")))
 
-(v:define-prefab "level-2" (:library ptp)
-  (level-manager :asteroid-field (v:ref :self :component 'asteroid-field)
+(c:define-prefab "level-2" (:library ptp)
+  (level-manager :asteroid-field (c:ref :self :component 'asteroid-field)
                  :time-keeper
-                 (v:ref "time-keeper" :component 'time-keeper))
+                 (c:ref "time-keeper" :component 'time-keeper))
   (tags :tags '(:level-manager))
-  (asteroid-field :asteroid-holder (v:ref "/level-0/asteroids"))
+  (asteroid-field :asteroid-holder (c:ref "/level-0/asteroids"))
   ("asteroids")
   (("starfield" :link ("/starfield" :from ptp)))
   (("time-keeper" :link ("/time-keeper" :from ptp))
@@ -2288,14 +2321,14 @@ NIL if no such list exists."
                 :block-alias :ptp-spritesheet
                 :name "planet01")))
 
-(v:define-prefab "protect-the-planets" (:library ptp)
+(c:define-prefab "protect-the-planets" (:library ptp)
   "The top most level prefab which has the component which drives the game
 sequencing."
   (comp:transform :scale (v3:ones))
   (delayed-render :layer-order *render-layer-order*)
   (tags :tags '(:delayed-render-system))
-  (director :level-holder (v:ref "/protect-the-planets/current-level")
-            :player-1-stable (v:ref "/protect-the-planets/player-1-stable"
+  (director :level-holder (c:ref "/protect-the-planets/current-level")
+            :player-1-stable (c:ref "/protect-the-planets/player-1-stable"
                                     :component 'player-stable))
   (("camera" :copy ("/cameras/ortho" :from ptp-base))
    (comp:transform :translate (v3:vec 0f0 0f0 (dl :camera))))
@@ -2304,7 +2337,7 @@ sequencing."
     :translate (v3:vec -900f0 550f0 (dl :player-stable))))
   ("current-level"))
 
-(v:define-prefab "starfield-demo" (:library ptp)
+(c:define-prefab "starfield-demo" (:library ptp)
   "A simple demo scene of the starfield. Not used in the game, but for
 testing the starfield shader."
   (("starfield" :link ("/starfield" :from ptp)))

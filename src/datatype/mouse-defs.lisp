@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defstruct (mouse-motion-state
             (:predicate nil)

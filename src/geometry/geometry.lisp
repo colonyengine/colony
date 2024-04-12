@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defun make-geometry (name)
   (funcall (u:href =meta/geometry= name)))

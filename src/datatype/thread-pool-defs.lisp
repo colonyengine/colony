@@ -1,7 +1,9 @@
-(in-package #:virality)
+(in-package #:colony.thread-pool)
 
 (defclass thread-pool ()
-  ((%worker-count :reader worker-count
+  ((%kernel :accessor kernel
+            :initarg :kernel)
+   (%worker-count :reader worker-count
                   :initarg :worker-count)
    (%channels :reader channels
               :initform (u:dict #'eq))

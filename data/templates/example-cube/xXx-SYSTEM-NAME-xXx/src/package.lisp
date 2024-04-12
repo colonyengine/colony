@@ -8,10 +8,10 @@
    #:start))
 
 (uiop:define-package #:xXx-SYSTEM-NAME-xXx.shader
-  (:use #:virality.shader)
+  (:use #:colony.shader)
   (:export
    ))
 
-(virality.nicknames:define-nicknames
+(colony.nicknames:define-nicknames
   (:xXx-SYSTEM-NAME-xXx :proj)
   (:xXx-SYSTEM-NAME-xXx.shader :proj/shd))

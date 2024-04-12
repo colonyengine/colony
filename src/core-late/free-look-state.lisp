@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defclass free-look-state ()
   ((%context :reader context

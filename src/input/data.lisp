@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; Implementation of datatype INPUT-DATA
 

@@ -1,6 +1,6 @@
-(in-package #:virality.component)
+(in-package #:colony.component)
 
-(v:define-component cuboid (v:region-cuboid)
+(c:define-component cuboid (c:region-cuboid)
   (;; The collider is only ever on a single layer.
    (%on-layer :accessor on-layer
               :initarg :on-layer)
@@ -17,7 +17,7 @@
 
    (%material :reader material
               :initform 'x::collider/cuboid
-              :annotation (v::material))
+              :annotation (c::material))
 
    ;; TODO: We do not have a difference between triggers and collisions yet.
    ;; That will come when actual physics arrives.
@@ -34,65 +34,65 @@
    (%obb :accessor obb
          :initform nil)))
 
-(defmethod v:on-component-initialize ((self cuboid))
+(defmethod c:on-component-initialize ((self cuboid))
   ;; TODO
   nil)
 
-(defmethod v:on-component-attach ((self cuboid) actor)
+(defmethod c:on-component-attach ((self cuboid) actor)
   (declare (ignore actor))
-  (v::register-collider (v:context self) self))
+  (c::register-collider (c:context self) self))
 
-(defmethod v:on-component-detach ((self cuboid) actor)
+(defmethod c:on-component-detach ((self cuboid) actor)
   (declare (ignore actor))
-  (v::deregister-collider (v:context self) self))
+  (c::deregister-collider (c:context self) self))
 
-(defmethod v:on-component-destroy ((self cuboid))
+(defmethod c:on-component-destroy ((self cuboid))
   (setf (referent self) nil))
 
 ;; TODO: Refactor this as it was just a quick hack
-(defmethod v:on-component-physics-update ((self cuboid))
-  (let* ((min (v:transform-point self
-                                 (v3:+ (v:center self)
-                                       (v3:vec (v:minx self)
-                                               (v:miny self)
-                                               (v:minz self)))))
-         (max (v:transform-point self
-                                 (v3:+ (v:center self)
-                                       (v3:vec (v:maxx self)
-                                               (v:maxy self)
-                                               (v:maxz self)))))
+(defmethod c:on-component-physics-update ((self cuboid))
+  (let* ((min (c:transform-point self
+                                 (v3:+ (c:center self)
+                                       (v3:vec (c:minx self)
+                                               (c:miny self)
+                                               (c:minz self)))))
+         (max (c:transform-point self
+                                 (v3:+ (c:center self)
+                                       (v3:vec (c:maxx self)
+                                               (c:maxy self)
+                                               (c:maxz self)))))
          (center (v3:lerp min max 0.5))
          (axes (m4:rotation-to-mat3
                 (m4:normalize-rotation
-                 (v:get-model-matrix self))))
+                 (c:get-model-matrix self))))
          (diagonal (v3:- max center))
          (half-widths (v3:vec (v3:dot diagonal (m3:get-column axes 0))
                               (v3:dot diagonal (m3:get-column axes 1))
                               (v3:dot diagonal (m3:get-column axes 2)))))
-    (setf (obb self) (v::make-oriented-bounding-box center axes half-widths))))
+    (setf (obb self) (c::make-oriented-bounding-box center axes half-widths))))
 
 ;; TODO: When I implement the ability to not call protocol methods on types that
 ;; don't have them defined, ALSO create a feature that I can turn off calling
 ;; them for types that DO have them. Then I can leave this here and also not pay
 ;; the cost to render it.
-(defmethod v:on-component-render ((self cuboid))
+(defmethod c:on-component-render ((self cuboid))
   (unless (visualize self)
-    (return-from v:on-component-render))
-  (u:when-let ((camera (v::active-camera (v:context self))))
+    (return-from c:on-component-render))
+  (u:when-let ((camera (c::active-camera (c:context self))))
     (with-material (material self)
-        (:model (v:get-model-matrix self)
+        (:model (c:get-model-matrix self)
          :view (view camera)
          :proj (projection camera)
-         :collider-local-center (v:center self)
+         :collider-local-center (c:center self)
          :in-contact-p (plusp (contact-count self))
          ;; NOTE: The shader computes the world-space math appropriately for
          ;; visualization purposes.
-         :minx (v:minx self)
-         :maxx (v:maxx self)
-         :miny (v:miny self)
-         :maxy (v:maxy self)
-         :minz (v:minz self)
-         :maxz (v:maxz self))
+         :minx (c:minx self)
+         :maxx (c:maxx self)
+         :miny (c:miny self)
+         :maxy (c:maxy self)
+         :minz (c:minz self)
+         :maxz (c:maxz self))
 
       ;; Finally, draw the visualizaiton.
       (gl:bind-vertex-array (geometry self))
@@ -104,22 +104,22 @@
 ;; ourselves to our referent (who implements this same API). This way, the
 ;; collider component instance can keep data about itself for visualization or
 ;; other purposes.
-(defmethod v:on-collision-enter ((self cuboid) other-collider)
+(defmethod c:on-collision-enter ((self cuboid) other-collider)
   (incf (contact-count self))
   (u:when-let ((referent (referent self)))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
-    (v:on-collision-enter referent other-collider)))
+    (c:on-collision-enter referent other-collider)))
 
-(defmethod v:on-collision-continue ((self cuboid) other-collider)
+(defmethod c:on-collision-continue ((self cuboid) other-collider)
   (u:when-let ((referent (referent self)))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
-    (v:on-collision-continue referent other-collider)))
+    (c:on-collision-continue referent other-collider)))
 
-(defmethod v:on-collision-exit ((self cuboid) other-collider)
+(defmethod c:on-collision-exit ((self cuboid) other-collider)
   (decf (contact-count self))
   (u:when-let ((referent (referent self)))
     (when (eq self referent)
       (error "The referent of a collider must not be same collider component!"))
-    (v:on-collision-exit referent other-collider)))
+    (c:on-collision-exit referent other-collider)))

@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; Some of the implementation of the datatype CORE.
 
@@ -39,9 +39,26 @@ structures in CORE."
     (setf (slot-value core '%scene-tree) actor)))
 
 (defun make-core (config)
-  (let ((core (make-instance 'core
-                             :config config
-                             :tables (make-instance 'bookkeeping-tables))))
-    (setf *core-debug* core)
-    (make-context core)
+  ;; TODO: LOAD-CONFIG should have been executed before this. Write a small
+  ;; piece of code that can check this fact right here.
+  (let ((core
+          (make-instance
+           'core
+           ;; NOTE: It is possible the ordering of this initialization may be
+           ;; significant.
+           ;;
+           ;; NOTE: It is debatable that we should move these out of this
+           ;; function and into the engine.lisp INITIALIZE function so we can
+           ;; finely control the initialization of everything.
+           :config config
+           :tables (make-instance 'bookkeeping-tables)
+           :materials (make-materials-table)
+           :texture-maps (texmaptab:make-texture-map-table)
+           :textures (textab:make-texture-table)
+           :thread-pool (tpool:make-thread-pool (or =threads= =cpu-count=))
+           :context (make-context)
+           :clock (make-clock))))
+
+    (setf (slot-value (context core) '%core) core
+          *core-debug* core)
     core))

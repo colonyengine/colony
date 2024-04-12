@@ -1,11 +1,11 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; NOTE: Implementation of defstruct SPRITESHEET
 
 (defun make-spritesheet-buffer (spritesheet)
   (let ((name (spritesheet-name spritesheet))
         (block-alias (spritesheet-block-alias spritesheet)))
-    ;; TODO: This 1 is hardcoded because virality doesn't have an allocation
+    ;; TODO: This 1 is hardcoded because colony doesn't have an allocation
     ;; system for these integers.
     (shadow:bind-block block-alias 1)
     (shadow:create-buffer name block-alias)
@@ -38,8 +38,8 @@
              (spritesheet-name spritesheet))))
 
 (defun make-spritesheet (context spec block-alias)
-  (let ((path (v::resolve-path spec)))
-    (v:with-asset-cache context block-alias spec
+  (let ((path (c::resolve-path spec)))
+    (c:with-asset-cache context block-alias spec
       (let ((spritesheet (%make-spritesheet
                           :name spec
                           :block-alias block-alias

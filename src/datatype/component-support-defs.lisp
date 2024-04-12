@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;; NOTE: A general place to store structures used in the engine so they are
 ;; loaded before any use of them later. This preserves inlining of the slot

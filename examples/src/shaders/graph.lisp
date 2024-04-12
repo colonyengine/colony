@@ -1,4 +1,4 @@
-(in-package #:virality-examples.shader)
+(in-package #:colony-examples.shader)
 
 (defun graph/frag ((uv :vec2)
                    &uniforms

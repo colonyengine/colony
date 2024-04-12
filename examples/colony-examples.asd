@@ -1,12 +1,10 @@
-(asdf:defsystem #:virality-examples
-  :description "Virality Engine Examples"
-  :author ("Michael Fiano <mail@mfiano.net>"
-           "Peter Keller <psilord@cs.wisc.edu>")
-  :maintainer ("Michael Fiano <mail@mfiano.net>"
-               "Peter Keller <psilord@cs.wisc.edu>")
+(asdf:defsystem #:colony-examples
+  :description "Colony Engine Examples"
+  :author ("Peter Keller <psilord@cs.wisc.edu>")
+  :maintainer ("Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
   :version "0.1.0"
-  :depends-on (#:virality)
+  :depends-on (#:colony)
   :pathname "src"
   :serial t
   :components

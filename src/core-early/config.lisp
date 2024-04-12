@@ -1,8 +1,8 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (u:eval-always
   (defun get-config-option-name (key)
-    (u:format-symbol :virality "=~a=" key)))
+    (u:format-symbol :colony "=~a=" key)))
 
 (defun validate-config-options (options)
   (u:do-plist (k v options)
@@ -38,7 +38,7 @@
 (defmacro define-config (config-name options &body body)
   (declare (ignore options))
   `(progn
-     ,@(if (eq config-name :virality)
+     ,@(if (eq config-name :colony)
            `((setf =meta/config/default= (u:dict ,@body))
              ,@(loop :for (k v) :on body :by #'cddr
                      :for name = (get-config-option-name k)
@@ -53,7 +53,7 @@
 
 ;; NOTE: All other define-config forms implicitly inherit their keys from this
 ;; config.
-(define-config :virality ()
+(define-config :colony ()
   :default nil
   :allow-screensaver nil
   :anti-alias-level 4
@@ -68,4 +68,4 @@
   :vsync t
   :window-height 450
   :window-width 800
-  :window-title "Virality Engine")
+  :window-title "Colony Engine")

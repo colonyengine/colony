@@ -1,4 +1,4 @@
-(in-package #:virality.texture)
+(in-package #:colony.texture)
 
 (defmethod load-texture-data ((texture-type (eql :texture-3d)) texture context)
   ;; Determine if loading :images or :volume
@@ -25,7 +25,7 @@
          (texture-base-level
            (get-computed-applied-attribute texture :texture-base-level))
          (max-mipmaps (- texture-max-level texture-base-level))
-         (max-texture-3d-size (v::get-gpu-parameter :max-3d-texture-size))
+         (max-texture-3d-size (c::get-gpu-parameter :max-3d-texture-size))
          (data (get-computed-applied-attribute texture :data))
          (flip-y (get-computed-applied-attribute texture :flip-y))
          (num-mipmaps (length data)))
@@ -38,8 +38,8 @@
            (depth (length (aref all-slices 0))))
       ;; Figure out the ideal mipmap count from the base resolution.
       (multiple-value-bind (expected-mipmaps expected-resolutions)
-          (compute-mipmap-levels (v::width first-image)
-                                 (v::height first-image)
+          (compute-mipmap-levels (img:width first-image)
+                                 (img:height first-image)
                                  depth)
         #++(format t "expected mipmaps: ~a expected-resolutions: ~a~%"
                    expected-mipmaps expected-resolutions)
@@ -52,19 +52,19 @@
                 (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
           (if immutable-p
               (%gl:tex-storage-3d texture-type num-mipmaps-to-generate
-                                  (v::internal-format first-image)
-                                  (v::width first-image)
-                                  (v::height first-image)
+                                  (img:internal-format first-image)
+                                  (img:width first-image)
+                                  (img:height first-image)
                                   depth)
               (loop :for i :below num-mipmaps-to-generate
                     :for (mipmap-width mipmap-height mipmap-depth)
                       :in expected-resolutions
                     :do (gl:tex-image-3d texture-type (+ texture-base-level i)
-                                         (v::internal-format first-image)
+                                         (img:internal-format first-image)
                                          mipmap-width mipmap-height mipmap-depth
                                          0
-                                         (v::pixel-format first-image)
-                                         (v::pixel-type first-image)
+                                         (img:pixel-format first-image)
+                                         (img:pixel-type first-image)
                                          (cffi:null-pointer)))))
         ;; Load all volumetric mipmaps into the gpu.
         (loop :for idx :below (if use-mipmaps-p num-mipmaps 1)
@@ -89,10 +89,10 @@
                        0
                        0
                        i
-                       (v::width image)
-                       (v::height image)
+                       (img:width image)
+                       (img:height image)
                        1
-                       (v::pixel-format image)
-                       (v::pixel-type image)
-                       (v::data (aref (aref all-slices idx) i))))))
+                       (img:pixel-format image)
+                       (img:pixel-type image)
+                       (img:data (aref (aref all-slices idx) i))))))
         (potentially-autogenerate-mipmaps texture-type texture)))))

@@ -1,4 +1,4 @@
-(in-package #:virality.extension)
+(in-package #:colony.extension)
 
 (tex:define-texture-profile default-profile
   ;; texparameter stuff, opengl defaults

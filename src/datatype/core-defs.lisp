@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;; Used in the CORE to manage a pile of component flow state in a state
 ;; machine.
@@ -36,7 +36,9 @@
 ;; instance.
 (defclass core ()
   ((%config :reader config
-             :initarg :config)
+            :initarg :config)
+   (%thread-pool :reader thread-pool
+                 :initarg :thread-pool)
    (%assets :reader assets
             :initform (u:dict #'eq))
    (%running-p :accessor running-p
@@ -44,6 +46,7 @@
    (%resource-cache :reader resource-cache
                     :initform (u:dict #'eq))
    (%clock :reader clock
+           :initarg :clock
            :initform nil)
    (%display :reader display
              :initform nil)
@@ -55,10 +58,13 @@
    (%framebuffers :reader framebuffers
                   :initform (u:dict #'eq))
    (%materials :accessor materials
-               :initform (make-materials-table))
+               :initarg :materials)
+   (%texture-maps :accessor texture-maps
+                  :initarg :texture-maps)
    (%textures :accessor textures
-              :initform (tex::make-textures-table))
-   (%context :reader context)
+              :initarg :textures)
+   (%context :reader context
+             :initarg :context)
    (%tables :reader tables
             :initarg :tables)
    (%call-flows :reader call-flows

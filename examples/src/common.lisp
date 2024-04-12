@@ -1,38 +1,38 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
-(v:define-config virality-examples ()
+(c:define-config colony-examples ()
   :default t
   :window-width 1920 ;; 1280
   :window-height 1080 ;; 720
   :delta (float 1/120 1f0)
   :initial-scene '(("example-selector" examples)))
 
-(v:define-asset-pool metadata ()
+(c:define-asset-pool metadata ()
   :path "data/metadata")
 
-(v:define-asset-pool meshes ()
+(c:define-asset-pool meshes ()
   :path "data/mesh"
   :filter "glb")
 
-(v:define-asset-pool textures ()
+(c:define-asset-pool textures ()
   :path "data/texture"
   :filter "png")
 
-(v:define-asset-pool mesh-textures ()
+(c:define-asset-pool mesh-textures ()
   :path "data/texture/mesh"
   :filter "png")
 
-(v:define-asset-pool environments ()
+(c:define-asset-pool environments ()
   :path "data/texture/environment"
   :filter "hdr")
 
-(v:define-asset-pool ptp-textures ()
+(c:define-asset-pool ptp-textures ()
   :path "data/texture/protect-the-planets"
   :filter "png")
 
 ;;; Prefabs
 
-(v:define-prefab "cameras" (:library examples)
+(c:define-prefab "cameras" (:library examples)
   ("ortho"
    (comp:camera :active-p t
                 :mode :orthographic))
@@ -48,34 +48,34 @@
     (comp:camera :active-p t
                  :mode :orthographic))))
 
-(v:define-prefab "mesh" (:library examples)
-  (comp:mesh :asset '(v::meshes v::primitives)
+(c:define-prefab "mesh" (:library examples)
+  (comp:mesh :asset '(c::meshes c::primitives)
              :name "plane")
   (comp:render :material 'x:unlit-texture
-               :slave (v:ref :self :component 'comp:mesh)))
+               :slave (c:ref :self :component 'comp:mesh)))
 
 ;;; Graphs
 
 ;; TODO: FIgure out why the graph DSL can't parse syntax based on symbol-name.
 ;; The following in-package form is needed until this is fixed
 
-(in-package #:virality)
+(in-package #:colony)
 
-(define-graph :virality-examples
+(define-graph :colony-examples
     (:category component-dependency
      :depends-on ((:core (all-unknown-types core-types)))
      :roots (all-ordered-types))
   (subdag all-ordered-types
           ((splice core-types)
-           -> virality-examples::sketch
-           -> virality-examples::delayed-render
+           -> colony-examples::sketch
+           -> colony-examples::delayed-render
            -> (splice all-unknown-types))))
 
-(define-graph :virality
+(define-graph :colony
     (:category component-package-order
      :depends-on ((:core-component-order (core-packages)))
      :roots (start-search))
-  (subdag current-project (:comp -> :virality-examples))
+  (subdag current-project (:comp -> :colony-examples))
   (subdag start-search
           ((splice current-project)
            -> (splice core-packages))))

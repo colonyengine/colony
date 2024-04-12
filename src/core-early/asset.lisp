@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;; implementation of ASSET-SPEC
 
@@ -105,7 +105,7 @@
       (error "Release must be deployed on SBCL to load assets.")
       (asdf:system-relative-pathname system path)))
 
-(defun resolve-system-path (path &optional (system :virality))
+(defun resolve-system-path (path &optional (system :colony))
   (let* ((system (asdf:find-system system))
          (path (uiop:merge-pathnames*
                 path
@@ -126,7 +126,7 @@
                  spec-name pool-name path)))))
 
 (defmethod resolve-path ((asset string))
-  (resolve-system-path asset :virality))
+  (resolve-system-path asset :colony))
 
 (defmacro with-asset-cache (context type key &body body)
   (u:with-gensyms (table value found-p)

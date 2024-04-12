@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; all code dealing with the material (and profile) DSL parsing and inserting
 ;;;; into the metadata, reification and integration of the material metadata
@@ -140,17 +140,19 @@ be executed after all the shader programs have been compiled."
 
 
 (defun update-material/interactively (name func)
-  (push-queue
-   :recompile
-   (list
-    :material
-    (lambda (core)
-      (u:mvlet ((old-material found-p (%lookup-material name core))
-                (new-material (funcall func core)))
-        (resolve-material new-material)
-        (if found-p
-            (update-material old-material new-material)
-            (%add-material new-material core)))))))
+  (c:with-selected-interactive-core (core)
+    (tpool:push-queue
+     (thread-pool core)
+     :recompile
+     (list
+      :material
+      (lambda (core)
+        (u:mvlet ((old-material found-p (%lookup-material name core))
+                  (new-material (funcall func core)))
+          (resolve-material new-material)
+          (if found-p
+              (update-material old-material new-material)
+              (%add-material new-material core))))))))
 
 (defmacro define-material (name &body (body))
   ;; TODO: better parsing and type checking of material forms...

@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; Implementation of datatypes: GEOMETRY-GROUP, GEOMETRY-GROUP/SEPARATE,
 ;;;; GEOMETRY-GROUP/INTERLEAVED
@@ -10,7 +10,7 @@
       (destructuring-bind (name (&key (format 'interleaved) (divisor 0))
                            . attrs)
           group
-        (u:mvlet ((group-type (u:format-symbol :virality "GEOMETRY-GROUP/~a"
+        (u:mvlet ((group-type (u:format-symbol :colony "GEOMETRY-GROUP/~a"
                                                format))
                   (attributes attribute-order (make-geometry-attributes attrs)))
           (push name order)

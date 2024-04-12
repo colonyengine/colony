@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; This file sets up at compile time a collection of hash tables stored in
 ;;;; global variables used for storing metadata that are used during development
@@ -44,6 +44,10 @@
 ;; and placed into the game world at runtime. This metadata is stored by
 ;; `DEFINE-PREFAB`.
 (global-vars:define-global-var =meta/prefabs= (u:dict #'eq))
+
+;; Texture maps represent CPU/file image/data assets which can be uploaded into
+;; GPU textures.
+(global-vars:define-global-var =meta/texture-maps= (u:dict #'eq))
 
 ;; Textures for mapping image assets to GPU data structures for rendering. This
 ;; metadata is stored by `DEFINE-TEXTURE`.

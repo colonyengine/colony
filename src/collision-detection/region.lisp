@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; Implementation of datatypes:
 ;;;; REGION, REGION-CUBOID, REGION-SPHERE, REGION-ELLIPSOID

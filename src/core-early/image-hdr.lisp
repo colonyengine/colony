@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony.image)
 
 ;;;; Implementation of IMAGE structure for HDR images
 ;;;; Uses HDR-IMAGE-BUFFER structure

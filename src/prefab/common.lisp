@@ -1,4 +1,4 @@
-(in-package #:virality.prefab)
+(in-package #:colony.prefab)
 
 ;;;; Implementation of datatypes: PREFAB, NODE, INJECTABLE-REF-VALUE-THUNK
 
@@ -31,7 +31,7 @@
   (format nil "/~{~a~^/~}" path-parts))
 
 (defun find-library (name)
-  (u:if-found (library (u:href v::=meta/prefabs= name))
+  (u:if-found (library (u:href c::=meta/prefabs= name))
     library
     (error "Prefab library ~s does not exist." name)))
 

@@ -1,16 +1,15 @@
 ;; Turn off a cl-opengl bug fix for buggy intel drivers that cause a severe
 ;; performance problem for those not using the buggy intel gpu. See the
 ;; See the README concerning this line.
-(push :cl-opengl-no-masked-traps *features*)
+(pushnew :cl-opengl-no-masked-traps *features*)
 
-(asdf:defsystem #:virality
+(asdf:defsystem #:colony
   :description "An experimental game engine."
-  :author ("Michael Fiano <mail@mfiano.net>"
-           "Peter Keller <psilord@cs.wisc.edu>")
+  :author ("Peter Keller <psilord@cs.wisc.edu>")
   :license "MIT"
-  :homepage "https://github.com/bufferswap/ViralityEngine"
-  :bug-tracker "https://github.com/bufferswap/ViralityEngine/issues"
-  :source-control (:git "https://github.com/bufferswap/ViralityEngine")
+  :homepage "https://github.com/colonyengine/colony"
+  :bug-tracker "https://github.com/colonyengine/colony/issues"
+  :source-control (:git "https://github.com/colonyengine/colony")
   :encoding :utf-8
   :depends-on (#:3b-bmfont
                #:3b-bmfont/json
@@ -37,19 +36,23 @@
                #:static-vectors
                #:trivial-features
                #:uiop)
-  :in-order-to ((asdf:test-op (asdf:test-op #:virality.test)))
+  :in-order-to ((asdf:test-op (asdf:test-op #:colony.test)))
   :pathname "src"
   :serial t
   :components
   ((:file "package")
    (:module "datatype"
+    :serial t
     :components
-    ((:file "thread-pool-defs")
+    ((:file "clone-defs")
+     (:file "attribute-bag-defs")
+     (:file "thread-pool-defs")
      (:file "uuid-defs")
      (:file "asset-defs")
      (:file "graph-defs")
      (:file "flow-defs")
      (:file "clock-defs")
+     (:file "resource-cache-defs")
      (:file "context-defs")
      (:file "core-defs")
      (:file "kernel-defs")
@@ -66,6 +69,7 @@
      (:file "attribute-defs")
      (:file "group-defs")
      (:file "layout-defs")
+     (:file "texture-map-defs")
      (:file "texture-defs")
      (:file "common-defs")
      (:file "component-support-defs")
@@ -76,8 +80,12 @@
      (:file "material-defs")
      (:file "make-project-defs")))
    (:module "core-early"
+    :serial t
     :components
-    ((:file "general")
+    ((:file "clone")
+     (:file "clone-test")
+     (:file "attribute-bag")
+     (:file "general")
      (:file "metadata")
      (:file "config")
      (:file "hardware")    ;; Put into new GPU abstraction support lib.
@@ -92,20 +100,25 @@
      (:file "graph")
      (:file "flow") ;; maybe lift binding-pattern if used elsewhere.
      (:file "protocol")
+     (:file "image")
+     (:file "image-png")
+     (:file "image-hdr")
      (:file "resource-cache")
      (:file "clock")
      (:file "shaders")
      (:file "annotations")
-     (:file "context")
-     (:file "core")))
+     (:file "context") ;; TODO: This depends on above, move to higher layer.
+     (:file "core") ;; TODO: This depends on above, move to higher layer.
+     ))
    ;; This module houses files that are still being worked out and not
    ;; integrated into the core yet.
    (:module "flux"
+    :serial t
     :components
-    ((:file "attributes")
-     ;; TODO: Fix this file so it loads. ~axion 4/17/2020
+    (;; TODO: Fix this file so it loads. ~axion 4/17/2020
      #++(:file "meta-graphs")))
    (:module "kernel"
+    :serial t
     :components
     ((:file "kernel")
      (:file "actor")
@@ -113,6 +126,7 @@
      (:file "component")
      (:file "storage")))
    (:module "input"       ;;;; KEEP GOING for vutils refactor.
+    :serial t
     :components
     ((:file "data")
      (:file "keyboard")
@@ -122,11 +136,13 @@
      (:file "button")
      (:file "input")))
    (:module "collision-detection"
+    :serial t
     :components
     ((:file "region")
      (:file "bounding-volume-obb")
      (:file "colliders")))
    (:module "geometry"
+    :serial t
     :components
     ((:file "spec")
      (:file "attribute")
@@ -134,10 +150,20 @@
      (:file "layout")
      (:file "buffer")
      (:file "geometry")))
+   (:module "texture-map"
+    :serial t
+    :components
+    ((:file "common")
+     (:file "clone")
+     (:file "texture-map-table")
+     (:file "map-parser")
+     (:file "texture-map")))
    (:module "texture"
+    :serial t
     :components
     ((:file "common")
      (:file "texture")
+     (:file "texture-table")
      (:file "1d")
      (:file "2d")
      (:file "3d")
@@ -148,6 +174,7 @@
      (:file "rectangle")
      (:file "buffer")))
    (:module "components"
+    :serial t
     :components
     ((:file "transform")
      (:file "camera")
@@ -162,6 +189,7 @@
      (:file "collider-cuboid")
      (:file "collider-collide-p")))
    (:module "prefab"
+    :serial t
     :components
     ((:file "common")
      (:file "checks")
@@ -171,17 +199,16 @@
      (:file "prefab")))
    ;; datatypes in module "shader" are not CL datatypes. They stay here.
    (:module "shader"
+    :serial t
     :components
     ((:file "texture")
      (:file "collider")
      (:file "matcap")))
    (:module "core-late"
+    :serial t
     :components
     ((:file "opengl")
      (:file "display")
-     (:file "image")
-     (:file "image-png")
-     (:file "image-hdr")
      (:file "gltf")
      (:file "material-values")
      (:file "material")
@@ -196,6 +223,7 @@
      (:file "object-picking")
      (:file "engine")))
    (:module "definition"
+    :serial t
     :components
     ((:file "graphs")
      (:file "flows")

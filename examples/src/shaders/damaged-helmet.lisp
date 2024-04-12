@@ -1,4 +1,4 @@
-(in-package #:virality-examples.shader)
+(in-package #:colony-examples.shader)
 
 (defconstant +albedo+ 0)
 (defconstant +ao+ 1)

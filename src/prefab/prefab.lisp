@@ -1,4 +1,4 @@
-(in-package #:virality.prefab)
+(in-package #:colony.prefab)
 
 (defmacro preprocess-spec (prefab-name context policy spec)
   (labels ((rec (data)
@@ -59,22 +59,24 @@
     (doc prefab)))
 
 (defun update-prefab/interactively (spec)
-  (v::push-queue
-   :recompile
-   (list
-    :prefab
-    (lambda (core)
-      (dolist (entity (u:href (v::prefab-entities core) spec))
-        (let* ((transform (v:component-by-type entity 'comp:transform))
-               (parent (comp::parent transform)))
-          (declare (ignore parent))
-          ;; TODO: Figure out why parenting isn't working
-          (v::destroy entity)
-          (load-prefab core spec nil)))))))
+  (c:with-selected-interactive-core (core)
+    (tpool:push-queue
+     (c::thread-pool core)
+     :recompile
+     (list
+      :prefab
+      (lambda (core)
+        (dolist (entity (u:href (c::prefab-entities core) spec))
+          (let* ((transform (c:component-by-type entity 'comp:transform))
+                 (parent (comp::parent transform)))
+            (declare (ignore parent))
+            ;; TODO: Figure out why parenting isn't working
+            (c::destroy entity)
+            (load-prefab core spec nil))))))))
 
 (defmacro define-prefab (name (&key library (context 'context) policy)
                          &body body)
-  (let ((prefabs `(u:href v::=meta/prefabs= ',library)))
+  (let ((prefabs `(u:href c::=meta/prefabs= ',library)))
     (u:with-gensyms (prefab data)
       (u:mvlet ((body decls doc (u:parse-body body :documentation t)))
         `(progn
@@ -87,12 +89,12 @@
            ;; NOTE: This prefab-wide ref environment is accessible via a
            ;; pandoric function in the INJECTABLE-REF-VALUE-THUNK instance
            ;; created for each component initarg value. We use it later to
-           ;; adjust which actors and components are available for V:REF when
+           ;; adjust which actors and components are available for C:REF when
            ;; forcing the argument thunk. We COULD have made an
-           ;; INJECTABLE-REF-VALUE-THUNK for EACH argument value, but that would
-           ;; generate more garbage than this method. So, unless we find we have
-           ;; to do that, we'll just do it for all the components in this prefab
-           ;; itself.
+           ;; INJECTABLE-REF-VALUE-THUNK for EACH argument value, but that
+           ;; would generate more garbage than this method. So, unless we find
+           ;; we have to do that, we'll just do it for all the components in
+           ;; this prefab itself.
            (inject-ref-environment
              (u:mvlet* ((,data (preprocess-spec
                                 ,name ,context ,policy ,body))

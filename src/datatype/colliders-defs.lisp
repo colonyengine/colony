@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defclass collider-system ()
   ((%physics-layers :reader physics-layers

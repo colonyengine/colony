@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defun map-font-glyphs (font-spec func string)
   (loop :with w = (float (font:scale-w font-spec) 1f0)

@@ -1,9 +1,9 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; Implementation of the CONTEXT structure.
 
-(defun make-context (core)
-  (setf (slot-value core '%context) (make-instance 'context :core core)))
+(defun make-context ()
+  (make-instance 'context))
 
 (defun run-prologue (core)
   (let ((context (context core)))

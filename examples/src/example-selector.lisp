@@ -1,6 +1,6 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
-(v:define-component example-selector ()
+(c:define-component example-selector ()
   ((%selector-prefabs :accessor selector-prefabs
                       :initarg :selector-prefabs
                       :initform nil)
@@ -58,25 +58,25 @@
 
 (defun kill-non-selector-actors (self)
   (with-accessors ((selector-safe-actors selector-safe-actors)
-                   (context v:context))
+                   (context c:context))
       self
     (comp:map-actors (lambda (actor)
                        (unless (member actor selector-safe-actors)
-                         (v:destroy actor)))
+                         (c:destroy actor)))
                      :universe context)))
 
 (defun spawn-selected-prefab (self)
   (with-accessors ((selector-prefabs selector-prefabs)
                    (selector-selected selector-selected)
-                   (context v:context))
+                   (context c:context))
       self
-    (v:make-prefab-instance
-     (v::core context)
+    (c:make-prefab-instance
+     (c::core context)
      ;; TODO: So far, only starts ONE prefab, augment to take
      ;; a list.
      (list (aref selector-prefabs selector-selected)))))
 
-(defmethod v:on-component-update ((self example-selector))
+(defmethod c:on-component-update ((self example-selector))
   (with-accessors ((selector-prefabs selector-prefabs)
                    (selector-camera selector-camera)
                    (selector-text selector-text)
@@ -85,7 +85,7 @@
                    (selector-selected selector-selected)
                    (selector-safe-actors selector-safe-actors)
                    (selector-state selector-state)
-                   (context v:context))
+                   (context c:context))
       self
     ;; TODO: This is an idiom that really requires a whole protocol function
     ;; (or "something" assigned to THIS prefab that we can execute) to be run
@@ -98,14 +98,14 @@
       ;; Find all actors associated with the selector ONCE...
       (comp::map-actors (lambda (actor)
                           (push actor selector-safe-actors))
-                        (v:actor self))
+                        (c:actor self))
 
       (update-selector-text self)
       (kill-non-selector-actors self)
 
       (setf selector-initialized t)
 
-      (return-from v:on-component-update))
+      (return-from c:on-component-update))
 
 
     ;; Run the state machine to move back and forth between selector and
@@ -114,13 +114,13 @@
     (ecase selector-state
       (:selecting-example
        (let ((num-prefabs (length selector-prefabs))
-             (next-p (v:on-button-enter context :key :down))
-             (prev-p (v:on-button-enter context :key :up))
-             (start-example-p (v:on-button-enter context :key :return)))
+             (next-p (c:on-button-enter context :key :down))
+             (prev-p (c:on-button-enter context :key :up))
+             (start-example-p (c:on-button-enter context :key :return)))
 
          ;; TODO: Make this case better.
          (unless (plusp num-prefabs)
-           (return-from v:on-component-update))
+           (return-from c:on-component-update))
 
          (cond
            ;; Move the indicator forwards or backwards
@@ -150,8 +150,8 @@
             (setf selector-state :playing-example)))))
 
       (:playing-example
-       (let ((reset-p (v:on-button-enter context :key :home))
-             (exit-p (v:on-button-enter context :key :end)))
+       (let ((reset-p (c:on-button-enter context :key :home))
+             (exit-p (c:on-button-enter context :key :end)))
 
          (cond
            (exit-p
@@ -164,22 +164,22 @@
             (spawn-selected-prefab self))))))
     nil))
 
-(v:define-prefab "selector-text-display" (:library examples)
+(c:define-prefab "selector-text-display" (:library examples)
   ("text-container"
    (comp:geometry :name 'comp::text)
    (comp:font :asset '(metadata font)
               :rate 0
               :text "Default Text")
    (comp:render :material 'font
-                :slave (v:ref :self :component 'comp:geometry))))
+                :slave (c:ref :self :component 'comp:geometry))))
 
-(v:define-prefab "example-selector" (:library examples)
+(c:define-prefab "example-selector" (:library examples)
   (example-selector
-   :selector-camera (v:ref "/example-selector/camera"
+   :selector-camera (c:ref "/example-selector/camera"
                            :component 'comp:camera)
-   :selector-text (v:ref "/example-selector/options/text-container"
+   :selector-text (c:ref "/example-selector/options/text-container"
                          :component 'comp:font)
-   :selector-text-renderer (v:ref "/example-selector/options/text-container"
+   :selector-text-renderer (c:ref "/example-selector/options/text-container"
                                   :component 'comp:render)
    :selector-prefabs #(("damaged-helmet" examples)
                        ("damaged-helmet-turn-table" examples)

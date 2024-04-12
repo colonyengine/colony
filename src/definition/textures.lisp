@@ -1,33 +1,53 @@
-(in-package #:virality.extension)
+(in-package #:colony.extension)
 
+(texmap:define-texture-map debug-texture (:single :unique)
+  (:mipmap () (c::textures c::debug-0))
+  (:mipmap () (c::textures c::debug-1))
+  (:mipmap () (c::textures c::debug-2))
+  (:mipmap () (c::textures c::debug-3))
+  (:mipmap () (c::textures c::debug-4))
+  (:mipmap () (c::textures c::debug-5))
+  (:mipmap () (c::textures c::debug-6))
+  (:mipmap () (c::textures c::debug-7))
+  (:mipmap () (c::textures c::debug-8))
+  (:mipmap () (c::textures c::debug-9))
+  (:mipmap () (c::textures c::debug-10)))
+
+;; TODO: TMAP Convert :data to reference define-texture-map name
 (tex:define-texture debug-texture (:texture-2d clamp-all-edges)
   ;; I can put overrides in here too specific to this texture.
-  (:data #((v::textures v::debug-0)
-           (v::textures v::debug-1)
-           (v::textures v::debug-2)
-           (v::textures v::debug-3)
-           (v::textures v::debug-4)
-           (v::textures v::debug-5)
-           (v::textures v::debug-6)
-           (v::textures v::debug-7)
-           (v::textures v::debug-8)
-           (v::textures v::debug-9)
-           (v::textures v::debug-10))))
+  (:data #((c::textures c::debug-0)
+           (c::textures c::debug-1)
+           (c::textures c::debug-2)
+           (c::textures c::debug-3)
+           (c::textures c::debug-4)
+           (c::textures c::debug-5)
+           (c::textures c::debug-6)
+           (c::textures c::debug-7)
+           (c::textures c::debug-8)
+           (c::textures c::debug-9)
+           (c::textures c::debug-10))))
 
 (defmacro gen-define-textures (pool-name prefix options &body name-list)
   `(progn
      ,@(loop
          :for name :in name-list
-         :collect
-         `(tex:define-texture
-              ,(u:format-symbol :virality.extension
-                                "~A~A" prefix name)
-              ,options
+         :append
+         `((texmap:define-texture-map
+               ,(u:format-symbol :colony.extension
+                                 "~A~A" prefix name)
+               (:single :unique)
+             (:mipmap () (,pool-name ,(u:format-symbol :c "~A" name))))
 
-            (:data #((,pool-name ,(u:format-symbol :v "~A" name))))))))
+           (tex:define-texture
+               ,(u:format-symbol :colony.extension
+                                 "~A~A" prefix name)
+               ,options
+             ;; TODO: TMAP Convert :data to reference above texture-map name.
+             (:data #((,pool-name ,(u:format-symbol :c "~A" name)))))))))
 
-;; These textures are CC-0 from the Blener Foundation.
-(gen-define-textures v:matcaps matcap/ (:texture-2d clamp-all-edges)
+;; These textures are CC-0 from the Blender Foundation.
+(gen-define-textures c:matcaps matcap/ (:texture-2d clamp-all-edges)
   basic-1
   basic-2
   basic-dark

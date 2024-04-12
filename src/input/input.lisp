@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defmacro event-case ((event) &body handlers)
   (let (events)

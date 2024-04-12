@@ -1,4 +1,4 @@
-(in-package #:virality.prefab)
+(in-package #:colony.prefab)
 
 (defclass prefab ()
   ((%name :reader name
@@ -47,7 +47,7 @@
 ;; Each component initialization argument is converted temporarily to an
 ;; instance of this class which, after we figure out which argument values are
 ;; actually valid and present due to component merge policies, we then
-;; initialize the env and force the thunk. This is usef to implement the V:REF
+;; initialize the env and force the thunk. This is usef to implement the C:REF
 ;; function in the value form of the components.
 (defclass injectable-ref-value-thunk ()
   (;; A lambda function wrapped around the value lexically supplying a CONTEXT
@@ -57,7 +57,7 @@
    (%thunk :reader thunk
            :initarg :thunk)
    ;; Each injection ref environment has a secret back door to fill in the
-   ;; lexical variables that the V:REF lexicaly scoped call needs to process
+   ;; lexical variables that the C:REF lexicaly scoped call needs to process
    ;; each argument. We use this to poke in the values to the lexical closure
    ;; before evaluating the thunk.
    (%env-injection-control-func :reader env-injection-control-func

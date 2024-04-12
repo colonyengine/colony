@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; Implementation of datatypes: GAMEPAD, GAMEPAD-ATTACH-STATE,
 ;;;; GAMEPAD-ANALOG-STATE

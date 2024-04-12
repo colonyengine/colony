@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 ;;;; Implementation of structure CLOCK
 
@@ -8,12 +8,12 @@
 (defun (setf pause-time) (value clock)
   (setf (clock-pause-time clock) value))
 
-(defun make-clock (core)
+(defun make-clock ()
   (let ((clock (%make-clock)))
     (setf (clock-start-time clock) (sb-ext:get-time-of-day)
           (clock-current-time clock) (get-time clock)
-          (clock-delta-time clock) (float =delta= 1d0)
-          (slot-value core '%clock) clock)))
+          (clock-delta-time clock) (float =delta= 1d0))
+    clock))
 
 (defun get-time (clock)
   #+sbcl

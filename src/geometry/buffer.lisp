@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defgeneric get-geometry-buffer-names (spec geometry-group))
 

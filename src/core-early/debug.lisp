@@ -1,4 +1,4 @@
-(in-package #:virality)
+(in-package #:colony)
 
 (defvar *profile* nil)
 (defvar *profile-frames* 600)
@@ -7,31 +7,33 @@
 (defmacro with-profiling (core &body body)
   (let ((packages (remove-if-not
                    (lambda (x)
-                     (or (u:string-starts-with-p x "VIRALITY")
-                         (u:string-starts-with-p x "NET.MFIANO.LISP.ORIGIN")
-                         (string= x "NET.MFIANO.LISP.SHADOW")
-                         (string= x "NET.MFIANO.LISP.GOLDEN-UTILS")
+                     (or (u:string-starts-with-p x "COLONY")
+                         (u:string-starts-with-p x "VORIGIN")
+                         (string= x "VSHADOW")
+                         (string= x "VUTILS")
                          (string= x "SDL2")
                          (string= x "CL-OPENGL")))
                    (mapcar #'package-name (list-all-packages)))))
-    `(if *profile*
-         (unwind-protect
-              (progn
-                (setf =profile-frame-counter= 0)
-                (sb-profile:unprofile)
-                (sb-profile:profile ,@packages)
-                (submit-job :profile-watcher
-                            (let ((target *profile-frames*))
-                              (lambda ()
-                                (loop :until (>= =profile-frame-counter=
-                                                 target)
-                                      :finally (stop ,core)))))
-                ,@body)
-           (sb-profile:report)
-           (sb-profile:unprofile)
-           (sb-profile:reset)
-           (setf =profile-frame-counter= 0))
-         (progn ,@body))))
+    (u:once-only (core)
+      `(if *profile*
+           (unwind-protect
+                (progn
+                  (setf =profile-frame-counter= 0)
+                  (sb-profile:unprofile)
+                  (sb-profile:profile ,@packages)
+                  (tpool:submit-job
+                   (thread-pool ,core) :profile-watcher
+                   (let ((target *profile-frames*))
+                     (lambda ()
+                       (loop :until (>= =profile-frame-counter=
+                                        target)
+                             :finally (stop ,core)))))
+                  ,@body)
+             (sb-profile:report)
+             (sb-profile:unprofile)
+             (sb-profile:reset)
+             (setf =profile-frame-counter= 0))
+           (progn ,@body)))))
 
 (defun print-scene-tree (core)
   "Print an ascii representation of the scene tree indented to show children."

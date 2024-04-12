@@ -1,4 +1,4 @@
-(in-package #:virality.component)
+(in-package #:colony.component)
 
 ;; All colliders define a COLLIDE-P method appropriate for any combination that
 ;; could be computed.
@@ -8,30 +8,30 @@
 
 (defmethod collide-p ((fist sphere) (face sphere))
   "Return T if the two spheres actually collided."
-  (if (not (and (v:actor fist) (v:actor face)))
+  (if (not (and (c:actor fist) (c:actor face)))
       ;; NOTE: This code path is here for testing the collider system when
       ;; not running V properly. It should be removed when we figure out how
       ;; to test V's collision system better.
-      (let ((distance/2 (/ (p3:distance (v:center fist)
-                                        (v:center face)) 2f0)))
-        (or (<= distance/2 (v:radius fist))
-            (<= distance/2 (v:radius face))))
+      (let ((distance/2 (/ (p3:distance (c:center fist)
+                                        (c:center face)) 2f0)))
+        (or (<= distance/2 (c:radius fist))
+            (<= distance/2 (c:radius face))))
 
       ;; This is the REAL path through this code, which transforms the collider
       ;; into world space appropriately.
       (let* (;; Figure out where the center for these colliders are in world
              ;; space.
-             (fist-collider-world-center (v:transform-point fist
-                                                            (v:center fist)))
-             (face-collider-world-center (v:transform-point face
-                                                            (v:center face)))
+             (fist-collider-world-center (c:transform-point fist
+                                                            (c:center fist)))
+             (face-collider-world-center (c:transform-point face
+                                                            (c:center face)))
              ;; Figure out the size of the radius in world space. We treat the
              ;; radius as a vector and rotate/scale (but no translate!) it by
              ;; the world matrix.
-             (fist-world-radius (v:transform-vector
-                                 fist (v3:vec (v:radius fist) 0f0 0f0)))
-             (face-world-radius (v:transform-vector
-                                 face (v3:vec (v:radius face) 0f0 0f0)))
+             (fist-world-radius (c:transform-vector
+                                 fist (v3:vec (c:radius fist) 0f0 0f0)))
+             (face-world-radius (c:transform-vector
+                                 face (v3:vec (c:radius face) 0f0 0f0)))
 
              ;; TODO: Allow the gamedev an ability to ensure that the world
              ;; matrix must be uniform for a sphere collider.  This involves
@@ -73,22 +73,22 @@
   ;; it with the sphere also in world space.
   (let* (;; Compute on the cuboid objects
          ;; Create an OBB from the cuboid
-         (l-min (v3:+ (v:center face)
-                      (v3:vec (v:minx face) (v:miny face) (v:minz face))))
-         (l-max (v3:+ (v:center face)
-                      (v3:vec (v:maxx face) (v:maxy face) (v:maxz face))))
-         (w-min (v:transform-point face l-min))
-         (w-max (v:transform-point face l-max))
+         (l-min (v3:+ (c:center face)
+                      (v3:vec (c:minx face) (c:miny face) (c:minz face))))
+         (l-max (v3:+ (c:center face)
+                      (v3:vec (c:maxx face) (c:maxy face) (c:maxz face))))
+         (w-min (c:transform-point face l-min))
+         (w-max (c:transform-point face l-max))
          ;; center of OBB in world space.
          (w-center (v3:lerp w-min w-max .5f0))
          ;; Now get rotation axes as rotated in world-space. Page 101 of RTCD
          ;; was vague on if u in the struct OBB was a basis vector or not.
          (x-axis (v3:normalize (m4:rotation-axis-to-vec3
-                                (v:get-model-matrix face) :x)))
+                                (c:get-model-matrix face) :x)))
          (y-axis (v3:normalize (m4:rotation-axis-to-vec3
-                                (v:get-model-matrix face) :y)))
+                                (c:get-model-matrix face) :y)))
          (z-axis (v3:normalize (m4:rotation-axis-to-vec3
-                                (v:get-model-matrix face) :z)))
+                                (c:get-model-matrix face) :z)))
          (obb-axes (make-array 3 :element-type 'v3:vec
                                  :initial-contents (list x-axis y-axis z-axis)))
          (diagonal (v3:- w-max w-center))
@@ -99,10 +99,10 @@
                               (v3:dot diagonal z-axis)))
 
          ;; Get the important parts of the sphere into world space.
-         (fist-collider-world-center (v:transform-point fist (v:center fist)))
+         (fist-collider-world-center (c:transform-point fist (c:center fist)))
          (fist-world-radius (v3:length
-                             (v:transform-vector
-                              fist (v3:vec (v:radius fist) 0f0 0f0)))))
+                             (c:transform-vector
+                              fist (v3:vec (c:radius fist) 0f0 0f0)))))
 
     (let* ((p (closest-pt-point-obb fist-collider-world-center
                                     obb-axes w-center half-widths))
@@ -123,11 +123,11 @@
 (defmethod collide-p ((fist cuboid) (face cuboid))
   (u:mvlet* ((obb1 (obb fist))
              (obb2 (obb face))
-             (r r-abs (v::make-obb-obb-rotation obb1 obb2)))
+             (r r-abs (c::make-obb-obb-rotation obb1 obb2)))
     (m3:with-components ((r r) (ar r-abs))
-      (v3:with-components ((tr (v::make-obb-obb-translation obb1 obb2))
-                           (h1 (v::half-widths obb1))
-                           (h2 (v::half-widths obb2)))
+      (v3:with-components ((tr (c::make-obb-obb-translation obb1 obb2))
+                           (h1 (c::half-widths obb1))
+                           (h2 (c::half-widths obb2)))
         (let ((b (+ (* h2x ar00) (* h2y ar01) (* h2z ar02))))
           (when (> (abs trx) (+ h1x b))
             (return-from collide-p)))
@@ -189,11 +189,11 @@
 (defmethod collide-p ((fist cuboid) (face cuboid))
   (u:mvlet* ((obb1 (obb fist))
              (obb2 (obb face))
-             (r r-abs (v::make-obb-obb-rotation obb1 obb2)))
+             (r r-abs (c::make-obb-obb-rotation obb1 obb2)))
     (m3:with-components ((r r) (ar r-abs))
-      (v3:with-components ((tr (v::make-obb-obb-translation obb1 obb2))
-                           (h1 (v::half-widths obb1))
-                           (h2 (v::half-widths obb2)))
+      (v3:with-components ((tr (c::make-obb-obb-translation obb1 obb2))
+                           (h1 (c::half-widths obb1))
+                           (h2 (c::half-widths obb2)))
         (not (or (> (abs trx)
                     (+ h1x (* h2x ar00) (* h2y ar01) (* h2z ar02)))
                  (> (abs try)

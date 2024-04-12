@@ -6,6 +6,12 @@
      (print-unreadable-object (,object ,stream :type ,type :identity ,identity)
        ,@body)))
 
+(defmacro when-slot-boundp (inst slotname &body body)
+  "If SLOTNAME is boundp in the INST, then execute the BODY and return the
+value of the last form in BODY. Otherwise, return NIL."
+  `(when (slot-boundp ,inst ',slotname)
+     ,@body))
+
 (defmacro when-found ((var lookup) &body body)
   "If `LOOKUP` is successful, perform `BODY` with `VAR` bound to the result.
 `LOOKUP` is an expression that returns two values, with the second value

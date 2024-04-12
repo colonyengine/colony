@@ -1,4 +1,4 @@
-(in-package #:virality-examples.shader)
+(in-package #:colony-examples.shader)
 
 (defstruct texture-struct-1d
   (sampler1 :sampler-1d :accessor sampler1)

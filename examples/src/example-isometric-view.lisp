@@ -1,8 +1,8 @@
-(in-package #:virality-examples)
+(in-package #:colony-examples)
 
 ;;; Prefabs
 
-(v:define-prefab "isometric-view" (:library examples)
+(c:define-prefab "isometric-view" (:library examples)
   ("camera-handle"
    (comp:transform :rotate/velocity (v3:velocity v3:+up+ o:pi/4))
    ("iso"
@@ -26,22 +26,22 @@
   ;; NOTE: cubes are on xz plane.
   (("cube-z-1" :copy "/mesh")
    (comp:transform :translate (v3:vec 0f0 0f0 -4f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "cube"))
   (("cube-z-0" :copy "/mesh")
    (comp:transform :translate (v3:vec 0f0 0f0 -2f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "cube"))
   (("cube-origin" :copy "/mesh")
    (comp:transform
     #++ :rotate/velocity #++ (p:angular-velocity (v3:vec -1f0 1f0 1f0) o:pi/2))
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "cube"))
   (("cube-x-0" :copy "/mesh")
    (comp:transform :translate (v3:vec 2f0 0f0 0f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "cube"))
   (("cube-x-1" :copy "/mesh")
    (comp:transform :translate (v3:vec 4f0 0f0 0f0))
-   (comp:mesh :asset '(v::meshes v::primitives)
+   (comp:mesh :asset '(c::meshes c::primitives)
               :name "cube")))
