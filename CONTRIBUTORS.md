@@ -17,5 +17,7 @@ None at the moment.
 
 # Contributors prior to the Colony Engine hard fork.
 ```text
+contrapunctus
+Elijah Malaby (djeis97)
 Michael Fiano (mfiano)
 ```
