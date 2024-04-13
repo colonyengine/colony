@@ -155,6 +155,8 @@ Copyright © 2017-2024
 
 * Jack Ladwig <ladwi035@gmail.com>
 
+* Michael Fiano
+
 ## Past Contributors
 
 * Michael Fiano
