@@ -144,22 +144,7 @@ To run the Colony Engine test suite, run this at the repl:
 (asdf:test-system :colony)
 ```
 
-
 ## License
-
-Copyright © 2017-2024
-
-* Bart Botta <00003b at gmail.com>
-
-* Peter Keller <psilord@cs.wisc.edu>
-
-* Jack Ladwig <ladwi035@gmail.com>
-
-* Michael Fiano
-
-## Past Contributors
-
-* Michael Fiano
 
 Licensed under the MIT License.
 
