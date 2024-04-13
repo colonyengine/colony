@@ -8,6 +8,10 @@ simple classes of games can be made with it.  The developers (`psilord`,
 #lispgames on irc.libera.chat. Stop by if you want to help or see how to run
 what we currently have, or just to say hello.
 
+NOTE: The DEFINE-TEXTURE-MAP macro DSL is currently in flux in all of the
+example projects. This will be fixed once branch `psilord/define-texture-map`
+is completed and merged into `develop`.
+
 ## Overview
 
 Writing a game is a difficult thing. So we've created a system and workflow
