@@ -14,7 +14,7 @@
   (load-graphs core)
   (load-call-flows core)
   (initialize-shaders core)
-  (texmap:reify-texture-map-descriptors core)
+  (texmaptab:reify-texture-map-descriptors core)
   (tex:reify-texture-profiles core)
   (tex:reify-texture-descriptors core)
   (load-materials core)

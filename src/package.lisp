@@ -248,7 +248,7 @@
    #:name
    #:texture-map-descriptor
    #:user-form
-   #:reify-texture-map-descriptors))
+   ))
 
 (defpackage #:colony.texture-map.texture-map-table
   (:use #:cl)
@@ -257,6 +257,7 @@
    #:add-semantic-texture-map-descriptor
    #:find-semantic-texture-map-descriptor
    #:make-texture-map-table
+   #:reify-texture-map-descriptors
    #:remove-semantic-texture-map-descriptor
    #:resolve-all-semantic-texture-map-descriptors
    #:resolve-semantic-texture-map-descriptor

@@ -69,3 +69,15 @@ internal texture maps (as for cube maps) into an instance that can be used in
 the application."
   (u:do-hash-values (desc (semantic-texture-map-descriptors texture-map-table))
     (resolve-semantic-texture-map-descriptor texture-map-table desc)))
+
+;; TODO: This code is not finished.
+(defun reify-texture-map-descriptors (core)
+  "Clone all the meta descriptions of the texture-maps into the core."
+  (with-accessors ((texture-map-table c::texture-maps)) core
+    (let ((eql-map (clone::make-eql-map)))
+      (u:do-hash-values (desc c::=meta/texture-maps=)
+        (let ((cloned-desc (clone:clone-deep desc eql-map)))
+          (texmaptab:add-semantic-texture-map-descriptor cloned-desc
+                                                         texture-map-table)))
+      (texmaptab:resolve-all-semantic-texture-map-descriptors
+       texture-map-table))))
