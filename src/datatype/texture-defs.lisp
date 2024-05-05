@@ -80,8 +80,39 @@
 (defclass texture-cube-map (texture) ())
 (defclass texture-cube-map-array (texture) ())
 
+;; TODO: This interim protocol will likely change when the texture-map codes
+;; integrate with the texture DSL and texture object handling. It is here for
+;; now to make the evolution of the code easier towards that goal.
+
+(defgeneric load-texture-data (texture-type texture context)
+  (:documentation "Load actual data described in the TEXTURE's texdesc of ~
+TEXTURE-TYPE into the texture memory."))
+
+;; TODO: This is an interim solution for reading the texture-map data from disk
+;; and will be wholly replaced when the texture-map functionality is
+;; complete. It is just here to act as a scaffold while the code evolves to use
+;; the texture-map features. The functionality of this code should move to the
+;; texture-map codebase and the resource cache.
+(defgeneric read-texture-mipmaps (texture kind context))
+
+;; TODO: The images argument here is WRONG. It should be that this function
+;; digs around in the reference to the texture-map instance this texture
+;; references. The texture-map instance should know the sizes of the images
+;; (without necessarily having loaded them) and all that.
+(defgeneric gpu-allocate-texture-storage (texture-type texture images))
+
+;; TODO: See if I can abstract this to add in the concept of a subrectangle
+;; copied _from the source data_ into the texture. I want to see if I can
+;; get this function to copy just the portion from a combined mipmap into
+;; the right place in the texture. This will require glPixelStore*() to
+;; specify it. Instead of taking an IMG structure, should it take a MIPMAP
+;; structure (which defines the rectangle in the image holding the mipmap)?
+(defgeneric gpu-upload-texture-mipmap-layer (texture-type texture image level
+                                             &key offset face-signifier))
 
 
+
+;; The Texture Table API
 (in-package #:colony.texture.texture-table)
 
 

@@ -46,7 +46,6 @@
         ;; TODO: Fix this call.
         #++(validate-mipmap-images images texture
                                    expected-mipmaps expected-resolutions)
-        (potentially-degrade-texture-min-filter texture)
         ;; Allocate immutable storage if required.
         (let ((num-mipmaps-to-generate
                 (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))

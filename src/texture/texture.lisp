@@ -138,10 +138,6 @@ texture."
 ;;; TODO: These are cut into individual functions for their context. Maybe
 ;;; later I'll see about condensing them to be more concise.
 
-(defgeneric load-texture-data (texture-type texture context)
-  (:documentation "Load actual data described in the TEXTURE's texdesc of ~
-TEXTURE-TYPE into the texture memory."))
-
 (defun resolve-image-path (context type asset)
   "Given a CONTEXT and a TYPE of asset-cache, resolve the ASSET into a full
 path into the filesystem to that asset. Return this path."
@@ -338,8 +334,9 @@ IMAGES vector to see if we have the expected number and resolution of mipmaps."
          (num-mipmaps (length images))
          (texture-name (name texture)))
     ;; We need at least one base image.
-    ;; TODO: When dealing with procedurally generated textures, this needs to be
-    ;; evolved.
+    ;;
+    ;; TODO: When dealing with procedurally generated textures, this needs to
+    ;; be evolved.
     (unless (plusp num-mipmaps)
       (error "Texture ~a specifies no images! Please specify an image!"
              texture-name))
@@ -374,33 +371,37 @@ IMAGES vector to see if we have the expected number and resolution of mipmaps."
                 expected-mipmaps))))))
 
 (defun potentially-degrade-texture-min-filter (texture)
-  "If the TEXTURE is not using mipmaps, fix the :texture-min-filter attribute on
-the texture to something appropriate if it is currently set to using mipmap
-related interpolation."
+  "If the TEXTURE is not using mipmaps, fix the :texture-min-filter attribute
+ on the texture to something appropriate if it is currently set to using mipmap
+related interpolation. This function ignores textures of type :texture-buffer
+and :texture-rectangle since they cannot have mipmaps."
   (let ((use-mipmaps-p (get-computed-applied-attribute texture :use-mipmaps))
+        (texture-type (texture-type (computed-texdesc texture)))
         (texture-name (name texture)))
-    (symbol-macrolet ((current-tex-min-filter
-                        (get-computed-applied-attribute
-                         texture
-                         :texture-min-filter)))
-      (unless use-mipmaps-p
-        (ecase current-tex-min-filter
-          ((:nearest-mipmap-nearest :nearest-mipmap-linear)
-           (warn "Down converting nearest texture min mipmap filter due to ~
+    (unless (or (eq texture-type :texture-buffer)
+                (eq texture-type :texture-rectangle))
+      (symbol-macrolet ((current-tex-min-filter
+                          (get-computed-applied-attribute
+                           texture
+                           :texture-min-filter)))
+        (unless use-mipmaps-p
+          (ecase current-tex-min-filter
+            ((:nearest-mipmap-nearest :nearest-mipmap-linear)
+             (warn "Down converting nearest texture min mipmap filter due to ~
                   disabled mipmaps. Please specify an override ~
                   :texture-min-filter for texture ~a"
-                 texture-name)
-           (setf current-tex-min-filter :nearest))
-          ((:linear-mipmap-nearest :linear-mipmap-linear)
-           (warn "Down converting linear texture min mipmap filter due to ~
+                   texture-name)
+             (setf current-tex-min-filter :nearest))
+            ((:linear-mipmap-nearest :linear-mipmap-linear)
+             (warn "Down converting linear texture min mipmap filter due to ~
                   disabled mipmaps. Please specify an override ~
                   :texture-min-filter for texture ~a"
-                 texture-name)
-           (setf current-tex-min-filter :linear)))))))
+                   texture-name)
+             (setf current-tex-min-filter :linear))))))))
 
 (defun potentially-autogenerate-mipmaps (texture-type texture)
   "If, for this TEXTURE, we are using mipmaps, and only supplied a single base
-image, then we use GL:GENERASTE-MIPMAP to auto create all of the mipmaps in the
+image, then we use GL:GENERATE-MIPMAP to auto create all of the mipmaps in the
 GPU memory."
   (let* ((use-mipmaps-p (get-computed-applied-attribute texture :use-mipmaps))
          (texture-max-level
@@ -503,7 +504,22 @@ return the TEXTURE instance for the debug-texture."
      (generate-computed-texture-descriptor texture)
      (with-accessors ((computed-texdesc computed-texdesc)) texture
        (gl:bind-texture (texture-type computed-texdesc) (texid texture))
+
+       (potentially-degrade-texture-min-filter texture)
+
+       ;; TODO: This is still too early to do this because the
+       ;; :texture-max-level texture parameter can't be set properly until we
+       ;; know how many mipmaps there will be, so we're left with the default
+       ;; setting which is like 1000 and this is bad since it uses a lot of
+       ;; resources on the card to manage like 990 1x1 textures. The way to
+       ;; fix it in the current structure is to move it into the interim
+       ;; READ-TEXTURE-MIPMAPS method after the images are read.
+       ;;
+       ;; TODO: Fix this when the texture-map stuff goes in and we can properly
+       ;; figure out and order how many mipmaps exist before processing the
+       ;; texture object.
        (set-opengl-texture-parameters texture)
+
        (load-texture-data (texture-type computed-texdesc) texture context)))
     ;; Procedural textures are completely left alone EXCEPT for the texid
     ;; assigned above. It is up to the user to define all the opengl

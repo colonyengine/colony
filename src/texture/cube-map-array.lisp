@@ -30,20 +30,10 @@
       ;; TODO: Fix this up for cube-maps
       #++(validate-mipmap-images images texture
                                  expected-mipmaps expected-resolutions)
-      (potentially-degrade-texture-min-filter texture)
       ;; Allocate immutable storage if required.
       (when immutable-p
         (let ((num-mipmaps-to-generate
                 (if use-mipmaps-p (min expected-mipmaps max-mipmaps) 1)))
-          #++(:printv "tex-storage-3d: texture-type = ~a, ~
-                      num-mipmaps-to-generate = ~a, internal-format = ~a, ~
-                      width = ~a, height = ~a, depth = ~a~%"
-                      texture-type
-                      num-mipmaps-to-generate
-                      (img:internal-format first-image)
-                      (img:width first-image)
-                      (img:height first-image)
-                      (* (length data) 6))
           (%gl:tex-storage-3d texture-type
                               num-mipmaps-to-generate
                               (img:internal-format first-image)
