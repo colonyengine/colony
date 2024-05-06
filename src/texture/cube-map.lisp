@@ -11,7 +11,6 @@
     ;; load all of the images we may require.
     ;;
     ;; TODO: Reading the data here is an interim solution. Move to texture-map.
-    ;; Note we get back the _reshaped_ images array.
     (let* ((images (read-texture-mipmaps texture :cube-map context))
            (first-cube (aref images 0))
            (num-mipmaps (length (second (aref (second first-cube) 0)))))
