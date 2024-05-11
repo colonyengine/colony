@@ -21,7 +21,7 @@
 (c:define-texture-map NAME DATA-MODEL-FORM
   PROPERTY-FORM*
   DATA-FORM* which can be (depending on data-model) on of these groups:
-  exactly 6 of (:FACE dirsym (:TEXTURE-MAP ...) or texture-map-name)
+  exactly 6 of (:FACE dirsym (DEFINE-TEXTURE-MAP ...) or texture-map-name)
   1 or more of (:MIPMAP () ...)
   1 or more of (:IMAGE () ...)
   exactly 1 of (:NAME () ...)
