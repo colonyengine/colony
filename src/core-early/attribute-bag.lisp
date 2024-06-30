@@ -244,13 +244,13 @@ Return the modified BAG."
       (overlay bag bags))
   (when attrs
     (if (hash-table-p attrs)
-        (u:do-hash k v attrs
+        (u:do-hash (k v attrs)
           (setf (attr bag k) v))
         (dolist (attr attrs)
           (setf (attr bag (first attr)) (second attr)))))
   (when cattrs
     (if (hash-table-p cattrs)
-        (u:do-hash k v cattrs
+        (u:do-hash (k v cattrs)
           (setf (cattr bag k v) v))
         (dolist (cattr cattrs)
           ;; Set the semantic value to be the same too so the attr isn't dirty.
@@ -258,7 +258,7 @@ Return the modified BAG."
                 (second cattr)))))
   (when sattrs
     (if (hash-table-p sattrs)
-        (u:do-hash k v sattrs
+        (u:do-hash (k v sattrs)
           (setf (sattr bag k) v))
         (dolist (sattr sattrs)
           (setf (sattr bag (first sattr)) (second sattr)))))
