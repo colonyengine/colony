@@ -219,6 +219,51 @@ mostly derived, this is not a commonly used function. Apply the OVERLAY
 function to ARGS."
   (apply #'overlay (make-instance 'attribute-bag) args))
 
+(defun absorb (bag &key bags attrs cattrs sattrs)
+  "This is a more flexible version of OVERLAY built on top of OVERLAY.
+BAG is an instance of an ATTRIBUTE-BAG into which the rest of the arguments are
+overlayed/merged in a specific order.
+
+BAGS   is a single instance of an ATTRIBUTE-BAG, or a list of them.
+ATTRS  be my a list of (key attribute-value-instance) pairs, or a hash table
+       of key -> attribute-value-instance mappings.
+CATTRS is a list of (key computed-value) pairs, or a hash table
+       of key -> computed-value mappings.
+SATTRS is a list of (key semantic-value) pairs, or a hash table
+       of key -> semantic-value mappings.
+
+The are overlayed into BAG in the order of: BAGS, ATTRS, CATTRS, SATTRS
+and in left to right order (if they are lists) for each one.
+
+NOTE: If the same key is supplied for multiple attributes, the last operation
+applies in terms of the dirty flag in the attribute.
+
+Return the modified BAG."
+  (if (listp bags)
+      (apply #'overlay bag bags)
+      (overlay bag bags))
+  (when attrs
+    (if (hash-table-p attrs)
+        (u:do-hash k v attrs
+          (setf (attr bag k) v))
+        (dolist (attr attrs)
+          (setf (attr bag (first attr)) (second attr)))))
+  (when cattrs
+    (if (hash-table-p cattrs)
+        (u:do-hash k v cattrs
+          (setf (cattr bag k v) v))
+        (dolist (cattr cattrs)
+          ;; Set the semantic value to be the same too so the attr isn't dirty.
+          (setf (cattr bag (first cattr) (second cattr))
+                (second cattr)))))
+  (when sattrs
+    (if (hash-table-p sattrs)
+        (u:do-hash k v sattrs
+          (setf (sattr bag k) v))
+        (dolist (sattr sattrs)
+          (setf (sattr bag (first sattr)) (second sattr)))))
+  bag)
+
 ;;; ----
 ;; Contained Attribute Value API
 ;;; ----

@@ -2,7 +2,7 @@
 
 ;;; The ATTRIBUTE-BAG system is a CLOS object that holds dynamically created
 ;;; associations between EQUAL comparable names and values which are stored as
-;;; ATTRIBUTE-VALUSE. The ATTRIBUTE-VALUE has a 'semantic' value which is often
+;;; ATTRIBUTE-VALUES. The ATTRIBUTE-VALUE has a 'semantic' value which is often
 ;;; the original value discoverd in the DSL (the usual use case) and a
 ;;; 'computed' value which is the post processed semantic value which is ready
 ;;; for use in a computation. It is intended that the ATTRIBUTE-BAG is derived

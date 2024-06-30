@@ -90,6 +90,7 @@
    )
   ;; ATTRIBUTE-BAG API
   (:export
+   #:absorb
    #:attr
    #:attribute-bag
    #:cattr
