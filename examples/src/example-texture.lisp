@@ -42,15 +42,21 @@
   ;;
   ;; One of these data models MAY be specified (there is a default)
   ;;
-  ;; () - use the default model of (:single :combined :common)
+  ;; () - use the default model of (:2d :combined)
   ;;
-  ;; ;; NOTE: 1d, 2d texture maps are ":single" texture maps.
-  ;;  (:single :unique) - A single texture map as individual AAA mipmaps
+  ;;  ([:1d | 2d] :unique) - A single texture map as individual mipmap images
   ;;
-  ;;D (:single :combined AAA) - all mipmaps in one file (in a common format)
+  ;;D ([:1d | 2d] :combined AAA) - all mipmaps in one file (in a common format)
   ;;      AAA can be
   ;;      :common - The common packed format into one file.
+  ;;      nil - Use a heuristic to figure out the mipmap layout in the
+  ;;               combined image.
   ;;      etc - Other layouts systems of the combined mipmaps in a file.
+  ;;      NOTE: If AAA is not supplied, it is assumed to be nil, which
+  ;;      means for the engine to use a heuristic and guess at what the
+  ;;      combined form the mipmap is. Note: It may guess wrong, but if
+  ;;      it can't decide, it can only produce an error and the user has to
+  ;;      fix it by specifing an actual format..
   ;;
   ;;  ;; NOTE: Rectangle storage. 2d only. Only 1 (:image () ...) form
   ;;  (:rect :unique)
@@ -60,7 +66,7 @@
   ;;  (:buffer :unique)
   ;;
   ;;  ;; NOTE: A 3d texture maps as unique mipmaped voxels.
-  ;;  (:voxel :unique (:slices :back-to-front)) - a 3d mimap
+  ;;  (:3d :unique (:slices :xy-z)) - a 3d mimap
   ;;
   ;;  ;; NOTE: cube texture maps (there are sub-texture-maps)
   ;;  (:cube :unique AAA) - cube map faces as separate texture-maps
@@ -71,14 +77,16 @@
   ;;  (:cube :combined AAA) - cube map where all faces are encoded in a
   ;;                          single image possibly under :mipmap scaling.
   ;;    AAA can be: (and there can be MANY of these)
-  ;;      :auto ;; (the default) determine the combined format, even custom..
+  ;;      :guess ;; (the default) determine the combined format, even custom..
   ;;      :vcross-top
   ;;      :hcross-left
   ;;      :column
   ;;      :row
   ;;      :equirect
   ;;      (:custom <one of some unknown number and undetermined layout format>)
+  ;;      If AAA is not supplied, it is assumed to be nil.
   ;;    Each combined image may have a mipmap of smaller combined images.
+
 
   ;; Now come one or more of these property forms: (cube maps ignore these)
   ;; :context CONTEXT - a place to automatically store anonymous texture-maps
@@ -116,13 +124,13 @@
   ;; TODO: TMAP Fix to accept texture-map name.
   (:data #((textures texture-gradient-1d))))
 
+
 (c:define-texture-map 2d-wood (:single :unique)
   (:mipmap () (textures wood)))
 (c:define-texture 2d-wood
     (:texture-2d x:clamp-all-edges)
   ;; TODO: TMAP Fix to accept texture-map name.
   (:data #((textures wood))))
-
 
 (c:define-texture-map 3d (:voxel :unique (:slices :back-to-front))
   ;; mipmap level 0

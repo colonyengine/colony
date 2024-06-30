@@ -56,6 +56,9 @@
   (c:with-selected-interactive-core (core)
     (update-texture-map (c:context core) old-descriptor new-descriptor)))
 
+;;
+;; Old implementation, convert over to the new implementation.
+;;
 ;; NIL is a reserved name which means "anonymous texture-map".
 ;; Return three values:
 ;; First: the name of the texture (even if assigned due to it being anonymous).
@@ -63,11 +66,11 @@
 ;; Third: If there were additional texture-maps defined, like say faces of a
 ;;        cube map, then return all the ASTs for those additional texture maps
 ;;        in a list.
-(defmacro define-texture-map (name data-model &body body)
+(defmacro define-texture-map-original (name data-model &body body)
   (u:with-gensyms (tmap extra-tmaps-list context anonymous-p canon-name
                         desc-lookup old-desc new-desc)
     (u:mvlet ((model style store (parse-data-model data-model)))
-      ;;; TODO
+      ;; TODO
       ;; Make parse-texture-map returns two values: The first value is the
       ;; texture map AST instance described by the define-texture-map form.
       ;; The second value is a list of any additional texture-map AST instances
@@ -86,7 +89,7 @@
              ;; (and any extra-tmaps) under the conditions of its creation.  We
              ;; check in a particular order for performance reasons.
              (cond
-               ;;; CASE 0
+               ;; CASE 0
                ;; This means we likely expanded into runtime code and we're
                ;; making an anonymous texture-map which we'll poke into the
                ;; context.
@@ -95,7 +98,7 @@
                 ;; soon.
                 (error "define-texture-map: Handle case 0"))
 
-               ;;; CASE 1
+               ;; CASE 1
                ;; We assign a meaning of just return the parsed AST to the
                ;; appdev and do no other work with this texture-map. It is up
                ;; to the appdev to reify or otherwise insert this texture-map
@@ -104,12 +107,12 @@
                ((and (not ,context) ,anonymous-p)
                 T)
 
-               ;;; CASE 2
+               ;; CASE 2
                ;; We don't have a meaning for this situation yet.
                ((and ,context (not ,anonymous-p))
                 (error "define-texture-map: Handle case 2."))
 
-               ;;; CASE 3
+               ;; CASE 3
                ;; This means we generally evaluated at toplevel during the load
                ;; of the system, or are in a live-coding situation, or it was
                ;; typed into the REPL.  So insert it into the metaspace and/or
@@ -126,3 +129,8 @@
                     (update-texture-map/interactively ,old-desc ,new-desc)))))
 
              (values ,canon-name ,tmap ,extra-tmaps-list)))))))
+
+;; Soon to be new stuff.
+(defmacro define-texture-map (name data-model &body body)
+  (declare (ignore name data-model body))
+  nil)
