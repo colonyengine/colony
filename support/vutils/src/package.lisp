@@ -189,6 +189,9 @@
   ;; Random
   (:export
    #:initialize-rng)
+  ;; Sieve
+  (:export
+   #:sieve)
   ;; Misc
   (:export
    #:doc
