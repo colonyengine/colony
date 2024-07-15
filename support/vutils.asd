@@ -31,4 +31,5 @@
    (:file "math")
    (:file "os")
    (:file "random")
+   (:file "sieve")
    (:file "misc")))

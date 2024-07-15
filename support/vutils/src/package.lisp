@@ -191,7 +191,8 @@
    #:initialize-rng)
   ;; Sieve
   (:export
-   #:sieve)
+   #:sieve
+   #:sort-by-symbols)
   ;; Misc
   (:export
    #:doc
