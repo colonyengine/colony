@@ -57,6 +57,11 @@ GETHASH."
   `(loop :until ,predicate
          :do ,@body))
 
+(defmacro default (val default-val)
+  "If VAL is not nil, return VAL, otherwise, return DEFAULT-VAL"
+  (once-only (val)
+    `(if ,val ,val ,default-val)))
+
 (defmacro mvlet* ((&rest bindings) &body body)
   (destructuring-bind (&optional car . cdr) bindings
     (typecase car

@@ -11,6 +11,7 @@
    #:mvlet*)
   ;; Macros
   (:export
+   #:default
    #:define-package
    #:define-printer
    #:fn->
