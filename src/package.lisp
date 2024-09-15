@@ -249,7 +249,101 @@
    #:name
    #:texture-map-descriptor
    #:user-form
-   ))
+   )
+  ;; programmatic texture-map API types
+  (:export
+   #:cube
+   #:cube-representaton
+   #:data-element ;; TODO move to another package
+   #:data-span ;; TODO move to another package
+   #:data-span-1d ;; TODO move to another package
+   #:data-span-2d ;; TODO move to another package
+   #:data-span-3d ;; TODO move to another package
+   #:envmap-representation
+   #:face
+   #:faces-representation
+   #:image-element
+   #:location ;; TODO move to another package
+   #:mapping-span ;; TODO move to another package
+   #:mapping-span-1d ;; TODO move to another package
+   #:mapping-span-2d ;; TODO move to another package
+   #:mapping-span-3d ;; TODO move to another package
+   #:mipmap
+   #:mipmap-1d
+   #:mipmap-2d
+   #:mipmap-3d
+   #:span ;; TODO move to another package
+   #:span-1d ;; TODO move to another package
+   #:span-2d ;; TODO move to another package
+   #:span-3d ;; TODO move to another package
+   #:storage-form
+   #:texture-map
+   #:texture-map-1d
+   #:texture-map-2d
+   #:texture-map-3d
+   #:texture-map-complex
+   #:texture-map-cube
+   #:texture-map-element
+   #:texture-map-simple
+   )
+  ;; programmatic texture-map API methods and functions
+  (:export
+   #:anonymous-p ;; accessor for texture-map
+   #:cube ;; accessor texture-map-cube
+   #:data-elements ;; accessor for texture-map
+   #:dir ;; accessor for face
+   #:element ;; accessor for data-element TODO move
+   #:elidx ;; accessor for data-span TODO move AND accessor for face, keep here
+   #:extent ;; accessor for span TODO move AND accessor for mipmap, keep here
+   #:faces ;; accessor for faces-representation
+   #:from ;; accessor for mapping-span TODO move
+   #:logloc ;; accessor for location TODO move
+   #:make-cube
+   #:make-cube-representation ;; GF for cube-representation
+   #:make-data-element ;; GF for data-element TODO maybe move?
+   #:make-data-elements
+   #:make-data-span ;; GF for data-span TODO maybe move?
+   #:make-data-span-1d ;; TODO move to another package
+   #:make-data-span-2d ;; TODO move to another package
+   #:make-data-span-3d ;; TODO move to another package
+   #:make-envmap-representation
+   #:make-face
+   #:make-faces
+   #:make-faces-representation
+   #:make-image-element
+   #:make-location ;; TODO move to another package.
+   #:make-mapping-span ;; GF for mapping-span TODO maybe move?
+   #:make-mapping-span-1d ;; TODO move to another package
+   #:make-mapping-span-2d ;; TODO move to another package
+   #:make-mapping-span-3d ;; TODO move to another package
+   #:make-mapping-spans
+   #:make-mipmap-1d
+   #:make-mipmap-2d
+   #:make-mipmap-3d
+   #:make-mipmaps
+   #:make-span ;; GF for spam TODO maybe move?
+   #:make-span-1d ;; TODO move to another package
+   #:make-span-2d ;; TODO move to another package
+   #:make-span-3d ;; TODO move to another package
+   #:make-storage-form ;; GF for storage-form
+   #:make-texture-map ;; GF for texture-map
+   #:make-texture-map-1d
+   #:make-texture-map-2d
+   #:make-texture-map-3d
+   #:make-texture-map-cube
+   #:make-texture-map-element
+   #:mapping-spans ;; accessor for mipmap
+   #:mipmaps ;; accessor for envmap-representaton, texture-map-simple
+   #:model ;; accessor for texture-map
+   #:name ;; accessor for texture-map
+   #:origin ;; accessor for span TODO move
+   #:physloc ;; accessor for location TODO move
+   #:repr ;; accessor for cube
+   #:store ;; accessor for cube, texture-map
+   #:style ;; accessor for cube, texture-map
+   #:to ;; accessor for mapping-span TODO move
+   )
+  )
 
 (defpackage #:colony.texture-map.texture-map-table
   (:use #:cl)

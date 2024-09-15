@@ -131,7 +131,7 @@ however many dimensions it needs to be--or nil")
                    :type (or null (vector mapping-span))
                    :documentation
                    "An array of MAPPING-SPAN objects which cover the extent ~
-with no overlaps or holes--or nil")))
+with no overlaps or holes--or nil. Mipmaps never share mapping spans.")))
 (defclass mipmap-1d (mipmap) ())
 (defclass mipmap-2d (mipmap) ())
 (defclass mipmap-3d (mipmap) ())
@@ -167,7 +167,7 @@ environment map which may contain a range of different layouts."))
 ;; be :unique or :combined).
 ;; The :six or :opengl is how each face is identified and is assumed to
 ;; be :six if not supplied.
-(defclass faces (cube-representation)
+(defclass faces-representation (cube-representation)
   ((%faces :accessor faces
            :initarg :faces
            :initform nil
@@ -184,7 +184,7 @@ environment map which may contain a range of different layouts."))
 ;; multiple mipmaps (and the engine will verify the dimensions). The engine
 ;; won't be able to determine for itself how many mipmaps there are. It must be
 ;; explicitly told the exact number present.
-(defclass envmap (cube-representation)
+(defclass envmap-representation (cube-representation)
   ((%mipmaps :accessor mipmaps
              :initarg :mipmaps
              :initform nil

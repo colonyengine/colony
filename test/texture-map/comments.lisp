@@ -5,6 +5,7 @@
 ;; B: Name, no dashes
 ;; C: LOG for Logical
 ;;    PHY for Physical
+;;    IMP for manual implementation using the texture-map programming API.
 ;; D: INF for anything at all being inferred
 ;;    GND for no inference required
 ;; E: ONE for exactly one base mipmap (required for things with one image only)

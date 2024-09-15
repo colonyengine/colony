@@ -59,7 +59,7 @@
 ;; Grounded (as much as possible) physical form of the above logical form.
 (c:define-texture-map g000-2d-phy-gnd-one-non (:2d :unique)
   (c:data-elements
-   (0 (c:image-elements :logloc (textures 2d-64x64))))
+   (0 (c:image-element :logloc (textures 2d-64x64))))
   (c:mipmap-2d
    :extent (c:span-2d :origin (v2:zero)
                       :extent (v2:vec 64f0 64f0))
@@ -210,7 +210,7 @@
 ;; in a :combined :common image. There is only one mipmap.
 ;;; --------------------------------------------------------
 
-(define-texture-map g003-2d-phy-gnd-one-non (:2d :unique)
+(c:define-texture-map g003-2d-phy-gnd-one-non (:2d :unique)
   (c:data-elements
    (0 (c:image-element :logloc (textures 2d-64x64)))
    (1 (c:image-element :logloc (textures 2d-32x32)))
@@ -284,7 +284,7 @@
 ;; v
 (c:define-texture-map g004-2d-phy-gnd-all-non (:2d :combined :common)
   (c:data-elements
-   (0 (c:image-elements :logloc (textures 2d-all-96x64))))
+   (0 (c:image-element :logloc (textures 2d-all-96x64))))
   (c:mipmap-2d
    :extent (c:span-2d :origin (v2:zero)
                       :extent (v2:vec 64f0 64f0))

@@ -156,6 +156,8 @@
     ((:file "common")
      (:file "clone")
      (:file "texture-map-table")
+     (:file "logical-to-physical-parser")
+     (:file "physical-to-api-parser")
      (:file "map-parser")
      (:file "texture-map")))
    (:module "texture"
