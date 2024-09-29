@@ -333,7 +333,6 @@ with each form being NIL if there aren't any in that category.
  The fourth value is all the mipvars in order of encoding (so they can be used
 as hash keys in the right order)."
 
-  ;; KEEP GOING
   (let ((atbl (u:dict #'eq))
         (mipvars nil)
         (all-binding-groups nil))
@@ -348,7 +347,7 @@ as hash keys in the right order)."
                 ;; Associate the mipvar with the attrs it might need.
                 (setf (u:href atbl mipvar)
                       (list :attrs attrs :cattrs cattrs :sattrs sattrs))
-                ;; construct a binding group as give a name to the mipmap
+                ;; construct a binding group and give a varname to the mipmap
                 ;; binding form, store in list.
                 (push (append bindings `((,mipvar ,mipmap-form)))
                       all-binding-groups)))
@@ -358,6 +357,9 @@ as hash keys in the right order)."
            (v2 atbl)
            (v3 rev-mipvars))
       (values v0 v1 v2 v3))))
+
+
+;; KEEP GOING
 
 
 ;;; ---------------------------------------------------------------------------
