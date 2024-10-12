@@ -8,6 +8,11 @@
    "Map a DSL object symbol to another symbol which is the constructor
 function for that object."))
 
+(defgeneric gen-texture-map-form (name model style store
+                                  &key anonymous-p data-elements-var-name
+                                    mipmaps-var-name cube-var-name
+                                    phys/attrs phys/cattrs phys/sattrs))
+
 ;;; ---------------------------------------------------------------------------
 ;; helper functions and methods.
 ;;; ---------------------------------------------------------------------------
@@ -93,6 +98,12 @@ function for that object."))
   'make-mipmap-3d)
 (defmethod dslobjsym->constructor ((sym (eql 'implicit/mipmaps)))
   'make-mipmaps)
+(defmethod dslobjsym->constructor ((sym (eql :1d)))
+  'make-texture-map-1d)
+(defmethod dslobjsym->constructor ((sym (eql :2d)))
+  'make-texture-map-2d)
+(defmethod dslobjsym->constructor ((sym (eql :3d)))
+  'make-texture-map-3d)
 
 
 ;; ------- data-element PHYS->API generation
@@ -132,7 +143,7 @@ the binding variables for each binding form in the first value."
     (let* ((element-bindings
              (loop
                :for (sid elem) :in elems
-               :collect (gen-data-element-binding-form
+               :collect (gen-data-ele2ment-binding-form
                          (varname "de" sid) elem)))
            (de-form
              `(,(varname "data-elements" 0)
@@ -254,8 +265,6 @@ And produce a LET binding form for it with VAR as the variable name."
   `(,var ,(gen-span-form phys/span-form)))
 
 
-;; KEEP GOING
-
 ;; ------- mipmap PHYS->API generation
 
 (defun gen-mipmap-form (sym &key extent mapping-spans)
@@ -316,13 +325,22 @@ by the mipmap-var-names. SYM in this context must be the symbol
 TEXMAP:IMPLICIT/MIPMAPS. Return the API syntax form."
   `(,(dslobjsym->constructor sym) :encode ,@mipmap-var-names))
 
-(defun gen-mipmaps-binding-group (phys/mipmaps model style store)
-  "Return three values. The first value is a list of bindings to create all the
+(defun gen-mipmaps-binding-form (mipmaps-container-var sym mipmap-var-names)
+  "Construct a LET binding form with MIPMAPS-CONTAINER-VAR as the variable and
+the a mipmaps container form built from SYM and the MIPMAP-VAR-NAMES variable
+list."
+  `(,mipmaps-container-var
+    ,(apply #'gen-mipmaps-form sym mipmap-var-names)))
+
+(defun gen-mipmaps-binding-group (mipmaps-var phys/mipmaps model style store)
+  "Return four values. The first value is a list of bindings to create all the
 mipmaps in the MIPMAPS form (including bindings for the mapping-spans and any
 required data-spans).
 
-The second value is the form which constructs the mipmap container into
-which the individual mipmap variables are encoded.
+The second value is the let bindings form which constructs the mipmap container
+into which the individual mipmap variables are encoded. The first element of
+that list is the variable binding and the second the mipmaps container
+construction form.
 
 The third value is a hashtable of attribute bag absorption forms to implement
 the attribute inheritance correctly for each mipmap. The hash key is the mipmap
@@ -353,43 +371,155 @@ as hash keys in the right order)."
                       all-binding-groups)))
     (let* ((rev-mipvars (nreverse mipvars))
            (v0 (mapcan #'list* (nreverse all-binding-groups)))
-           (v1 (apply #'gen-mipmaps-form 'implicit/mipmaps rev-mipvars))
+           (v1 (gen-mipmaps-binding-form mipmaps-var
+                                         'implicit/mipmaps rev-mipvars))
            (v2 atbl)
            (v3 rev-mipvars))
       (values v0 v1 v2 v3))))
 
+(defun gen-attribute-eval-form (attr-forms)
+  "When given a list of attribute key/value pairs, return a
+transformation that rebuilds it via list forms where both the key and the value
+are both evaluated."
+  `(list ,@(loop :for (k v) :in attr-forms
+                 :collect `(list ,k ,v))))
 
-;; KEEP GOING
+;; Used for 1d, 2d, 3d texture map forms.
+(defmethod gen-texture-map-form (name model style store
+                                 &key anonymous-p data-elements-var-name
+                                   mipmaps-var-name cube-var-name
+                                   phys/attrs phys/cattrs phys/sattrs)
+  (when cube-var-name
+    (error
+     "gen-texture-map-form: Cannot use a cube map with a ~S texture model."
+     model))
 
+  `(,(dslobjsym->constructor model)
+    :name ',name
+    ,@(when anonymous-p `(:anonymous-p ,anonymous-p))
+    :model ',model
+    :style ',style
+    :store ',store
+    ;; TODO: The cdar forms probably should be fixed up. They are a little
+    ;; dirty.
+    ,@(when data-elements-var-name
+        `(:data-elements ,data-elements-var-name))
+    ,@(when mipmaps-var-name
+        `(:mipmaps ,mipmaps-var-name))
+    ,@(when phys/attrs
+        `(:attrs ,(gen-attribute-eval-form (cdar phys/attrs))))
+    ,@(when phys/cattrs
+        `(:cattrs ,(gen-attribute-eval-form (cdar phys/cattrs))))
+    ,@(when phys/sattrs
+        `(:sattrs ,(gen-attribute-eval-form (cdar phys/sattrs))))))
+
+
+;; Used for :cube maps (gotta analyze faces and mipmaps in a special way)
+(defmethod gen-texture-map-form (name (model (eql :cube)) style store
+                                 &key anonymous-p data-elements-var-name
+                                   mipmaps-var-name cube-var-name
+                                   phys/attrs phys/cattrs phys/sattrs)
+  nil)
+
+
+;; Used for :1d, :2d, :3d textures.
+(defmethod gen-texture-map-binding-group (name model style store body)
+  "Return three values. The first value is the complete binding group to build
+the texture using the texmap API. The second value is the symbol of the
+variable of the bound texture-map. The third value is all of the absorption
+forms for any mipmap attributes."
+
+  (let* ((texture-map-key-pool '(attrs cattrs sattrs data-elements
+                                 mipmap :unknown))
+         (mipmaps-var (varname "mipmaps" 0))
+         (texture-var (varname "texture" 0)))
+    (multiple-value-bind (phys/attrs phys/cattrs phys/sattrs
+                          phys/data-elements phys/mipmaps unknown)
+        ;; Partition the body into chunks
+        (partition-a-dsl-form texture-map-key-pool
+                              (physical-form-classifier
+                               :body model style store)
+                              body)
+      ;; Validation
+      (when (plusp (length unknown))
+        (error "Unknown texture-map physical form: ~A : ~A" name unknown))
+      (unless (= (length phys/data-elements) 1)
+        (error "Need ONE data-elements form for texture-map physical form: ~A"
+               name))
+
+      (multiple-value-bind (de-let-bindings de-container-binding)
+          ;; NOTE: There is only one data-elements form, and this function
+          ;; call wants ONLY that form.
+          (gen-data-elements-binding-form (first phys/data-elements))
+        (multiple-value-bind (mip-let-bindings mip-container-binding
+                              mip-attrs mipvars)
+            (gen-mipmaps-binding-group mipmaps-var phys/mipmaps model
+                                       style store)
+          (let ((texmap-form
+                  (gen-texture-map-form
+                   name model style store
+                   :phys/sattrs phys/sattrs
+                   :phys/cattrs phys/cattrs
+                   :phys/attrs phys/attrs
+                   :data-elements-var-name (first de-container-binding)
+                   :mipmaps-var-name mipmaps-var)))
+
+            (let ((texture-binding-group
+                    ;; Produce the complete binding group
+                    (append de-let-bindings
+                            (list de-container-binding)
+                            mip-let-bindings
+                            (list mip-container-binding)
+                            (list (list texture-var texmap-form))))
+
+                  ;; Now, produce the absorption forms, if any
+                  (mipmap-absorption-forms
+                    (let ((forms nil))
+                      (u:do-hash (var attr-spec mip-attrs)
+                        (destructuring-bind (&key sattrs cattrs attrs)
+                            attr-spec
+                          (push
+                           `(abag:absorb
+                             ,var
+                             :bags ,texture-var
+                             ;; TODO: the cdar is a little dirty. Mayhap have
+                             ;; to fixup how the dataflow works in the
+                             ;; partitioning concerning the attributes.
+                             ,@(when sattrs
+                                 `(:sattrs ,(gen-attribute-eval-form
+                                             (cdar sattrs))))
+                             ,@(when cattrs
+                                 `(:cattrs ,(gen-attribute-eval-form
+                                             (cdar cattrs))))
+                             ,@(when attrs
+                                 `(:attrs ,(gen-attribute-eval-form
+                                            (cdar attrs)))))
+                           forms)))
+                      (nreverse forms))))
+
+              (values texture-binding-group
+                      texture-var
+                      mipmap-absorption-forms))))))))
+
+
+;; Used for :cube textures.
+(defmethod gen-texture-map-binding-group (name (model (eql :cube)) style
+                                          store body)
+  nil)
 
 ;;; ---------------------------------------------------------------------------
 ;; 1d, 2d, 3d logical texture conversion.
 ;;; ---------------------------------------------------------------------------
 
 (defmethod physical->api (name model style store body)
-  (let* ((texture-map-key-pool '(attrs cattrs sattrs data-elements
-                                 mipmap :unknown)))
-    (multiple-value-bind (attrs cattrs sattrs data-elements mipmaps unknown)
-        ;; Partition the body into chunks
-        (partition-a-dsl-form texture-map-key-pool
-                              (physical-form-classifier
-                               :body model style store)
-                              body)
-      ;; Debugging
-      (mapc (lambda (name val)
-              (format t "~(~S~) ~S~%" name val))
-            '(attrs cattrs sattrs data-elements mipmaps unknown)
-            (list attrs cattrs sattrs data-elements mipmaps unknown))
 
-      (when (plusp (length unknown))
-        (error "Unknown texture-map physical form: ~A : ~A" name unknown))
-
-
-      (let* ((deform (gen-data-element-forms data-elements))
-             ))
-
-
-      )))
+  ;; TODO: Figure out how to wedge a context into the dsl, then
+  ;; wrap form in lambda to specify context.
+  (multiple-value-bind (all-bindings texture-var absorption-forms)
+      (gen-texture-map-binding-group name model style store body)
+    `(let* ,all-bindings
+       ,@absorption-forms
+       ,texture-var)))
 
 ;;; ---------------------------------------------------------------------------
 ;; Sort of unit tests.
@@ -399,18 +529,17 @@ as hash keys in the right order)."
   (let* ((name 'g000-1d-log-inf-one-non)
          (model :1d)
          (style :unique)
-         (store nil)
-         (data-model (list model style store)))
-    (list name
-          data-model
-          (physical->api
-           name model style store
-           ;; body
-           '((data-elements
-              (0 (image-element :logloc (textures 1d-64x1))))
+         (store nil))
+    (physical->api
+     name model style store
+     ;; body
+     '((cattrs ("foo" 100) ('qux 12))
+       (data-elements
+        (0 (image-element :logloc (textures 1d-64x1))))
 
-             (mipmap-1d
-              :extent (span-1d :origin 0 :extent 64)
-              (mapping-span-1d :to (data-span-1d :origin 0 :extent 64)
-                               :from (data-span-1d :origin 0 :extent 64
-                                                   :elidx 0))))))))
+       (mipmap-1d
+        (cattrs ("foo" 42) ('bar 100))
+        :extent (span-1d :origin 0 :extent 64)
+        (mapping-span-1d :to (data-span-1d :origin 0 :extent 64)
+                         :from (data-span-1d :origin 0 :extent 64
+                                             :elidx 0)))))))
