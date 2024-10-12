@@ -377,12 +377,15 @@ as hash keys in the right order)."
            (v3 rev-mipvars))
       (values v0 v1 v2 v3))))
 
-(defun gen-attribute-eval-form (attr-forms)
-  "When given a list of attribute key/value pairs, return a
-transformation that rebuilds it via list forms where both the key and the value
-are both evaluated."
-  `(list ,@(loop :for (k v) :in attr-forms
-                 :collect `(list ,k ,v))))
+(defun gen-attribute-eval-form (attr-spec)
+  "When given an ATTR-SPEC of a collection of (the same) attributes and their
+values, example: ((cattrs ('bar 100) ('qux 200)) (cattrs ('feh 100)))
+transform it into: (list (list 'bar 100) (list 'qux 200) (list 'feh 100)) then
+return it."
+  (flet ((flatten-spec (spec)
+           (mapcan (lambda (x) (list* (cdr x))) spec)))
+    `(list ,@(loop :for (k v) :in (flatten-spec attr-spec)
+                   :collect `(list ,k ,v)))))
 
 ;; Used for 1d, 2d, 3d texture map forms.
 (defmethod gen-texture-map-form (name model style store
@@ -400,18 +403,16 @@ are both evaluated."
     :model ',model
     :style ',style
     :store ',store
-    ;; TODO: The cdar forms probably should be fixed up. They are a little
-    ;; dirty.
     ,@(when data-elements-var-name
         `(:data-elements ,data-elements-var-name))
     ,@(when mipmaps-var-name
         `(:mipmaps ,mipmaps-var-name))
     ,@(when phys/attrs
-        `(:attrs ,(gen-attribute-eval-form (cdar phys/attrs))))
+        `(:attrs ,(gen-attribute-eval-form phys/attrs)))
     ,@(when phys/cattrs
-        `(:cattrs ,(gen-attribute-eval-form (cdar phys/cattrs))))
+        `(:cattrs ,(gen-attribute-eval-form phys/cattrs)))
     ,@(when phys/sattrs
-        `(:sattrs ,(gen-attribute-eval-form (cdar phys/sattrs))))))
+        `(:sattrs ,(gen-attribute-eval-form phys/sattrs)))))
 
 
 ;; Used for :cube maps (gotta analyze faces and mipmaps in a special way)
@@ -471,36 +472,31 @@ forms for any mipmap attributes."
                             mip-let-bindings
                             (list mip-container-binding)
                             (list (list texture-var texmap-form))))
-
                   ;; Now, produce the absorption forms, if any
                   (mipmap-absorption-forms
                     (let ((forms nil))
-                      ;; TODO FIXME. Do this in order of mipvars
                       (loop :for var :in mipvars
-                            :for attr-spec = (u:href mip-attrs var)
-                            :do
-                               (destructuring-bind (&key sattrs cattrs attrs)
-                                   attr-spec
-                                 (push
-                                  `(abag:absorb
-                                    ,var
-                                    :bags ,texture-var
-                                    ;; TODO: the cdar is a little dirty. Mayhap
-                                    ;; have to fixup how the dataflow works in
-                                    ;; the partitioning concerning the
-                                    ;; attributes.
-                                    ,@(when sattrs
-                                        `(:sattrs ,(gen-attribute-eval-form
-                                                    (cdar sattrs))))
-                                    ,@(when cattrs
-                                        `(:cattrs ,(gen-attribute-eval-form
-                                                    (cdar cattrs))))
-                                    ,@(when attrs
-                                        `(:attrs ,(gen-attribute-eval-form
-                                                   (cdar attrs)))))
-                                  forms)))
+                            :for collected-attrs = (u:href mip-attrs var)
+                            :do (destructuring-bind (&key sattrs cattrs attrs)
+                                    collected-attrs
+                                  (push
+                                   `(abag:absorb
+                                     ,var
+                                     :bags ,texture-var
+                                     ,@(when sattrs
+                                         `(:sattrs ,(gen-attribute-eval-form
+                                                     sattrs)))
+                                     ,@(when cattrs
+                                         `(:cattrs ,(gen-attribute-eval-form
+                                                     cattrs)))
+                                     ,@(when attrs
+                                         `(:attrs ,(gen-attribute-eval-form
+                                                    attrs))))
+                                   forms)))
                       (nreverse forms))))
 
+              ;; Finally, this is the complete information to describe building
+              ;; of the texture using the texmap API.
               (values texture-binding-group
                       texture-var
                       mipmap-absorption-forms))))))))
