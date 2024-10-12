@@ -475,26 +475,30 @@ forms for any mipmap attributes."
                   ;; Now, produce the absorption forms, if any
                   (mipmap-absorption-forms
                     (let ((forms nil))
-                      (u:do-hash (var attr-spec mip-attrs)
-                        (destructuring-bind (&key sattrs cattrs attrs)
-                            attr-spec
-                          (push
-                           `(abag:absorb
-                             ,var
-                             :bags ,texture-var
-                             ;; TODO: the cdar is a little dirty. Mayhap have
-                             ;; to fixup how the dataflow works in the
-                             ;; partitioning concerning the attributes.
-                             ,@(when sattrs
-                                 `(:sattrs ,(gen-attribute-eval-form
-                                             (cdar sattrs))))
-                             ,@(when cattrs
-                                 `(:cattrs ,(gen-attribute-eval-form
-                                             (cdar cattrs))))
-                             ,@(when attrs
-                                 `(:attrs ,(gen-attribute-eval-form
-                                            (cdar attrs)))))
-                           forms)))
+                      ;; TODO FIXME. Do this in order of mipvars
+                      (loop :for var :in mipvars
+                            :for attr-spec = (u:href mip-attrs var)
+                            :do
+                               (destructuring-bind (&key sattrs cattrs attrs)
+                                   attr-spec
+                                 (push
+                                  `(abag:absorb
+                                    ,var
+                                    :bags ,texture-var
+                                    ;; TODO: the cdar is a little dirty. Mayhap
+                                    ;; have to fixup how the dataflow works in
+                                    ;; the partitioning concerning the
+                                    ;; attributes.
+                                    ,@(when sattrs
+                                        `(:sattrs ,(gen-attribute-eval-form
+                                                    (cdar sattrs))))
+                                    ,@(when cattrs
+                                        `(:cattrs ,(gen-attribute-eval-form
+                                                    (cdar cattrs))))
+                                    ,@(when attrs
+                                        `(:attrs ,(gen-attribute-eval-form
+                                                   (cdar attrs)))))
+                                  forms)))
                       (nreverse forms))))
 
               (values texture-binding-group
@@ -515,6 +519,7 @@ forms for any mipmap attributes."
 
   ;; TODO: Figure out how to wedge a context into the dsl, then
   ;; wrap form in lambda to specify context.
+
   (multiple-value-bind (all-bindings texture-var absorption-forms)
       (gen-texture-map-binding-group name model style store body)
     `(let* ,all-bindings
