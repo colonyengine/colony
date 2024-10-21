@@ -143,7 +143,7 @@ the binding variables for each binding form in the first value."
     (let* ((element-bindings
              (loop
                :for (sid elem) :in elems
-               :collect (gen-data-ele2ment-binding-form
+               :collect (gen-data-element-binding-form
                          (varname "de" sid) elem)))
            (de-form
              `(,(varname "data-elements" 0)
