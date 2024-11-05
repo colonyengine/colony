@@ -8,6 +8,8 @@
    "Map a DSL object symbol to another symbol which is the constructor
 function for that object."))
 
+(defgeneric gen-cube-binding-group (cube-var phys/cube model style store))
+
 (defgeneric gen-texture-map-form (name model style store
                                   &key anonymous-p data-elements-var-name
                                     mipmaps-var-name cube-var-name
@@ -38,6 +40,42 @@ function for that object."))
       (t
        :unknown))))
 
+(defmethod physical-form-classifier ((form-type (eql :body))
+                                     (model (eql :cube))
+                                     style store)
+  (lambda (item)
+    (cond
+      ((and (listp item)
+            (member (car item) '(sattrs cattrs attrs data-elements cube)))
+       (car item))
+      (t
+       :unknown))))
+
+(defmethod physical-form-classifier ((form-type (eql :faces))
+                                     model
+                                     (style (eql :unique))
+                                     store)
+  (lambda (item)
+    (cond
+      ((and (listp item)
+            (member (car item) '(face)))
+       (car item))
+      (t
+       :unknown))))
+
+(defmethod physical-form-classifier ((form-type (eql :face))
+                                     (model (eql :cube))
+                                     style store)
+  (lambda (item)
+    (cond
+      ((and (listp item)
+            (member (car item) '(sattrs cattrs attrs)))
+       (car item))
+      (t
+       :kwargs))))
+
+;; TODO: This function could prolly be rewritten to use the :kwargs
+;; hacky idiom of the above method for much less code.
 (defmethod physical-form-classifier ((form-type (eql :mipmap))
                                      model style store)
   (lambda (item)
@@ -104,7 +142,16 @@ function for that object."))
   'make-texture-map-2d)
 (defmethod dslobjsym->constructor ((sym (eql :3d)))
   'make-texture-map-3d)
-
+(defmethod dslobjsym->constructor ((sym (eql 'face)))
+  'make-face)
+(defmethod dslobjsym->constructor ((sym (eql 'faces)))
+  'make-faces)
+(defmethod dslobjsym->constructor ((sym (eql 'implicit/faces-representation)))
+  'make-faces-representation)
+(defmethod dslobjsym->constructor ((sym (eql 'implicit/envmap-representation)))
+  'make-envmap-representation)
+(defmethod dslobjsym->constructor ((sym (eql 'cube)))
+  'make-cube)
 
 ;; ------- data-element PHYS->API generation
 
@@ -423,6 +470,32 @@ return it."
   nil)
 
 
+(defun gen-absorption-forms (texture-var storage-vars storage-attrs)
+  "Return a list of forms for each STORAGE-VAR, in the left to right order
+of the STORAGE-VARS, that inherit the attributes from TEXTURE-VAR and in which
+the attributes stored in the associated STORAGE-ATTRS hash table entry are
+ set."
+  (let ((forms nil))
+    (loop :for var :in storage-vars
+          :for collected-attrs = (u:href storage-attrs var)
+          :do (destructuring-bind (&key sattrs cattrs attrs)
+                  collected-attrs
+                (push
+                 `(abag:absorb
+                   ,var
+                   :bags ,texture-var
+                   ,@(when sattrs
+                       `(:sattrs ,(gen-attribute-eval-form
+                                   sattrs)))
+                   ,@(when cattrs
+                       `(:cattrs ,(gen-attribute-eval-form
+                                   cattrs)))
+                   ,@(when attrs
+                       `(:attrs ,(gen-attribute-eval-form
+                                  attrs))))
+                 forms)))
+    (nreverse forms)))
+
 ;; Used for :1d, :2d, :3d textures.
 (defmethod gen-texture-map-binding-group (name model style store body)
   "Return three values. The first value is the complete binding group to build
@@ -474,26 +547,7 @@ forms for any mipmap attributes."
                             (list (list texture-var texmap-form))))
                   ;; Now, produce the absorption forms, if any
                   (mipmap-absorption-forms
-                    (let ((forms nil))
-                      (loop :for var :in mipvars
-                            :for collected-attrs = (u:href mip-attrs var)
-                            :do (destructuring-bind (&key sattrs cattrs attrs)
-                                    collected-attrs
-                                  (push
-                                   `(abag:absorb
-                                     ,var
-                                     :bags ,texture-var
-                                     ,@(when sattrs
-                                         `(:sattrs ,(gen-attribute-eval-form
-                                                     sattrs)))
-                                     ,@(when cattrs
-                                         `(:cattrs ,(gen-attribute-eval-form
-                                                     cattrs)))
-                                     ,@(when attrs
-                                         `(:attrs ,(gen-attribute-eval-form
-                                                    attrs))))
-                                   forms)))
-                      (nreverse forms))))
+                    (gen-absorption-forms texture-var mipvars mip-attrs)))
 
               ;; Finally, this is the complete information to describe building
               ;; of the texture using the texmap API.
@@ -502,13 +556,254 @@ forms for any mipmap attributes."
                       mipmap-absorption-forms))))))))
 
 
+;;; ---------------------------------------------------------------------------
+;; :cube physical -> API conversion.
+;;; ---------------------------------------------------------------------------
+
+;; ------- face PHYS->API generation
+
+(defun gen-face-form (sym &key dir elidx)
+  `(,(dslobjsym->constructor sym)
+    ,@(when dir `(:dir ,dir))
+    ,@(when elidx `(:elidx ,elidx))))
+
+;; TODO: Prolly convert to defmethod
+(defun gen-face-binding-group (phys/face model style store)
+  "Return five values. The first value is any ATTRS form if present. The
+second value is any CATTRS form if present. The third value is any SATTRS form
+if present. The fourth form is a list of LET bindings of the :dir and :elidx
+values in the face, if any. The fifth form is the face creation form itself."
+  (let* ((face-key-pool '(attrs cattrs sattrs :kwargs)))
+    (destructuring-bind (sym &rest face-body) phys/face
+      (multiple-value-bind (attrs cattrs sattrs kwargs)
+          ;; TODO CLUNKY (misuse of current SIEVE functionality)
+          ;; Partition the body into chunks
+          ;;
+          ;; TODO: Add &key handling to the key pool to pick off &key args.
+          (partition-a-dsl-form face-key-pool
+                                ;; TODO CLUNKY (misuse of current SIEVE
+                                ;; functionality)
+                                (physical-form-classifier
+                                 :face model style store)
+                                face-body)
+        (destructuring-bind (&key dir elidx) kwargs
+          (values attrs
+                  cattrs
+                  sattrs
+                  ;; finally the face creation form.
+                  (gen-face-form sym :dir dir :elidx elidx)))))))
+
+;; TODO: prolly convert to defmethod.
+(defun gen-face-binding-form (face-var api/face model style store)
+  "Return a form suitable to use in a LET binding of the FACE-VAR and the
+API/FACE."
+  (declare (ignore model style store))
+  `(,face-var ,api/face))
+
+;; ------- faces container PHYS->API generation
+
+(defun gen-faces-form (sym &rest face-var-names)
+  "Construct an API syntax form of the collection of faces represented
+by the FACE-VAR-NAMES. SYM in this context must be the symbol
+TEXMAP:FACES. Return the API syntax form."
+  `(,(dslobjsym->constructor sym) :encode ,@face-var-names))
+
+(defun gen-faces-binding-form (faces-container-var sym face-var-names)
+  "Construct a LET binding form with FACES-CONTAINER-VAR as the variable and
+a faces container form built from SYM and the FACE-VAR-NAMES variable
+list."
+  `(,faces-container-var
+    ,(apply #'gen-faces-form sym face-var-names)))
+
+(defun gen-faces-binding-group (faces-var phys/faces model store style)
+  "Return four values. The first value is a list of bindings to create all the
+faces in the PHYS/FACES form.
+
+The second value is the let bindings form which constructs the faces container
+into which the individual face variables are encoded. The first element of
+that list is the variable binding and the second the mipmaps container
+construction form.
+
+The third value is a hashtable of attribute bag absorption forms to implement
+the attribute inheritance correctly for each face. The hash key is the face
+variable and the hash value is the list
+ (:ATTRS <attrs-form> :CATTRS <cattrs-form> :SATTRS <sattrs-form>)
+with each form being NIL if there aren't any in that category.
+
+ The fourth value is all the face variables in order of encoding (so they can
+be used as hash keys in the right order)."
+
+  (let ((atbl (u:dict #'eq))
+        (face-vars nil)
+        (all-binding-groups nil))
+    (loop :for phys/face :in phys/faces
+          :for id :from 0
+          :for face-var = (varname "face" id)
+          :do (multiple-value-bind (attrs cattrs sattrs face-form)
+                  (gen-face-binding-group phys/face model style store)
+
+                ;; Store the facevar for later encoding into faces container.
+                (push face-var face-vars)
+                ;; Associate the facevar with the attrs it might need.
+                (setf (u:href atbl face-var)
+                      (list :attrs attrs :cattrs cattrs :sattrs sattrs))
+                ;; construct a binding group and give a varname to the mipmap
+                ;; binding form, store in list.
+                (push `((,face-var ,face-form))
+                      all-binding-groups)))
+    (let* ((rev-face-vars (nreverse face-vars))
+           (v0 (mapcan #'list* (nreverse all-binding-groups)))
+           (v1 (gen-faces-binding-form faces-var
+                                       'faces rev-face-vars))
+           (v2 atbl)
+           (v3 rev-face-vars))
+      (values v0 v1 v2 v3))))
+
+;; KEEP GOING (being worked on below)
+
+(defun gen-representation-form (sym &key faces)
+  `(,(dslobjsym->constructor sym)
+    ,@(when faces `(:faces ,faces))))
+
+(defun gen-representation-binding-form (repr-var api/repr)
+  `(,repr-var ,api/repr))
+
+(defun gen-cube-form (sym &key style store repr)
+  `(,(dslobjsym->constructor sym)
+    ,@(when style `(:style ,style))
+    ,@(when store `(:store ,store))
+    ,@(when repr `(:repr ,repr))))
+
+(defun gen-cube-binding-form (cube-var api/cube)
+  `(,cube-var ,api/cube))
+
+;; A :unique cube map will always use faces in the cube representation
+(defmethod gen-cube-binding-group (cube-var phys/cube
+                                   model (style (eql :unique)) store)
+  "Return four values. TODO FILL IN."
+
+  (format t "phys/cube is: ~S~%" phys/cube)
+  (let ((syntax-datum (first (second phys/cube))))
+    (unless (eq syntax-datum 'faces)
+      (error
+       "gen-cube-binding-group (:unique): Wrong. Expected FACES, but got ~S"
+       syntax-datum)))
+
+  (let ((faces-body (cdr (second phys/cube)))
+        (cube-key-pool '(face :unknown)))
+    (multiple-value-bind (phys/faces unknown)
+        ;; Partition the faces body in the faces form in the cube form.
+        (partition-a-dsl-form cube-key-pool
+                              (physical-form-classifier
+                               :faces model style store)
+                              faces-body)
+
+      (format t "phys/faces: ~S~%unknown: ~S~%" phys/faces unknown)
+
+      (multiple-value-bind (face-bindings face-container-binding
+                            face-attrs face-vars)
+          (gen-faces-binding-group (varname "faces" 0)
+                                   phys/faces model style store)
+
+        ;; Now, generate the representation we put all of this into.
+        (let* ((api/repr
+                 (gen-representation-form 'implicit/faces-representation
+                                          :faces (car face-container-binding)))
+               (representation-var (varname "repr" 0))
+               (repr-binding-form
+                 (gen-representation-binding-form representation-var
+                                                  api/repr))
+               (api/cube (gen-cube-form 'cube :style style :store store
+                                              :repr representation-var))
+               (cube-binding-form (gen-cube-binding-form cube-var api/cube)))
+
+          ;; debugging.
+          ;; TODO: append the frst three together into one binding group.
+          (values (append face-bindings
+                          (list face-container-binding)
+                          (list repr-binding-form))
+
+                  cube-binding-form
+                  face-attrs
+                  face-vars)
+
+          )))))
+
+;; An :envmap cube map will always use envmap in the cube form.
+(defmethod gen-cube-binding-group (cube-var phys/cube
+                                   model (style (eql :envmap)) store)
+  nil)
+
 ;; Used for :cube textures.
 (defmethod gen-texture-map-binding-group (name (model (eql :cube)) style
                                           store body)
-  nil)
+  (let* ((texture-map-key-pool '(attrs cattrs sattrs data-elements
+                                 cube :unknown))
+         (cube-var (varname "cube" 0))
+         (texture-var (varname "texture" 0)))
+    (multiple-value-bind (phys/attrs phys/cattrs phys/sattrs
+                          phys/data-elements phys/cube unknown)
+        ;; Partition the body into data-elements and cube forms.
+        (partition-a-dsl-form texture-map-key-pool
+                              (physical-form-classifier
+                               :body model style store)
+                              body)
+      ;; Validation
+      (when (plusp (length unknown))
+        (error "Unknown texture-map physical form: ~A : ~A" name unknown))
+      (unless (= (length phys/data-elements) 1)
+        (error "Need ONE data-elements form for texture-map physical form: ~A"
+               name))
+      (unless (= (length phys/cube) 1)
+        (error "Need ONE cube form in the texture-map physical form: ~A"
+               name))
+
+      (multiple-value-bind (de-let-bindings de-container-binding)
+          ;; NOTE: There is only one data-elements form, and this function
+          ;; call wants ONLY that form.
+          (gen-data-elements-binding-form (first phys/data-elements))
+
+        ;; KEEP GOING (this is partially transformed so read carefully)
+
+        ;; TODO: Hrm, what is the interface to gen-cube-binding-group?
+
+        (multiple-value-bind (cube-let-bindings cube-container-binding
+                              storage-attrs storage-vars)
+            (gen-cube-binding-group cube-var
+                                    ;; NOTE: Only one cube form.
+                                    (first phys/cube)
+                                    model style store)
+
+          (let ((texmap-form
+                  (gen-texture-map-form
+                   name model style store
+                   :phys/sattrs phys/sattrs
+                   :phys/cattrs phys/cattrs
+                   :phys/attrs phys/attrs
+                   :data-elements-var-name (first de-container-binding)
+                   :cube-var-name cube-var)))
+
+            (let ((texture-binding-group
+                    ;; Produce the complete binding group
+                    (append de-let-bindings
+                            (list de-container-binding)
+                            cube-let-bindings
+                            (list cube-container-binding)
+                            (list (list texture-var texmap-form))))
+                  ;; Now, produce the absorption forms, if any
+                  (storage-absorption-forms
+                    (gen-absorption-forms texture-var storage-vars
+                                          storage-attrs)))
+
+              ;; Finally, this is the complete information to describe
+              ;; building of the texture using the texmap API.
+              (values texture-binding-group
+                      texture-var
+                      storage-absorption-forms))))))))
+
 
 ;;; ---------------------------------------------------------------------------
-;; 1d, 2d, 3d logical texture conversion.
+;; 1d, 2d, 3d, cube logical texture conversion.
 ;;; ---------------------------------------------------------------------------
 
 (defmethod physical->api (name model style store body)
@@ -526,6 +821,7 @@ forms for any mipmap attributes."
 ;; Sort of unit tests.
 ;;; ---------------------------------------------------------------------------
 
+;; 1/2/3d test
 (defun test-phys-to-api/g000-1d-log-inf-one-non ()
   (let* ((name 'g000-1d-log-inf-one-non)
          (model :1d)
@@ -544,3 +840,28 @@ forms for any mipmap attributes."
         (mapping-span-1d :to (data-span-1d :origin 0 :extent 64)
                          :from (data-span-1d :origin 0 :extent 64
                                              :elidx 0)))))))
+
+;; cube map test
+(defun test-g000-cube-phy-gnd-one-non ()
+  (let* ((name 'g000-cube-phy-gnd-one-non)
+         (model :cube)
+         (style :unique)
+         (store :six))
+    (physical->api
+     name model style store
+     ;; body
+     '((data-elements
+        (0 (texture-map-element :logloc cube-posx))
+        (1 (texture-map-element :logloc cube-negx))
+        (2 (texture-map-element :logloc cube-posy))
+        (3 (texture-map-element :logloc cube-negy))
+        (4 (texture-map-element :logloc cube-posz))
+        (5 (texture-map-element :logloc cube-negz)))
+       (cube
+        (faces
+         (face :dir :+x :elidx 0)
+         (face :dir :-x :elidx 1)
+         (face :dir :+y :elidx 2)
+         (face :dir :-y :elidx 3)
+         (face :dir :+z :elidx 4)
+         (face :dir :-z :elidx 5)))))))
