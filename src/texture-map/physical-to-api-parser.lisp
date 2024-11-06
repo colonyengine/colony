@@ -152,6 +152,8 @@ function for that object."))
   'make-envmap-representation)
 (defmethod dslobjsym->constructor ((sym (eql 'cube)))
   'make-cube)
+(defmethod dslobjsym->constructor ((sym (eql :cube)))
+  'make-texture-map-cube)
 
 ;; ------- data-element PHYS->API generation
 
@@ -467,7 +469,27 @@ return it."
                                  &key anonymous-p data-elements-var-name
                                    mipmaps-var-name cube-var-name
                                    phys/attrs phys/cattrs phys/sattrs)
-  nil)
+  (when (and cube-var-name mipmaps-var-name)
+    (error
+     "gen-texture-map-form: Require cube representation with ~S texture model for texture name: ~A."
+     model name))
+
+  `(,(dslobjsym->constructor model)
+    :name ',name
+    ,@(when anonymous-p `(:anonymous-p ,anonymous-p))
+    :model ',model
+    :style ',style
+    :store ',store
+    ,@(when data-elements-var-name
+        `(:data-elements ,data-elements-var-name))
+    ,@(when cube-var-name
+        `(:cube ,cube-var-name))
+    ,@(when phys/attrs
+        `(:attrs ,(gen-attribute-eval-form phys/attrs)))
+    ,@(when phys/cattrs
+        `(:cattrs ,(gen-attribute-eval-form phys/cattrs)))
+    ,@(when phys/sattrs
+        `(:sattrs ,(gen-attribute-eval-form phys/sattrs)))))
 
 
 (defun gen-absorption-forms (texture-var storage-vars storage-attrs)
@@ -682,7 +704,6 @@ be used as hash keys in the right order)."
                                    model (style (eql :unique)) store)
   "Return four values. TODO FILL IN."
 
-  (format t "phys/cube is: ~S~%" phys/cube)
   (let ((syntax-datum (first (second phys/cube))))
     (unless (eq syntax-datum 'faces)
       (error
@@ -698,7 +719,9 @@ be used as hash keys in the right order)."
                                :faces model style store)
                               faces-body)
 
-      (format t "phys/faces: ~S~%unknown: ~S~%" phys/faces unknown)
+      (when (plusp (length unknown))
+        (error "Unknown gen-cube-binding-group physical form: ~A"
+               unknown))
 
       (multiple-value-bind (face-bindings face-container-binding
                             face-attrs face-vars)
@@ -762,10 +785,6 @@ be used as hash keys in the right order)."
           ;; NOTE: There is only one data-elements form, and this function
           ;; call wants ONLY that form.
           (gen-data-elements-binding-form (first phys/data-elements))
-
-        ;; KEEP GOING (this is partially transformed so read carefully)
-
-        ;; TODO: Hrm, what is the interface to gen-cube-binding-group?
 
         (multiple-value-bind (cube-let-bindings cube-container-binding
                               storage-attrs storage-vars)
@@ -850,7 +869,8 @@ be used as hash keys in the right order)."
     (physical->api
      name model style store
      ;; body
-     '((data-elements
+     '((sattrs ('foo 100))
+       (data-elements
         (0 (texture-map-element :logloc cube-posx))
         (1 (texture-map-element :logloc cube-negx))
         (2 (texture-map-element :logloc cube-posy))
@@ -859,7 +879,7 @@ be used as hash keys in the right order)."
         (5 (texture-map-element :logloc cube-negz)))
        (cube
         (faces
-         (face :dir :+x :elidx 0)
+         (face (sattrs ('foo 42)) :dir :+x :elidx 0)
          (face :dir :-x :elidx 1)
          (face :dir :+y :elidx 2)
          (face :dir :-y :elidx 3)
