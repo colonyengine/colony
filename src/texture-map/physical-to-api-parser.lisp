@@ -74,6 +74,19 @@ function for that object."))
       (t
        :kwargs))))
 
+(defmethod physical-form-classifier ((form-type (eql :envmap))
+                                     (model (eql :cube))
+                                     style store)
+  (lambda (item)
+    (cond
+      ;; squish all :mipmap-*d forms into a single 'mipmap bucket.
+      ((and (listp item)
+            (member (car item) '(mipmap-1d mipmap-2d mipmap-3d)))
+       'mipmap)
+      (t
+       :unknown))))
+
+
 ;; TODO: This function could prolly be rewritten to use the :kwargs
 ;; hacky idiom of the above method for much less code.
 (defmethod physical-form-classifier ((form-type (eql :mipmap))
@@ -683,10 +696,11 @@ be used as hash keys in the right order)."
 
 ;; KEEP GOING (being worked on below)
 
-(defun gen-representation-form (sym &key faces)
+(defun gen-faces-representation-form (sym &key faces)
   `(,(dslobjsym->constructor sym)
     ,@(when faces `(:faces ,faces))))
 
+;; Can be used for either faces or envmap representation.
 (defun gen-representation-binding-form (repr-var api/repr)
   `(,repr-var ,api/repr))
 
@@ -702,7 +716,13 @@ be used as hash keys in the right order)."
 ;; A :unique cube map will always use faces in the cube representation
 (defmethod gen-cube-binding-group (cube-var phys/cube
                                    model (style (eql :unique)) store)
-  "Return four values. TODO FILL IN."
+  "Return four values. The first value is a list of LET bindings which
+construct all of the faces and then one more for the faces container. The
+second value is the binding form for the cube which uses the faces-container as
+its representaton. The third value is a hash table keyed by the face binding
+variable symbol and whose value is the attrs spec associated with that specific
+face form. The fourth value is the face variables in order of discovery in the
+physical dsl form."
 
   (let ((syntax-datum (first (second phys/cube))))
     (unless (eq syntax-datum 'faces)
@@ -720,7 +740,7 @@ be used as hash keys in the right order)."
                               faces-body)
 
       (when (plusp (length unknown))
-        (error "Unknown gen-cube-binding-group physical form: ~A"
+        (error "Unknown gen-cube-binding-group faces physical form: ~A"
                unknown))
 
       (multiple-value-bind (face-bindings face-container-binding
@@ -730,8 +750,9 @@ be used as hash keys in the right order)."
 
         ;; Now, generate the representation we put all of this into.
         (let* ((api/repr
-                 (gen-representation-form 'implicit/faces-representation
-                                          :faces (car face-container-binding)))
+                 (gen-faces-representation-form
+                  'implicit/faces-representation
+                  :faces (car face-container-binding)))
                (representation-var (varname "repr" 0))
                (repr-binding-form
                  (gen-representation-binding-form representation-var
@@ -740,24 +761,76 @@ be used as hash keys in the right order)."
                                               :repr representation-var))
                (cube-binding-form (gen-cube-binding-form cube-var api/cube)))
 
-          ;; debugging.
-          ;; TODO: append the frst three together into one binding group.
           (values (append face-bindings
                           (list face-container-binding)
                           (list repr-binding-form))
 
                   cube-binding-form
                   face-attrs
-                  face-vars)
+                  face-vars))))))
 
-          )))))
+(defun gen-envmap-representation-form (sym &key mipmaps)
+  `(,(dslobjsym->constructor sym)
+    ,@(when mipmaps `(:mipmaps ,mipmaps))))
 
 ;; An :envmap cube map will always use envmap in the cube form.
 (defmethod gen-cube-binding-group (cube-var phys/cube
                                    model (style (eql :envmap)) store)
-  nil)
 
-;; Used for :cube textures.
+  "Return four values. The first value is a list of LET bindings which
+construct all of the faces and then one more for the faces container. The
+second value is the binding form for the cube which uses the faces-container as
+its representaton. The third value is a hash table keyed by the face binding
+variable symbol and whose value is the attrs spec associated with that specific
+face form. The fourth value is the face variables in order of discovery in the
+physical dsl form."
+
+  (let ((syntax-datum (first (second phys/cube))))
+    (unless (eq syntax-datum 'envmap)
+      (error
+       "gen-cube-binding-group (:envmap): Wrong. Expected ENVMAP, but got ~S"
+       syntax-datum)))
+
+  (let ((mipmaps-body (cdr (second phys/cube)))
+        (cube-key-pool '(mipmap :unknown)))
+    (multiple-value-bind (phys/mipmaps unknown)
+        ;; Partition the faces body in the envmap form in the cube form.
+        (partition-a-dsl-form cube-key-pool
+                              (physical-form-classifier
+                               :envmap model style store)
+                              mipmaps-body)
+
+      (when (plusp (length unknown))
+        (error "Unknown gen-cube-binding-group envmap physical form: ~A"
+               unknown))
+
+      (multiple-value-bind (mipmap-bindings mipmap-container-binding
+                            mipmap-attrs mipmap-vars)
+          (gen-mipmaps-binding-group (varname "mipmaps" 0)
+                                     phys/mipmaps model style store)
+
+        ;; Now, generate the representation we put all of this into.
+        (let* ((api/repr
+                 (gen-envmap-representation-form
+                  'implicit/envmap-representation
+                  :mipmaps (car mipmap-container-binding)))
+               (representation-var (varname "repr" 0))
+               (repr-binding-form
+                 (gen-representation-binding-form representation-var
+                                                  api/repr))
+               (api/cube (gen-cube-form 'cube :style style :store store
+                                              :repr representation-var))
+               (cube-binding-form (gen-cube-binding-form cube-var api/cube)))
+
+          (values (append mipmap-bindings
+                          (list mipmap-container-binding)
+                          (list repr-binding-form))
+
+                  cube-binding-form
+                  mipmap-attrs
+                  mipmap-vars))))))
+
+;; Used for :cube model textures, both :unique and :envmap styles.
 (defmethod gen-texture-map-binding-group (name (model (eql :cube)) style
                                           store body)
   (let* ((texture-map-key-pool '(attrs cattrs sattrs data-elements
@@ -786,13 +859,13 @@ be used as hash keys in the right order)."
           ;; call wants ONLY that form.
           (gen-data-elements-binding-form (first phys/data-elements))
 
+        ;; assemble the cube form with the appropriate representation.
         (multiple-value-bind (cube-let-bindings cube-container-binding
                               storage-attrs storage-vars)
             (gen-cube-binding-group cube-var
                                     ;; NOTE: Only one cube form.
                                     (first phys/cube)
                                     model style store)
-
           (let ((texmap-form
                   (gen-texture-map-form
                    name model style store
@@ -885,3 +958,50 @@ be used as hash keys in the right order)."
          (face :dir :-y :elidx 3)
          (face :dir :+z :elidx 4)
          (face :dir :-z :elidx 5)))))))
+
+(defun test-g000-cube-phy-gnd-one-non ()
+  (let* ((name 'g000-cube-phy-gnd-one-non)
+         (model :cube)
+         (style :envmap)
+         (store :hcross))
+    (physical->api
+     name model style store
+     ;; body
+     '((data-elements
+        (0 (image-element :logloc (textures cube-hcross-256x192)))
+        (1 (image-element :logloc (textures cube-hcross-128x96)))
+        (2 (image-element :logloc (textures cube-hcross-64x48)))
+        (3 (image-element :logloc (textures cube-hcross-32x24)))
+        (4 (image-element :logloc (textures cube-hcross-16x12)))
+        (5 (image-element :logloc (textures cube-hcross-8x6)))
+        (6 (image-element :logloc (textures cube-hcross-4x3))))
+       (cube
+        (envmap
+         (mipmap-2d
+          :extent (span-2d)
+          (mapping-span-2d :to (data-span-2d)
+                           :from (data-span-2d :elidx 0)))
+         (mipmap-2d
+          :extent (span-2d)
+          (mapping-span-2d :to (data-span-2d)
+                           :from (data-span-2d :elidx 1)))
+         (mipmap-2d
+          :extent (span-2d)
+          (mapping-span-2d :to (data-span-2d)
+                           :from (data-span-2d :elidx 2)))
+         (mipmap-2d
+          :extent (span-2d)
+          (mapping-span-2d :to (data-span-2d)
+                           :from (data-span-2d :elidx 3)))
+         (mipmap-2d
+          :extent (span-2d)
+          (mapping-span-2d :to (data-span-2d)
+                           :from (data-span-2d :elidx 4)))
+         (mipmap-2d
+          :extent (span-2d)
+          (mapping-span-2d :to (data-span-2d)
+                           :from (data-span-2d :elidx 5)))
+         (mipmap-2d
+          :extent (span-2d)
+          (mapping-span-2d :to (data-span-2d)
+                           :from (data-span-2d :elidx 6)))))))))
