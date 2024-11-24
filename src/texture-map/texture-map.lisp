@@ -39,7 +39,7 @@
 ;; it should be put there at all.
 (defun update-texture-map (context old-descriptor new-descriptor)
   (declare (ignore context old-descriptor new-descriptor))
-  (error "update-texture-map: Implement me! Figure out how to replace a texture-map at runtime during live coding.")
+  (format t "IGNORABLE ERROR: update-texture-map: Implement me! Figure out how to replace a texture-map at runtime during live coding.")
 
   ;; COmment this in and finish it.
   #++(tpool:push-queue
