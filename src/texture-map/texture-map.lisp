@@ -131,7 +131,7 @@
              (values ,canon-name ,tmap ,extra-tmaps-list)))))))
 
 ;; Soon to be new stuff.
-(defmacro define-texture-map (name data-model &body body)
+(defmacro define-texture-map-new (name data-model &body body)
   (u:mvlet* ((model style store (unpack-data-model data-model))
              (texmap-form
               anonymous-p (parse-texture-map name model style store body)))
@@ -139,5 +139,7 @@
     `(progn ',anonymous-p
             ',texmap-form)))
 
-(defmacro define-texture-map-2 (name data-model &body body)
+;; All current forms spread through the examples and such are screwed and
+;; so this just removes them while I work on it.
+(defmacro define-texture-map (name data-model &body body)
   nil)
