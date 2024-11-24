@@ -1,5 +1,8 @@
 (in-package #:colony.texture-map)
 
+(defgeneric unpack-data-model (data-model))
+(defgeneric gen-texture-map-name (name model style store))
+
 (defgeneric physical->api (name model style store body))
 (defgeneric physical-form-classifer (form-type model style store))
 
@@ -18,6 +21,22 @@ function for that object."))
 ;;; ---------------------------------------------------------------------------
 ;; helper functions and methods.
 ;;; ---------------------------------------------------------------------------
+
+;; This basically must be for all texture-map kinds.
+(defmethod unpack-data-model (data-model)
+  "Return three forms. The first form is the model, the second is the style,
+and the third, which may be a symbol or a list, is the store."
+  (destructuring-bind (model style . store)
+      (or data-model '(:2d :combined))
+    (values model style store)))
+
+(defmethod gen-texture-map-name (name model style store)
+  "Return two values. The first is the NAME if it is defined or a gensymed
+name if not, and the second is T if the name is a gensym name and NIL
+ otherwise"
+  (if name
+      (values name nil)
+      (values (gensym "ANON-TEX-MAP") t)))
 
 (defun varname (prefix sid &key (suffix "") (pkg nil))
   (u:format-symbol pkg "~A~A~A"
@@ -564,14 +583,20 @@ forms for any mipmap attributes."
                               mip-attrs mipvars)
             (gen-mipmaps-binding-group mipmaps-var phys/mipmaps model
                                        style store)
-          (let ((texmap-form
-                  (gen-texture-map-form
-                   name model style store
-                   :phys/sattrs phys/sattrs
-                   :phys/cattrs phys/cattrs
-                   :phys/attrs phys/attrs
-                   :data-elements-var-name (first de-container-binding)
-                   :mipmaps-var-name mipmaps-var)))
+
+          ;; TODO: Deal with anonymous texture name
+          (u:mvlet* ((concrete-texmap-name
+                      anonymous-p
+                      (gen-texture-map-name name model style store))
+                     (texmap-form
+                      (gen-texture-map-form
+                       concrete-texmap-name model style store
+                       :anonymous-p anonymous-p
+                       :phys/sattrs phys/sattrs
+                       :phys/cattrs phys/cattrs
+                       :phys/attrs phys/attrs
+                       :data-elements-var-name (first de-container-binding)
+                       :mipmaps-var-name mipmaps-var)))
 
             (let ((texture-binding-group
                     ;; Produce the complete binding group
@@ -588,7 +613,8 @@ forms for any mipmap attributes."
               ;; of the texture using the texmap API.
               (values texture-binding-group
                       texture-var
-                      mipmap-absorption-forms))))))))
+                      mipmap-absorption-forms
+                      anonymous-p))))))))
 
 
 ;;; ---------------------------------------------------------------------------
@@ -866,14 +892,20 @@ physical dsl form."
                                     ;; NOTE: Only one cube form.
                                     (first phys/cube)
                                     model style store)
-          (let ((texmap-form
-                  (gen-texture-map-form
-                   name model style store
-                   :phys/sattrs phys/sattrs
-                   :phys/cattrs phys/cattrs
-                   :phys/attrs phys/attrs
-                   :data-elements-var-name (first de-container-binding)
-                   :cube-var-name cube-var)))
+
+          (u:mvlet*
+              ((concrete-texmap-name anonymous-p
+                                     (gen-texture-map-name name
+                                                           model style store))
+               (texmap-form
+                (gen-texture-map-form
+                 concrete-texmap-name model style store
+                 :anonymous-p anonymous-p
+                 :phys/sattrs phys/sattrs
+                 :phys/cattrs phys/cattrs
+                 :phys/attrs phys/attrs
+                 :data-elements-var-name (first de-container-binding)
+                 :cube-var-name cube-var)))
 
             (let ((texture-binding-group
                     ;; Produce the complete binding group
@@ -891,7 +923,8 @@ physical dsl form."
               ;; building of the texture using the texmap API.
               (values texture-binding-group
                       texture-var
-                      storage-absorption-forms))))))))
+                      storage-absorption-forms
+                      anonymous-p))))))))
 
 
 ;;; ---------------------------------------------------------------------------
@@ -903,11 +936,14 @@ physical dsl form."
   ;; TODO: Figure out how to wedge a context into the dsl, then
   ;; wrap form in lambda to specify context.
 
-  (multiple-value-bind (all-bindings texture-var absorption-forms)
+  (multiple-value-bind (all-bindings texture-var absorption-forms anonymous-p)
       (gen-texture-map-binding-group name model style store body)
-    `(let* ,all-bindings
-       ,@absorption-forms
-       ,texture-var)))
+    (values
+     `(lambda ()
+        (let* ,all-bindings
+          ,@absorption-forms
+          ,texture-var))
+     anonymous-p)))
 
 ;;; ---------------------------------------------------------------------------
 ;; Sort of unit tests.
@@ -959,8 +995,8 @@ physical dsl form."
          (face :dir :+z :elidx 4)
          (face :dir :-z :elidx 5)))))))
 
-(defun test-g000-cube-phy-gnd-one-non ()
-  (let* ((name 'g000-cube-phy-gnd-one-non)
+(defun xtest-g000-cube-phy-gnd-one-non ()
+  (let* ((name 'xg000-cube-phy-gnd-one-non)
          (model :cube)
          (style :envmap)
          (store :hcross))

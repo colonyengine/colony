@@ -588,6 +588,12 @@ return the TEXTURE instance for the debug-texture."
   ;; a form at the REPL, or when loading/compiling the system itself. Given
   ;; this we can give proper "X is a duplicate of Y" warnings when loading and
   ;; compiling but not when live coding (if desired).
+  ;;
+  ;; TODO:
+  ;; <|3b|> also, other workflows to consider when testing that:
+  ;;        C-c C-k, C-c C-l, C-M-x, C-x C-e RET (after a form in a buffer),
+  ;;        C-c I RET (at start of a form in a buffer)
+
 
   (u:with-gensyms (desc-lookup old-desc new-desc)
     `(symbol-macrolet ((,desc-lookup (u:href c::=meta/textures= ',name)))

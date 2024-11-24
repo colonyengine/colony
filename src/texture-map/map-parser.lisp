@@ -19,6 +19,9 @@ otherwise return NIL."
 ;; ---------------------------------------------------------------------------
 
 (defmethod parse-texture-map (name model style store body)
+  "Return two values. The first value is the API lambda form to construct
+the in memory texture-map objects. The second form is if the texture was
+anonymous or not."
   (parse-texture-map-simple name model style store body))
 
 (defmethod parse-texture-map-simple (name model style store body)

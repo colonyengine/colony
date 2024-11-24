@@ -132,5 +132,12 @@
 
 ;; Soon to be new stuff.
 (defmacro define-texture-map (name data-model &body body)
-  (declare (ignore name data-model body))
+  (u:mvlet* ((model style store (unpack-data-model data-model))
+             (texmap-form
+              anonymous-p (parse-texture-map name model style store body)))
+    ;; TODO: testing. make a texture-map-descriptor here, etc, etc.
+    `(progn ',anonymous-p
+            ',texmap-form)))
+
+(defmacro define-texture-map-2 (name data-model &body body)
   nil)
