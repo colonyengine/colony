@@ -40,27 +40,15 @@
 
 (defun resolve-semantic-texture-map-descriptor (texture-map-table
                                                 texture-map-desc)
-  ;; NOTE: We clone the individual texture-maps when resolving them because
-  ;; later, during live coding, we'll have a much better chance of being able
-  ;; to figure out how to integrate a new (or changed!) texture-map-descriptor
-  ;; in the face of mutations done to the resolved texture-maps during the
-  ;; execution of the app itself.
-
-  (let* ((eql-map (clone:make-eql-map))
-         (main-texture-map
-           (clone:clone-deep (texmap:ast texture-map-desc) eql-map)))
-
-    ;; There is always a texture-map in the AST.
-    (add-resolved-texture-map texture-map-table main-texture-map)
-
-    ;; But cube maps MAY have extra-texture-maps depending if they are
-    ;; anonymously defined. If there are any, they are promoted to first-class
-    ;; resolved texture maps.
-    (when (texmap::extra-asts-p texture-map-desc)
-      (dolist (extra-texture-map (texmap::extra-asts texture-map-desc))
-        (add-resolved-texture-map texture-map-table
-                                  (clone:clone-deep extra-texture-map
-                                                    eql-map))))))
+  ;; Actually construct the in memory representation of the texture-map
+  ;; object and jam it into the table. This will later be processed by
+  ;; the engine and completed (menaing, all inferred information realized
+  ;; and data possibly loaded from disk/network and put onto gpu, etc.
+  ;;
+  ;; Since we construct it whole sale here, there is no need for cloning
+  ;; the in memory texture-map data structure.
+  (let* ((main-texture-map (funcall (texmap:constructor texture-map-desc))))
+    (add-resolved-texture-map texture-map-table main-texture-map)))
 
 (defun resolve-all-semantic-texture-map-descriptors (texture-map-table)
   "Iterate through the semantic texture maps descriptors in the
@@ -70,9 +58,10 @@ the application."
   (u:do-hash-values (desc (semantic-texture-map-descriptors texture-map-table))
     (resolve-semantic-texture-map-descriptor texture-map-table desc)))
 
-;; TODO: This code is not finished.
 (defun reify-texture-map-descriptors (core)
-  "Clone all the meta descriptions of the texture-maps into the core."
+  "Clone all the meta descriptions of the texture-maps-descriptors into the
+core. Then resolve them by constructing the texture-map in memory
+data-structures. and put them into the RESOLVED-TEXTURE-MAP slot."
   (with-accessors ((texture-map-table c::texture-maps)) core
     (let ((eql-map (clone::make-eql-map)))
       (u:do-hash-values (desc c::=meta/texture-maps=)

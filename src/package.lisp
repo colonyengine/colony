@@ -252,6 +252,8 @@
    )
   ;; programmatic texture-map API types
   (:export
+   #:anonymous-p
+   #:constructor
    #:cube
    #:cube-representaton
    #:data-element ;; TODO move to another package
@@ -272,6 +274,8 @@
    #:mipmap-1d
    #:mipmap-2d
    #:mipmap-3d
+   #:name
+   #:original-form
    #:span ;; TODO move to another package
    #:span-1d ;; TODO move to another package
    #:span-2d ;; TODO move to another package
@@ -283,6 +287,7 @@
    #:texture-map-3d
    #:texture-map-complex
    #:texture-map-cube
+   #:texture-map-descriptor
    #:texture-map-element
    #:texture-map-simple
    )

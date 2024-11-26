@@ -584,13 +584,12 @@ forms for any mipmap attributes."
             (gen-mipmaps-binding-group mipmaps-var phys/mipmaps model
                                        style store)
 
-          ;; TODO: Deal with anonymous texture name
-          (u:mvlet* ((concrete-texmap-name
+          (u:mvlet* ((canonical-texmap-name
                       anonymous-p
                       (gen-texture-map-name name model style store))
                      (texmap-form
                       (gen-texture-map-form
-                       concrete-texmap-name model style store
+                       canonical-texmap-name model style store
                        :anonymous-p anonymous-p
                        :phys/sattrs phys/sattrs
                        :phys/cattrs phys/cattrs
@@ -614,6 +613,7 @@ forms for any mipmap attributes."
               (values texture-binding-group
                       texture-var
                       mipmap-absorption-forms
+                      canonical-texmap-name
                       anonymous-p))))))))
 
 
@@ -894,12 +894,12 @@ physical dsl form."
                                     model style store)
 
           (u:mvlet*
-              ((concrete-texmap-name anonymous-p
+              ((canonical-texmap-name anonymous-p
                                      (gen-texture-map-name name
                                                            model style store))
                (texmap-form
                 (gen-texture-map-form
-                 concrete-texmap-name model style store
+                 canonical-texmap-name model style store
                  :anonymous-p anonymous-p
                  :phys/sattrs phys/sattrs
                  :phys/cattrs phys/cattrs
@@ -924,11 +924,12 @@ physical dsl form."
               (values texture-binding-group
                       texture-var
                       storage-absorption-forms
+                      canonical-texmap-name
                       anonymous-p))))))))
 
 
 ;;; ---------------------------------------------------------------------------
-;; 1d, 2d, 3d, cube logical texture conversion.
+;; 1d, 2d, 3d, cube physical texture conversion.
 ;;; ---------------------------------------------------------------------------
 
 (defmethod physical->api (name model style store body)
@@ -936,14 +937,16 @@ physical dsl form."
   ;; TODO: Figure out how to wedge a context into the dsl, then
   ;; wrap form in lambda to specify context.
 
-  (multiple-value-bind (all-bindings texture-var absorption-forms anonymous-p)
+  (multiple-value-bind (all-bindings texture-var absorption-forms
+                        canonical-texmap-name anonymous-p)
       (gen-texture-map-binding-group name model style store body)
     (values
+     canonical-texmap-name
+     anonymous-p
      `(lambda ()
         (let* ,all-bindings
           ,@absorption-forms
-          ,texture-var))
-     anonymous-p)))
+          ,texture-var)))))
 
 ;;; ---------------------------------------------------------------------------
 ;; Sort of unit tests.

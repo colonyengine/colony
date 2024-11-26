@@ -66,6 +66,7 @@
 ;; Third: If there were additional texture-maps defined, like say faces of a
 ;;        cube map, then return all the ASTs for those additional texture maps
 ;;        in a list.
+#++
 (defmacro define-texture-map-original (name data-model &body body)
   (u:with-gensyms (tmap extra-tmaps-list context anonymous-p canon-name
                         desc-lookup old-desc new-desc)
@@ -130,16 +131,36 @@
 
              (values ,canon-name ,tmap ,extra-tmaps-list)))))))
 
+;; NOTE: This macro is slightly less than screwed. fix me.
 ;; Soon to be new stuff.
 (defmacro define-texture-map-new (name data-model &body body)
-  (u:mvlet* ((model style store (unpack-data-model data-model))
-             (texmap-form
-              anonymous-p (parse-texture-map name model style store body)))
-    ;; TODO: testing. make a texture-map-descriptor here, etc, etc.
-    `(progn ',anonymous-p
-            ',texmap-form)))
+  (multiple-value-bind (model style store)
+      (unpack-data-model data-model)
+    (multiple-value-bind (canonical-texmap-name anonymous-p constructor)
+         ;; TODO there is a bug here.
+         (parse-texture-map name model style store body)
+      `(progn
+
+        ;; Is doing this directly at macro expansion time right? I think so
+        ;; since the constructor creates a thunk.
+        (format t "canonical: ~S~%anon: ~S~%constructor: ~S~%"
+                ',canonical-texmap-name ,anonymous-p ,constructor)
+
+        (symbol-macrolet ((desc-lookup (u:href c::=meta/texture-maps=
+                                               ',canonical-texmap-name)))
+          (let ((new-desc (make-texture-map-descriptor
+                           ',canonical-texmap-name ,anonymous-p ,constructor
+                           `(define-texture-map ,',name ,',data-model
+                              ,@',body)))
+                (old-desc desc-lookup))
+            (setf desc-lookup new-desc)
+            (update-texture-map/interactively old-desc new-desc))
+          (values
+           ',canonical-texmap-name
+           ,anonymous-p))))))
 
 ;; All current forms spread through the examples and such are screwed and
 ;; so this just removes them while I work on it.
 (defmacro define-texture-map (name data-model &body body)
+  (declare (ignore name data-model body))
   nil)
