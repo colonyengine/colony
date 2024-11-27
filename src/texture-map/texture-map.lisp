@@ -137,27 +137,28 @@
   (multiple-value-bind (model style store)
       (unpack-data-model data-model)
     (multiple-value-bind (canonical-texmap-name anonymous-p constructor)
-         ;; TODO there is a bug here.
-         (parse-texture-map name model style store body)
+        ;; NOTE: We convert the DSL into the lambda thunk at macro expansion
+        ;; time.
+        (parse-texture-map name model style store body)
       `(progn
+         ;; Is doing this directly at macro expansion time right? I think so
+         ;; since the constructor creates a thunk.
+         (format t "canonical: ~S~%anon: ~S~%constructor: ~S~%"
+                 ',canonical-texmap-name ,anonymous-p ,constructor)
 
-        ;; Is doing this directly at macro expansion time right? I think so
-        ;; since the constructor creates a thunk.
-        (format t "canonical: ~S~%anon: ~S~%constructor: ~S~%"
-                ',canonical-texmap-name ,anonymous-p ,constructor)
-
-        (symbol-macrolet ((desc-lookup (u:href c::=meta/texture-maps=
-                                               ',canonical-texmap-name)))
-          (let ((new-desc (make-texture-map-descriptor
-                           ',canonical-texmap-name ,anonymous-p ,constructor
-                           `(define-texture-map ,',name ,',data-model
-                              ,@',body)))
-                (old-desc desc-lookup))
-            (setf desc-lookup new-desc)
-            (update-texture-map/interactively old-desc new-desc))
-          (values
-           ',canonical-texmap-name
-           ,anonymous-p))))))
+         (symbol-macrolet ((desc-lookup (u:href c::=meta/texture-maps=
+                                                ',canonical-texmap-name)))
+           (let ((new-desc (make-texture-map-descriptor
+                            ',canonical-texmap-name ,anonymous-p ,constructor
+                            `(define-texture-map ,',name ,',data-model
+                               ,@',body)))
+                 (old-desc desc-lookup))
+             (setf desc-lookup new-desc)
+             (update-texture-map/interactively old-desc new-desc))
+           (values
+            ',canonical-texmap-name
+            ,anonymous-p
+            ,constructor))))))
 
 ;; All current forms spread through the examples and such are screwed and
 ;; so this just removes them while I work on it.

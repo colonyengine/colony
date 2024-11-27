@@ -243,17 +243,15 @@
    )
   ;; texture-map-descriptor API
   (:export
-   #:ast
-   #:extra-asts
+   #:anonymous-p
+   #:constructor
    #:make-texture-map-descriptor
    #:name
+   #:original-form
    #:texture-map-descriptor
-   #:user-form
    )
   ;; programmatic texture-map API types
   (:export
-   #:anonymous-p
-   #:constructor
    #:cube
    #:cube-representaton
    #:data-element ;; TODO move to another package
@@ -275,7 +273,6 @@
    #:mipmap-2d
    #:mipmap-3d
    #:name
-   #:original-form
    #:span ;; TODO move to another package
    #:span-1d ;; TODO move to another package
    #:span-2d ;; TODO move to another package
@@ -347,6 +344,9 @@
    #:store ;; accessor for cube, texture-map
    #:style ;; accessor for cube, texture-map
    #:to ;; accessor for mapping-span TODO move
+   )
+  ;; Exported define-texture-map DSL symbols
+  (:export
    )
   )
 
@@ -617,7 +617,34 @@
    #:colony.texture-map
    #:define-texture-map)
   (:export
-   #:define-texture-map)
+   #:define-texture-map
+   ;; texture-map DSL keywords
+   #:attrs
+   #:cattrs
+   #:cube
+   #:data-elements
+   #:data-span
+   #:data-span-1d
+   #:data-span-2d
+   #:data-span-3d
+   #:envmap
+   #:face
+   #:faces
+   #:image-element
+   #:mapping-span
+   #:mapping-span-1d
+   #:mapping-span-2d
+   #:mapping-span-3d
+   #:mipmap
+   #:mipmap-1d
+   #:mipmap-2d
+   #:mipmap-3d
+   #:sattrs
+   #:span
+   #:span-1d
+   #:span-2d
+   #:span-3d
+   #:texture-map-element)
   ;; textures
   (:import-from
    #:colony.texture
