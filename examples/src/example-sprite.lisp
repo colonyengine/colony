@@ -2,8 +2,8 @@
 
 ;;; Textures
 
-(c:define-texture-map sprites (:single :unique)
-  (:mipmap () (textures sprites)))
+(c:define-texture-map sprites (:2d :unique)
+  (texmap:mipmap (textures sprites)))
 
 (c:define-texture sprites (:texture-2d)
   ;; TODO: TMAP Convert :data to be texture-map name.

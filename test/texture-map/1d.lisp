@@ -26,28 +26,28 @@
 
 ;; logical form, 99% of texture-maps prolly look like this (or with all
 ;; mipmaps specified).
-(c:define-texture-map g000-1d-log-inf-one-non (:1d :unique)
-  (c:mipmap (textures 1d-64x1)))
+(texmap:define-texture-map g000-1d-log-inf-one-non (:1d :unique)
+  (texmap:mipmap (textures 1d-64x1)))
 ;; |
-;; | converted upon macro expansion immediately to the below physical form.
+;; | converted by logical->physical to the below texture-map dsl.
 ;; v
 ;; physical form of the above logical form with many things yet to be inferred
 ;; For each element: :physloc will be filled in too, but :data may or may not
 ;; be fully realized (meaning it could exist but hold header information
 ;; only).
-(c:define-texture-map g000-1d-phy-inf-one-non (:1d :unique)
-  (c:data-elements
+(texmap:define-texture-map g000-1d-phy-inf-one-non (:1d :unique)
+  (texmap:data-elements
    ;; The first value can be a symbol or an integer, but in memory are mapped
    ;; to integers starting from 0 and increasing by one each time in the order
-   ;; of presentation in c:data-elements. The :elidx entry in the data-span-*
-   ;; entries are altered to be the actual index of the data-element in the
-   ;; data-elements array and the symbolic names are lost forever (at this
-   ;; time) in the actual in memory data structure.
-   (0 (c:image-element :logloc (textures 1d-64x1))))
-  (c:mipmap-1d
-   :extent (c:span-1d)
-   (c:mapping-span-1d :to (c:data-span-1d)
-                      :from (c:data-span-1d :elidx 0))))
+   ;; of presentation in texmap:data-elements. The :elidx entry in the
+   ;; data-span-* entries are altered to be the actual index of the
+   ;; data-element in the data-elements array and the symbolic names are lost
+   ;; forever (at this time) in the actual in memory data structure.
+   (0 (texmap:image-element :logloc (textures 1d-64x1))))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d)
+                           :from (texmap:data-span-1d :elidx 0))))
 ;; |
 ;; | One or more, up to all, storage-forms will be filled in my reading the
 ;; ! headers of the images in order to get the right dimensions. The actual
@@ -58,13 +58,14 @@
 ;; | time.
 ;; v
 ;; Grounded (as much as possible) physical form of the above logical form.
-(c:define-texture-map g000-1d-phy-gnd-one-non (:1d :unique)
-  (c:data-elements
-   (0 (c:image-element :logloc (textures 1d-64x1))))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 64)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 64)
-                      :from (c:data-span-1d :origin 0 :extent 64 :elidx 0))))
+(texmap:define-texture-map g000-1d-phy-gnd-one-non (:1d :unique)
+  (texmap:data-elements
+   (0 (texmap:image-element :logloc (textures 1d-64x1))))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 64)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 64)
+                           :from (texmap:data-span-1d :origin 0 :extent 64
+                                                      :elidx 0))))
 ;; -
 ;; |
 ;; | The same grounded form as above, but built from programmatic API.
@@ -106,13 +107,13 @@
                        :mipmaps mipmaps
                        ;; If any attributes, put them here as appropriate.
                        ;; :cattrs ((...) ...)
-                       ))
+                       )))
 
-         ;; HOWEVER: If there were any attributes, deal with them here.  Each
-         ;; storage-forms absorbs the texture-map while using :cattr (or
-         ;; whatever as appropriate)
+    ;; HOWEVER: If there were any attributes, deal with them here.  Each
+    ;; storage-forms absorbs the texture-map while using :cattr (or
+    ;; whatever as appropriate)
 
-         texture-map)))
+    texture-map))
 
 
 
@@ -123,100 +124,107 @@
 ;;; --------------------------------------------------------
 
 ;; The logical form which is written 99% of the time by a human.
-(c:define-texture-map g001-1d-log-inf-all-non (:1d :unique)
+(texmap:define-texture-map g001-1d-log-inf-all-non (:1d :unique)
   ;; USER MUST PUT THEM IN ORDER.
-  (c:mipmap (textures 1d-64x1))
-  (c:mipmap (textures 1d-32x1))
-  (c:mipmap (textures 1d-16x1))
-  (c:mipmap (textures 1d-8x1))
-  (c:mipmap (textures 1d-4x1))
-  (c:mipmap (textures 1d-2x1))
-  (c:mipmap (textures 1d-1x1)))
+  (texmap:mipmap (textures 1d-64x1))
+  (texmap:mipmap (textures 1d-32x1))
+  (texmap:mipmap (textures 1d-16x1))
+  (texmap:mipmap (textures 1d-8x1))
+  (texmap:mipmap (textures 1d-4x1))
+  (texmap:mipmap (textures 1d-2x1))
+  (texmap:mipmap (textures 1d-1x1)))
 ;; |
 ;; | Converted at macro expansion time to the below. The expander simply
 ;; | honors the mipmap images found.
 ;; |
 ;; v
-(c:define-texture-map g001-1d-phy-inf-all-non (:1d :unique)
-  (c:data-elements
-   (0 (c:image-element :logloc (textures 1d-64x1)))
-   (1 (c:image-element :logloc (textures 1d-32x1)))
-   (2 (c:image-element :logloc (textures 1d-16x1)))
-   (3 (c:image-element :logloc (textures 1d-8x1)))
-   (4 (c:image-element :logloc (textures 1d-4x1)))
-   (5 (c:image-element :logloc (textures 1d-2x1)))
-   (6 (c:image-element :logloc (textures 1d-1x1))))
-  (c:mipmap-1d
-   :extent (c:span-1d)
-   (c:mapping-span-1d :to (c:data-span-1d)
-                      :from (c:data-span-1d :elidx 0)))
-  (c:mipmap-1d
-   :extent (c:span-1d)
-   (c:mapping-span-1d :to (c:data-span-1d)
-                      :from (c:data-span-1d :elidx 1)))
-  (c:mipmap-1d
-   :extent (c:span-1d)
-   (c:mapping-span-1d :to (c:data-span-1d)
-                      :from (c:data-span-1d :elidx 2)))
-  (c:mipmap-1d
-   :extent (c:span-1d)
-   (c:mapping-span-1d :to (c:data-span-1d)
-                      :from (c:data-span-1d :elidx 3)))
-  (c:mipmap-1d
-   :extent (c:span-1d)
-   (c:mapping-span-1d :to (c:data-span-1d)
-                      :from (c:data-span-1d :elidx 4)))
-  (c:mipmap-1d
-   :extent (c:span-1d)
-   (c:mapping-span-1d :to (c:data-span-1d)
-                      :from (c:data-span-1d :elidx 5)))
-  (c:mipmap-1d
-   :extent (c:span-1d)
-   (c:mapping-span-1d :to (c:data-span-1d)
-                      :from (c:data-span-1d :elidx 6))))
+(texmap:define-texture-map g001-1d-phy-inf-all-non (:1d :unique)
+  (texmap:data-elements
+   (0 (texmap:image-element :logloc (textures 1d-64x1)))
+   (1 (texmap:image-element :logloc (textures 1d-32x1)))
+   (2 (texmap:image-element :logloc (textures 1d-16x1)))
+   (3 (texmap:image-element :logloc (textures 1d-8x1)))
+   (4 (texmap:image-element :logloc (textures 1d-4x1)))
+   (5 (texmap:image-element :logloc (textures 1d-2x1)))
+   (6 (texmap:image-element :logloc (textures 1d-1x1))))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d)
+                           :from (texmap:data-span-1d :elidx 0)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d)
+                           :from (texmap:data-span-1d :elidx 1)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d)
+                           :from (texmap:data-span-1d :elidx 2)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d)
+                           :from (texmap:data-span-1d :elidx 3)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d)
+                           :from (texmap:data-span-1d :elidx 4)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d)
+                           :from (texmap:data-span-1d :elidx 5)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d)
+                           :from (texmap:data-span-1d :elidx 6))))
 ;; |
 ;; | One or more mipmaps image headers are read and ultimately produce
 ;; | the following. However, in order to mark the texture-map as "complete"
 ;; | we need to eventually see the entire set of image headers.
 ;; |
 ;; v
-(c:define-texture-map g001-1d-phy-gnd-all-non (:1d :unique)
-  (c:data-elements
-   (0 (c:image-element :logloc (textures 1d-64x1)))
-   (1 (c:image-element :logloc (textures 1d-32x1)))
-   (2 (c:image-element :logloc (textures 1d-16x1)))
-   (3 (c:image-element :logloc (textures 1d-8x1)))
-   (4 (c:image-element :logloc (textures 1d-4x1)))
-   (5 (c:image-element :logloc (textures 1d-2x1)))
-   (6 (c:image-element :logloc (textures 1d-1x1))))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 64)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 64)
-                      :from (c:data-span-1d :origin 0 :extent 64 :elidx 0)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 32)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 32)
-                      :from (c:data-span-1d :origin 0 :extent 32 :elidx 1)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 16)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 16)
-                      :from (c:data-span-1d :origin 0 :extent 16 :elidx 2)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 8)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 8)
-                      :from (c:data-span-1d :origin 0 :extent 8 :elidx 3)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 4)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 4)
-                      :from (c:data-span-1d :origin 0 :extent 4 :elidx 4)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 2)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 2)
-                      :from (c:data-span-1d :origin 0 :extent 2 :elidx 5)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 1)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 1)
-                      :from (c:data-span-1d :origin 0 :extent 1 :elidx 6))))
+(texmap:define-texture-map g001-1d-phy-gnd-all-non (:1d :unique)
+  (texmap:data-elements
+   (0 (texmap:image-element :logloc (textures 1d-64x1)))
+   (1 (texmap:image-element :logloc (textures 1d-32x1)))
+   (2 (texmap:image-element :logloc (textures 1d-16x1)))
+   (3 (texmap:image-element :logloc (textures 1d-8x1)))
+   (4 (texmap:image-element :logloc (textures 1d-4x1)))
+   (5 (texmap:image-element :logloc (textures 1d-2x1)))
+   (6 (texmap:image-element :logloc (textures 1d-1x1))))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 64)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 64)
+                           :from (texmap:data-span-1d :origin 0 :extent 64
+                                                      :elidx 0)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 32)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 32)
+                           :from (texmap:data-span-1d :origin 0 :extent 32
+                                                      :elidx 1)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 16)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 16)
+                           :from (texmap:data-span-1d :origin 0 :extent 16
+                                                      :elidx 2)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 8)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 8)
+                           :from (texmap:data-span-1d :origin 0 :extent 8
+                                                      :elidx 3)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 4)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 4)
+                           :from (texmap:data-span-1d :origin 0 :extent 4
+                                                      :elidx 4)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 2)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 2)
+                           :from (texmap:data-span-1d :origin 0 :extent 2
+                                                      :elidx 5)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 1)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 1)
+                           :from (texmap:data-span-1d :origin 0 :extent 1
+                                                      :elidx 6))))
 ;; -
 ;; |
 ;; | The same grounded form as above, but built from programmatic API.
@@ -349,31 +357,38 @@
 ;;; --------------------------------------------------------
 
 
-(c:define-texture-map g002-1d-phy-gnd-one-non (:1d :unique)
-  (c:data-elements
-   (0 (c:image-element :logloc (textures 1d-64x1)))
-   (1 (c:image-element :logloc (textures 1d-32x1)))
-   (2 (c:image-element :logloc (textures 1d-16x1)))
-   (3 (c:image-element :logloc (textures 1d-8x1)))
-   (4 (c:image-element :logloc (textures 1d-4x1)))
-   (5 (c:image-element :logloc (textures 1d-2x1)))
-   (6 (c:image-element :logloc (textures 1d-1x1))))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 127)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 64)
-                      :from (c:data-span-1d :origin 0 :extent 64 :elidx 0))
-   (c:mapping-span-1d :to (c:data-span-1d :origin 64 :extent 32)
-                      :from (c:data-span-1d :origin 0 :extent 32 :elidx 1))
-   (c:mapping-span-1d :to (c:data-span-1d :origin 96 :extent 16)
-                      :from (c:data-span-1d :origin 0 :extent 16 :elidx 2))
-   (c:mapping-span-1d :to (c:data-span-1d :origin 112 :extent 8)
-                      :from (c:data-span-1d :origin 0 :extent 8 :elidx 3))
-   (c:mapping-span-1d :to (c:data-span-1d :origin 120 :extent 4)
-                      :from (c:data-span-1d :origin 0 :extent 4 :elidx 4))
-   (c:mapping-span-1d :to (c:data-span-1d :origin 124 :extent 2)
-                      :from (c:data-span-1d :origin 0 :extent 2 :elidx 5))
-   (c:mapping-span-1d :to (c:data-span-1d :origin 126 :extent 1)
-                      :from (c:data-span-1d :origin 0 :extent 1 :elidx 6))))
+(texmap:define-texture-map g002-1d-phy-gnd-one-non (:1d :unique)
+  (texmap:data-elements
+   (0 (texmap:image-element :logloc (textures 1d-64x1)))
+   (1 (texmap:image-element :logloc (textures 1d-32x1)))
+   (2 (texmap:image-element :logloc (textures 1d-16x1)))
+   (3 (texmap:image-element :logloc (textures 1d-8x1)))
+   (4 (texmap:image-element :logloc (textures 1d-4x1)))
+   (5 (texmap:image-element :logloc (textures 1d-2x1)))
+   (6 (texmap:image-element :logloc (textures 1d-1x1))))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 127)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 64)
+                           :from (texmap:data-span-1d :origin 0 :extent 64
+                                                      :elidx 0))
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 64 :extent 32)
+                           :from (texmap:data-span-1d :origin 0 :extent 32
+                                                      :elidx 1))
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 96 :extent 16)
+                           :from (texmap:data-span-1d :origin 0 :extent 16
+                                                      :elidx 2))
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 112 :extent 8)
+                           :from (texmap:data-span-1d :origin 0 :extent 8
+                                                      :elidx 3))
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 120 :extent 4)
+                           :from (texmap:data-span-1d :origin 0 :extent 4
+                                                      :elidx 4))
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 124 :extent 2)
+                           :from (texmap:data-span-1d :origin 0 :extent 2
+                                                      :elidx 5))
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 126 :extent 1)
+                           :from (texmap:data-span-1d :origin 0 :extent 1
+                                                      :elidx 6))))
 ;; -
 ;; |
 ;; | The same grounded form as above, but built from programmatic API.
@@ -470,18 +485,18 @@
 ;; Model (:1d :combined :common) ;; 64x1 on left side, 1x1 on right.
 ;;; --------------------------------------------------------
 
-(c:define-texture-map g003-1d-log-inf-all-non (:1d :combined :common)
+(texmap:define-texture-map g003-1d-log-inf-all-non (:1d :combined :common)
   ;; NOTE: There can only be ONE mipmap here.
-  (c:mipmap (textures 1d-all-127x1)))
+  (texmap:mipmap (textures 1d-all-127x1)))
 ;; |
 ;; | Convert to physical form, but since we haven't read the image header
 ;; | we don't know how many mipmaps there are or how big they are. We can't
 ;; | specify any mipmaps yet! The engine will have to figure it out at runtime
 ;; | or asset packing time.
 ;; v
-(c:define-texture-map g003-1d-phy-inf-all-non (:1d :combined :common)
-  (c:data-elements
-   (0 (c:image-element :logloc (textures 1d-all-127x1))))
+(texmap:define-texture-map g003-1d-phy-inf-all-non (:1d :combined :common)
+  (texmap:data-elements
+   (0 (texmap:image-element :logloc (textures 1d-all-127x1))))
   ;; NOTE: Empty here, the dsl parser expects a single image in data-elements
   ;; and will know what to do with it.
   )
@@ -490,44 +505,44 @@
 ;; | We still might not have read the actual image data though to validate
 ;; | that the image is _actually_ in :common format.
 ;; v
-(c:define-texture-map g003-1d-phy-gnd-all-non (:1d :combined :common)
-  (c:data-elements
-   (0 (c:image-element :logloc (textures 1d-all-127x1))))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 64)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 64)
-                      :from (c:data-span-1d :origin 0 :extent 64
-                                            :elidx 0)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 32)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 32)
-                      :from (c:data-span-1d :origin 64 :extent 32
-                                            :elidx 0)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 16)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 16)
-                      :from (c:data-span-1d :origin 96 :extent 16
-                                            :elidx 0)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 8)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 8)
-                      :from (c:data-span-1d :origin 112 :extent 8
-                                            :elidx 0)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 4)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 4)
-                      :from (c:data-span-1d :origin 120 :extent 4
-                                            :elidx 0)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 2)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 2)
-                      :from (c:data-span-1d :origin 124 :extent 2
-                                            :elidx 0)))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 1)
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 1)
-                      :from (c:data-span-1d :origin 126 :extent 1
-                                            :elidx 0))))
+(texmap:define-texture-map g003-1d-phy-gnd-all-non (:1d :combined :common)
+  (texmap:data-elements
+   (0 (texmap:image-element :logloc (textures 1d-all-127x1))))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 64)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 64)
+                           :from (texmap:data-span-1d :origin 0 :extent 64
+                                                      :elidx 0)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 32)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 32)
+                           :from (texmap:data-span-1d :origin 64 :extent 32
+                                                      :elidx 0)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 16)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 16)
+                           :from (texmap:data-span-1d :origin 96 :extent 16
+                                                      :elidx 0)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 8)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 8)
+                           :from (texmap:data-span-1d :origin 112 :extent 8
+                                                      :elidx 0)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 4)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 4)
+                           :from (texmap:data-span-1d :origin 120 :extent 4
+                                                      :elidx 0)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 2)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 2)
+                           :from (texmap:data-span-1d :origin 124 :extent 2
+                                                      :elidx 0)))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 1)
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 1)
+                           :from (texmap:data-span-1d :origin 126 :extent 1
+                                                      :elidx 0))))
 ;; -
 ;; |
 ;; | The same grounded form as above, but built from programmatic API.
@@ -648,46 +663,47 @@
 ;; Name: 1d
 ;; Model (:1d :unique)
 ;;; --------------------------------------------------------
-(c:define-texture-map g004-1d-log-inf-one-ovr (:1d :unique)
-  ;; use (c:attrs (key semantic-val computed-val) ...) for full control.
-  ;; use (c:cattrs (key computed-val) ...) for computed attributes.
-  ;; use (c:sattrs (key semantic-val) ...) for semantic attributes.
-  (c:cattrs ('foo "tmap attr 0")
-            ('bar "tmap attr 1"))
-  (c:mipmap
-   (c:cattrs ('bar "mipmap attr 0 overlays onto tmap attr 0")
-             ('qux "mipmap attr 1"))
+(texmap:define-texture-map g004-1d-log-inf-one-ovr (:1d :unique)
+  ;; use (texmap:attrs (key semantic-val computed-val) ...) for full control.
+  ;; use (texmap:cattrs (key computed-val) ...) for computed attributes.
+  ;; use (texmap:sattrs (key semantic-val) ...) for semantic attributes.
+  (texmap:cattrs ('foo "tmap attr 0")
+                 ('bar "tmap attr 1"))
+  (texmap:mipmap
+   (texmap:cattrs ('bar "mipmap attr 0 overlays onto tmap attr 0")
+                  ('qux "mipmap attr 1"))
    (textures 1d-64x1)))
 ;; |
 ;; | converted to this physical form
 ;; |
 ;; v
-(c:define-texture-map g004-1d-phy-inf-one-ovr (:1d :unique)
-  (c:cattrs ('foo "tmap attr 0")
-            ('bar "tmap attr 1"))
-  (c:data-elements
-   (0 (c:image-element :logloc (textures 1d-64x1))))
-  (c:mipmap-1d
-   :extent (c:span-1d)
-   (c:cattrs ('bar "mipmap attr 0 overlays onto tmap attr 0")
-             ('qux "mipmap attr 1"))
-   (c:mapping-span-1d :to (c:data-span-1d)
-                      :from (c:data-span-1d :elidx 0))))
+(texmap:define-texture-map g004-1d-phy-inf-one-ovr (:1d :unique)
+  (texmap:cattrs ('foo "tmap attr 0")
+                 ('bar "tmap attr 1"))
+  (texmap:data-elements
+   (0 (texmap:image-element :logloc (textures 1d-64x1))))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d)
+   (texmap:cattrs ('bar "mipmap attr 0 overlays onto tmap attr 0")
+                  ('qux "mipmap attr 1"))
+   (texmap:mapping-span-1d :to (texmap:data-span-1d)
+                           :from (texmap:data-span-1d :elidx 0))))
 ;; |
 ;; | Then once the image header read, it is grounded into this form.
 ;; |
 ;; v
-(c:define-texture-map g004-1d-phy-gnd-one-ovr (:1d :unique)
-  (c:cattrs ('foo "tmap attr 0")
-            ('bar "tmap attr 1"))
-  (c:data-elements
-   (0 (c:image-element :logloc (textures 1d-64x1))))
-  (c:mipmap-1d
-   :extent (c:span-1d :origin 0 :extent 64)
-   (c:cattrs ('bar "mip attr 0 overlays onto tmap attr 0")
-             ('qux "mip attr 1"))
-   (c:mapping-span-1d :to (c:data-span-1d :origin 0 :extent 64)
-                      :from (c:data-span-1d :origin 0 :extent 64 :elidx 0))))
+(texmap:define-texture-map g004-1d-phy-gnd-one-ovr (:1d :unique)
+  (texmap:cattrs ('foo "tmap attr 0")
+                 ('bar "tmap attr 1"))
+  (texmap:data-elements
+   (0 (texmap:image-element :logloc (textures 1d-64x1))))
+  (texmap:mipmap-1d
+   :extent (texmap:span-1d :origin 0 :extent 64)
+   (texmap:cattrs ('bar "mip attr 0 overlays onto tmap attr 0")
+                  ('qux "mip attr 1"))
+   (texmap:mapping-span-1d :to (texmap:data-span-1d :origin 0 :extent 64)
+                           :from (texmap:data-span-1d :origin 0 :extent 64
+                                                      :elidx 0))))
 ;; -
 ;; |
 ;; | The same grounded form as above, but built from programmatic API.
@@ -738,3 +754,36 @@
                           (list 'bar "mip attr 0 overlays onto tmap attr 0")
                           (list 'qux "mip attr 1")))
     texture-map))
+
+;; ----------------------------------------------------------------------------
+
+;; The actual test forms looking at the stuff defined above.
+
+;; TODO: Move to generic test suite definition file.
+(define-test suite/texture-map)
+(define-test suite/texture-map/1d
+  :depends-on (suite/texture-map))
+
+;; TODO: Start writing tests to check that the texture exists in the metaspace
+;; if appropriate, and that constructed textures have the right in memory
+;; structure.
+
+(define-test meta-present/g000-1d-log-inf-one-non
+  :depends-on (suite/texture-map/1d)
+  (let* ((tmap-desc
+           (u:href colony::=meta/texture-maps= 'g000-1d-log-inf-one-non))
+         (gen-tmap (when tmap-desc (texmap:constructor tmap-desc))))
+    (of-type 'texmap:texture-map-descriptor tmap-desc)
+    (of-type 'function gen-tmap)))
+
+(define-test constructed/g000-1d-log-inf-one-non
+  :depends-on (suite/texture-map/1d)
+  (let* ((tmap-desc
+           (u:href colony::=meta/texture-maps= 'g000-1d-log-inf-one-non))
+         (gen-tmap (when tmap-desc (texmap:constructor tmap-desc)))
+         (tmap (when gen-tmap (funcall gen-tmap))))
+    (of-type 'texmap:texture-map-descriptor tmap-desc)
+    (of-type 'function gen-tmap)
+    ;; TODO check that the constructed tmap in memory data structure and all if
+    ;; its children, etc is exactly what we expect it to be.
+    (of-type 'texmap:texture-map-1d tmap)))

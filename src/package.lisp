@@ -345,7 +345,7 @@
    #:style ;; accessor for cube, texture-map
    #:to ;; accessor for mapping-span TODO move
    )
-  ;; Exported define-texture-map DSL symbols
+  ;; Exported define-texture-map DSL syntax symbols
   (:export
    #:attrs
    #:cattrs
@@ -355,6 +355,7 @@
    #:data-span-1d
    #:data-span-2d
    #:data-span-3d
+   #:dir
    #:envmap
    #:face
    #:faces
@@ -642,62 +643,10 @@
   (:import-from
    #:colony.texture-map
    #:define-texture-map
-   ;; Import texture-map dsl tokens
-   #:attrs
-   #:cattrs
-   #:cube
-   #:data-elements
-   #:data-span
-   #:data-span-1d
-   #:data-span-2d
-   #:data-span-3d
-   #:envmap
-   #:face
-   #:faces
-   #:image-element
-   #:mapping-span
-   #:mapping-span-1d
-   #:mapping-span-2d
-   #:mapping-span-3d
-   #:mipmap
-   #:mipmap-1d
-   #:mipmap-2d
-   #:mipmap-3d
-   #:sattrs
-   #:span
-   #:span-1d
-   #:span-2d
-   #:span-3d
-   #:texture-map-element)
+   )
   (:export
    #:define-texture-map
-   ;; texture-map DSL tokens
-   #:attrs
-   #:cattrs
-   #:cube
-   #:data-elements
-   #:data-span
-   #:data-span-1d
-   #:data-span-2d
-   #:data-span-3d
-   #:envmap
-   #:face
-   #:faces
-   #:image-element
-   #:mapping-span
-   #:mapping-span-1d
-   #:mapping-span-2d
-   #:mapping-span-3d
-   #:mipmap
-   #:mipmap-1d
-   #:mipmap-2d
-   #:mipmap-3d
-   #:sattrs
-   #:span
-   #:span-1d
-   #:span-2d
-   #:span-3d
-   #:texture-map-element)
+   )
   ;; textures
   (:import-from
    #:colony.texture

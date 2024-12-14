@@ -133,16 +133,17 @@
 
 ;; NOTE: This macro is slightly less than screwed. fix me.
 ;; Soon to be new stuff.
-(defmacro define-texture-map-new (name data-model &body body)
+(defmacro define-texture-map (name data-model &body body)
   (multiple-value-bind (model style store)
       (unpack-data-model data-model)
     (multiple-value-bind (canonical-texmap-name anonymous-p constructor)
-        ;; NOTE: We convert the DSL into the lambda thunk at macro expansion
-        ;; time.
+        ;; NOTE: We convert the DSL into a lambda form at macro expansion
+        ;; time that then gets compiled into a thunk.
         (parse-texture-map name model style store body)
       `(progn
          ;; Is doing this directly at macro expansion time right? I think so
          ;; since the constructor creates a thunk.
+         #++
          (format t "canonical: ~S~%anon: ~S~%constructor: ~S~%"
                  ',canonical-texmap-name ,anonymous-p ,constructor)
 
@@ -154,14 +155,14 @@
                                ,@',body)))
                  (old-desc desc-lookup))
              (setf desc-lookup new-desc)
-             (update-texture-map/interactively old-desc new-desc))
-           (values
-            ',canonical-texmap-name
-            ,anonymous-p
-            ,constructor))))))
+             (update-texture-map/interactively old-desc new-desc)
+             (values
+              (name new-desc)
+              (anonymous-p new-desc)
+              (constructor new-desc))))))))
 
 ;; All current forms spread through the examples and such are screwed and
 ;; so this just removes them while I work on it.
-(defmacro define-texture-map (name data-model &body body)
+(defmacro define-texture-map-new (name data-model &body body)
   (declare (ignore name data-model body))
   nil)

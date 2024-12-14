@@ -377,7 +377,7 @@ forms."
                                 mipmap-body)
         (declare (ignore extent-symbol))
         (when (plusp (length unknown))
-          (error "Unknown mipmap physical form: ~A" unknown))
+          (error "Unknown mipmap physical form: ~S" unknown))
 
         (multiple-value-bind (mapping-spans-api-group
                               mapping-spans-binding-form)
@@ -570,7 +570,7 @@ forms for any mipmap attributes."
                               body)
       ;; Validation
       (when (plusp (length unknown))
-        (error "Unknown texture-map physical form: ~A : ~A" name unknown))
+        (error "Unknown texture-map physical form: ~S : ~S" name unknown))
       (unless (= (length phys/data-elements) 1)
         (error "Need ONE data-elements form for texture-map physical form: ~A"
                name))
@@ -732,8 +732,8 @@ be used as hash keys in the right order)."
 
 (defun gen-cube-form (sym &key style store repr)
   `(,(dslobjsym->constructor sym)
-    ,@(when style `(:style ,style))
-    ,@(when store `(:store ,store))
+    ,@(when style `(:style ',style))
+    ,@(when store `(:store ',store))
     ,@(when repr `(:repr ,repr))))
 
 (defun gen-cube-binding-form (cube-var api/cube)
@@ -827,7 +827,7 @@ physical dsl form."
                               mipmaps-body)
 
       (when (plusp (length unknown))
-        (error "Unknown gen-cube-binding-group envmap physical form: ~A"
+        (error "Unknown gen-cube-binding-group envmap physical form: ~S"
                unknown))
 
       (multiple-value-bind (mipmap-bindings mipmap-container-binding
@@ -872,12 +872,13 @@ physical dsl form."
                               body)
       ;; Validation
       (when (plusp (length unknown))
-        (error "Unknown texture-map physical form: ~A : ~A" name unknown))
+        (error "Unknown cube texture-map physical form: ~S : ~S" name unknown))
       (unless (= (length phys/data-elements) 1)
-        (error "Need ONE data-elements form for texture-map physical form: ~A"
-               name))
+        (error
+         "Need ONE data-elements form for cube texture-map physical form: ~S"
+         name))
       (unless (= (length phys/cube) 1)
-        (error "Need ONE cube form in the texture-map physical form: ~A"
+        (error "Need ONE cube form in the texture-map physical form: ~S"
                name))
 
       (multiple-value-bind (de-let-bindings de-container-binding)
@@ -895,8 +896,8 @@ physical dsl form."
 
           (u:mvlet*
               ((canonical-texmap-name anonymous-p
-                                     (gen-texture-map-name name
-                                                           model style store))
+                                      (gen-texture-map-name name
+                                                            model style store))
                (texmap-form
                 (gen-texture-map-form
                  canonical-texmap-name model style store

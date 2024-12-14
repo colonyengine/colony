@@ -1,17 +1,17 @@
 (in-package #:colony.extension)
 
-(texmap:define-texture-map debug-texture (:single :unique)
-  (:mipmap () (c::textures c::debug-0))
-  (:mipmap () (c::textures c::debug-1))
-  (:mipmap () (c::textures c::debug-2))
-  (:mipmap () (c::textures c::debug-3))
-  (:mipmap () (c::textures c::debug-4))
-  (:mipmap () (c::textures c::debug-5))
-  (:mipmap () (c::textures c::debug-6))
-  (:mipmap () (c::textures c::debug-7))
-  (:mipmap () (c::textures c::debug-8))
-  (:mipmap () (c::textures c::debug-9))
-  (:mipmap () (c::textures c::debug-10)))
+(texmap:define-texture-map debug-texture (:2d :unique)
+  (texmap:mipmap (c::textures c::debug-0))
+  (texmap:mipmap (c::textures c::debug-1))
+  (texmap:mipmap (c::textures c::debug-2))
+  (texmap:mipmap (c::textures c::debug-3))
+  (texmap:mipmap (c::textures c::debug-4))
+  (texmap:mipmap (c::textures c::debug-5))
+  (texmap:mipmap (c::textures c::debug-6))
+  (texmap:mipmap (c::textures c::debug-7))
+  (texmap:mipmap (c::textures c::debug-8))
+  (texmap:mipmap (c::textures c::debug-9))
+  (texmap:mipmap (c::textures c::debug-10)))
 
 ;; TODO: TMAP Convert :data to reference define-texture-map name
 (tex:define-texture debug-texture (:texture-2d clamp-all-edges)
@@ -36,8 +36,8 @@
          `((texmap:define-texture-map
                ,(u:format-symbol :colony.extension
                                  "~A~A" prefix name)
-               (:single :unique)
-             (:mipmap () (,pool-name ,(u:format-symbol :c "~A" name))))
+               (:2d :unique)
+             (texmap:mipmap (,pool-name ,(u:format-symbol :c "~A" name))))
 
            (tex:define-texture
                ,(u:format-symbol :colony.extension

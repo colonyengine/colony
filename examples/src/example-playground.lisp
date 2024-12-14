@@ -1,13 +1,13 @@
 (in-package #:colony-examples)
 
-;; TODO: Remove uses of globals and replace with calls to cfg system.
-;; This is because V should not provide any globals to the user, and also
-;; because the screen size can change.
+;; TODO: Remove uses of globals and replace with calls to cfg system. This is
+;; because Colony should not provide any globals to the user, and also because
+;; the screen size can change.
 
 ;;; Textures
 
-(c:define-texture-map art5/texture (:single :unique)
-  (:mipmap () (textures city)))
+(c:define-texture-map art5/texture (:2d :unique)
+  (texmap:mipmap (textures city)))
 
 (c:define-texture art5/texture (:texture-2d)
   ;; TODO: TMAP Convert :data to use texture-map name.

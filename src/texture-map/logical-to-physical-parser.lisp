@@ -17,8 +17,6 @@ the lists of each category in the order of KEY-POOL."
            :pred-range-sort (u:sort-by-symbols key-pool)
            :collector #'second))
 
-
-
 (defun gen-inferred-image-element-form (elidx logloc)
   `(,elidx (image-element :logloc ,logloc)))
 
@@ -27,18 +25,20 @@ the lists of each category in the order of KEY-POOL."
 
 (defun gen-inferred-mapping-span-form (model elidx)
   "Used only in LOGICAL->PHYSICAL to generate template MAPPING-SPAN-* forms."
-  (let* ((mapping-sym
-           (u:format-symbol t "MAPPING-SPAN-~A" (symbol-name model)))
+  (let* ((pkg :colony.texture-map)
+         (mapping-sym
+           (u:format-symbol pkg "MAPPING-SPAN-~A" (symbol-name model)))
          (data-span-sym
-           (u:format-symbol t "DATA-SPAN-~A" (symbol-name model))))
+           (u:format-symbol pkg "DATA-SPAN-~A" (symbol-name model))))
     `(,mapping-sym :to (,data-span-sym) :from (,data-span-sym :elidx ,elidx))))
 
 (defun gen-inferred-mipmap-form (model attrs cattrs sattrs &rest mapping-spans)
   "Used only in LOGICAL->PHYSICAL to generate template MIPMAP-* forms."
-  (let* ((mipmap-sym
-           (u:format-symbol t "MIPMAP-~A" (symbol-name model)))
+  (let* ((pkg :colony.texture-map)
+         (mipmap-sym
+           (u:format-symbol pkg "MIPMAP-~A" (symbol-name model)))
          (span-sym
-           (u:format-symbol t "SPAN-~A" (symbol-name model))))
+           (u:format-symbol pkg "SPAN-~A" (symbol-name model))))
     `(,mipmap-sym :extent (,span-sym)
                   ,@attrs ,@cattrs ,@sattrs ,@mapping-spans)))
 

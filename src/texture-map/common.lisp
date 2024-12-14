@@ -133,7 +133,8 @@
 ;;; -----------------
 
 ;; Extensible API
-(defmethod make-cube-representation ((type (eql 'faces)) &key faces)
+(defmethod make-cube-representation ((type (eql 'faces-representation))
+                                     &key faces)
   (unless (or (not faces)
               (subtypep (type-of faces) '(vector face)))
     (error "make-cube-representation: type: ~A The type of FACES is wrong."
@@ -148,7 +149,8 @@
 ;;; -----------------
 
 ;; Extensible API
-(defmethod make-cube-representation ((type (eql 'envmap)) &key mipmaps)
+(defmethod make-cube-representation ((type (eql 'envmap-representation))
+                                     &key mipmaps)
   (unless (or (not mipmaps)
               (subtypep (type-of mipmaps) '(vector mipmap)))
     (error "make-cube-representation: type: ~A The type of MIPMAPS is wrong."

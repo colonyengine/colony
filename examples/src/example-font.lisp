@@ -1,8 +1,8 @@
 (in-package #:colony-examples)
 
 ;;; Texture Maps
-(c:define-texture-map font (:single :unique)
-  (:mipmap () (textures font)))
+(c:define-texture-map font (:2d :unique)
+  (texmap:mipmap (textures font)))
 
 ;;; Textures
 (c:define-texture font (:texture-2d)

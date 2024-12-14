@@ -190,39 +190,39 @@
 
 ;; We only use a single sprite sheet atlas that contains all of our sub texture
 ;; maps.  This one is included with the engine.
-(c:define-texture-map sprite-atlas (:single :unique)
-  (:mipmap () (textures sprites)))
+(c:define-texture-map sprite-atlas (:2d :unique)
+  (texmap:mipmap (textures sprites)))
 
 ;; This background image was downloaded off the web here:
 ;; https://www.wikitree.com/photo/jpg/Tileable_Background_Images
 ;; And the url for the license is 404, but the wayback machine found it:
 ;; https://web.archive.org/web/20180723233810/http://webtreats.mysitemyway.com/terms-of-use/
 ;; Which says it can be used for any purpose.
-(c:define-texture-map starfield (:single :unique)
-  (:mipmap () (ptp-textures starfield)))
+(c:define-texture-map starfield (:2d :unique)
+  (texmap:mipmap (ptp-textures starfield)))
 
 ;; This texture was created by Pixel_Outlaw for use in this game.
-(c:define-texture-map warning-wave (:single :unique)
-  (:mipmap () (ptp-textures warning-wave)))
+(c:define-texture-map warning-wave (:2d :unique)
+  (texmap:mipmap (ptp-textures warning-wave)))
 
 ;; This texture was created by Pixel_Outlaw for use in this game.
-(c:define-texture-map warning-mothership (:single :unique)
-  (:mipmap () (ptp-textures warning-mothership)))
+(c:define-texture-map warning-mothership (:2d :unique)
+  (texmap:mipmap (ptp-textures warning-mothership)))
 
-(c:define-texture-map game-over (:single :unique)
-  (:mipmap () (ptp-textures game-over)))
+(c:define-texture-map game-over (:2d :unique)
+  (texmap:mipmap (ptp-textures game-over)))
 
-(c:define-texture-map title (:single :unique)
-  (:mipmap () (ptp-textures title)))
+(c:define-texture-map title (:2d :unique)
+  (texmap:mipmap (ptp-textures title)))
 
-(c:define-texture-map level-complete (:single :unique)
-  (:mipmap () (ptp-textures level-complete)))
+(c:define-texture-map level-complete (:2d :unique)
+  (texmap:mipmap (ptp-textures level-complete)))
 
-(c:define-texture-map white (:single :unique)
-  (:mipmap () (ptp-textures white)))
+(c:define-texture-map white (:2d :unique)
+  (texmap:mipmap (ptp-textures white)))
 
-(c:define-texture-map pivot (:single :unique)
-  (:mipmap () (ptp-textures transpivot)))
+(c:define-texture-map pivot (:2d :unique)
+  (texmap:mipmap (ptp-textures transpivot)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Textures

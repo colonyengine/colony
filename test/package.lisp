@@ -12,7 +12,8 @@
    (#:v3 #:vorigin.vec3)
    (#:v4 #:vorigin.vec4)
    (#:abag #:colony.attribute-bag)
-   (#:clone #:colony.clone))
+   (#:clone #:colony.clone)
+   (#:texmap #:colony.texture-map))
   (:use
    #:cl
    #:parachute))

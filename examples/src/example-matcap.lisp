@@ -8,8 +8,8 @@
 ;; Also, the regular matcap shader still has the (- 1 y). So confusion all
 ;; around for a little bit.
 
-(c:define-texture-map matcap/matcap-map (:single :unique)
-  (:mipmap () (textures matcap-map)))
+(c:define-texture-map matcap/matcap-map (:2d :unique)
+  (texmap:mipmap (textures matcap-map)))
 
 (c:define-texture matcap/matcap-map (:texture-2d x:clamp-all-edges)
   ;; TODO: This is commented out because the gltf2 uvs have a different origin
@@ -20,23 +20,23 @@
   (:data #((textures matcap-map))))
 
 ;; TODO: possibly set :origin for these images to deal with the matcap shader.
-(c:define-texture-map matcap/basic-dark (:single :unique)
-  (:mipmap () (c:matcaps c::basic-dark)))
+(c:define-texture-map matcap/basic-dark (:2d :unique)
+  (texmap:mipmap (c:matcaps c::basic-dark)))
 
-(c:define-texture-map matcap/metal-carpaint (:single :unique)
-  (:mipmap () (c:matcaps c::metal-carpaint)))
+(c:define-texture-map matcap/metal-carpaint (:2d :unique)
+  (texmap:mipmap (c:matcaps c::metal-carpaint)))
 
-(c:define-texture-map matcap/jade (:single :unique)
-  (:mipmap () (c:matcaps c::jade)))
+(c:define-texture-map matcap/jade (:2d :unique)
+  (texmap:mipmap (c:matcaps c::jade)))
 
-(c:define-texture-map matcap/basic-1 (:single :unique)
-  (:mipmap () (c:matcaps c::basic-1)))
+(c:define-texture-map matcap/basic-1 (:2d :unique)
+  (texmap:mipmap (c:matcaps c::basic-1)))
 
-(c:define-texture-map matcap/metal-shiny (:single :unique)
-  (:mipmap () (c:matcaps c::metal-shiny)))
+(c:define-texture-map matcap/metal-shiny (:2d :unique)
+  (texmap:mipmap (c:matcaps c::metal-shiny)))
 
-(c:define-texture-map matcap/metal-lead (:single :unique)
-  (:mipmap () (c:matcaps c::metal-lead)))
+(c:define-texture-map matcap/metal-lead (:2d :unique)
+  (texmap:mipmap (c:matcaps c::metal-lead)))
 
 ;; TOOD: make basic-dark an RGB greyscale image. Check the others too.
 (c:define-texture matcap/lookup (:texture-2d-array x:clamp-all-edges)

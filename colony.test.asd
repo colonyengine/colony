@@ -13,11 +13,11 @@
   :components
   ((:file "package")
    (:file "smoke")
-   (:file "attribute-bag"))
-  #++(:module "texture-map"
-      :serial t
-      :components
-      ((:file "1d")
-       (:file "2d")
-       (:file "3d")
-       (:file "cube"))))
+   (:file "attribute-bag")
+   (:module "texture-map"
+    :serial t
+    :components
+    ((:file "1d")
+     #++(:file "2d")
+     #++(:file "3d")
+     #++(:file "cube")))))
