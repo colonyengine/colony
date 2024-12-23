@@ -8,11 +8,17 @@
 
 (defun set-opengl-attributes ()
   (destructuring-bind (major minor) (parse-opengl-version)
-    (sdl2:gl-set-attrs :context-major-version major
-                       :context-minor-version minor
-                       :context-profile-mask 1
-                       :multisamplebuffers 1
-                       :multisamplesamples 16)))
+    (sdl2:gl-set-attrs
+     :context-major-version major
+     :context-minor-version minor
+     :context-profile-mask sdl2-ffi:+SDL-GL-CONTEXT-PROFILE-CORE+
+     :doublebuffer 1
+     ;; TODO: These next two are sometimes problematic between GPU vendors.
+     ;; NVidia likes 16 for :multisamplesamples but AMD likes 8. Since we don't
+     ;; currently have a way to figure this sort of thing out automatically, we
+     ;; choose the conservative value for now.
+     :multisamplebuffers 1
+     :multisamplesamples 8)))
 
 (defun make-opengl-context (display)
   (let ((context (sdl2:gl-create-context (window display))))
@@ -33,12 +39,23 @@
 
 (defun make-display (core)
   ;; (sdl2:init :everything)
+  ;;
   ;; NOTE: We can't call (sdl2:init :everything) because it tries to manage the
-  ;; main thread itself and when there is an ABORT restart in V, will get
-  ;; confused and lock up. Since V does the thread management itself, we the
-  ;; the lower level raw equvalent of it in the SDL2 CFFI.  TODO: Prolly should
-  ;; export this in SDL2 and/or make it easier to use.
-  (sdl2::sdl-init #xf231)
+  ;; main thread itself and when there is an ABORT restart, will get confused
+  ;; and lock up. Since we do the thread management ourselves, we the the lower
+  ;; level raw (an unexported, hence ::) equvalent of it in the SDL2 CFFI.
+  ;;
+  ;; TODO: Prolly should export this in SDL2 and/or make it easier to use.
+  (sdl2::sdl-init (logior
+                   sdl2-ffi:+SDL-INIT-TIMER+
+                   sdl2-ffi:+SDL-INIT-AUDIO+
+                   sdl2-ffi:+SDL-INIT-VIDEO+
+                   sdl2-ffi:+SDL-INIT-JOYSTICK+
+                   sdl2-ffi:+SDL-INIT-HAPTIC+
+                   sdl2-ffi:+SDL-INIT-GAMECONTROLLER+
+                   sdl2-ffi:+SDL-INIT-EVENTS+
+                   sdl2-ffi:+SDL-INIT-SENSOR+))
+
   (let* ((refresh-rate (nth-value 3 (sdl2:get-current-display-mode 0)))
          (resolution (v2:vec* =window-width= =window-height=))
          (display (make-instance 'display
