@@ -44,58 +44,7 @@ NOTE: These are already in the resource-cache."
                                            (c::textures (c::core context))))
 ;; -------------------------------------------------------------------------
 
-
-;; Implementation of TEXTURE-DESCRIPTOR
-
-;; TODO candidate for public API
-(defun make-texture-descriptor (&rest init-args)
-  (apply #'make-instance 'texture-descriptor init-args))
-
-;; TODO: Candidate for public API.
-(defun copy-texture-descriptor (texdesc)
-  (let ((new-texdesc (make-texture-descriptor)))
-    (setf
-     ;; These are currently symbols.
-     (name new-texdesc) (name texdesc)
-     (texture-type new-texdesc) (texture-type texdesc)
-     ;; This is a list
-     (profile-overlay-names new-texdesc)
-     (copy-seq (profile-overlay-names texdesc)))
-    ;; Then copy over the attributes, we support SIMPLE values such as: string,
-    ;; array, list, vector, and symbol.
-    (u:do-hash (key value (attributes texdesc))
-      (setf (u:href (attributes new-texdesc) key) (u:copy-sequence-tree value)))
-    (u:do-hash (key value (applied-attributes texdesc))
-      (setf (u:href (applied-attributes new-texdesc) key) (u:copy-sequence-tree value)))
-    new-texdesc))
-
-
-
-;; Implementation of TEXTURE-PROFILE
-
-;; TODO: Candidate for public API
-(defun make-texture-profile (&rest init-args)
-  (apply #'make-instance 'texture-profile init-args))
-
-(defun parse-texture-profile (name body-form)
-  (u:with-gensyms (texprof)
-    `(let* ((,texprof (make-texture-profile :name ',name)))
-       (setf ,@(loop :for (attribute value) :in body-form
-                     :appending `((u:href (attributes ,texprof) ,attribute)
-                                  ,value)))
-       ,texprof)))
-
-(defmacro define-texture-profile (name &body body)
-  "Define a set of attribute defaults that can be applied while defining a
-texture."
-  (u:with-gensyms (profile)
-    `(let ((,profile ,(parse-texture-profile name body)))
-       (setf (u:href c::=meta/texture-profiles= (name ,profile)) ,profile))))
-
-
-
 ;; Implementation of TEXTURE
-
 
 (u:define-printer (texture stream :type t)
   (format stream "id: ~s" (texid texture)))

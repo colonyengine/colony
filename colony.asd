@@ -164,7 +164,9 @@
     :serial t
     :components
     ((:file "common")
+     (:file "texture-profile")
      (:file "texture")
+     (:file "texture-descriptor")
      (:file "texture-table")
      (:file "1d")
      (:file "2d")
