@@ -17,22 +17,22 @@ called from) on any other package in that layer.
 We expect to reorganize and continue to break stuff into packages.
 
 - Layer: Colony
- - This layer is a mudball of everything else at all abstraction layers. It is
-   continuously being broken apart and refactored into additional layers.
+    - This layer is a mudball of everything else at all abstraction layers. It
+      is continuously being broken apart and refactored into additional layers.
 
 - Layer: Asset Kinds
- - texture
- - texture-map
+    - texture
+    - texture-map
 
 - Layer: Core Early
- - attribute-bag
- - uuid thread-pool resource-cache image
- - clone
+    - attribute-bag
+    - uuid thread-pool resource-cache image
+    - clone
 
 - Layer: Support Libraries
- - vorigin(s) vshadow(s)
- - vumbra(s)
- - vutils(s)
+    - vorigin(s) vshadow(s)
+    - vumbra(s)
+    - vutils(s)
 
 - Layer: System Dependencies
- - See the :depends-on for in colony.asd and colony.test.asd.
+    - See the :depends-on for in colony.asd and colony.test.asd.
