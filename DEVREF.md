@@ -11,8 +11,9 @@ available in Common Lisp.
 
 - [Engine Coding Guildlines][DEVREF-guide-code]
 - [Creating DSLs][DEVREF-guide-dsl]
-
+- [Engine Layers][DEVREF-engine-layers]
 
 <!--- Labeled links so you only have to fix one place to move something --->
 [DEVREF-guide-code]: ./devref/DEVREF-guide-code.md
 [DEVREF-guide-dsl]: ./devref/DEVREF-guide-dsl.md
+[DEVREF-engine-layers]: ./devref/DEVREF-engine-layers.md
