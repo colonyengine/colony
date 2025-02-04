@@ -10,6 +10,7 @@ more discourse or explanation than the raw documentation strings
 available in Common Lisp.
 
 - [Engine Coding Guildlines][DEVREF-guide-code]
+- [Lexicon of Terms][DEVREF-lexicon]
 - [Creating DSLs][DEVREF-guide-dsl]
 - [Engine Layers][DEVREF-engine-layers]
 
@@ -17,3 +18,4 @@ available in Common Lisp.
 [DEVREF-guide-code]: ./devref/DEVREF-guide-code.md
 [DEVREF-guide-dsl]: ./devref/DEVREF-guide-dsl.md
 [DEVREF-engine-layers]: ./devref/DEVREF-engine-layers.md
+[DEVREF-lexicon]: ./devref/DEVREF-lexicon.md
