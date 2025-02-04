@@ -57,8 +57,10 @@
     generating information (such as a texture-map image or an entire level) in
     an in main memory form, etc.
 
-- **realization**: Movement of any data (whch is almost certainly materialized)
-    to the GPU memory space.
+- **realization**: Movement of any data (which is almost certainly
+    materialized) to a peripheral's memory. Examples are audio memory, GPU
+    memory, etc. The storage disk of the machine, or a virtual file system
+    stored on disk can be a context of *realization*.
 
 - **reification**: This is the process (often executed during the engine start)
     which will *reify* *abstract* data into *reified* data.
