@@ -125,9 +125,10 @@ than once to produce independent *runtime* instances of those game objects.
 though it may be constructed using the *prefab* API at *runtime*.
 
 - **realization**: Movement of any data (which is almost certainly
-materialized) to a peripheral's memory. Examples are audio memory, GPU
-memory, etc. The storage disk of the machine, or a virtual file system
-stored on disk can be a context of *realization*.
+*materialized*) to a peripheral's memory. Examples are audio memory, GPU
+memory, etc. Additional examples includde: the physical storage disk of the
+machine, a network server, a virtual file system in main memory can be a
+location of *realization*.
 
 - **reification**: This is the process (often executed during the engine start)
 which will *reify* *abstract* data into *reified* data.
