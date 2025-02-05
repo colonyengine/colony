@@ -67,13 +67,13 @@ compatibility.
     - **prefab dsl**: *ADAPI* A *prefab* description which names and describes
     how actors and components (and their initargs) are assembled.
 
-    - **texture-map dsl**: *ADAPI* A *texture-map* description form that names,
-    describes the assets required, and specified the arrangement of data for a
-    *texture-map*.
-
     - **texture dsl**: *ADAPI* A *texture* description form that names,
     describes which *texture-maps* are required, and specifies the parameters
     of the *texture object* ultimately created on the GPU.
+
+    - **texture-map dsl**: *ADAPI* A *texture-map* description form that names,
+    describes the assets required, and specified the arrangement of data for a
+    *texture-map*.
 
 - **live coding**: A situation where an *appdev* is interacting via an editor
 (like emacs), a repl, or some other means with a running instance of the
@@ -147,8 +147,9 @@ not even exist in the global lisp environment.
 of the engine when the engine is started and executing. When the engine
 stops executing, there is no more *runtime*.
 
-- **scene**: The currently active set of *actors* along with their
-*components*. There is only one *scene*.
+- **scene**: The current set of *materialized* *actors* along with their
+*components* for which the engine is performing maintenance, updating,
+rendering, etc. There is only one *scene*.
 
 - **scene tree**: A directed acyclic graph that denotes the hierarchical
 coordinate frame relationships between transform *components* held by *actors*.
@@ -171,8 +172,8 @@ its association with some *texture-map* data. Often contains a reference to the
 
 - **texture-map**: A set of (usually) image data (which may include
 hierarchical mipmaps, individual image slices of a voxel, or other aggregate
-forms) associated that comprise a 1d, 2d, 3d, and cube-map image.
+forms) that comprise a 1d, 2d, 3d, or cube-map image.
 
-- **texture object**: Data on the GPU representing a texture. It is
+- **texture object**: Data in the GPU memory representing a texture. It is
 constructed, manipulated, and destroyed by the GPU driver API (such as OpenGL,
 Vulkan, etc).
