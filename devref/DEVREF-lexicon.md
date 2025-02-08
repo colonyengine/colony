@@ -124,21 +124,25 @@ than once to produce independent *runtime* instances of those game objects.
 *materialized* *prefabs*. A *prefab* is usually specified by a *prefab dsl*
 though it may be constructed using the *prefab* API at *runtime*.
 
-- **realization**: Movement of any data (which is almost certainly
-*materialized*) to a peripheral's memory. Examples are audio memory, GPU
-memory, etc. Additional examples includde: the physical storage disk of the
-machine, a network server, a virtual file system in main memory can be a
-location of *realization*.
+- **realization**: Movement of any data (which has often previously been
+*materialized*) to another (non engine) API's managed memory or to another
+peripheral's memory. Examples: writing data to audio memory via a device
+driver, or passing data ownership/copy off to OpenGL or Vulkan, etc. Additional
+examples include: the physical storage disk of the machine (*concretized
+metadata might be *realized* to disk), a network server, a virtual file system
+in main memory can be a location of *realization*. Data streamed directly from
+a source, like disk or network, straight into the peripheral's or API's managed
+memory, is still *realized*, just not from a *materialized* source.
 
 - **reification**: This is the process (often executed during the engine start)
 which will *reify* *abstract* data into *reified* data.
 
 - **reified**: A piece of information is *reified* if it has been transformed
-(and often copied) from the *metaspace* into a running core instance of the
-engine. *Reified* data can be freely manipulated by the engine and only
-exists for that unique instance of that execution. Data may be *reified*
-from a *concretized metapsace* as well, which could be read from disk and
-not even exist in the global lisp environment.
+(and often copied) from the *metaspace* into a *runtime*. *Reified* data can be
+freely manipulated by the engine and only exists for that unique instance of
+that execution. Data may be *reified* from a *concretized metapsace* as well,
+which could be read from disk and never transition through the global lisp
+environment.
 
 - **reify**: The action of converting *abstract* data in the *metadata* to
 *reified* data in the *runtime* at engine start.
