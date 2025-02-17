@@ -124,9 +124,9 @@
    #:cache-item
    #:location
    #:make-cache-item
+   #:opaque-data
    #:policy
    #:size
-   #:tag
    #:value
    )
   ;; CACHE-DOMAIN API
@@ -162,24 +162,27 @@
    #:if-not-exits
    #:key
    #:opaque-data
-   #:statep
+   #:state
    #:value
    )
   ;; RESOURCE-CACHE-SCHEDULER API
   (:export
    #:core
    #:make-resource-cache-scheduler
+   #:resource-cache-scheduler
+   #:resubmit
    #:schedule
    #:unscheduled-tasks
    )
   ;; The Cache Warming Protocol (move to a better protocol definition place).
   (:export
    #:acquire-caching-task
-   #:compute-caching-task-value
+   #:compute-caching-task
+   #:consider-caching-task
+   #:discard-caching-task
+   #:dispose-caching-task
    #:finalize-caching-task
-   #:init-caching-task
    #:release-caching-task
-   #:reserve-or-discard-caching-task-p
    )
   ;; RESOURCE-CACHE-EXECUTOR API
   (:export
@@ -334,16 +337,22 @@
    #:make-texture-map-3d
    #:make-texture-map-cube
    #:make-texture-map-element
+   #:make-texture-map-state
    #:mapping-spans ;; accessor for mipmap
+   #:materialized-p ;; accessor for texture-map-state
    #:mipmaps ;; accessor for envmap-representaton, texture-map-simple
    #:model ;; accessor for texture-map
    #:name ;; accessor for texture-map
    #:origin ;; accessor for span TODO move
    #:physloc ;; accessor for location TODO move
    #:repr ;; accessor for cube
+   #:state
    #:store ;; accessor for cube, texture-map
    #:style ;; accessor for cube, texture-map
+   #:texture-map-state ;; class for tmap state object.
    #:to ;; accessor for mapping-span TODO move
+   #:valid-elements-p ;; accessor for texture-map-state
+   #:valid-representation-p ;; accessor for texture-map-state
    )
   ;; Exported define-texture-map DSL syntax symbols
   (:export

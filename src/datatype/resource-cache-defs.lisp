@@ -12,10 +12,14 @@
 ;; additional cache-items if needed.
 (defclass cache-item ()
   (;; An opaque object the user can do whatever they want with.
-   (%tag :accessor tag :initarg :tag :initform nil)
+   (%opaque-data :accessor opaque-data :initarg :opaque-data :initform nil)
    ;; policy can be :unlocked (generally evictable), :locked (not evictable),
    ;; etc
    (%policy :accessor policy :initarg :policy :initform :unlocked)
+   ;; Can be :cold (never cached), :reserved (in cache, value not computed),
+   ;; :cached (in cache and usable), or :evicted (used to be in cache, but got
+   ;; evicted (and possibly replaced)).
+   (%state :accessor state :initarg :state :initform :cold)
    ;; TODO: at least we have: :cl-heap, :ffi-heap, :gpu-memory, :disk, etc.
    ;; :disk is to be interpreted as something we wrote to disk.
    (%location :accessor location :initarg :location)
@@ -24,16 +28,6 @@
    ;; the actual representation of value
    (%value :accessor value :initarg :value)
    ))
-
-;; TODO: Move this to the higher layer that uses it.
-;; The ancestral cache-item is assumed to be the GPU storage and data
-;; cache-item is the main-memory storage if present.
-(defclass texture-cache-item (cache-item)
-  (;; If this texture is also in main memory, then data will be another
-   ;; cache-item that represents this in memory data.
-   (%data :accessor data :initarg :data :type (or null cache-item))))
-
-
 
 ;;;; --------------------------------------------------------------------------
 ;;;; The basic Cache Domain and Resource Cache API
@@ -77,7 +71,9 @@
 
   ;; The cache of (possibly nested) hash tables. The layout indicates (up to)
   ;; the depth of hash table that gets constructed to hold elements in this
-  ;; domain. Key(s) is appropriate to the domain. Value is held in CPU memory.
+  ;; domain.
+  ;; Key(s) is appropriate to the domain.
+  ;; Value is held in CPU memory.
   (cache nil :type (or hash-table null)))
 
 
@@ -90,7 +86,8 @@
             (:predicate nil)
             (:copier nil))
   ;; All of the cache-domains managed by the resource cache.
-  ;; Key is domain id. Value is a cache-domain object.
+  ;; KEY: domain id.
+  ;; VALUE: a cache-domain object.
   (domains (u:dict #'equal) :type hash-table))
 
 
@@ -107,8 +104,53 @@
 ;; This will often be derived to be a specific kind of caching type which makes
 ;; the protocol run smoother. It doesn't HAVE to be derived, though, as long as
 ;; the protocol for this base class type is also specified.
+;;
+;; The caching-task will go through a state machine:
+;;
+;; Start State         |  End State           | method performing it
+;; ----------------------------------------------------------------------------
+;; nil                 -> :initialized        | acquire-caching-task
+
+;; :initialized        -> :reserved           | consider-caching-task
+;; :initialized        -> :retry-reservation  | consider-caching-task
+;; :initialized        -> :discarded          | consider-caching-task
+
+;; :retry-reservation  -> :retry-reservation  | consider-caching-task
+;; :retry-reservation  -> :reserved           | consider-caching-task
+;; :retry-reservation  -> :discarded          | consider-caching-task
+
+;; :reserved           -> :computed           | compute-caching-task
+;; :reserved           -> :retry-computation  | compute-caching-task
+;; :reserved           -> :discarded          | compute-caching-task
+
+;; :retry-computation  -> :retry-computation  | compute-caching-task
+;; :retry-computation  -> :computed           | compute-caching-task
+;; :retry-computation  -> :discarded          | compute-caching-task
+
+;; :computed           -> :finalized          | finalize-caching-task
+;; :computed           -> :retry-finalization | finalize-caching-task
+;; :computed           -> :discarded          | finalize-caching-task
+
+;; :retry-finalization -> :retry-finalization | finalize-caching-task
+;; :retry-finalization -> :finalized          | finalize-caching-task
+;; :retry-finalization -> :discarded          | finalize-caching-task
+
+;; :discarded          -> :disposed           | discard-caching-task
+;; :discarded          -> :retry-discarding   | discard-caching-task
+
+;; :retry-discarding   -> :retry-discarding   | discard-caching-task
+;; :retry-discarding   -> :disposed           | discard-caching-task
+
+;; :finalized          -> :disposed           | dispose-caching-task
+;; :finalized          -> :retry-disposing    | dispose-caching-task
+
+;; :retry-disposing    -> :retry-disposing    | dispose-caching-task
+;; :retry-disposing    -> :disposed           | dispose-caching-task
+
+;; :disposed           -> nil                 | release-caching-task
+;;
 (defclass caching-task ()
-  ( ;; the key that ends up in the resource-cache as the lookup id for the
+  (;; the key that ends up in the resource-cache as the lookup id for the
    ;; value this caching-task ultimately computes.
    (%key :accessor key :initarg :key)
    (%opaque-data :accessor opaque-data :initarg :opaque-data)
@@ -134,10 +176,8 @@
                    :initarg :if-not-exists
                    :initform :create)
 
-   ;; Set to :reserved if we processed the task and :discarded if we don't want
-   ;; to process the task. The finalizer looks at this to determine what and
-   ;; how much work it actually has to do.
-   (%statep :accessor statep :initarg :statep :initform :reserved)
+   ;; See table above for what this could be.
+   (%state :accessor state :initarg :state :initform :reserved)
 
    ;; Ultimate form of the key converted into the value.
    (%value :accessor value :initarg :value)
@@ -145,7 +185,6 @@
    (%core :reader core :initarg :core)
    ))
 
-;; TODO: This object probably goes into the CORE as a slot.
 ;; This is responsible for scheduling across all warmers inserted into it.  It
 ;; can decide to schedule tasks in the order necessary and mix and match
 ;; between warmers to maintain high throughput.
@@ -156,55 +195,97 @@
                        :initarg :unscheduled-tasks
                        :initform (u:dict #'eql))
 
-   (%core :reader core :initarg :core)
+   ;; this also has a reference to the core that contains this object since
+   ;; the warming protocol will usually need access to it.
+   (%core :accessor core :initarg :core)
 
-   ;; TODO: When acquire-caching-task and release-caching-task actually
+   ;; TODO: When init-caching-task and release-caching-task actually
    ;; recycle, make an object pool slot here.
    ))
+
+;; KEP GOING: Fix comments about return values.
 
 ;; This is the warmer protocol. Step 0,1 likely occur right after each other in
 ;; the code which is producing the caching-tasks. The rest happen in the
 ;; EXECUTE method on the executor.
 
-;; executed on main thread
-;; Step 0: Not expected to be specialized or written by the user.
-;; Ask the resource scheduler for a caching-task which is returned by this
-;; and that we will fill in.
+;; Step 0: Executed on main thread. Not expected to be specialized (but can be)
+;;
+;; Not expected to be specialized or written by the user. Ask the resource
+;; scheduler for a caching-task, which we initialize, and automatically store
+;; it in the resource scheduler as an unscheduled task for execution. We both
+;; acquire and initialize the caching-task with the init-args in this single
+;; call.
+;;
+;; Returns two values:
+;;  The first value is the keyword symbol: :initialized
+;;  The second value is the initialized caching-task.
 (defgeneric acquire-caching-task (resource-cache-scheduler task-type
-                                  domain-id))
+                                  domain-id &rest init-args))
 
-;; executed on main thread
-;; Step 1: Expected to be specialized on caching-task
-;; Must return the caching-task
-(defgeneric init-caching-task (caching-task &rest init-args
-                               &key &allow-other-keys))
+;; Step 1: Executed on main thread. Expected to be specialized.
+;;
+;; This function chooses if this task is a duplicate or if the it is worth
+;; isnerting into the cache. It either willl discard the catching-task or
+;; allow it to proceed by getting a reservation in the resource-cache for it.
+;; If we're reserving in the resource-cache, then put a new cache-item
+;; into the resource cache with :reserved as the state. This prolly requires
+;; locking.
+;;
+;; Return two values:
+;;  The first value is one of: :reserved, :retry-reservation, :discarded
+;;  The second value is the caching-task.
+(defgeneric consider-caching-task (caching-task resource-cache-scheduler))
 
-;; executed on main thread
-;; Step 2: Expected to be specialized on caching-task
-;; Mark the task if it should be discarded or not.
-;; Actually put a reservation in the place where it should go (often the
-;; resource-cache) if we want to reserve the spot for this task.
-;; Must return the caching-task
-(defgeneric reserve-or-discard-caching-task-p (caching-task))
+;; Step 2: Expected to run in thread-pool. Expected to be specialized.
+;;
+;; The code which computes the value of the caching-task (often from the key).
+;;
+;; Must return two values:
+;;  The first value is one of: :computed, :retry-computation, :discarded
+;;  The second value is the caching-task.
+(defgeneric compute-caching-task (caching-task resource-cache-scheduler))
 
-;; These would be executed in the thread pool. It is expected that if locking
-;; needs to happen here it is done here.
-;; Step 3: Expected to be specialized on caching-task
-;; The code which computes the value of the caching-task.
-;; Must return the caching-task
-(defgeneric compute-caching-task-value (caching-task))
+;; Step 3: Executed on main thread. Expected to be specialized.
+;;
+;; Value is actually inserted into cache and the reserved cache-item is
+;; finally satisfied and availabel for use. Prolly requires locking.
+;;
+;; Must return two values:
+;;  The first value is one of: :finalized, :retry-finalization, :discarded
+;;  The second value is the caching-task.
+(defgeneric finalize-caching-task (caching-task resource-cache-scheduler))
 
-;; executed on main thread, value is inserted into cache, or discard dealt
-;; with.
-;; Step 4: Expected to be specialized on caching-task
-;; Usually the code that inserts the entry into the resource-cache.
-;; Must return caching-task
-(defgeneric finalize-caching-task (caching-task))
+;; Step 4: Executed on main thread. Expected to be specialized.
+;;
+;; Discards the reservation and any does any additional work beyond disposal.
+;; The user's verson of this method should almost certainly call
+;; dispose-caching-task if appropriate.
+;;
+;; Must return two values:
+;;  The first value is one of: :finalized, :retry-discarding
+;;  The second value is the caching-task.
+(defgeneric discard-caching-task (caching-task resource-cache-scheduler))
 
-;; executed on main-thread
-;; Step 5: Not expected to be specialized or written by user.
-;; Returns T if caching-task is recycled, NIL otherwise
-(defgeneric release-caching-task (resource-cache-scheduler caching-task))
+;; Step 5: Executed on main thread. Expected to be specialized.
+;;
+;; Discards the reservation and any additional work beyond disposal.
+;;
+;; Must return two values:
+;;  The first value is one of: :finalized, :retry-discarding
+;;  The second value is the caching-task.
+(defgeneric dispose-caching-task (caching-task resource-cache-scheduler))
+
+;; Step 6: Executed on main thread. Not expected to be specialized (but can be)
+;;
+;; Release any reference to the caching-task other than possibly storing it
+;; in a pool for reuse later. The user better not be messing with it if it is
+;; in the pool otherwise there will be uninteded effects.
+;;
+;; Returns two values:
+;;  The first value MUST be nil.
+;;  The second value is T if it was recycled and NIL if not.
+(defgeneric release-caching-task (caching-task resource-cache-scheduler))
 
 ;;;; --------------------------------------------------------------------------
 ;;;; The resource cache scheduling API
@@ -213,16 +294,17 @@
 ;; NOTE: This API still needs work! What does it do? How does it have to
 ;; honor threading (if at all)? What thread calls this?
 (defgeneric schedule (resource-cache-scheduler &key &allow-other-keys))
+;; resubmit the caching-task back into the scheduler for another go-around.
+(defgeneric resubmit (resource-cache-scheduler caching-task))
 
 ;;;; --------------------------------------------------------------------------
 ;;;; The executor API.
 ;;;; --------------------------------------------------------------------------
 
-;; TODO: This object probably goes into the CORE as a slot.
 ;; The executor speaks to the scheduler and arranges for the caching-tasks to
 ;; be completed.
 (defclass resource-cache-executor ()
-  ((%core :reader core :initarg :core)))
+  ((%core :accessor core :initarg :core)))
 (defclass sequential-resource-cache-executor (resource-cache-executor) ())
 (defclass concurrent-resource-cache-executor (resource-cache-executor) ())
 

@@ -43,8 +43,18 @@
             :initform (u:dict #'eq))
    (%running-p :accessor running-p
                :initform t)
+
+   ;; The new resource cache system
+   (%resource-cache-scheduler :reader resource-cache-scheduler
+                              :initarg :resource-cache-scheduler)
+   (%resource-cache-executor :reader resource-cache-executor
+                              :initarg :resource-cache-executor)
    (%resource-cache :reader resource-cache
-                    :initform (u:dict #'eq))
+                    :initarg :resource-cache)
+   ;; This is deprecated and being removed. It is replaced by the above.
+   (%old-resource-cache :reader old-resource-cache
+                        :initform (u:dict #'eq))
+
    (%clock :reader clock
            :initarg :clock
            :initform nil)

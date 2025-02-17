@@ -168,6 +168,13 @@
   (make-instance 'cube :style style :store store :repr repr))
 
 ;;; -----------------
+;; defclass TEXTURE-MAP-STATE support code
+;;; -----------------
+
+(defun make-texture-map-state (&rest initargs)
+  (apply #'make-instance 'texture-map-state initargs))
+
+;;; -----------------
 ;; defclass TEXTURE-MAP (and children) support code
 ;; NOTE: Factory for 'texture-map-1d, 'texture-map-2d, 'texture-map-3d as
 ;; the general symbol and a specialized method for 'texture-map-cube.
@@ -176,25 +183,31 @@
 ;; Extensible API
 (defmethod make-texture-map ((type symbol)
                              &key name anonymous-p model style store
-                               data-elements mipmaps bags attrs cattrs sattrs)
+                               data-elements state
+                               mipmaps bags attrs cattrs sattrs)
   ;; TYPE ends up being all the simple texture maps.
   (let ((texture-map
           (make-instance type
                          :name name :anonymous-p anonymous-p :model model
                          :style style :store store
-                         :data-elements data-elements :mipmaps mipmaps)))
+                         :data-elements data-elements
+                         :state (u:default state (make-texture-map-state))
+                         :mipmaps mipmaps)))
     (abag:absorb texture-map
                  :bags bags :attrs attrs :cattrs cattrs :sattrs sattrs)
     texture-map))
 (defmethod make-texture-map ((type (eql 'texture-map-cube))
                              &key name anonymous-p model style store
-                               data-elements cube bags attrs cattrs sattrs)
+                               data-elements state
+                               cube bags attrs cattrs sattrs)
   ;; TYPE is a complex texture map type.
   (let ((texture-map
           (make-instance type
                          :name name :anonymous-p anonymous-p :model model
                          :style style :store store
-                         :data-elements data-elements :cube cube)))
+                         :data-elements data-elements
+                         :state (u:default state (make-texture-map-state))
+                         :cube cube)))
     (abag:absorb texture-map
                  :bags bags :attrs attrs :cattrs cattrs :sattrs sattrs)
     texture-map))

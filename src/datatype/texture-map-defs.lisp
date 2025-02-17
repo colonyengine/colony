@@ -29,7 +29,9 @@
              :initarg :element
              :initform nil
              :documentation
-             "In-memory object of data that can be read/written.")))
+             "In-memory object of data that can be read/written. May also ~
+be a reference to a cache-item in the resource cache.")))
+
 ;; API
 ;; method, factory-like
 ;; (make-data-element type :logloc logloc :physloc physloc :element element)
@@ -212,6 +214,37 @@ CUBE-REPRESENTATION in current use.")))
 ;; function
 ;; (make-cube :style style :store store :repr repr)
 
+;; An internal class to TEXTURE-MAP class which indicates runtime data about
+;; the texture map.
+(defclass texture-map-state ()
+  (;; Data about the texture-map and its state (often in the runtime).
+   (%valid-elements-p :accessor valid-elements-p
+                      :initarg :valid-elements-p
+                      :initform nil
+                      :type boolean
+                      :documentation
+                      "T if all of the elements are findable assets. ~
+This can mean actually found on disk, or a network server connected to, or ~
+whatever is appropriate that the elements are present. NIL otherwise.")
+   (%valid-representation-p :accessor valid-representation-p
+                            :initarg :valid-representation-p
+                            :initform nil
+                            :type boolean
+                            :documentation
+                            "T if the representation (mipmaps, cube, etc) ~
+can be validly built out of the actual elements. This entails reading at ~
+least each element's header data and performing computations to see if ~
+the desired number of mipmaps, their actual geometry, and similar ~
+understanding about the cube representation are legal.")
+   (%materialized-p :accessor materialized-p
+                    :initarg :materialized-p
+                    :initform nil
+                    :type boolean
+                    :documentation
+                    "T if ALL the elements have been simultaneously
+materialized into the main memory of the engine. NIL otherwise.")))
+
+;; Base class for all texture-maps
 (defclass texture-map (abag:attribute-bag)
   ((%name :accessor name
           :initarg :name
@@ -219,7 +252,7 @@ CUBE-REPRESENTATION in current use.")))
           :type (not null)
           :documentation
           "Specified by the define-texture-map form, or gensymed, or ~
-:unspecified. If a texture-map with the name :unspecified is observed by the
+:unspecified. If a texture-map with the name :unspecified is observed by the ~
 engine, it is an error.")
    (%anonymous-p :accessor anonymous-p
                  :initarg :anonymous-p
@@ -252,7 +285,14 @@ list and it dependant on the MODEL and STYLE of the texture.")
                    :type (or null (vector data-element))
                    :documentation
                    "An adjustable array of data-elements that represent where ~
-to find the texel data for this texture-map or nil.")))
+to find the texel data for this texture-map or nil.")
+   (%state :reader state
+           :initarg :state
+           :type texture-map-state
+           :documentation
+           "The state object which contains information about the validity ~
+and state of this texture-map.")))
+
 ;; API
 ;; method, factory-like
 ;; (make-texture-map type
@@ -261,6 +301,7 @@ to find the texel data for this texture-map or nil.")))
 ;;  :data-elements array-of-data-elements &allow-other-keys)
 (defgeneric make-texture-map (type &key name anonymous-p model style store
                                      data-elements bags attrs cattrs sattrs
+                                     state
                               &allow-other-keys))
 
 (defclass texture-map-simple (texture-map)
@@ -323,6 +364,20 @@ Example: A cube map."))
                    :initarg :original-form
                    :initform nil)))
 
+
+;; --------------------------------------------------------------------------
+;; Types for caching texture-maps into the resource-cache.
+
+;; Split an entire texture-map into smaller pieces to work on then assemble
+;; the entire thing into the resource-cache when done.
+(defclass caching-task/texture-map (rc:caching-task) ())
+;; Deal with a single image-element in a texture-map. This loads the
+;; image-element and puts it into the cache (if appropriate).
+(defclass caching-task/image-element (rc:caching-task) ())
+;; Deal with a single texture-map-element in a texture. This find the
+;; reference to (or possibly loads) a texture for a texture-map-element
+;; (if appropriate).
+(defclass caching-task/texture-map-element (rc:caching-task) ())
 
 ;; --------------------------------------------------------------------------
 

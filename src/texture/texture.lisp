@@ -452,6 +452,10 @@ return the TEXTURE instance for the debug-texture."
     ((not (procedural-texture-p texture))
      (generate-computed-texture-descriptor texture)
      (with-accessors ((computed-texdesc computed-texdesc)) texture
+
+       ;; NOTE: Uploading texture-data to the gpu requires the texid, hence the
+       ;; texture layer is responsible for taking already loaded data and
+       ;; putting it into the right spot.
        (gl:bind-texture (texture-type computed-texdesc) (texid texture))
 
        (potentially-degrade-texture-min-filter texture)
@@ -754,6 +758,8 @@ semantic name of it which was specified with a DEFINE-TEXTURE."
 ;; NOTE: data-form holds the original form, a resolved form of it, and then the
 ;; loaded/computed/whatever datum (a real image or a key into a cache, etc)
 ;; representing it.
+
+
 
 ;; Gamedev (and internally used) Texture Protocol:
 ;; Make a free floating texture-descriptor:

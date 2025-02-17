@@ -58,6 +58,17 @@ shared material may affect the NEXT rendering call!"
   (when (render-p self)
     (u:when-let ((camera (c::active-camera (c:context self)))
                  (transform (c:component-by-type (c:actor self) 'transform)))
+
+      ;; TODO: Right here, thereabouts, materialize the material and the data
+      ;; requirements it might have (plus constructing the texture object and
+      ;; all that). Putting this work here has the effect of serializing the
+      ;; material's texture-map requirements right here which will almost
+      ;; surely cause frame juttering becuase we can't (beyond multiple
+      ;; texture-map data requirements for a single material) concurrently load
+      ;; all of the required ones here for the entire frame. It is being done
+      ;; this way to complete the feature of a branch and we'll revisit it
+      ;; later.
+
       (with-material (material self)
           (:model (model transform)
            :view (view camera)

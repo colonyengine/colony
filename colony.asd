@@ -159,7 +159,9 @@
      (:file "logical-to-physical-parser")
      (:file "physical-to-api-parser")
      (:file "map-parser")
-     (:file "texture-map")))
+     (:file "texture-map")
+     (:file "realize")
+     (:file "materialize")))
    (:module "texture"
     :serial t
     :components

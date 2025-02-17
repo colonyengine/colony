@@ -57,7 +57,15 @@ structures in CORE."
            :textures (textab:make-texture-table)
            :thread-pool (tpool:make-thread-pool (or =threads= =cpu-count=))
            :context (make-context)
+           :resource-cache (rc:make-resource-cache)
+           :resource-cache-scheduler (rc:make-resource-cache-scheduler)
+           :resource-cache-executor (rc:make-resource-cache-executor
+                                     :sequential)
            :clock (make-clock))))
+
+    ;; Create required some back references.
+    (setf (rc:core (resource-cache-scheduler core)) core)
+    (setf (rc:core (resource-cache-executor core)) core)
 
     (setf (slot-value (context core) '%core) core
           *core-debug* core)
