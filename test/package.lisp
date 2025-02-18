@@ -13,7 +13,8 @@
    (#:v4 #:vorigin.vec4)
    (#:abag #:colony.attribute-bag)
    (#:clone #:colony.clone)
-   (#:texmap #:colony.texture-map))
+   (#:texmap #:colony.texture-map)
+   (#:rc #:colony.resource-cache))
   (:use
    #:cl
    #:parachute))

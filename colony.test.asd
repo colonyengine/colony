@@ -14,6 +14,7 @@
   ((:file "package")
    (:file "smoke")
    (:file "attribute-bag")
+   (:file "resource-cache")
    (:module "texture-map"
     :serial t
     :components

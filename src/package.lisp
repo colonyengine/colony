@@ -151,6 +151,7 @@
    #:rcref
    #:rcrefd
    #:rcrem
+   #:rcremd
    #:resource-cache
    )
   ;; CACHING-TASK API

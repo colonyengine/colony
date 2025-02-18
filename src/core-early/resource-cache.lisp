@@ -134,42 +134,6 @@ present."
                            (values value present)))
         :do (setf table (gethash key table))))
 
-
-;; TODO: move to some unit test suite.
-(defun cdtest ()
-  (let ((key0 '(abc . 0))
-        (key1a '(ijk . 0))
-        (key1b '(xyz . 0))
-        ;; TODO: Make the API cognizant if I try to use more keys than
-        ;; possible. Should we error? Should we just extend using EQUAL by
-        ;; default? Maybe put a flag in the cache-domain to let us do one or
-        ;; the other by choice?
-        (cd (make-cache-domain :texture (list #'equal #'equal))))
-    (flet ((emit (cd &rest keys)
-             (multiple-value-bind (value present)
-                 (apply #'cdref cd keys)
-               (format t "(cdref cd ~{~S ~})-> value: ~S, present: ~A~%"
-                       keys value present))))
-
-      (emit cd key0)
-      (setf (cdref cd key0) "path/to/file.png")
-      (emit cd key0)
-
-      (emit cd key1a key1b)
-      (setf (cdref cd key1a key1b) "another/path/to/file.png")
-      (emit cd key1a key1b)
-      (format t "-------------------~%")
-      (emit cd key0)
-      (emit cd key1a key1b)
-
-      (cdrem cd key0)
-      (emit cd key0)
-      (cdrem cd key1a key1b)
-      (emit cd key1a key1b)
-
-      cd)))
-
-
 ;; Implementation of RESOURCE-CACHE
 
 (defun ensure-cache-domain (resource-cache domain-id &optional layout)
@@ -244,39 +208,7 @@ the second is the cache-domain object if it did exist or NIL otherwise."
     (values present cache-domain)))
 
 
-;; TODO: move over to a unit test.
-(defun rctest ()
-  (let ((rc (make-resource-cache `((:foo (,#'eql ,#'eql))))))
-    (ensure-cache-domain rc :bar `(,#'equal))
 
-    (flet ((emit (rc domain-id &rest keys)
-             (multiple-value-bind (value present)
-                 (apply #'rcref rc domain-id keys)
-               (format t "(rcref rc ~S ~{~S ~})-> value: ~S, present: ~A~%"
-                       domain-id keys value present))))
-
-      (emit rc :foo :a 10)
-      (setf (rcref rc :foo :a 10) "a/b/c")
-      (emit rc :foo :a 10)
-      (rcrem rc :foo :a 10)
-      (emit rc :foo :a 10)
-      (format t "cache-domain for :foo is: ~S~%" (rcrefd rc :foo))
-      (rcremd rc :foo)
-      (format t "cache-domain for :foo is: ~S~%" (rcrefd rc :foo))
-
-      (format t "--------------~%")
-
-      (let ((key "/file/path"))
-        (emit rc :bar key)
-        (setf (rcref rc :bar key) 100)
-        (emit rc :bar key)
-        (rcrem rc :bar key)
-        (emit rc :bar key))
-
-      (format t "cache-domain for :bar is: ~S~%" (rcrefd rc :bar))
-      (rcremd rc :bar)
-      (format t "cache-domain for :bar is: ~S~%" (rcrefd rc :bar))
-      )))
 
 ;;; --------------------------------------------------------------------------
 ;;; The cache warming (scheduler/executor) API
@@ -323,8 +255,9 @@ the CACHING-TASK."
 ;; The Cache Warming Protocol
 ;; -------------------------------------------------------------------------
 
+;; rewrite to use RESUBMIT, change to SUBMIT.
 (defmethod acquire-caching-task (resource-cache-scheduler task-type domain-id
-                              &rest init-args)
+                                 &rest init-args)
   "Allocate or reinitialize a pool instance of TASK-TYPE with INIT-ARGS, then
 store into the RESOURCE-CACHE-SCHEDULER under the DOMAIN-ID category.
 Return two values:
@@ -364,6 +297,7 @@ Return two values:
   (declare (ignore caching-task resource-cache-scheduler))
   (error "This method must be specialized on caching-task."))
 
+;; TODO add REVOKE
 (defmethod release-caching-task (caching-task resource-cache-scheduler)
   ;; If the caching-task is in the scheduler, remove it. In both cases just
   ;; drop the reference to it from the resource-cache API's point of view and
@@ -451,58 +385,3 @@ Return two values:
                     resource-cache-scheduler)
   (error "Not implemented yet!")
   nil)
-
-;; --------------------------------------------------------------------------
-;; Testing the warming API
-;; --------------------------------------------------------------------------
-
-;; The caching task test is to convert a key which is a string to a value which
-;; is the length of the string.
-(defclass warmer-test-caching-task (caching-task) ())
-
-(defmethod consider-caching-task ((caching-task warmer-test-caching-task)
-                                  (resource-cache-scheduler
-                                   resource-cache-scheduler))
-  (values :reserved caching-task))
-
-(defmethod compute-caching-task ((caching-task warmer-test-caching-task)
-                                 (resource-cache-scheduler
-                                  resource-cache-scheduler))
-  (setf (value caching-task) (length (key caching-task)))
-  (values :computed caching-task))
-
-(defmethod finalize-caching-task ((caching-task warmer-test-caching-task)
-                                  (resource-cache-scheduler
-                                   resource-cache-scheduler))
-  (assert (= (value caching-task) (length (key caching-task))))
-  (format t "Finalized task: key: ~S, value: ~A~%"
-          (key caching-task)
-          (value caching-task))
-  (values :finalized caching-task))
-
-(defmethod discard-caching-task ((caching-task warmer-test-caching-task)
-                                 (resource-cache-scheduler
-                                  resource-cache-scheduler))
-  (values :disposed caching-task))
-
-(defmethod dispose-caching-task ((caching-task warmer-test-caching-task)
-                                 (resource-cache-scheduler
-                                  resource-cache-scheduler))
-  (values :disposed caching-task))
-
-(defun warmer-test ()
-  (let* ((scheduler (make-resource-cache-scheduler :core nil))
-         (executor (make-resource-cache-executor :sequential :core nil))
-         (db #("hi-there-" "stuff-" "foo-"))
-         (db-len (length db)))
-    ;; allocate the tasks
-    (loop :repeat 10
-          :do (acquire-caching-task
-               scheduler 'warmer-test-caching-task :test-domain
-               :key (string-downcase
-                     (symbol-name
-                      (gensym (aref db (random db-len)))))))
-
-    ;; Then schedule and execute them
-    (let ((total (execute executor scheduler)))
-      (format t "Total caching-tasks processed: ~A~%" total))))
