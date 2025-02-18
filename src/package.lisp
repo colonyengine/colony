@@ -171,8 +171,9 @@
    #:core
    #:make-resource-cache-scheduler
    #:resource-cache-scheduler
-   #:resubmit
+   #:revoke
    #:schedule
+   #:submit
    #:unscheduled-tasks
    )
   ;; The Cache Warming Protocol (move to a better protocol definition place).

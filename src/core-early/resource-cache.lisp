@@ -237,9 +237,10 @@ caching-tasks are removed from the scheduler's ownership."
         (clrhash tasks)))
     scheduled-tasks))
 
-(defmethod resubmit (resource-cache-scheduler (caching-task caching-task))
-  "Put an in-use CACHING-TASK back into the unscheduled pool in the
-RESOURCE-CACHE-SCHEDULER for rescheduling again sometime in the future. Return
+;; TODO: Explain why the appdev might not want to mess with this much.
+(defmethod submit (resource-cache-scheduler (caching-task caching-task))
+  "Put a CACHING-TASK back into the unscheduled pool in the
+RESOURCE-CACHE-SCHEDULER for scheduling again sometime in the future. Return
 the CACHING-TASK."
   (let* ((task-type (class-name (class-of caching-task)))
          (domain-id (domain-id caching-task))
@@ -251,11 +252,25 @@ the CACHING-TASK."
          (dht (u:ensure-gethash domain-id ttt (make-hash-table))))
     (u:ensure-gethash ct dht ct)))
 
+;; TODO: Explain why the appdev might not want to mess with this much.
+(defmethod revoke (resource-cache-scheduler (caching-task caching-task))
+  ;; If the caching-task is in the scheduler, remove it. In both cases just
+  ;; drop the reference to it from the resource-cache API's point of view and
+  ;; let the GC collect it. Finalization or discarding should have cleaned up
+  ;; any resource used by the caching-task.
+  (let* ((task-type (class-name (class-of caching-task)))
+         (ttt (u:ensure-gethash task-type
+                                (unscheduled-tasks resource-cache-scheduler)
+                                (make-hash-table)))
+         (dht (u:ensure-gethash (domain-id caching-task) ttt
+                                (make-hash-table))))
+    (remhash caching-task dht)
+    (values nil nil)))
+
 ;; -------------------------------------------------------------------------
 ;; The Cache Warming Protocol
 ;; -------------------------------------------------------------------------
 
-;; rewrite to use RESUBMIT, change to SUBMIT.
 (defmethod acquire-caching-task (resource-cache-scheduler task-type domain-id
                                  &rest init-args)
   "Allocate or reinitialize a pool instance of TASK-TYPE with INIT-ARGS, then
@@ -270,12 +285,9 @@ Return two values:
   (let* ((ct (apply #'make-instance task-type
                     :domain-id domain-id
                     :core (core resource-cache-scheduler)
-                    init-args))
-         (ttt (u:ensure-gethash task-type
-                                (unscheduled-tasks resource-cache-scheduler)
-                                (make-hash-table)))
-         (dht (u:ensure-gethash domain-id ttt (make-hash-table))))
-    (values :initalized (u:ensure-gethash ct dht ct))))
+                    init-args)))
+    (values :initalized
+            (submit resource-cache-scheduler ct))))
 
 (defmethod consider-caching-task (caching-task resource-cache-scheduler)
   (declare (ignore caching-task resource-cache-scheduler))
@@ -297,20 +309,8 @@ Return two values:
   (declare (ignore caching-task resource-cache-scheduler))
   (error "This method must be specialized on caching-task."))
 
-;; TODO add REVOKE
 (defmethod release-caching-task (caching-task resource-cache-scheduler)
-  ;; If the caching-task is in the scheduler, remove it. In both cases just
-  ;; drop the reference to it from the resource-cache API's point of view and
-  ;; let the GC collect it. Finalization or discarding should have cleaned up
-  ;; any resource used by the caching-task.
-  (let* ((task-type (class-name (class-of caching-task)))
-         (ttt (u:ensure-gethash task-type
-                                (unscheduled-tasks resource-cache-scheduler)
-                                (make-hash-table)))
-         (dht (u:ensure-gethash (domain-id caching-task) ttt
-                                (make-hash-table))))
-    (remhash caching-task dht)
-    (values nil nil)))
+  (revoke resource-cache-scheduler caching-task))
 
 ;; --------------------------------------------------------------------------
 ;; The executor API.
@@ -334,45 +334,50 @@ Return two values:
 (defmethod execute (resource-cache-executor resource-cache-scheduler)
   (error "Unknown executor algorithm!"))
 
-;; TODO: Fix up the state machine to keep its state in the caching-task
-;; a little more explicitly. This way resubmitted tasks which are being
-;; recomputed or refinalized can be more explicitly understood by the appdev
-;; (or our own) written cache warming protocols.
 (defmethod execute ((resource-cache-executor
                      sequential-resource-cache-executor)
                     resource-cache-scheduler)
   (let ((total-processed 0))
     ;; Do one step of the state machine for each task, we're usually
-    ;; going to resubmit when we reach the next state. Anything in the
-    ;; finalized state gets released and doesn't resubmit anything.
+    ;; going to submit when we reach the next state. Anything in the
+    ;; finalized state gets released and doesn't submit anything.
     ;;
     ;; TODO: This is sketchy cause it doesn't enforce the correct edge
     ;; transitions. Add that.
     (loop :for tasks = (schedule resource-cache-scheduler)
           :while tasks
           :do (dolist (task tasks)
-                (let ((transition-func
-                        (ecase (state task)
-                          ((:initialized :retry-reservation)
-                           #'consider-caching-task)
-                          ((:reserved :retry-computation)
-                           #'compute-caching-task)
-                          ((:computed :retry-finalization)
-                           #'finalize-caching-task)
-                          ((:discarded :retry-discarding)
-                           #'discard-caching-task)
-                          ((:finalized :retry-disposing)
-                           #'dispose-caching-task)
-                          (:disposed
-                           (incf total-processed)
-                           #'release-caching-task))))
+                (multiple-value-bind (transition-func valid-transitions)
+                    (ecase (state task)
+                      ((:initialized :retry-reservation)
+                       (values #'consider-caching-task
+                               '(:reserved :retry-reservation :discarded)))
+                      ((:reserved :retry-computation)
+                       (values #'compute-caching-task
+                               '(:computed :retry-computation :discarded)))
+                      ((:computed :retry-finalization)
+                       (values #'finalize-caching-task
+                               '(:finalized :retry-finalization :discarded)))
+                      ((:discarded :retry-discarding)
+                       (values #'discard-caching-task
+                               '(:disposed :retry-discarding)))
+                      ((:finalized :retry-disposing)
+                       (values #'dispose-caching-task
+                               '(:disposed :retry-disposing)))
+                      (:disposed
+                       (incf total-processed)
+                       (values #'release-caching-task
+                               '(nil))))
                   ;; TODO: Deal with VALUE better here.
                   (multiple-value-bind (next-state value)
                       (funcall transition-func task resource-cache-scheduler)
                     (declare (ignore value))
+                    (unless (member next-state valid-transitions)
+                      (error "execute: invalid-transition: ~S, expected: ~S"
+                             next-state valid-transitions))
                     (setf (state task) next-state)
                     (when next-state ;; nil means it was released.
-                      (resubmit resource-cache-scheduler task))))))
+                      (submit resource-cache-scheduler task))))))
 
     ;; In case the body puts more tasks in, we catch it in this loop.
     total-processed))
