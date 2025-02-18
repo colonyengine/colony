@@ -263,7 +263,7 @@
 ;; dispose-caching-task if appropriate.
 ;;
 ;; Must return two values:
-;;  The first value is one of: :finalized, :retry-discarding
+;;  The first value is one of: :disposed, :retry-discarding
 ;;  The second value is the caching-task.
 (defgeneric discard-caching-task (caching-task resource-cache-scheduler))
 
@@ -272,7 +272,7 @@
 ;; Discards the reservation and any additional work beyond disposal.
 ;;
 ;; Must return two values:
-;;  The first value is one of: :finalized, :retry-discarding
+;;  The first value is one of: :dispose, :retry-disposing
 ;;  The second value is the caching-task.
 (defgeneric dispose-caching-task (caching-task resource-cache-scheduler))
 
@@ -283,7 +283,7 @@
 ;; in the pool otherwise there will be uninteded effects.
 ;;
 ;; Returns two values:
-;;  The first value MUST be nil.
+;;  The first value MUST be: nil.
 ;;  The second value is T if it was recycled and NIL if not.
 (defgeneric release-caching-task (caching-task resource-cache-scheduler))
 
