@@ -42,12 +42,16 @@ as possible between *cores*.
 transformed (often during macro processing) into another form--usually Common
 Lisp, and often then compiled. Many *appdev* APIs are in the form of *dsls*.
 The engine has a lot of *dsls* both internal and *appdev* facing. A lot of care
-goes into constructing optimal *dsl* syntax and meaning. It is the data driven
-means by which the *appdev* declares much of the behaviour and asset need of
+goes into constructing useful *dsl* syntax and meaning. It is the data driven
+means by which the *appdev* declares much of the behaviour and asset needs of
 the *app*. The engine's duty is to bend these data driven specifications into
 efficient in memory data structures to reduce resource needs to execute the
 *app* and to ensure that *ADAPI* *dsls* slowly change to preserve backwards
-compatibility.
+compatibility. Please note: An *ADAPI* *dsl* is often used at toplevel in the
+*app*'s source code but usually can also be used as a shorthand in the *appdev*
+code itself to construct *unregistered* in-memory data structures without
+having to call the entire detailed *programmatic API*. It is often true that a
+*dsl* expands into its specific *programmatic API*.
 
     - **asset dsl**: *ADAPI* An asset description language which indicates
     where to find (on disk, or network servers, etc) assets like images, audio
@@ -124,6 +128,18 @@ than once to produce independent *runtime* instances of those game objects.
 *materialized* *prefabs*. A *prefab* is usually specified by a *prefab dsl*
 though it may be constructed using the *prefab* API at *runtime*.
 
+- **programmatic API**: This almost always means a detailed set of lisp
+functions and macros specific to the engine which comprise a means to allocate
+and initialize various data structures representing such engine concepts as a
+*material*, a *texture*, a *texture-map*, etc. The specific API is usually
+disambiguated by the context--otherwise we'll say something like *texture-map
+programmatic API* to indicate the engine lisp API interface to allocate and
+construct a *texture-map* in-memory instance. Note that a *programmatic API*
+often includes the fully formed *dsl* that when used not in a toplevel context,
+is a shorthand for producing an *unregistered* in memory representation for
+something. It is often true that the expansion of a *dsl* expands directly
+into its *programmatic API*.
+
 - **realization**: Movement of any data (which has often previously been
 *materialized*) to another (non engine) API's managed memory or to another
 peripheral's memory. Examples: writing data to audio memory via a device
@@ -133,6 +149,13 @@ metadata might be *realized* to disk), a network server, a virtual file system
 in main memory can be a location of *realization*. Data streamed directly from
 a source, like disk or network, straight into the peripheral's or API's managed
 memory, is still *realized*, just not from a *materialized* source.
+
+- **registration**: This is the process where ownership and control of a data
+structure prevously constructed by the *app* is passed from the *app* memory to
+the engine.
+
+- **register**: Invocation of an engine API function which does *registration*
+of the data structure into the engine.
 
 - **reification**: This is the process (often executed during the engine start)
 which will *reify* *abstract* data into *reified* data.
@@ -148,8 +171,10 @@ environment.
 *reified* data in the *runtime* at engine start.
 
 - **runtime**: This is all of the code being executed and the ephemeral state
-of the engine when the engine is started and executing. When the engine
-stops executing, there is no more *runtime*.
+of the engine when the engine is started and executing. When the engine stops
+executing, there is no more *runtime*. This word means both the engine and the
+*app* in-memory data structure during execution and is disambiguated by stating
+the *engine runtime* and the *app runtime*.
 
 - **scene**: The current set of *materialized* *actors* along with their
 *components* for which the engine is performing maintenance, updating,
@@ -181,3 +206,12 @@ forms) that comprise a 1d, 2d, 3d, or cube-map image.
 - **texture object**: Data in the GPU memory representing a texture. It is
 constructed, manipulated, and destroyed by the GPU driver API (such as OpenGL,
 Vulkan, etc).
+
+- **unregistered**: When an in memory instance is constructed via a
+*programmatic API* by the *app*, it only exists in the *app runtime* and this
+state is called *unregistered*. It must still be *registered* to the engine so
+the engine can locate and resolve all needed assets, validate, and make ready
+the information for use by the *app*. An example might be procedural generation
+of a *texture-map*. One would construct the *texture-map* with the
+*texture-map* *programmatic API* and then *register* it with the appropriate
+engine API.
