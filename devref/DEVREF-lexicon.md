@@ -38,7 +38,7 @@ a chess server and two clients--each one represented by a *core* and being
 executed concurrently in the same lisp image. Resource are shared as much
 as possible between *cores*.
 
-- **dsl**: Domain Specific Language. This is a form or set of forms which are
+- **DSL**: Domain Specific Language. This is a form or set of forms which are
 transformed (often during macro processing) into another form--usually Common
 Lisp, and often then compiled. Many *appdev* APIs are in the form of *dsls*.
 The engine has a lot of *dsls* both internal and *appdev* facing. A lot of care
@@ -53,31 +53,39 @@ code itself to construct *unregistered* in-memory data structures without
 having to call the entire detailed *programmatic API*. It is often true that a
 *dsl* expands into its specific *programmatic API*.
 
-    - **asset dsl**: *ADAPI* An asset description language which indicates
-    where to find (on disk, or network servers, etc) assets like images, audio
-    files, models, custom data, etc.
+    - **Asset DSL: define-asset**: *ADAPI* An asset description language which
+    indicates where to find (on disk, or network servers, etc) assets like
+    images, audio files, models, custom data, etc.
 
-    - **config dsl**: *ADAPI* A configuration language that describes *runtime*
-    parameters across a wide spectrum of domains in the engine.
+    - **Config DSL: define-config**: *ADAPI* A configuration language that
+    describes *runtime* parameters across a wide spectrum of domains in the
+    engine.
 
-    - **component dsl**: *ADAPI* A *component* description which names it and
-    described the slots and their initialization values. TBD
+    - **Component DSL: define-component**: *ADAPI* A *component* description
+    which names it and described the slots and their initialization values.
+    TBD
 
-    - **material dsl**: *ADAPI* A *material* description which describes the
-    association between: one or more *textures*, a *shader program*, the values
-    (or means by which to compute them) for all the required
-    *shader-variables*.
+    - **Graph DSL: define-graph**: *ADAPI* A graph dependency description of
+    the order of updates for different component types during a frame
+    compuation in the engine. The *graph dsl* is intended to have much more
+    functionality than it currently does.
 
-    - **prefab dsl**: *ADAPI* A *prefab* description which names and describes
-    how actors and components (and their initargs) are assembled.
+    - **Material DSL: define-material**: *ADAPI* A *material* description which
+    describes the association between: one or more *textures*, a *shader
+    program*, the values (or means by which to compute them) for all the
+    required *shader-variables*.
 
-    - **texture dsl**: *ADAPI* A *texture* description form that names,
-    describes which *texture-maps* are required, and specifies the parameters
-    of the *texture object* ultimately created on the GPU.
+    - **Prefab DSL: define-prefab**: *ADAPI* A *prefab* description which names
+    and describes how actors and components (and their initargs) are
+    assembled.
 
-    - **texture-map dsl**: *ADAPI* A *texture-map* description form that names,
-    describes the assets required, and specified the arrangement of data for a
-    *texture-map*.
+    - **Texture DSL: define-texture**: *ADAPI* A *texture* description form
+    that names, describes which *texture-maps* are required, and specifies
+    the parameters of the *texture object* ultimately created on the GPU.
+
+    - **Texture-map DSL: define-texture-map**: *ADAPI* A *texture-map*
+    description form that names, describes the assets required, and specified
+    the arrangement of data for a *texture-map*.
 
 - **live coding**: A situation where an *appdev* is interacting via an editor
 (like emacs), a repl, or some other means with a running instance of the
