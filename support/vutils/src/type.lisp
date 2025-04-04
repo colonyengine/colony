@@ -55,3 +55,5 @@
   `(function ,args ,values))
 
 (deftype non-null-symbol () '(and symbol (not null)))
+
+(deftype or-null (&rest types) `(or null ,@types))

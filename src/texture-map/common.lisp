@@ -331,6 +331,11 @@ nil entries and returned."
 
 ;;; -----------------
 
+(defun make-warming-info/texture-map (&rest init-args)
+  (apply #'make-instance 'warming-info/texture-map init-args))
+
+;;; -----------------
+
 (defun make-texture-map-descriptor (name anonymous-p constructor
                                     &optional original-form)
   (make-instance 'texture-map-descriptor

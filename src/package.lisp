@@ -1,5 +1,18 @@
 (in-package #:cl-user)
 
+(defpackage #:colony.lockable
+  (:use #:cl)
+  ;; LOCKABLE Class
+  (:export
+   #:lock
+   #:lockable
+   )
+  ;; LOCKABLE Macro API
+  (:export
+   #:with-lock
+   )
+  )
+
 (defpackage #:colony.clone
   (:use #:cl)
   ;; CLONE-POLICY Classes
@@ -127,6 +140,7 @@
    #:opaque-data
    #:policy
    #:size
+   #:with-cache-item-lock
    #:value
    )
   ;; CACHE-DOMAIN API
@@ -161,10 +175,21 @@
    #:domain-id
    #:if-exists
    #:if-not-exits
+   #:info
    #:key
    #:opaque-data
    #:state
    #:value
+   )
+  ;; WARMING-INFO API
+  (:export
+   #:clear-events
+   #:events
+   #:get-recorded-caching-tasks
+   #:get-recorded-events
+   #:map-events
+   #:record-event
+   #:warming-info
    )
   ;; RESOURCE-CACHE-SCHEDULER API
   (:export
@@ -183,8 +208,13 @@
    #:consider-caching-task
    #:discard-caching-task
    #:dispose-caching-task
-   #:finalize-caching-task
+   #:lookup-caching-task
+   #:rectify-caching-task
+   #:recycle-caching-task
    #:release-caching-task
+   #:reserve-caching-task
+   #:synchronize-from-caching-task
+   #:synchronize-to-caching-task
    )
   ;; RESOURCE-CACHE-EXECUTOR API
   (:export
@@ -606,6 +636,7 @@
    #:frame-time
    #:refresh-rate
    #:id
+   #:inspect-core ;; Debugging function to inspect a running core.
    #:make-actor
    #:make-project
    #:mcmnt
@@ -833,6 +864,7 @@
       (:colony.component :comp)
       (:colony :c)
       (:colony.extension :x)
+      (:colony.lockable :lock)
       (:colony.prefab :prefab)
       (:colony.shader :shd)
       (:colony.resource-cache :rc)

@@ -106,9 +106,11 @@
 ;; is the length of the string.
 (defclass warmer-test-caching-task (rc:caching-task) ())
 
+;; We forgo actually using the resource-cache.
 (defmethod rc:consider-caching-task ((caching-task warmer-test-caching-task)
-                                     (resource-cache-scheduler
-                                      rc:resource-cache-scheduler))
+                                    (resource-cache-scheduler
+                                     rc:resource-cache-scheduler))
+
   (values :reserved caching-task))
 
 (defmethod rc:compute-caching-task ((caching-task warmer-test-caching-task)
@@ -117,16 +119,12 @@
   (setf (rc:value caching-task) (length (rc:key caching-task)))
   (values :computed caching-task))
 
-(defmethod rc:finalize-caching-task ((caching-task warmer-test-caching-task)
-                                     (resource-cache-scheduler
-                                      rc:resource-cache-scheduler))
+(defmethod rc:synchronize-from-caching-task ((caching-task
+                                              warmer-test-caching-task)
+                                             (resource-cache-scheduler
+                                              rc:resource-cache-scheduler))
   (assert (= (rc:value caching-task) (length (rc:key caching-task))))
-  (values :finalized caching-task))
-
-(defmethod rc:discard-caching-task ((caching-task warmer-test-caching-task)
-                                    (resource-cache-scheduler
-                                     rc:resource-cache-scheduler))
-  (values :disposed caching-task))
+  (values :synchronized caching-task))
 
 (defmethod rc:dispose-caching-task ((caching-task warmer-test-caching-task)
                                     (resource-cache-scheduler

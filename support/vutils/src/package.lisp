@@ -51,6 +51,7 @@
    #:f64a
    #:fixnum-array
    #:non-null-symbol
+   #:or-null
    #:ub8
    #:ub8a
    #:ub16

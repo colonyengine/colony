@@ -56,10 +56,11 @@ the lists of each category in the order of KEY-POOL."
         (car item)
         :unknown)))
 
-;; For :cube/:unique only
+;; For :cube/:faces only
 (defmethod logical-form-classifier ((form-type (eql :body))
                                     (model (eql :cube))
-                                    (style (eql :unique)) store)
+                                    (style (eql :faces))
+                                    store)
   (lambda (item)
     (if (and (listp item)
              (member (car item) '(sattrs cattrs attrs face)))
@@ -162,8 +163,8 @@ the lists of each category in the order of KEY-POOL."
 ;; :cube logical texture conversion.
 ;;; ---------------------------------------------------------------------------
 
-;; For :cube :unique textures
-(defmethod logical->physical (name (model (eql :cube)) (style (eql :unique))
+;; For :cube :faces textures
+(defmethod logical->physical (name (model (eql :cube)) (style (eql :faces))
                               store body)
   (when (physicalp body)
     ;; No error checking, we trust the body is in the right physical form.
@@ -178,7 +179,8 @@ the lists of each category in the order of KEY-POOL."
                               body)
 
       (when (plusp (length unknown))
-        (error "Unknown texture-map logical form: ~A : ~A" name unknown))
+        (error "Unknown texture-map cube/faces logical form: ~A : ~A"
+               name unknown))
 
       ;; 3. Iterate the faces, converting to the physical form and collecting
       ;; the data-elements from the face form. We make very strong assumptions
@@ -244,7 +246,8 @@ the lists of each category in the order of KEY-POOL."
                               body)
 
       (when (plusp (length unknown))
-        (error "Unknown texture-map logical form: ~A : ~A" name unknown))
+        (error "Unknown texture-map cube/envmap logical form: ~A : ~A"
+               name unknown))
 
       ;; 3. Iterate the mipmaps, converting to the physical form and collecting
       ;; the data-elements from the mipmaps. We make very strong assumptions
@@ -377,7 +380,7 @@ the lists of each category in the order of KEY-POOL."
 (defun test-log-to-phys/g000-cube-log-inf-one-non ()
   (let* ((name 'g000-cube-log-inf-one-non)
          (model :cube)
-         (style :unique)
+         (style :faces)
          (store :six)
          (data-model (list model style store)))
     (list name

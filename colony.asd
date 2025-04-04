@@ -44,7 +44,8 @@
    (:module "datatype"
     :serial t
     :components
-    ((:file "clone-defs")
+    ((:file "lockable-defs")
+     (:file "clone-defs")
      (:file "attribute-bag-defs")
      (:file "thread-pool-defs")
      (:file "uuid-defs")

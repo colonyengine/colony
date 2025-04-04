@@ -72,7 +72,7 @@ name if not, and the second is T if the name is a gensym name and NIL
 
 (defmethod physical-form-classifier ((form-type (eql :faces))
                                      model
-                                     (style (eql :unique))
+                                     (style (eql :faces))
                                      store)
   (lambda (item)
     (cond
@@ -741,7 +741,7 @@ be used as hash keys in the right order)."
 
 ;; A :unique cube map will always use faces in the cube representation
 (defmethod gen-cube-binding-group (cube-var phys/cube
-                                   model (style (eql :unique)) store)
+                                   model (style (eql :faces)) store)
   "Return four values. The first value is a list of LET bindings which
 construct all of the faces and then one more for the faces container. The
 second value is the binding form for the cube which uses the faces-container as

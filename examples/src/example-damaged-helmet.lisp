@@ -30,7 +30,7 @@
 (c:define-texture-map doge2-diffuse-front (:2d :unique)
   (texmap:mipmap (environments doge2-diffuse-front)))
 
-(c:define-texture-map doge2-diffuse-cube (:cube :unique :six)
+(c:define-texture-map doge2-diffuse-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) doge2-diffuse-right)
   (texmap:face (texmap:dir :-x) doge2-diffuse-left)
   (texmap:face (texmap:dir :+y) doge2-diffuse-top)
@@ -51,7 +51,7 @@
 (c:define-texture-map doge2-specular-front (:2d :unique)
   (texmap:mipmap (environments doge2-specular-front)))
 
-(c:define-texture-map doge2-specular-cube (:cube :unique :six)
+(c:define-texture-map doge2-specular-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) doge2-specular-right)
   (texmap:face (texmap:dir :-x) doge2-specular-left)
   (texmap:face (texmap:dir :+y) doge2-specular-top)
@@ -73,7 +73,7 @@
 (c:define-texture-map papermill-diffuse-front (:2d :unique)
   (texmap:mipmap (environments papermill-diffuse-front)))
 
-(c:define-texture-map papermill-diffuse-cube (:cube :unique :six)
+(c:define-texture-map papermill-diffuse-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) papermill-diffuse-right)
   (texmap:face (texmap:dir :-x) papermill-diffuse-left)
   (texmap:face (texmap:dir :+y) papermill-diffuse-top)
@@ -94,7 +94,7 @@
 (c:define-texture-map papermill-specular-front (:2d :unique)
   (texmap:mipmap (environments papermill-specular-front)))
 
-(c:define-texture-map papermill-specular-cube (:cube :unique :six)
+(c:define-texture-map papermill-specular-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) papermill-specular-right)
   (texmap:face (texmap:dir :-x) papermill-specular-left)
   (texmap:face (texmap:dir :+y) papermill-specular-top)
@@ -116,7 +116,7 @@
 (c:define-texture-map helipad-diffuse-front (:2d :unique)
   (texmap:mipmap (environments helipad-diffuse-front)))
 
-(c:define-texture-map helipad-diffuse-cube (:cube :unique :six)
+(c:define-texture-map helipad-diffuse-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) helipad-diffuse-right)
   (texmap:face (texmap:dir :-x) helipad-diffuse-left)
   (texmap:face (texmap:dir :+y) helipad-diffuse-top)
@@ -137,7 +137,7 @@
 (c:define-texture-map helipad-specular-front (:2d :unique)
   (texmap:mipmap (environments helipad-specular-front)))
 
-(c:define-texture-map helipad-specular-cube (:cube :unique :six)
+(c:define-texture-map helipad-specular-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) helipad-specular-right)
   (texmap:face (texmap:dir :-x) helipad-specular-left)
   (texmap:face (texmap:dir :+y) helipad-specular-top)
@@ -159,7 +159,7 @@
 (c:define-texture-map pisa-diffuse-front (:2d :unique)
   (texmap:mipmap (environments pisa-diffuse-front)))
 
-(c:define-texture-map pisa-diffuse-cube (:cube :unique :six)
+(c:define-texture-map pisa-diffuse-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) pisa-diffuse-right)
   (texmap:face (texmap:dir :-x) pisa-diffuse-left)
   (texmap:face (texmap:dir :+y) pisa-diffuse-top)
@@ -180,7 +180,7 @@
 (c:define-texture-map pisa-specular-front (:2d :unique)
   (texmap:mipmap (environments pisa-specular-front)))
 
-(c:define-texture-map pisa-specular-cube (:cube :unique :six)
+(c:define-texture-map pisa-specular-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) pisa-specular-right)
   (texmap:face (texmap:dir :-x) pisa-specular-left)
   (texmap:face (texmap:dir :+y) pisa-specular-top)
@@ -202,7 +202,7 @@
 (c:define-texture-map footprint-diffuse-front (:2d :unique)
   (texmap:mipmap (environments footprint-diffuse-front)))
 
-(c:define-texture-map footprint-diffuse-cube (:cube :unique :six)
+(c:define-texture-map footprint-diffuse-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) footprint-diffuse-right)
   (texmap:face (texmap:dir :-x) footprint-diffuse-left)
   (texmap:face (texmap:dir :+y) footprint-diffuse-top)
@@ -223,7 +223,7 @@
 (c:define-texture-map footprint-specular-front (:2d :unique)
   (texmap:mipmap (environments footprint-specular-front)))
 
-(c:define-texture-map footprint-specular-cube (:cube :unique :six)
+(c:define-texture-map footprint-specular-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) footprint-specular-right)
   (texmap:face (texmap:dir :-x) footprint-specular-left)
   (texmap:face (texmap:dir :+y) footprint-specular-top)
@@ -245,7 +245,7 @@
 (c:define-texture-map ennis-diffuse-front (:2d :unique)
   (texmap:mipmap (environments ennis-diffuse-front)))
 
-(c:define-texture-map ennis-diffuse-cube (:cube :unique :six)
+(c:define-texture-map ennis-diffuse-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) ennis-diffuse-right)
   (texmap:face (texmap:dir :-x) ennis-diffuse-left)
   (texmap:face (texmap:dir :+y) ennis-diffuse-top)
@@ -266,7 +266,7 @@
 (c:define-texture-map ennis-specular-front (:2d :unique)
   (texmap:mipmap (environments ennis-specular-front)))
 
-(c:define-texture-map ennis-specular-cube (:cube :unique :six)
+(c:define-texture-map ennis-specular-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) ennis-specular-right)
   (texmap:face (texmap:dir :-x) ennis-specular-left)
   (texmap:face (texmap:dir :+y) ennis-specular-top)
@@ -288,7 +288,7 @@
 (c:define-texture-map field-diffuse-front (:2d :unique)
   (texmap:mipmap (environments field-diffuse-front)))
 
-(c:define-texture-map field-diffuse-cube (:cube :unique :six)
+(c:define-texture-map field-diffuse-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) field-diffuse-right)
   (texmap:face (texmap:dir :-x) field-diffuse-left)
   (texmap:face (texmap:dir :+y) field-diffuse-top)
@@ -309,7 +309,7 @@
 (c:define-texture-map field-specular-front (:2d :unique)
   (texmap:mipmap (environments field-specular-front)))
 
-(c:define-texture-map field-specular-cube (:cube :unique :six)
+(c:define-texture-map field-specular-cube (:cube :faces :six)
   (texmap:face (texmap:dir :+x) field-specular-right)
   (texmap:face (texmap:dir :-x) field-specular-left)
   (texmap:face (texmap:dir :+y) field-specular-top)

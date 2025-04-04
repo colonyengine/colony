@@ -70,7 +70,8 @@
    (%materials :accessor materials
                :initarg :materials)
    (%texture-maps :accessor texture-maps
-                  :initarg :texture-maps)
+                  :initarg :texture-maps
+                  :type (u:or-null texmaptab::texture-map-table))
    (%textures :accessor textures
               :initarg :textures)
    (%context :reader context

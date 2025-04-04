@@ -238,38 +238,94 @@ caching-tasks are removed from the scheduler's ownership."
     scheduled-tasks))
 
 ;; TODO: Explain why the appdev might not want to mess with this much.
+;; TODO: I prolly have to lock the scheduler so I can insert stuff into it
+;; from different threads than main.
 (defmethod submit (resource-cache-scheduler (caching-task caching-task))
   "Put a CACHING-TASK back into the unscheduled pool in the
 RESOURCE-CACHE-SCHEDULER for scheduling again sometime in the future. Return
 the CACHING-TASK."
-  (let* ((task-type (class-name (class-of caching-task)))
-         (domain-id (domain-id caching-task))
-         (unscheduled-tasks (unscheduled-tasks resource-cache-scheduler))
-         (ct caching-task)
-         (ttt (u:ensure-gethash task-type
-                                unscheduled-tasks
-                                (make-hash-table)))
-         (dht (u:ensure-gethash domain-id ttt (make-hash-table))))
-    (u:ensure-gethash ct dht ct)))
+  (lock:with-lock (resource-cache-scheduler)
+    (let* ((task-type (class-name (class-of caching-task)))
+           (domain-id (domain-id caching-task))
+           (unscheduled-tasks (unscheduled-tasks resource-cache-scheduler))
+           (ct caching-task)
+           (ttt (u:ensure-gethash task-type
+                                  unscheduled-tasks
+                                  (make-hash-table)))
+           (dht (u:ensure-gethash domain-id ttt (make-hash-table))))
+      (u:ensure-gethash ct dht ct))))
 
 ;; TODO: Explain why the appdev might not want to mess with this much.
+;; I prolly have to lock the sceduler in case I revoke stuff in a different
+;; thread.
 (defmethod revoke (resource-cache-scheduler (caching-task caching-task))
   ;; If the caching-task is in the scheduler, remove it. In both cases just
   ;; drop the reference to it from the resource-cache API's point of view and
   ;; let the GC collect it. Finalization or discarding should have cleaned up
   ;; any resource used by the caching-task.
-  (let* ((task-type (class-name (class-of caching-task)))
-         (ttt (u:ensure-gethash task-type
-                                (unscheduled-tasks resource-cache-scheduler)
-                                (make-hash-table)))
-         (dht (u:ensure-gethash (domain-id caching-task) ttt
-                                (make-hash-table))))
-    (remhash caching-task dht)
-    (values nil nil)))
+  (lock:with-lock (resource-cache-scheduler)
+    (let* ((task-type (class-name (class-of caching-task)))
+           (ttt (u:ensure-gethash task-type
+                                  (unscheduled-tasks resource-cache-scheduler)
+                                  (make-hash-table)))
+           (dht (u:ensure-gethash (domain-id caching-task) ttt
+                                  (make-hash-table))))
+      (remhash caching-task dht)
+      (values nil nil))))
 
 ;; -------------------------------------------------------------------------
 ;; The Cache Warming Protocol
 ;; -------------------------------------------------------------------------
+
+;; Warming-info protocol
+
+(defmethod record-event ((info (eql nil)) caching-task event)
+  ;; This is a nop to cover cases where the appdev did not specify an
+  ;; info object.
+  nil)
+
+(defmethod record-event ((info warming-info) (caching-task caching-task) event)
+  "Push the EVENT into a list contained in INFO that is associated with the
+CACHING-TASK. Return the EVENT."
+  (push event (u:href (events info) caching-task)))
+
+(defmethod clear-events ((info warming-info) (caching-task caching-task))
+  "Set the event-list associates with CACHING-TASK in the INFO object to nil.
+Return T."
+  (setf (u:href (events info) caching-task) nil)
+  t)
+
+(defmethod get-recorded-caching-tasks ((info warming-info))
+  "Return a list of caching-tasks for which events were recorded. The
+caching-tasks themselves were only used as keys for this data and they may or
+may not be actually valid to inspect. Do not inspect any fields in the
+caching-tasks."
+  (u:hash-keys (events info)))
+
+(defmethod get-recorded-events ((info warming-info)
+                                (caching-task caching-task))
+  "For the given CACHING-TASK, if there is an event list in the INFO object for
+it, then make a COPY-SEQ of the event list and return it. The most recent event
+is first in the event list. Return two values: The first is the event list. The
+second is T if there was a CACHING-TASK key in the INFO object."
+  (multiple-value-bind (event-list presentp)
+      (u:href (events info) caching-task)
+    (values (copy-seq event-list)
+            presentp)))
+
+(defmethod map-events ((info warming-info) func)
+  "Map the FUNC which take a key and value argument across the events inthe
+INFO object. Return a list of the function results in hash table order."
+  (let ((results nil))
+    (maphash
+     (lambda (k v)
+       (push (funcall func k v) results))
+     (events info))
+    results))
+
+;; ----
+;; Caching-task protocol
+;; ----
 
 (defmethod acquire-caching-task (resource-cache-scheduler task-type domain-id
                                  &rest init-args)
@@ -281,24 +337,98 @@ Return two values:
    RESOURCE-CACHE-SCHEDULER so you can often ignore it)."
 
   ;; TODO: If recycling, use reinitialize-instance here after getting
-  ;; an instance of the _exact_ task-type from the pool.
-  (let* ((ct (apply #'make-instance task-type
+  ;; an instance of the _exact_ task-type from the type-pool.
+  (let* ((core (core resource-cache-scheduler))
+         (ct (apply #'make-instance task-type
                     :domain-id domain-id
-                    :core (core resource-cache-scheduler)
+                    :core core
+                    :state :initialized
                     init-args)))
+
+    (rc:record-event (info ct) ct :acquired)
+
     (values :initalized
             (submit resource-cache-scheduler ct))))
 
 (defmethod consider-caching-task (caching-task resource-cache-scheduler)
+  (let ((rc (c::resource-cache (core resource-cache-scheduler))))
+    (lock:with-lock (rc)
+      (multiple-value-bind  (cache-item presentp)
+          (lookup-caching-task caching-task resource-cache-scheduler rc)
+        (if (not presentp)
+            (ecase (if-not-exists caching-task)
+              (:create
+               (rc:record-event (info caching-task) caching-task
+                                `(:considered :create))
+               (reserve-caching-task caching-task resource-cache-scheduler
+                                     rc)))
+            (ecase (state cache-item)
+              (:cached
+               (ecase (if-exists caching-task)
+                 (:synchronize
+                  ;; cache-item info flows to caching-task...
+                  (rc:record-event (info caching-task) caching-task
+                                   `(:considered :synchronize-to))
+                  (synchronize-to-caching-task caching-task cache-item
+                                               resource-cache-scheduler))
+                 (:nop
+                  ;; Do nothing.
+                  (rc:record-event (info caching-task) caching-task
+                                   `(:considered :nop))
+                  (values :synchronized caching-task))
+
+                 (:supersede
+                  (rc:record-event (info caching-task) caching-task
+                                   `(:considered :supersede))
+                  (recycle-caching-task caching-task cache-item
+                                        resource-cache-scheduler))))
+              (:reserved
+               ;; We have to wait until the cache-item is :cached to do
+               ;; anything.
+               (rc:record-event (info caching-task) caching-task
+                                `(:considered :retry-reservation))
+               (values :retry-reservation caching-task))))))))
+
+(defmethod lookup-caching-task (caching-task resource-cache-scheduler
+                                resource-cache)
+  (declare (ignore resource-cache-scheduler))
+  ;; TODO: This APPLY is a little clunky cause it means the key always
+  ;; has to be a list. The problem is both how rc:rcref wants its
+  ;; information, and also how we're storing it in the caching-task.
+  ;; But, since this is specializable to a new type, if it is a problem
+  ;; it can just be solved for any specific caching-task subtype.
+  (format t "lookup-caching-task: domain ~A, key ~A~%"
+          (domain-id caching-task) (key caching-task))
+
+  (multiple-value-bind (item presentp)
+      (apply #'rc:rcref resource-cache
+             (domain-id caching-task) (key caching-task))
+    (format t "lookup-caching-task: item ~A, presentp ~A~%"
+            item presentp)
+    (values item presentp)))
+
+(defmethod reserve-caching-task (caching-task resource-cache-scheduler
+                                 resource-cache)
+  (declare (ignore caching-task resource-cache-scheduler resource-cache))
+  (error "This method must be specialized on caching-task."))
+
+(defmethod recycle-caching-task (caching-task cache-item
+                                 resource-cache-scheduler)
   (declare (ignore caching-task resource-cache-scheduler))
   (error "This method must be specialized on caching-task."))
 
 (defmethod compute-caching-task (caching-task resource-cache-scheduler)
   (declare (ignore caching-task resource-cache-scheduler))
-  (error "This method mustbe specialized on caching-task."))
+  (error "This method must be specialized on caching-task."))
 
-(defmethod finalize-caching-task (caching-task resource-cache-scheduler)
+(defmethod synchronize-from-caching-task (caching-task
+                                          resource-cache-scheduler)
   (declare (ignore caching-task resource-cache-scheduler))
+  (error "This method must be specialized on caching-task."))
+
+(defmethod synchronize-to-caching-task (caching-task cache-item
+                                        resource-cache-scheduler)
+  (declare (ignore caching-task cache-item resource-cache-scheduler))
   (error "This method must be specialized on caching-task."))
 
 (defmethod discard-caching-task (caching-task resource-cache-scheduler)
@@ -310,7 +440,12 @@ Return two values:
   (error "This method must be specialized on caching-task."))
 
 (defmethod release-caching-task (caching-task resource-cache-scheduler)
+  (rc:record-event (info caching-task) caching-task :release)
   (revoke resource-cache-scheduler caching-task))
+
+(defmethod rectify-caching-task (caching-task resource-cache-scheduler)
+  (declare (ignore caching-task resource-cache-scheduler))
+  (error "This method must be specialized on caching-task."))
 
 ;; --------------------------------------------------------------------------
 ;; The executor API.
@@ -338,43 +473,50 @@ Return two values:
                      sequential-resource-cache-executor)
                     resource-cache-scheduler)
   (let ((total-processed 0))
-    ;; Do one step of the state machine for each task, we're usually
-    ;; going to submit when we reach the next state. Anything in the
-    ;; finalized state gets released and doesn't submit anything.
-    ;;
-    ;; TODO: This is sketchy cause it doesn't enforce the correct edge
-    ;; transitions. Add that.
+    ;; This is clearly not optimal, but we can fix later.
     (loop :for tasks = (schedule resource-cache-scheduler)
           :while tasks
           :do (dolist (task tasks)
                 (multiple-value-bind (transition-func valid-transitions)
                     (ecase (state task)
                       ((:initialized :retry-reservation)
-                       (values #'consider-caching-task
-                               '(:reserved :retry-reservation :discarded)))
+                       (values 'consider-caching-task
+                               '(:reserved :retry-reservation :discarded
+                                 :synchronized :anomalous)))
                       ((:reserved :retry-computation)
-                       (values #'compute-caching-task
-                               '(:computed :retry-computation :discarded)))
-                      ((:computed :retry-finalization)
-                       (values #'finalize-caching-task
-                               '(:finalized :retry-finalization :discarded)))
+                       (values 'compute-caching-task
+                               '(:computed :retry-computation :discarded
+                                 :anomalous)))
+                      ((:computed :retry-synchronization)
+                       (values 'synchronize-from-caching-task
+                               '(:synchronized :retry-synchronization
+                                 :discarded :anomalous)))
                       ((:discarded :retry-discarding)
-                       (values #'discard-caching-task
-                               '(:disposed :retry-discarding)))
-                      ((:finalized :retry-disposing)
-                       (values #'dispose-caching-task
-                               '(:disposed :retry-disposing)))
+                       (values 'discard-caching-task
+                               '(:synchronized :retry-discarding :anomalous)))
+                      ((:synchronized :retry-disposing)
+                       (values 'dispose-caching-task
+                               '(:disposed :retry-disposing :anomalous)))
                       (:disposed
                        (incf total-processed)
-                       (values #'release-caching-task
-                               '(nil))))
+                       (values 'release-caching-task
+                               '(nil :anomalous)))
+                      (:anomalous
+                       (values 'rectify-caching-task
+                               '(nil :initialized :retry-reservation
+                                 :reserved :retry-computation
+                                 :computed :retry-synchronization
+                                 :discarded :retry-discarding
+                                 :synchronized :retry-disposing
+                                 :disposed :anomalous)
+                               )))
                   ;; TODO: Deal with VALUE better here.
                   (multiple-value-bind (next-state value)
                       (funcall transition-func task resource-cache-scheduler)
                     (declare (ignore value))
                     (unless (member next-state valid-transitions)
-                      (error "execute: invalid-transition: ~S, expected: ~S"
-                             next-state valid-transitions))
+                      (error "execute: function: ~A invalid-transition: ~S, expected: ~S"
+                             transition-func next-state valid-transitions))
                     (setf (state task) next-state)
                     (when next-state ;; nil means it was released.
                       (submit resource-cache-scheduler task))))))

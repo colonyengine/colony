@@ -69,12 +69,12 @@
   ;;  (:3d :unique (:slices :xy-z)) - a 3d mimap
   ;;
   ;;  ;; NOTE: cube texture maps (there are sub-texture-maps)
-  ;;  (:cube :unique AAA) - cube map faces as separate texture-maps
+  ;;  (:cube :faces AAA) - cube map faces as separate texture-maps
   ;;    AAA (the syntax & semantics of the rest of the form) can be
   ;;      :six
   ;;      :opengl
   ;;    Each :face can themselves have combined or unique mipmaps.
-  ;;  (:cube :combined AAA) - cube map where all faces are encoded in a
+  ;;  (:cube :envmap AAA) - cube map where all faces are encoded in a
   ;;                          single image possibly under :mipmap scaling.
   ;;    AAA can be: (and there can be MANY of these)
   ;;      :guess ;; (the default) determine the combined format, even custom..
@@ -343,7 +343,7 @@
 (c:define-texture-map cube-map-front (:2d :unique)
   (texmap:mipmap (textures cube-map-front)))
 
-(c:define-texture-map cube-map (:cube :unique :six)
+(c:define-texture-map cube-map (:cube :faces :six)
   (texmap:face (texmap:dir :+x) cube-map-right)
   (texmap:face (texmap:dir :-x) cube-map-left)
   (texmap:face (texmap:dir :+y) cube-map-top)
@@ -381,7 +381,7 @@
 (c:define-texture-map cube-map-front-2 (:2d :unique)
   (texmap:mipmap (textures cube-map-front-2)))
 
-(c:define-texture-map cube-map-2 (:cube :unique :six)
+(c:define-texture-map cube-map-2 (:cube :faces :six)
   (texmap:face (texmap:dir :+x) cube-map-right-2)
   (texmap:face (texmap:dir :-x) cube-map-left-2)
   (texmap:face (texmap:dir :+y) cube-map-top-2)

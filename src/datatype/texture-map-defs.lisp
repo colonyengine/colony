@@ -165,7 +165,7 @@ environment map which may contain a range of different layouts."))
 ;; (:cube :faces [:six | :opengl])
 ;;
 ;; :faces means each face (of which there MUST be six) is in its own
-;; (named or anonymous) texture map (which may or may not itself
+;; named texture map (which may or may not itself
 ;; be :unique or :combined).
 ;; The :six or :opengl is how each face is identified and is assumed to
 ;; be :six if not supplied.
@@ -366,10 +366,14 @@ Example: A cube map."))
 
 
 ;; --------------------------------------------------------------------------
-;; Types for caching texture-maps into the resource-cache.
+;; Types for caching texture-maps into the resource-cache and warming-protocol.
 
-;; Split an entire texture-map into smaller pieces to work on then assemble
-;; the entire thing into the resource-cache when done.
+;; Used as a place to keep track of what happens to each texture-map name as it
+;; goes through the warming-protocol on the way to materialization.
+(defclass warming-info/texture-map (rc:warming-info)  ())
+
+;; This will allow us to figure out what elements we actually need and
+;; shove them into the state machine.
 (defclass caching-task/texture-map (rc:caching-task) ())
 ;; Deal with a single image-element in a texture-map. This loads the
 ;; image-element and puts it into the cache (if appropriate).
