@@ -158,6 +158,14 @@ in main memory can be a location of *realization*. Data streamed directly from
 a source, like disk or network, straight into the peripheral's or API's managed
 memory, is still *realized*, just not from a *materialized* source.
 
+- **rectification**: Fill in any missing data in an in-memory data
+structure and if there are any constraints in that in-memory data
+structure then ensure they are honored as well. A common thing to do
+with in-memory data structure from the *ADAPI* DSLs but this term is
+general for any kind of in-memory data structure.
+
+- **rectify**: See *rectification*.
+
 - **registration**: This is the process where ownership and control of a data
 structure prevously constructed by the *app* is passed from the *app* memory to
 the engine.
