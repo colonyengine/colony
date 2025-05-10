@@ -182,6 +182,7 @@
   ;; Math
   (:export
    #:average
+   #:compute-mipmap-levels
    #:degrees->radians
    #:map-domain
    #:radians->degrees)
