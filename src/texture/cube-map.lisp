@@ -103,8 +103,8 @@
 
     ;; TODO: Move the computing of the mipmap levels to the texture-map codes.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
-        (compute-mipmap-levels (img:width first-image)
-                               (img:height first-image))
+        (u:compute-mipmap-levels (img:width first-image)
+                                 (img:height first-image))
       (declare (ignore expected-resolutions))
 
       ;; TODO Move this to texture-map handling codes. Fix for cube-maps.

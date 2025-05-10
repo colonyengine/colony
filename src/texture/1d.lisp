@@ -81,8 +81,8 @@
 
     ;; TODO: Move the computing of the mipmap levels to the texture-map codes.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
-        (compute-mipmap-levels (img:width (aref images 0))
-                               (img:height (aref images 0)))
+        (u:compute-mipmap-levels (img:width (aref images 0))
+                                 (img:height (aref images 0)))
 
       ;; TODO Move this to texture-map handling codes.
       (validate-mipmap-images

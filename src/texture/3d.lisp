@@ -85,9 +85,9 @@
          (depth (length (aref images 0))))
     ;; TODO: Move the computing of the mipmap levels to the texture-map codes.
     (multiple-value-bind (expected-mipmaps expected-resolutions)
-        (compute-mipmap-levels (img:width first-image)
-                               (img:height first-image)
-                               depth)
+        (u:compute-mipmap-levels (img:width first-image)
+                                 (img:height first-image)
+                                 depth)
       ;; TODO Move this to texture-map handling codes.
       #++(validate-mipmap-images
           images texture expected-mipmaps expected-resolutions)
