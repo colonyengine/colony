@@ -19,6 +19,18 @@ visualization, or any other program.
 
 - **appdev**: The person(s) using the engine to develop an *app*.
 
+- **attribute-bag**: A CLOS type which holds key/value pairs of keys
+suitable to compare with EQUAL and *attribute-value* structures. This is
+usually used as a base class for other types. Used often in DSL syntax.
+
+- **attribute-value**: A CLOS type which holds a *semantic* value which
+is the original value, a *dirty* slot, which indicates if there was an
+update to the *semantic* slot, and a *computed* slot, which is whatever
+final value was computed using the *semantic* slot as input. The layers
+of code using the *attribute-bag* and the *attribute-value*s determine
+the exact semantics of their use. They are used as values in
+*attribute-bag*s.
+
 - **component**: A game object that often looks like a class with slots and
 methods and which can be instanced into main memory like classes. However
 *components* have additional properties beyond that of classes. One such
@@ -186,6 +198,10 @@ environment.
 - **reify**: The action of converting *abstract* data in the *metadata* to
 *reified* data in the *runtime* at engine start.
 
+- **resource-cache**: An in memory storage system in the engine which
+deduplicates requests when loading data and only holds one instance of
+anything in main memory.
+
 - **runtime**: This is all of the code being executed and the ephemeral state
 of the engine when the engine is started and executing. When the engine stops
 executing, there is no more *runtime*. This word means both the engine and the
@@ -206,22 +222,26 @@ shader pipeline.
 - **shader-variables**: Uniforms, etc, that name variables to which values are
 bound for a specific *shader program*.
 
-- **texture**: An named association between parameter names and values and
-*texture-map* data that all should be eventually *realized* into an on gpu
-*texture object*.
+- **texture**: A named association between parameter names and value
+pairs and *texture-map* data that all should be eventually *realized*
+into an on gpu *texture object*.
 
 - **texture instance**: An in main memory object that is part of the *appdev*
-API representing that names the parameters of a *texture object* on the GPU and
-its association with some *texture-map* data. Often contains a reference to the
-*texture object*.
+API that represents and names the parameters of a *texture object* on the GPU
+and its association with some *texture-map* data. Often contains a reference to
+the *texture object*.
+
+- **texture object**: Data in the GPU memory representing a texture. It is
+constructed, manipulated, and destroyed by the GPU driver API (such as OpenGL,
+Vulkan, etc).
 
 - **texture-map**: A set of (usually) image data (which may include
 hierarchical mipmaps, individual image slices of a voxel, or other aggregate
 forms) that comprise a 1d, 2d, 3d, or cube-map image.
 
-- **texture object**: Data in the GPU memory representing a texture. It is
-constructed, manipulated, and destroyed by the GPU driver API (such as OpenGL,
-Vulkan, etc).
+- **texture-map instance**: An in main memory object that represents all
+of the aggregate *texture-map* data and (usually) points to it in the
+*resource-cache*.
 
 - **unregistered**: When an in memory instance is constructed via a
 *programmatic API* by the *app*, it only exists in the *app runtime* and this
