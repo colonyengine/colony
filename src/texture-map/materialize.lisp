@@ -17,23 +17,24 @@
   (rc:map-events info
                  (lambda (ct-inst event-list)
                    ;; opaque data has a weird format.
-                   (format t " Texture-map: ~A, image-element: ~A, ct ~A~%"
+                   (format t " Texture-map: ~A~%  data-element: ~A~%  ct ~A~%"
                            (texmap:name (car (rc:opaque-data ct-inst)))
                            (logloc (cdr (rc:opaque-data ct-inst)))
                            ct-inst)
-
+                   (format t "  events:~%")
                    (dolist (event (reverse event-list))
-                     (format t "  ~S~%" event)))))
+                     (format t "   ~S~%" event)))))
 
 
 ;; image element state machine
 
 (defmethod rc:reserve-caching-task ((caching-task caching-task/image-element)
                                     resource-cache-scheduler resource-cache)
-  (let ((cache-item (rc:make-cache-item :opaque-data caching-task
-                                        :policy :unlocked
-                                        :state :reserved
-                                        :location :cl-heap)))
+  (let ((cache-item (rc:make-cache-item
+                     :opaque-data caching-task
+                     :policy :unlocked
+                     :state :reserved
+                     :location :cl-heap)))
     (setf (apply #'rc:rcref
                  resource-cache
                  (rc:domain-id caching-task)
@@ -53,11 +54,13 @@
         (rc:policy cache-item) :unlocked
         (rc:state cache-item) :reserved
         (rc:location cache-item) :cl-heap
-        (rc:size cache-item) nil)
+        (rc:size cache-item) nil
+        (rc:core cache-item) nil)
 
   (when (rc:value cache-item)
-    ;; TODO: Figure out if I need to free this resource or just drop it like
-    ;; I am doing here and let the GC get it if noone else has reference.
+    ;; TODO: Figure out if I need to free this resource or just drop it
+    ;; like I am doing here and let the GC get it if noone else has
+    ;; reference.
     (setf (rc:value cache-item) nil))
 
   (rc:record-event
@@ -69,18 +72,17 @@
 (defmethod rc:compute-caching-task ((caching-task caching-task/image-element)
                                     resource-cache-scheduler)
   (let* ((context (colony::context (rc::core caching-task)))
-         ;; 1. convert asset key to filepath
-         (asset (first (rc:key caching-task)))
-         ;; TODO: Store this somewhere (maybe in cache-item?), cause it
-         ;; needs to go into the data-element's PHYSLOC field.
-         (asset-path
-           (c:with-asset-cache context :texture asset
-             (c::resolve-path asset)))
-         ;; 2. load filepath as generic image
+         ;; 1. convert asset key to a physical asset-path
+         (asset (car (rc:key caching-task)))
+         (asset-path (c:with-asset-cache context :texture asset
+                       (c::resolve-path asset)))
+         ;; 2. load filepath as generic image from asset-path
          (img (img:load-image asset-path)))
 
-    ;; 3. finally store into caching task.
-    (setf (rc:value caching-task) img)
+    ;; 3. Finally store the img results (and where we actually found
+    ;; it) into caching task....
+    (setf (rc:value caching-task) img
+          (texmap:physloc caching-task) asset-path)
 
     (rc:record-event
      (rc:info caching-task) caching-task `(:computed ,img))
@@ -90,7 +92,11 @@
 (defmethod rc:synchronize-from-caching-task ((caching-task
                                               caching-task/image-element)
                                              resource-cache-scheduler)
-  (let ((resource-cache (c::resource-cache (rc:core caching-task))))
+  (let ((resource-cache (c::resource-cache (rc:core caching-task)))
+        (data-element
+          ;; TODO This ad hoc opaque-data structure is scary. Maybe make it
+          ;; a real object.
+          (cdr (rc:opaque-data caching-task))))
     (lock:with-lock (resource-cache)
       (let ((cache-item (rc:lookup-caching-task caching-task
                                                 resource-cache-scheduler
@@ -102,31 +108,47 @@
                  caching-task
                  (rc:key caching-task)))
 
+        ;; Synchronize the information in the caching-task into the
+        ;; cache-item (and also into the data-element).
         (let ((img (rc:value caching-task)))
-          (setf (rc:value cache-item) img
-                (rc:state cache-item) :cached
-                ;; TODO: add size computation to image class., this is
-                ;; wrong since it doesn't take into consideraton the
-                ;; size of a pixel.
-                (rc:size cache-item) (* (img:width img)
-                                        (img:height img)))))
+          (setf
+           ;; fill in cache-item
+           (rc:value cache-item) img
+           (rc:state cache-item) :cached
+           ;; TODO: add size computation to image class. this is
+           ;; wrong since it doesn't take into consideraton the
+           ;; size of a pixel.
+           (rc:size cache-item) (* (img:width img)
+                                   (img:height img))
+           ;; We use the opaque-data in the cache-item to store the
+           ;; physloc.
+           (rc:opaque-data cache-item) (texmap:physloc caching-task)
 
-      (rc:record-event
-       (rc:info caching-task) caching-task :synchronize-from)
+           ;; Now fill in the data-element fields for which this
+           ;; caching-task was doing its work. This connects the
+           ;; data-element directly to the cache-item.
+           (texmap:physloc data-element) (texmap:physloc caching-task)
+           (texmap:element data-element) cache-item)
 
-      (values :synchronized caching-task))))
+          (rc:record-event
+           (rc:info caching-task) caching-task :synchronize-from)
+
+          (values :synchronized caching-task))))))
 
 (defmethod rc:synchronize-to-caching-task ((caching-task
                                             caching-task/image-element)
                                            cache-item
                                            resource-cache-scheduler)
-  (format t "synchronize-to-caching-task: not yet implemented: ~A~%"
-          (type-of caching-task))
+  ;; NOTE: We stored the physloc of the logloc into the opaque-data in
+  ;; the cache-item. Lets use it to fix up the data-element.
+  (let ((data-element (cdr (rc:opaque-data caching-task))))
+    (setf (texmap:physloc data-element) (rc:opaque-data cache-item)
+          (texmap:element data-element) cache-item)
 
-  (rc:record-event
-   (rc:info caching-task) caching-task :synchronize-to)
+    (rc:record-event
+     (rc:info caching-task) caching-task :synchronize-to)
 
-  (values :synchronized caching-task))
+    (values :synchronized caching-task)))
 
 (defmethod rc:discard-caching-task ((caching-task caching-task/image-element)
                                     resource-cache-scheduler)
@@ -270,13 +292,361 @@ texture-map instances, and a list of unregistered texture-map names."
 
     (dump-info info)
 
-    (format t "materialize: materializable texture-map instances (names): ~A~%"
-            (mapcar #'texmap:name materializable-texmap-insts))
-    (format t "materialize: unregistered texture-map names: ~A~%"
-            unregistered-texmap-names)
+    (dolist (texmap-inst materializable-texmap-insts)
+      (setf (texmap:materialized-p (texmap:state texmap-inst)) t))
 
     (values materializable-texmap-insts
             unregistered-texmap-names)))
+
+;;; ABOVE is materialize-data-elements and associated functions
+;;; ---------------------------------------------------------------------------
+;;; BELOW is classification of the inference requirements of the in
+;;; memory texture-map structure.
+
+(defun collapse-inference-types (&rest items)
+  "This function expects that ITEMS is a list of results from
+CLASSIFY-RECTIFICATION. It returns :synthesize, :validate, or :infer,
+depending on the contents of the ITEMS list."
+  (cond
+    ((every (u:curry #'eq :synthesize) items)
+     :synthesize)
+    ((every (u:curry #'eq :validate) items)
+     :validate)
+    (t
+     :infer)))
+
+(defgeneric classify-rectification (inst root &key core &allow-other-keys)
+  (:documentation
+   "Classify INST and return one of four choices:
+ nil         - Unclassifiable by the CLASSIFY-RECTIFICATION system.
+ :synthesize - ALL values/structure must be synthesized from base knowledge.
+ :validate   - ALL values/structure are specified and must be validated.
+ :infer      - SOME values/structure must be filled in. May need backtracking.
+
+If there is a choice between :synthesize and :validate, then :infer is chosen.
+If there is a choice between :infer and someting else, :infer is chosen.
+
+CLASSIFY-RECTIFICATION is often called on data structures with many sub
+pieces that themselves have subpieces and this generic function is
+expected to recurse on those pieces. ROOT should be the root level
+object of that tree. Often when exxamining INST (which is some possibly
+deep subpart of ROOT), you'll need access to ROOT to compute the
+classification. The keyword argument :CORE is usually the core instance
+of the engine, since sometimes classification can cause references to
+other data to be found in CORE as well. It is very likely you'll start
+the CLASSIFY-RECTIFICATION with the same object for INST and ROOT. This
+is normal."))
+
+(defmethod classify-rectification (inst root &key core)
+  (declare (ignore inst root core))
+  nil)
+
+(defmethod classify-rectification ((inst (eql nil)) root &key core)
+  (declare (ignore inst root core))
+  :synthesize)
+
+(defmethod classify-rectification ((items vector) root &key core)
+  (apply #'collapse-inference-types
+         (map 'list (u:rcurry #'classify-rectification root :core core) items)))
+
+;; ---------- texture-map processing
+
+(defmethod classify-rectification ((inst data-span) (root texture-map)
+                                   &key core)
+  (declare (ignore root core))
+  ;; We assume the elidx is previously correct.
+  (let ((origin-infer-type (if (texmap:origin inst)
+                               :validate
+                               :synthesize))
+        (extent-infer-type (if (texmap:extent inst)
+                               :validate
+                               :synthesize)))
+    (collapse-inference-types origin-infer-type extent-infer-type)))
+
+(defmethod classify-rectification ((inst span) (root texture-map) &key core)
+  (declare (ignore root core))
+  (let ((origin-infer-type (if (texmap:origin inst)
+                               :validate
+                               :synthesize))
+        (extent-infer-type (if (texmap:extent inst)
+                               :validate
+                               :synthesize)))
+    (collapse-inference-types origin-infer-type extent-infer-type)))
+
+(defmethod classify-rectification ((inst mapping-span) (root texture-map)
+                                   &key core)
+  (let ((to-infer-type
+          (classify-rectification (texmap:to inst) root :core core))
+        (from-infer-type
+          (classify-rectification (texmap:from inst) root :core core)))
+    (collapse-inference-types to-infer-type from-infer-type)))
+
+(defmethod classify-rectification ((inst mipmap) (root texture-map) &key core)
+  (let ((extent-infer-type
+          (classify-rectification (texmap:extent inst)
+                                  root :core core))
+        (mapping-spans-infer-type
+          (classify-rectification (texmap:mapping-spans inst)
+                                  root :core core)))
+    (collapse-inference-types extent-infer-type mapping-spans-infer-type)))
+
+;; ---------- texture-map-simple processing
+
+(defmethod classify-rectification ((inst texture-map-simple)
+                                   (root texture-map-simple)
+                                   &key core)
+  ;; We understand that the other fields in the inst are corrrectly and fully
+  ;; specified.
+  (classify-rectification (texmap:mipmaps inst) root :core core))
+
+;; ---------- texture-map-complex processing
+
+(defmethod classify-rectification ((inst face)
+                                   (root texture-map-complex)
+                                   &key core)
+  ;; Find the name of the face, look it up in the textable...
+  (let* ((texmap-table (colony::texture-maps core))
+         (delems (texmap:data-elements root))
+         (face-name (texmap:logloc (aref delems (texmap:elidx inst))))
+         (face-texture-map-inst
+           (texmaptab::find-resolved-texture-map texmap-table face-name))
+         (texmap-state (texmap:state face-texture-map-inst))
+         ;; ...and observe it's classification
+         (rect-class (texmap:rectification-classification texmap-state)))
+
+    ;; TODO: This is shady a little bit. Figure out exactly when this is
+    ;; ok to do and when it is expected to be done. (Changing a cube map
+    ;; when the simple-textures all have been previously rectified might
+    ;; be sufficient, but the full understanding of these consequences
+    ;; is not complete.)
+    (if (eq rect-class :rectified)
+        :validate
+        rect-class)))
+
+(defmethod classify-rectification ((inst faces-representation)
+                                   (root texture-map-complex)
+                                   &key core)
+  (classify-rectification (texmap:faces inst) root :core core))
+
+(defmethod classify-rectification ((inst envmap-representation)
+                                   (root texture-map-complex)
+                                   &key core)
+  ;; NOTE: Cube mipmaps are specified in the manner as in a
+  ;; texture-map-simple and don't use texture-map-elements, but instead
+  ;; image-elements in the data-element array. So, we simply classify
+  ;; them like regular mipmaps.
+  (classify-rectification (texmap:mipmaps inst) root :core core))
+
+(defmethod classify-rectification ((inst cube)
+                                   (root texture-map-complex)
+                                   &key core)
+  (classify-rectification (texmap:repr inst) root :core core))
+
+(defmethod classify-rectification ((inst texture-map-complex)
+                                   (root texture-map-complex)
+                                   &key core)
+  ;; This assumes all simple texture-maps referenced by this object have been
+  ;; classified BEFORE this texture-map has been classified.
+  (classify-rectification (texmap:cube inst) root :core core))
+
+;;; ABOVE is classify-rectification and associated functions
+;;; ---------------------------------------------------------------------------
+;;; BELOW is rectification of the in memory texture-map
+;;; structure.
+
+;;
+;; rectification:
+;;
+;; "rectify" means validate any information given to us, and if no
+;; information is given to us, synthesize what information should be
+;; there. If a "rectify" fails it means there is an inconsistancy.
+;;
+;; This unfortunately is a prolog-like unification problem that tries to
+;; see if what the appdev specified in the texture-map DSL unifies with
+;; the actual data-elements holding the data. However, to save time, I'm
+;; just implementing a common subset of the functionality and bailing
+;; when the unification get too complex.
+;;
+;; ALgorithm:
+;; foreach texture-map
+;;  rectify-data-elements: all delem must have the same pixel format
+;;  rectify-total-mipmaps: tot num mipmaps wrt base img size is validated/synth
+;;  foreach mipmap # mipmap number, expected mipmap size from base delem
+;;     rectify-mipmap-extent: validate/synthesize mipmap extent
+;;     rectify-total-mapping-spans: total number of mapping-spans val/synth
+;;     foreach mapping-span # using elidx delem image
+;;       rectify-mapping-span: val/synth mapping span
+;;         rectify-mapping-span-to: val/synth destination span
+;;         rectify-mapping-span-from: val/synth source span
+;;       build mapping-span-to set coverage map
+;;       ensure coverage map perfectly covers mipmap extent, no over/underlap
+;;
+;; For cube maps, do the above, but also sure all base level mipmaps are
+;; the same size between the faces, and exactly square for :faces
+;; representation.
+
+;; TODO: Candidate for a generalized method appropriate for use in many places
+;; and by the appdev. In what package would it be?
+(defgeneric rectify (infer-style feature inst root
+                     &key core &allow-other-keys)
+  (:documentation "Rectify the INST so any required values inside of it are
+concretized. INFER-STYLE can be :synthesize, :validate, or :infer and
+this dictates what the RECTIFY method is going to do. FEATURE is
+(usually) a symbol that indicates what particular feature of the INST
+will be rectified. ROOT is usually the root object in the hierarchy of a
+nested set of objects used when rectification information needs to span
+more information that is just available in the INST. CORE is the usual
+engine core if needed. Return T if the rectification was successful and
+NIL otherwise."))
+
+(defmethod rectify ((infer-style (eql :validate))
+                    (feature (eql :pixel-format))
+                    (inst vector)
+                    (root texture-map)
+                    &key core)
+  "Return T if all the data-elements in the INST use the same pixel-format.
+Signal an error otherwise."
+  (declare (ignore infer-style feature core))
+  ;; TODO: Should this code actually decide upon a pixel-format if some
+  ;; of these differ and them homogenize the data? Would this surprise
+  ;; the appdev?
+  (loop :with pixel-format = nil
+        :for delem :across inst
+        :for delem-pixel-format = (img:pixel-format
+                                   (rc:value (texmap:element delem)))
+        :do (if pixel-format
+                (unless (eql delem-pixel-format pixel-format)
+                  (error "rectify-data-elements: Implement pixel-format fix"))
+                (setf pixel-format delem-pixel-format)))
+  t)
+
+(defmethod rectify (infer-style
+                    (feature (eql :mipmaps))
+                    (inst texture-map-simple)
+                    (root texture-map-simple)
+                    &key core)
+  "Rectify or verify the number of mipmaps in the INST."
+
+  (declare (ignore infer-style feature inst root core))
+
+  ;; KEEP GOING
+
+  ;; if :combined, there should be one or (length expected-extents)
+  ;;    if there was one, then up it to (length expected-extents) mipmaps.
+  ;;    There should also be one data-element.
+  ;;
+  ;; if :unique, there should be 1 (for exactly 1 mipmap) or
+  ;;      (length expected-extents)
+  ;;    if there is other than 1 or length, then error (I could fixup).
+
+  nil)
+
+(defmethod rectify ((infer-style (eql :synthesize))
+                    (feature (eql :texture-map-contents))
+                    (inst texture-map-simple)
+                    (root texture-map-simple)
+                    &key core)
+  ;; TODO: How do I collect errors and warnings in this method? Should
+  ;; they be signaled conditions with restarts so the user can fix stuff
+  ;; up or just collected and reported for later?
+  (declare (ignore infer-style feature inst root core))
+
+  t
+
+  #++
+  (rectify infer-style :pixel-format
+           (texmap:data-elements inst) root :core core)
+
+  #++
+  (let ((mipmaps (texmap:mipmaps texmap-inst)))
+    (multiple-value-bind (validp model extents reason)
+        (expected-extents (deduce-mipmap-structure texmap-inst))
+
+      ;; TODO: This next function either decides however many mipmaps are
+      ;; present is correct, or it will fix the number to be correct.
+      (rectify-total-mipmaps infer-style texmap-inst expected-extents)
+
+      (loop :for mipmap :across mipmaps
+            :for required-extent :in expected-extents
+            :for mipmap-idx :by 1
+            :do ;; This loop forces/check the mipmap extents to be in the
+                ;; right order (if present) in the in-memory
+                ;; representation. Otherwise it fills them in.
+                ;; 1) sum 3d vol of mapping spans, must equal to mipmap extent
+                ;; 2) All mapping spans must not extend outside mipmap extent
+                ;; 3) all combinations of mapping spans must not intersect
+                ;; 4) then the mapping spans exactly cover the mipmap extent
+                (rectify-mipmap-extent infer-style texmap-inst mipmap
+                                       required-extent)
+                (rectify-total-mapping-spans infer-style texmap-inst mipmap)
+                (loop :for mapping-span :across (texmap:mapping-spans mipmap)
+                      :do (rectify-mapping-span infer-style texmap-inst
+                                                mipmap mapping-span)
+                          (let ((coverage-map (build-coverage-map mipmap)))
+                            (unless (perfect-covering-p coverage-map)
+                              (error
+                               "Bad coverage-map: Texture-map: ~A, mipmap: ~A"
+                               (texmap:name texmap-inst)
+                               mipmap-idx)))))
+
+      ;; TODO: don't modify this return value in the caller.
+      (texmap:extent (aref mipmaps 0)))))
+
+(defmethod rectify ((infer-style (eql :validate))
+                    (feature (eql :texture-map-contents))
+                    (inst texture-map-simple)
+                    (root texture-map-simple)
+                    &key core)
+  (declare (ignore infer-style feature inst root core))
+
+  t)
+
+
+(defmethod rectify (infer-style
+                    (feature (eql :texture-map-contents))
+                    (inst texture-map-complex)
+                    (root texture-map-complex)
+                    &key core)
+  (declare (ignore feature root core))
+  (format t "rectify: ~(~S~) ~(~S~): Implement me!~%"
+          (texmap:name inst) infer-style)
+  t)
+
+;; Main toplevel entry method for texture-map rectification.
+(defmethod rectify (infer-style
+                    (feature (eql :texture-map))
+                    (inst texture-map)
+                    (root texture-map)
+                    &key core)
+  ;; todo: :infer requires prolog-like backtracking, we leave
+  ;; unimplemented for now.
+  (when (eq infer-style :infer)
+    (error "Not implemented! Unable to rectify an :infer instance: ~A"
+           inst))
+  (let ((texmap-state (texmap:state inst)))
+    ;; TODO: Maybe add a :force keyword argument to force rectification?
+    ;; Otherwise we could bail early because it had already been done.
+    (setf (texmap:rectified-p texmap-state) nil)
+    ;; If we must :synthesize the data, we accomplish that first.
+    (when (eq infer-style :synthesize)
+      (unless (rectify :synthesize :texture-map-contents inst root :core core)
+        (error "Rectification synthesis failed: ~A" inst))
+      ;; Update the classification to the next one we need to do.
+      (setf (texmap:rectification-classification texmap-state) :validate
+            infer-style :validate))
+    ;; Then, either after synthesis, or because we only need to validate,
+    ;; process :validate.
+    (when (eq infer-style :validate)
+      (unless (rectify :validate :texture-map-contents inst root :core core)
+        (error "Rectification validation failed: ~A" inst))
+      (setf (texmap:rectification-classification texmap-state) :rectified
+            (texmap:rectified-p texmap-state) t
+            infer-style :rectified))
+    ;; If something blew up or went awry, we signal a condition.
+    (unless (eq infer-style :rectified)
+      (error "Unknown infer-style ~(~S~) for this instance: ~A"
+             infer-style inst))
+    t))
 
 
 (defun materialize (core texmap-names &key force)
@@ -293,11 +663,59 @@ those texture-maps are returned in a list. If the return value is NIL, it meant
 all texture-maps were materialized properly."
 
   (multiple-value-bind (materialized-texmap-insts unregistered-texmap-names)
-      ;; Phase 1: load all data elements.
+      ;; Phase 1: Materialize ALL the texture-map's data-elements into
+      ;; main-memory
       (materialize-data-elements core texmap-names :force force)
 
-    (declare (ignore materialized-texmap-insts unregistered-texmap-names))
-    ;; Phase 2: Validate and fill in missing data in the in memory texture-map
-    ;; now that we have the elements we need.
+    (format t "materialize: materialized texture-map instances (names): ~A~%"
+            (mapcar #'texmap:name materialized-texmap-insts))
 
-    ))
+    (format t "materialize: unregistered texture-map names: ~A~%"
+            unregistered-texmap-names)
+
+    ;; We split the simple maps from the complex maps and process the
+    ;; simple ones first during the next phases. Since complex
+    ;; texture-maps depend on simple texture-maps (at this time), it
+    ;; gives us a natural way to order the processing.
+    (multiple-value-bind (tm-simple-list tm-complex-list)
+        (u:partition (lambda (tmap)
+                       (subtypep (type-of tmap) 'texture-map-simple))
+                     materialized-texmap-insts)
+
+      ;; Phase 2: Classify ALL the materialized texture-maps into one of
+      ;; four rectification inference categories: :synthesize,
+      ;; :validate, :infer, or nil.
+      (dolist (texmap-insts (list tm-simple-list tm-complex-list))
+        (dolist (texmap-inst texmap-insts)
+          (let ((tmap-state (texmap:state texmap-inst))
+                (infer-style
+                  (classify-rectification texmap-inst texmap-inst :core core)))
+            (format t "CLASS-RECTI: ~(~S~) <- ~(~S~) ~(~S~)~%"
+                    infer-style
+                    (texmap:name texmap-inst)
+                    (list (texmap:model texmap-inst)
+                          (texmap:style texmap-inst)
+                          (texmap:store texmap-inst)))
+            (setf (texmap:rectification-classification tmap-state)
+                  infer-style))))
+
+      ;; Phase 3: Rectify ALL the texture-maps. This will concretize all
+      ;; required values in the texture-map instance. Rectification will
+      ;; hop onto this path in the diagram below at the appropriate
+      ;; state and do the work until rectification is complete or there
+      ;; is an error.
+      ;;
+      ;; :synthesize -> :validate--+--> recified-p is T
+      ;; ^                      ^  |
+      ;; |                      |  +--> ERROR
+      ;; +------>:infer<--------+
+      (dolist (texmap-insts (list tm-simple-list tm-complex-list))
+        (dolist (texmap-inst texmap-insts)
+          (let* ((texmap-state (texmap:state texmap-inst))
+                 (infer-style
+                   (texmap:rectification-classification texmap-state)))
+            (rectify infer-style :texture-map
+                     texmap-inst texmap-inst :core core))))))
+
+  :todo-return-something-good-here
+  )

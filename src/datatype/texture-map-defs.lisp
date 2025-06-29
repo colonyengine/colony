@@ -89,14 +89,15 @@ be a reference to a cache-item in the resource cache.")))
         :documentation
         "A DATA-SPAN to which the FROM is written. It can be equal to or ~
 higher dimensionality than the DATA-SPAN in FROM. The coordinate system has ~
-the same origin as the EXTENT in whatever storage form this MAPPING-SPAN is ~
-used in -- so if the DATA-SPAN has a different origin, it is wrt to that.")
+the same origin as the mipmap EXTENT in whatever storage form this ~
+MAPPING-SPAN is used in -- so if the DATA-SPAN has a different origin, ~
+it is wrt to that.")
    (%from :accessor from
           :initarg :from
           :initform nil
           :type (or null data-span)
           :documentation
-          "A DATA-SPAN which selects an -dim region from the indexed ~
+          "A DATA-SPAN which selects an n-dim region from the indexed ~
 DATA-ELEMENT. The origin of the coordinate system is whatever the coordinate ~
 system is in the data-element.")))
 ;; API
@@ -242,7 +243,26 @@ understanding about the cube representation are legal.")
                     :type boolean
                     :documentation
                     "T if ALL the elements have been simultaneously
-materialized into the main memory of the engine. NIL otherwise.")))
+materialized into the main memory of the engine. NIL otherwise.")
+   (%rectification-classification
+    :accessor rectification-classification
+    :initarg :rectification-classification
+    :initform :unknown
+    :type symbol
+    :documentation
+    "What is the rectification classification ~
+computed for this texture-map? Choices are: nil (for incalculable), ~
+:synthesize, :validate, :infer, :unknown for never calculated, and ~
+:rectified for a fully rectified texture-map.")
+   (%rectified-p :accessor rectified-p
+                 :initarg :rectified-p
+                 :initform nil
+                 :type boolean
+                 :documentation
+                 "When this texture-map is completely rectified, this will be ~
+marked T, otherwise it is NIL.")
+
+   ))
 
 ;; Base class for all texture-maps
 (defclass texture-map (abag:attribute-bag)
@@ -372,16 +392,12 @@ Example: A cube map."))
 ;; goes through the warming-protocol on the way to materialization.
 (defclass warming-info/texture-map (rc:warming-info)  ())
 
-;; This will allow us to figure out what elements we actually need and
-;; shove them into the state machine.
-(defclass caching-task/texture-map (rc:caching-task) ())
 ;; Deal with a single image-element in a texture-map. This loads the
 ;; image-element and puts it into the cache (if appropriate).
-(defclass caching-task/image-element (rc:caching-task) ())
-;; Deal with a single texture-map-element in a texture. This find the
-;; reference to (or possibly loads) a texture for a texture-map-element
-;; (if appropriate).
-(defclass caching-task/texture-map-element (rc:caching-task) ())
+(defclass caching-task/image-element (rc:caching-task)
+  ((%physloc :accessor physloc
+             :initarg :physloc
+             :initform nil)))
 
 ;; --------------------------------------------------------------------------
 

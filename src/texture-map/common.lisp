@@ -343,3 +343,99 @@ nil entries and returned."
                  :anonymous-p anonymous-p
                  :constructor constructor
                  :original-form original-form))
+
+;;; -----------------
+;;; Utility Functions
+;;; -----------------
+
+;; TODO: This is sort of an interesting function to write because a
+;; texture-map DSL form can default a lot of shit or also be some expert
+;; written thing. I think I have to see if all the mipmap forms specify
+;; extents, and then check that those extents are internally
+;; self-consistent and correct. If they aren't specified in the mipmap
+;; forms, then I have to read the assumed base mipmap layer image and
+;; deduce the extents and number of mipmaps from that. It is possible
+;; the appdev could write a legal thing I don't know how to check yet,
+;; so keep an eye out for that.
+(defgeneric deduce-mipmap-structure (texmap-inst &key core &allow-other-keys)
+  (:documentation
+   "Given a materialized TEXMAP-INST, deduce how many mipmaps it should have
+and their individual extents. Sometimes, one needs to dig around in CORE
+to find the information needed--example cube texture-maps because only
+symbolic names are stored in certain representations of the cube.
+
+Return four values:
+ The first value is T if the deduced mipmaps are consistent and in good form
+  and NIL otherwise.
+ The second value is the model of the TEXMAP-INST.
+ When the model is one of: :1d, :2d, :3d,
+   The third value is a list of (x y z) decreasing extents whose length is
+    equal to the number of mipmaps. Unused dimensions are set to 1.
+ When the model is :cube,
+  If the style is :envmap,
+   The third value is a list of (x y z) decreasing extents whose length is
+    equal to the number of mipmaps. Unused dimensions are set to 1.
+  If the style is :faces,
+   The third value is a list of exactly six (face ...) forms  where the ...
+     represents a decreasing list of extents whose length is equal to the
+     number of mipmaps for that face.
+ The fourth value is a reason form if the first value is NIL."))
+
+;; NOTE: 1d and 2d texmap-inst.
+(defmethod deduce-mipmap-structure ((texmap-inst texture-map) &key core)
+  (declare (ignore core))
+
+  ;; Deduce the mipmap structure in progressivly more complex contexts:
+
+  ;; Context 1: simple logical form
+  ;; Observation:
+  ;;  N data-elements
+  ;;  N mipmap forms each with NIL extent
+  ;;  Each mipmap has 1 mapping-span with NIL :from pointing to unique delem
+  ;; Assume: 1 mipmap per data-element, in sorted order big to little.
+  ;; Rectification: Get the mipmap sizes from the base layer image.
+
+  ;; Context 2: simple physical form
+  ;; Observation:
+  ;;  N data-elements
+  ;;  N mipmap forms each with specified extent
+  ;; Assume: 1 mipmap per data-element, in sorted order big to little.
+
+  (unless (texmap:materialized-p texmap-inst)
+    (error "deduce-mipmap-structure: Unmaterialized 1d or 2d texmap!"))
+
+  (let* ((delems (texmap:data-elements texmap-inst))
+         ;; NOTE: We assume data-element 0 is the base level mipmap layer.
+         (base-elem (aref delems 0))
+         (base-image (rc:value (texmap:element base-elem)))
+         (base-image-height (img:height base-image))
+         (base-image-width (img:width base-image))
+         (base-image-depth 1))
+
+    (ecase (texmap:style texmap-inst)
+      (:unique
+       (u:compute-mipmap-levels base-image-width base-image-height
+                                base-image-depth))
+      (:combined
+       (ecase (texmap:store texmap-inst)
+         (:common
+          ;; TODO: We don't actually CHECK the image, we just assume the
+          ;; user told us the right thing.
+          (u:compute-mipmap-levels
+           (- base-image-width (floor (/ base-image-width 3)))
+           base-image-height
+           base-image-depth)))))))
+
+;; TODO: Implement me!
+(defmethod deduce-mipmap-structure ((texmap-inst texture-map-3d) &key core)
+  (declare (ignore core))
+
+  (unless (texmap:materialized-p texmap-inst)
+    (error "deduce-mipmap-structure: Unmaterialized 3d texmap!"))
+  )
+
+
+;; TODO: Implement me:
+(defmethod deduce-mipmap-structure ((texmap-inst texture-map-cube) &key core)
+  (declare (ignore core))
+  nil)

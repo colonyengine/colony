@@ -328,13 +328,16 @@
    #:anonymous-p ;; accessor for texture-map
    #:cube ;; accessor texture-map-cube
    #:data-elements ;; accessor for texture-map
+   #:deduce-mipmap-structure ;; utility method
    #:dir ;; accessor for face
    #:element ;; accessor for data-element TODO move
    #:elidx ;; accessor for data-span TODO move AND accessor for face, keep here
    #:extent ;; accessor for span TODO move AND accessor for mipmap, keep here
    #:faces ;; accessor for faces-representation
    #:from ;; accessor for mapping-span TODO move
+   #:inference-classification ;; accessor for texture-map-state
    #:logloc ;; accessor for location TODO move
+   #:materialized-p ;; accessor for texture-map-state
    #:make-cube
    #:make-cube-representation ;; GF for cube-representation
    #:make-data-element ;; GF for data-element TODO maybe move?
@@ -377,11 +380,13 @@
    #:name ;; accessor for texture-map
    #:origin ;; accessor for span TODO move
    #:physloc ;; accessor for location TODO move
+   #:rectification-classification ;; access for texture-map-state object.
+   #:rectified-p ;; accessor for texture-map-state object.
    #:repr ;; accessor for cube
    #:state
    #:store ;; accessor for cube, texture-map
    #:style ;; accessor for cube, texture-map
-   #:texture-map-state ;; class for tmap state object.
+   #:texture-map-state ;; class for texture-map-state object.
    #:to ;; accessor for mapping-span TODO move
    #:valid-elements-p ;; accessor for texture-map-state
    #:valid-representation-p ;; accessor for texture-map-state
