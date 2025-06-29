@@ -32,11 +32,11 @@
 ;; (:buffer <name>) and (:rect :unique) are 80% understood, but it is good to
 ;; implement now.
 #++
-(c:define-texture-map name (:single :unique) ;; The data model
+(c:define-texture-map name (:2d :unique) ;; The data model
 
   ;; The data model consists of a form: (MODEL STYLE STORE)
-  ;; The MODEL is either: :single, :rect, :buffer, :voxel, :cube.
-  ;; The STYLE is either: :unique, :combined.
+  ;; The MODEL is either: :1d. :2d. :3d. :cube.
+  ;; The STYLE is either: :unique, :combined (or :faces or :envmap if :cube)
   ;; The STORE form can vary quite a bit, be a list, and depends on
   ;; MODEL and STYLE.
   ;;
@@ -44,9 +44,9 @@
   ;;
   ;; () - use the default model of (:2d :combined)
   ;;
-  ;;  ([:1d | 2d] :unique) - A single texture map as individual mipmap images
+  ;;  ([:1d | 2d] :unique) - A single texture map with mipmap images
   ;;
-  ;;D ([:1d | 2d] :combined AAA) - all mipmaps in one file (in a common format)
+  ;;D ([:1d | 2d] :combined AAA) - all mipmaps in one file
   ;;      AAA can be
   ;;      :common - The common packed format into one file.
   ;;      nil - Use a heuristic to figure out the mipmap layout in the
@@ -116,7 +116,7 @@
 ;;; Textures
 ;;;
 
-(c:define-texture-map 1d-gradient (:2d :unique)
+(c:define-texture-map 1d-gradient (:1d :unique)
   (texmap:mipmap (textures texture-gradient-1d)))
 
 ;; TODO: Make the define-texture return the name.
