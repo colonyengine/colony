@@ -19,6 +19,17 @@ visualization, or any other program.
 
 - **appdev**: The person(s) using the engine to develop an *app*.
 
+- **asset**: Any piece of data required to make the app. Assets are
+often things like texture-map images, audio files, model meshes, mesh
+animation data, level layout data, sql databases of more data, etc.
+
+- **asset form**: An s-expr which describes in symbolic terms where to
+find an asset wrt an *asset pool*. *Asset forms* are *resolved* into
+*physical* locations for where to find those assets.
+
+- **asset pool**: A place on disk to find certain *assets*. Described by
+the *asset DSL*.
+
 - **attribute-bag**: A CLOS type which holds key/value pairs of keys
 suitable to compare with EQUAL and *attribute-value* structures. This is
 usually used as a base class for other types. Used often in DSL syntax.
@@ -30,6 +41,21 @@ final value was computed using the *semantic* slot as input. The layers
 of code using the *attribute-bag* and the *attribute-value*s determine
 the exact semantics of their use. They are used as values in
 *attribute-bag*s.
+
+- **canonical form or data**: Some data structures, either in-memory or
+*DSL*, which may already *normalized*, may have further changes or
+re-arragements specific to that data in order to make that data usable.
+An example would be the requirement that a *logical* *texture-map*'s
+data-elements must be ordered from largest to smallest in terms of all
+mipmap extents.
+
+- **canonicalization**: The process of putting data into *canonical
+form*.
+
+- **classification of rectification**: One of the *materialization*
+passes which classifies the start state of the *rectification* state
+machine. The initial states are: *sythesis pass*, or *inference pass*,
+or *validation pass*.
 
 - **component**: A game object that often looks like a class with slots and
 methods and which can be instanced into main memory like classes. However
@@ -99,6 +125,14 @@ having to call the entire detailed *programmatic API*. It is often true that a
     description form that names, describes the assets required, and specified
     the arrangement of data for a *texture-map*.
 
+- **inference pass**: One of the *rectification* passes which will do a
+prolog-like search to fill in any missing data when SOME of the ground
+truth is specified and SOME of the derived data is specified in the data
+structure. By default, the *inference pass* is not implemented initially
+because the engine would need a prolog engine inside of it to do it
+correctly (which currently doesn't exist). This pass is implemented on
+an as needed basis.
+
 - **live coding**: A situation where an *appdev* is interacting via an editor
 (like emacs), a repl, or some other means with a running instance of the
 engine and mutating *abstract* data that the engine incorporates into
@@ -109,6 +143,11 @@ etc. *Live coding* mutations try to be synchronized to frame boundaries
 when possible, but this cannot always be held true. If the engine is not in
 the frame portion of its *runtime*, then the time of effect of *live
 coding* changes is currently unspecified.
+
+- **logical form or data**: A higher level, or symbolic, form of a piece
+of data. It is often the case that *logical* data is transformed into
+*physical* data. *Logical* data usually must have many assumptions and
+additional work applied to them to convert them to *physical* data.
 
 - **material**: A named association between a *shader program*, a set of
 *shader-variable* names along with their values (or how to compute them), and a
@@ -138,6 +177,23 @@ updated *abstract* information (via the *appdev*) may flow one way from the
 never read/write to the *metaspace* during *runtime*--EXCEPT for a
 *reification* process at *app* start. There is only one *metaspace* and it
 may be empty.
+
+- **normal form or data**: For vector data, this means to perform a math
+operation to make the length of the vector exactly one. For any other
+data structure, especially in-memory data structures, and often in and
+around the *DSL*s, it means to refactor the data so it takes the
+smallest amount of information to specify it AND/OR to rearrange the
+data into an expected form that follows whatever general rules which
+need to be followed for that data.
+
+- **normalization**: The process of putting data into *normal form*. For
+vectors, it is the math operation to give it a magnitude of one.
+
+- **physical form or data**: A lower level form or data that usually
+specifies all data required or allows the data to be immediately usable
+in a programmatic context. An example might be the transformation of a
+*logical* *asset form* into a real path on disk. The real path is called
+the *physical* path.
 
 - **prefab**: A template which describes one or more *actors* and the
 *components* they use along with their coordiante frame, spatial, and/or
@@ -170,11 +226,14 @@ in main memory can be a location of *realization*. Data streamed directly from
 a source, like disk or network, straight into the peripheral's or API's managed
 memory, is still *realized*, just not from a *materialized* source.
 
-- **rectification**: Fill in any missing data in an in-memory data
-structure and if there are any constraints in that in-memory data
-structure then ensure they are honored as well. A common thing to do
-with in-memory data structure from the *ADAPI* DSLs but this term is
-general for any kind of in-memory data structure.
+- **rectification**: The process of filling in any missing data in an
+in-memory data structure from ground truth data. If there are any
+constraints in that in-memory data structure then ensure they are
+honored as well. This is a common thing to do with in-memory data
+structure from the *ADAPI* DSLs but this term is general for any kind of
+in-memory data structure. *Rectification* performs these passes
+generally in this order: *synthesis pass*, *inference pass*, *validation
+pass*.
 
 - **rectify**: See *rectification*.
 
@@ -197,6 +256,10 @@ environment.
 
 - **reify**: The action of converting *abstract* data in the *metadata* to
 *reified* data in the *runtime* at engine start.
+
+- **resolve**: A process of rearranging or computing on data to put it
+into *normal* form, or *canonical* form, or to convert *logical* forms
+to *physical* forms, or any or all of the above.
 
 - **resource-cache**: An in memory storage system in the engine which
 deduplicates requests when loading data and only holds one instance of
@@ -221,6 +284,11 @@ shader pipeline.
 
 - **shader-variables**: Uniforms, etc, that name variables to which values are
 bound for a specific *shader program*.
+
+- **synthesis pass**: One of the *rectification* passes where, using
+only *canonicalized* ground truth data, all missing derived data from
+that ground truth data is created. This pass can only be applied to data
+that is missing all derived data.
 
 - **texture**: A named association between parameter names and value
 pairs and *texture-map* data that all should be eventually *realized*
@@ -251,3 +319,9 @@ the information for use by the *app*. An example might be procedural generation
 of a *texture-map*. One would construct the *texture-map* with the
 *texture-map* *programmatic API* and then *register* it with the appropriate
 engine API.
+
+- **validation pass**: One of the *rectification* passes on a fully
+specified piece of *physical* data that checks to make sure all the data
+follows any required constraints. This pass can only be applied to data
+where all derived data has been filled in--either by a *synthesis pass*
+or by some other means.
