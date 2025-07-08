@@ -47,7 +47,14 @@ the exact semantics of their use. They are used as values in
 re-arragements specific to that data in order to make that data usable.
 An example would be the requirement that a *logical* *texture-map*'s
 data-elements must be ordered from largest to smallest in terms of all
-mipmap extents.
+mipmap extents. The following list describes *canonical form*s for
+things:
+
+    - **texture-map**: Any present mipmap forms or the data-elements,
+    must be specified from largest to smallest. Not all *texture-map*
+    forms can be put into *canonical form*, but *logical* *texture-map*
+    forms MUST be in this form. Some *physical* *texture-map* forms can
+    also be placed into *canonical form*.
 
 - **canonicalization**: The process of putting data into *canonical
 form*.
