@@ -117,6 +117,7 @@
   (:export
    #:combinations/repetition
    #:interleave
+   #:ragged-mapcar
    #:tree-leaves
    #:zip)
   ;; Association lists
