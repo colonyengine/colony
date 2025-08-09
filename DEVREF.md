@@ -9,12 +9,14 @@ institutional knowledge is more in-depth, at a higher level, or needing
 more discourse or explanation than the raw documentation strings
 available in Common Lisp.
 
+- [Roadmap][DEVREF-roadmap]
 - [Engine Coding Guildlines][DEVREF-guide-code]
 - [Lexicon of Terms][DEVREF-lexicon]
 - [Creating DSLs][DEVREF-guide-dsl]
 - [Engine Layers][DEVREF-engine-layers]
 
 <!--- Labeled links so you only have to fix one place to move something --->
+[DEVREF-roadmap]: ./devref/DEFREF-roadmap.md
 [DEVREF-guide-code]: ./devref/DEVREF-guide-code.md
 [DEVREF-guide-dsl]: ./devref/DEVREF-guide-dsl.md
 [DEVREF-engine-layers]: ./devref/DEVREF-engine-layers.md
