@@ -347,59 +347,185 @@ nil entries and returned."
 ;;; -----------------
 ;;; Utility Functions
 ;;; -----------------
+(defun group-data-elements-by-resolution/combined (texmap-inst)
+  "We get the data-elements from the materialized TEXMAP-INST for models
+:1d, :2d, :3d/(:slices <any>), :cube/:envmap--but only for styles which
+are :COMBINED. WE ASSUME the data-elements are in canonical form. Return
+two values. The first value is a ((X Y Z) (elidxA ... elidxZ)) form that
+describes the mipmap extents and participating DATA-ELEMENTS in each
+extent or NIL if something went wrong. The second value is :OK if
+nothing went wrong or a keyword symbol indicating the reason.
 
-;; TODO: This is sort of an interesting function to write because a
-;; texture-map DSL form can default a lot of shit or also be some expert
-;; written thing. I think I have to see if all the mipmap forms specify
-;; extents, and then check that those extents are internally
-;; self-consistent and correct. If they aren't specified in the mipmap
-;; forms, then I have to read the assumed base mipmap layer image and
-;; deduce the extents and number of mipmaps from that. It is possible
-;; the appdev could write a legal thing I don't know how to check yet,
-;; so keep an eye out for that.
+This function will put NIL for the (elidxA ... elidxZ) form if there
+were no DATA-ELEMENTS to satisfy that resolution. This function will
+return a complete set of mipmap resolutions meaning starting from the
+biggest resolution, the final one will be (1 1 1)."
+
+  ;; TODO
+
+  t)
+
+
+(defun group-data-elements-by-resolution/unique (texmap-inst)
+  "We get the data-elements from the materialized TEXMAP-INST for models
+:1d, :2d, :3d/(:slices <any>), :cube/:envmap--but only for styles which
+are :UNIQUE. WE ASSUME the data-elements are in canonical form. Return
+two values. The first value is a ((X Y Z) (elidxA ... elidxZ)) form that
+describes the mipmap extents and participating DATA-ELEMENTS in each
+extent or NIL if something went wrong. The second value is :OK if
+nothing went wrong or a keyword symbol indicating the reason.
+
+This function will put NIL for the (elidxA ... elidxZ) form if there
+were no DATA-ELEMENTS to satisfy that resolution. This function will
+return a complete set of mipmap resolutions meaning starting from the
+biggest resolution, the final one will be (1 1 1)."
+
+  ;; TODO: This code probably doesn't handle the case when data-elements
+  ;; actually contains many (1 1 1) mipmaps!
+
+  ;; TODO: This is clunky. Clean up later.
+  (unless (or (member (texmap:model texmap-inst) '(:1d :2d))
+              (and (eq (texmap:model texmap-inst) :3d)
+                   (listp (texmap:store texmap-inst))
+                   (eq (car (texmap:store texmap-inst)) :slices))
+              (and (eq (texmap:model texmap-inst) :cube)
+                   (eq (car texmap-inst) :envmap)))
+    (return-from group-data-elements-by-resolution/unique
+      (values NIL :unsupported-model-form)))
+
+  ;; We're going to temporarily take advantage of the fact that all
+  ;; image formats are actually 2 dimensions.
+  (let ((delems (texmap:data-elements texmap-inst))
+        ;; Key: (WIDTH HEIGHT)
+        ;; Value: (idxA ... idxZ) [Need to reverse these when done.]
+        (res-table (u:dict #'equal)))
+
+    ;; NOTE: This loop makes an assumption that the data-elements are in
+    ;; canonical form (sorted largest to smallest and in the case of :3d
+    ;; (:slices <any>) the slices are in a contiguous group per mipmap
+    ;; and also in the right slice order).
+    (dotimes (idx (length delems))
+      (let* ((delem (aref delems idx))
+             (image (rc:value (texmap:element delem)))
+             (width (img:width image))
+             (height (img:height image)))
+        (push idx (u:href res-table (list width height)))))
+
+    ;; Get the available resolutions and sort ascendingly.
+    (let* ((ascending-keys
+             (sort (u:hash-table-keys res-table)
+                   ;; Sort by area.
+                   (lambda (left right)
+                     (destructuring-bind (left-width left-height) left
+                       (destructuring-bind (right-width right-height) right
+                         (> (* left-width left-height)
+                            (* right-width right-height)))))))
+
+           ;; Build partial results given only what is in the data-elements.
+           (delem-extents
+             (mapcar
+              (lambda (key)
+                (let* ((participating-elems
+                         (reverse (u:href res-table key)))
+                       ;; TODO: This next line is a lie. For :3d models
+                       ;; and :slices store forms we need to treat what
+                       ;; is actually width/height/depth more
+                       ;; accurately.
+                       (depth (length participating-elems)))
+                  (destructuring-bind (width height) key
+                    `((,width ,height ,depth) ,participating-elems))))
+              ascending-keys))
+           (largest-delem-extent
+             (caar delem-extents)))
+
+      ;; Now, u:compute-mipmap-extents from the largest one and resolve
+      ;; them together comparing the real resolutions found in the
+      ;; delem-extents with the one from compute-mipmap-extents and the
+      ;; adding in any addition extents down to (1 1 1) with NIL as the
+      ;; elidxs as appropriate.
+      (multiple-value-bind (num-levels computed-extents)
+          (destructuring-bind (width height depth) largest-delem-extent
+            (u:compute-mipmap-levels width height depth))
+
+        ;; TODO: The relationship between num-levels and length
+        ;; delem-extents needs meaning assigned.
+
+        (flet ((resolve (dext cext)
+                 ;; KEEP GOING: Resolve two possibly unequal in length
+                 ;; lists together into one list that will represent all
+                 ;; the mipmaps from largest to smallest.
+                 nil))
+          (u:ragged-mapcar :dne #'resolve delem-extents computed-extents))))))
+
 (defgeneric deduce-mipmap-structure (texmap-inst &key core &allow-other-keys)
   (:documentation
-   "Given a materialized TEXMAP-INST, deduce how many mipmaps it should have
-and their individual extents. Sometimes, one needs to dig around in CORE
-to find the information needed--example cube texture-maps because only
-symbolic names are stored in certain representations of the cube.
+   "Given a TEXMAP-INST with materialized data-elements, deduce how many
+mipmaps it should have, their individual extents, and which data-elements
+those mipmaps require from ONLY the information in the data-elements.
+
+IT IS ASSUMED that this GF is only called during the synthesis phase of
+rectification. This means the GF may assume that the data-elements are
+ordered from largest to smallest in mipmap resolutions and that any
+:STORE layouts are normalized. For :1d and :2d models, this is
+intuitive, but for :3d models, depending on the :STORE form, the
+function assumes whatever would have been the correct representation in
+the data-elements array.
+
+It is an error to use this GF during the validating phase of
+rectification of a texture-map. This is because a texture-map in the
+validation phase could have arrived there due to exact specification of
+all data values which may legally break many assumptions made by this
+GF. In this situation, this generic function will signal an error.
+
+This GF will look in CORE to find information about cube texture-maps
+when the :style is :faces. These face texture maps must already have
+been successfully rectified before this function can use that data.
 
 Return four values:
  The first value is T if the deduced mipmaps are consistent and in good form
-  and NIL otherwise.
+ and NIL otherwise.
+
  The second value is the model of the TEXMAP-INST.
- When the model is one of: :1d, :2d, :3d,
-   The third value is a list of (x y z) decreasing extents whose length is
-    equal to the number of mipmaps. Unused dimensions are set to 1.
- When the model is :cube,
-  If the style is :envmap,
-   The third value is a list of (x y z) decreasing extents whose length is
-    equal to the number of mipmaps. Unused dimensions are set to 1.
-  If the style is :faces,
-   The third value is a list of exactly six (face ...) forms  where the ...
-     represents a decreasing list of extents whose length is equal to the
-     number of mipmaps for that face.
- The fourth value is a reason form if the first value is NIL."))
+
+ The third value:
+   when the model is :1d, :2d, :3d, or :cube with style :envmap,
+
+     An EXTENTS list of ((x y z) (elidxA ... elidxZ)) entries that
+     describe decreasing mipmap extents whose length is equal to the
+     number of mipmaps. Unused dimensions are set to 1. (elidxA ...
+     elidxZ) is a list of elidxes to the data-elements that participate
+     in the extent of the mipmap at that resolution in the order
+     required to union together into the extent. If there are no
+     data-elements for a mipmap extent, then the list (elidxA ...
+     elidxZ) is NIL. In the case of the :cube/:envmap model, these
+     extents represent the ENTIRE size of the envmap at each mipmap
+     level (i.e. not each face).
+
+   when the model is :cube with style :faces,
+
+     A list of exactly six (face DIR EXTENTS) forms where DIR represents
+     the direction of the face (appropriate to the :store) and EXTENTS
+     represents the same decreasing list of extents whose length is
+     equal to the number of mipmaps for that face, and so forth as
+     described above. This function will retrieve these values from the
+     named texture-maps from CORE. Those texture maps must already have
+     been successfully rectified before this call is made on the cube
+     map.
+
+ The fourth value is a reason keyword symbol if the first value is NIL."))
+
+;; KEEP GOING: Implement below what I wrote above.
 
 ;; NOTE: 1d and 2d texmap-inst.
 (defmethod deduce-mipmap-structure ((texmap-inst texture-map) &key core)
   (declare (ignore core))
 
-  ;; Deduce the mipmap structure in progressivly more complex contexts:
-
-  ;; Context 1: simple logical form
-  ;; Observation:
-  ;;  N data-elements
-  ;;  N mipmap forms each with NIL extent
-  ;;  Each mipmap has 1 mapping-span with NIL :from pointing to unique delem
-  ;; Assume: 1 mipmap per data-element, in sorted order big to little.
-  ;; Rectification: Get the mipmap sizes from the base layer image.
-
-  ;; Context 2: simple physical form
-  ;; Observation:
-  ;;  N data-elements
-  ;;  N mipmap forms each with specified extent
-  ;; Assume: 1 mipmap per data-element, in sorted order big to little.
+  (let ((state (texmap:state texmap-inst)))
+    (unless (eq (texmap:state state) :synthesize)
+      (error "~A ~A ~S"
+             "This GF may not be used during the validation phase of "
+             "rectification for the texture-map: "
+             texmap-inst)))
 
   (unless (texmap:materialized-p texmap-inst)
     (error "deduce-mipmap-structure: Unmaterialized 1d or 2d texmap!"))

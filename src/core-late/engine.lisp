@@ -23,6 +23,24 @@
   (load-initial-scene core scene-name)
   ;; TODO: Right here, eagerly load any known resources the scene needs
   (run-prologue core)
+
+  ;; BEGIN DEBUGGING
+  ;; Ok, let's see what happens when we attempt to materialize a texture-map
+  ;; into the resource-cache.
+  ;; working ones:
+  ;; colony-examples:1d-gradient
+  ;; colony-examples:blue-fur (2d contains mipmaps)
+  ;; colony-examples:3d (all slices loaded)
+  ;; colony-examples:cube-map :faces
+  (texmap::materialize
+   core (list
+         (u:format-symbol "COLONY-EXAMPLES" "~A" "1D-GRADIENT")
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "BLUE-FUR")
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "3D")
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "CUBE-MAP")
+         ))
+  ;; END DEBUGGING
+
   ;; TODO: In the game loop frame execution, we lazily load anything we need
   ;; when the app attempts to observe/add the asset data.
   (start-game-loop core))
@@ -56,3 +74,6 @@
 
 (defun stop (core)
   (setf (running-p core) nil))
+
+(defun inspect-core ()
+  (inspect *core-debug*))

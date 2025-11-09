@@ -496,51 +496,12 @@ this dictates what the RECTIFY method is going to do. FEATURE is
 will be rectified. ROOT is usually the root object in the hierarchy of a
 nested set of objects used when rectification information needs to span
 more information that is just available in the INST. CORE is the usual
-engine core if needed. Return T if the rectification was successful and
-NIL otherwise."))
+engine core if needed. Return two values: The first value is T or NIL
+depending on if the required rectification was successful. The second
+value is ignored f the first value is T, or it is a keyword indicating
+a reason for the failure of the rectification."))
 
-(defmethod rectify ((infer-style (eql :validate))
-                    (feature (eql :pixel-format))
-                    (inst vector)
-                    (root texture-map)
-                    &key core)
-  "Return T if all the data-elements in the INST use the same pixel-format.
-Signal an error otherwise."
-  (declare (ignore infer-style feature core))
-  ;; TODO: Should this code actually decide upon a pixel-format if some
-  ;; of these differ and them homogenize the data? Would this surprise
-  ;; the appdev?
-  (loop :with pixel-format = nil
-        :for delem :across inst
-        :for delem-pixel-format = (img:pixel-format
-                                   (rc:value (texmap:element delem)))
-        :do (if pixel-format
-                (unless (eql delem-pixel-format pixel-format)
-                  (error "rectify-data-elements: Implement pixel-format fix"))
-                (setf pixel-format delem-pixel-format)))
-  t)
-
-(defmethod rectify (infer-style
-                    (feature (eql :mipmaps))
-                    (inst texture-map-simple)
-                    (root texture-map-simple)
-                    &key core)
-  "Rectify or verify the number of mipmaps in the INST."
-
-  (declare (ignore infer-style feature inst root core))
-
-  ;; KEEP GOING
-
-  ;; if :combined, there should be one or (length expected-extents)
-  ;;    if there was one, then up it to (length expected-extents) mipmaps.
-  ;;    There should also be one data-element.
-  ;;
-  ;; if :unique, there should be 1 (for exactly 1 mipmap) or
-  ;;      (length expected-extents)
-  ;;    if there is other than 1 or length, then error (I could fixup).
-
-  nil)
-
+;; scavange
 (defmethod rectify ((infer-style (eql :synthesize))
                     (feature (eql :texture-map-contents))
                     (inst texture-map-simple)
@@ -572,10 +533,6 @@ Signal an error otherwise."
             :do ;; This loop forces/check the mipmap extents to be in the
                 ;; right order (if present) in the in-memory
                 ;; representation. Otherwise it fills them in.
-                ;; 1) sum 3d vol of mapping spans, must equal to mipmap extent
-                ;; 2) All mapping spans must not extend outside mipmap extent
-                ;; 3) all combinations of mapping spans must not intersect
-                ;; 4) then the mapping spans exactly cover the mipmap extent
                 (rectify-mipmap-extent infer-style texmap-inst mipmap
                                        required-extent)
                 (rectify-total-mapping-spans infer-style texmap-inst mipmap)
@@ -592,25 +549,258 @@ Signal an error otherwise."
       ;; TODO: don't modify this return value in the caller.
       (texmap:extent (aref mipmaps 0)))))
 
-(defmethod rectify ((infer-style (eql :validate))
-                    (feature (eql :texture-map-contents))
+
+
+
+;; ------------------------
+;; Synthesize Methods
+;; ------------------------
+(defmethod rectify ((infer-style (eql :synthesize))
+                    (feature (eql :number-of-mipmaps/unique))
                     (inst texture-map-simple)
+                    (root texture-map-simple)
+                    &key core)
+
+  (declare (ignore infer-style feature inst root core))
+  ;; Deduce the mipmap structure from the
+  ;; data-elements/model/style/store. Assume data-elements are in
+  ;; descending mipmap size order during synthesis. The deduction is
+  ;; robust to all texture maps types, though we are restricted here to
+  ;; texture-map-simple types.
+
+
+  ;; NOTE: do different behavior depending on :unique or :combined.
+  ;; We assume that elidxs are a priori correct (but we may have to add
+  ;; new mipmaps with new mapping-spans and we make sure those are correct).
+  ;;
+  ;; 5. Figure out how many mipmaps there should be in the texture-map.
+  ;; If 1d,2d,
+  ;;   If (= (length current-mipmaps) (length data-elements)), all good.
+  ;;   If (< (length current-mipmaps) (length data-elements)), add mipmaps.
+  ;;   If (> (length current-mipmaps) (length data-elements)), del mipmaps.
+  ;;   (Any mipmaps we add must have the elidx slots set.)
+  ;; else 3d
+  ;;    If zero current-mipmaps,
+  ;;       either we deduced them and make the right mipmap instances,
+  ;;       or we error :unable-to-synthesize-mipmaps
+  ;;    If there is one mipmap form, it must use all the data-elements.
+  ;;    (Any mipmaps we add must have the elidx slots set.)
+  ;;
+
+  ;; Just a hack for testing to return T.
+  (values t :ok))
+
+
+(defmethod rectify ((infer-style (eql :synthesize))
+                    (feature (eql :number-of-mipmaps/combined))
+                    (inst texture-map-simple)
+                    (root texture-map-simple)
+                    &key core)
+
+  (declare (ignore infer-style feature inst root core))
+  ;; Deduce the mipmap structure from the
+  ;; data-elements/model/style/store. Assume data-elements are in
+  ;; descending mipmap size order during synthesis. The deduction is
+  ;; robust to all texture maps types, though we are restricted here to
+  ;; texture-map-simple types.
+
+
+  ;; NOTE: do different behavior depending on :unique or :combined.
+  ;; We assume that elidxs are a priori correct.
+  ;;
+  ;; 0. If zero data-elements, error :missing-data-elements
+  ;; 1. Find out (length current-mipmaps) currently specified.
+  ;; 2. Find out (length data-elements)
+  ;;
+  ;; 3. Figure out how many mipmaps there should be in the texture-map.
+  ;; if :combined,
+  ;;    If 1d,2d:
+  ;;      There must be one data-element.
+  ;;      Guess, using :store, the number and location of mipmaps in the image.
+  ;;      If there are zero mipmaps, maybe an error?
+  ;;      If there is one mipmap, increase to guessed mipmap number.
+  ;;      If num mipmaps = num guessed mipmaps, all good.
+  ;;      If >0 mipmaps and <guessed-num, check :mipmap-combined-policy
+  ;;      If >guessed-num, check :mipmap-combined-policy
+  ;;    If 3d:
+  ;;      KEEP GOING.
+
+  ;; Just a hack for testing to return T.
+  (values t :ok))
+
+;; This only synthesizes the right number of mipmaps, potentially their
+;; elidxs, and then returns.
+(defmethod rectify ((infer-style (eql :synthesize))
+                    (feature (eql :number-of-mipmaps))
+                    (inst texture-map-simple)
+                    (root texture-map-simple)
+                    &key core)
+  (declare (ignore feature))
+
+  ;; 0. Check that we can synthesize any mipmaps at all!
+  (u:when-let (delems (texmap:data-elements inst))
+    (when (zerop (length delems))
+      (return-from rectify (values nil :missing-data-elements))))
+
+  ;; 1. Synthesize the mipmaps container contents and the elidx of each mipmap.
+  (multiple-value-bind (result error-domain)
+      ;; NOTE: This may change the mipmap array reference and size!
+      (ecase (texmap:style inst)
+        (:unique
+         (rectify infer-style :number-of-mipmaps/unique
+                  inst root :core core))
+        (:combined
+         (rectify infer-style :number-of-mipmaps/combined
+                  inst root :core core)))
+    (values result error-domain)))
+
+(defmethod rectify ((infer-style (eql :synthesize))
+                    (feature (eql :mipmap))
+                    (inst mipmap)
                     (root texture-map-simple)
                     &key core)
   (declare (ignore infer-style feature inst root core))
 
-  t)
+  ;; Just a hack for testing to return T.
+  (values t :ok))
 
+(defmethod rectify ((infer-style (eql :synthesize))
+                    (feature (eql :texture-map-contents))
+                    (inst texture-map-simple)
+                    (root texture-map-simple)
+                    &key core)
+  (declare (ignore feature))
 
-(defmethod rectify (infer-style
+  ;; We choose this algorithm to NOT be recursive in the way a lisper
+  ;; might have written it. We instead process the INST in a breadth
+  ;; first manner wrt the container of the mipmaps. We do this to reduce
+  ;; the choices and depth of what would have been the recursive
+  ;; algorithm. In this particular instance, it makes this more
+  ;; understandable and maintainable.
+
+  ;; 0. Fixup the mipmaps array to hold the right number of mipmaps that point
+  ;; to the right elidxs (if possible) for synthesis.
+  (multiple-value-bind (result error-domain)
+      ;; The mipmaps vector could be reassigned by this method.
+      (rectify infer-style :number-of-mipmaps inst root :core core)
+    (unless result
+      (return-from rectify (values result error-domain))))
+  ;; 1. Walk each mipmap (now that we know how many we have and for sure
+  ;; we know the elidxs are correct) and synthesize the information that
+  ;; specific mipmap needs from the image data.
+  (loop :for mipmap :across (texmap:mipmaps inst)
+        :do (multiple-value-bind (result error_domain)
+                (rectify infer-style :mipmap mipmap root :core core)
+              (unless result
+                (return-from rectify (values result error-domain)))))
+  (values t :ok))
+
+(defmethod rectify ((infer-style (eql :synthesize))
                     (feature (eql :texture-map-contents))
                     (inst texture-map-complex)
                     (root texture-map-complex)
                     &key core)
   (declare (ignore feature root core))
-  (format t "rectify: ~(~S~) ~(~S~): Implement me!~%"
-          (texmap:name inst) infer-style)
+  (format
+   t "rectify(texture-map-complex, synthesize): ~(~S~) ~(~S~): Implement me!~%"
+   (texmap:name inst) infer-style)
+  ;; Just a hack for testing to return T.
   t)
+
+;; ------------------------
+;; Validate Methods
+;; ------------------------
+
+(defmethod rectify ((infer-style (eql :validate))
+                    (feature (eql :mspans-cover-extent))
+                    (inst mipmap)
+                    (root texture-map-simple)
+                    &key core)
+  (declare (ignore infer-style feature inst root core))
+  ;; TODO: Implement this check if the mapping-spans perfectly cover a
+  ;; mipmap extent.
+  ;;
+  ;; 1) sum 3d vol of mapping spans, must equal to mipmap extent
+  ;; 2) All mapping spans must not extend outside mipmap extent
+  ;; 3) all combinations of mapping spans must not intersect
+  ;; 4) ...then the mapping spans exactly cover the mipmap extent
+
+  ;; Just a hack for testing to return T.
+  t)
+
+(defmethod rectify ((infer-style (eql :validate))
+                    (feature (eql :pixel-format))
+                    (inst vector)
+                    (root texture-map-simple)
+                    &key core)
+  "Return two values: if all the image-data-elements in the INST use the
+same pixel-format, then return T and :OK. Otherwise return NIL and a
+kayword indicating reason for the failure."
+  (declare (ignore infer-style feature core))
+  (loop :with pixel-format = nil
+        :for delem :across inst
+        :for delem-pixel-format = (img:pixel-format
+                                   (rc:value (texmap:element delem)))
+        :do (if pixel-format
+                (unless (eql delem-pixel-format pixel-format)
+                  (return-from rectify (values nil :pixel-format-mismatch)))
+                (setf pixel-format delem-pixel-format)))
+  (values t :ok))
+
+(defmethod rectify ((infer-style (eql :validate))
+                    (feature (eql :texture-map-contents))
+                    (inst texture-map-simple)
+                    (root texture-map-simple)
+                    &key core)
+  (declare (ignore feature))
+
+  (u:mvlet ((result error-domain
+                    (rectify infer-style :pixel-format
+                             (texmap:data-elements inst) root :core core)))
+    (format
+     t "rectify(texture-map-simple, validate): ~(~S~) ~(~S~): finish me!~%"
+     (texmap:name inst) infer-style)
+
+    (values result error-domain)))
+
+(defmethod rectify ((infer-style (eql :validate))
+                    (feature (eql :texture-map-contents))
+                    (inst texture-map-complex)
+                    (root texture-map-complex)
+                    &key core)
+  (declare (ignore feature root core))
+  (error
+   "rectify(texture-map-complex, validate): ~(~S~) ~(~S~): Implement me!~%"
+   (texmap:name inst) infer-style)
+  (values t :ok))
+
+;; ------------------------
+;; Infer Methods
+;; ------------------------
+
+(defmethod rectify ((infer-style (eql :infer))
+                    (feature (eql :texture-map-contents))
+                    (inst texture-map-simple)
+                    (root texture-map-simple)
+                    &key core)
+  (declare (ignore infer-style feature inst root core))
+  (error "rectify(texture-map-simple, infer): ~(~S~) ~(~S~): Implement me!~%"
+         (texmap:name inst) infer-style)
+  nil)
+
+(defmethod rectify ((infer-style (eql :infer))
+                    (feature (eql :texture-map-contents))
+                    (inst texture-map-complex)
+                    (root texture-map-complex)
+                    &key core)
+  (declare (ignore feature root core))
+  (error "rectify(texture-map-complex, infer): ~(~S~) ~(~S~): Implement me!~%"
+         (texmap:name inst) infer-style)
+  nil)
+
+;; ------------------------
+;; Rectification Entry Point
+;; ------------------------
 
 ;; Main toplevel entry method for texture-map rectification.
 (defmethod rectify (infer-style
@@ -626,6 +816,8 @@ Signal an error otherwise."
   (let ((texmap-state (texmap:state inst)))
     ;; TODO: Maybe add a :force keyword argument to force rectification?
     ;; Otherwise we could bail early because it had already been done.
+    ;; We may need this for when we runtime mutate the texture
+    ;; map--which may cause rectification to occur again.
     (setf (texmap:rectified-p texmap-state) nil)
     ;; If we must :synthesize the data, we accomplish that first.
     (when (eq infer-style :synthesize)
@@ -648,6 +840,12 @@ Signal an error otherwise."
              infer-style inst))
     t))
 
+;;; ABOVE is rectify and associated functions
+;;; ---------------------------------------------------------------------------
+;;; BELOW is materialize, the entry point into the entire above
+;;; pipeline. This will load all registered texture maps into memory and
+;;; ensure that the texture-map in-memory instances are all up to date
+;;; and all their slots are filled.
 
 (defun materialize (core texmap-names &key force)
   "Materialize all texture-maps specified in the list TEXMAP-NAMES.
