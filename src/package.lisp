@@ -317,8 +317,14 @@
   (:use #:cl)
   ;; GLTF API
   (:export
-   ;; TODO: Fill me in.
-   ))
+   ;; TODO: Fill in the entire set of class types, constructor
+   ;; functions, and accessor method symbol names for the entire gltf
+   ;; type hierarchy. This creates the programmatic API for dealing with
+   ;; glTF files.
+   )
+  (:export
+   #:load-gltf-file)
+  )
 
 (defpackage #:colony.prefab
   (:use #:cl)
