@@ -1,6 +1,7 @@
-(in-package #:colony.file.gltf)
+(in-package #:colony.model.gltf)
 
-;;;; Extensions are not yet supported in this model.
+;;;; Extensions are not yet supported in this model. The defclass forms
+;;;; don't even have the slots in them for representing extensions yet.
 
 ;;;; I didn't try and cram the parse and typechecking codes into
 ;;;; generic functions because the congruence or type selection doesn't
@@ -9,15 +10,12 @@
 ;;;; Additional generic functions for the glTF data types
 ;;;; style can be :human or :json and transmits recursively
 ;;;; to the children of that thing
-(defgeneric emit (style gltf-instance &key stream indent))
-
-(defgeneric typecheck (pass gltf-instance &key &allow-other-keys))
 
 ;;;; Convenience functions for glTF data representation and outputting.
 (defun is-aligned-p (value alignment)
   (zerop (mod value alignment)))
 
-(defun component-type-value->component-type-symbol (component-type-value)
+(defun component-type-value->symbol (component-type-value)
   (ecase component-type-value
     (5120 :byte)
     (5121 :unsigned-byte)
@@ -26,7 +24,7 @@
     (5125 :unsigned-int)
     (5126 :float)))
 
-(defun component-type-symbol->component-type-value (component-type-symbol)
+(defun component-type-symbol->value (component-type-symbol)
   (ecase component-type-symbol
     (:byte 5120)
     (:unsigned-byte 5121)
@@ -54,7 +52,7 @@
     (:mat3 9)
     (:mat4 16)))
 
-(defun attribute-type-value->attribute-type-symbol (attribute-type-value)
+(defun attribute-type-value->symbol (attribute-type-value)
   (let* ((db `(("SCALAR" . :scalar)
                ("VEC2" . :vec2)
                ("VEC3" . :vec3)
@@ -64,90 +62,86 @@
                ("MAT4" . :mat4))))
     (cdr (assoc attribute-type-value db :test #'string=))))
 
-(defun attribute-type-symbol->attribute-type-value (attribute-type-symbol)
-  (let* ((db `((:scalar . "SCALAR")
-               (:vec2 . "VEC2")
-               (:vec3 . "VEC3")
-               (:vec4 . "VEC4")
-               (:mat2 . "MAT2")
-               (:mat3 . "MAT3")
-               (:mat4 . "MAT4"))))
-    (cdr (assoc attribute-type-symbol db :test #'eq))))
+(defun attribute-type-symbol->value (attribute-type-symbol)
+  (ecase attribute-type-symbol
+    (:scalar "SCALAR")
+    (:vec2 "VEC2")
+    (:vec3 "VEC3")
+    (:vec4 "VEC4")
+    (:mat2 "MAT2")
+    (:mat3 "MAT3")
+    (:mat4 "MAT4")))
 
-(defun target-path-value->target-path-symbol (target-path-value)
+(defun target-path-value->symbol (target-path-value)
   (let* ((db `(("translation" . :translation)
                ("rotation" . :rotation)
                ("scale" . :scale)
                ("weights" . :weights))))
     (cdr (assoc target-path-value db :test #'string=))))
 
-(defun target-path-symbol->target-path-value (target-path-symbol)
-  (let* ((db `((:translation . "translation")
-               (:rotation . "rotation")
-               (:scale . "scale")
-               (:weights . "weights"))))
-    (cdr (assoc target-path-symbol db :test #'eq))))
+(defun target-path-symbol->value (target-path-symbol)
+  (ecase target-path-symbol
+    (:translation "translation")
+    (:rotation "rotation")
+    (:scale "scale")
+    (:weights "weights")))
 
-(defun animsampler-interp-value->animsampler-interp-symbol
-    (animsampler-interp-value)
+(defun animsampler-interp-value->symbol (animsampler-interp-value)
   (let* ((db `(("LINEAR" . :linear)
                ("STEP" . :step)
                ("CUBICSPLINE" . :cubic-spline))))
     (cdr (assoc animsampler-interp-value db :test #'string=))))
 
-(defun animsampler-interp-symbol->animsampler-interp-value
-    (animsampler-interp-symbol)
-  (let* ((db `((:linear . "LINEAR")
-               (:step . "STEP")
-               (:cubic-spline . "CUBICSPLINE"))))
-    (cdr (assoc animsampler-interp-symbol db :test #'eq))))
+(defun animsampler-interp-symbol->value (animsampler-interp-symbol)
+  (ecase animsampler-interp-symbol
+    (:linear "LINEAR")
+    (:step "STEP")
+    (:cubic-spline "CUBICSPLINE")))
 
-(defun buffer-view-target-value->buffer-view-target-symbol
-    (buffer-view-target-value)
+(defun buffer-view-target-value->symbol (buffer-view-target-value)
   (ecase buffer-view-target-value
     (34962 :array-buffer)
     (34963 :element-array-buffer)))
 
-(defun buffer-view-target-symbol->buffer-view-target-interp-value
-    (buffer-view-target-symbol)
+(defun buffer-view-target-symbol->value (buffer-view-target-symbol)
   (ecase buffer-view-target-symbol
     (:array-buffer 34962)
     (:element-array-buffer 34963)))
 
-(defun camera-type-value->camera-type-symbol (camera-type-value)
+(defun camera-type-value->symbol (camera-type-value)
   (let* ((db `(("perspective" . :perspective)
                ("orthographic" . :orthographic))))
     (cdr (assoc camera-type-value db :test #'string=))))
 
-(defun camera-type-symbol->camera-type-value (camera-type-symbol)
-  (let* ((db `((:perspective . "perspective")
-               (:orthographic . "orthographic"))))
-    (cdr (assoc camera-type-symbol db :test #'eq))))
+(defun camera-type-symbol->value (camera-type-symbol)
+  (ecase camera-type-symbol
+    (:perspective "perspective")
+    (:orthographic "orthographic")))
 
-(defun image-mime-type-value->image-mime-type-symbol (image-mime-type-value)
+(defun image-mime-type-value->symbol (image-mime-type-value)
   (let* ((db `(("image/jpeg" . :image/jpeg)
                ("image/png" . :image/png))))
     (cdr (assoc image-mime-type-value db :test #'string=))))
 
-(defun image-mime-type-symbol->image-mime-type-value (image-mime-type-symbol)
-  (let* ((db `((:image/jpeg . "image/jpeg")
-               (:image/png . "image/png"))))
-    (cdr (assoc image-mime-type-symbol db :test #'eq))))
+(defun image-mime-type-symbol->value (image-mime-type-symbol)
+  (ecase image-mime-type-symbol
+    (:image/jpeg "image/jpeg")
+    (:image/png "image/png")))
 
-(defun alpha-mode-value->alpha-mode-symbol (alpha-mode-value)
+(defun alpha-mode-value->symbol (alpha-mode-value)
   (let* ((db `(("OPAQUE" . :opaque)
                ("MASK" . :mask)
                ("BLEND" . :blend))))
     (cdr (assoc alpha-mode-value db :test #'string=))))
 
-(defun alpha-mode-symbol->alpha-mode-value (alpha-mode-symbol)
-  (let* ((db `((:opaque . "OPAQUE")
-               (:mask . "MASK")
-               (:blend . "BLEND"))))
-    (cdr (assoc alpha-mode-symbol db :test #'eq))))
+(defun alpha-mode-symbol->value (alpha-mode-symbol)
+  (ecase alpha-mode-symbol
+    (:opaque "OPAQUE")
+    (:mask "MASK")
+    (:blend "BLEND")))
 
 ;; TODO: This might be a more useful utility function for general use
-(defun attribute-value->attribute-name (str)
+(defun attribute-value->name (str)
   (flet ((keywordify (s) (intern (string-upcase s) "KEYWORD")))
     (cl-ppcre:register-groups-bind
         ((#'keywordify name) (#'parse-integer index))
@@ -157,15 +151,14 @@
           name))))
 
 ;; TODO: This might be a more useful utility function for general use
-(defun attribute-name->attribute-value (val)
+(defun attribute-name->value (val)
   (etypecase val
     (symbol (symbol-name val))
     (cons (destructuring-bind (sym . index) val
             (concatenate 'string
                          (symbol-name sym) "_" (write-to-string index))))))
 
-(defun primitive-attribute-value->primitive-attribute-name
-    (primitive-attribute-value)
+(defun primitive-attribute-value->name (primitive-attribute-value)
   "A PRIMITIVE-ATTRIBUTE-VALUE can be in one of a few formats, we describe the
 allowable inputs below and what is returned.
 
@@ -184,27 +177,26 @@ allowable inputs below and what is returned.
   \".*__.*\"
 "
   (unless (stringp primitive-attribute-value)
-    (error "primitive-attribute-value->primitive-attribute-name: PRIMITIVE-ATTRIBUTE-VALUE must be a string!"))
+    (error "primitive-attribute-value->name: PRIMITIVE-ATTRIBUTE-VALUE must be a string!"))
 
   (let* ((primitive-attribute-value (string-trim " " primitive-attribute-value))
          (pav-length (length primitive-attribute-value)))
     (unless (> pav-length 0)
-      (error "primitive-attribute-value->primitive-attribute-name: PRIMITIVE-ATTRIBUTE-VALUE must be a string of greater than zero length"))
+      (error "primitive-attribute-value->name: PRIMITIVE-ATTRIBUTE-VALUE must be a string of greater than zero length"))
 
     (when (eql (aref primitive-attribute-value (1- pav-length)) #\_)
-      (error "primitive-attribute-value->primitive-attribute-name: missing index number on priitive value: ~A. It should have integer characters at the end."
+      (error "primitive-attribute-value->name: missing index number on priitive value: ~A. It should have integer characters at the end."
              primitive-attribute-value))
 
-    (attribute-value->attribute-name primitive-attribute-value)))
+    (attribute-value->name primitive-attribute-value)))
 
-(defun primitive-attribute-name->primitive-attribute-value
-    (primitive-attribute-name)
+(defun primitive-attribute-name->value (primitive-attribute-name)
 
   ;; TODO: Do some type checks.
 
-  (attribute-name->attribute-value primitive-attribute-name))
+  (attribute-name->value primitive-attribute-name))
 
-(defun primitive-mode-value->primitive-mode-symbol (primitive-mode-value)
+(defun primitive-mode-value->symbol (primitive-mode-value)
   (ecase primitive-mode-value
     (0 :points)
     (1 :lines)
@@ -214,7 +206,7 @@ allowable inputs below and what is returned.
     (5 :triangle-strip)
     (6 :triangle-fan)))
 
-(defun primitive-mode-symbol->primitive-mode-value (primitive-mode-symbol)
+(defun primitive-mode-symbol->value (primitive-mode-symbol)
   (ecase primitive-mode-symbol
     (:points 0)
     (:lines 1)
@@ -232,30 +224,28 @@ allowable inputs below and what is returned.
              (and (> (length primitive-target-value) 0)
                   (eql (aref primitive-target-value 0) #\_))))))
 
-(defun primitive-target-value->primitive-target-symbol (primitive-target-value)
+(defun primitive-target-value->symbol (primitive-target-value)
   (unless (primitive-target-value-valid-p primitive-target-value)
-    (error "primitive-target-value->primitive-target-symbol: The only valid values are NORMAL, POSITION, TANGENT, and any string of all capital letters starting with _. The value ~S is illegal: " primitive-target-value))
-
+    (error "primitive-target-value->symbol: The only valid values are NORMAL, POSITION, TANGENT, and any string of all capital letters starting with _. The value ~S is illegal: " primitive-target-value))
   (intern (string-upcase primitive-target-value) "KEYWORD"))
 
-(defun primitive-target-symbol->primitive-target-value (primitive-target-symbol)
+(defun primitive-target-symbol->value (primitive-target-symbol)
   (let ((primitive-target-value (symbol-name primitive-target-symbol)))
     (unless (primitive-target-value-valid-p primitive-target-value)
-      (error "primitive-target-symbol->primitive-target-value: The only valid symbols are :NORMAL, :POSITION, :TANGENT, and any keyword symbol starting with _. The symbol ~S is illegal: " primitive-target-symbol))
+      (error "primitive-target-symbol->value: The only valid symbols are :NORMAL, :POSITION, :TANGENT, and any keyword symbol starting with _. The symbol ~S is illegal: " primitive-target-symbol))
     primitive-target-value))
 
-
-(defun sampler-mag-filter-value->sampler-mag-filter-symbol (mag-filter-value)
+(defun sampler-mag-filter-value->symbol (mag-filter-value)
   (ecase mag-filter-value
     (9728 :nearest)
     (9729 :linear)))
 
-(defun sampler-mag-filter-symbol->sampler-mag-filter-value (mag-filter-symbol)
+(defun sampler-mag-filter-symbol->value (mag-filter-symbol)
   (ecase mag-filter-symbol
     (:nearest 9728)
     (:linear 9729)))
 
-(defun sampler-min-filter-value->sampler-min-filter-symbol (min-filter-value)
+(defun sampler-min-filter-value->symbol (min-filter-value)
   (ecase min-filter-value
     (9728 :nearest)
     (9729 :linear)
@@ -264,7 +254,7 @@ allowable inputs below and what is returned.
     (9986 :nearest-mipmap-linear)
     (9987 :linear-mipmap-linear)))
 
-(defun sampler-min-filter-symbol->sampler-min-filter-value (min-filter-symbol)
+(defun sampler-min-filter-symbol->value (min-filter-symbol)
   (ecase min-filter-symbol
     (:nearest 9728)
     (:linear 9729)
@@ -274,13 +264,13 @@ allowable inputs below and what is returned.
     (:linear-mipmap-linear 9987)))
 
 
-(defun sampler-wrap-mode-value->sampler-wrap-mode-symbol (wrap-mode-value)
+(defun sampler-wrap-mode-value->symbol (wrap-mode-value)
   (ecase wrap-mode-value
     (33071 :clamp-to-edge)
     (33648 :mirrored-repeat)
     (10497 :repeat)))
 
-(defun sampler-wrap-mode-symbol->sampler-wrap-mode-value (wrap-mode-symbol)
+(defun sampler-wrap-mode-symbol->value (wrap-mode-symbol)
   (ecase wrap-mode-symbol
     (:clamp-to-edge 33071)
     (:mirrored-repeat 33648)
@@ -288,608 +278,11 @@ allowable inputs below and what is returned.
 
 
 
-;; Begin glTF data types.
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Accessors
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-(defclass gltf-indices ()
-  (;; An integer, cannot reference a ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target
-   (%buffer-view :accessor buffer-view
-                 :initarg :buffer-view)
-   ;; An integer
-   (%byte-offset :accessor byte-offset
-                 :initarg :byte-offset
-                 :initform 0)
-   ;; An integer
-   ;; One of:
-   ;;
-   ;; 5121 UNSIGNED_BYTE
-   ;; 5123 UNSIGNED_SHORT
-   ;; 5125 UNSIGNED_INT
-   ;;
-   ;; NOTE: we always store the symbol equivalent of the above values in this
-   ;; slot.
-   (%component-type :accessor component-type
-                    :initarg :component-type)))
-
-(defclass gltf-values ()
-  (;; An integer, cannot reference a ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target
-   (%buffer-view :accessor buffer-view
-                 :initarg :buffer-view)
-   (%byte-offset :accessor byte-offset
-                 :initarg :byte-offset
-                 :initform 0)))
-
-(defclass gltf-sparse ()
-  (;; An integer
-   (%count :accessor sparse-count
-           :initarg :sparse-count
-           :initform 1)
-   ;; An instance of gltf-indices (which point to a buffer of indices)
-   (%indices :accessor indices
-             :initarg :indices)
-   ;; An instance of gltf-values (which point to a buffer of values)
-   (%values :accessor sparse-values
-            :initarg :sparse-values)))
-
-(defclass gltf-accessor ()
-  (;; An integer
-   (%buffer-view :accessor buffer-view
-                 :initarg :buffer-view)
-   ;; An integer
-   (%byte-offset :accessor byte-offset
-                 :initarg :byte-offset
-                 :initform 0)
-   ;; One of:
-   ;;
-   ;; 5120 BYTE
-   ;; 5121 UNSIGNED_BYTE
-   ;; 5122 SHORT
-   ;; 5123 UNSIGNED_SHORT
-   ;; 5125 UNSIGNED_INT
-   ;; 5126 FLOAT
-   (%component-type :accessor component-type
-                    :initarg :component-type)
-   ;; a boolean
-   (%normalized :accessor normalized
-                :initarg :normalized
-                :initform nil)
-   ;; An integer
-   (%count :accessor attribute-count
-           :initarg :attribute-count
-           :initform 1)
-   ;; One of:
-   ;;
-   ;; "SCALAR"
-   ;; "VEC2"
-   ;; "VEC3"
-   ;; "VEC4"
-   ;; "MAT2"
-   ;; "MAT3"
-   ;; "MAT4"
-   (%type :accessor attribute-type
-          :initarg :attribute-type)
-   ;; An instance of the correct type as denoted in ATTRIBUTE-TYPE
-   (%max :accessor max-value
-         :initarg :max-value)
-   ;; An instance of the correct type as denoted in ATTRIBUTE-TYPE
-   (%min :accessor min-value
-         :initarg :min-value)
-   ;; A gltf-sparse instance
-   (%sparse :accessor sparse
-            :initarg :sparse)
-   ;; A string
-   (%name :accessor name
-          :initarg :name)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Animations
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-target ()
-  (;; An integer
-   (%node :accessor node
-          :initarg :node)
-   ;; A string
-   (%path :accessor path
-          :initarg :path)))
-
-(defclass gltf-channel ()
-  (;; An integer
-   (%sampler :accessor sampler
-             :initarg :sampler
-             :initform 0)
-   ;; A gltf-target instance
-   (%target :accessor target
-            :initarg :target)))
-
-(defclass gltf-animation-sampler ()
-  (;; An integer
-   (%input :accessor input
-           :initarg :input
-           :initform 0)
-   ;; A string
-   (%interpolation :accessor interpolation
-                   :initarg :interpolation
-                   :initform "LINEAR")
-   ;; An integer
-   (%output :accessor output
-            :initarg :output
-            :initform 0)))
-
-(defclass gltf-animation ()
-  (;; An array of gltf-channel instances
-   (%channels :accessor channels
-              :initarg :channels)
-   ;; An array of gltf-sampler instances
-   (%samplers :accessor samplers
-              :initarg :samplers)
-   ;; A string
-   (%name :accessor name
-          :initarg :name)))
-
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Asset (glTF identification)
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-asset ()
-  (;; a string
-   (%copyright :accessor copyright
-               :initarg :copyright)
-   ;; a string
-   (%generator :accessor generator
-               :initarg :generator)
-   ;; a string
-   (%version :accessor version
-             :initarg :version)
-   ;; a string
-   (%min-version :accessor min-version
-                 :initarg :min-version)))
-
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Buffers
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-buffer ()
-  (;; a string
-   (%uri :accessor uri
-         :initarg :uri)
-   ;; an integer >= 1
-   (%byte-length :accessor byte-length
-                 :initarg :byte-length)
-   ;; a string
-   (%name :accessor name
-          :initarg :name
-          :initform "")))
-
-(defclass gltf-buffer-view ()
-  (;; an integer
-   (%buffer :accessor buffer
-            :initarg :buffer)
-   ;; an integer
-   (%byte-offset :accessor byte-offset
-                 :initarg :byte-offset)
-   ;; an integer
-   (%byte-length :accessor byte-length
-                 :initarg :byte-length)
-   ;; an integer
-   (%byte-stride :accessor byte-stride
-                 :initarg :byte-stride)
-   ;; an integer
-   (%target :accessor target
-            :initarg :target)
-   ;; a string
-   (%name :accessor name
-          :initarg :name
-          :initform "")))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Cameras
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-orthographic ()
-  (;; a number
-   (%x-mag :accessor x-mag
-           :initarg :x-mag)
-   ;; a number
-   (%y-mag :accessor y-mag
-           :initarg :y-mag)
-   ;; a number
-   (%z-far :accessor z-far
-           :initarg :z-far)
-   ;; a number
-   (%z-near :accessor z-near
-            :initarg :z-near)))
-
-(defclass gltf-perspective ()
-  (;; a number
-   (%aspect-ratio :accessor aspect-ratio
-                  :initarg :aspect-ratio)
-   ;; a number
-   (%y-fov :accessor y-fov
-           :initarg :y-fov)
-   ;; a number
-   (%z-far :accessor z-far
-           :initarg :z-far)
-   ;; a number
-   (%z-near :accessor z-near
-            :initarg :z-near)))
-
-(defclass gltf-camera ()
-  (;; a gltf-orthographic instance OR null
-   (%orthographic :accessor orthographic
-                  :initarg :orthographic)
-   ;; a gltf-perspective instance OR null
-   (%perspective :accessor perspective
-                 :initarg :perspective)
-   ;; a string [changed from 'type' to 'camera-type']
-   (%type :accessor camera-type
-          :initarg :camera-type)
-   ;; a string
-   (%name :accessor name
-          :initarg :name)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Root glTF object (TODO: probably move to bottom)
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf ()
-  (;; an array of strings
-   (%extensions-used :accessor extensions-used
-                     :initarg :extensions-used)
-   ;; an array of strings
-   (%extensions-required :accessor extensions-required
-                         :initarg :extensions-required)
-   ;; an array of gltf-accessor instances
-   (%accessors :accessor accessors
-               :initarg :accessors)
-   ;; an arry of gltf-animation instances
-   (%animations :accessor animations
-                :initarg :animations)
-   ;; a gltf-asset instance
-   (%asset :accessor asset
-           :initarg :asset)
-   ;; an array of gltf-buffer instances
-   (%buffers :accessor buffers
-             :initarg :buffers)
-   ;; an array of gltf-buffer-view instances
-   (%buffer-views :accessor buffer-views
-                  :initarg :buffer-views)
-   ;; an array of gltf-camera instances
-   (%cameras :accessor cameras
-             :initarg :cameras)
-   ;; an array of gltf-images instances
-   (%images :accessor images
-            :initarg :images)
-   ;; an array of gltf-material instances
-   (%materials :accessor materials
-               :initarg :materials)
-   ;; an array of gltf-mesh instances
-   (%meshes :accessor meshes
-            :initarg :meshes)
-   ;; an array of gltf-node instances
-   (%nodes :accessor nodes
-           :initarg :nodes)
-   ;; an array of gltf-sampler instances
-   (%samplers :accessor sampleres
-              :initarg :samplers)
-   ;; an integer
-   (%scene :accessor scene
-           :initarg :scene)
-   ;; an array of gltf-scene instances
-   (%scenes :accessor scenes
-            :initarg :scenes)
-   ;; an array of gltf-skin instances
-   (%skins :accessor skins
-           :initarg :skins)
-   ;; an array of gltf-texture instances
-   (%textures :accessor textures
-              :initarg :textures)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Images
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-image ()
-  (;; a string
-   (%uri :accessor uri
-         :initarg :uri)
-   ;; a string, one of
-   ;; "image/jpeg"
-   ;; "image/png"
-   (%mime-type :accessor mime-type
-               :initarg :mime-type)
-   ;; an integer >= 0
-   (%buffer-view :accessor buffer-view
-                 :initarg :buffer-view)
-   ;; a string
-   (%name :accessor name
-          :initarg :name)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Materials
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-normal-texture-info ()
-  (;; an integer >= 0
-   (%index :accessor index
-           :initarg :index)
-   ;; an integer >= 0
-   (%tex-coord :accessor tex-coord
-               :initarg :tex-coord
-               :initform 0)
-   ;; a number
-   (%scale :accessor scale
-           :initarg :scale
-           :initform 1f0)))
-
-(defclass gltf-occlusion-texture-info ()
-  (;; an integer >= 0
-   (%index :accessor index
-           :initarg :index)
-   ;; an integer >= 0
-   (%tex-coord :accessor tex-coord
-               :initarg :tex-coord
-               :initform 0)
-   ;; a number >= 0 AND <= 1
-   (%strength :accessor strength
-              :initarg :strength
-              :initform 1f0)))
-
-(defclass gltf-pbr-metallic-roughness ()
-  (;; an array of 4 numbers
-   (%base-color-factor :accessor base-color-factor
-                       :initarg :base-color-factor
-                       :initform (vector 1f0 1f0 1f0 1f0))
-   ;; a gltf-texture-info instance
-   (%base-color-texture :accessor base-color-texture
-                        :initarg :base-color-texture
-                        :initform nil)
-   ;; a number >= 0 AND <= 1
-   (%metallic-factor :accessor metallic-factor
-                     :initarg :metallic-factor
-                     :initform 1f0)
-   ;; a number >= 0 AND <= 1
-   (%roughness-factor :accessor roughness-factor
-                      :initarg :roughness-factor
-                      :initform 1f0)
-   ;; a gltf-texture-info instance
-   (%metallic-roughness-texture :accessor metallic-roughness-texture
-                                :initarg :metallic-roughness-texture
-                                :initform nil)))
-
-(defclass gltf-material ()
-  (;; a string
-   (%name :accessor name
-          :initarg :name)
-   ;; an instance of gltf-pbr-metallic-roughness or null
-   (%pbr-metallic-roughness :accessor pbr-metallic-roughness
-                            :initarg :pbr-metallic-roughness)
-   ;; an instance of gltf-texture-info
-   (%normal-texture :accessor normal-texture
-                    :initarg :normal-texture)
-   ;; an instance of gltf-texture-info
-   (%occlusion-texture :accessor occlusion-texture
-                       :initarg :occlusion-texture)
-   ;; an instance of gltf-texture-info
-   (%emissive-texture :accessor emissive-texture
-                      :initarg :emissive-texture)
-   ;; an array of 3 numbers
-   (%emissive-factor :accessor emissive-factor
-                     :initarg :emissive-factor
-                     :initform (vector 1f0 1f0 1f0))
-   ;; a string, one of:
-   ;; "OPAQUE"
-   ;; "MASK"
-   ;; "BLEND"
-   (%alpha-mode :accessor alpha-mode
-                :initarg :alpha-mode
-                :initform "OPAQUE")
-   ;; a number >= 0 AND <= 1
-   (%alpha-cutoff :accessor alpha-cutoff
-                  :initarg :alpha-cutoff
-                  :initform .5f0)
-   ;; a boolean
-   (%double-sided :accessor double-sided
-                  :initarg :double-sided
-                  :initform nil)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Meshes
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-primitive ()
-  (;; a hash table:
-   ;; key: (string) mesh attribute semantic name
-   ;; value: (integer) index to accessor containing data of associated attribute
-   (%attributes :accessor attributes
-                :initarg :attributes
-                :initform (u:dict #'equal))
-   ;; an integer
-   (%indices :accessor indices
-             :initarg :indices)
-   ;; an integer
-   (%material :accessor material
-              :initarg :material)
-   ;; an integer, one of
-   ;;
-   ;; 0 POINTS
-   ;; 1 LINES
-   ;; 2 LINE_LOOP
-   ;; 3 LINE_STRIP
-   ;; 4 TRIANGLES
-   ;; 5 TRIANGLE_STRIP
-   ;; 6 TRIANGLE_FAN
-   (%mode :accessor mode
-          :initarg :mode
-          :initform 4)
-   ;; an array of hash tables:
-   ;; the key is one of:
-   ;; :position,
-   ;; :normal,
-   ;; :tangent"
-   ;; The value is: (integer) an accessor index to the vertex displacement data
-   (%targets :accessor targets
-             :initarg :targets)))
-
-(defclass gltf-mesh ()
-  (;; an array of gltf-primitive instances
-   (%primitives :accessor primitives
-                :initarg :primitives)
-   ;; an array of numbers
-   (%weights :accessor weights
-             :initarg :weights)
-   ;; a string
-   (%name :accessor name
-          :initarg :name)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Nodes in the spatial hierarchy
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-node ()
-  (;; an integer
-   (%camera :accessor camera
-            :initarg :camera)
-   ;; an array of integers
-   (%children :accessor children
-              :initarg :children)
-   ;; an integer
-   (%skin :accessor skin
-          :initarg :skin)
-   ;; an array of 16 numbers, a 4x4 matrix stored in column order
-   ;; NOTE: Only used if "rotation", or "translation", or or "scale" are
-   ;; not default values.
-   (%matrix :accessor matrix
-            :initarg :matrix
-            :initform (vector 1f0 0f0 0f0 0f0
-                              0f0 1f0 0f0 0f0
-                              0f0 0f0 1f0 0f0
-                              0f0 0f0 0f0 1f0))
-   ;; an integer
-   (%mesh :accessor mesh
-          :initarg :mesh)
-   ;; an array of 4 numbers
-   (%rotation :accessor rotation
-              :initarg :rotation
-              :initform (vector 0f0 0f0 0f0 1f0))
-   ;; an array of 3 numbers
-   (%scale :accessor scale
-           :initarg :scale
-           :initform (vector 1f0 1f0 1f0))
-   ;; an array of 3 numbers
-   (%translation :accessor translation
-                 :initarg :translation
-                 :initform (vector 0f0 0f0 0f0))
-   ;; an array of number
-   (%weights :accessor weights
-             :initarg :weights)
-   ;; a string
-   (%name :accessor name
-          :initarg :name)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Samplers
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-sampler ()
-  (;; an integer, one of:
-   ;; 9728 NEAREST
-   ;; 9729 LINEAR
-   (%mag-filter :accessor mag-filter
-                :initarg :mag-filter)
-   ;; an integer, one of:
-   ;; 9728 NEAREST
-   ;; 9729 LINEAR
-   ;; 9984 NEAREST_MIPMAP_NEAREST
-   ;; 9985 LINEAR_MIPMAP_NEAREST
-   ;; 9986 NEAREST_MIPMAP_LINEAR
-   ;; 9987 LINEAR_MIPMAP_LINEAR
-   (%min-filter :accessor min-filter
-                :initarg :min-filter)
-   ;; an integer, one of:
-   ;; 33071 CLAMP_TO_EDGE
-   ;; 33648 MIRRORED_REPEAT
-   ;; 10497 REPEAT
-   (%wrap-s :accessor wrap-s
-            :initarg :wrap-s
-            :initform 10497)
-   ;; an integer, one of:
-   ;; 33071 CLAMP_TO_EDGE
-   ;; 33648 MIRRORED_REPEAT
-   ;; 10497 REPEAT
-   (%wrap-t :accessor wrap-t
-            :initarg :wrap-t
-            :initform 10497)
-   ;; a string
-   (%name :accessor name
-          :initarg :name)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Scenes
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-scene ()
-  (;; an array of integers
-   (%nodes :accessor nodes
-           :initarg :nodes)
-   ;; a string
-   (%name :accessor name
-          :initarg :name)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Skin
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-skin ()
-  (;; an integer
-   (%inverse-bind-matricies :accessor inverse-bind-matricies
-                            :initarg :inverse-bind-matricies)
-   ;; an integer
-   (%skeleton :accessor skeleton
-              :initarg :skeleton)
-   ;; an array of integers
-   (%joints :accessor joints
-            :initarg :joints)
-   ;; a string
-   (%name :accessor name
-          :initarg :name)))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Textures
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defclass gltf-texture ()
-  (;; an integer
-   (%sampler :accessor sampler
-             :initarg :sampler)
-   ;; an integer
-   (%source :accessor source
-            :initarg :source)
-   ;; a string
-   (%name :accessor name
-          :initarg :name)))
-
-(defclass gltf-texture-info ()
-  (;; an integer
-   (%index :accessor index
-           :initarg :index)
-   ;; an integer
-   (%tex-coord :accessor tex-coord
-               :initarg :tex-coord
-               :initform 0)))
-
-;; End glTF data types.
 
 ;; maker functions
 
-(defun make-indices (&rest args)
-  (apply #'make-instance 'gltf-indices args))
+(defun make-sparse-indices (&rest args)
+  (apply #'make-instance 'gltf-sparse-indices args))
 
 (defun make-values (&rest args)
   (apply #'make-instance 'gltf-values args))
@@ -1006,7 +399,7 @@ allowable inputs below and what is returned.
       (apply #'typecheck/error pass (class-name (class-of gltf-obj)) fmt args)))
 
 (defmacro typecheck/assert-group (pass gltf-obj &body forms)
-  (a:with-gensyms (obj)
+  (u:with-gensyms (obj)
     (let ((body
             (loop :for (val fmt . args) :in forms
                   :collect `(typecheck/assert ,pass ,obj ,val ,fmt ,@args))))
@@ -1030,24 +423,25 @@ allowable inputs below and what is returned.
     (coerce extensions-required 'vector)))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
-;; gltf-indices
+;; gltf-sparse-indices
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun parse-indices (jobj)
+(defun parse-sparse-indices (jobj)
   (u:mvlet ((buffer-view bv-p (jsown:val-safe jobj "bufferView"))
             (byte-offset bo-p (jsown:val-safe jobj "byteOffset"))
             (component-type ct-p (jsown:val-safe jobj "componentType")))
 
-    (parse/assert bv-p 'gltf-indices "bufferView")
-    (parse/assert ct-p 'gltf-indices "componentType")
+    (parse/assert bv-p 'gltf-sparse-indices "bufferView")
+    (parse/assert ct-p 'gltf-sparse-indices "componentType")
 
-    (make-indices
+    (make-sparse-indices
      :buffer-view buffer-view
      :byte-offset (if bo-p byte-offset 0)
      :component-type
-     (component-type-value->component-type-symbol component-type))))
+     (component-type-value->symbol component-type))))
 
-(defmethod typecheck ((pass (eql :static)) (obj gltf-indices) &key buffer-views)
+(defmethod typecheck ((pass (eql :static)) (obj gltf-sparse-indices)
+                      &key buffer-views)
   (with-accessors ((buffer-view buffer-view) (byte-offset byte-offset)
                    (component-type component-type))
       obj
@@ -1121,7 +515,7 @@ allowable inputs below and what is returned.
 
     (make-sparse
      :sparse-count sparse-count
-     :indices (parse-indices jobj-indices)
+     :indices (parse-sparse-indices jobj-indices)
      :sparse-values (parse-values jobj-values))))
 
 (defmethod typecheck ((pass (eql :static))
@@ -1169,12 +563,10 @@ allowable inputs below and what is returned.
     (make-accessor
      :buffer-view buffer-view
      :byte-offset (if bo-p byte-offset 0)
-     :component-type
-     (component-type-value->component-type-symbol component-type)
+     :component-type (component-type-value->symbol component-type)
      :normalized normalized-p
      :attribute-count attribute-count
-     :attribute-type
-     (attribute-type-value->attribute-type-symbol attribute-type)
+     :attribute-type (attribute-type-value->symbol attribute-type)
      :max-value (when max-p (coerce max-value 'vector))
      :min-value (when min-p (coerce min-value 'vector))
      :sparse (when jobj-sparse (parse-sparse jobj-sparse))
@@ -1253,7 +645,7 @@ allowable inputs below and what is returned.
     ;; TODO: Need to check with sparse substitution applied.
     (when min-value
       (let ((valid-lengths '(1 2 3 4 9 16)))
-        (typecheck/assert-group obj
+        (typecheck/assert-group pass obj
           ((vectorp min-value)
            "slot MIN-VALUE must be a vector!")
           ((member (length min-value) valid-lengths :test #'=)
@@ -1289,8 +681,7 @@ allowable inputs below and what is returned.
     (parse/assert path-p 'gltf-target "path")
 
     (make-target :node node
-                 :path
-                 (target-path-value->target-path-symbol path))))
+                 :path (target-path-value->symbol path))))
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Parse gltf-channel
@@ -1322,7 +713,7 @@ allowable inputs below and what is returned.
      :input input
      :interpolation
      (if interp
-         (animsampler-interp-value->animsampler-interp-symbol interp)
+         (animsampler-interp-value->symbol interp)
          :linear)
      :output output)))
 
@@ -1407,8 +798,7 @@ allowable inputs below and what is returned.
      :byte-offset (if bo-p byte-offset 0)
      :byte-length byte-length
      :byte-stride byte-stride
-     :target (when target-p
-               (buffer-view-target-value->buffer-view-target-symbol target))
+     :target (when target-p (buffer-view-target-value->symbol target))
      :name name)))
 
 (defun parse-buffer-views (buffer-views)
@@ -1474,7 +864,7 @@ allowable inputs below and what is returned.
                     "Only one of these must be defined if any are."))
 
     (make-camera
-     :camera-type (camera-type-value->camera-type-symbol camera-type)
+     :camera-type (camera-type-value->symbol camera-type)
      :orthographic (when ortho-p (parse-orthographic jobj-orthographic))
      :perspective (when persp-p (parse-perspective jobj-perspective))
      :name name)))
@@ -1497,7 +887,7 @@ allowable inputs below and what is returned.
      ;; TODO: We handle these URI's later for loading or converting them
      ;; the byte arrays.
      :uri uri
-     :mime-type (image-mime-type-value->image-mime-type-symbol mime-type)
+     :mime-type (image-mime-type-value->symbol mime-type)
      :buffer-view buffer-view
      :name name)))
 
@@ -1614,7 +1004,7 @@ allowable inputs below and what is returned.
                           (coerce emissive-factor 'vector)
                           (vector 0f0 0f0 0f0))
      :alpha-mode (if am-p
-                     (alpha-mode-value->alpha-mode-symbol alpha-mode)
+                     (alpha-mode-value->symbol alpha-mode)
                      :opaque)
      :alpha-cutoff (if ac-p alpha-cutoff .5f0)
      :double-sided double-sided)))
@@ -1641,13 +1031,13 @@ allowable inputs below and what is returned.
              :indices indices
              :material material
              :mode (if mode-p
-                       (primitive-mode-value->primitive-mode-symbol mode)
+                       (primitive-mode-value->symbol mode)
                        :triangles))))
 
       ;; Parse the attribute hash
       (loop :for (%attr-name . index) :in (rest jobj-attributes)
             :do (let ((attr-name
-                        (primitive-attribute-value->primitive-attribute-name
+                        (primitive-attribute-value->name
                          %attr-name)))
 
                   (setf (u:href (attributes primitive) attr-name) index)))
@@ -1659,8 +1049,7 @@ allowable inputs below and what is returned.
                    :with db = (u:dict #'equal)
                    :for (%attr-name . index) :in (rest morph-target)
                    :do (let ((attr-name
-                               (primitive-attribute-value->primitive-attribute-name
-                                %attr-name)))
+                               (primitive-attribute-value->name %attr-name)))
                          (parse/assert
                           (member attr-name '(:position :normal :tangent))
                           'gltf-primitive 'targets
@@ -1792,17 +1181,17 @@ allowable inputs below and what is returned.
     (make-sampler
      :mag-filter
      (when mag-filter
-       (sampler-mag-filter-value->sampler-mag-filter-symbol mag-filter))
+       (sampler-mag-filter-value->symbol mag-filter))
      :min-filter
      (when min-filter
-       (sampler-min-filter-value->sampler-min-filter-symbol min-filter))
+       (sampler-min-filter-value->symbol min-filter))
      :wrap-s
      (if wrap-s-p
-         (sampler-wrap-mode-value->sampler-wrap-mode-symbol wrap-s)
+         (sampler-wrap-mode-value->symbol wrap-s)
          :repeat)
      :wrap-t
      (if wrap-t-p
-         (sampler-wrap-mode-value->sampler-wrap-mode-symbol wrap-t)
+         (sampler-wrap-mode-value->symbol wrap-t)
          :repeat)
      :name name)))
 
@@ -1900,13 +1289,14 @@ allowable inputs below and what is returned.
      :textures (parse-textures textures))))
 
 
+;; TODO: This is woefully incomplete in what slots it typechecks.
 (defmethod typecheck ((pass (eql :static)) (obj gltf) &key)
   (with-accessors ((accessors accessors)
                    (buffer-views buffer-views))
       obj
 
     (loop :for accessor :across accessors
-          :do (typecheck accessor :buffer-views buffer-views))))
+          :do (typecheck pass accessor :buffer-views buffer-views))))
 
 
 
@@ -1920,37 +1310,37 @@ allowable inputs below and what is returned.
 ;; Test code. (move to other file...)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun test/parse-indices (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+(defun test/parse-sparse-indices (file)
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (jsown:val
                (jsown:val
                 (nth 1 (jsown:val j "accessors")) "sparse") "indices"))
-         (inst (colony.file.gltf::parse-indices obj)))
+         (inst (colony.model.gltf::parse-sparse-indices obj)))
     (describe inst)))
 
 (defun test/parse-values (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (jsown:val
                (jsown:val
                 (nth 1 (jsown:val j "accessors")) "sparse") "values"))
-         (inst (colony.file.gltf::parse-values obj)))
+         (inst (colony.model.gltf::parse-values obj)))
     (describe inst)))
 
 (defun test/parse-sparse (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (jsown:val
                (nth 1 (jsown:val j "accessors")) "sparse"))
-         (inst (colony.file.gltf::parse-sparse obj)))
+         (inst (colony.model.gltf::parse-sparse obj)))
     (describe inst)))
 
 (defun test/parse-accessor (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 1 (jsown:val j "accessors")))
-         (inst (colony.file.gltf::parse-accessor obj)))
+         (inst (colony.model.gltf::parse-accessor obj)))
     (describe inst)))
 
 (defun test/parse-target (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (jsown:val-safe
             (nth 0
@@ -1958,231 +1348,240 @@ allowable inputs below and what is returned.
                   (nth 0 (jsown:val j "animations"))
                   "channels"))
             "target"))
-         (inst (colony.file.gltf::parse-target obj)))
+         (inst (colony.model.gltf::parse-target obj)))
     (describe inst)))
 
 (defun test/parse-channel (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (nth 0
                 (jsown:val-safe
                  (nth 0 (jsown:val j "animations"))
                  "channels")))
-         (inst (colony.file.gltf::parse-channel obj)))
+         (inst (colony.model.gltf::parse-channel obj)))
     (describe inst)))
 
 (defun test/parse-animation-sampler (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (nth 0
                 (jsown:val-safe
                  (nth 0 (jsown:val j "animations"))
                  "samplers")))
-         (inst (colony.file.gltf::parse-animation-sampler obj)))
+         (inst (colony.model.gltf::parse-animation-sampler obj)))
     (describe inst)))
 
 (defun test/parse-animation (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 0 (jsown:val j "animations")))
-         (inst (colony.file.gltf::parse-animation obj)))
+         (inst (colony.model.gltf::parse-animation obj)))
     (describe inst)))
 
 (defun test/parse-asset (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (jsown:val j "asset"))
-         (inst (colony.file.gltf::parse-asset obj)))
+         (inst (colony.model.gltf::parse-asset obj)))
     (describe inst)))
 
 (defun test/parse-buffer (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 0 (jsown:val j "buffers")))
-         (inst (colony.file.gltf::parse-buffer obj)))
+         (inst (colony.model.gltf::parse-buffer obj)))
     (describe inst)))
 
 (defun test/parse-buffer-view (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 1 (jsown:val j "bufferViews")))
-         (inst (colony.file.gltf::parse-buffer-view obj)))
+         (inst (colony.model.gltf::parse-buffer-view obj)))
     (describe inst)))
 
 (defun test/parse-orthographic (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (jsown:val
             (nth 1 (jsown:val j "cameras"))
             "orthographic"))
-         (inst (colony.file.gltf::parse-orthographic obj)))
+         (inst (colony.model.gltf::parse-orthographic obj)))
     (describe inst)))
 
 (defun test/parse-perspective (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (jsown:val
             (nth 0 (jsown:val j "cameras"))
             "perspective"))
-         (inst (colony.file.gltf::parse-perspective obj)))
+         (inst (colony.model.gltf::parse-perspective obj)))
     (describe inst)))
 
 (defun test/parse-camera (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (nth 0 (jsown:val j "cameras")))
-         (inst (colony.file.gltf::parse-camera obj)))
+         (inst (colony.model.gltf::parse-camera obj)))
     (describe inst)))
 
 (defun test/parse-image (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (nth 0 (jsown:val j "images")))
-         (inst (colony.file.gltf::parse-image obj)))
+         (inst (colony.model.gltf::parse-image obj)))
     (describe inst)))
 
 (defun test/parse-normal-texture-info (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (jsown:val
             (nth 0 (jsown:val j "materials"))
             "normalTexture"))
-         (inst (colony.file.gltf::parse-normal-texture-info obj)))
+         (inst (colony.model.gltf::parse-normal-texture-info obj)))
     (describe inst)))
 
 (defun test/parse-occlusion-texture-info (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (jsown:val
             (nth 0 (jsown:val j "materials"))
             "occlusionTexture"))
-         (inst (colony.file.gltf::parse-occlusion-texture-info obj)))
+         (inst (colony.model.gltf::parse-occlusion-texture-info obj)))
     (describe inst)))
 
 (defun test/parse-texture-info (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (jsown:val
             (jsown:val
              (nth 0 (jsown:val j "materials"))
              "pbrMetallicRoughness")
             "baseColorTexture"))
-         (inst (colony.file.gltf::parse-texture-info obj)))
+         (inst (colony.model.gltf::parse-texture-info obj)))
     (describe inst)))
 
 (defun test/parse-pbr-metallic-roughness (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (jsown:val
             (nth 0 (jsown:val j "materials"))
             "pbrMetallicRoughness"))
-         (inst (colony.file.gltf::parse-pbr-metallic-roughness obj)))
+         (inst (colony.model.gltf::parse-pbr-metallic-roughness obj)))
     (describe inst)))
 
 (defun test/parse-material (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 0 (jsown:val j "materials")))
-         (inst (colony.file.gltf::parse-material obj)))
+         (inst (colony.model.gltf::parse-material obj)))
     (describe inst)))
 
 (defun test/parse-primitive (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj
            (nth 0 (jsown:val (nth 0 (jsown:val j "meshes"))
                              "primitives")))
-         (inst (colony.file.gltf::parse-primitive obj)))
+         (inst (colony.model.gltf::parse-primitive obj)))
     (describe inst)))
 
 (defun test/parse-mesh (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 0 (jsown:val j "meshes")))
-         (inst (colony.file.gltf::parse-mesh obj)))
+         (inst (colony.model.gltf::parse-mesh obj)))
     (describe inst)))
 
 (defun test/parse-node (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 0 (jsown:val j "nodes")))
-         (inst (colony.file.gltf::parse-node obj)))
+         (inst (colony.model.gltf::parse-node obj)))
     (describe inst)))
 
 (defun test/parse-sampler (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 0 (jsown:val j "samplers")))
-         (inst (colony.file.gltf::parse-sampler obj)))
+         (inst (colony.model.gltf::parse-sampler obj)))
     (describe inst)))
 
 (defun test/parse-scene (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 0 (jsown:val j "scenes")))
-         (inst (colony.file.gltf::parse-scene obj)))
+         (inst (colony.model.gltf::parse-scene obj)))
     (describe inst)))
 
 (defun test/parse-skin (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 0 (jsown:val j "skins")))
-         (inst (colony.file.gltf::parse-skin obj)))
+         (inst (colony.model.gltf::parse-skin obj)))
     (describe inst)))
 
 (defun test/parse-texture (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
          (obj (nth 0 (jsown:val j "textures")))
-         (inst (colony.file.gltf::parse-texture obj)))
+         (inst (colony.model.gltf::parse-texture obj)))
     (describe inst)))
 
 (defun test/parse-gltf (file)
-  (let* ((j (colony.file.gltf::load-gltf-file file))
-         (inst (colony.file.gltf::parse-gltf j)))
+  (let* ((j (colony.model.gltf::%load-gltf-file file))
+         (inst (colony.model.gltf::parse-gltf j)))
     (describe inst)))
 
-(defun test/parse ()
-  (let ((sample-sparse-accessor-file
-          "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/SimpleSparseAccessor/glTF/SimpleSparseAccessor.gltf")
-        (box-animated-file
-          "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/BoxAnimated/glTF/BoxAnimated.gltf")
-        (cameras-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/Cameras/glTF/Cameras.gltf")
-        (images-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/DamagedHelmet/glTF/DamagedHelmet.gltf")
-        (morph-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/MorphPrimitivesTest/glTF/MorphPrimitivesTest.gltf")
-        (nodes-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/CesiumMilkTruck/glTF/CesiumMilkTruck.gltf")
-        (skin-file "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/CesiumMan/glTF/CesiumMan.gltf"))
+(defun test/parse (&key
+                     (default-gltf-models-path
+                      ;; Check out this repo and fix the path here to point to
+                      ;; it.
+                      ;;
+                      ;; https://github.com/KhronosGroup/glTF-Sample-Models.git
+                      "/home/psilord/content/code/vendor/glTF-Sample-Models"))
 
+  (flet ((gltf2-path (model-name)
+           ;; The git repo has a specific naming convention of which we
+           ;; take advantage.
+           (concatenate 'string default-gltf-models-path
+                        "/2.0/" model-name "/glTF/" model-name ".gltf")))
+    (let ((sample-sparse-accessor-file (gltf2-path "SimpleSparseAccessor"))
+          (box-animated-file (gltf2-path "BoxAnimated"))
+          (cameras-file (gltf2-path "Cameras"))
+          (images-file (gltf2-path "DamagedHelmet"))
+          (morph-file (gltf2-path "MorphPrimitivesTest"))
+          (nodes-file (gltf2-path "CesiumMilkTruck"))
+          (skin-file (gltf2-path "CesiumMan"))
+          (samplers-file (gltf2-path "CesiumMan")))
 
-    (test/parse-indices sample-sparse-accessor-file)
-    (test/parse-values sample-sparse-accessor-file)
-    (test/parse-sparse sample-sparse-accessor-file)
-    (test/parse-accessor sample-sparse-accessor-file)
+      (test/parse-sparse-indices sample-sparse-accessor-file)
+      (test/parse-values sample-sparse-accessor-file)
+      (test/parse-sparse sample-sparse-accessor-file)
+      (test/parse-accessor sample-sparse-accessor-file)
 
-    (test/parse-target box-animated-file)
-    (test/parse-channel box-animated-file)
-    (test/parse-animation-sampler box-animated-file)
-    (test/parse-animation box-animated-file)
+      (test/parse-target box-animated-file)
+      (test/parse-channel box-animated-file)
+      (test/parse-animation-sampler box-animated-file)
+      (test/parse-animation box-animated-file)
 
-    (test/parse-asset box-animated-file)
-    (test/parse-buffer box-animated-file)
+      (test/parse-asset box-animated-file)
+      (test/parse-buffer box-animated-file)
 
-    (test/parse-buffer-view box-animated-file)
+      (test/parse-buffer-view box-animated-file)
 
-    (test/parse-orthographic cameras-file)
-    (test/parse-perspective cameras-file)
-    (test/parse-camera cameras-file)
+      (test/parse-orthographic cameras-file)
+      (test/parse-perspective cameras-file)
+      (test/parse-camera cameras-file)
 
-    (test/parse-image images-file)
+      (test/parse-image images-file)
 
-    (test/parse-normal-texture-info images-file)
-    (test/parse-occlusion-texture-info images-file)
-    (test/parse-texture-info images-file)
-    (test/parse-pbr-metallic-roughness images-file)
-    (test/parse-material images-file)
+      (test/parse-normal-texture-info images-file)
+      (test/parse-occlusion-texture-info images-file)
+      (test/parse-texture-info images-file)
+      (test/parse-pbr-metallic-roughness images-file)
+      (test/parse-material images-file)
 
-    (test/parse-primitive morph-file)
-    (test/parse-mesh morph-file)
+      (test/parse-primitive morph-file)
+      (test/parse-mesh morph-file)
 
-    (test/parse-node nodes-file)
-    (test/parse-sampler nodes-file)
-    (test/parse-scene nodes-file)
+      (test/parse-node nodes-file)
+      (test/parse-scene nodes-file)
 
-    (test/parse-skin skin-file)
-    (test/parse-texture skin-file)
+      (test/parse-sampler samplers-file)
 
-    (test/parse-gltf skin-file)
+      (test/parse-skin skin-file)
+      (test/parse-texture skin-file)
+      (test/parse-gltf skin-file)
 
-    ))
-
+      )))
 
 
 
@@ -2192,31 +1591,7 @@ allowable inputs below and what is returned.
 ;; Data types to handle the loading of the glTF/glb file.
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass glb-header ()
-  ((%magic :accessor header-magic
-           :initarg :header-magic
-           :initform #x46546C67)
-   (%version :accessor header-version
-             :initarg :hreader-version
-             :initform 2)
-   (%length :accessor header-length
-            :initarg :header-length)))
-
-(defclass glb-chunk ()
-  ((%length :accessor chunk-length
-            :initarg :chunk-length)
-   (%type :accessor chunk-type
-          :initarg :chunk-type)
-   (%data :accessor chunk-data
-          :initarg :chunk-data)))
-
-(defclass glib-container ()
-  ((%header :accessor header
-            :initarg :header)
-   (%chunks :accessor chunks
-            :initarg :chunks)))
-
-(defun %load-gltf (path)
+(defun %load-gltf-file (path)
   (declare (optimize speed))
   (let ((json-string (u:file->string path)))
     (declare (simple-string json-string))
@@ -2234,6 +1609,7 @@ allowable inputs below and what is returned.
 
 (defun %load-glb (path)
   (declare (ignore path))
+  (format t "Complete loading GLB file codes.~%")
   nil)
 
 
@@ -2243,8 +1619,9 @@ allowable inputs below and what is returned.
   (let ((file-type (pathname-type path)))
     (cond
       ((string= file-type "gltf")
-       (let ((gltf (parse-gltf (%load-gltf path))))
-         (typecheck gltf)
+       (let ((gltf (parse-gltf (%load-gltf-file path))))
+         ;; TODO: Typecheck is not fully implemented!
+         #++(typecheck :static gltf)
          gltf))
       ((string= file-type "glb")
        (%load-glb path))
@@ -2256,184 +1633,204 @@ allowable inputs below and what is returned.
 
 
 (defun test/load-gltf-files
-    (&optional (examples-dir
-                "/home/psilord/content/code/vendor/glTF-Sample-Models/2.0/"))
+    (&key (models-path
+           ;; Check out this and point this path to it:
+           ;; https://github.com/KhronosGroup/glTF-Sample-Models.git
+           "/home/psilord/content/code/vendor/glTF-Sample-Models"))
 
   ;; Grab all .glTF files from the examples-dir
-  (let* ((gltf-files nil))
-    (u:map-files (pathname examples-dir)
+  (let* ((gltf2-files nil))
+    (u:map-files (pathname (concatenate 'string models-path "/2.0/"))
                  (lambda (file)
-                   (push file gltf-files))
+                   (push file gltf2-files))
                  :test (lambda (n)
                          (string= (pathname-type n) "gltf")))
     ;; make it in the same order we found it while recursing
-    (setf gltf-files (nreverse gltf-files))
+    (setf gltf2-files (nreverse gltf2-files))
 
     ;; Try just one
-    ;;(format t "~S~%" (load-gltf-file (first gltf-files)))
+    (format t "Attempting to load gltf file: ~A~%" (first gltf2-files))
+    (let ((gltf2-obj (load-gltf-file (first gltf2-files))))
+      (format t "Loaded.~%")
+      gltf2-obj)
 
     ;; Try them all
-    (dolist (gltf-file gltf-files)
-      (format t "Attempting to load .gltf file: ~S~%" gltf-file)
-      (format t "~S~%" (load-gltf-file gltf-file)))
+    #++
+    (progn
+      (dolist (gltf2-file gltf2-files)
+        (format t "Attempting to load .gltf file: ~S~%" gltf2-file)
+        (format t "~S~%" (load-gltf-file gltf2-file)))
 
-    (format t "Processed ~A gltf files.~%" (length gltf-files))))
-
-
-
+      (format t "Processed ~A gltf files.~%" (length gltf2-files)))))
 
 
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(in-package #:colony.geometry)
+;; TODO: The code below is defunct, but contains how to read a glb file.
+;; So, that part has to be lifted out and implemented above. There is a
+;; lot of additional cruft and types in the below code which vanishs
+;; during the refactor of the below code.
+;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+#++
+(progn
+  (in-package #:colony.geometry)
 
-(defclass gltf ()
-  ((%buffer :reader buffer
-            :initarg :buffer)
-   (%parse-tree :accessor parse-tree)
-   (%json :accessor json)
-   (%buffers :accessor buffers)
-   (%allocated-views :accessor allocated-views
-                     :initform nil)
-   (%primitives :accessor primitives
-                :initform nil)))
+  ;; The types used by the below codes
 
-(defclass gltf-datastream ()
-  ((%header :reader header)
-   (%chunks :reader chunks)))
+  (defclass gltf ()
+    ((%buffer :reader buffer
+              :initarg :buffer)
+     (%parse-tree :accessor parse-tree)
+     (%json :accessor json)
+     (%buffers :accessor buffers)
+     (%allocated-views :accessor allocated-views
+                       :initform nil)
+     (%primitives :accessor primitives
+                  :initform nil)))
 
-(defclass gltf-header ()
-  ((%magic :reader format-magic)
-   (%version :reader format-version)
-   (%length :reader format-length)))
+  (defclass gltf-datastream ()
+    ((%header :reader header)
+     (%chunks :reader chunks)))
 
-(defclass gltf-chunk ()
-  ((%length :reader chunk-length)
-   (%type :reader chunk-type)
-   (%data :reader chunk-data)))
+  (defclass gltf-header ()
+    ((%magic :reader format-magic)
+     (%version :reader format-version)
+     (%length :reader format-length)))
 
-(u:define-printer (gltf-chunk stream :type t)
-  (format stream "~s" (get-gltf-chunk-type gltf-chunk)))
+  (defclass gltf-chunk ()
+    ((%length :reader chunk-length)
+     (%type :reader chunk-type)
+     (%data :reader chunk-data))))
 
-(defun get-gltf-property (gltf key &optional object)
-  (let ((object (or object (json gltf))))
-    (when (jsown:keyp object key)
-      (jsown:val (or object (json gltf)) key))))
+#++
+(progn
+  (in-package #:colony.geometry)
 
-(defun get-gltf-chunk-type (chunk)
-  (case (chunk-type chunk)
-    (#x4e4f534a :json-content)
-    (#x004e4942 :binary-buffer)
-    (otherwise :unknown)))
+  (u:define-printer (gltf-chunk stream :type t)
+    (format stream "~s" (get-gltf-chunk-type gltf-chunk)))
 
-(defun parse-gltf-header (gltf)
-  (let ((header (make-instance 'gltf-header)))
-    (with-slots (%magic %version %length) header
-      (let* ((buffer (fast-io:make-input-buffer
-                      :vector (c::read-bytes (buffer gltf) 12)))
-             (magic (c::read-string buffer :bytes 4)))
-        (if (not (string= magic "glTF"))
-            (error "Invalid glTF2 file.")
-            (setf %magic magic
-                  %version (c::read-uint-le buffer 4)
-                  %length (c::read-uint-le buffer 4)))))
-    header))
+  (defun get-gltf-property (gltf key &optional object)
+    (let ((object (or object (json gltf))))
+      (when (jsown:keyp object key)
+        (jsown:val (or object (json gltf)) key))))
 
-(defgeneric parse-gltf-chunk-data (gltf chunk-type chunk &key)
-  (:method :around (gltf chunk-type chunk &key)
-    (let ((buffer (fast-io:make-input-buffer
-                   :vector (c::read-bytes (buffer gltf) (chunk-length chunk)))))
-      (call-next-method gltf chunk-type chunk :buffer buffer))))
+  (defun get-gltf-chunk-type (chunk)
+    (case (chunk-type chunk)
+      (#x4e4f534a :json-content)
+      (#x004e4942 :binary-buffer)
+      (otherwise :unknown)))
 
-(defmethod parse-gltf-chunk-data (gltf (chunk-type (eql :json-content)) chunk
-                                  &key buffer)
-  (let ((data (c::read-string buffer :encoding :utf-8)))
-    (setf (json gltf) (jsown:parse data))
-    data))
+  (defun parse-gltf-header (gltf)
+    (let ((header (make-instance 'gltf-header)))
+      (with-slots (%magic %version %length) header
+        (let* ((buffer (fast-io:make-input-buffer
+                        :vector (c::read-bytes (buffer gltf) 12)))
+               (magic (c::read-string buffer :bytes 4)))
+          (if (not (string= magic "glTF"))
+              (error "Invalid glTF2 file.")
+              (setf %magic magic
+                    %version (c::read-uint-le buffer 4)
+                    %length (c::read-uint-le buffer 4)))))
+      header))
 
-(defmethod parse-gltf-chunk-data (gltf (chunk-type (eql :binary-buffer)) chunk
-                                  &key buffer)
-  (loop :with buffers = (get-gltf-property gltf "buffers")
-        :with data = (make-array (length buffers))
-        :for data-buffer :in buffers
-        :for index :below (length buffers)
-        :for size = (get-gltf-property gltf "byteLength" data-buffer)
-        :do (setf (aref data index) (c::read-bytes buffer size))
-        :finally (setf (buffers gltf) data))
-  nil)
+  (defgeneric parse-gltf-chunk-data (gltf chunk-type chunk &key)
+    (:method :around (gltf chunk-type chunk &key)
+      (let ((buffer (fast-io:make-input-buffer
+                     :vector (c::read-bytes (buffer gltf)
+                                            (chunk-length chunk)))))
+        (call-next-method gltf chunk-type chunk :buffer buffer))))
 
-(defmethod parse-gltf-chunk-data (gltf (chunk-type (eql :unknown)) chunk
-                                  &key buffer)
-  (declare (ignore buffer))
-  (warn "Ignoring an unknown chunk type."))
+  (defmethod parse-gltf-chunk-data (gltf (chunk-type (eql :json-content))
+                                    chunk &key buffer)
+    (let ((data (c::read-string buffer :encoding :utf-8)))
+      (setf (json gltf) (jsown:parse data))
+      data))
 
-(defun parse-gltf-chunk (gltf)
-  (let ((chunk (make-instance 'gltf-chunk))
-        (buffer (buffer gltf)))
-    (with-slots (%length %type %data) chunk
-      (setf %length (c::read-uint-le buffer 4)
-            %type (c::read-uint-le buffer 4)
-            %data (parse-gltf-chunk-data
-                   gltf (get-gltf-chunk-type chunk) chunk)))
-    chunk))
+  (defmethod parse-gltf-chunk-data (gltf (chunk-type (eql :binary-buffer))
+                                    chunk &key buffer)
+    (loop :with buffers = (get-gltf-property gltf "buffers")
+          :with data = (make-array (length buffers))
+          :for data-buffer :in buffers
+          :for index :below (length buffers)
+          :for size = (get-gltf-property gltf "byteLength" data-buffer)
+          :do (setf (aref data index) (c::read-bytes buffer size))
+          :finally (setf (buffers gltf) data))
+    nil)
 
-(defun parse-gltf-chunks (gltf)
-  (loop :with stream = (fast-io:input-buffer-stream (buffer gltf))
-        :until (= (file-position stream) (file-length stream))
-        :for chunk = (parse-gltf-chunk gltf)
-        :collect chunk))
+  (defmethod parse-gltf-chunk-data (gltf (chunk-type (eql :unknown)) chunk
+                                    &key buffer)
+    (declare (ignore buffer))
+    (warn "Ignoring an unknown chunk type."))
 
-(defun parse-gltf-datastream (gltf)
-  (let ((datastream (make-instance 'gltf-datastream)))
-    (with-slots (%header %chunks) datastream
-      (setf %header (parse-gltf-header gltf)
-            %chunks (parse-gltf-chunks gltf)))
-    datastream))
+  (defun parse-gltf-chunk (gltf)
+    (let ((chunk (make-instance 'gltf-chunk))
+          (buffer (buffer gltf)))
+      (with-slots (%length %type %data) chunk
+        (setf %length (c::read-uint-le buffer 4)
+              %type (c::read-uint-le buffer 4)
+              %data (parse-gltf-chunk-data
+                     gltf (get-gltf-chunk-type chunk) chunk)))
+      chunk))
 
-(defun load-gltf-file (path)
-  (u:with-binary-input (in path)
-    (let* ((buffer (fast-io:make-input-buffer :stream in))
-           (gltf (make-instance 'gltf :buffer buffer)))
-      (setf (parse-tree gltf) (parse-gltf-datastream gltf))
-      gltf)))
+  (defun parse-gltf-chunks (gltf)
+    (loop :with stream = (fast-io:input-buffer-stream (buffer gltf))
+          :until (= (file-position stream) (file-length stream))
+          :for chunk = (parse-gltf-chunk gltf)
+          :collect chunk))
 
-(defun get-gltf-component-type (gltf accessor)
-  (ecase (get-gltf-property gltf "componentType" accessor)
-    (5120 :byte)
-    (5121 :unsigned-byte)
-    (5122 :short)
-    (5123 :unsigned-short)
-    (5125 :unsigned-int)
-    (5126 :float)))
+  (defun parse-gltf-datastream (gltf)
+    (let ((datastream (make-instance 'gltf-datastream)))
+      (with-slots (%header %chunks) datastream
+        (setf %header (parse-gltf-header gltf)
+              %chunks (parse-gltf-chunks gltf)))
+      datastream))
 
-(defun get-gltf-component-count (data-type)
-  (ecase (u:make-keyword data-type)
-    (:scalar 1)
-    (:vec2 2)
-    (:vec3 3)
-    ((:vec4 :mat2) 4)
-    (:mat3 9)
-    (:mat4 16)))
+  ;; NOTE: This is probably the only useful concept in here.
+  (defun load-gltf-file (path)
+    (u:with-binary-input (in path)
+      (let* ((buffer (fast-io:make-input-buffer :stream in))
+             (gltf (make-instance 'gltf :buffer buffer)))
+        (setf (parse-tree gltf) (parse-gltf-datastream gltf))
+        gltf)))
 
-(defun get-gltf-attribute-normalization (name component-type)
-  (if (and (or (eq component-type :unsigned-byte)
-               (eq component-type :unsigned-short))
-           (not (string= name "JOINTS_0")))
-      :true
-      :false))
+  (defun get-gltf-component-type (gltf accessor)
+    (ecase (get-gltf-property gltf "componentType" accessor)
+      (5120 :byte)
+      (5121 :unsigned-byte)
+      (5122 :short)
+      (5123 :unsigned-short)
+      (5125 :unsigned-int)
+      (5126 :float)))
 
-(defun get-gltf-primitive-mode (gltf primitive)
-  (case (get-gltf-property gltf "mode" primitive)
-    (0 :points)
-    (1 :lines)
-    (2 :line-loop)
-    (3 :line-strip)
-    (4 :triangles)
-    (5 :triangle-strip)
-    (6 :triangle-fan)
-    (otherwise :triangles)))
+  (defun get-gltf-component-count (data-type)
+    (ecase (u:make-keyword data-type)
+      (:scalar 1)
+      (:vec2 2)
+      (:vec3 3)
+      ((:vec4 :mat2) 4)
+      (:mat3 9)
+      (:mat4 16)))
 
-(defun find-gltf-mesh (gltf index)
-  (let ((meshes (get-gltf-property gltf "meshes")))
-    (when (>= index (length meshes))
-      (error "Mesh index ~d not found." index))
-    (get-gltf-property gltf "primitives" (elt meshes index))))
+  (defun get-gltf-attribute-normalization (name component-type)
+    (if (and (or (eq component-type :unsigned-byte)
+                 (eq component-type :unsigned-short))
+             (not (string= name "JOINTS_0")))
+        :true
+        :false))
+
+  (defun get-gltf-primitive-mode (gltf primitive)
+    (case (get-gltf-property gltf "mode" primitive)
+      (0 :points)
+      (1 :lines)
+      (2 :line-loop)
+      (3 :line-strip)
+      (4 :triangles)
+      (5 :triangle-strip)
+      (6 :triangle-fan)
+      (otherwise :triangles)))
+
+  (defun find-gltf-mesh (gltf index)
+    (let ((meshes (get-gltf-property gltf "meshes")))
+      (when (>= index (length meshes))
+        (error "Mesh index ~d not found." index))
+      (get-gltf-property gltf "primitives" (elt meshes index))))
+  )

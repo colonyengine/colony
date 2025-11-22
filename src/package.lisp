@@ -313,6 +313,13 @@
    #:texture-table
    #:unrealized-procedural-textures))
 
+(defpackage #:colony.model.gltf
+  (:use #:cl)
+  ;; GLTF API
+  (:export
+   ;; TODO: Fill me in.
+   ))
+
 (defpackage #:colony.prefab
   (:use #:cl)
   (:export
@@ -702,6 +709,7 @@
       (:colony.texture.texture-table :textab)
       (:colony.texture :tex)
       (:colony.image :img)
+      (:colony.model.gltf :model.gltf)
       (:vshadow :shadow))))
 
 (macrolet ((define-nicknames/internal ()

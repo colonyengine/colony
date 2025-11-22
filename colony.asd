@@ -188,6 +188,14 @@
      (:file "collider-sphere")
      (:file "collider-cuboid")
      (:file "collider-collide-p")))
+   (:module "model"
+    :serial t
+    :components
+    ((:module "gltf"
+      :serial t
+      :components
+      ((:file "gltf-defs")
+       (:file "gltf")))))
    (:module "prefab"
     :serial t
     :components
