@@ -65,6 +65,7 @@
     ;; opengl context must be created AFTER SDL window creation.
     (make-opengl-context display)
     (sdl2:gl-set-swap-interval (if =vsync= 1 0))
+    ;;(format t "SDL Swap interval is: ~A~%" (sdl2:gl-get-swap-interval))
     (if =allow-screensaver=
         (sdl2:enable-screensaver)
         (sdl2:disable-screensaver))
@@ -87,17 +88,56 @@
         (values 0 0 0 1)))
   (gl:clear :color-buffer :depth-buffer))
 
+
+;; TODO: Candidate for profiling utilities in vutils.
+(defun frame-profile-result-func (val mod-val strm fmt &rest vals)
+  (lambda (ms)
+    (when (zerop (mod val mod-val))
+      (apply #'format strm (concatenate 'string "[took ~,5F ms]: " fmt) ms
+             vals))))
+
+(defun frame-profile-nop-func (val mod-val strm fmt &rest vals)
+  (declare (ignore val mod-val strm fmt vals))
+  (lambda (ms)
+    (declare (ignore ms))
+    nil))
+
+;; TODO: Candidate for profiling utilities in vutils.
+(defmacro with-time-profile-body (time-func &body body)
+  (u:with-gensyms (mv-result start-sec start-ms end-sec end-ms)
+    `(u:mvlet ((,start-sec ,start-ms (sb-ext:get-time-of-day)))
+       (let ((,mv-result (multiple-value-list (progn ,@body))))
+         (u:mvlet ((,end-sec ,end-ms (sb-ext:get-time-of-day)))
+           (funcall ,time-func (* (- (+ ,end-sec (/ ,end-ms 1d6))
+                                     (+ ,start-sec (/ ,start-ms 1d6)))
+                                  1d3))
+           (values-list ,mv-result))))))
+
 (defun render-frame (core)
   (with-slots (%clock %display %running-p) core
     (when %running-p
-      (clear-screen core)
-      (execute-flow core
-                    :default
-                    'perform-one-frame
-                    'entry/perform-one-frame
-                    :come-from-state-name :ef)
-      (sdl2:gl-swap-window (window %display))
-      (incf (clock-frame-count %clock))
+      ;; TODO: There should be a proper statistics object (the we can
+      ;; turn off during production runs) to keep all this stuff from
+      ;; all over the engine.
+
+      (with-time-profile-body
+          (frame-profile-nop-func ;; Try frame-profile-result-func...
+           (clock-frame-count %clock)
+           60
+           t
+           "Frame ~A rendered.~%"
+           (clock-frame-count %clock))
+
+        ;; The Body
+        (clear-screen core)
+        (execute-flow core
+                      :default
+                      'perform-one-frame
+                      'entry/perform-one-frame
+                      :come-from-state-name :ef)
+        (sdl2:gl-swap-window (window %display))
+        (incf (clock-frame-count %clock)))
+
       (when *profile*
         (incf =profile-frame-counter=)))))
 

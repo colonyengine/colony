@@ -41,6 +41,7 @@
   :serial t
   :components
   ((:file "package")
+
    (:module "datatype"
     :serial t
     :components
@@ -80,6 +81,7 @@
      (:file "gltf-defs")
      (:file "material-defs")
      (:file "make-project-defs")))
+
    (:module "core-early"
     :serial t
     :components
@@ -89,7 +91,7 @@
      (:file "general")
      (:file "metadata")
      (:file "config")
-     (:file "hardware")    ;; Put into new GPU abstraction support lib.
+     (:file "hardware") ;; Put into new GPU abstraction support lib.
      (:file "thread-pool")
      (:file "live-coding")
      (:file "debug")
@@ -111,6 +113,7 @@
      (:file "context") ;; TODO: This depends on above, move to higher layer.
      (:file "core") ;; TODO: This depends on above, move to higher layer.
      ))
+
    ;; This module houses files that are still being worked out and not
    ;; integrated into the core yet.
    (:module "flux"
@@ -118,6 +121,7 @@
     :components
     (;; TODO: Fix this file so it loads. ~axion 4/17/2020
      #++(:file "meta-graphs")))
+
    (:module "kernel"
     :serial t
     :components
@@ -126,7 +130,8 @@
      (:file "component-mop")
      (:file "component")
      (:file "storage")))
-   (:module "input"       ;;;; KEEP GOING for vutils refactor.
+
+   (:module "input" ;;;; KEEP GOING for vutils refactor.
     :serial t
     :components
     ((:file "data")
@@ -136,12 +141,14 @@
      (:file "window")
      (:file "button")
      (:file "input")))
+
    (:module "collision-detection"
     :serial t
     :components
     ((:file "region")
      (:file "bounding-volume-obb")
      (:file "colliders")))
+
    (:module "geometry"
     :serial t
     :components
@@ -151,18 +158,31 @@
      (:file "layout")
      (:file "buffer")
      (:file "geometry")))
+
    (:module "texture-map"
     :serial t
     :components
     ((:file "common")
      (:file "clone")
+     ;; store them in core.
      (:file "texture-map-table")
+     ;; parse and process the define-texture-map DSL
      (:file "logical-to-physical-parser")
      (:file "physical-to-api-parser")
      (:file "map-parser")
      (:file "texture-map")
-     (:file "realize")
-     (:file "materialize")))
+     ;; Load the data from disk/network/etc into main memory.
+     (:file "materialize-data-elements")
+     (:file "classify-rectification")
+     (:file "deduce-mipmap-hierarchy")
+     (:file "rectify-synthesize")
+     (:file "rectify-validate")
+     (:file "rectify-infer")
+     (:file "rectify")
+     (:file "materialize")
+     ;; Load it to the GPU memory
+     (:file "realize")))
+
    (:module "texture"
     :serial t
     :components
@@ -180,6 +200,7 @@
      (:file "cube-map-array")
      (:file "rectangle")
      (:file "buffer")))
+
    (:module "components"
     :serial t
     :components
@@ -195,6 +216,7 @@
      (:file "collider-sphere")
      (:file "collider-cuboid")
      (:file "collider-collide-p")))
+
    (:module "prefab"
     :serial t
     :components
@@ -204,6 +226,7 @@
      (:file "loader")
      (:file "reference")
      (:file "prefab")))
+
    ;; datatypes in module "shader" are not CL datatypes. They stay here.
    (:module "shader"
     :serial t
@@ -211,6 +234,7 @@
     ((:file "texture")
      (:file "collider")
      (:file "matcap")))
+
    (:module "core-late"
     :serial t
     :components
@@ -229,6 +253,7 @@
      (:file "font")
      (:file "object-picking")
      (:file "engine")))
+
    (:module "definition"
     :serial t
     :components

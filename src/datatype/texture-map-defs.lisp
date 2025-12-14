@@ -70,7 +70,8 @@ be a reference to a cache-item in the resource cache.")))
            :initarg :elidx
            :initform nil
            :type (or null integer)
-           :documentation "An index into an array of data-elements.")))
+           :documentation "An index into an array of data-elements. When this ~
+is NIL, it means that there is no source or sink for the data defined.")))
 ;; API
 ;; method, factory-like
 ;; (make-data-span type :elidx val)
@@ -121,7 +122,28 @@ a mipmap, an image, a rect specification, a cube of faces, etc."))
                                &allow-other-keys))
 
 (defclass mipmap (storage-form)
-  ((%extent :accessor extent
+  ((%sourced-p :accessor sourced-p
+               :initarg :sourced-p
+               :initform nil
+               :type boolean
+               :documentation
+               "If T, it means all contained MAPPING-SPANS have a FROM that ~
+has a defined ELIDX field. NIL means one, or more, or all MAPPING-SPANS have ~
+a FROM field with an ELIDX that is NIL. If there are no MAPPING-SPANS, this ~
+field is nil. It is usually the case that a MIPMAP with SOURCED-P being NIL ~
+mwans that the data does not exist for it and it cannot be materialized or ~
+realized--leaving a hole in the mipmap herarchy for a TEXTURE-MAP.")
+   (%sunk-p :accessor sunk-p
+            :initarg :sunk-p
+            :initform nil
+            :type boolean
+            :documentation
+            "If T, it means all contained MAPPING-SPANS have a TO that has a ~
+defined ELIDX field. If one, or more, or all MAPPING-SPANS have a TO field ~
+that is nil, then this field is also nil. This field being nil usually means ~
+that either a default location (like gpu memory) will be assumed as the ~
+sink, or it will be defined at runtime when more information is available.")
+   (%extent :accessor extent
             :initarg :extent
             :initform nil
             :type (or null span)
@@ -244,6 +266,13 @@ understanding about the cube representation are legal.")
                     :documentation
                     "T if ALL the elements have been simultaneously
 materialized into the main memory of the engine. NIL otherwise.")
+   (%complete-p :accessor complete-p
+                :initarg :complete-p
+                :initform nil
+                :documentation
+                "T if all mipmaps for this texture-map are sourced. NIL if ~
+there are gaps or missing resolutions, one or more mipmap will have a ~
+sourced-p of nil, and this field will be NIL.")
    (%rectification-classification
     :accessor rectification-classification
     :initarg :rectification-classification

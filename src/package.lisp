@@ -326,9 +326,10 @@
   ;; programmatic texture-map API methods and functions
   (:export
    #:anonymous-p ;; accessor for texture-map
+   #:complete-p ;; accessor for texture-map-state
    #:cube ;; accessor texture-map-cube
    #:data-elements ;; accessor for texture-map
-   #:deduce-mipmap-structure ;; utility method
+   #:deduce-mipmap-hierarchy ;; utility method
    #:dir ;; accessor for face
    #:element ;; accessor for data-element TODO move
    #:elidx ;; accessor for data-span TODO move AND accessor for face, keep here
@@ -383,9 +384,11 @@
    #:rectification-classification ;; access for texture-map-state object.
    #:rectified-p ;; accessor for texture-map-state object.
    #:repr ;; accessor for cube
+   #:sourced-p ;; accessor for mipmap
    #:state
    #:store ;; accessor for cube, texture-map
    #:style ;; accessor for cube, texture-map
+   #:sunk-p ;; accessor for mipmap
    #:texture-map-state ;; class for texture-map-state object.
    #:to ;; accessor for mapping-span TODO move
    #:valid-elements-p ;; accessor for texture-map-state
