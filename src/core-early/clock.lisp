@@ -114,13 +114,16 @@
          (pause (clock-pause-time clock))
          (previous (clock-current-time clock))
          (current (get-time clock)))
-    ;; When the pause time is non-zero, increment the previous time and decrement the current time
-    ;; by the pause time, and then set pause time to zero. This fixes a nasty bug where the current
-    ;; time and previous time drift farther and farther apart due to accumulation error. In the live
-    ;; coding module, we no longer increment pause time; we setf it to the explicit pause time.
-    ;; Another side effect of this bug was that the delta-buffer time used for delta time smoothing
-    ;; would decrement itself VERY quickly, easily reaching negative 10,000 seconds in the blink of
-    ;; an eye after accumulating a large enough pause time.
+    ;; When the pause time is non-zero, increment the previous time and
+    ;; decrement the current time by the pause time, and then set pause
+    ;; time to zero. This fixes a nasty bug where the current time and
+    ;; previous time drift farther and farther apart due to accumulation
+    ;; error. In the live coding module, we no longer increment pause
+    ;; time; we setf it to the explicit pause time. Another side effect
+    ;; of this bug was that the delta-buffer time used for delta time
+    ;; smoothing would decrement itself VERY quickly, easily reaching
+    ;; negative 10,000 seconds in the blink of an eye after accumulating
+    ;; a large enough pause time.
     (unless (zerop pause)
       (incf previous pause)
       (decf current pause)
@@ -131,11 +134,11 @@
     (when =vsync=
       (smooth-delta-time clock (refresh-rate display)))
 
-    ;; NOTE: On the first frame, we correct however long it took to open the
-    ;; window, load the data, etc, etc.
+    ;; NOTE: On the first frame, we correct however long it took to open
+    ;; the window, load the data, etc, etc.
     (when (zerop (clock-frame-count clock))
-      ;; This cannot be zero because if someone tries to use the frame-time
-      ;; to compute fps or something, it'll blow up.
+      ;; This cannot be zero because if someone tries to use the
+      ;; frame-time to compute fps or something, it'll blow up.
       (setf (clock-frame-time clock) (clock-delta-time clock)))
 
     (clock-physics-update core clock)
