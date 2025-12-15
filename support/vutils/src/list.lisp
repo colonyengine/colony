@@ -49,5 +49,9 @@ data from those lists. VOID-OBJ must be EQL comparable."
             ;; when we run out.
             (loop :for cell :on lists
                   :do (unless (eql (car cell) void-obj)
-                        (setf (car cell) (default (cdar cell) void-obj))))
+                        (let ((the-cdar (cdar cell)))
+                          (setf (car cell)
+                                (if the-cdar
+                                    the-cdar
+                                    void-obj)))))
         :finally (return result)))
