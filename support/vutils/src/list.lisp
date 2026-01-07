@@ -32,6 +32,10 @@ From Let Over Lambda by Doug Hoyte."
             (funcall result tree)
             tree))))
 
+;; TODO: make it so void-obj _could_ be a list, which must be the same
+;; length as the lengths of LISTS, and if whatever list runs out of
+;; entries, to choose that index out of the void-obj list to use in its
+;; place.
 (defun ragged-mapcar (void-obj func &rest lists)
   "Act just like MAPCAR when all LISTS the same size. But if the
 lists are different lengths, continue processing until the longest list
