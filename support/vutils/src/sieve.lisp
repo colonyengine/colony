@@ -3,7 +3,9 @@
 ;; TODO: This function really needs some documentation. It is used to
 ;; partition a pile of forms in a list into group based upon a categorization
 ;; function.
-
+;;
+;; TODO: Implement a default value for each key if it is not matched.
+;; Currently it defaults to nil and cannot be changed.
 (defun sieve (pred sequ &key (key #'identity)
                           (collector nil)
                           (values t)
