@@ -1,5 +1,14 @@
 (in-package #:vutils)
 
+(defmacro cat (&rest strings)
+  "A macro expansion time concatenation of all STRINGS (which must actually be
+string literals.) Often used to book keepfor long FORMAT fmt strings for
+readability."
+  (unless (every 'stringp strings)
+    (error "CAT may only used to concatenate actual string literals at macro expansion time.~%One or more of the items in this list is not a string:~%~S."
+           strings))
+  (apply 'concatenate 'string strings))
+
 (defmacro define-printer ((object stream &key (type t) (identity t)) &body body)
   "Define a PRINT-OBJECT method for `OBJECT`."
   `(defmethod print-object ((,object ,object) ,stream)
