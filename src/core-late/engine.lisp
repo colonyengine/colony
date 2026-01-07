@@ -4,7 +4,7 @@
   (let ((scene-name (or scene-name =initial-scene=)))
     (make-prefab-instance core scene-name)))
 
-(defun initialize (core scene-name)
+(defun initialize (core scene-name init-only)
   (setup-repl)
   (u:initialize-rng)
   (prepare-gamepads)
@@ -41,6 +41,10 @@
          ))
   ;; END DEBUGGING
 
+  (when init-only
+    (format t "Stopping after initialization because INIT-ONLY is true!~%")
+    (return-from initialize t))
+
   ;; TODO: In the game loop frame execution, we lazily load anything we need
   ;; when the app attempts to observe/add the asset data.
   (start-game-loop core))
@@ -66,10 +70,10 @@
           (when (on-button-enter context :key :escape)
             (stop core)))))))
 
-(defun start (&key config scene)
+(defun start (&key config scene init-only)
   (load-config config)
   (let ((core (make-core config)))
-    (unwind-protect (initialize core scene)
+    (unwind-protect (initialize core scene init-only)
       (deinitialize core))))
 
 (defun stop (core)
