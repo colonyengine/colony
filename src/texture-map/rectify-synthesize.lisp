@@ -1,5 +1,23 @@
 (in-package #:colony.texture-map)
 
+;; TODO: Temporary until I can decide on a better debugging/logging system.
+
+(defmacro with-no-layout (&body body)
+  `(let ((*print-right-margin* (* 1024 1024))
+         (*print-miser-width* (* 1024 1024))
+         (*print-length* (* 1024 1024))
+         (*print-level* nil)
+         (*print-circle* t)
+         (*print-lines* nil))
+     ,@body))
+
+(defun debug-rectification (kind infer-style feature fmt &rest args)
+  (with-no-layout
+    (apply
+     #'format t (concatenate 'string "rectification: [~S ~(~S~) ~(~S~)]: " fmt)
+     kind infer-style feature args)))
+
+
 ;; ------------------------
 ;; Synthesize Methods
 ;; ------------------------
@@ -10,7 +28,7 @@
                     (root texture-map-simple)
                     &key core)
 
-  (declare (ignore infer-style feature inst root core))
+  (declare (ignore feature root))
   ;; Deduce the mipmap structure from the
   ;; data-elements/model/style/store. Assume data-elements are in
   ;; descending mipmap size order during synthesis. Validate this fact.
@@ -43,8 +61,25 @@
   ;;    (Any mipmaps we add must have the elidx slots set.)
   ;;
 
-  ;; Just a hack for testing to return T.
-  (values t :ok))
+  (let ((result
+          (deduce-mipmap-hierarchy inst (texmap:style inst) (texmap:store inst)
+                                   :core core)))
+
+    (debug-rectification "texture-map-simple"
+                         infer-style
+                         :number-of-mipmaps/unique
+                         "Deduced mipmap hierarchy:~%~{~{ ~S~%~}~%~}"
+                         result)
+
+    ;; KEEP GOING
+    ;;
+    ;; Take the RESULT and overwrite it into the texmap-inst's mipmaps.
+    ;; I may have to resize the mipmaps array. Also set the completion slot
+    ;; based on the completion status of the texture-map.
+    ;;
+    ;; Compute completion status.
+
+    (values t :ok)))
 
 
 (defmethod rectify ((infer-style (eql :synthesize))
@@ -53,7 +88,7 @@
                     (root texture-map-simple)
                     &key core)
 
-  (declare (ignore infer-style feature inst root core))
+  (declare (ignore feature root))
   ;; Deduce the mipmap structure from the
   ;; data-elements/model/style/store. Assume data-elements are in
   ;; descending mipmap size order during synthesis. The deduction is
@@ -81,8 +116,29 @@
   ;;    If 3d:
   ;;      KEEP GOING.
 
-  ;; Just a hack for testing to return T.
-  (values t :ok))
+  ;; Just a hack for testing...
+  (let ((result
+          (deduce-mipmap-hierarchy inst (texmap:style inst) (texmap:store inst)
+                                   :core core)))
+
+    (debug-rectification "texture-map-simple"
+                         infer-style
+                         :number-of-mipmaps/combined
+                         "Deduced mipmap hierarchy:~%~{~{ ~S~%~}~%~}"
+                         result)
+
+    ;; KEEP GOING
+    ;;
+    ;; Take the RESULT and overwrite it into the texmap-inst's mipmaps.
+    ;; I may have to resize the mipmaps array. Also set the completion slot
+    ;; based on the completion status of the texture-map.
+    ;;
+    ;; Compute completion status.
+
+    (values t :ok))
+  )
+
+
 
 ;; This only synthesizes the right number of mipmaps, potentially their
 ;; elidxs, and then returns.
@@ -92,6 +148,10 @@
                     (root texture-map-simple)
                     &key core)
   (declare (ignore feature))
+
+  (format t (u:cat "rectify: kind: texture-map-simple, :synthesize): "
+                   "~(~S~) ~(~S~): Called!~%")
+          (texmap:name inst) infer-style)
 
   ;; 0. Check that we can synthesize any mipmaps at all!
   (u:when-let (delems (texmap:data-elements inst))
@@ -119,6 +179,10 @@
 
   ;; Just a hack for testing to return T.
   (values t :ok))
+
+
+
+
 
 (defmethod rectify ((infer-style (eql :synthesize))
                     (feature (eql :texture-map-contents))
@@ -154,6 +218,11 @@
 
 
 
+
+
+
+
+
 (defmethod rectify ((infer-style (eql :synthesize))
                     (feature (eql :texture-map-contents))
                     (inst texture-map-complex)
@@ -165,6 +234,11 @@
    (texmap:name inst) infer-style)
   ;; Just a hack for testing to return T.
   t)
+
+
+
+
+
 
 ;; There is a depth to this based on the store form which is not rendered here.
 ;;        style
@@ -187,25 +261,28 @@
 ;;
 ;;  GF: (DEDUCE-MIPMAP-HIERARCHY texmap-inst model style store &key core)
 ;;
-;;  TODO: Make deduce-mipmap-hierarchy a generic function.
 ;;  NOTE: Understand this processes data-elements in order, which, in the
 ;;        context of synthesis is always largest to smallest mipmap.
 ;;
 ;;  This generic function returns a: <RESULT>
 ;;  <RESULT> ::=
 ;;               # when :1d, :2d, :3d, :cube/:envmap, name is self name.
-;;               ((<NAME> <TEXMAP-OBS>))
-;;               # when :cube/:faces texture-maps, name is each face.
-;;             | ((<NAME> <TEXMAP-OBS>)
-;;                (<NAME> <TEXMAP-OBS>)
-;;                (<NAME> <TEXMAP-OBS>)
-;;                (<NAME> <TEXMAP-OBS>)
-;;                (<NAME> <TEXMAP-OBS>)
-;;                (<NAME> <TEXMAP-OBS>))
-;;  <TEXMAP-OBS> ::= (<MIPMAP>+)
-;;                 | NIL
+;;               ((<NAME> <MIPMAP-OBS>+))
+;;               # when :cube/:faces texture-maps, name is on behalf of a face.
+;;             | ((<NAME> <MIPMAP-OBS>+)
+;;                (<NAME> <MIPMAP-OBS>+)
+;;                (<NAME> <MIPMAP-OBS>+)
+;;                (<NAME> <MIPMAP-OBS>+)
+;;                (<NAME> <MIPMAP-OBS>+)
+;;                (<NAME> <MIPMAP-OBS>+))
+;;  <MIPMAP-OBS> ::= (<EXTENT> <MIPMAP>)
+;;                 | (<EXTENT> :dne)
 ;;  <MIPMAP> ::= mipmap-* clos object, filled in with real data.
 ;;  <NAME> ::= Name of texture map (a symbol)
+;;  <EXTENT> ::= (<WIDTH> <HEIGHT> <DEPTH>)
+;;  <WIDTH> ::= positive integer
+;;  <HEIGHT> ::= positive integer
+;;  <DEPTH> ::= positive integer
 ;;
 ;;  (deduce-mipmap-hierarchy texmap-1d :unique <store>)
 ;;   Each data-element is one entire mipmap.
@@ -266,7 +343,7 @@
 ;;
 ;; ----
 ;;
-;; 5. Determine complete-p by inspection of the texture-map's
+;; 5. Determine completion state by inspection of the texture-map's
 ;; reengineered mipmaps. Set it in the texture-map instance.
 ;;
 ;; ----

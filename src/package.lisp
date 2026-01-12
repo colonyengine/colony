@@ -326,7 +326,7 @@
   ;; programmatic texture-map API methods and functions
   (:export
    #:anonymous-p ;; accessor for texture-map
-   #:complete-p ;; accessor for texture-map-state
+   #:completion ;; accessor for texture-map-state
    #:cube ;; accessor texture-map-cube
    #:data-elements ;; accessor for texture-map
    #:deduce-mipmap-hierarchy ;; utility method

@@ -266,18 +266,24 @@ understanding about the cube representation are legal.")
                     :documentation
                     "T if ALL the elements have been simultaneously
 materialized into the main memory of the engine. NIL otherwise.")
-   (%complete-p :accessor complete-p
-                :initarg :complete-p
+   (%completion :accessor completion
+                :initarg :completion
                 :initform nil
+                :type (member nil :base-only :gaps :complete)
                 :documentation
-                "T if all mipmaps for this texture-map are sourced. NIL if ~
-there are gaps or missing resolutions, one or more mipmap will have a ~
-sourced-p of nil, and this field will be NIL.")
+                "A value of NIL means not calculated. A value of :base-only
+means there is only a single defined and (at least once had been)
+materialized mipmap--the rest of the mipmaps will be present, but not
+sourced from anywhere or backed by any loaded assets (this preserves
+what their extents _would be_ so we could autogenerate them later if
+needed). A value of :gaps means there are one or more gaps of undefined
+mipmaps. The value of :complete means all mipmaps are present and (at
+least once) had been materialized.")
    (%rectification-classification
     :accessor rectification-classification
     :initarg :rectification-classification
     :initform :unknown
-    :type symbol
+    :type (member nil :synthesize :validate :infer :rectified :unknown)
     :documentation
     "What is the rectification classification ~
 computed for this texture-map? Choices are: nil (for incalculable), ~

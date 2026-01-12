@@ -125,6 +125,42 @@
   ;; TODO: TMAP Fix to accept texture-map name.
   (:data #((textures texture-gradient-1d))))
 
+(c:define-texture-map 1d-gradient-mipmaps (:1d :unique)
+  (texmap:mipmap (textures texture-gradient-1d-0))
+  (texmap:mipmap (textures texture-gradient-1d-1))
+  (texmap:mipmap (textures texture-gradient-1d-2))
+  (texmap:mipmap (textures texture-gradient-1d-3))
+  (texmap:mipmap (textures texture-gradient-1d-4))
+  (texmap:mipmap (textures texture-gradient-1d-5))
+  (texmap:mipmap (textures texture-gradient-1d-6))
+  (texmap:mipmap (textures texture-gradient-1d-7))
+  (texmap:mipmap (textures texture-gradient-1d-8))
+  (texmap:mipmap (textures texture-gradient-1d-9))
+  (texmap:mipmap (textures texture-gradient-1d-10)))
+
+(c:define-texture 1d-gradient-mipmaps
+    (:texture-1d x:clamp-all-edges)
+  ;; TODO: TMAP Fix to accept texture-map name.
+  (:data #((textures texture-gradient-1d-0)
+           (textures texture-gradient-1d-1)
+           (textures texture-gradient-1d-2)
+           (textures texture-gradient-1d-3)
+           (textures texture-gradient-1d-4)
+           (textures texture-gradient-1d-5)
+           (textures texture-gradient-1d-6)
+           (textures texture-gradient-1d-7)
+           (textures texture-gradient-1d-8)
+           (textures texture-gradient-1d-9)
+           (textures texture-gradient-1d-10))))
+
+;; NOTE: No analog in pre-updated c:define-texture until I change it to
+;; handle define-texture-map names.
+(c:define-texture-map 1d-gradient-mipmaps-vertical-top-left-big
+    (:1d :combined :vertical-top-left-big)
+  (texmap:mipmap (textures texture-gradient-1d-vertical-top-left-big)))
+
+
+
 
 (c:define-texture-map 2d-wood (:2d :unique)
   (texmap:mipmap (textures wood)))
@@ -417,6 +453,13 @@
    ((:tex.sampler1 '1d-gradient)
     (:mix-color (v4:ones)))))
 
+(c:define-material 1d-gradient-mipmaps
+  (:shader ex/shd:unlit-texture-1d
+   :profiles (x:u-mvp)
+   :uniforms
+   ((:tex.sampler1 '1d-gradient-mipmaps)
+    (:mix-color (v4:ones)))))
+
 (c:define-material 2d-wood
   (:shader shd:unlit-texture
    :profiles (x:u-mvp)
@@ -521,8 +564,12 @@
   (("camera" :copy "/cameras/perspective")
    (comp:camera (:policy :new-args) :zoom 3f0))
   (("1d-texture" :copy "/mesh")
-   (comp:transform :translate (v3:vec -4f0 3f0 0f0))
+   (comp:transform :translate (v3:vec -6f0 3f0 0f0))
    (comp:render :material '1d-gradient
+                :slave (c:ref :self :component 'comp:mesh)))
+  (("1d-texture-mipmaps" :copy "/mesh")
+   (comp:transform :translate (v3:vec -4f0 3f0 0f0))
+   (comp:render :material '1d-gradient-mipmaps
                 :slave (c:ref :self :component 'comp:mesh)))
   (("2d-texture" :copy "/mesh")
    (comp:transform :translate (v3:vec -2f0 3f0 0f0))

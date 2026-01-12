@@ -34,7 +34,8 @@
   ;; colony-examples:cube-map :faces
   (texmap::materialize
    core (list
-         (u:format-symbol "COLONY-EXAMPLES" "~A" "1D-GRADIENT")
+         (u:format-symbol "COLONY-EXAMPLES" "~A"
+                          "1D-GRADIENT-MIPMAPS-VERTICAL-TOP-LEFT-BIG")
          #++(u:format-symbol "COLONY-EXAMPLES" "~A" "BLUE-FUR")
          #++(u:format-symbol "COLONY-EXAMPLES" "~A" "3D")
          #++(u:format-symbol "COLONY-EXAMPLES" "~A" "CUBE-MAP")

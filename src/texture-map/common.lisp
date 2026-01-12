@@ -87,23 +87,32 @@
 ;;; -----------------
 
 ;; Extensible API
-(defmethod make-storage-form ((type symbol) &key extent mapping-spans
+(defmethod make-storage-form ((type symbol) &key sourced-p sunk-p
+                                              extent mapping-spans
                                               bags attrs cattrs sattrs)
-  (let ((storage-form (make-instance type :extent extent
-                                    :mapping-spans mapping-spans)))
+  (let ((storage-form (make-instance type :sourced-p sourced-p
+                                          :sunk-p sunk-p
+                                          :extent extent
+                                          :mapping-spans mapping-spans)))
     (abag:absorb storage-form :bags bags :attrs attrs :cattrs cattrs
                               :sattrs sattrs)
     storage-form))
 
 ;; Convenience API
-(defun make-mipmap-1d (&key extent mapping-spans bags attrs cattrs sattrs)
-  (make-storage-form 'mipmap-1d :extent extent :mapping-spans mapping-spans
+(defun make-mipmap-1d (&key sourced-p sunk-p extent mapping-spans
+                         bags attrs cattrs sattrs)
+  (make-storage-form 'mipmap-1d :sourced-p sourced-p :sunk-p sunk-p
+                                :extent extent :mapping-spans mapping-spans
                                 :bags bags :attrs attrs :cattrs cattrs :sattrs sattrs))
-(defun make-mipmap-2d (&key extent mapping-spans bags attrs cattrs sattrs)
-  (make-storage-form 'mipmap-2d :extent extent :mapping-spans mapping-spans
+(defun make-mipmap-2d (&key sourced-p sunk-p extent mapping-spans
+                         bags attrs cattrs sattrs)
+  (make-storage-form 'mipmap-2d :sourced-p sourced-p :sunk-p sunk-p
+                                :extent extent :mapping-spans mapping-spans
                                 :bags bags :attrs attrs :cattrs cattrs :sattrs sattrs))
-(defun make-mipmap-3d (&key extent mapping-spans bags attrs cattrs sattrs)
-  (make-storage-form 'mipmap-3d :extent extent :mapping-spans mapping-spans
+(defun make-mipmap-3d (&key sourced-p sunk-p extent mapping-spans
+                         bags attrs cattrs sattrs)
+  (make-storage-form 'mipmap-3d :sourced-p sourced-p :sunk-p sunk-p
+                                :extent extent :mapping-spans mapping-spans
                                 :bags bags :attrs attrs :cattrs cattrs :sattrs sattrs))
 
 ;;; -----------------
