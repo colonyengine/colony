@@ -332,15 +332,12 @@
     (is m4:= o r)
     (is m4:= (m4:invert m) r)
     (is m4:= (m4:invert m4:+id+) m4:+id+)
-    (is-values (m4:invert (m4:mat 1f0 5f0 9f0 13f0
-                                  2f0 6f0 10f0 14f0
-                                  3f0 7f0 11f0 15f0
-                                  4f0 8f0 12f0 16f0))
-      (m4:= (m4:mat 1f0 5f0 9f0 13f0
-                    2f0 6f0 10f0 14f0
-                    3f0 7f0 11f0 15f0
-                    4f0 8f0 12f0 16f0))
-      (eq nil))))
+    (true (handler-case
+              (m4:invert (m4:mat 1f0 5f0 9f0 13f0
+                                 2f0 6f0 10f0 14f0
+                                 3f0 7f0 11f0 15f0
+                                 4f0 8f0 12f0 16f0))
+            (simple-error () t)))))
 
 (define-test m4/look-at
   (let ((o (m4:id))

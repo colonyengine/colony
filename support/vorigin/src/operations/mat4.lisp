@@ -443,9 +443,9 @@ multiplication of MAT * T."
       (copy! out mat)
       (ecase space
         (:local
-         (*! out out x)
-         (*! out out z)
-         (*! out out y))
+          (*! out out x)
+          (*! out out z)
+          (*! out out y))
         (:world
          (*! out x out)
          (*! out z out)
@@ -707,8 +707,16 @@ multiplication of MAT * T."
                    det)))
     (let ((det (determinant mat)))
       (when (com:= det 0f0 1f-15 1f-15)
-        (error "Skipped inverting matrix because it has a determinant of zero:~%~s" mat)
-        (return-from %invert/generic! (values (copy! out mat) nil)))
+        ;; TODO: When not invertible, we signal an error. We should have
+        ;; a macro like INVERT-BIND which can allow a function to be
+        ;; called if the invert fails. The default behavior should be
+        ;; that the condition is signaled and likely the engine dies.
+        ;; BUT this macro allows the appdev to handle the error locally
+        ;; if they wish without paying for it syntactically if they
+        ;; don't care.
+        (error
+         "Skipped inverting matrix because it has a determinant of zero:~%~s"
+         mat))
       (with-components ((o out) (m mat))
         (psetf o00 (% m11 m22 m33 m12 m23 m31 m13 m21 m32 m11 m23 m32 m12 m21 m33 m13 m22 m31)
                o01 (% m01 m23 m32 m02 m21 m33 m03 m22 m31 m01 m22 m33 m02 m23 m31 m03 m21 m32)
@@ -730,42 +738,42 @@ multiplication of MAT * T."
 
 (u:fn-> invert! (mat mat) (values mat boolean))
 #++(defun invert! (out mat)
-  (declare (optimize speed))
-  (macrolet ((% (a b c d)
-               `(cl:/ (cl:- (cl:* ,a ,b) (cl:* ,c ,d)) det)))
-    (flet ((sub-determinant (matrix)
-             (with-components ((m matrix))
-               (cl:- (cl:+ (cl:* m00 m11 m22) (cl:* m10 m21 m02) (cl:* m20 m01 m12))
-                     (cl:* m00 m21 m12)
-                     (cl:* m20 m11 m02)
-                     (cl:* m10 m01 m22)))))
-      (declare (inline sub-determinant))
-      (with-components ((m mat) (o out))
-        (zero! out)
-        (when (id-p mat)
-          (return-from invert! (id! out)))
-        (unless (and (com:= m30 0f0) (com:= m31 0f0) (com:= m32 0f0) (com:= m33 1f0))
-          (return-from invert! (%invert/generic! out mat)))
-        (let ((det (sub-determinant mat)))
-          (if (and (com:= det 0f0 1f-15 1f-15)
-                   (or (not (com:= m00 0f0)) (not (com:= m01 0f0)) (not (com:= m02 0f0))
-                       (not (com:= m10 0f0)) (not (com:= m11 0f0)) (not (com:= m12 0f0))
-                       (not (com:= m20 0f0)) (not (com:= m21 0f0)) (not (com:= m22 0f0))))
-              (return-from invert! (%invert/generic! out mat))
-              (setf o00 (% m11 m22 m12 m21)
-                    o01 (% m02 m21 m01 m22)
-                    o02 (% m01 m12 m02 m11)
-                    o10 (% m12 m20 m10 m22)
-                    o11 (% m00 m22 m02 m20)
-                    o12 (% m02 m10 m00 m12)
-                    o20 (% m10 m21 m11 m20)
-                    o21 (% m01 m20 m00 m21)
-                    o22 (% m00 m11 m01 m10)))
-          (setf o03 (cl:- (cl:+ (cl:* m03 o00) (cl:* m13 o01) (cl:* m23 o02)))
-                o13 (cl:- (cl:+ (cl:* m03 o10) (cl:* m13 o11) (cl:* m23 o12)))
-                o23 (cl:- (cl:+ (cl:* m03 o20) (cl:* m13 o21) (cl:* m23 o22)))
-                o33 1f0)
-          out)))))
+     (declare (optimize speed))
+     (macrolet ((% (a b c d)
+                  `(cl:/ (cl:- (cl:* ,a ,b) (cl:* ,c ,d)) det)))
+       (flet ((sub-determinant (matrix)
+                (with-components ((m matrix))
+                  (cl:- (cl:+ (cl:* m00 m11 m22) (cl:* m10 m21 m02) (cl:* m20 m01 m12))
+                        (cl:* m00 m21 m12)
+                        (cl:* m20 m11 m02)
+                        (cl:* m10 m01 m22)))))
+         (declare (inline sub-determinant))
+         (with-components ((m mat) (o out))
+           (zero! out)
+           (when (id-p mat)
+             (return-from invert! (id! out)))
+           (unless (and (com:= m30 0f0) (com:= m31 0f0) (com:= m32 0f0) (com:= m33 1f0))
+             (return-from invert! (%invert/generic! out mat)))
+           (let ((det (sub-determinant mat)))
+             (if (and (com:= det 0f0 1f-15 1f-15)
+                      (or (not (com:= m00 0f0)) (not (com:= m01 0f0)) (not (com:= m02 0f0))
+                          (not (com:= m10 0f0)) (not (com:= m11 0f0)) (not (com:= m12 0f0))
+                          (not (com:= m20 0f0)) (not (com:= m21 0f0)) (not (com:= m22 0f0))))
+                 (return-from invert! (%invert/generic! out mat))
+                 (setf o00 (% m11 m22 m12 m21)
+                       o01 (% m02 m21 m01 m22)
+                       o02 (% m01 m12 m02 m11)
+                       o10 (% m12 m20 m10 m22)
+                       o11 (% m00 m22 m02 m20)
+                       o12 (% m02 m10 m00 m12)
+                       o20 (% m10 m21 m11 m20)
+                       o21 (% m01 m20 m00 m21)
+                       o22 (% m00 m11 m01 m10)))
+             (setf o03 (cl:- (cl:+ (cl:* m03 o00) (cl:* m13 o01) (cl:* m23 o02)))
+                   o13 (cl:- (cl:+ (cl:* m03 o10) (cl:* m13 o11) (cl:* m23 o12)))
+                   o23 (cl:- (cl:+ (cl:* m03 o20) (cl:* m13 o21) (cl:* m23 o22)))
+                   o33 1f0)
+             out)))))
 
 (defun invert! (out mat)
   (declare (optimize speed))
@@ -789,7 +797,7 @@ multiplication of MAT * T."
                          (not (com:= m10 0f0)) (not (com:= m11 0f0)) (not (com:= m12 0f0))
                          (not (com:= m20 0f0)) (not (com:= m21 0f0)) (not (com:= m22 0f0))))
             (return-from invert! (%invert/generic! out mat)))
-	  ;; invert rotation matrix
+          ;; invert rotation matrix
           (psetf o00 (% m11 m22 m12 m21)
                  o01 (% m02 m21 m01 m22)
                  o02 (% m01 m12 m02 m11)
@@ -799,15 +807,15 @@ multiplication of MAT * T."
                  o20 (% m10 m21 m11 m20)
                  o21 (% m01 m20 m00 m21)
                  o22 (% m00 m11 m01 m10))
-	  ;; invert translation
+          ;; invert translation
           (psetf o03 (cl:- (cl:+ (cl:* m03 o00) (cl:* m13 o01) (cl:* m23 o02)))
                  o13 (cl:- (cl:+ (cl:* m03 o10) (cl:* m13 o11) (cl:* m23 o12)))
                  o23 (cl:- (cl:+ (cl:* m03 o20) (cl:* m13 o21) (cl:* m23 o22))))
-	  ;; fill in expected constants
-	  (setf o30 0f0
-		o31 0f0
-		o32 0f0
-		o33 1f0)
+          ;; fill in expected constants
+          (setf o30 0f0
+                o31 0f0
+                o32 0f0
+                o33 1f0)
           out)))))
 
 (u:fn-> invert (mat) mat)
