@@ -11,4 +11,10 @@
    #:cwcmp
    #:cwcmp-or
    #:cwset
-   #:make-accessor-symbol))
+   #:make-accessor-symbol
+   #:smod32*
+   #:smod32+
+   #:smod32-
+   #:smod32-mod
+   #:smod32/
+   ))

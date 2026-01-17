@@ -8,13 +8,16 @@
    #:parachute)
   :pathname "vorigin/test"
   :serial t
-  :perform (asdf:test-op (o c) 
-             (uiop:symbol-call '#:parachute '#:test '#:vorigin.test))
+  :perform (asdf:test-op (o c)
+                         (uiop:symbol-call '#:parachute '#:test '#:vorigin.test))
   :components
   ((:file "package")
    (:file "vec2")
    (:file "vec3")
    (:file "vec4")
+   (:file "ivec2")
+   (:file "ivec3")
+   (:file "ivec4")
    (:file "mat2")
    (:file "mat3")
    (:file "mat4")
