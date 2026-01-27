@@ -31,12 +31,30 @@ confusion).
   - We use column major memory layout of the matrices (to match opengl).
     Example: The above matrix is linearly laid out into memory like this:
     ```text
-    #(Xx Xy Xz 0 Tx Yy Yz 0 Zx Zy Zz 0 Tx Ty Tz 1)
+    #(Xx Xy Xz 0 Yx Yy Yz 0 Zx Zy Zz 0 Tx Ty Tz 1)
     ```
   - NOTE: the above two concepts are orthogonal to each other! There are 4
     combinations of these features and we picked column vector representation
     to match the math books our math library is derived from, and column major
     layout to match how opengl wishes to accept the matrices.
+
+  - A meaningful side effect of using column vector matrices is that when you
+    want to apply a sequence of matrix transforms to a point, it applies right
+    to left.
+    Example:
+    ```text
+    p' = T5 * T4 * T3 * T2 * T1 * T0 * p
+
+    This will apply the transforms to p in this order:
+
+    First, apply T0 to p,
+    then T1 next,
+    then T2 next,
+    then T3 next,
+    then T4 next,
+    then finally T5,
+    which produces the transformed p' point.
+    ```
 
 ## Coordinate Systems
   - Local/Object/Model Space
