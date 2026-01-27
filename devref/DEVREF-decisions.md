@@ -16,12 +16,13 @@ confusion).
 
 ## Support's vorigin library
   - We use column vectors to represent mathematical quantities in matrices.
-    Example: Rotation Transform with a translation encoded into it.
+    Example: Transform matrix with a rotation and translation encoded into it.
     ```text
     The Y axis is: (Yx Yy Yz)
     The X axis is: (Xx Xy Xz)
     The Z axis is: (Zx Zy Zz)
     The translation is: (Tx Ty Tz)
+
     | Xx Yx Zx Tx |
     | Xy Yy Zy Ty |
     | Xz Yz Zz Tz |
