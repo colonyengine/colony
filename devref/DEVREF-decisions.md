@@ -3,16 +3,39 @@
 This page describes technical decisions we have made about the engine, or about
 defaults supplied to the engine, which affect the internal structure of the
 engine (usually memory layout or choice of representation of a math concept
-like projection matrices) and how the appdev ineracts with the engine. These
-decisions are not set in stone, per se, but there should be good reason to
-change them as it will affect engine code, appdev code, and documentation
-describing them.
+like transform or projection matrices) and how the appdev ineracts with the
+engine. These decisions are not set in stone, per se, but there should be good
+reason to change them as it will affect engine code, appdev code, and
+documentation describing them.
 
 There are a lot of previous decisions made not written here. We'll add them as
 we remember/find/need them. At this time, many of these decisions are hardcoded
 into the engine and not configurable (for no particular reason other than time
 and effort to implement the configurability or if it would contribute to appdev
 confusion).
+
+## Support's vorigin library
+  - We use column vectors to represent mathematical quantities in matrices.
+    Example: Rotation Transform with a translation encoded into it.
+    ```text
+    The Y axis is: (Yx Yy Yz)
+    The X axis is: (Xx Xy Xz)
+    The Z axis is: (Zx Zy Zz)
+    The translation is: (Tx Ty Tz)
+    | Xx Yx Zx Tx |
+    | Xy Yy Zy Ty |
+    | Xz Yz Zz Tz |
+    |  0 0 0 0  1 |
+    ```
+  - We use column major memory layout of the matrices (to match opengl).
+    Example: The above matrix is linearly laid out into memory like this:
+    ```text
+    #(Xx Xy Xz 0 Tx Yy Yz 0 Zx Zy Zz 0 Tx Ty Tz 1)
+    ```
+  - NOTE: the above two concepts are orthogonal to each other! There are 4
+    combinations of these features and we picked column vector representation
+    to match the math books our math library is derived from, and column major
+    layout to match how opengl wishes to accept the matrices.
 
 ## Coordinate Systems
   - Local/Object/Model Space

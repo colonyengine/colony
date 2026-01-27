@@ -11,6 +11,7 @@ available in Common Lisp.
 
 - [Roadmap][DEVREF-roadmap]
 - [Engine Coding Guildlines][DEVREF-guide-code]
+- [Decisions Concerning the Engine][DEVREF-decisions]
 - [Lexicon of Terms][DEVREF-lexicon]
 - [Creating DSLs][DEVREF-guide-dsl]
 - [Engine Layers][DEVREF-engine-layers]
@@ -18,6 +19,7 @@ available in Common Lisp.
 <!--- Labeled links so you only have to fix one place to move something --->
 [DEVREF-roadmap]: ./devref/DEVREF-roadmap.md
 [DEVREF-guide-code]: ./devref/DEVREF-guide-code.md
+[DEVREF-decisions]: ./devref/DEVREF-decisions.md
 [DEVREF-guide-dsl]: ./devref/DEVREF-guide-dsl.md
 [DEVREF-engine-layers]: ./devref/DEVREF-engine-layers.md
 [DEVREF-lexicon]: ./devref/DEVREF-lexicon.md
