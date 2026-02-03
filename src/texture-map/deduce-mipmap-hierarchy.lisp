@@ -5,7 +5,7 @@
 
 ;; Used to find the physical mipmap location data from the materialized
 ;; data-elements.
-(defgeneric deduce-physical-mipmaps (texmap-inst style store)
+(defgeneric deduce-physical-mipmaps (texmap-inst style store store-args)
   (:documentation
    "During texture-map synthesis ONLY, figure out, using only the
 materialized data-elements in the TEXMAP-INST and the STYLE and STORE,
@@ -18,20 +18,23 @@ Returns a hash-table with an EQUAL test with this in it:
 
  Mipmap Extent Key: (WIDTH HEIGHT DEPTH)
 
- Value: ( (idxA (START-W START-H START-D) (END-W END-H END-D))
+ Value: ( data-span-3d
           ...
-          (idxN (START-W START-H START-D) (END-W END-H END-D)) )
+          data-span-3d )
 
-The value ALWAYS represents a cuboid and we treat a single image
-as having a depth of 1 pixel. The idx* is the data-element from where we
-need to get the data. The START-W/H/D and END-W/H/D represent the location
-in the source represented by the elidx for where to find the actual data.
-The START-* value is inclusive and the END-* value is exclusive."))
+The value ALWAYS represents a list of data spans where each of them
+specifies one or more data spans from the elidx that collectively fill
+in the extent in the mipmap. We treat a single 2d image as having a
+depth of 1 pixel and we treat a 1d line as having 1 height and 1 depth.
+Each data-spen-3d has an elidx that indicates from where we need to get
+the data."))
 
-(defgeneric deduce-mipmap-hierarchy (texmap-inst style store
-                                     &key core &allow-other-keys)
+(defgeneric deduce-mipmap-hierarchy (texmap-inst style store store-args
+                                     &key core
+                                     &allow-other-keys)
   (:documentation
-   ""))
+   "This returns one or more fully specified mipmap objects using the
+results of DEDUCE-PHYSICAL-MIPMAPS."))
 
 ;; -------------------------------------------------------------------------
 
@@ -41,8 +44,8 @@ The START-* value is inclusive and the END-* value is exclusive."))
 ;; and :3d style must be (:slices ...)
 (defmethod deduce-physical-mipmaps ((texmap-inst texture-map-simple)
                                     (style (eql :unique))
-                                    store)
-  (declare (ignore store))
+                                    store store-args)
+  (declare (ignore store store-args))
 
   ;; We're going to temporarily take advantage of the fact that all
   ;; image formats are actually 2 dimensions.
@@ -99,11 +102,20 @@ The START-* value is inclusive and the END-* value is exclusive."))
              (wxh (list mipmap-width mipmap-height))
              (mipmap-depth (u:href total-depth-table wxh))
              (current-depth (u:href depth-table wxh))
+             ;; deduce-mipmap-extent?
              (mipmap-extent (list mipmap-width mipmap-height mipmap-depth)))
 
-        (push (list idx
-                    (list 0 0 current-depth)
-                    (list mipmap-width mipmap-height (1+ current-depth)))
+        ;; Since this method is called for any texture-map-simple, we use a
+        ;; data-span-3d to represent the source mipmap region we're extracting
+        ;; from the elidx object. The consumer of this result will determine
+        ;; if the subspace defined by the data-span-3d is appropriate or not
+        ;; for its needs.
+        (push (make-data-span-3d
+               :elidx idx
+               :origin (iv3:vec 0 0 current-depth) ;; deduce-mipmap-origin?
+               :extent (iv3:vec mipmap-width ;; deduce-mipmap-extent?
+                                mipmap-height
+                                1))
               (u:href res-table mipmap-extent))
         (incf (u:href depth-table wxh))))
 
@@ -111,6 +123,20 @@ The START-* value is inclusive and the END-* value is exclusive."))
     ;; order in data-elements.
     (u:do-hash (mipmap-key mipmap-values res-table)
       (setf (u:href res-table mipmap-key) (nreverse mipmap-values)))
+
+    ;; TODO: If STORE is :slices, at this point we have to reorient the
+    ;; mipmap extent (W H D) dimensions to map the slice kind in the
+    ;; store args so the mipmap extent matches the actual slice data in
+    ;; the appropriate dimensions.
+    ;;
+    ;; TODO: If I implement the deduce-* stuff above, I don't need this here.
+    (when (eq store :slices)
+      ;; TODO: bad place for default, put in DSL parser
+      (ecase (or (car store-args) :xy-z)
+        (:xy-z nil)
+        (:xz-y nil)
+        (:yz-x nil)))
+
 
     ;; DEBUG
     (u:do-hash (mipmap-key mipmap-values res-table)
@@ -133,83 +159,151 @@ out along that dimension BASE-EXTENT does not have to be a power of two."
   (- (* base-extent-width 2) (logcount base-extent-width)))
 
 
-
-;; KEEP GOING
-(defmethod deduce-physical-mipmaps ((texmap-inst texture-map-1d)
-                                    (style (eql :combined))
-                                    (store list))
-  (format t "deduce-physical-mipmaps :combined trampoline (?) to ~A~%"
-          (first store))
-
-  ;; Sort of a hack since STORE is a list.
-  (cond
-    ((= (length store) 1)
-     (deduce-physical-mipmaps texmap-inst style (first store)))
-    (t
-     (error "Not yet implemented for texture: ~A" texmap-inst))))
-
-
+;;;
+;;; 1D texture map synthesis support
+;;;
 
 (defmethod deduce-physical-mipmaps ((texmap-inst texture-map-1d)
                                     (style (eql :combined))
-                                    (store (eql :horizontal-left-small)))
+                                    (store (eql :horizontal-left-small))
+                                    store-args)
   nil)
 (defmethod deduce-physical-mipmaps ((texmap-inst texture-map-1d)
                                     (style (eql :combined))
-                                    (store (eql :horizontal-left-big)))
+                                    (store (eql :horizontal-left-big))
+                                    store-args)
   nil)
 (defmethod deduce-physical-mipmaps ((texmap-inst texture-map-1d)
                                     (style (eql :combined))
-                                    (store (eql :vertical-top-left-small)))
+                                    (store (eql :vertical-top-left-small))
+                                    store-args)
   nil)
 (defmethod deduce-physical-mipmaps ((texmap-inst texture-map-1d)
                                     (style (eql :combined))
-                                    (store (eql :vertical-top-left-big)))
-  ;; TODO: Implement me first cause much easier.
-
+                                    (store (eql :vertical-top-left-big))
+                                    store-args)
   (let ((delems (texmap:data-elements texmap-inst))
         (res-table (u:dict #'equal)))
-
     ;; Can only have a single combined image for all mipmaps in this context
     ;; of synthesis.
     (assert (= (length delems) 1))
-
-    ;; KEEP GOING
-
     (let* ((idx 0)
            (delem (aref delems idx))
            (image (rc:value (texmap:element delem)))
            (combined-mipmap-width (img:width image))
            (combined-mipmap-height (img:height image)))
-
       (loop
         :for mipmap-row :from 0 :below combined-mipmap-height
         :with current-mipmap-width = combined-mipmap-width
         :do ;; We pick out a single 1D slice from the combined image
             ;; that corresponds to the correct 1d slice for this STORE
-            ;; kind.
-            (let ((mipmap-start (list 0 mipmap-row 0))
-                  (mipmap-extent (list current-mipmap-width (1+ mipmap-row) 1)))
-              (push (list idx mipmap-start mipmap-extent)
-                    (u:href res-table (list current-mipmap-width 1 1)))
-              (setf current-mipmap-width (floor (/ current-mipmap-width 2)))))
+            ;; kind. We return it as a 3D data span though. It is up to
+            ;; the caller to ensure it is of the correct subspan.
+            (push (make-data-span-3d
+                   :elidx idx
+                   :origin (iv3:vec 0
+                                    (- combined-mipmap-height mipmap-row 1)
+                                    0)
+                   :extent (iv3:vec current-mipmap-width 1 1))
+                  (u:href res-table (list current-mipmap-width 1 1)))
+            (setf current-mipmap-width (floor (/ current-mipmap-width 2))))
       res-table)))
 (defmethod deduce-physical-mipmaps ((texmap-inst texture-map-1d)
                                     (style (eql :combined))
-                                    (store (eql :vertical-top-center-small)))
+                                    (store (eql :vertical-top-center-small))
+                                    store-args)
   nil)
 (defmethod deduce-physical-mipmaps ((texmap-inst texture-map-1d)
                                     (style (eql :combined))
-                                    (store (eql :vertical-top-center-big)))
+                                    (store (eql :vertical-top-center-big))
+                                    store-args)
   nil)
 (defmethod deduce-physical-mipmaps ((texmap-inst texture-map-1d)
                                     (style (eql :combined))
-                                    (store (eql :vertical-top-right-small)))
+                                    (store (eql :vertical-top-right-small))
+                                    store-args)
   nil)
 (defmethod deduce-physical-mipmaps ((texmap-inst texture-map-1d)
                                     (style (eql :combined))
-                                    (store (eql :vertical-top-right-big)))
+                                    (store (eql :vertical-top-right-big))
+                                    store-args)
   nil)
+
+
+
+;;;
+;;; 2D texture map synthesis support
+;;;
+
+
+
+(defmethod deduce-physical-mipmaps ((texmap-inst texture-map-2d)
+                                    (style (eql :combined))
+                                    (store (eql :common))
+                                    store-args)
+
+  (let ((delems (texmap:data-elements texmap-inst))
+        (res-table (u:dict #'equal)))
+    ;; Can only have a single combined image for all mipmaps in this
+    ;; context of synthesis.
+    (assert (= (length delems) 1))
+    (let* ((idx 0)
+           (delem (aref delems idx))
+           (image (rc:value (texmap:element delem)))
+           (combined-mipmap-width (img:width image))
+           (combined-mipmap-height (img:height image))
+           (base-mipmap-width (max 1 (- combined-mipmap-width
+                                        (floor (/ combined-mipmap-width 3)))))
+           (base-mipmap-height combined-mipmap-height))
+      (loop
+        :with running-height = 0
+        :with current-mipmap-width = base-mipmap-width
+        :with current-mipmap-height = base-mipmap-height
+
+        :for mipmap-level :from 0
+          :below (1+ (floor (log (max base-mipmap-width
+                                      base-mipmap-height)
+                                 2)))
+
+        :do ;; We pick out a single 2D subrectangle from the combined
+            ;; image that corresponds to the correct 2d mipmap for this
+            ;; STORE kind. We return it as a 3D data span though with 1
+            ;; depth. It is up to the caller to ensure it is of the
+            ;; correct subspan.
+
+            (setf current-mipmap-width
+                  (max 1 (floor (/ base-mipmap-width (expt 2 mipmap-level))))
+                  current-mipmap-height
+                  (max 1 (floor (/ base-mipmap-height (expt 2 mipmap-level)))))
+
+            (when (plusp mipmap-level)
+              (incf running-height current-mipmap-height))
+
+            (push (make-data-span-3d
+                   :elidx idx
+                   :origin (if (zerop mipmap-level)
+                               ;; base mipmap origin
+                               (iv3:vec 0 0 0)
+                               ;; other mipmap origins
+                               (iv3:vec base-mipmap-width
+                                        (- base-mipmap-height running-height)
+                                        0))
+                   :extent (iv3:vec current-mipmap-width
+                                    current-mipmap-height
+                                    1))
+                  (u:href res-table (list current-mipmap-width
+                                          current-mipmap-height
+                                          1))))
+
+      res-table)))
+
+
+
+
+
+
+
+
 
 
 
@@ -239,31 +333,20 @@ in the :synthesize state."
                  (* right-width right-height right-depth)))))))
 
 
-;; TODO: If I play my cards right, deduce-physical-mipmaps will do the
-;; right thing for style :unique and :combine and I can combine the
-;; :unique and :combined forms of this method. It isn't guaranteed that
-;; this will work out though...
-;;
-;;
-;; COMBINE The :unique and :combined forms together. Change the making of
-;; the mipmap-1d to use data-span-2d. I hacked this in, but verify and remove
-;; the :combined codebase. DEDUCE-PHYSICAL-MIPMAPS is doing all the hard work.
-;;
-
 (defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-1d)
-                                    ;;(style (eql :unique))
-                                    style
-                                    store
+                                    style ;; Both :unique and :combined
+                                    store store-args
                                     &key core)
   (declare (ignore core))
   (check-deducible-mipmap-hierarchy texmap-inst)
 
-  (let* (;; NOTE: The res-table keys contains the ACTUAL dimensions of
+  (let* (;; NOTE: The res-table keys contain the ACTUAL dimensions of
          ;; the materialized images in the data-elements gotten by
          ;; gather-unique-mipmaps via the resource cache
          (res-table (deduce-physical-mipmaps texmap-inst
                                              (texmap:style texmap-inst)
-                                             (texmap:store texmap-inst)))
+                                             (texmap:store texmap-inst)
+                                             (texmap:store-args texmap-inst)))
          (descending-mipmap-extent-keys (sort-mipmap-extents res-table))
          (largest-mipmap-extent (car descending-mipmap-extent-keys)))
 
@@ -305,34 +388,35 @@ in the :synthesize state."
 
                       ;; Construct the mipmap-1d for the identified section
                       ;; the elidx-spec identifies.
-                      (destructuring-bind (elidx
-                                           (start-w start-h start-d)
-                                           (end-w end-h end-d))
-                          (first elidx-spec)
-                        (declare (ignore start-h start-d end-h end-d))
-                        (let* ((mipmap-width (car mipmap-extent))
-                               ;; Finally build the mipmap-1d instance.
-                               ;; and :to in the mapping-span-1d.
-
-                               ;; TODO: FIX DATA-SPANS FOR 2D IMAGES?
-                               (mipmap-1d
-                                 (make-mipmap-1d
-                                  :sourced-p t
-                                  :extent (make-span-1d
-                                           :origin 0
-                                           :extent mipmap-width)
-                                  :mapping-spans
-                                  (make-mapping-spans
-                                   :encode
-                                   (make-mapping-span-1d
-                                    :from (make-data-span-1d
-                                           :origin start-w
-                                           :extent (- end-w start-w)
-                                           :elidx elidx)
-                                    :to (make-data-span-1d
-                                         :origin 0
-                                         :extent mipmap-width))))))
-                          (list computed-extent mipmap-1d))))
+                      (let* ((dspan-3d (first elidx-spec))
+                             (mipmap-width (car mipmap-extent))
+                             ;; TODO: We assume the :from is going to
+                             ;; be a 2D image. This doesn't have to be
+                             ;; the case (like reading from a buffer
+                             ;; instead of an image) and we will
+                             ;; support it later when we actually do
+                             ;; that.
+                             (mipmap-1d
+                               (make-mipmap-1d
+                                :sourced-p t
+                                :extent (make-span-1d
+                                         :origin 00
+                                         :extent mipmap-width)
+                                :mapping-spans
+                                (make-mapping-spans
+                                 :encode
+                                 (make-mapping-span-1d
+                                  ;; We select a 1-d subspace of an N
+                                  ;; pixel wide, 1 pixel high, and 1
+                                  ;; pixel deep 3D span from the (2d)
+                                  ;; image...
+                                  :from dspan-3d
+                                  ;; ...and place it here in the 1d
+                                  ;; extent of this mipmap.
+                                  :to (make-data-span-1d
+                                       :origin 0
+                                       :extent mipmap-width))))))
+                        (list computed-extent mipmap-1d)))
                      (t
                       ;; We simply record that we don't have a known
                       ;; mipmap description for this extent.
@@ -343,31 +427,27 @@ in the :synthesize state."
         (list (cons (texmap:name texmap-inst) mipmap-obs))))))
 
 
-
-;; TODO: See if I can just use the above copy and fix to make mipmap-1d
-;; but with 2d data spans cause we're picking from 2D images. This code
-;; duplication with MINOR changesis a bad antipattern and
-;; unmaintainable.
-#++
-(defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-1d)
-                                    (style (eql :combined)) store
+(defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-2d)
+                                    style ;; oth :unique and :combined
+                                    store store-args
                                     &key core)
   (declare (ignore core))
   (check-deducible-mipmap-hierarchy texmap-inst)
 
-  (let* (;; NOTE: The res-table keys contains the ACTUAL dimensions of
+  (let* (;; NOTE: The res-table keys contain the ACTUAL dimensions of
          ;; the materialized images in the data-elements gotten by
          ;; gather-unique-mipmaps via the resource cache
          (res-table (deduce-physical-mipmaps texmap-inst
                                              (texmap:style texmap-inst)
-                                             (texmap:store texmap-inst)))
+                                             (texmap:store texmap-inst)
+                                             (texmap:store-args texmap-inst)))
          (descending-mipmap-extent-keys (sort-mipmap-extents res-table))
          (largest-mipmap-extent (car descending-mipmap-extent-keys)))
 
-    ;; NOTE: There must not be any height or depth for synthesized 1d
+    ;; NOTE: There must not be any depth for synthesized 2d
     ;; texture maps.
     (loop :for (width height depth) :in descending-mipmap-extent-keys
-          :do (assert (= 1 height depth)))
+          :do (assert (= 1 depth)))
 
     (format t "res-table is:~%")
     (u:do-hash (whd loc res-table)
@@ -402,34 +482,38 @@ in the :synthesize state."
 
                       ;; Construct the mipmap-1d for the identified section
                       ;; the elidx-spec identifies.
-                      (destructuring-bind (elidx
-                                           (start-w start-h start-d)
-                                           (end-w end-h end-d))
-                          (first elidx-spec)
-                        (declare (ignore start-h start-d end-h end-d))
-                        (let* ((mipmap-width (car mipmap-extent))
-                               ;; Finally build the mipmap-1d instance.
-                               ;; and :to in the mapping-span-1d.
-
-                               ;; TODO: FIX DATA-SPANS FOR 2D IMAGES?
-                               (mipmap-1d
-                                 (make-mipmap-1d
-                                  :sourced-p t
-                                  :extent (make-span-1d
-                                           :origin 0
-                                           :extent mipmap-width)
-                                  :mapping-spans
-                                  (make-mapping-spans
-                                   :encode
-                                   (make-mapping-span-1d
-                                    :from (make-data-span-1d
-                                           :origin start-w
-                                           :extent (- end-w start-w)
-                                           :elidx elidx)
-                                    :to (make-data-span-1d
-                                         :origin 0
-                                         :extent mipmap-width))))))
-                          (list computed-extent mipmap-1d))))
+                      (let* ((dspan-3d (first elidx-spec))
+                             (mipmap-width (first mipmap-extent))
+                             (mipmap-height (second mipmap-extent))
+                             ;; TODO: We assume the :from is going to
+                             ;; be a 2D image. This doesn't have to be
+                             ;; the case (like reading from a buffer
+                             ;; instead of an image) and we will
+                             ;; support it later when we actually do
+                             ;; that.
+                             (mipmap-2d
+                               (make-mipmap-2d
+                                :sourced-p t
+                                :extent (make-span-2d
+                                         :origin (iv2:vec 0 0)
+                                         :extent (iv2:vec mipmap-width
+                                                          mipmap-height))
+                                :mapping-spans
+                                (make-mapping-spans
+                                 :encode
+                                 (make-mapping-span-2d
+                                  ;; We select a 2-d subspace of an N
+                                  ;; pixel wide, M pixel high, and 1
+                                  ;; pixel deep 3D span from the (2d)
+                                  ;; image...
+                                  :from dspan-3d
+                                  ;; ...and place it here in the 1d
+                                  ;; extent of this mipmap.
+                                  :to (make-data-span-2d
+                                       :origin (iv2:vec 0 0)
+                                       :extent (iv2:vec mipmap-width
+                                                        mipmap-height)))))))
+                        (list computed-extent mipmap-2d)))
                      (t
                       ;; We simply record that we don't have a known
                       ;; mipmap description for this extent.
@@ -440,61 +524,15 @@ in the :synthesize state."
         (list (cons (texmap:name texmap-inst) mipmap-obs))))))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-(defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-2d)
-                                    (style (eql :unique)) store
-                                    &key core)
-  (declare (ignore core))
-  (check-deducible-mipmap-hierarchy texmap-inst)
-
-  nil)
-
-(defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-2d)
-                                    (style (eql :combined)) store
-                                    &key core)
-  (declare (ignore core))
-  (check-deducible-mipmap-hierarchy texmap-inst)
-
-  nil)
-
 (defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-3d)
-                                    (style (eql :unique)) store
+                                    (style (eql :unique)) store store-args
                                     &key core)
   (declare (ignore core))
   (check-deducible-mipmap-hierarchy texmap-inst)
 
   nil)
-
 (defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-3d)
-                                    (style (eql :combined)) store
+                                    (style (eql :combined)) store store-args
                                     &key core)
   (declare (ignore core))
   (check-deducible-mipmap-hierarchy texmap-inst)
@@ -502,7 +540,7 @@ in the :synthesize state."
   nil)
 
 (defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-cube)
-                                    (style (eql :faces)) store
+                                    (style (eql :faces)) store store-args
                                     &key core)
   (declare (ignore core))
   (check-deducible-mipmap-hierarchy texmap-inst)
@@ -510,7 +548,7 @@ in the :synthesize state."
   nil)
 
 (defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-cube)
-                                    (style (eql :envmap)) store
+                                    (style (eql :envmap)) store store-args
                                     &key core)
   (declare (ignore core))
   (check-deducible-mipmap-hierarchy texmap-inst)

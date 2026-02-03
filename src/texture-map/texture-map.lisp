@@ -134,12 +134,12 @@
 ;; NOTE: This macro is slightly less than screwed. fix me.
 ;; Soon to be new stuff.
 (defmacro define-texture-map (name data-model &body body)
-  (multiple-value-bind (model style store)
+  (multiple-value-bind (model style store store-args)
       (unpack-data-model data-model)
     (multiple-value-bind (canonical-texmap-name anonymous-p constructor)
         ;; NOTE: We convert the DSL into a lambda form at macro expansion
         ;; time that then gets compiled into a thunk.
-        (parse-texture-map name model style store body)
+        (parse-texture-map name model style store store-args body)
       `(progn
          ;; Is doing this directly at macro expansion time right? I think so
          ;; since the constructor creates a thunk.

@@ -1,8 +1,8 @@
 (in-package #:colony.texture-map)
 
-(defgeneric parse-texture-map (name model style store body))
-(defgeneric parse-texture-simple (name model style store body))
-(defgeneric parse-texture-complex (name model style store body))
+(defgeneric parse-texture-map (name model style store store-args body))
+(defgeneric parse-texture-simple (name model style store store-args body))
+(defgeneric parse-texture-complex (name model style store store-args body))
 
 ;; ------------------------------------------------------------------
 ;; Utilities for the parsing.
@@ -18,33 +18,34 @@ otherwise return NIL."
 ;; :1d, :2d, :3d  processing is the default.
 ;; ---------------------------------------------------------------------------
 
-(defmethod parse-texture-map (name model style store body)
+(defmethod parse-texture-map (name model style store store-args body)
   "Return three values.  The first form is the canonical name of the texture
 (which was either supplied or generated).  The second form is if the texture
 was anonymous or not.  The third value is the API lambda form to construct the
 in memory texture-map objects.
 "
-  (parse-texture-map-simple name model style store body))
+  (parse-texture-map-simple name model style store store-args body))
 
-(defmethod parse-texture-map-simple (name model style store body)
+(defmethod parse-texture-map-simple (name model style store store-args body)
   (physical->api
-   name model style store
+   name model style store store-args
    (if (physicalp body)
        body
-       (logical->physical name model style store body))))
+       (logical->physical name model style store store-args body))))
 
 ;; ------------------------------------------------------------------
 ;; :cube processing
 ;; ------------------------------------------------------------------
 
 ;; Handle :cube
-(defmethod parse-texture-map (name (model (eql :cube)) style store body)
-  (parse-texture-map-complex name model style store body))
+(defmethod parse-texture-map (name (model (eql :cube)) style store store-args
+                              body)
+  (parse-texture-map-complex name model style store store-args body))
 
 ;; Currently only :cube
-(defmethod parse-texture-map-complex (name model style store body)
+(defmethod parse-texture-map-complex (name model style store store-args body)
   (physical->api
-   name model style store
+   name model style store store-args
    (if (physicalp body)
        body
-       (logical->physical name model style store body))))
+       (logical->physical name model style store store-args body))))

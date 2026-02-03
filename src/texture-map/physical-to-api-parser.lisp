@@ -1,19 +1,19 @@
 (in-package #:colony.texture-map)
 
-(defgeneric unpack-data-model (data-model))
-(defgeneric gen-texture-map-name (name model style store))
+(defgeneric gen-texture-map-name (name model style store store-args))
 
-(defgeneric physical->api (name model style store body))
-(defgeneric physical-form-classifer (form-type model style store))
+(defgeneric physical->api (name model style store store-args body))
+(defgeneric physical-form-classifer (form-type model style store store-args))
 
 (defgeneric dslobjsym->constructor (sym)
   (:documentation
    "Map a DSL object symbol to another symbol which is the constructor
 function for that object."))
 
-(defgeneric gen-cube-binding-group (cube-var phys/cube model style store))
+(defgeneric gen-cube-binding-group (cube-var phys/cube model style
+                                    store store-args))
 
-(defgeneric gen-texture-map-form (name model style store
+(defgeneric gen-texture-map-form (name model style store store-args
                                   &key anonymous-p data-elements-var-name
                                     mipmaps-var-name cube-var-name
                                     phys/attrs phys/cattrs phys/sattrs))
@@ -23,14 +23,53 @@ function for that object."))
 ;;; ---------------------------------------------------------------------------
 
 ;; This basically must be for all texture-map kinds.
-(defmethod unpack-data-model (data-model)
+#++
+(defun unpack-data-model (data-model)
   "Return three forms. The first form is the model, the second is the style,
 and the third, which may be a symbol or a list, is the store."
   (destructuring-bind (model style . store)
       (or data-model '(:2d :combined))
     (values model style store)))
 
-(defmethod gen-texture-map-name (name model style store)
+(defun unpack-data-model (data-model)
+  "Parse the DATA-MODEL and return four values.
+ The first value is a symbol indicating the MODEL.
+ The second value is a symbol indicating the STYLE.
+ The third value is a symbol denoting the STORE or NIL if no store specified.
+ The fourth value is a list of STORE-ARGS or NIL if none.
+ If the third value is NIL, the fourth value is always NIL."
+  (destructuring-bind (model style . store-spec)
+      (or data-model '(:2d :combined :common))
+    ;; This next form assumes STORE-SPEC was built from the
+    ;; destructuring-bind.
+    ;;
+    ;; TODO: This code could use a little refactor.
+    (cond
+      ((null store-spec)
+       (values model style nil nil))
+      ((symbolp (car store-spec))
+       (unless (null (cdr store-spec))
+         (error (u:cat "STORE form is illegal.~%"
+                       "STORE with args must be supplied as "
+                       "(store argN*).~%"
+                       "but found: ~{~S ~}"
+                       "in define-texture-map data-form.")
+                store-spec))
+       (values model style (car store-spec) (cdr store-spec)))
+      ((and (listp (car store-spec))
+            (= (length store-spec) 1)
+            (symbolp (caar store-spec))
+            (or (not (null (caar store-spec)))
+                (and (null (caar store-spec))
+                     (null (cdar store-spec)))))
+       (values model style (caar store-spec) (cdar store-spec)))
+      (t
+       (error (u:cat "STORE form is malformed.~%"
+                     "Unknown store form--can't parse.~%"
+                     "Form is: ~{~S ~}")
+              store-spec)))))
+
+(defmethod gen-texture-map-name (name model style store store-args)
   "Return two values. The first is the NAME if it is defined or a gensymed
 name if not, and the second is T if the name is a gensym name and NIL
  otherwise"
@@ -46,7 +85,7 @@ name if not, and the second is T if the name is a gensym name and NIL
   (u:format-symbol nil "~A-~A-~A" mipvar msvar suffix))
 
 (defmethod physical-form-classifier ((form-type (eql :body))
-                                     model style store)
+                                     model style store store-args)
   (lambda (item)
     (cond
       ((and (listp item)
@@ -61,7 +100,7 @@ name if not, and the second is T if the name is a gensym name and NIL
 
 (defmethod physical-form-classifier ((form-type (eql :body))
                                      (model (eql :cube))
-                                     style store)
+                                     style store store-args)
   (lambda (item)
     (cond
       ((and (listp item)
@@ -73,7 +112,7 @@ name if not, and the second is T if the name is a gensym name and NIL
 (defmethod physical-form-classifier ((form-type (eql :faces))
                                      model
                                      (style (eql :faces))
-                                     store)
+                                     store store-args)
   (lambda (item)
     (cond
       ((and (listp item)
@@ -84,7 +123,7 @@ name if not, and the second is T if the name is a gensym name and NIL
 
 (defmethod physical-form-classifier ((form-type (eql :face))
                                      (model (eql :cube))
-                                     style store)
+                                     style store store-args)
   (lambda (item)
     (cond
       ((and (listp item)
@@ -95,7 +134,7 @@ name if not, and the second is T if the name is a gensym name and NIL
 
 (defmethod physical-form-classifier ((form-type (eql :envmap))
                                      (model (eql :cube))
-                                     style store)
+                                     style store store-args)
   (lambda (item)
     (cond
       ;; squish all :mipmap-*d forms into a single 'mipmap bucket.
@@ -109,7 +148,7 @@ name if not, and the second is T if the name is a gensym name and NIL
 ;; TODO: This function could prolly be rewritten to use the :kwargs
 ;; hacky idiom of the above method for much less code.
 (defmethod physical-form-classifier ((form-type (eql :mipmap))
-                                     model style store)
+                                     model style store store-args)
   (lambda (item)
     (cond
       ((and (listp item)
@@ -353,7 +392,8 @@ And produce a LET binding form for it with VAR as the variable name."
     ,@(when extent `(:extent ,extent))
     ,@(when mapping-spans `(:mapping-spans ,mapping-spans))))
 
-(defun gen-mipmap-binding-group (mipvar phys/mipmap model style store)
+(defun gen-mipmap-binding-group (mipvar phys/mipmap model style store
+                                 store-args)
   "Return five values. The first value is any ATTRS form if present. The
 second value is any CATTRS form if present. The third value is any SATTRS form
 if present, the fourth value is the list of LET binding forms for any
@@ -373,7 +413,7 @@ forms."
                                 ;; TODO CLUNKY (misuse of current SIEVE
                                 ;; functionality)
                                 (physical-form-classifier
-                                 :mipmap model style store)
+                                 :mipmap model style store store-args)
                                 mipmap-body)
         (declare (ignore extent-symbol))
         (when (plusp (length unknown))
@@ -413,7 +453,8 @@ list."
   `(,mipmaps-container-var
     ,(apply #'gen-mipmaps-form sym mipmap-var-names)))
 
-(defun gen-mipmaps-binding-group (mipmaps-var phys/mipmaps model style store)
+(defun gen-mipmaps-binding-group (mipmaps-var phys/mipmaps model style
+                                  store store-args)
   "Return four values. The first value is a list of bindings to create all the
 mipmaps in the MIPMAPS form (including bindings for the mapping-spans and any
 required data-spans).
@@ -440,7 +481,7 @@ as hash keys in the right order)."
           :for mipvar = (varname "mip" id)
           :do (multiple-value-bind (attrs cattrs sattrs bindings mipmap-form)
                   (gen-mipmap-binding-group mipvar phys/mipmap
-                                            model style store)
+                                            model style store store-args)
                 ;; Store the mipvar for later encoding into mipmap container.
                 (push mipvar mipvars)
                 ;; Associate the mipvar with the attrs it might need.
@@ -469,7 +510,7 @@ return it."
                    :collect `(list ,k ,v)))))
 
 ;; Used for 1d, 2d, 3d texture map forms.
-(defmethod gen-texture-map-form (name model style store
+(defmethod gen-texture-map-form (name model style store store-args
                                  &key anonymous-p data-elements-var-name
                                    mipmaps-var-name cube-var-name
                                    phys/attrs phys/cattrs phys/sattrs)
@@ -484,6 +525,7 @@ return it."
     :model ',model
     :style ',style
     :store ',store
+    :store-args ',store-args
     ,@(when data-elements-var-name
         `(:data-elements ,data-elements-var-name))
     ,@(when mipmaps-var-name
@@ -497,7 +539,8 @@ return it."
 
 
 ;; Used for :cube maps (gotta analyze faces and mipmaps in a special way)
-(defmethod gen-texture-map-form (name (model (eql :cube)) style store
+(defmethod gen-texture-map-form (name (model (eql :cube)) style
+                                 store store-args
                                  &key anonymous-p data-elements-var-name
                                    mipmaps-var-name cube-var-name
                                    phys/attrs phys/cattrs phys/sattrs)
@@ -512,6 +555,7 @@ return it."
     :model ',model
     :style ',style
     :store ',store
+    :store-args ',store-args
     ,@(when data-elements-var-name
         `(:data-elements ,data-elements-var-name))
     ,@(when cube-var-name
@@ -551,7 +595,8 @@ the attributes stored in the associated STORAGE-ATTRS hash table entry are
     (nreverse forms)))
 
 ;; Used for :1d, :2d, :3d textures.
-(defmethod gen-texture-map-binding-group (name model style store body)
+(defmethod gen-texture-map-binding-group (name model style store store-args
+                                          body)
   "Return three values. The first value is the complete binding group to build
 the texture using the texmap API. The second value is the symbol of the
 variable of the bound texture-map. The third value is all of the absorption
@@ -566,7 +611,7 @@ forms for any mipmap attributes."
         ;; Partition the body into chunks
         (partition-a-dsl-form texture-map-key-pool
                               (physical-form-classifier
-                               :body model style store)
+                               :body model style store store-args)
                               body)
       ;; Validation
       (when (plusp (length unknown))
@@ -582,14 +627,14 @@ forms for any mipmap attributes."
         (multiple-value-bind (mip-let-bindings mip-container-binding
                               mip-attrs mipvars)
             (gen-mipmaps-binding-group mipmaps-var phys/mipmaps model
-                                       style store)
+                                       style store store-args)
 
           (u:mvlet* ((canonical-texmap-name
                       anonymous-p
-                      (gen-texture-map-name name model style store))
+                      (gen-texture-map-name name model style store store-args))
                      (texmap-form
                       (gen-texture-map-form
-                       canonical-texmap-name model style store
+                       canonical-texmap-name model style store store-args
                        :anonymous-p anonymous-p
                        :phys/sattrs phys/sattrs
                        :phys/cattrs phys/cattrs
@@ -629,7 +674,7 @@ forms for any mipmap attributes."
     ,@(when elidx `(:elidx ,elidx))))
 
 ;; TODO: Prolly convert to defmethod
-(defun gen-face-binding-group (phys/face model style store)
+(defun gen-face-binding-group (phys/face model style store store-args)
   "Return five values. The first value is any ATTRS form if present. The
 second value is any CATTRS form if present. The third value is any SATTRS form
 if present. The fourth form is a list of LET bindings of the :dir and :elidx
@@ -645,7 +690,7 @@ values in the face, if any. The fifth form is the face creation form itself."
                                 ;; TODO CLUNKY (misuse of current SIEVE
                                 ;; functionality)
                                 (physical-form-classifier
-                                 :face model style store)
+                                 :face model style store store-args)
                                 face-body)
         (destructuring-bind (&key dir elidx) kwargs
           (values attrs
@@ -655,10 +700,10 @@ values in the face, if any. The fifth form is the face creation form itself."
                   (gen-face-form sym :dir dir :elidx elidx)))))))
 
 ;; TODO: prolly convert to defmethod.
-(defun gen-face-binding-form (face-var api/face model style store)
+(defun gen-face-binding-form (face-var api/face model style store store-args)
   "Return a form suitable to use in a LET binding of the FACE-VAR and the
 API/FACE."
-  (declare (ignore model style store))
+  (declare (ignore model style store store-args))
   `(,face-var ,api/face))
 
 ;; ------- faces container PHYS->API generation
@@ -676,7 +721,8 @@ list."
   `(,faces-container-var
     ,(apply #'gen-faces-form sym face-var-names)))
 
-(defun gen-faces-binding-group (faces-var phys/faces model store style)
+(defun gen-faces-binding-group (faces-var phys/faces model style
+                                store store-args)
   "Return four values. The first value is a list of bindings to create all the
 faces in the PHYS/FACES form.
 
@@ -701,7 +747,8 @@ be used as hash keys in the right order)."
           :for id :from 0
           :for face-var = (varname "face" id)
           :do (multiple-value-bind (attrs cattrs sattrs face-form)
-                  (gen-face-binding-group phys/face model style store)
+                  (gen-face-binding-group phys/face model style
+                                          store store-args)
 
                 ;; Store the facevar for later encoding into faces container.
                 (push face-var face-vars)
@@ -730,10 +777,11 @@ be used as hash keys in the right order)."
 (defun gen-representation-binding-form (repr-var api/repr)
   `(,repr-var ,api/repr))
 
-(defun gen-cube-form (sym &key style store repr)
+(defun gen-cube-form (sym &key style store store-args repr)
   `(,(dslobjsym->constructor sym)
     ,@(when style `(:style ',style))
     ,@(when store `(:store ',store))
+    ,@(when store-args `(:store-args ',store-args))
     ,@(when repr `(:repr ,repr))))
 
 (defun gen-cube-binding-form (cube-var api/cube)
@@ -741,7 +789,8 @@ be used as hash keys in the right order)."
 
 ;; A :unique cube map will always use faces in the cube representation
 (defmethod gen-cube-binding-group (cube-var phys/cube
-                                   model (style (eql :faces)) store)
+                                   model (style (eql :faces))
+                                   store store-args)
   "Return four values. The first value is a list of LET bindings which
 construct all of the faces and then one more for the faces container. The
 second value is the binding form for the cube which uses the faces-container as
@@ -762,7 +811,7 @@ physical dsl form."
         ;; Partition the faces body in the faces form in the cube form.
         (partition-a-dsl-form cube-key-pool
                               (physical-form-classifier
-                               :faces model style store)
+                               :faces model style store store-args)
                               faces-body)
 
       (when (plusp (length unknown))
@@ -772,7 +821,7 @@ physical dsl form."
       (multiple-value-bind (face-bindings face-container-binding
                             face-attrs face-vars)
           (gen-faces-binding-group (varname "faces" 0)
-                                   phys/faces model style store)
+                                   phys/faces model style store store-args)
 
         ;; Now, generate the representation we put all of this into.
         (let* ((api/repr
@@ -783,7 +832,9 @@ physical dsl form."
                (repr-binding-form
                  (gen-representation-binding-form representation-var
                                                   api/repr))
-               (api/cube (gen-cube-form 'cube :style style :store store
+               (api/cube (gen-cube-form 'cube :style style
+                                              :store store
+                                              :store-args store-args
                                               :repr representation-var))
                (cube-binding-form (gen-cube-binding-form cube-var api/cube)))
 
@@ -801,7 +852,8 @@ physical dsl form."
 
 ;; An :envmap cube map will always use envmap in the cube form.
 (defmethod gen-cube-binding-group (cube-var phys/cube
-                                   model (style (eql :envmap)) store)
+                                   model (style (eql :envmap))
+                                   store store-args)
 
   "Return four values. The first value is a list of LET bindings which
 construct all of the faces and then one more for the faces container. The
@@ -823,7 +875,7 @@ physical dsl form."
         ;; Partition the faces body in the envmap form in the cube form.
         (partition-a-dsl-form cube-key-pool
                               (physical-form-classifier
-                               :envmap model style store)
+                               :envmap model style store store-args)
                               mipmaps-body)
 
       (when (plusp (length unknown))
@@ -833,7 +885,7 @@ physical dsl form."
       (multiple-value-bind (mipmap-bindings mipmap-container-binding
                             mipmap-attrs mipmap-vars)
           (gen-mipmaps-binding-group (varname "mipmaps" 0)
-                                     phys/mipmaps model style store)
+                                     phys/mipmaps model style store store-args)
 
         ;; Now, generate the representation we put all of this into.
         (let* ((api/repr
@@ -844,7 +896,9 @@ physical dsl form."
                (repr-binding-form
                  (gen-representation-binding-form representation-var
                                                   api/repr))
-               (api/cube (gen-cube-form 'cube :style style :store store
+               (api/cube (gen-cube-form 'cube :style style
+                                              :store store
+                                              :store-args store-args
                                               :repr representation-var))
                (cube-binding-form (gen-cube-binding-form cube-var api/cube)))
 
@@ -858,7 +912,7 @@ physical dsl form."
 
 ;; Used for :cube model textures, both :unique and :envmap styles.
 (defmethod gen-texture-map-binding-group (name (model (eql :cube)) style
-                                          store body)
+                                          store store-args body)
   (let* ((texture-map-key-pool '(attrs cattrs sattrs data-elements
                                  cube :unknown))
          (cube-var (varname "cube" 0))
@@ -868,7 +922,7 @@ physical dsl form."
         ;; Partition the body into data-elements and cube forms.
         (partition-a-dsl-form texture-map-key-pool
                               (physical-form-classifier
-                               :body model style store)
+                               :body model style store store-args)
                               body)
       ;; Validation
       (when (plusp (length unknown))
@@ -892,15 +946,16 @@ physical dsl form."
             (gen-cube-binding-group cube-var
                                     ;; NOTE: Only one cube form.
                                     (first phys/cube)
-                                    model style store)
+                                    model style store store-args)
 
           (u:mvlet*
               ((canonical-texmap-name anonymous-p
                                       (gen-texture-map-name name
-                                                            model style store))
+                                                            model style
+                                                            store store-args))
                (texmap-form
                 (gen-texture-map-form
-                 canonical-texmap-name model style store
+                 canonical-texmap-name model style store store-args
                  :anonymous-p anonymous-p
                  :phys/sattrs phys/sattrs
                  :phys/cattrs phys/cattrs
@@ -933,14 +988,14 @@ physical dsl form."
 ;; 1d, 2d, 3d, cube physical texture conversion.
 ;;; ---------------------------------------------------------------------------
 
-(defmethod physical->api (name model style store body)
+(defmethod physical->api (name model style store store-args body)
 
   ;; TODO: Figure out how to wedge a context into the dsl, then
   ;; wrap form in lambda to specify context.
 
   (multiple-value-bind (all-bindings texture-var absorption-forms
                         canonical-texmap-name anonymous-p)
-      (gen-texture-map-binding-group name model style store body)
+      (gen-texture-map-binding-group name model style store store-args body)
     (values
      canonical-texmap-name
      anonymous-p
@@ -958,9 +1013,10 @@ physical dsl form."
   (let* ((name 'g000-1d-log-inf-one-non)
          (model :1d)
          (style :unique)
+         (store-args nil)
          (store nil))
     (physical->api
-     name model style store
+     name model style store store-args
      ;; body
      '((cattrs ("foo" 100) ('qux 12))
        (data-elements
@@ -978,9 +1034,10 @@ physical dsl form."
   (let* ((name 'g000-cube-phy-gnd-one-non)
          (model :cube)
          (style :unique)
+         (store-args nil)
          (store :six))
     (physical->api
-     name model style store
+     name model style store store-args
      ;; body
      '((sattrs ('foo 100))
        (data-elements
@@ -1003,9 +1060,10 @@ physical dsl form."
   (let* ((name 'xg000-cube-phy-gnd-one-non)
          (model :cube)
          (style :envmap)
+         (store-args nil)
          (store :hcross))
     (physical->api
-     name model style store
+     name model style store store-args
      ;; body
      '((data-elements
         (0 (image-element :logloc (textures cube-hcross-256x192)))

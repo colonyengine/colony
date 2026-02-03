@@ -22,124 +22,6 @@
 ;; Synthesize Methods
 ;; ------------------------
 
-(defmethod rectify ((infer-style (eql :synthesize))
-                    (feature (eql :number-of-mipmaps/unique))
-                    (inst texture-map-simple)
-                    (root texture-map-simple)
-                    &key core)
-
-  (declare (ignore feature root))
-  ;; Deduce the mipmap structure from the
-  ;; data-elements/model/style/store. Assume data-elements are in
-  ;; descending mipmap size order during synthesis. Validate this fact.
-  ;; The deduction is robust to all texture maps types, though we are
-  ;; restricted here to texture-map-simple types.
-
-  ;; problem: in a 1d/2d situation, the data-elements will be EACH starting
-  ;; at a larger size then going downwrds to the smallest mipmap.
-  ;; But, in a 3d situation, you might have a set of IxJ mipmaps, then another
-  ;; set of KxL mipmaps which are smaller, and so on. So, do we deduce that
-  ;; here or do we split the
-
-  ;; NOTE:
-  ;; We assume that elidxs are a priori correct (but we may have to add
-  ;; new mipmaps with new mapping-spans and we make sure those are correct).
-  ;;
-  ;; NOTE: zero data-elements is already checked for before this is called.
-  ;;
-  ;; Figure out how many mipmaps there should be in the texture-map.
-  ;; If 1d,2d,
-  ;;   If (= (length current-mipmaps) (length data-elements)), all good.
-  ;;   If (< (length current-mipmaps) (length data-elements)), add mipmaps.
-  ;;   If (> (length current-mipmaps) (length data-elements)), del mipmaps.
-  ;;   (Any mipmaps we add must have the elidx slots set.)
-  ;; else 3d
-  ;;    If zero current-mipmaps,
-  ;;       either we deduced them from the data-elements and make the right
-  ;;       mipmap instances, or we error :unable-to-synthesize-mipmaps
-  ;;    If there is one mipmap form, it must use all the data-elements.
-  ;;    (Any mipmaps we add must have the elidx slots set.)
-  ;;
-
-  (let ((result
-          (deduce-mipmap-hierarchy inst (texmap:style inst) (texmap:store inst)
-                                   :core core)))
-
-    (debug-rectification "texture-map-simple"
-                         infer-style
-                         :number-of-mipmaps/unique
-                         "Deduced mipmap hierarchy:~%~{~{ ~S~%~}~%~}"
-                         result)
-
-    ;; KEEP GOING
-    ;;
-    ;; Take the RESULT and overwrite it into the texmap-inst's mipmaps.
-    ;; I may have to resize the mipmaps array. Also set the completion slot
-    ;; based on the completion status of the texture-map.
-    ;;
-    ;; Compute completion status.
-
-    (values t :ok)))
-
-
-(defmethod rectify ((infer-style (eql :synthesize))
-                    (feature (eql :number-of-mipmaps/combined))
-                    (inst texture-map-simple)
-                    (root texture-map-simple)
-                    &key core)
-
-  (declare (ignore feature root))
-  ;; Deduce the mipmap structure from the
-  ;; data-elements/model/style/store. Assume data-elements are in
-  ;; descending mipmap size order during synthesis. The deduction is
-  ;; robust to all texture maps types, though we are restricted here to
-  ;; texture-map-simple types.
-
-
-  ;; NOTE:
-  ;; We assume that elidxs are a priori correct.
-  ;;
-  ;; 0. If zero data-elements, error :missing-data-elements
-  ;; 1. Find out (length current-mipmaps) currently specified.
-  ;; 2. Find out (length data-elements)
-  ;;
-  ;; 3. Figure out how many mipmaps there should be in the texture-map.
-  ;; if :combined,
-  ;;    If 1d,2d:
-  ;;      There must be one data-element.
-  ;;      Guess, using :store, the number and location of mipmaps in the image.
-  ;;      If there are zero mipmaps, maybe an error?
-  ;;      If there is one mipmap, increase to guessed mipmap number.
-  ;;      If num mipmaps = num guessed mipmaps, all good.
-  ;;      If >0 mipmaps and <guessed-num, check :mipmap-combined-policy
-  ;;      If >guessed-num, check :mipmap-combined-policy
-  ;;    If 3d:
-  ;;      KEEP GOING.
-
-  ;; Just a hack for testing...
-  (let ((result
-          (deduce-mipmap-hierarchy inst (texmap:style inst) (texmap:store inst)
-                                   :core core)))
-
-    (debug-rectification "texture-map-simple"
-                         infer-style
-                         :number-of-mipmaps/combined
-                         "Deduced mipmap hierarchy:~%~{~{ ~S~%~}~%~}"
-                         result)
-
-    ;; KEEP GOING
-    ;;
-    ;; Take the RESULT and overwrite it into the texmap-inst's mipmaps.
-    ;; I may have to resize the mipmaps array. Also set the completion slot
-    ;; based on the completion status of the texture-map.
-    ;;
-    ;; Compute completion status.
-
-    (values t :ok))
-  )
-
-
-
 ;; This only synthesizes the right number of mipmaps, potentially their
 ;; elidxs, and then returns.
 (defmethod rectify ((infer-style (eql :synthesize))
@@ -158,17 +40,30 @@
     (when (zerop (length delems))
       (return-from rectify (values nil :missing-data-elements))))
 
-  ;; 1. Synthesize the mipmaps container contents and the elidx of each mipmap.
-  (multiple-value-bind (result error-domain)
-      ;; NOTE: This may change the mipmap array reference and size!
-      (ecase (texmap:style inst)
-        (:unique
-         (rectify infer-style :number-of-mipmaps/unique
-                  inst root :core core))
-        (:combined
-         (rectify infer-style :number-of-mipmaps/combined
-                  inst root :core core)))
-    (values result error-domain)))
+  ;; 1. Synthesize a new list of mipmap-* objects in order from largest
+  ;; to smallest that can be deduced from the data elements.
+  (let ((result (deduce-mipmap-hierarchy inst (texmap:style inst)
+                                         (texmap:store inst)
+                                         (texmap:store-args inst)
+                                         :core core)))
+
+    (debug-rectification "texture-map-simple"
+                         infer-style
+                         :number-of-mipmaps
+                         "Deduced mipmap hierarchy:~%~{~{ ~S~%~}~%~}"
+                         result)
+
+    ;; KEEP GOING
+    ;;
+    ;; Take the RESULT and overwrite it into the texmap-inst's mipmaps.
+    ;; I may have to resize the mipmaps array. Also set the completion slot
+    ;; based on the completion status of the texture-map.
+    ;;
+    ;; Compute completion status.
+    ;;(inspect result)
+
+    (values t :ok))
+  )
 
 (defmethod rectify ((infer-style (eql :synthesize))
                     (feature (eql :mipmap))
@@ -284,36 +179,36 @@
 ;;  <HEIGHT> ::= positive integer
 ;;  <DEPTH> ::= positive integer
 ;;
-;;  (deduce-mipmap-hierarchy texmap-1d :unique <store>)
+;;  (deduce-mipmap-hierarchy texmap-1d :unique <store> <store-args>)
 ;;   Each data-element is one entire mipmap.
 ;;   Return <RESULT>
 ;;
-;;  (deduce-mipmap-hierarchy texmap-1d :combined <store>)
+;;  (deduce-mipmap-hierarchy texmap-1d :combined <store> <store-args>)
 ;;   TODO
 ;;   Return <RESULT>
 ;;
-;;  (deduce-mipmap-hierarchy texmap-2d :unique <store>)
+;;  (deduce-mipmap-hierarchy texmap-2d :unique <store> <store-args>)
 ;;   Each data-element is one entire mipmap.
 ;;   Return <RESULT>
 ;;
-;;  (deduce-mipmap-hierarchy texmap-2d :combined <store>)
+;;  (deduce-mipmap-hierarchy texmap-2d :combined <store> <store-args>)
 ;;   TODO
 ;;   Return <RESULT>
 ;;
-;;  (deduce-mipmap-hierarchy texmap-3d :unique <store>)
+;;  (deduce-mipmap-hierarchy texmap-3d :unique <store> <store-args>)
 ;;   Collect data-elements via store description until size changes,
 ;;    compute mipmap size for each size grouping.
 ;;   Return <RESULT>
 ;;
-;;  (deduce-mipmap-hierarchy texmap-3d :combined <store>)
+;;  (deduce-mipmap-hierarchy texmap-3d :combined <store> <store-args>)
 ;;   TODO
 ;;   Return <RESULT>
 ;;
-;;  (deduce-mipmap-hierarchy texmap-cube :faces <store>)
+;;  (deduce-mipmap-hierarchy texmap-cube :faces <store> <store-args>)
 ;;   For cube, process each sub-texture and collect results.
 ;;   Return <RESULT>
 ;;
-;;  (deduce-mipmap-hierarchy texmap-cube :envmap <store>)
+;;  (deduce-mipmap-hierarchy texmap-cube :envmap <store> <store-args>)
 ;;   TODO
 ;;   Return <RESULT>
 ;;

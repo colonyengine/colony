@@ -37,8 +37,12 @@
   ;; The data model consists of a form: (MODEL STYLE STORE)
   ;; The MODEL is either: :1d. :2d. :3d. :cube.
   ;; The STYLE is either: :unique, :combined (or :faces or :envmap if :cube)
-  ;; The STORE form can vary quite a bit, be a list, and depends on
-  ;; MODEL and STYLE.
+  ;; The STORE can be a symbol or a list. A lone symbol is a
+  ;; "store method" with an empty argument list. As for a list, the
+  ;; first element of the list must be a symbol which represents the
+  ;; "store method" and the &rest of the list are contextual arguments
+  ;; relating to that store method.
+  ;;
   ;;
   ;; One of these data models MAY be specified (there is a default)
   ;;
@@ -47,16 +51,13 @@
   ;;  ([:1d | 2d] :unique) - A single texture map with mipmap images
   ;;
   ;;D ([:1d | 2d] :combined AAA) - all mipmaps in one file
-  ;;      AAA can be
-  ;;      :common - The common packed format into one file.
-  ;;      nil - Use a heuristic to figure out the mipmap layout in the
-  ;;               combined image.
+  ;;      AAA can be:
+  ;;      :common - The common packed mipmap format one file.
+  ;;      :dds - The Direct Draw Surface file format (holding mipmaps)
+  ;;      nil - Default if AAA not supplied.
+  ;;               Use a heuristic to figure out the mipmap layout in the
+  ;;               combined image. May guess wrong!
   ;;      etc - Other layouts systems of the combined mipmaps in a file.
-  ;;      NOTE: If AAA is not supplied, it is assumed to be nil, which
-  ;;      means for the engine to use a heuristic and guess at what the
-  ;;      combined form the mipmap is. Note: It may guess wrong, but if
-  ;;      it can't decide, it can only produce an error and the user has to
-  ;;      fix it by specifing an actual format..
   ;;
   ;;  ;; NOTE: Rectangle storage. 2d only. Only 1 (:image () ...) form
   ;;  (:rect :unique)
@@ -66,7 +67,11 @@
   ;;  (:buffer :unique)
   ;;
   ;;  ;; NOTE: A 3d texture maps as unique mipmaped voxels.
-  ;;  (:3d :unique (:slices :xy-z)) - a 3d mimap
+  ;;  (:3d :unique (:slices AAA)) - a 3d mimap
+  ;;      AAA can be:
+  ;;      :xy-z - image slice is 0,0 to +x,+y then 0 to +z slices
+  ;;      :xz-y - image slice is 0,0 to +x,+z then 0 to +y slices
+  ;;      :yz-x - image slice is 0,0 to +y,+z then 0 to +x slices
   ;;
   ;;  ;; NOTE: cube texture maps (there are sub-texture-maps)
   ;;  (:cube :faces AAA) - cube map faces as separate texture-maps
@@ -168,6 +173,12 @@
     (:texture-2d x:clamp-all-edges)
   ;; TODO: TMAP Fix to accept texture-map name.
   (:data #((textures wood))))
+
+;; NOTE: No analog in pre-updated c:define-texture until I change it to
+;; handle define-texture-map names.
+(c:define-texture-map 2d-wood-mipmap-common (:2d :combined :common)
+  (texmap:mipmap (textures wood-mipmap-common)))
+
 
 (c:define-texture-map 3d (:3d :unique (:slices :xy-z))
   ;; mipmap level 0

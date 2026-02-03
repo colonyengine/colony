@@ -175,8 +175,9 @@
 ;; defclass CUBE (and children) support code
 ;;; -----------------
 
-(defun make-cube (&key style store repr)
-  (make-instance 'cube :style style :store store :repr repr))
+(defun make-cube (&key style store store-args repr)
+  (make-instance 'cube :style style :store store :store-args store-args
+                       :repr repr))
 
 ;;; -----------------
 ;; defclass TEXTURE-MAP-STATE support code
@@ -193,14 +194,14 @@
 
 ;; Extensible API
 (defmethod make-texture-map ((type symbol)
-                             &key name anonymous-p model style store
+                             &key name anonymous-p model style store store-args
                                data-elements state
                                mipmaps bags attrs cattrs sattrs)
   ;; TYPE ends up being all the simple texture maps.
   (let ((texture-map
           (make-instance type
                          :name name :anonymous-p anonymous-p :model model
-                         :style style :store store
+                         :style style :store store :store-args store-args
                          :data-elements data-elements
                          :state (u:default state (make-texture-map-state))
                          :mipmaps mipmaps)))
@@ -208,14 +209,14 @@
                  :bags bags :attrs attrs :cattrs cattrs :sattrs sattrs)
     texture-map))
 (defmethod make-texture-map ((type (eql 'texture-map-cube))
-                             &key name anonymous-p model style store
+                             &key name anonymous-p model style store store-args
                                data-elements state
                                cube bags attrs cattrs sattrs)
   ;; TYPE is a complex texture map type.
   (let ((texture-map
           (make-instance type
                          :name name :anonymous-p anonymous-p :model model
-                         :style style :store store
+                         :style style :store store :store-args store-args
                          :data-elements data-elements
                          :state (u:default state (make-texture-map-state))
                          :cube cube)))
@@ -223,31 +224,36 @@
                  :bags bags :attrs attrs :cattrs cattrs :sattrs sattrs)
     texture-map))
 ;; Convenience API
-(defun make-texture-map-1d (&key name anonymous-p model style store
+(defun make-texture-map-1d (&key name anonymous-p model style store store-args
                               data-elements mipmaps bags attrs cattrs sattrs)
   (make-texture-map 'texture-map-1d :name name :anonymous-p anonymous-p
-                                    :model model :style style :store store
+                                    :model model :style style
+                                    :store store :store-args store-args
                                     :data-elements data-elements
                                     :mipmaps mipmaps :bags bags :attrs attrs
                                     :cattrs cattrs :sattrs sattrs))
-(defun make-texture-map-2d (&key name anonymous-p model style store
+(defun make-texture-map-2d (&key name anonymous-p model style store store-args
                               data-elements mipmaps bags attrs cattrs sattrs)
   (make-texture-map 'texture-map-2d :name name :anonymous-p anonymous-p
-                                    :model model :style style :store store
+                                    :model model :style style
+                                    :store store :store-args store-args
                                     :data-elements data-elements
                                     :mipmaps mipmaps :bags bags :attrs attrs
                                     :cattrs cattrs :sattrs sattrs))
-(defun make-texture-map-3d (&key name anonymous-p model style store
+(defun make-texture-map-3d (&key name anonymous-p model style store store-args
                               data-elements mipmaps bags attrs cattrs sattrs)
   (make-texture-map 'texture-map-3d :name name :anonymous-p anonymous-p
-                                    :model model :style style :store store
+                                    :model model :style style
+                                    :store store :store-args store-args
                                     :data-elements data-elements
                                     :mipmaps mipmaps :bags bags :attrs attrs
                                     :cattrs cattrs :sattrs sattrs))
-(defun make-texture-map-cube (&key name anonymous-p model style store
+(defun make-texture-map-cube (&key name anonymous-p model style
+                                store store-args
                                 data-elements cube bags attrs cattrs sattrs)
   (make-texture-map 'texture-map-cube :name name :anonymous-p anonymous-p
-                                      :model model :style style :store store
+                                      :model model :style style
+                                      :store store :store-args store-args
                                       :data-elements data-elements
                                       :cube cube :bags bags :attrs attrs
                                       :cattrs cattrs :sattrs sattrs))

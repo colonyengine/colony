@@ -387,6 +387,7 @@
    #:sourced-p ;; accessor for mipmap
    #:state
    #:store ;; accessor for cube, texture-map
+   #:store-args ;; accessor for cube, texture-map
    #:style ;; accessor for cube, texture-map
    #:sunk-p ;; accessor for mipmap
    #:texture-map-state ;; class for texture-map-state object.
@@ -852,6 +853,9 @@
       (:vorigin.vec2 :v2)
       (:vorigin.vec3 :v3)
       (:vorigin.vec4 :v4)
+      (:vorigin.ivec2 :iv2)
+      (:vorigin.ivec3 :iv3)
+      (:vorigin.ivec4 :iv4)
       (:vorigin.dvec2 :dv2)
       (:vorigin.dvec3 :dv3)
       (:vorigin.dvec4 :dv4)

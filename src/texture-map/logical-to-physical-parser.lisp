@@ -1,7 +1,7 @@
 (in-package #:colony.texture-map)
 
-(defgeneric logical->physical (name model style store body))
-(defgeneric logical-form-classifer (form-type model style store))
+(defgeneric logical->physical (name model style store store-args body))
+(defgeneric logical-form-classifer (form-type model style store store-args))
 
 ;;; ---------------------------------------------------------------------------
 ;; helper functions and methods.
@@ -49,7 +49,7 @@ the lists of each category in the order of KEY-POOL."
 
 ;; For :1d, :2d, :3d, :cube/:envmap
 (defmethod logical-form-classifier ((form-type (eql :body))
-                                    model style store)
+                                    model style store store-args)
   (lambda (item)
     (if (and (listp item)
              (member (car item) '(sattrs cattrs attrs mipmap)))
@@ -60,7 +60,7 @@ the lists of each category in the order of KEY-POOL."
 (defmethod logical-form-classifier ((form-type (eql :body))
                                     (model (eql :cube))
                                     (style (eql :faces))
-                                    store)
+                                    store store-args)
   (lambda (item)
     (if (and (listp item)
              (member (car item) '(sattrs cattrs attrs face)))
@@ -68,7 +68,7 @@ the lists of each category in the order of KEY-POOL."
         :unknown)))
 
 (defmethod logical-form-classifier ((form-type (eql :mipmap))
-                                    model style store)
+                                    model style store store-args)
   (lambda (item)
     (if (and (listp item)
              (member (car item) '(attrs cattrs sattrs)))
@@ -76,7 +76,7 @@ the lists of each category in the order of KEY-POOL."
         :image-elements)))
 
 (defmethod logical-form-classifier ((form-type (eql :face))
-                                    model style store)
+                                    model style store store-args)
   (lambda (item)
     (if (and (listp item)
              (member (car item) '(attrs cattrs sattrs dir)))
@@ -87,7 +87,7 @@ the lists of each category in the order of KEY-POOL."
 ;; 1d, 2d, 3d logical texture conversion.
 ;;; ---------------------------------------------------------------------------
 
-(defmethod logical->physical (name model style store body)
+(defmethod logical->physical (name model style store store-args body)
   (when (physicalp body)
     ;; No error checking, we trust the body is in the right physical form.
     (return-from logical->physical body))
@@ -97,7 +97,7 @@ the lists of each category in the order of KEY-POOL."
         ;; Partition the body into chunks
         (partition-a-dsl-form texture-map-key-pool
                               (logical-form-classifier
-                               :body model style store)
+                               :body model style store store-args)
                               body)
 
       (when (plusp (length unknown))
@@ -118,7 +118,7 @@ the lists of each category in the order of KEY-POOL."
                                     mipmap-sattrs image-elements)
                   (partition-a-dsl-form mipmap-key-pool
                                         (logical-form-classifier
-                                         :mipmap model style store)
+                                         :mipmap model style store store-args)
                                         mipmap-body)
                 (let* ((physical-mapping-spans nil))
                   ;; Super basic texture-map type checking.
@@ -165,7 +165,7 @@ the lists of each category in the order of KEY-POOL."
 
 ;; For :cube :faces textures
 (defmethod logical->physical (name (model (eql :cube)) (style (eql :faces))
-                              store body)
+                              store store-args body)
   (when (physicalp body)
     ;; No error checking, we trust the body is in the right physical form.
     (return-from logical->physical body))
@@ -175,7 +175,7 @@ the lists of each category in the order of KEY-POOL."
         ;; 1 partition the body into chunks
         (partition-a-dsl-form texture-map-key-pool
                               (logical-form-classifier
-                               :body model style store)
+                               :body model style store store-args)
                               body)
 
       (when (plusp (length unknown))
@@ -197,7 +197,7 @@ the lists of each category in the order of KEY-POOL."
                                     face-dirs texture-map-elements)
                   (partition-a-dsl-form face-key-pool
                                         (logical-form-classifier
-                                         :face model style store)
+                                         :face model style store store-args)
                                         face-body)
                 ;; Super basic texture-map type checking.
                 (u:when-let (num-elems (length texture-map-elements))
@@ -232,7 +232,7 @@ the lists of each category in the order of KEY-POOL."
                   (cube (faces ,@physical-faces)))))))
 
 (defmethod logical->physical (name (model (eql :cube)) (style (eql :envmap))
-                              store body)
+                              store store-args body)
   (when (physicalp body)
     ;; No error checking, we trust the body is in the right physical form.
     (return-from logical->physical body))
@@ -242,7 +242,7 @@ the lists of each category in the order of KEY-POOL."
         ;; 1 partition the body into chunks
         (partition-a-dsl-form texture-map-key-pool
                               (logical-form-classifier
-                               :body model style store)
+                               :body model style store store-args)
                               body)
 
       (when (plusp (length unknown))
@@ -264,7 +264,7 @@ the lists of each category in the order of KEY-POOL."
                                     mipmap-sattrs image-elements)
                   (partition-a-dsl-form mipmap-key-pool
                                         (logical-form-classifier
-                                         :mipmap model style store)
+                                         :mipmap model style store store-args)
                                         mipmap-body)
                 (let* ((physical-mapping-spans nil))
                   ;; Super basic texture-map type checking.
@@ -314,11 +314,12 @@ the lists of each category in the order of KEY-POOL."
   (let* ((name 'g000-1d-log-inf-one-non)
          (model :1d)
          (style :unique)
+         (store-args nil)
          (store nil)
          (data-model (list model style store)))
     (list name
           data-model
-          (logical->physical name model style store
+          (logical->physical name model style store store-args
                              ;; body
                              '((mipmap (textures 1d-64x1)))))))
 
@@ -326,11 +327,12 @@ the lists of each category in the order of KEY-POOL."
   (let* ((name 'g001-1d-log-inf-all-non)
          (model :1d)
          (style :unique)
+         (store-args nil)
          (store nil)
          (data-model (list model style store)))
     (list name
           data-model
-          (logical->physical name model style store
+          (logical->physical name model style store store-args
                              ;; body
                              '((mipmap (textures 1d-64x1))
                                (mipmap (textures 1d-32x1))
@@ -344,6 +346,7 @@ the lists of each category in the order of KEY-POOL."
   (let* ((name 'g003-1d-log-inf-all-non)
          (model :1d)
          (style :combined)
+         (store-args nil)
          (store :common)
          (data-model (list model style store)))
     (list name
@@ -351,7 +354,7 @@ the lists of each category in the order of KEY-POOL."
           ;; NOTE: No body gets produce beyond the data-elements form.  This is
           ;; because we don't know how many mipmaps are available until we
           ;; inspect the image header to determine it.
-          (logical->physical name model style store
+          (logical->physical name model style store store-args
                              ;; body
                              '((mipmap (textures 1d-all-127x1)))))))
 
@@ -359,6 +362,7 @@ the lists of each category in the order of KEY-POOL."
   (let* ((name 'g004-1d-log-inf-one-ovr)
          (model :1d)
          (style :unique)
+         (store-args nil)
          (store :common)
          (data-model (list model style store)))
     (list name
@@ -367,7 +371,7 @@ the lists of each category in the order of KEY-POOL."
           ;; because we don't know how many mipmaps are available until we
           ;; inspect the image header to determine it.
           (logical->physical
-           name model style store
+           name model style store store-args
            ;; body
            '((cattrs ('foo "tmap attr 0")
               ('bar "tmap attr 1"))
@@ -381,12 +385,13 @@ the lists of each category in the order of KEY-POOL."
   (let* ((name 'g000-cube-log-inf-one-non)
          (model :cube)
          (style :faces)
+         (store-args nil)
          (store :six)
          (data-model (list model style store)))
     (list name
           data-model
           (logical->physical
-           name model style store
+           name model style store store-args
            ;; body
            '((face (dir :-x) cube-negx)
              (face (cattrs ('foo 42)) (dir :+x) cube-posx)
@@ -399,12 +404,13 @@ the lists of each category in the order of KEY-POOL."
   (let* ((name 'g001-cube-log-inf-one-non)
          (model :cube)
          (style :envmap)
+         (store-args nil)
          (store :hcross)
          (data-model (list model style store)))
     (list name
           data-model
           (logical->physical
-           name model style store
+           name model style store store-args
            ;; body
            '((mipmap (textures cube-hcross-256x192)))))))
 
@@ -412,12 +418,13 @@ the lists of each category in the order of KEY-POOL."
   (let* ((name 'g002-cube-log-inf-all-non)
          (model :cube)
          (style :envmap)
+         (store-args nil)
          (store :hcross)
          (data-model (list model style store)))
     (list name
           data-model
           (logical->physical
-           name model style store
+           name model style store store-args
            ;; body
            '((mipmap (textures cube-hcross-256x192))
              (mipmap (textures cube-hcross-128x96))

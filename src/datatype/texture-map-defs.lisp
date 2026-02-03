@@ -225,6 +225,10 @@ environment map which may contain a range of different layouts."))
            :initarg :style)
    (%store :accessor store
            :initarg :store)
+   (%store-args :accessor store-args
+                :initarg :store-args
+                :initform nil
+                :type (or symbol list))
    (%repr :accessor repr
           :initarg :repr
           :initform nil
@@ -334,6 +338,14 @@ DEFINE-TEXTURE-MAP form. It is NIL otherwise.")
            :type (or symbol list)
            :documentation "The store of the texture. It may be a symbol or a ~
 list and it dependant on the MODEL and STYLE of the texture.")
+   (%store-args :accessor store-args
+                :initarg :store-args
+                :initform nil
+                :type (or symbol list)
+                :documentation "The store of a texture, usually nil or a
+ symbol indicating the store kind, may have additional arguments
+associated with it to narrow how the store is exactly defined. In the
+latter case, the arguments are store as a list in this slot.")
    (%data-elements :accessor data-elements
                    :initarg :data-elements
                    :initform nil
