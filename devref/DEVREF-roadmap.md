@@ -1,26 +1,27 @@
 # Roadmap
 
-This document describes, in general order, the features we're working on
+This document describes, in general order, the features we are working on
 in order to provide a fully functional engine. The tasks being worked on
 are grouped into named milestones. The milestone are ordered with the
-first one being the one we are working on and onwards.
+first one at the top being the one we are working on and so on.
 
-The milestones only describes feature that we want completed, not how to
+The milestones only describes features that we want completed, not how to
 do them in parallel or if they can be done parallel.
 
 NOTE: Completing BlueJay and Grackle will allow the engine to generally
 be used by everyday people who like adventures while using their tools.
 Additional completion of Great Kiskadee adds the appdev UI functionality
-and generally presents a plausible "complete" environment for game
+and generally presents a plausibly "complete" environment for game
 making.
 
 
 - Milestone: Bluejay
   - Finish branch psilord/define-texture-map
     - Complete recification
-    - Complete realiztion
-    - Complete define-texture change to use new define-teture-map names.
-    - Record stuff left over not otherwise fixed.
+    - Complete realization
+    - Complete define-texture change to use new define-texture-map names
+    - Document system design and other technical info into a devref entry
+    - Record stuff left over not otherwise fixed
   - Complete GLTF package
     - Implement read/write to/from a stream/disk/etc
     - Ensure the runtime API makes sense and is usable to construct them.
@@ -29,7 +30,7 @@ making.
   - Integrate GLTF with resource-cache and define-prefab DSL
     - When we're close, need to do a little empirical research
     - This enables appdevs to have a library of objects and an simple
-      means of linking to them in the define-prefab language.
+      means of linking to them in the define-prefab language
 
 - Milestone: Grackle
   - Implement a basic audio system
