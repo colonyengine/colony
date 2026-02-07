@@ -647,9 +647,6 @@ in the :synthesize state."
                                        :with s = 0
                                        :collect
 
-                                       ;; TODO: the :to and :from are
-                                       ;; broken for 3D.
-
                                        (make-mapping-span-3d
                                         ;; We select a 3-d
                                         ;; subspace of an N pixel
@@ -678,12 +675,13 @@ in the :synthesize state."
                                          (let ((extent
                                                  (iv3:copy
                                                   (texmap:extent dspan-3d))))
-                                           (iv3:with-components
-                                               ((e extent))
-                                             (ecase (car store-args)
-                                               (:xy-z (incf s ez))
-                                               (:xz-y (incf s ey))
-                                               (:yz-x (incf s ex))))
+                                           (when (eq store :slices)
+                                             (iv3:with-components
+                                                 ((e extent))
+                                               (ecase (car store-args)
+                                                 (:xy-z (incf s ez))
+                                                 (:xz-y (incf s ey))
+                                                 (:yz-x (incf s ex)))))
                                            extent))))))))
                         (list computed-extent mipmap-3d)))
                      (t
