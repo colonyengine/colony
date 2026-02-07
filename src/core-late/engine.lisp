@@ -41,7 +41,11 @@
                           ;;"1D-GRADIENT-MIPMAPS-VERTICAL-TOP-LEFT-BIG"
 
                           ;;"2D-WOOD"
-                          "2D-WOOD-MIPMAP-COMMON"
+                          ;;"BARK" ;; mipmap individual images.
+                          "2D-WOOD-MIPMAP-COMMON" ;; mipmap combined
+
+                          ;;"3D" ;; :xy-z
+                          ;;"3D/XZ-Y" ;; :xz-y
 
                           )
          #++(u:format-symbol "COLONY-EXAMPLES" "~A" "BLUE-FUR")

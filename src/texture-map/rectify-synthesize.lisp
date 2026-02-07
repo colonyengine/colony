@@ -38,6 +38,10 @@
   ;; 0. Check that we can synthesize any mipmaps at all!
   (u:when-let (delems (texmap:data-elements inst))
     (when (zerop (length delems))
+      (debug-rectification "texture-map-simple"
+                           infer-style
+                           :number-of-mipmaps
+                           "TODO: Why are there zero delems.")
       (return-from rectify (values nil :missing-data-elements))))
 
   ;; 1. Synthesize a new list of mipmap-* objects in order from largest

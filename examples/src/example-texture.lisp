@@ -67,11 +67,13 @@
   ;;  (:buffer :unique)
   ;;
   ;;  ;; NOTE: A 3d texture maps as unique mipmaped voxels.
-  ;;  (:3d :unique (:slices AAA)) - a 3d mimap
+  ;;  (:3d :unique AAA) - a 3d mimap
   ;;      AAA can be:
-  ;;      :xy-z - image slice is 0,0 to +x,+y then 0 to +z slices
-  ;;      :xz-y - image slice is 0,0 to +x,+z then 0 to +y slices
-  ;;      :yz-x - image slice is 0,0 to +y,+z then 0 to +x slices
+  ;;      (:slices BBB) -
+  ;;        BBB must be:
+  ;;          :xy-z - image slice is 0,0 to +x,+y then 0 to +z slices
+  ;;          :xz-y - image slice is 0,0 to +x,+z then 0 to +y slices
+  ;;          :yz-x - image slice is 0,0 to +y,+z then 0 to +x slices
   ;;
   ;;  ;; NOTE: cube texture maps (there are sub-texture-maps)
   ;;  (:cube :faces AAA) - cube map faces as separate texture-maps
@@ -228,6 +230,33 @@
            #((textures 3d-slice-0-2)
              (textures 3d-slice-1-2))
            #((textures 3d-slice-0-3)))))
+
+;; TODO: Not used, move to unit test.
+(c:define-texture-map 3d/xz-y (:3d :unique (:slices :xz-y))
+  ;; mipmap level 0
+  (texmap:mipmap
+   (textures 3d-slice-0-0)
+   (textures 3d-slice-1-0)
+   (textures 3d-slice-2-0)
+   (textures 3d-slice-3-0)
+   (textures 3d-slice-4-0)
+   (textures 3d-slice-5-0)
+   (textures 3d-slice-6-0)
+   (textures 3d-slice-7-0))
+  ;; mipmap level 1
+  (texmap:mipmap
+   (textures 3d-slice-0-1)
+   (textures 3d-slice-1-1)
+   (textures 3d-slice-2-1)
+   (textures 3d-slice-3-1))
+  ;; mipmap level 2
+  (texmap:mipmap
+   (textures 3d-slice-0-2)
+   (textures 3d-slice-1-2))
+  ;; mipmap level 3
+  (texmap:mipmap
+   (textures 3d-slice-0-3)))
+
 
 
 (c:define-texture-map red-line (:1d :unique)
