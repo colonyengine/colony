@@ -202,8 +202,8 @@ results of DEDUCE-PHYSICAL-MIPMAPS."))
        "mipmap-key: ~S -> mipmap-values: ~A~%" mipmap-key mipmap-values))
     (format t "sorted mipmap extents: ~A~%" (sort-mipmap-extents res-table))
 
-    ;; If :3d, the mipmap extents, etc are already corrected according to the
-    ;; :slices.
+    ;; NOTE: If :3d, the mipmap extents, etc are already corrected
+    ;; according to the :slices.
     res-table))
 
 ;;; TODO: We have to reconstruct the dimensions of a set of mipmaps that can be
