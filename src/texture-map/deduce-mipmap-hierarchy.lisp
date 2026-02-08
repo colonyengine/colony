@@ -361,7 +361,10 @@ out along that dimension BASE-EXTENT does not have to be a power of two."
 ;;; 3D texture map synthesis support
 ;;;
 
-;; TODO: Currently, :3d (:slices *) is supported above.
+;; TODO: Currently, :3d (:slices *) is supported above. That is the only
+;; one we support in the engine currently. Hence, there are no
+;; deduce-physical-mipmaps methods for :combined forms--we don't have
+;; any!
 
 
 
@@ -526,9 +529,7 @@ in the :synthesize state."
      :sourced-p t
      :extent (make-span-3d
               :origin (iv3:vec 0 0 0)
-              :extent (iv3:vec mipmap-width
-                               mipmap-height
-                               mipmap-depth))
+              :extent (iv3:vec mipmap-width mipmap-height mipmap-depth))
      :mapping-spans
      (apply
       #'make-mapping-spans
@@ -536,7 +537,6 @@ in the :synthesize state."
       (loop :for dspan-3d :in elidx-spec
             :with s = 0
             :collect
-
             (make-mapping-span-3d
              ;; We select a 3-d subspace of an N pixel wide, M pixel
              ;; high, and 1 pixel deep 3D span from the (2d) image...
@@ -546,24 +546,18 @@ in the :synthesize state."
              :to
              (make-data-span-3d
               :origin
-              (let ((origin
-                      (iv3:copy
-                       (texmap:origin dspan-3d))))
+              (let ((origin (iv3:copy (texmap:origin dspan-3d))))
                 (when (eq store :slices)
-                  (iv3:with-components
-                      ((o origin))
+                  (iv3:with-components ((o origin))
                     (ecase (car store-args)
                       (:xy-z (setf oz s))
                       (:xz-y (setf oy s))
                       (:yz-x (setf ox s)))))
                 origin)
               :extent
-              (let ((extent
-                      (iv3:copy
-                       (texmap:extent dspan-3d))))
+              (let ((extent (iv3:copy (texmap:extent dspan-3d))))
                 (when (eq store :slices)
-                  (iv3:with-components
-                      ((e extent))
+                  (iv3:with-components ((e extent))
                     (ecase (car store-args)
                       (:xy-z (incf s ez))
                       (:xz-y (incf s ey))
