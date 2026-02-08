@@ -47,6 +47,25 @@ Each data-spen-3d has an elidx that indicates from where we need to get
 the data. NOTE: It is not the job of this method to figure out the TO of
 where this data is supposed to go in the mipmap extent."))
 
+
+(defgeneric check-mipmap-extent-validity (texmap-inst
+                                          style store store-args
+                                          mipmap-extents)
+  (:documentation "Different texture models, like 1d, 2d, 3d, etc need to
+have their synthesized mipmap extents checked to ensure the dimensionality
+of the extents matches the expectations of the TEXMAP-INST model. Return
+T is it does match, or signal a condition if not."))
+
+
+(defgeneric synthesize-mipmap (texmap-inst style store store-args
+                               computed-extent mipmap-extent elidx-spec)
+  (:documentation "Given the synthesized information about a single mipmap,
+generate the mipmap-* object instance with all the mapping spans such
+that it actually holds real resolutions and elidxs gotten from the
+resource cache from the actual images.It is expected that the mipmap is
+synthesizable and will be synthesized when this function is called.
+Return the instantiated and filled in MIPMAP-*D instance."))
+
 (defgeneric deduce-mipmap-hierarchy (texmap-inst style store store-args
                                      &key core
                                      &allow-other-keys)
@@ -338,17 +357,11 @@ out along that dimension BASE-EXTENT does not have to be a power of two."
       res-table)))
 
 
-
-
 ;;;
 ;;; 3D texture map synthesis support
 ;;;
 
-;; KEEP GOING
-
-
-
-
+;; TODO: Currently, :3d (:slices *) is supported above.
 
 
 
@@ -377,8 +390,188 @@ in the :synthesize state."
               (> (* left-width left-height left-depth)
                  (* right-width right-height right-depth)))))))
 
+(defmethod check-mipmap-extent-validity ((texmap-inst texture-map-1d)
+                                         style store store-args
+                                         mipmap-extents)
+  ;; NOTE: There must not be any height or depth for synthesized 1d
+  ;; texture maps.
+  (loop :for (width height depth) :in mipmap-extents
+        :do (assert (= 1 height depth)))
+  t)
 
-(defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-1d)
+(defmethod check-mipmap-extent-validity ((texmap-inst texture-map-2d)
+                                         style store store-args
+                                         mipmap-extents)
+  ;; NOTE: There must not be any depth for synthesized 2d
+  ;; texture maps.
+  (loop :for (width height depth) :in mipmap-extents
+        :do (assert (= 1 depth)))
+  t)
+
+(defmethod check-mipmap-extent-validity ((texmap-inst texture-map-3d)
+                                         style store store-args
+                                         mipmap-extents)
+  ;; For :3d textures, any mipmap extent dimension must be at least 1.
+  (loop :for (width height depth) :in mipmap-extents
+        :do (assert (>= width 1))
+            (assert (>= height 1))
+            (assert (>= depth 1)))
+  t)
+
+(defmethod synthesize-mipmap ((texmap-inst texture-map-1d)
+                              style store store-args
+                              computed-extent mipmap-extent elidx-spec)
+  ;; This assertion checks that the materialized size of the image
+  ;; actually matches the expected mipmap extents we're expecting at
+  ;; this mipmap level. This finds bugs where one mipmap level might be
+  ;; the wrong on disk resolution, etc.
+  ;;
+  ;; TODO: Present this constraint error better to the appdev.
+  (assert (equal computed-extent mipmap-extent))
+
+  ;; There can only be one data-element elidx-spec source for this
+  ;; unique 1d mipmap.
+  (assert (= (length elidx-spec) 1))
+
+  (let* ((dspan-3d (first elidx-spec))
+         (mipmap-width (car mipmap-extent)))
+    ;; TODO: We assume the :from is going to be a 2D image. This doesn't
+    ;; have to be the case (like reading from a buffer instead of an
+    ;; image) and we will support it later when we actually do that.
+    (make-mipmap-1d
+     :sourced-p t
+     :extent (make-span-1d
+              :origin 0
+              :extent mipmap-width)
+     :mapping-spans
+     (make-mapping-spans
+      :encode
+      (make-mapping-span-1d
+       ;; We select a 1-d subspace of an N pixel wide, 1 pixel high, and
+       ;; 1 pixel deep 3D span from the (2d) image...
+       :from dspan-3d
+       ;; ...and place it here in the 1d extent of this mipmap.
+       :to (make-data-span-1d
+            :origin 0
+            :extent mipmap-width))))))
+
+(defmethod synthesize-mipmap ((texmap-inst texture-map-2d)
+                              style store store-args
+                              computed-extent mipmap-extent elidx-spec)
+
+  ;; This assertion checks that the materialized size of the image
+  ;; actually matches the expected mipmap extents we're expecting at
+  ;; this mipmap level. This finds bugs where one mipmap level might be
+  ;; the wrong on disk resolution, etc.
+  ;;
+  ;; TODO: Present this constraint error better to the appdev.
+  (assert (equal computed-extent mipmap-extent))
+
+  ;; There can only be one data-element elidx-spec
+  ;; source for this unique 1d mipmap.
+  (assert (= (length elidx-spec) 1))
+
+  ;; Construct the mipmap-2d for the identified section the elidx-spec
+  ;; identifies.
+  (let* ((dspan-3d (first elidx-spec))
+         (mipmap-width (first mipmap-extent))
+         (mipmap-height (second mipmap-extent)))
+    ;; TODO: We assume the :from is going to be a 2D image. This doesn't
+    ;; have to be the case (like reading from a buffer instead of an
+    ;; image) and we will support it later when we actually do that.
+    (make-mipmap-2d
+     :sourced-p t
+     :extent (make-span-2d
+              :origin (iv2:vec 0 0)
+              :extent (iv2:vec mipmap-width mipmap-height))
+     :mapping-spans
+     (make-mapping-spans
+      :encode
+      (make-mapping-span-2d
+       ;; We select a 2D subspace of an N pixel wide, M pixel high, and
+       ;; 1 pixel deep 3D span from the (2d) image...
+       :from dspan-3d
+       ;; ...and place it here in the 2d extent of this mipmap.
+       :to (make-data-span-2d
+            :origin (iv2:vec 0 0)
+            :extent (iv2:vec mipmap-width mipmap-height)))))))
+
+(defmethod synthesize-mipmap ((texmap-inst texture-map-3d)
+                              style store store-args
+                              computed-extent mipmap-extent elidx-spec)
+  ;; This assertion checks that the materialized
+  ;; size of the image actually matches the
+  ;; expected mipmap extents we're expecting at
+  ;; this mipmap level. This finds bugs where
+  ;; one mipmap level might be the wrong on disk
+  ;; resolution, etc.
+  ;;
+  ;; TODO: Present this constraint error better
+  ;; to the appdev.
+  (assert (equal computed-extent mipmap-extent))
+
+  ;; 3D mipmaps can have 1 or more elidxs representing each slice
+  ;; required for that mipmap.
+
+  ;; Construct the mipmap-3d for the identified section the elidx-spec
+  ;; identifies.
+  (let* ((mipmap-width (first mipmap-extent))
+         (mipmap-height (second mipmap-extent))
+         (mipmap-depth (third mipmap-extent)))
+    ;; TODO: We assume the :from is going to be one or more 2D image
+    ;; slices. This doesn't have to be the case (like reading from a
+    ;; buffer instead of an image) and we will support it later when we
+    ;; actually do that.
+    (make-mipmap-3d
+     :sourced-p t
+     :extent (make-span-3d
+              :origin (iv3:vec 0 0 0)
+              :extent (iv3:vec mipmap-width
+                               mipmap-height
+                               mipmap-depth))
+     :mapping-spans
+     (apply
+      #'make-mapping-spans
+      :encode
+      (loop :for dspan-3d :in elidx-spec
+            :with s = 0
+            :collect
+
+            (make-mapping-span-3d
+             ;; We select a 3-d subspace of an N pixel wide, M pixel
+             ;; high, and 1 pixel deep 3D span from the (2d) image...
+             :from dspan-3d
+             ;; ...and place it here in the 2D slice extent of this
+             ;; mipmap.
+             :to
+             (make-data-span-3d
+              :origin
+              (let ((origin
+                      (iv3:copy
+                       (texmap:origin dspan-3d))))
+                (when (eq store :slices)
+                  (iv3:with-components
+                      ((o origin))
+                    (ecase (car store-args)
+                      (:xy-z (setf oz s))
+                      (:xz-y (setf oy s))
+                      (:yz-x (setf ox s)))))
+                origin)
+              :extent
+              (let ((extent
+                      (iv3:copy
+                       (texmap:extent dspan-3d))))
+                (when (eq store :slices)
+                  (iv3:with-components
+                      ((e extent))
+                    (ecase (car store-args)
+                      (:xy-z (incf s ez))
+                      (:xz-y (incf s ey))
+                      (:yz-x (incf s ex)))))
+                extent))))))))
+
+
+(defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-simple)
                                     style ;; Both :unique and :combined
                                     store store-args
                                     &key core)
@@ -395,10 +588,8 @@ in the :synthesize state."
          (descending-mipmap-extent-keys (sort-mipmap-extents res-table))
          (largest-mipmap-extent (car descending-mipmap-extent-keys)))
 
-    ;; NOTE: There must not be any height or depth for synthesized 1d
-    ;; texture maps.
-    (loop :for (width height depth) :in descending-mipmap-extent-keys
-          :do (assert (= 1 height depth)))
+    (check-mipmap-extent-validity texmap-inst style store store-args
+                                  descending-mipmap-extent-keys)
 
     (format t "res-table is:~%")
     (u:do-hash (whd loc res-table)
@@ -414,285 +605,22 @@ in the :synthesize state."
                (lambda (computed-extent mipmap-extent)
                  (multiple-value-bind (elidx-spec present-p)
                      (u:href res-table computed-extent)
-                   (cond
-                     (present-p
-                      ;; This assertion checks that the materialized
-                      ;; size of the image actually matches the
-                      ;; expected mipmap extents we're expecting at
-                      ;; this mipmap level. This finds bugs where
-                      ;; one mipmap level might be the wrong on disk
-                      ;; resolution, etc.
-                      ;;
-                      ;; TODO: Present this constraint error better
-                      ;; to the appdev.
-                      (assert (equal computed-extent mipmap-extent))
-
-                      ;; There can only be one data-element elidx-spec
-                      ;; source for this unique 1d mipmap.
-                      (assert (= (length elidx-spec) 1))
-
-                      ;; Construct the mipmap-1d for the identified section
-                      ;; the elidx-spec identifies.
-                      (let* ((dspan-3d (first elidx-spec))
-                             (mipmap-width (car mipmap-extent))
-                             ;; TODO: We assume the :from is going to
-                             ;; be a 2D image. This doesn't have to be
-                             ;; the case (like reading from a buffer
-                             ;; instead of an image) and we will
-                             ;; support it later when we actually do
-                             ;; that.
-                             (mipmap-1d
-                               (make-mipmap-1d
-                                :sourced-p t
-                                :extent (make-span-1d
-                                         :origin 0
-                                         :extent mipmap-width)
-                                :mapping-spans
-                                (make-mapping-spans
-                                 :encode
-                                 (make-mapping-span-1d
-                                  ;; We select a 1-d subspace of an N
-                                  ;; pixel wide, 1 pixel high, and 1
-                                  ;; pixel deep 3D span from the (2d)
-                                  ;; image...
-                                  :from dspan-3d
-                                  ;; ...and place it here in the 1d
-                                  ;; extent of this mipmap.
-                                  :to (make-data-span-1d
-                                       :origin 0
-                                       :extent mipmap-width))))))
-                        (list computed-extent mipmap-1d)))
-                     (t
-                      ;; We simply record that we don't have a known
-                      ;; mipmap description for this extent.
-                      (list computed-extent :dne)))))
+                   (list computed-extent
+                         (if present-p
+                             (synthesize-mipmap texmap-inst
+                                                style store store-args
+                                                computed-extent mipmap-extent
+                                                elidx-spec)
+                             ;; We simply record that we don't have a known
+                             ;; mipmap description for this extent.
+                             :dne))))
                computed-extents
                descending-mipmap-extent-keys)))
         ;; Finally we return the answer.
         (list (cons (texmap:name texmap-inst) mipmap-obs))))))
 
 
-(defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-2d)
-                                    style ;; Both :unique and :combined
-                                    store store-args
-                                    &key core)
-  (declare (ignore core))
-  (check-deducible-mipmap-hierarchy texmap-inst)
-
-  (let* (;; NOTE: The res-table keys contain the ACTUAL dimensions of
-         ;; the materialized images in the data-elements gotten by
-         ;; gather-unique-mipmaps via the resource cache
-         (res-table (deduce-physical-mipmaps texmap-inst
-                                             (texmap:style texmap-inst)
-                                             (texmap:store texmap-inst)
-                                             (texmap:store-args texmap-inst)))
-         (descending-mipmap-extent-keys (sort-mipmap-extents res-table))
-         (largest-mipmap-extent (car descending-mipmap-extent-keys)))
-
-    ;; NOTE: There must not be any depth for synthesized 2d
-    ;; texture maps.
-    (loop :for (width height depth) :in descending-mipmap-extent-keys
-          :do (assert (= 1 depth)))
-
-    (format t "res-table is:~%")
-    (u:do-hash (whd loc res-table)
-      (format t " ~S -> ~S~%" whd loc))
-
-    (multiple-value-bind (num-levels computed-extents)
-        (destructuring-bind (width height depth) largest-mipmap-extent
-          (u:compute-mipmap-levels width height depth))
-      (declare (ignore num-levels))
-      (let ((mipmap-obs
-              (u:ragged-mapcar
-               :dne
-               (lambda (computed-extent mipmap-extent)
-                 (multiple-value-bind (elidx-spec present-p)
-                     (u:href res-table computed-extent)
-                   (cond
-                     (present-p
-                      ;; This assertion checks that the materialized
-                      ;; size of the image actually matches the
-                      ;; expected mipmap extents we're expecting at
-                      ;; this mipmap level. This finds bugs where
-                      ;; one mipmap level might be the wrong on disk
-                      ;; resolution, etc.
-                      ;;
-                      ;; TODO: Present this constraint error better
-                      ;; to the appdev.
-                      (assert (equal computed-extent mipmap-extent))
-
-                      ;; There can only be one data-element elidx-spec
-                      ;; source for this unique 1d mipmap.
-                      (assert (= (length elidx-spec) 1))
-
-                      ;; Construct the mipmap-2d for the identified section
-                      ;; the elidx-spec identifies.
-                      (let* ((dspan-3d (first elidx-spec))
-                             (mipmap-width (first mipmap-extent))
-                             (mipmap-height (second mipmap-extent))
-                             ;; TODO: We assume the :from is going to
-                             ;; be a 2D image. This doesn't have to be
-                             ;; the case (like reading from a buffer
-                             ;; instead of an image) and we will
-                             ;; support it later when we actually do
-                             ;; that.
-                             (mipmap-2d
-                               (make-mipmap-2d
-                                :sourced-p t
-                                :extent (make-span-2d
-                                         :origin (iv2:vec 0 0)
-                                         :extent (iv2:vec mipmap-width
-                                                          mipmap-height))
-                                :mapping-spans
-                                (make-mapping-spans
-                                 :encode
-                                 (make-mapping-span-2d
-                                  ;; We select a 2-d subspace of an N
-                                  ;; pixel wide, M pixel high, and 1
-                                  ;; pixel deep 3D span from the (2d)
-                                  ;; image...
-                                  :from dspan-3d
-                                  ;; ...and place it here in the 1d
-                                  ;; extent of this mipmap.
-                                  :to (make-data-span-2d
-                                       :origin (iv2:vec 0 0)
-                                       :extent (iv2:vec mipmap-width
-                                                        mipmap-height)))))))
-                        (list computed-extent mipmap-2d)))
-                     (t
-                      ;; We simply record that we don't have a known
-                      ;; mipmap description for this extent.
-                      (list computed-extent :dne)))))
-               computed-extents
-               descending-mipmap-extent-keys)))
-        ;; Finally we return the answer.
-        (list (cons (texmap:name texmap-inst) mipmap-obs))))))
-
-
-(defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-3d)
-                                    style ;; Both :unique and :combined
-                                    store store-args
-                                    &key core)
-  (declare (ignore core))
-  (check-deducible-mipmap-hierarchy texmap-inst)
-
-  (let* (;; NOTE: The res-table keys contain the ACTUAL dimensions of
-         ;; the materialized images in the data-elements gotten by
-         ;; gather-unique-mipmaps via the resource cache
-         (res-table (deduce-physical-mipmaps texmap-inst
-                                             (texmap:style texmap-inst)
-                                             (texmap:store texmap-inst)
-                                             (texmap:store-args texmap-inst)))
-         (descending-mipmap-extent-keys (sort-mipmap-extents res-table))
-         (largest-mipmap-extent (car descending-mipmap-extent-keys)))
-
-    ;; NOTE: There must be SOME depth for synthesized 3d texture maps.
-    (loop :for (width height depth) :in descending-mipmap-extent-keys
-          :do (assert (>= depth 1)))
-
-    (format t "res-table is:~%")
-    (u:do-hash (whd loc res-table)
-      (format t " ~S -> ~S~%" whd loc))
-
-    (multiple-value-bind (num-levels computed-extents)
-        (destructuring-bind (width height depth) largest-mipmap-extent
-          (u:compute-mipmap-levels width height depth))
-      (declare (ignore num-levels))
-      (let ((mipmap-obs
-              (u:ragged-mapcar
-               :dne
-               (lambda (computed-extent mipmap-extent)
-                 (multiple-value-bind (elidx-spec present-p)
-                     (u:href res-table computed-extent)
-                   (cond
-                     (present-p
-                      ;; This assertion checks that the materialized
-                      ;; size of the image actually matches the
-                      ;; expected mipmap extents we're expecting at
-                      ;; this mipmap level. This finds bugs where
-                      ;; one mipmap level might be the wrong on disk
-                      ;; resolution, etc.
-                      ;;
-                      ;; TODO: Present this constraint error better
-                      ;; to the appdev.
-                      (assert (equal computed-extent mipmap-extent))
-
-                      ;; 3D mipmaps can have 1 or more elidxs representing
-                      ;; each slice required for that mipmap.
-
-                      ;; Construct the mipmap-3d for the identified section
-                      ;; the elidx-spec identifies.
-                      (let* ((mipmap-width (first mipmap-extent))
-                             (mipmap-height (second mipmap-extent))
-                             (mipmap-depth (third mipmap-extent))
-                             ;; TODO: We assume the :from is going to be
-                             ;; one or more 2D image slices. This
-                             ;; doesn't have to be the case (like
-                             ;; reading from a buffer instead of an
-                             ;; image) and we will support it later when
-                             ;; we actually do that.
-                             (mipmap-3d
-                               (make-mipmap-3d
-                                :sourced-p t
-                                :extent (make-span-3d
-                                         :origin (iv3:vec 0 0 0)
-                                         :extent (iv3:vec mipmap-width
-                                                          mipmap-height
-                                                          mipmap-depth))
-                                :mapping-spans
-                                (apply
-                                 #'make-mapping-spans
-                                 :encode
-                                 (loop :for dspan-3d :in elidx-spec
-                                       :with s = 0
-                                       :collect
-
-                                       (make-mapping-span-3d
-                                        ;; We select a 3-d
-                                        ;; subspace of an N pixel
-                                        ;; wide, M pixel high, and
-                                        ;; 1 pixel deep 3D span
-                                        ;; from the (2d) image...
-                                        :from dspan-3d
-                                        ;; ...and place it here in
-                                        ;; the 2dd slice extent of this
-                                        ;; mipmap.
-                                        :to
-                                        (make-data-span-3d
-                                         :origin
-                                         (let ((origin
-                                                 (iv3:copy
-                                                  (texmap:origin dspan-3d))))
-                                           (when (eq store :slices)
-                                             (iv3:with-components
-                                                 ((o origin))
-                                               (ecase (car store-args)
-                                                 (:xy-z (setf oz s))
-                                                 (:xz-y (setf oy s))
-                                                 (:yz-x (setf ox s)))))
-                                           origin)
-                                         :extent
-                                         (let ((extent
-                                                 (iv3:copy
-                                                  (texmap:extent dspan-3d))))
-                                           (when (eq store :slices)
-                                             (iv3:with-components
-                                                 ((e extent))
-                                               (ecase (car store-args)
-                                                 (:xy-z (incf s ez))
-                                                 (:xz-y (incf s ey))
-                                                 (:yz-x (incf s ex)))))
-                                           extent))))))))
-                        (list computed-extent mipmap-3d)))
-                     (t
-                      ;; We simply record that we don't have a known
-                      ;; mipmap description for this extent.
-                      (list computed-extent :dne)))))
-               computed-extents
-               descending-mipmap-extent-keys)))
-        ;; Finally we return the answer.
-        (list (cons (texmap:name texmap-inst) mipmap-obs))))))
-
+;; KEEP GOING: do cube maps.
 
 
 (defmethod deduce-mipmap-hierarchy ((texmap-inst texture-map-cube)
