@@ -105,7 +105,7 @@ results of DEDUCE-PHYSICAL-MIPMAPS."))
 
 
 ;; Used for all :1d, :2d, and :3d texture-maps whose style is :unique
-;; and :3d style must be (:slices ...)
+;; and :3d store must be (:slices ...)
 (defmethod deduce-physical-mipmaps ((texmap-inst texture-map-simple)
                                     (style (eql :unique))
                                     store store-args)
