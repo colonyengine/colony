@@ -15,11 +15,12 @@ and effort to implement the configurability or if it would contribute to appdev
 confusion).
 
 ## Support's vorigin library
-  - We use column vectors to represent mathematical quantities in matrices.
-    Example: Transform matrix with a rotation and translation encoded into it.
+  - We use column vectors to represent mathematical quantities in matrices. 
+    Example: Transform matrix with a 3x3 rotation matrix in the upper left and
+    a 3x1 translation vector encoded into it.
     ```text
-    The Y axis is: (Yx Yy Yz)
     The X axis is: (Xx Xy Xz)
+    The Y axis is: (Yx Yy Yz)
     The Z axis is: (Zx Zy Zz)
     The translation is: (Tx Ty Tz)
 
@@ -249,12 +250,29 @@ confusion).
           - DSL W axis is [0, 1)
           - DSL H axis is [0, 1)
 
-
-
-
-
-
-
-
-
-
+  - Performance and Optimization
+    - Optimization is defined as a sustained cycle of profiling something,
+      thinking about how to make it faster, then changing the code to make it
+      faster and repeating until it is fast enough. Usually, the resultant
+      optimized code is unreadable, somewhat fragile, and hard to maintain.
+      Serious optimization is not to be done frivolously since it takes a lot
+      of time to do it, time to prove it correct, and then we have to check it
+      periodically to make sure it does what we expect as environments change.
+      We need to ensure that the payoff is worth it.
+    - We never prematurely optimize, but we also don't pick exponentially bad
+      solutions when a little work might get you something *much* better.  The
+      balance is usually pick the best answer you can implement in a resonable
+      amount of time.
+    - We tend to optimize the "frame path" of the engine. This is the path the
+      engine follows while rendering a frame. Situations like loading assets
+      when the engine starts or tearing things down when the app is exiting are
+      as a rule not optimized until explicitly needed.
+    - Example of explicit need:
+      - The engine loaded ALL assets on start, if it used them or not, in a
+        sequential manner. This caused the start of the engine to take many
+        seconds and slowed development and ruined satisfaction of a responsive
+        app.  The solution in this case was a rearchitecting of the engine to
+        be able to concurrently load assets in different threads. While the
+        effect was an optimization, the real reason was that the engine code
+        was ossified and simply couldn't concurrently load things or
+        stagger/defer loads to reduce frame stalls.
