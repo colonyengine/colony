@@ -12,7 +12,7 @@ performance of convenience.
 
 ## Resource Cache
 
-Examples of the kinds of data that go into the resource cache are:
+A non-exhaustive sample of kinds of data stored in the `resource-cache`:
   - images, texture-maps/mipmaps, sprite sheet data
   - mesh data
   - animation data
