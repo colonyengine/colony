@@ -169,7 +169,7 @@
   (make-instance type :mipmaps mipmaps))
 ;; Convenience API
 (defun make-envmap-representation (&key mipmaps)
-  (make-cube-representation 'envmap-representaton :mipmaps mipmaps))
+  (make-cube-representation 'envmap-representation :mipmaps mipmaps))
 
 ;;; -----------------
 ;; defclass CUBE (and children) support code
