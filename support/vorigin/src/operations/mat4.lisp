@@ -890,7 +890,7 @@ multiplication of MAT * T."
       (psetf m00 (cl:* f (cl:/ aspect))
              m11 f
              m22 (/ (cl:+ near far) z)
-             m23 (/ (cl:* 2 near far) z)
+             m23 (/ (cl:* 2f0 near far) z)
              m32 -1f0)))
   out)
 
