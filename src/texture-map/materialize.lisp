@@ -74,5 +74,6 @@ all texture-maps were materialized properly."
             (rectify infer-style :texture-map
                      texmap-inst texmap-inst :core core))))))
 
+  ;; TODO
   :todo-return-something-good-here
   )

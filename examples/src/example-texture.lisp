@@ -483,6 +483,8 @@
         (:+z #((textures cube-map-back-2)))
         (:-z #((textures cube-map-front-2))))))))
 
+(c:define-texture-map cube-yokohama (:cube :envmap :hcross)
+     (texmap:mipmap (textures yokohama-envmap)))
 
 ;;; Materials
 

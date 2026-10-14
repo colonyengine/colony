@@ -243,7 +243,11 @@ registered."))
                        (submit-data-elements
                         face-texture-map-inst scheduler info)
                        (push face-texture-map-inst submitted))
-                     (push face-texmap-name unsubmitted))))))
+                     (push face-texmap-name unsubmitted))))
+
+                ;; TODO: Ensure the cube map cache-item itself gets inserted
+                ;; into the resource-cache.
+                ))
     (values submitted
             unsubmitted)))
 

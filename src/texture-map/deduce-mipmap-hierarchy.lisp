@@ -70,8 +70,12 @@ Return the instantiated and filled in MIPMAP-*D instance."))
                                      &key core
                                      &allow-other-keys)
   (:documentation
-   "This returns one or more fully specified mipmap objects using the
-results of DEDUCE-PHYSICAL-MIPMAPS."))
+   "This returns a list of these items:
+ (texture-map-name ((extent) mipmap-*) ... ((extent) mipmap-*))
+For simple texture-maps, this will be a list of one of the above items.
+For complex texture-maps, there will be multiple items in the list, one
+for each texture-map participating in the texture-map-complex.
+For example: cube maps of :faces style will have 6 items in the list."))
 
 ;; -------------------------------------------------------------------------
 
@@ -585,7 +589,7 @@ in the :synthesize state."
     (check-mipmap-extent-validity texmap-inst style store store-args
                                   descending-mipmap-extent-keys)
 
-    (format t "res-table is:~%")
+    (format t "res-table for texture-map ~A is:~%" (texmap:name texmap-inst))
     (u:do-hash (whd loc res-table)
       (format t " ~S -> ~S~%" whd loc))
 

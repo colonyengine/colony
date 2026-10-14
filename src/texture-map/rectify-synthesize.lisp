@@ -22,99 +22,143 @@
 ;; Synthesize Methods
 ;; ------------------------
 
-;; This only synthesizes the right number of mipmaps, potentially their
-;; elidxs, and then returns.
-(defmethod rectify ((infer-style (eql :synthesize))
-                    (feature (eql :number-of-mipmaps))
-                    (inst texture-map-simple)
-                    (root texture-map-simple)
-                    &key core)
-  (declare (ignore feature))
-
-  (format t (u:cat "rectify: kind: texture-map-simple, :synthesize): "
-                   "~(~S~) ~(~S~): Called!~%")
-          (texmap:name inst) infer-style)
-
-  ;; 0. Check that we can synthesize any mipmaps at all!
-  (u:when-let (delems (texmap:data-elements inst))
-    (when (zerop (length delems))
-      (debug-rectification "texture-map-simple"
-                           infer-style
-                           :number-of-mipmaps
-                           "TODO: Why are there zero delems.")
-      (return-from rectify (values nil :missing-data-elements))))
-
-  ;; 1. Synthesize a new list of mipmap-* objects in order from largest
-  ;; to smallest that can be deduced from the data elements.
-  (let ((result (deduce-mipmap-hierarchy inst (texmap:style inst)
-                                         (texmap:store inst)
-                                         (texmap:store-args inst)
-                                         :core core)))
-
-    (debug-rectification "texture-map-simple"
-                         infer-style
-                         :number-of-mipmaps
-                         "Deduced mipmap hierarchy:~%~{~{ ~S~%~}~%~}"
-                         result)
-
-    ;; KEEP GOING
-    ;;
-    ;; Take the RESULT and overwrite it into the texmap-inst's mipmaps.
-    ;; I may have to resize the mipmaps array. Also set the completion slot
-    ;; based on the completion status of the texture-map.
-    ;;
-    ;; Compute completion status.
-    ;;(inspect result)
-
-    (values t :ok))
-  )
-
-(defmethod rectify ((infer-style (eql :synthesize))
-                    (feature (eql :mipmap))
-                    (inst mipmap)
-                    (root texture-map-simple)
-                    &key core)
-  (declare (ignore infer-style feature inst root core))
-
-  ;; Just a hack for testing to return T.
-  (values t :ok))
-
-
-
-
-
 (defmethod rectify ((infer-style (eql :synthesize))
                     (feature (eql :texture-map-contents))
                     (inst texture-map-simple)
                     (root texture-map-simple)
                     &key core)
-  (declare (ignore feature))
 
-  ;; We choose this algorithm to NOT be recursive in the way a lisper
-  ;; might have written it. We instead process the INST in a breadth
-  ;; first manner wrt the container of the mipmaps. We do this to reduce
-  ;; the choices and depth of what would have been the recursive
-  ;; algorithm. In this particular instance, it makes this more
-  ;; understandable and maintainable.
-
-  ;; 0. Fixup the mipmaps array to hold the right number of mipmaps that point
-  ;; to the right elidxs (if possible) for synthesis.
-  (multiple-value-bind (result error-domain)
-      ;; The mipmaps vector could be reassigned by this method.
-      (rectify infer-style :number-of-mipmaps inst root :core core)
-    (unless result
-      (return-from rectify (values result error-domain))))
-  ;; 1. Walk each mipmap (now that we know how many we have and for sure
-  ;; we know the elidxs are correct) and synthesize the information that
-  ;; specific mipmap needs from the image data.
-  (loop :for mipmap :across (texmap:mipmaps inst)
-        :do (multiple-value-bind (result error-domain)
-                (rectify infer-style :mipmap mipmap root :core core)
-              (unless result
-                (return-from rectify (values result error-domain)))))
-  (values t :ok))
+  ;; 0. Check that we can deduce any mipmaps at all!
+  (u:when-let (delems (texmap:data-elements inst))
+    (when (zerop (length delems))
+      (error (u:cat
+              "Rectify: Unexpectedly unable to deduce mipmaps during pass~%"
+              " :deduce-mipmap-hierarchy for a texture-map-simple named: ~A")
+             (texmap:name inst))))
 
 
+  (debug-rectification "texture-map-simple"
+                       infer-style
+                       feature
+                       "Attempting to deduce mipmaps for texture name: ~A~%"
+                       (texmap:name inst))
+
+  ;; 1. Deduce a new list of mipmap-* objects in order from largest to
+  ;; smallest that can be observed from the data elements.
+  (let* ((results (deduce-mipmap-hierarchy inst (texmap:style inst)
+                                           (texmap:store inst)
+                                           (texmap:store-args inst)
+                                           :core core))
+         (result (first results))
+         (mipmaps (cdr result)))
+
+    (debug-rectification "texture-map-simple"
+                         infer-style
+                         feature
+                         "Deduced mipmap hierarchy:~%~{~{ ~S~%~}~%~}"
+                         results)
+
+    ;;(inspect results)
+
+    (unless (= (length results) 1)
+      (return-from rectify (values inst :unable-to-deduce-mipmaps)))
+
+    ;; 0. Fixup the texture-maps' mipmaps array to hold the right number
+    ;; of mipmaps that point to the right elidxs (if possible) for
+    ;; synthesis. This will drop the original mipmaps array in the
+    ;; texture-map which will get garbage collected.
+
+    (when (> (length (texmap:mipmaps inst))
+             (length mipmaps))
+      (warn "TODO: Dropping some original mipmaps, is this bad?"))
+    (setf (texmap:mipmaps inst)
+          (adjust-array (texmap:mipmaps inst) (length mipmaps)))
+
+    ;; 1. Copy over the attributes from the original mipmap to the new
+    ;; one and place the new one in the inst's container replacing the
+    ;; original one. We leave the orig mipmap instances to be GCed.
+    (loop :for i :below (length (texmap:mipmaps inst))
+          :for orig-mipmap = (aref (texmap:mipmaps inst) i)
+          :for (extent new-mipmap) :in mipmaps
+          ;; NOTE: This assumes the order the user wrote the mipmap
+          ;; forms in the DSL are from largest to smallest.
+          :do (abag:absorb new-mipmap :bags (list orig-mipmap))
+              (setf (aref (texmap:mipmaps inst) i) new-mipmap))
+
+    ;;(inspect inst)
+
+    (values inst :ok)))
+
+;; -------------------------------------------------------------------------
+;; Cube maps are harder to do, so they get more code.
+
+(defmethod rectify ((infer-style (eql :synthesize))
+                    (feature (eql :cube))
+                    (inst faces-representation)
+                    (root texture-map-cube)
+                    &key core)
+
+  (format t (u:cat "rectify(~(~S~) ~(~S~) ~(~S~))): name: ~A "
+                   "Checking faces are rectified...~%")
+          infer-style feature (type-of inst) (texmap:name root))
+
+  ;; The 6 texture-map-simple texture-maps used by this cube map varient
+  ;; should already have been fully rectified. So, there is nothing to
+  ;; really do here at this time other than check that this is true. The
+  ;; :validation pass of rectification for this cube map instance will
+  ;; determine if all the faces are compatible with each other, (square,
+  ;; same size, same internal pixel format, etc), etc.
+
+  (loop
+    :with texmaptab = (colony::texture-maps core)
+    :for face :across (texmap:faces inst)
+    :for face-elidx = (texmap:elidx face)
+    :for de = (aref (texmap:data-elements root) face-elidx)
+    :for face-name = (texmap:logloc de)
+    :for face-texmap-inst = (texmaptab::find-resolved-texture-map texmaptab
+                                                                  face-name)
+    :for face-texmap-inst-state = (texmap:state face-texmap-inst)
+    :do (unless (eq (texmap:rectification-classification face-texmap-inst-state)
+                    :rectified)
+          (error (u:cat "Rectify: "
+                        "While synthesizing cube map ~A, which is~%"
+                        ":cube :faces, the cube map should have had face~%"
+                        "~A already rectified. but the face isn't rectified!~%")
+                 (texmap:name root) face-name)))
+
+  (values inst :ok))
+
+
+(defmethod rectify ((infer-style (eql :synthesize))
+                    (feature (eql :cube))
+                    (inst envmap-representation)
+                    (root texture-map-cube)
+                    &key core)
+  (declare (ignore core))
+
+  (format t (u:cat "rectify(~(~S~) ~(~S~) ~(~S~))): name: ~A Implement me!~%")
+          infer-style feature (type-of inst) (texmap:name root))
+
+
+  (values inst :ok))
+
+
+
+
+;; Trampoline to a more specific method on the cube type.
+(defmethod rectify ((infer-style (eql :synthesize))
+                    (feature (eql :texture-map-contents))
+                    (inst texture-map-cube)
+                    (root texture-map-cube)
+                    &key core)
+
+  (format t (u:cat "rectify(~(~S~) ~(~S~) ~(~S~))): name: ~A~%")
+          infer-style feature (type-of inst) (texmap:name root))
+
+  (rectify infer-style :cube (texmap:repr (texmap:cube inst)) root
+           :core core)
+
+  (values inst :ok))
 
 
 
@@ -127,14 +171,13 @@
                     (inst texture-map-complex)
                     (root texture-map-complex)
                     &key core)
-  (declare (ignore feature root core))
-  (format
-   t "rectify(texture-map-complex, synthesize): ~(~S~) ~(~S~): Implement me!~%"
-   (texmap:name inst) infer-style)
+  (declare (ignore core))
+
+  (format t (u:cat "rectify(~(~S~) ~(~S~) ~(~S~))): name: ~A~%")
+          infer-style feature (type-of inst) (texmap:name root))
+
   ;; Just a hack for testing to return T.
-  t)
-
-
+  (values inst :ok))
 
 
 

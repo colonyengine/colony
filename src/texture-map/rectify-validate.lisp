@@ -62,7 +62,7 @@ keyword indicating reason for the failure."
                     (root texture-map-complex)
                     &key core)
   (declare (ignore feature root core))
-  (error
-   "rectify(texture-map-complex, validate): ~(~S~) ~(~S~): Implement me!~%"
-   (texmap:name inst) infer-style)
+  (format t (u:cat "rectify(texture-map-complex, validate): "
+                   "~(~S~) ~(~S~): Implement me!~%")
+          (texmap:name inst) infer-style)
   (values t :ok))

@@ -34,23 +34,17 @@
   ;; colony-examples:cube-map :faces
   (texmap::materialize
    core (list
-         (u:format-symbol "COLONY-EXAMPLES" "~A"
-
-                          ;;"1D-GRADIENT"
-                          ;;"1D-GRADIENT-MIPMAPS"
-                          ;;"1D-GRADIENT-MIPMAPS-VERTICAL-TOP-LEFT-BIG"
-
-                          ;;"2D-WOOD"
-                          ;;"BARK" ;; mipmap individual images.
-                          "2D-WOOD-MIPMAP-COMMON" ;; mipmap combined
-
-                          ;;"3D" ;; :xy-z
-                          ;;"3D/XZ-Y" ;; :xz-y
-
-                          )
-         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "BLUE-FUR")
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "1D-GRADIENT")
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "1D-GRADIENT-MIPMAPS")
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A"
+                             "1D-GRADIENT-MIPMAPS-VERTICAL-TOP-LEFT-BIG")
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "2D-WOOD")
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "BARK") ;; indiv. images.
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "2D-WOOD-MIPMAP-COMMON")
          #++(u:format-symbol "COLONY-EXAMPLES" "~A" "3D")
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "3D/XZ-Y")
          #++(u:format-symbol "COLONY-EXAMPLES" "~A" "CUBE-MAP")
+         #++(u:format-symbol "COLONY-EXAMPLES" "~A" "CUBE-YOKOHAMA")
          ))
   ;; END DEBUGGING
 
