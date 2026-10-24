@@ -7,36 +7,25 @@
   (:shadow
    #:pi)
   (:export
-   #:+rad+
-   #:+rad/double+
    #:+deg+
    #:+deg/double+
-   #:2pi
-   #:2pi/3
-   #:2pi/12
-   #:3pi/2
-   #:3pi/4
-   #:3pi/12
-   #:4pi/3
-   #:4pi/12
-   #:5pi/3
-   #:5pi/4
-   #:5pi/6
-   #:5pi/12
-   #:6pi/12
-   #:7pi/4
-   #:7pi/6
-   #:7pi/12
-   #:8pi/12
-   #:9pi/12
+   #:+rad+
+   #:+rad/double+
    #:10pi/12
-   #:11pi/6
+   #:10pi/8
    #:11pi/12
+   #:11pi/6
+   #:11pi/8
    #:12pi/12
+   #:12pi/8
    #:13pi/12
+   #:13pi/8
    #:14pi/12
+   #:14pi/8
    #:15pi/12
+   #:15pi/8
    #:16pi/12
+   #:16pi/8
    #:17pi/12
    #:18pi/12
    #:19pi/12
@@ -45,15 +34,44 @@
    #:22pi/12
    #:23pi/12
    #:24pi/12
+   #:2pi
+   #:2pi/12
+   #:2pi/3
+   #:2pi/8
+   #:3pi/12
+   #:3pi/2
+   #:3pi/4
+   #:3pi/8
+   #:4pi/12
+   #:4pi/3
+   #:4pi/8
+   #:5pi/12
+   #:5pi/3
+   #:5pi/4
+   #:5pi/6
+   #:5pi/8
+   #:6pi/12
+   #:6pi/8
+   #:7pi/12
+   #:7pi/4
+   #:7pi/6
+   #:7pi/8
+   #:8pi/12
+   #:8pi/8
+   #:9pi/12
+   #:9pi/8
    #:pi
+   #:pi/12
    #:pi/2
    #:pi/3
    #:pi/4
    #:pi/6
-   #:pi/12))
+   #:pi/8
+   ))
 
 (in-package #:vorigin.constants)
 
+;; Circle cut into 1/12 segments.
 (u:define-constant pi/12 (float (/ cl:pi 12) 1f0))
 (u:define-constant pi/6 (float (/ cl:pi 6) 1f0))
 (u:define-constant 2pi/12 pi/6)
@@ -93,8 +111,28 @@
 (u:define-constant 22pi/12 11pi/6)
 (u:define-constant 23pi/12 (float (/ (* cl:pi 23) 12) 1f0))
 (u:define-constant 2pi (float (* cl:pi 2) 1f0))
-(u:define-constant 24pi12 2pi)
+(u:define-constant 24pi/12 2pi)
+
+;; circle cut into 1/8 segments
+(u:define-constant pi/8 (float (/ cl:pi 8) 1f0))
+(u:define-constant 2pi/8 pi/4)
+(u:define-constant 3pi/8 (float (/ (* cl:pi 3) 8) 1f0))
+(u:define-constant 4pi/8 pi/2)
+(u:define-constant 5pi/8 (float (/ (* cl:pi 5) 8) 1f0))
+(u:define-constant 6pi/8 3pi/4)
+(u:define-constant 7pi/8 (float (/ (* cl:pi 7) 8) 1f0))
+(u:define-constant 8pi/8 pi)
+(u:define-constant 9pi/8 (float (/ (* cl:pi 9) 8) 1f0))
+(u:define-constant 10pi/8 5pi/4)
+(u:define-constant 11pi/8 (float (/ (* cl:pi 11) 8) 1f0))
+(u:define-constant 12pi/8 3pi/2)
+(u:define-constant 13pi/8 (float (/ (* cl:pi 13) 8) 1f0))
+(u:define-constant 14pi/8 7pi/4)
+(u:define-constant 15pi/8 (float (/ (* cl:pi 15) 8) 1f0))
+(u:define-constant 16pi/8 2pi)
+
 (u:define-constant +rad+ (float (/ 180 cl:pi) 1f0))
+
 (u:define-constant +rad/double+ (/ 180 cl:pi))
 (u:define-constant +deg+ (float (/ cl:pi 180) 1f0))
 (u:define-constant +deg/double+ (/ cl:pi 180))

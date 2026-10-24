@@ -118,8 +118,6 @@ shared material may affect the NEXT rendering call!"
                                      (c:get-model-matrix self))
                                (v3:zero)))))))
 
-
-
       (c:on-component-slave-render self slave))))
 
 ;; ------------------------------------------------------------------------
