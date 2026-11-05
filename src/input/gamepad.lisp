@@ -53,6 +53,12 @@
 (defun get-gamepad-by-instance (data instance)
   (u:href (gamepad-instances data) instance))
 
+;; TODO: This exposes the internal gamepad instances to the appdev. Figure out
+;; if that's what we actually want to do.
+(defun get-gamepads (data)
+  (with-slots (%gamepad-instances) data
+    (u:hash-values %gamepad-instances)))
+
 (defun generate-gamepad-id (data)
   (with-slots (%gamepad-instances %detached-gamepads) data
     (or (pop %detached-gamepads)

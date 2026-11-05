@@ -713,7 +713,10 @@
   (:export
    #:disable-relative-motion
    #:enable-relative-motion
+   #:gamepad-id ;; struct gamepad slot
+   #:gamepad-name ;; struct gamepad slot
    #:get-gamepad-analog
+   #:get-gamepads
    #:get-mouse-position
    #:get-mouse-scroll
    #:get-window-mode
