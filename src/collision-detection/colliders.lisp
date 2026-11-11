@@ -307,27 +307,37 @@ had--and update all other faces too."
 ;; or an X (which means these two do collide).
 ;;
 ;; Here is a collision system: (notice :scenery collides with nothing)
-;; (NOTE: :p represents the keyword :planet, it was too long to fit)
+;; The :playfield layer is used to catch when bullets leave the platfield.
 ;;
-;;              :ground :player :player-bullet :enemy :enemy-bullet :scenery :p
-;;               --------------------------------------------------------------
-;; :ground       | X       @           @          @         @           @     @
-;; :player       | X                   @          @         @           @     @
-;; :player-bullet| X                              @         @           @     @
-;; :enemy        | X       X           X                    @           @     @
-;; :enemy-bullet | X       X           X                                @     @
-;; :scenery      |                                                            @
-;; :planet       |                                X
+;; A :ground
+;; B :player
+;; C :player-bullet
+;; D :enemy
+;; E :enemy-bullet
+;; F :scenery
+;; G :planet
+;; H :playfield
+;;
+;;     A B C D E F G H
+;;   +----------------
+;; A | y @ @ @ @ @ @ @
+;; B | y n @ @ @ @ @ @
+;; C | y n n @ @ @ @ @
+;; D | y y y n @ @ @ @
+;; E | y y y n n @ @ @
+;; F | n n n n n n @ @
+;; G | n n n y n n n @
+;; H | n n y n y n n n
 ;;
 ;; Then, the collision plan is an sparse representation of which columns for
-;; each row are marked X.
+;; each row are marked y.
 
 (defun initialize-collider-system (core)
   (let* ((collider-system-desc
            ;; TODO: This should be a DSL in a define-physics macro or something.
            `(:physics-layers
              (:ground :player :player-bullet :enemy :enemy-bullet :scenery
-              :planet)
+              :planet :playfield)
              ;; NOTE: Format and legality described in comment above.
              :collision-plan
              ;; The KEY is the row header, the VALUE is the X locations that
@@ -340,7 +350,8 @@ had--and update all other faces too."
                :enemy (list :ground :player :player-bullet)
                :enemy-bullet (list :ground :player :player-bullet)
                :scenery (list)
-               :planet (list :enemy))))
+               :planet (list :enemy)
+               :playfield (list :player-bullet :enemy-bullet))))
          (new-collider-system
            (apply #'make-collider-system collider-system-desc)))
     (setf (collider-system core) new-collider-system)
