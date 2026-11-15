@@ -1,13 +1,10 @@
 (in-package #:colony)
 
 (defclass collider-system ()
-  ((%physics-layers :reader physics-layers
-                    :initarg :physics-layers
-                    :initform nil)
-   (%collision-plan :reader collision-plan
-                    :initarg :collision-plan
-                    ;; keyed by layer, value is list of layers it collides with
-                    :initform (u:dict #'eq))
+  ((%physics-config :reader physics-config
+                    :initarg :physics-config
+                    :initform nil
+                    :type (or-null physics-config))
    ;; Keyed by :layer-name,
    ;; Value is ht
    ;; Key of second ht is collider-ref

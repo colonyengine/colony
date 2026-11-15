@@ -157,11 +157,12 @@ had--and update all other faces too."
   ;; Update the collision status for stable colliders in the order of the
   ;; layers. N^2 for now cause it is fast to write. There is no spatial
   ;; partitioning.
-  (dolist (fist-layer (physics-layers collider-system))
-    (let ((face-layers (u:href (collision-plan collider-system) fist-layer)))
-      (dolist (face-layer face-layers)
-        (compute-stable-layer-collisions collider-system
-                                         fist-layer face-layer)))))
+  (let ((physics-config (physics-config collider-system)))
+    (dolist (fist-layer (physics-layers physics-config))
+      (let ((face-layers (u:href (collision-plan physics-config) fist-layer)))
+        (dolist (face-layer face-layers)
+          (compute-stable-layer-collisions collider-system
+                                           fist-layer face-layer))))))
 
 (defun compute-stable-layer-collisions (collider-system fist-layer face-layer)
   ;; NOTE: we have to be very careful about sending duplicate events for the
@@ -214,12 +215,13 @@ had--and update all other faces too."
   ;; out of order, but choose to process the registering colliders in the order
   ;; of the physics-layers.
   (let ((registering-colliders (registering-colliders collider-system))
-        (stable-colliders (stable-colliders collider-system)))
+        (stable-colliders (stable-colliders collider-system))
+        (physics-config (physics-config collider-system)))
     ;; First, we process each physics-layer in order.
     ;; TODO: This is O(n) each time, we could do a better job of knowing what
     ;; registering colliders we actually have when there are a LOT of
     ;; physics-layers.
-    (dolist (fist-layer (physics-layers collider-system))
+    (dolist (fist-layer (physics-layers physics-config))
       ;; We will be processing each registering fist collider of the current
       ;; fist-layer.
       (let ((fist-layer-registering-colliders
@@ -236,7 +238,7 @@ had--and update all other faces too."
             (unless (u:href stable-colliders fist-layer fist)
               ;; The FIST is good to go! collide it and stabilize it!
               (let ((face-layers
-                      (u:href (collision-plan collider-system) fist-layer)))
+                      (u:href (collision-plan physics-config) fist-layer)))
                 #++(:printv "Checking registering fist: ~s, [~s: ~s]"
                             (display-id fist) (comp:on-layer fist)
                             face-layers)
@@ -281,10 +283,11 @@ had--and update all other faces too."
   ;; remove it from registering-colliders. Then remove all contacts for it. We
   ;; don't need to do this in any particular order but we choose the physics
   ;; layer ordering for convenience.
-  (let ((registering-colliders (registering-colliders collider-system))
+  (let ((physics-config (physics-config collider-system))
+        (registering-colliders (registering-colliders collider-system))
         (stable-colliders (stable-colliders collider-system))
         (deregistering-colliders (deregistering-colliders collider-system)))
-    (dolist (fist-layer (physics-layers collider-system))
+    (dolist (fist-layer (physics-layers physics-config))
       (let ((fist-layer-deregistering-colliders
               (u:href deregistering-colliders fist-layer)))
         (unless (zerop (hash-table-count fist-layer-deregistering-colliders))
@@ -300,11 +303,12 @@ had--and update all other faces too."
             ;; 4. Now remove from myself, cause I just processed it.
             (remhash fist fist-layer-deregistering-colliders)))))))
 
-;; TODO: This needs to be in a DSL like define-physics or something. The
-;; collision plan describes a lower left triangle of a collision matrix with the
-;; indicies in both axes being in the same order as the :layers list. @ means
-;; that isn't a valid spot to put either a space (for these two do not collide)
-;; or an X (which means these two do collide).
+;; TODO: This needs to be in a DSL like define-physics-config or
+;; something. The collision plan describes a lower left triangle of a
+;; collision matrix with the indicies in both axes being in the same
+;; order as the :layers list. ! means that isn't a valid spot to put
+;; either a n (for these two do not collide) or an y (which means
+;; these two do collide).
 ;;
 ;; Here is a collision system: (notice :scenery collides with nothing)
 ;; The :playfield layer is used to catch when bullets leave the platfield.
@@ -320,46 +324,44 @@ had--and update all other faces too."
 ;;
 ;;     A B C D E F G H
 ;;   +----------------
-;; A | y @ @ @ @ @ @ @
-;; B | y n @ @ @ @ @ @
-;; C | y n n @ @ @ @ @
-;; D | y y y n @ @ @ @
-;; E | y y y n n @ @ @
-;; F | n n n n n n @ @
-;; G | n n n y n n n @
+;; A | y ! ! ! ! ! ! !
+;; B | y n ! ! ! ! ! !
+;; C | y n n ! ! ! ! !
+;; D | y y y n ! ! ! !
+;; E | y y y n n ! ! !
+;; F | n n n n n n ! !
+;; G | n n n y n n n !
 ;; H | n n y n y n n n
 ;;
 ;; Then, the collision plan is an sparse representation of which columns for
-;; each row are marked y.
+;; each row are marked y/n.
 
 (defun initialize-collider-system (core)
-  (let* ((collider-system-desc
-           ;; TODO: This should be a DSL in a define-physics macro or something.
-           `(:physics-layers
-             (:ground :player :player-bullet :enemy :enemy-bullet :scenery
+  (let* ((physics-config
+           ;; TODO: This should be a DSL in a define-physics-config
+           ;; macro whose name is specified in define-config so we can
+           ;; use different layers for different projects or something
+           ;; and definitely not hardcoded into the engine.
+           (make-physics-config
+            '(:ground :player :player-bullet :enemy :enemy-bullet :scenery
               :planet :playfield)
-             ;; NOTE: Format and legality described in comment above.
-             :collision-plan
-             ;; The KEY is the row header, the VALUE is the X locations that
-             ;; indicate a collision situation.
-             ,(u:dict
-               #'eq
-               :ground (list :ground)
-               :player (list :ground)
-               :player-bullet (list :ground)
-               :enemy (list :ground :player :player-bullet)
-               :enemy-bullet (list :ground :player :player-bullet)
-               :scenery (list)
-               :planet (list :enemy)
-               :playfield (list :player-bullet :enemy-bullet))))
+            '((:ground (:ground))
+              (:player (:ground))
+              (:player-bullet (:ground))
+              (:enemy (:ground :player :player-bullet))
+              (:enemy-bullet (:ground :player :player-bullet))
+              (:scenery ())
+              (:planet (:enemy))
+              (:playfield (:player-bullet :enemy-bullet)))))
          (new-collider-system
-           (apply #'make-collider-system collider-system-desc)))
+           (make-collider-system :physics-config physics-config)))
     (setf (collider-system core) new-collider-system)
     (with-accessors ((registering-colliders registering-colliders)
                      (stable-colliders stable-colliders)
                      (deregistering-colliders deregistering-colliders))
         new-collider-system
-      (dolist (physics-layer (physics-layers new-collider-system))
+      (dolist (physics-layer (physics-layers
+                              (physics-config new-collider-system)))
         ;; Set up the htables to receive the collider references for each
         ;; physics-layer
         (setf (u:href registering-colliders physics-layer) (u:dict #'eq)

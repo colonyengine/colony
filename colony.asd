@@ -66,6 +66,7 @@
      (:file "button-defs")
      (:file "region-defs")
      (:file "bounding-volume-obb-defs")
+     (:file "physics-config")
      (:file "colliders-defs")
      (:file "spec-defs")
      (:file "attribute-defs")
@@ -145,7 +146,8 @@
    (:module "collision-detection"
     :serial t
     :components
-    ((:file "region")
+    ((:file "physics-config")
+     (:file "region")
      (:file "bounding-volume-obb")
      (:file "colliders")))
 
