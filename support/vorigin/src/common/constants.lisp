@@ -13,6 +13,8 @@
    #:+rad/double+
 
    ;; pi constants.
+   #:2pi
+
    #:pi
    #:2pi/1
    #:pi/2
