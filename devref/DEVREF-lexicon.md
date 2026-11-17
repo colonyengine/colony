@@ -101,6 +101,11 @@ having to call the entire detailed *programmatic API*. It is often true that a
     - **Asset DSL: define-asset**: *ADAPI* An asset description language which
     indicates where to find (on disk, or network servers, etc) assets like
     images, audio files, models, custom data, etc.
+    
+    - **Physics Config DSL: define-physics-config**: A configuration
+    language that defines physics layers that colliders can exist on
+    and a collision-plan that describes which layers collide with which
+    other layers.
 
     - **Config DSL: define-config**: *ADAPI* A configuration language that
     describes *runtime* parameters across a wide spectrum of domains in the
