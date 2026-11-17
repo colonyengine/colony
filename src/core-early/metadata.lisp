@@ -56,3 +56,7 @@
 ;; Texture profiles, which can be re-used across different texture definitions.
 ;; This metadata is stored by `DEFINE-TEXTURE-PROFILE`.
 (global-vars:define-global-var =meta/texture-profiles= (u:dict #'eq))
+
+;; physics-configs, which define physics-layers and how they collide among
+;; themselves. Used by the physics and collision system
+(global-vars:define-global-var =meta/physics-configs= (u:dict #'eq))

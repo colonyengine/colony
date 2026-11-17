@@ -337,24 +337,23 @@ had--and update all other faces too."
 ;; each row are marked y/n.
 
 (defun initialize-collider-system (core)
-  (let* ((physics-config
-           ;; TODO: This should be a DSL in a define-physics-config
-           ;; macro whose name is specified in define-config so we can
-           ;; use different layers for different projects or something
-           ;; and definitely not hardcoded into the engine.
-           (make-physics-config
-            '(:ground :player :player-bullet :enemy :enemy-bullet :scenery
-              :planet :playfield)
-            '((:ground (:ground))
-              (:player (:ground))
-              (:player-bullet (:ground))
-              (:enemy (:ground :player :player-bullet))
-              (:enemy-bullet (:ground :player :player-bullet))
-              (:scenery ())
-              (:planet (:enemy))
-              (:playfield (:player-bullet :enemy-bullet)))))
+  (let* ((config-table (config core))
+         (physics-config-name (u:href config-table :physics-config))
+         (physics-config
+           (if physics-config-name
+               (funcall (constructor
+                         ;; This gets the physics-config-descriptor
+                         ;; from which we invoke the constructor
+                         ;; to get the actual physics-config object.
+                         (u:href =meta/physics-configs=
+                                 physics-config-name)))
+               (error "No :physics-config defined in config!")))
          (new-collider-system
            (make-collider-system :physics-config physics-config)))
+
+    (format t "Initialized physics with physics-config: ~(~S~).~%"
+            (name physics-config))
+
     (setf (collider-system core) new-collider-system)
     (with-accessors ((registering-colliders registering-colliders)
                      (stable-colliders stable-colliders)

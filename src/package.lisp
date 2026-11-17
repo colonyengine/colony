@@ -632,12 +632,15 @@
   (:use #:cl)
   (:export
    #:actor
+   #:collision-plan ;; physics-config DSL syntax datum
    #:context
    #:core-bound-p
    #:define-annotation
    #:define-call-flow
    #:define-config
    #:define-graph
+   #:define-physics-config ;; physics-config DSL entry-point
+   #:definitions ;; physics-config DSL syntax datum
    #:delta
    #:destroy
    #:display-id
@@ -646,13 +649,16 @@
    #:refresh-rate
    #:id
    #:inspect-core ;; Debugging function to inspect a running core.
+   #:list-spec ;; physics-config DSL syntax datum
    #:make-actor
    #:make-project
    #:mcmnt
+   #:physics-layers ;; physics-config DSL syntax datum
    #:screen-resolution
    #:spawn-actor
    #:start
    #:stop
+   #:table-spec ;; physics-config DSL syntax datum
    #:total-time
    #:with-selected-interactive-core
    #:with-storage)

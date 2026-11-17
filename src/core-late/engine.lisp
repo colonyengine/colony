@@ -77,9 +77,9 @@
           (when (on-button-enter context :key :escape)
             (stop core)))))))
 
-(defun start (&key config scene init-only)
-  (load-config config)
-  (let ((core (make-core config)))
+(defun start (&key config-name scene init-only)
+  (let* ((config (load-config config-name))
+         (core (make-core config)))
     (unwind-protect (initialize core scene init-only)
       (deinitialize core))))
 

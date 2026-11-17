@@ -1,10 +1,35 @@
 (in-package #:colony-examples)
 
+;; NOTE: This physics-config is used for both the regular examples AND
+;; the Protect the Planets example.
+(c:define-physics-config example-physics ()
+  (c:physics-layers
+   (c:definitions
+    (A :ground)
+    (B :player)
+    (C :player-bullet)
+    (D :enemy)
+    (E :enemy-bullet)
+    (F :scenery)
+    (G :planet))
+   (c:collision-plan
+    (c:table-spec
+     ;; rows and columns are REQUIRED to be in same order.
+     ((  A B C D E F G)
+      (A y)
+      (B y n)
+      (C y n n)
+      (D y y y n)
+      (E y y y n n)
+      (F n n n n n n)
+      (G n n n y n n n))))))
+
 (c:define-config colony-examples ()
   :default t
-  :window-width 1920 ;; 1280
+  :window-width 1920  ;; 1280
   :window-height 1080 ;; 720
   :delta (float 1/120 1f0)
+  :physics-config 'example-physics
   :initial-scene '(("example-selector" examples)))
 
 (c:define-asset-pool metadata ()

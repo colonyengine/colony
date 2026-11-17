@@ -28,12 +28,14 @@
        (error "Cannot find a default config because no config has a :default t!")))))
 
 (defun load-config (config-name &rest args)
-  (u:do-hash (k v (find-config config-name))
-    (let ((global (get-config-option-name k)))
-      (setf (symbol-value global) v)))
-  (u:do-plist (k v args)
-    (let ((global (get-config-option-name k)))
-      (setf (symbol-value global) v))))
+  (let ((config (find-config config-name)))
+    (u:do-hash (k v config)
+      (let ((global (get-config-option-name k)))
+        (setf (symbol-value global) v)))
+    (u:do-plist (k v args)
+      (let ((global (get-config-option-name k)))
+        (setf (symbol-value global) v)))
+    config))
 
 (defmacro define-config (config-name options &body body)
   (declare (ignore options))
@@ -63,6 +65,7 @@
   :log-level :debug
   :opengl-version "4.3"
   :period-interval 0.25
+  :physics-config 'default-physics
   :release nil
   :threads 4
   :vsync t

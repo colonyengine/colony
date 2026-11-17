@@ -147,6 +147,7 @@
     :serial t
     :components
     ((:file "physics-config")
+     (:file "define-physics-config")
      (:file "region")
      (:file "bounding-volume-obb")
      (:file "colliders")))
@@ -265,4 +266,5 @@
      (:file "textures")
      (:file "material-profiles")
      (:file "materials")
-     (:file "geometry-layouts")))))
+     (:file "geometry-layouts")
+     (:file "physics-configs")))))
