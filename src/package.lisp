@@ -594,6 +594,8 @@
   ;; collider
   (:export
    #:collide-p
+   #:collider
+   #:contact-count
    #:on-layer
    #:referent
    #:sphere
@@ -704,6 +706,9 @@
   (:export
    #:define-texture-map
    )
+  ;; component (general types)
+  (:export
+   #:component)
   ;; textures
   (:import-from
    #:colony.texture

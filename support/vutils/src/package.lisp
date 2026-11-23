@@ -159,6 +159,7 @@
    #:dict
    #:do-hash
    #:do-hash-keys
+   #:do-hash-keys-pairwise
    #:do-hash-values
    #:hash-keys
    #:hash-merge

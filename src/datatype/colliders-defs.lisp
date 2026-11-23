@@ -1,5 +1,6 @@
 (in-package #:colony)
 
+;; The internal collider system in the engine.
 (defclass collider-system ()
   ((%physics-config :reader physics-config
                     :initarg :physics-config

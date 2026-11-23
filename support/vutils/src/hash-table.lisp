@@ -53,6 +53,13 @@ list."
      table)
     (nreverse keys)))
 
+(defun do-hash-keys-pairwise (func ht0 ht1)
+  "Get the two lists of keys from HT0 and HT1. Then iterate over them and call
+FUNC once for each pairwise combination between the keysets (not permutation)."
+  (do-hash-keys (a ht0)
+    (do-hash-keys (b ht1)
+      (funcall func a b))))
+
 (defun hash-values (table)
   "Collect a list of all values in the hash table `TABLE."
   (let (values)

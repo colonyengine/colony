@@ -10,6 +10,14 @@
 ;; (via whatever means, like destruction or detachment) of colliders from thier
 ;; actors.
 
+;; TODO: The number of contacts are not computed and stored in the
+;; collider instance correctly. The number of contacts must be fully
+;; resolved BEFORE any of the collision protocol is called. Currently
+;; num contacts is NOT SET AT ALL and this is a real problem (one can't
+;; say, "I need three things touching this collider for something to
+;; happen."
+
+
 (defun make-collider-system (&rest init-args)
   (apply #'make-instance 'collider-system init-args))
 
@@ -57,8 +65,10 @@ currently in contact."
     (setf (u:href contacts face-collider fist-collider) fist-collider)
     ;; Now that the contact has been added we'll invoke the enter protocol for
     ;; the contact.
-    (on-collision-enter fist-collider face-collider)
-    (on-collision-enter face-collider fist-collider)
+    (on-collision-enter (comp:referent fist-collider) fist-collider
+                        (comp:referent face-collider) face-collider)
+    (on-collision-enter (comp:referent face-collider) face-collider
+                        (comp:referent fist-collider) fist-collider)
     :enter))
 
 (defun continue-contact (collider-system fist-collider face-collider)
@@ -67,8 +77,10 @@ FIST-COLLIDER and FACE-COLLIDER."
   (declare (ignore collider-system))
   (assert (not (eq fist-collider face-collider)))
   ;; If we're continuing to collide, run the protocol!
-  (on-collision-continue fist-collider face-collider)
-  (on-collision-continue face-collider fist-collider)
+  (on-collision-continue (comp:referent fist-collider) fist-collider
+                         (comp:referent face-collider) face-collider)
+  (on-collision-continue (comp:referent face-collider) face-collider
+                         (comp:referent fist-collider) fist-collider)
   :continue)
 
 (defun exit-contact (collider-system fist-collider face-collider)
@@ -89,8 +101,10 @@ FIST-COLLIDER and FACE-COLLIDER."
         (remhash face-collider contacts)))
     ;; Now that the contact has been removed, invoke the exit protocol for the
     ;; exiting contacts.
-    (on-collision-exit fist-collider face-collider)
-    (on-collision-exit face-collider fist-collider)
+    (on-collision-exit (comp:referent fist-collider) fist-collider
+                       (comp:referent face-collider) face-collider)
+    (on-collision-exit (comp:referent face-collider) face-collider
+                       (comp:referent fist-collider) fist-collider)
     :exit))
 
 (defun remove-all-contacts (collider-system fist-collider)
@@ -196,11 +210,13 @@ had--and update all other faces too."
            :copy nil)))
       ;; ELSE simply iterate pairwise each fist collider over all the face
       ;; colliders. No chance of duplicate invocation of protocol here.
-      (u:when-let ((fists (u:href (stable-colliders collider-system) fist-layer))
-                   (faces (u:href (stable-colliders collider-system) face-layer)))
+      (u:when-let ((fists (u:href (stable-colliders collider-system)
+                                  fist-layer))
+                   (faces (u:href (stable-colliders collider-system)
+                                  face-layer)))
         (when (and (plusp (hash-table-count fists))
                    (plusp (hash-table-count faces)))
-          (do-hash-keys-pairwise
+          (u:do-hash-keys-pairwise
               (lambda (fist face)
                 (compute-contact-state collider-system fist face))
             fists faces)))))
@@ -303,40 +319,9 @@ had--and update all other faces too."
             ;; 4. Now remove from myself, cause I just processed it.
             (remhash fist fist-layer-deregistering-colliders)))))))
 
-;; TODO: This needs to be in a DSL like define-physics-config or
-;; something. The collision plan describes a lower left triangle of a
-;; collision matrix with the indicies in both axes being in the same
-;; order as the :layers list. ! means that isn't a valid spot to put
-;; either a n (for these two do not collide) or an y (which means
-;; these two do collide).
-;;
-;; Here is a collision system: (notice :scenery collides with nothing)
-;; The :playfield layer is used to catch when bullets leave the platfield.
-;;
-;; A :ground
-;; B :player
-;; C :player-bullet
-;; D :enemy
-;; E :enemy-bullet
-;; F :scenery
-;; G :planet
-;; H :playfield
-;;
-;;     A B C D E F G H
-;;   +----------------
-;; A | y ! ! ! ! ! ! !
-;; B | y n ! ! ! ! ! !
-;; C | y n n ! ! ! ! !
-;; D | y y y n ! ! ! !
-;; E | y y y n n ! ! !
-;; F | n n n n n n ! !
-;; G | n n n y n n n !
-;; H | n n y n y n n n
-;;
-;; Then, the collision plan is an sparse representation of which columns for
-;; each row are marked y/n.
-
 (defun initialize-collider-system (core)
+  "Initialize the engine collider physics using the physics-config found in
+the CORE's config."
   (let* ((config-table (config core))
          (physics-config-name (u:href config-table :physics-config))
          (physics-config
@@ -367,13 +352,6 @@ had--and update all other faces too."
               (u:href stable-colliders physics-layer) (u:dict #'eq)
               (u:href deregistering-colliders physics-layer) (u:dict #'eq))))))
 
-;; TODO: Move to utility file, maybe put in goldern-utils. Possibly extend to
-;; take &rest and perform all combinations of keys/values/etc in hash table.
-;; transfer-func deals with moving a from ht0 to ht1.
-(defun do-hash-keys-pairwise (func ht0 ht1)
-  (u:do-hash-keys (a ht0)
-    (u:do-hash-keys (b ht1)
-      (funcall func a b))))
 
 (defun test-collider-system ()
   "Manually test the basic functionality of the collider system. To be run at
@@ -460,10 +438,24 @@ the repl when the game is NOT running."
       (deregister-collider context c6)
       (collider-system core))))
 
-;;; Protocol methods
+;;; Base type protocol methods that do nothing.
+;;;
+;;; TODO: Should I keep these or FORCE the appdev to define them?
 
-(defmethod on-collision-enter ((self component) (other component)))
+(defmethod on-collision-enter ((self-referent (eql nil))
+                               (self-collider c:component)
+                               (other-referent (eql nil))
+                               (other-collider c:component))
+  nil)
 
-(defmethod on-collision-continue ((self component) (other component)))
+(defmethod on-collision-continue ((self-referent (eql nil))
+                                  (self-collider c:component)
+                                  (other-referent (eql nil))
+                                  (other-collider c:component))
+  nil)
 
-(defmethod on-collision-exit ((self component) (other component)))
+(defmethod on-collision-exit ((self-referent (eql nil))
+                              (self-collider c:component)
+                              (other-referent (eql nil))
+                              (other-collider c:component))
+  nil)

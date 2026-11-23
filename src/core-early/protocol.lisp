@@ -36,11 +36,14 @@ long the thing has yet to live, with NIL meaning infinity."))
 
 ;;; Collider
 
-(defgeneric on-collision-enter (collider other))
+(defgeneric on-collision-enter (self-referent self-collider
+                                other-referent other-collider))
 
-(defgeneric on-collision-continue (collider other))
+(defgeneric on-collision-continue (self-referent self-collider
+                                   other-referent other-collider))
 
-(defgeneric on-collision-exit (collider other))
+(defgeneric on-collision-exit (self-referent self-collider
+                               other-referent other-collider))
 
 (defgeneric collide-p (collider other))
 

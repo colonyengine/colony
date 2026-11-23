@@ -216,6 +216,7 @@
      (:file "mesh")
      (:file "sprite")
      (:file "font")
+     (:file "collider-base")
      (:file "collider-sphere")
      (:file "collider-cuboid")
      (:file "collider-collide-p")))
