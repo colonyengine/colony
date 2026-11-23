@@ -466,20 +466,78 @@ the repl when the game is NOT running."
 ;;;
 ;;; TODO: Should I keep these or FORCE the appdev to define them?
 
-(defmethod on-collision-enter ((self-referent T)
+;; No referents
+(defmethod on-collision-enter ((self-referent (eql nil))
                                (self-collider c:component)
-                               (other-referent T)
+                               (other-referent (eql nil))
                                (other-collider c:component))
   nil)
 
-(defmethod on-collision-continue ((self-referent T)
+(defmethod on-collision-continue ((self-referent (eql nil))
                                   (self-collider c:component)
-                                  (other-referent T)
+                                  (other-referent (eql nil))
                                   (other-collider c:component))
   nil)
 
-(defmethod on-collision-exit ((self-referent T)
+(defmethod on-collision-exit ((self-referent (eql nil))
                               (self-collider c:component)
-                              (other-referent T)
+                              (other-referent (eql nil))
+                              (other-collider c:component))
+  nil)
+
+;; Both has referents
+(defmethod on-collision-enter ((self-referent t)
+                               (self-collider c:component)
+                               (other-referent t)
+                               (other-collider c:component))
+  nil)
+
+(defmethod on-collision-continue ((self-referent t)
+                                  (self-collider c:component)
+                                  (other-referent t)
+                                  (other-collider c:component))
+  nil)
+
+(defmethod on-collision-exit ((self-referent t)
+                              (self-collider c:component)
+                              (other-referent t)
+                              (other-collider c:component))
+  nil)
+
+;; One has referent
+(defmethod on-collision-enter ((self-referent t)
+                               (self-collider c:component)
+                               (other-referent (eql nil))
+                               (other-collider c:component))
+  nil)
+
+(defmethod on-collision-continue ((self-referent t)
+                                  (self-collider c:component)
+                                  (other-referent (eql nil))
+                                  (other-collider c:component))
+  nil)
+
+(defmethod on-collision-exit ((self-referent t)
+                              (self-collider c:component)
+                              (other-referent (eql nil))
+                              (other-collider c:component))
+  nil)
+
+;; Other one has referent
+(defmethod on-collision-enter ((self-referent (eql nil))
+                               (self-collider c:component)
+                               (other-referent t)
+                               (other-collider c:component))
+  nil)
+
+(defmethod on-collision-continue ((self-referent (eql nil))
+                                  (self-collider c:component)
+                                  (other-referent t)
+                                  (other-collider c:component))
+  nil)
+
+(defmethod on-collision-exit ((self-referent (eql nil))
+                              (self-collider c:component)
+                              (other-referent t)
                               (other-collider c:component))
   nil)
