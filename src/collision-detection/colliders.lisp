@@ -63,6 +63,17 @@ currently in contact."
     (unless (u:href contacts face-collider)
       (setf (u:href contacts face-collider) (u:dict #'eq)))
     (setf (u:href contacts face-collider fist-collider) fist-collider)
+    ;; TODO: Now, we increase the contact-count for both the fist and the
+    ;; face. This is, in fact, the wrong place to do it. We technically must
+    ;; compute everything that enters, continues, and exits, update the
+    ;; contacts-count and THEN actually issue the on-collision-* events
+    ;; so that the contact-count is actually correct for everyone in a frame.
+    ;; Putting it here means that if 4 things are suddenly in contact this
+    ;; frame, depending on ordering of the code path that led us here, anyone
+    ;; inspecting contact-count that is participating in that collision
+    ;; might see 1 to 4 contacts when it should have been 4!
+    (incf (comp:contact-count fist-collider))
+    (incf (comp:contact-count face-collider))
     ;; Now that the contact has been added we'll invoke the enter protocol for
     ;; the contact.
     (on-collision-enter (comp:referent fist-collider) fist-collider
@@ -99,6 +110,16 @@ FIST-COLLIDER and FACE-COLLIDER."
       ;; If the face is colliding with nothing now, remove its table.
       (when (zerop (hash-table-count fist-set))
         (remhash face-collider contacts)))
+
+    ;; TODO: See enter-contact TODO about contact-count. This is the wrong place
+    ;; to adjust this value.
+    ;;
+    ;; Also, we interpret that this has the contact has been broken
+    ;; BEFORE we call the on-collision-* API. Then things can recognize
+    ;; when they are not contacting anymore.
+    (decf (comp:contact-count fist-collider))
+    (decf (comp:contact-count face-collider))
+
     ;; Now that the contact has been removed, invoke the exit protocol for the
     ;; exiting contacts.
     (on-collision-exit (comp:referent fist-collider) fist-collider
@@ -438,24 +459,27 @@ the repl when the game is NOT running."
       (deregister-collider context c6)
       (collider-system core))))
 
-;;; Base type protocol methods that do nothing.
+;;; Base type protocol methods that do nothing. This catches when colliders
+;;; are set on objects and either have or don't have referents, and the appdev
+;;; hasn't written a more specific method for them. In this situation,
+;;; the collision events are fired but nothing happens.
 ;;;
 ;;; TODO: Should I keep these or FORCE the appdev to define them?
 
-(defmethod on-collision-enter ((self-referent (eql nil))
+(defmethod on-collision-enter ((self-referent T)
                                (self-collider c:component)
-                               (other-referent (eql nil))
+                               (other-referent T)
                                (other-collider c:component))
   nil)
 
-(defmethod on-collision-continue ((self-referent (eql nil))
+(defmethod on-collision-continue ((self-referent T)
                                   (self-collider c:component)
-                                  (other-referent (eql nil))
+                                  (other-referent T)
                                   (other-collider c:component))
   nil)
 
-(defmethod on-collision-exit ((self-referent (eql nil))
+(defmethod on-collision-exit ((self-referent T)
                               (self-collider c:component)
-                              (other-referent (eql nil))
+                              (other-referent T)
                               (other-collider c:component))
   nil)

@@ -167,21 +167,22 @@
               :initarg :contacts
               :initform nil)))
 
-(defmethod c:on-collision-enter ((self ball) face)
+(defmethod c:on-collision-enter ((self ball) self-collider
+                                 face face-collider)
   (format t "Ball entered collision: ball ~A with actor ~A~%"
-          self (c:actor face))
-  (push (c:actor face) (contacts self)))
+          self (c:actor face-collider))
+  (push (c:actor face-collider) (contacts self)))
 
-(defmethod c:on-collision-exit ((self ball) face)
+(defmethod c:on-collision-exit ((self ball) self-collider
+                                face face-collider)
   (format t "Ball exited collision: ball ~A with actor ~A~%"
-          self (c:actor face)))
+          self (c:actor face-collider)))
 
 ;; Out of all bricks hit, react properly, but only destroy one of them.
 (defmethod c:on-component-physics-update ((self ball))
   (when (contacts self)
     (format t "Ball: Would have processed: ~A~%" (contacts self))
     (setf (contacts self) nil))
-
   )
 
 (c:define-prefab "brick" (:library examples)

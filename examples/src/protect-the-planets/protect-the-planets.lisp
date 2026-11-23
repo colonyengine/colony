@@ -693,13 +693,14 @@
                                         ;; TODO: I don't like this solution.
                                         (render-layer self)))))
 
-(defmethod c:on-collision-enter ((self hit-points) other-collider)
+(defmethod c:on-collision-enter ((self-referent hit-points) self-collider
+                                 other-referent other-collider)
   (with-accessors ((context c:context)
                    (allow-auto-destroy allow-auto-destroy)
                    (invulnerability-timer invulnerability-timer))
-      self
-    (possibly-accept-damage self other-collider)
-    (possibly-auto-destroy self)))
+      self-referent
+    (possibly-accept-damage self-referent other-collider)
+    (possibly-auto-destroy self-referent)))
 
 ;; ;;;;;;;;;
 ;; Component: projectile
@@ -1479,13 +1480,13 @@ NIL if no such list exists."
 ;; the planet is about to die when it <= the hit-point-warning-threshhold.
 ;; Currently, the physics layers are set up so that only enemies can hit the
 ;; planet.
-(defmethod c:on-collision-enter ((self planet) other-collider)
+(defmethod c:on-collision-enter ((self-referent planet) self-collider
+                                 other-referent other-collider)
   (with-accessors ((hit-points hit-points)
                    (hit-point-warning-threshhold hit-point-warning-threshhold))
-      self
+      self-referent
     (possibly-accept-damage hit-points other-collider)
-    (possibly-auto-destroy hit-points)
-    nil))
+    (possibly-auto-destroy hit-points)))
 
 ;; ;;;;;;;;;
 ;; Component: time-keeper

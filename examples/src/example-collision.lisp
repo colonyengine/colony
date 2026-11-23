@@ -9,19 +9,21 @@
                      :initarg :time-to-destroy
                      :initform 5f0)))
 
-(defmethod c:on-collision-enter ((self destroy-my-actor) other-collider)
+(defmethod c:on-collision-enter ((self-referent destroy-my-actor) self-collider
+                                 other-referent other-collider)
   #++(:printv "DESTROY-MY-ACTOR: Actor ~a entered collision with collider ~
              ~a(on actor ~a)"
-              (c:actor self) other-collider (c:actor other-collider))
+              (c:actor self-referent) other-collider (c:actor other-collider))
   (when (string= (c:display-id other-collider) "Ground")
     #++(:printv "===>>> DESTROY-MY-ACTOR: It was specifically the \"Ground\" ~
                object, so destroy myself!")
-    (c:destroy (c:actor self))))
+    (c:destroy (c:actor self-referent))))
 
-(defmethod c:on-collision-exit ((self destroy-my-actor) other-collider)
+(defmethod c:on-collision-exit ((self-referent destroy-my-actor) self-collider
+                                other-referent other-collider)
   #++(:printv "DESTROY-MY-ACTOR: Actor ~a is exiting collision with ~
              ~a(on actor: ~a)."
-              (c:actor self) other-collider (c:actor other-collider)))
+              (c:actor self-referent) other-collider (c:actor other-collider)))
 
 (defmethod c:on-component-update ((self destroy-my-actor))
   (decf (time-to-destroy self) (c:frame-time (c:context self)))
@@ -204,6 +206,7 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (c:define-prefab "collision-smoke-test" (:library examples)
+  "The visualized colliders around the rocks should turn red when they collide."
   (("camera" :copy "/cameras/perspective")
    (comp:camera (:policy :new-args) :zoom 6f0))
   ("rot-0-center"
