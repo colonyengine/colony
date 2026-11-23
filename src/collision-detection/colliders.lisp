@@ -464,7 +464,10 @@ the repl when the game is NOT running."
 ;;; hasn't written a more specific method for them. In this situation,
 ;;; the collision events are fired but nothing happens.
 ;;;
-;;; TODO: Should I keep these or FORCE the appdev to define them?
+;;; TODO: Should I keep these or FORCE the appdev to define them? Should
+;;; they go into the default project template, effectively defined by
+;;; the appdev, but at least trivially defined for the appdev when
+;;; making a new project and clearly labeled?
 
 ;; No referents
 (defmethod on-collision-enter ((self-referent (eql nil))
